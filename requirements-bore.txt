@@ -1,0 +1,5 @@
+numpy
+xgboost
+scikit-learn
+torch
+GPy==1.9.9

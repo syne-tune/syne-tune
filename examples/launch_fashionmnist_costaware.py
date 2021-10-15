@@ -1,0 +1,59 @@
+"""
+Example for cost-aware promotion-based Hyperband
+"""
+import logging
+
+from sagemaker_tune.backend.local_backend import LocalBackend
+from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from sagemaker_tune.tuner import Tuner
+from sagemaker_tune.stopping_criterion import StoppingCriterion
+
+from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist \
+    import mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
+
+
+if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.DEBUG)
+    #logging.getLogger().setLevel(logging.INFO)
+
+    # We pick the MLP on FashionMNIST benchmark
+    # The 'benchmark' dict contains arguments needed by scheduler and
+    # searcher (e.g., 'mode', 'metric'), along with suggested default values
+    # for other arguments (which you are free to override)
+    random_seed = 31415927
+    n_workers = 4
+    default_params = mlp_fashionmnist_default_params()
+    benchmark = mlp_fashionmnist_benchmark(default_params)
+    mode = benchmark['mode']
+    metric = benchmark['metric']
+
+    # If you don't like the default config_space, change it here. But let
+    # us use the default
+    config_space = benchmark['config_space']
+
+    # Local back-end
+    backend = LocalBackend(entry_point=benchmark['script'])
+
+    # Cost-aware variant of ASHA, using a random searcher
+    scheduler = HyperbandScheduler(
+        config_space,
+        searcher='random',
+        max_t=default_params['max_resource_level'],
+        grace_period=default_params['grace_period'],
+        reduction_factor=default_params['reduction_factor'],
+        resource_attr=benchmark['resource_attr'],
+        mode=mode,
+        metric=metric,
+        type='cost_promotion',
+        cost_attr=benchmark['elapsed_time_attr'],
+        random_seed=random_seed)
+
+    stop_criterion = StoppingCriterion(max_wallclock_time=120)
+    tuner = Tuner(
+        backend=backend,
+        scheduler=scheduler,
+        stop_criterion=stop_criterion,
+        n_workers=n_workers,
+    )
+
+    tuner.run()

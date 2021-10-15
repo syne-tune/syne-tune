@@ -1,0 +1,5 @@
+scipy
+autograd
+
+# for test
+requests

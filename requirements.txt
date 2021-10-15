@@ -1,0 +1,14 @@
+boto3
+sagemaker>=2.32.0
+dill
+
+# sagemaker local mode
+PyYaml
+pandas
+ujson
+
+typing_extensions
+
+# for testing
+pytest
+
