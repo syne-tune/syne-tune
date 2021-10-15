@@ -37,7 +37,7 @@ setup(
         'bore': required_bore,
         'gpsearchers': required_gpsearchers,
         'benchmarks': required_benchmarks,
-        'extra': required_ray + required_gpsearchers + required_benchmarks + required_bore,
+        'extra': required_ray + required_gpsearchers + required_benchmarks,
     },
     install_requires=required_core,
     include_package_data=True,
