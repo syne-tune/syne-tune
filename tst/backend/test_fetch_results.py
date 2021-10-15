@@ -16,7 +16,7 @@ from sagemaker_tune.backend.backend import Backend
 from sagemaker_tune.backend.trial_status import TrialResult, Status
 from sagemaker_tune.constants import SMT_WORKER_TIMESTAMP
 
-s
+
 class DeterministicBackend(Backend):
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
         pass
