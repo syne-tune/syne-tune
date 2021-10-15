@@ -31,7 +31,7 @@ sm_estimator = PyTorch(
     instance_count=1,
     py_version="py3",
     framework_version="1.7.1",
-    role=get_execution_role(),
+    role="dummy",
 )
 
 backend = SagemakerBackend(sm_estimator=sm_estimator)
