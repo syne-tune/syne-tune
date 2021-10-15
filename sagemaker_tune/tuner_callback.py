@@ -25,7 +25,7 @@ from sagemaker_tune.util import RegularCallback
 
 class TunerCallback(ABC):
 
-    def on_tuning_start(self, tuner: "Tuner"):
+    def on_tuning_start(self, tuner):
         pass
 
     def on_tuning_end(self):

@@ -203,8 +203,8 @@ class Parameter(object):
             if ctx is None:
                 if len(arr_list) == 1:
                     return arr_list[0]
-                else:
-                    ctx = context.current_context()
+                #else:
+                #    ctx = context.current_context()
             ctx_list = self._ctx_map[ctx.device_typeid&1]
             if ctx.device_id < len(ctx_list):
                 idx = ctx_list[ctx.device_id]
@@ -903,37 +903,37 @@ class Block(object):
             name = str(len(self._children))
         self._children[name] = block
 
-    def register_forward_pre_hook(self, hook):
-        r"""Registers a forward pre-hook on the block.
-        The hook function is called immediately before :func:`forward`.
-        It should not modify the input or output.
-        Parameters
-        ----------
-        hook : callable
-            The forward hook function of form `hook(block, input) -> None`.
-        Returns
-        -------
-        :class:`mxnet.gluon.utils.HookHandle`
-        """
-        handle = HookHandle()
-        handle.attach(self._forward_pre_hooks, hook)
-        return handle
+    # def register_forward_pre_hook(self, hook):
+    #     r"""Registers a forward pre-hook on the block.
+    #     The hook function is called immediately before :func:`forward`.
+    #     It should not modify the input or output.
+    #     Parameters
+    #     ----------
+    #     hook : callable
+    #         The forward hook function of form `hook(block, input) -> None`.
+    #     Returns
+    #     -------
+    #     :class:`mxnet.gluon.utils.HookHandle`
+    #     """
+    #     handle = HookHandle()
+    #     handle.attach(self._forward_pre_hooks, hook)
+    #     return handle
 
-    def register_forward_hook(self, hook):
-        r"""Registers a forward hook on the block.
-        The hook function is called immediately after :func:`forward`.
-        It should not modify the input or output.
-        Parameters
-        ----------
-        hook : callable
-            The forward hook function of form `hook(block, input, output) -> None`.
-        Returns
-        -------
-        :class:`mxnet.gluon.utils.HookHandle`
-        """
-        handle = HookHandle()
-        handle.attach(self._forward_hooks, hook)
-        return handle
+    # def register_forward_hook(self, hook):
+    #     r"""Registers a forward hook on the block.
+    #     The hook function is called immediately after :func:`forward`.
+    #     It should not modify the input or output.
+    #     Parameters
+    #     ----------
+    #     hook : callable
+    #         The forward hook function of form `hook(block, input, output) -> None`.
+    #     Returns
+    #     -------
+    #     :class:`mxnet.gluon.utils.HookHandle`
+    #     """
+    #     handle = HookHandle()
+    #     handle.attach(self._forward_hooks, hook)
+    #     return handle
 
     def apply(self, fn):
         r"""Applies ``fn`` recursively to every child block as well as self.
