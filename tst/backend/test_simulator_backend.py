@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import math
 import pytest
-import logging
 
 from sagemaker_tune.backend.local_backend import LocalBackend
 from sagemaker_tune.backend.simulator_backend.simulator_backend import \
@@ -28,9 +27,6 @@ from sagemaker_tune.constants import SMT_DECISION, SMT_TRIAL_ID
 from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
 from sagemaker_tune.optimizer.scheduler import SchedulerDecision
-
-from examples.training_scripts.height_with_cost.train_height_with_cost import \
-    height_with_cost_default_params, height_with_cost_benchmark
 
 
 def _compare_results(res_local: dict, res_simul: dict, num: int):
@@ -51,8 +47,12 @@ def _compare_results(res_local: dict, res_simul: dict, num: int):
 # short, trivial differences between local and simulated back-end get
 # amplified. These do not play a role with realistic training times of
 # more than 1 sec per epoch.
+@pytest.mark.skip("skipping for now since it depends on examples which is not included in path")
 @pytest.mark.parametrize("scheduler_name", ['fifo'])
 def test_compare_local_simulator_backends(scheduler_name):
+    from examples.training_scripts.height_with_cost.train_height_with_cost import \
+        height_with_cost_default_params, height_with_cost_benchmark
+
     random_seed = 382378624
     n_workers = 4
     tuner_sleep_time = 0.1
