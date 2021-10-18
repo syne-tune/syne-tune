@@ -25,6 +25,7 @@ from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import \
     add_sagemaker_tune_dependency, get_execution_role
 from sagemaker_tune.tuner import Tuner
 from sagemaker_tune.util import s3_experiment_path
+from sagemaker_tune.constants import SMT_REMOTE_UPLOAD_DIR_NAME
 
 import sagemaker_tune
 
@@ -186,10 +187,12 @@ class RemoteLauncher:
             self.tuner.backend.set_entrypoint(
                 f"{self.upload_dir().name}/{self.tuner.backend.entrypoint_path().name}")
 
-    def upload_dir(self) -> Path:
-        return Path(sagemaker_tune.__path__[0]).parent / "tuner"
+    @staticmethod
+    def upload_dir() -> Path:
+        return Path(sagemaker_tune.__path__[0]).parent / SMT_REMOTE_UPLOAD_DIR_NAME
 
-    def remote_script_dir(self) -> Path:
+    @staticmethod
+    def remote_script_dir() -> Path:
         return Path(__file__).parent
 
     def launch_tuning_job_on_sagemaker(self, wait: bool):

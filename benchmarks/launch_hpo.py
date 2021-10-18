@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-import git
 from pathlib import Path
 import itertools
 import copy
@@ -259,6 +258,7 @@ if __name__ == '__main__':
             backend = SimulatorBackend(
                 entry_point=benchmark['script'],
                 elapsed_time_attr=benchmark['elapsed_time_attr'],
+                table_class_name=benchmark.get('benchmark_table_class'),
                 simulator_config=SimulatorConfig(),
                 enable_checkpointing=params['enable_checkpointing'],
                 tuner_sleep_time=params['tuner_sleep_time'])
@@ -314,12 +314,17 @@ if __name__ == '__main__':
                 metadata[k] = benchmark[k]
         tuner_name = experiment_name
 
-        repo = git.Repo(search_parent_directories=True)
-        sha = repo.head.object.hexsha
-        metadata['git_hash'] = sha
-        o = repo.remote()
-        urls = list(o.urls)
-        metadata['git_urls'] = urls
+        try:
+            import git
+
+            repo = git.Repo(search_parent_directories=True)
+            sha = repo.head.object.hexsha
+            metadata['git_hash'] = sha
+            o = repo.remote()
+            urls = list(o.urls)
+            metadata['git_urls'] = urls
+        except Exception:
+            pass
 
         tuner_sleep_time = 0 if backend_name == 'simulated' \
             else params['tuner_sleep_time']

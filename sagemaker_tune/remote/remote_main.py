@@ -35,6 +35,17 @@ def get_tuner_callbacks(tuner: Tuner):
         return None
 
 
+def setup_simulator_backend(tuner: Tuner):
+    from sagemaker_tune.backend.simulator_backend.simulator_callback import \
+        SimulatorBackend
+    from sagemaker_tune.constants import SMT_REMOTE_UPLOAD_DIR_NAME
+
+    backend = tuner.backend
+    if isinstance(backend, SimulatorBackend):
+        backend.create_tabulated_benchmark(
+            module_prefix=SMT_REMOTE_UPLOAD_DIR_NAME)
+
+
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--tuner_path', type=str, default="tuner/")
@@ -56,6 +67,7 @@ if __name__ == '__main__':
 
     # Run the tuner on the sagemaker instance. If the simulation back-end is
     # used, this needs a specific callback
+    setup_simulator_backend(tuner)
     tuner_callbacks = get_tuner_callbacks(tuner)
     if args.no_tuner_logging == 'True':
         logging.getLogger('sagemaker_tune.tuner').setLevel(logging.ERROR)

@@ -10,8 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-# Collects constants to be shared between core code and tuning
-# scripts or benchmarks.
+"""
+Collects constants to be shared between core code and tuning scripts or
+benchmarks.
+"""
 
 SAGEMAKER_TUNE_FOLDER = "sagemaker-tune"
 
@@ -34,3 +36,6 @@ SMT_STATUS = "smt_status"
 
 # constant for the hyperparameter name that contains the checkpoint directory
 SMT_CHECKPOINT_DIR = "smt_checkpoint_dir"
+
+# Name for `upload_dir` in `RemoteTuner`
+SMT_REMOTE_UPLOAD_DIR_NAME = "tuner"
