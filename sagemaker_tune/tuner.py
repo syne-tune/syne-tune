@@ -150,15 +150,6 @@ class Tuner:
             # fetch new results
             trial_status_dict, new_results = self.backend.fetch_status_results(trial_ids=list(running_trials_ids))
 
-            for callback in callbacks:
-                callback.on_fetch_status_results(trial_status_dict=trial_status_dict, new_results=new_results)
-
-            # update status with new results and all done trials
-            tuning_status.update(
-                trial_status_dict=trial_status_dict,
-                new_results=new_results
-            )
-
             assert len(running_trials_ids) <= self.n_workers
 
             # gets list of trials that are done with the new results (could be because they completed or because the
@@ -169,6 +160,17 @@ class Tuner:
             # update the list of done trials and remove those from `running_trials_ids`
             all_done_trials.update(done_trials)
             running_trials_ids.difference_update(done_trials.keys())
+
+            trial_status_dict.update(done_trials)
+
+            # update status with new results and all done trials
+            tuning_status.update(
+                trial_status_dict=trial_status_dict,
+                new_results=new_results
+            )
+
+            for callback in callbacks:
+                callback.on_fetch_status_results(trial_status_dict=trial_status_dict, new_results=new_results)
 
             running_trials_threshold = self.n_workers \
                 if self.asynchronous_scheduling else 1
