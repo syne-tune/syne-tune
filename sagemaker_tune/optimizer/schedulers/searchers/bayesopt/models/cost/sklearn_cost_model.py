@@ -34,11 +34,8 @@ class NonLinearCostModel(CostModel):
     """
     Deterministic cost model, where c0(x) = b0 (constant), and c1(x) is given
     by a nonlinear regression model specified in subclasses. Parameters are b0
-    and those of the regression model.
-
-    The algorithm to jointly fit b0 and c1(x) is given in "Cost Estimation
-    using Nonlinear Models" in
-    https://code.amazon.com/packages/SyneDocs/blobs/mainline/--/MatthiasS/mlp_tuning/sim_scoring.tex
+    and those of the regression model. We use a simple algorithm to jointly fit
+    b0 and c1(x).
 
     """
     def __init__(self):

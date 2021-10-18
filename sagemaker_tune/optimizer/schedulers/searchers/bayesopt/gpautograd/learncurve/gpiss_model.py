@@ -45,11 +45,8 @@ class GaussianProcessISSModel(object):
     inference scales cubically only in the number of configurations, not in the
     number of observations.
 
-    Details about GP-ISSM can be found in
-
-        SyneDocs/MatthiasS/mlp_tuning/gpmodel_hb.tex, Section 5.3.
-
-    Details about ISSMs in general are found in
+    Details about GP-ISSM are contained in an internal report. Details about
+    ISSMs in general are found in
 
         Hyndman, R. and Koehler, A. and Ord, J. and Snyder, R.
         Forecasting with Exponential Smoothing: The State Space Approach

@@ -108,10 +108,6 @@ class SimulatorBackend(LocalBackend):
         `simulator_state` are processed whose time is before the current time
         in `time_keeper`. The method ends by `time_keeper.mark_exit()`.
 
-        For further documentation, see:
-
-        https://code.amazon.com/packages/SyneDocs/blobs/mainline/--/MatthiasS/mlp_tuning/simulator_backend.tex
-
         If `table_class_name` is not given, `entry_point` is a script to be
         executed (as in any other backend). Otherwise, it is a Python file
         containing a subclass of class:`TabulatedBenchmark`, named
