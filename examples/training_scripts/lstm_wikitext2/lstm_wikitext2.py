@@ -23,7 +23,8 @@ from sagemaker_tune.report import Reporter
 from sagemaker_tune.search_space import randint, uniform, loguniform, \
     add_to_argparse
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
-    checkpoint_model_at_rung_level, add_checkpointing_to_argparse
+    checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
+    pytorch_load_save_functions
 from benchmarks.utils import parse_bool, get_cost_model_for_batch_size
 
 
@@ -44,13 +45,21 @@ _config_space = {
 
 
 def lstm_wikitext2_default_params(params=None):
+    if params is not None and params.get('backend') == 'sagemaker':
+        instance_type = 'ml.g4dn.xlarge'
+        num_workers = 8
+    else:
+        # For local backend, GPU cores serve different workers, so we
+        # need more memory
+        instance_type = 'ml.g4dn.12xlarge'
+        num_workers = 4
     return {
         'max_resource_level': 81,
         'grace_period': 1,
         'reduction_factor': 3,
         'max_resource_attr': 'epochs',
-        'instance_type': 'ml.g4dn.xlarge',
-        'num_workers': 8,
+        'instance_type': instance_type,
+        'num_workers': num_workers,
         'framework': 'PyTorch',
         'framework_version': '1.6',
         'report_current_best': 'False',
@@ -277,7 +286,7 @@ def objective(config):
             # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
             for p in model.parameters():
-                p.data.add_(-lr, p.grad.data)
+                p.data.add_(p.grad.data, alpha=-lr)
 
             # total_loss += loss.item()
             # if batch % log_interval == 0 and batch > 0:
@@ -299,29 +308,8 @@ def objective(config):
         'lr': config['lr'],
         'best_val_loss': None}
 
-    def load_model_fn(local_path: str) -> int:
-        local_filename = os.path.join(local_path, 'checkpoint.json')
-        try:
-            checkpoint = torch.load(local_filename)
-            resume_from = int(checkpoint['epoch'])
-            model.load_state_dict(checkpoint['model_state_dict'])
-            mutable_state['lr'] = float(checkpoint['learning_rate'])
-            mutable_state['best_val_loss'] = float(checkpoint['best_val_loss'])
-        except Exception:
-            mutable_state['lr'] = config['lr']
-            mutable_state['best_val_loss'] = None
-            resume_from = 0
-        return resume_from
-
-    def save_model_fn(local_path: str, epoch: int):
-        os.makedirs(local_path, exist_ok=True)
-        local_filename = os.path.join(local_path, 'checkpoint.json')
-        data = {
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'learning_rate': mutable_state['lr'],
-            'best_val_loss': mutable_state['best_val_loss']}
-        torch.save(data, local_filename)
+    load_model_fn, save_model_fn = pytorch_load_save_functions(
+        {'model': model}, mutable_state)
 
     # Resume from checkpoint (optional)
     resume_from = resume_from_checkpointed_model(config, load_model_fn)
