@@ -207,7 +207,7 @@ def objective(config):
 
     # Checkpointing
     load_model_fn, save_model_fn = pytorch_load_save_functions(
-        state['model'], state['optimizer'])
+        {'model': state['model'], 'optimizer': state['optimizer']})
     # Resume from checkpoint (optional)
     resume_from = resume_from_checkpointed_model(config, load_model_fn)
 
