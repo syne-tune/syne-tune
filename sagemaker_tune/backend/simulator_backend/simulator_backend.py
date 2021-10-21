@@ -32,7 +32,7 @@ from sagemaker_tune.backend.simulator_backend.time_keeper import \
 from sagemaker_tune.backend.simulator_backend.events import SimulatorState, \
     StartEvent, CompleteEvent, StopEvent, OnTrialResultEvent
 from sagemaker_tune.constants import SMT_CHECKPOINT_DIR, SMT_WORKER_TIMESTAMP, \
-    SMT_TUNER_TIME
+    SMT_TUNER_TIME, SMT_REMOTE_UPLOAD_DIR_NAME
 from sagemaker_tune.tuner import DEFAULT_SLEEP_TIME
 import sagemaker_tune
 
@@ -151,6 +151,7 @@ class SimulatorBackend(LocalBackend):
         self._simulator_state = SimulatorState()
         self._time_keeper = SimulatedTimeKeeper()
         self._next_results_to_fetch = dict()
+        self._module_prefix = None  # See `_create_tabulated_benchmark`
         logger.setLevel(logging.INFO)  # Suppress DEBUG for this class
 
     @staticmethod
@@ -170,19 +171,19 @@ class SimulatorBackend(LocalBackend):
         module = '.'.join(parts)
         return module
 
-    def create_tabulated_benchmark(self, module_prefix: Optional[str] = None):
+    def _create_tabulated_benchmark(self):
         """
         If `_tabulated_benchmark` has been created already, this method does
         nothing.
 
         If `entry_point` is a class name, the corresponding table object is
         created here. By default, `entry_point` has a complete module prefix.
-        If `module_prefix` is given, this is used instead (this is required
-        for :class:`RemoteLauncher`).
+        If `self._module_prefix` is given, this is used instead (this is
+        required for :class:`RemoteLauncher`).
 
         Example: `entry_point` could be
         'examples.training_scripts.nasbench201.nasbench201.NASBench201Benchmark'.
-        If `module_prefix` is 'tuner', we would use
+        If `self._module_prefix` is 'tuner', we would use
         'tuner.nasbench201.NASBench201Benchmark'.
 
         :param module_prefix: See above
@@ -190,9 +191,9 @@ class SimulatorBackend(LocalBackend):
         if self.table_class_name is not None and \
                 self._tabulated_benchmark is None:
             mod_name = self._module_table_class
-            if module_prefix is not None:
+            if self._module_prefix is not None:
                 _, postfix = mod_name.rsplit('.', 1)
-                mod_name = module_prefix + '.' + postfix
+                mod_name = self._module_prefix + '.' + postfix
             mod = import_module(mod_name)
             cls = getattr(mod, self.table_class_name)
             self._tabulated_benchmark = cls()
@@ -478,7 +479,7 @@ class SimulatorBackend(LocalBackend):
             config = self._trial_dict[trial_id].config
         if self.table_class_name is not None:
             # Fetch all results for this trial from the table
-            self.create_tabulated_benchmark()
+            self._create_tabulated_benchmark()
             all_results = self._tabulated_benchmark(config)
             status = Status.completed
             num_already_before = self._last_metric_seen_index[trial_id]
@@ -538,3 +539,25 @@ class SimulatorBackend(LocalBackend):
             results = all_results[num_already_before:]
 
         return status, results
+
+
+class SimulatorBackendForRemoteLauncher(SimulatorBackend):
+    """
+    Subclass of :class:`SimulatorBackend` to be used with the remote launcher.
+    We need to set `_module_prefix` to where the remote launcher copies
+    sources.
+
+    """
+    def __init__(
+            self,
+            entry_point: str,
+            elapsed_time_attr: str,
+            table_class_name: Optional[str] = None,
+            simulator_config: Optional[SimulatorConfig] = None,
+            enable_checkpointing: bool = True,
+            tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
+    ):
+        super().__init__(
+            entry_point, elapsed_time_attr, table_class_name, simulator_config,
+            enable_checkpointing, tuner_sleep_time)
+        self._module_prefix = SMT_REMOTE_UPLOAD_DIR_NAME

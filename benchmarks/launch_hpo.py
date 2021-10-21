@@ -20,7 +20,7 @@ from sagemaker_tune.backend.local_backend import LocalBackend
 from sagemaker_tune.backend.sagemaker_backend.sagemaker_backend import \
     SagemakerBackend
 from sagemaker_tune.backend.simulator_backend.simulator_backend import \
-    SimulatorBackend, SimulatorConfig
+    SimulatorBackend, SimulatorConfig, SimulatorBackendForRemoteLauncher
 from sagemaker_tune.backend.simulator_backend.simulator_callback import \
     create_simulator_callback
 from sagemaker_tune.stopping_criterion import StoppingCriterion
@@ -255,13 +255,17 @@ if __name__ == '__main__':
             assert benchmark.get('supports_simulated', False), \
                 f"Benchmark {params['benchmark_name']} does not support " +\
                 "the simulation back-end (has to be tabulated)"
-            backend = SimulatorBackend(
+            backend_kwargs = dict(
                 entry_point=benchmark['script'],
                 elapsed_time_attr=benchmark['elapsed_time_attr'],
                 table_class_name=benchmark.get('benchmark_table_class'),
                 simulator_config=SimulatorConfig(),
                 enable_checkpointing=params['enable_checkpointing'],
                 tuner_sleep_time=params['tuner_sleep_time'])
+            if params['local_tuner']:
+                backend = SimulatorBackend(**backend_kwargs)
+            else:
+                backend = SimulatorBackendForRemoteLauncher(**backend_kwargs)
         else:
             assert backend_name == 'sagemaker'
             for k in ('instance_type',):
