@@ -46,9 +46,12 @@ if __name__ == '__main__':
     config_space = benchmark['config_space']
 
     # Simulator back-end
+    # If the benchmark provides a table object, use that. Otherwise, call the
+    # training script
     backend = SimulatorBackend(
         entry_point=benchmark['script'],
-        elapsed_time_attr=benchmark['elapsed_time_attr'])
+        elapsed_time_attr=benchmark['elapsed_time_attr'],
+        table_class_name=benchmark.get('benchmark_table_class'))
 
     searcher = 'random'
     # Hyperband (or successive halving) scheduler of the stopping type.

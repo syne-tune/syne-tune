@@ -17,9 +17,12 @@ import os
 import argparse
 import logging
 import time
+from typing import List
 
 from sagemaker_tune.report import Reporter
 from sagemaker_tune.search_space import choice, add_to_argparse
+from sagemaker_tune.backend.simulator_backend.tabulated_benchmark import \
+    TabulatedBenchmark
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse
 from benchmarks.utils import parse_bool
@@ -77,6 +80,7 @@ def nasbench201_benchmark(params):
         'config_space': config_space,
         'supports_simulated': True,
         'cost_model': get_cost_model(params),
+        'benchmark_table_class': 'NASBench201Benchmark',
     }
 
 
@@ -113,10 +117,10 @@ def get_cost_model(params):
         return None
 
 
-def download_datafile(dataset_path, dataset_name, s3_bucket):
+def download_datafile(dataset_path, dataset_name, dataset_s3_bucket):
     assert dataset_name in ["ImageNet16-120", "cifar10-valid", "cifar100"]
-    assert s3_bucket is not None, \
-        "TODO: Need s3_bucket to point to bucket where nasbench201 data can be downloaded"
+    assert dataset_s3_bucket is not None, \
+        "TODO: Need dataset_s3_bucket to point to bucket where nasbench201 data can be downloaded"
     dataset_fname = f"nasbench201_reduced_{dataset_name}.csv"
     s3_path = 'dataset'
     fname_local = os.path.join(dataset_path, dataset_fname)
@@ -125,32 +129,68 @@ def download_datafile(dataset_path, dataset_name, s3_bucket):
         import boto3
         s3 = boto3.resource('s3')
         s3.meta.client.download_file(
-            s3_bucket, os.path.join(s3_path, dataset_fname), fname_local)
+            dataset_s3_bucket, os.path.join(s3_path, dataset_fname), fname_local)
     return fname_local
+
+
+def get_dataframe(dataset_path, dataset_name, dataset_s3_bucket):
+    from filelock import SoftFileLock, Timeout
+    import pandas
+
+    # Make sure the datafile is on the local filesystem
+    os.makedirs(dataset_path, exist_ok=True)
+    # Lock protection is needed for backends which run multiple worker
+    # processes on the same instance
+    lock_path = os.path.join(dataset_path, 'lock')
+    lock = SoftFileLock(lock_path)
+    try:
+        with lock.acquire(timeout=120, poll_intervall=1):
+            fname_local = download_datafile(
+                dataset_path, dataset_name, dataset_s3_bucket)
+    except Timeout:
+        print(
+            "WARNING: Could not obtain lock for dataset files. Trying anyway...",
+            flush=True)
+        fname_local = download_datafile(
+            dataset_path, dataset_name, dataset_s3_bucket)
+    return pandas.read_csv(fname_local)
+
+
+class NASBench201Benchmark(TabulatedBenchmark):
+    def __init__(self):
+        self._data = None
+
+    def __call__(self, config: dict) -> List[dict]:
+        if self._data is None:
+            self._data = get_dataframe(
+                config['dataset_path'], config['dataset_name'],
+                config['dataset_s3_bucket'])
+        data = self._data
+        row = data.loc[(data['x0'] == config['x0']) &
+                       (data['x1'] == config['x1']) &
+                       (data['x2'] == config['x2']) &
+                       (data['x3'] == config['x3']) &
+                       (data['x4'] == config['x4']) &
+                       (data['x5'] == config['x5'])]
+        eval_time_epoch = float(row['eval_time_epoch'])
+        results = [
+            {
+                'epoch': epoch,
+                'objective': float(row['lc_valid_epoch_{}'.format(
+                    epoch - 1)]) / 100,
+                'elapsed_time': eval_time_epoch * epoch
+            }
+            for epoch in range(1, config['epochs'] + 1)
+        ]
+        return results
 
 
 def objective(config):
     dont_sleep = parse_bool(config['dont_sleep'])
 
-    # Make sure the datafile is on the local filesystem
-    path = config['dataset_path']
-    os.makedirs(path, exist_ok=True)
-    # Lock protection is needed for backends which run multiple worker
-    # processes on the same instance
-    lock_path = os.path.join(path, 'lock')
-    lock = SoftFileLock(lock_path)
-    dataset_name = config['dataset_name']
-    s3_bucket = config['dataset_s3_bucket']
-    try:
-        with lock.acquire(timeout=120, poll_intervall=1):
-            fname_local = download_datafile(path, dataset_name, s3_bucket)
-    except Timeout:
-        print(
-            "WARNING: Could not obtain lock for dataset files. Trying anyway...",
-            flush=True)
-        fname_local = download_datafile(path, dataset_name, s3_bucket)
-
-    data = pandas.read_csv(fname_local)
+    data = get_dataframe(
+        config['dataset_path'], config['dataset_name'],
+        config['dataset_s3_bucket'])
     row = data.loc[(data['x0'] == config['x0']) &
                    (data['x1'] == config['x1']) &
                    (data['x2'] == config['x2']) &
@@ -186,15 +226,15 @@ def objective(config):
 
     # Loop over epochs
     elapsed_time_raw = 0
+    eval_time_epoch = float(row['eval_time_epoch'])
     for epoch in range(resume_from + 1, config['epochs'] + 1):
         y = float(row['lc_valid_epoch_{}'.format(epoch - 1)])
-        t = float(row['eval_time_epoch'])
         accuracy = y / 100
 
         if dont_sleep:
-            elapsed_time_raw += t
+            elapsed_time_raw += eval_time_epoch
         else:
-            time.sleep(t)
+            time.sleep(eval_time_epoch)
         elapsed_time = time.time() - ts_start + elapsed_time_raw
 
         report(
@@ -211,8 +251,6 @@ if __name__ == '__main__':
     # Benchmark-specific imports are done here, in order to avoid import
     # errors if the dependencies are not installed (such errors should happen
     # only when the code is really called)
-    from filelock import SoftFileLock, Timeout
-    import pandas
     import json
 
     root = logging.getLogger()

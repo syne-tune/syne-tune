@@ -87,9 +87,7 @@ def issm_likelihood_computations(
     - beta: n-vector
     - gamma: scalar, positive
 
-    Likelihood computations are detailed in the report
-
-    SyneDocs/MatthiasS/mlp_tuning/gpmodel_hb.tex, Section 5.3.
+    Likelihood computations are detailed in an internal report.
 
     Results returned are:
     - c: n-vector [c_i], negative

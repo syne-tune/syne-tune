@@ -15,11 +15,13 @@ import logging
 import os
 from datetime import timedelta
 import copy
+from importlib import import_module
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
 
 import numpy as np
 import subprocess
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
 
 from sagemaker_tune.report import retrieve
 from sagemaker_tune.backend.backend import BACKEND_TYPES, ENV_BACKEND
@@ -30,8 +32,9 @@ from sagemaker_tune.backend.simulator_backend.time_keeper import \
 from sagemaker_tune.backend.simulator_backend.events import SimulatorState, \
     StartEvent, CompleteEvent, StopEvent, OnTrialResultEvent
 from sagemaker_tune.constants import SMT_CHECKPOINT_DIR, SMT_WORKER_TIMESTAMP, \
-    SMT_TUNER_TIME
+    SMT_TUNER_TIME, SMT_REMOTE_UPLOAD_DIR_NAME
 from sagemaker_tune.tuner import DEFAULT_SLEEP_TIME
+import sagemaker_tune
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +82,7 @@ class SimulatorBackend(LocalBackend):
             self,
             entry_point: str,
             elapsed_time_attr: str,
+            table_class_name: Optional[str] = None,
             simulator_config: Optional[SimulatorConfig] = None,
             tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
     ):
@@ -103,12 +107,20 @@ class SimulatorBackend(LocalBackend):
         `simulator_state` are processed whose time is before the current time
         in `time_keeper`. The method ends by `time_keeper.mark_exit()`.
 
-        For further documentation, see:
+        If `table_class_name` is not given, `entry_point` is a script to be
+        executed (as in any other backend). Otherwise, it is a Python file
+        containing a subclass of class:`TabulatedBenchmark`, named
+        `table_class_name`. In the latter case, the table object returns
+        results for a config directly, no script has to be called. This is
+        faster, and our recommended way to implement tabulated training
+        functions. The class needs to have `__init__` without any arguments.
+        If arguments are needed, they need to be passed as part of the configs.
 
-        https://code.amazon.com/packages/SyneDocs/blobs/mainline/--/MatthiasS/mlp_tuning/simulator_backend.tex
-
-        :param entry_point: Python main file to be tuned
+        :param entry_point: Python main file to be tuned, or Python file
+            containing `TabulatedBenchmark` class
         :param elapsed_time_attr: See above
+        :param table_class_name: If given, a tabular benchmark class from
+            `entry_point` is used
         :param simulator_config: Parameters for simulator
         :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
             information is needed in `SimulatorCallback`
@@ -116,6 +128,13 @@ class SimulatorBackend(LocalBackend):
         """
         super().__init__(
             entry_point=entry_point, rotate_gpus=False)
+        self.table_class_name = table_class_name
+        if table_class_name is not None:
+            self._module_table_class = self._module_from_script_name(
+                entry_point)
+        else:
+            self._module_table_class = None
+        self._tabulated_benchmark = None
         self.elapsed_time_attr = elapsed_time_attr
         if simulator_config is None:
             self.simulator_config = SimulatorConfig()
@@ -126,7 +145,52 @@ class SimulatorBackend(LocalBackend):
         self._simulator_state = SimulatorState()
         self._time_keeper = SimulatedTimeKeeper()
         self._next_results_to_fetch = dict()
+        self._module_prefix = None  # See `_create_tabulated_benchmark`
         logger.setLevel(logging.INFO)  # Suppress DEBUG for this class
+
+    @staticmethod
+    def _module_from_script_name(entry_point: str):
+        smt_prefix = Path(sagemaker_tune.__path__[0]).parent
+        parts = list(Path(entry_point).parts)
+        if entry_point.startswith(str(smt_prefix)):
+            prefix_parts = list(smt_prefix.parts)
+            parts = parts[len(prefix_parts):]
+        else:
+            logger.warning(
+                f"entry_point = {entry_point} does not start with "
+                f"smt_prefix = {smt_prefix}. Don't strip prefix off.")
+        fname = parts[-1]
+        assert fname[-3:] == '.py'
+        parts[-1] = fname[:-3]
+        module = '.'.join(parts)
+        return module
+
+    def _create_tabulated_benchmark(self):
+        """
+        If `_tabulated_benchmark` has been created already, this method does
+        nothing.
+
+        If `entry_point` is a class name, the corresponding table object is
+        created here. By default, `entry_point` has a complete module prefix.
+        If `self._module_prefix` is given, this is used instead (this is
+        required for :class:`RemoteLauncher`).
+
+        Example: `entry_point` could be
+        'examples.training_scripts.nasbench201.nasbench201.NASBench201Benchmark'.
+        If `self._module_prefix` is 'tuner', we would use
+        'tuner.nasbench201.NASBench201Benchmark'.
+
+        :param module_prefix: See above
+        """
+        if self.table_class_name is not None and \
+                self._tabulated_benchmark is None:
+            mod_name = self._module_table_class
+            if self._module_prefix is not None:
+                _, postfix = mod_name.rsplit('.', 1)
+                mod_name = self._module_prefix + '.' + postfix
+            mod = import_module(mod_name)
+            cls = getattr(mod, self.table_class_name)
+            self._tabulated_benchmark = cls()
 
     @property
     def time_keeper(self) -> SimulatedTimeKeeper:
@@ -292,8 +356,9 @@ class SimulatorBackend(LocalBackend):
                     f"= {len(result_list)}")
             logger.warning('\n'.join(warn_msg))
             self._next_results_to_fetch = dict()
-        results = sorted(
-            results, key=lambda result: result[1][SMT_WORKER_TIMESTAMP])
+        if self.table_class_name is None:
+            results = sorted(
+                results, key=lambda result: result[1][SMT_WORKER_TIMESTAMP])
 
         trial_status_dict = dict()
         for trial_id in trial_ids:
@@ -406,44 +471,87 @@ class SimulatorBackend(LocalBackend):
             f"Trial with trial_id = {trial_id} not registered with back-end"
         if config is None:
             config = self._trial_dict[trial_id].config
-        trial_path = self.trial_path(trial_id)
-        os.makedirs(trial_path, exist_ok=True)
-        config_copy = config.copy()
-        config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
-        config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
-
-        def np_encoder(obj):
-            if isinstance(obj, np.generic):
-                return obj.item()
-
-        with open(trial_path / "config.json", "w") as f:
-            # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
-            json.dump(config, f, default=np_encoder)
-        cmd = f"python {self.entry_point} {config_str}"
-        env = dict(os.environ)
-        logging.info(f"running script with command: {cmd}")
-        with open(trial_path / "std.out", 'a') as stdout:
-            with open(trial_path / "std.err", 'a') as stderr:
-                return_status = subprocess.run(
-                    cmd.split(" "),
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=env)
-        if return_status.returncode == 0:
+        if self.table_class_name is not None:
+            # Fetch all results for this trial from the table
+            self._create_tabulated_benchmark()
+            all_results = self._tabulated_benchmark(config)
             status = Status.completed
+            num_already_before = self._last_metric_seen_index[trial_id]
+            if num_already_before > 0:
+                assert num_already_before <= len(all_results), \
+                    f"Found {len(all_results)} total results, but have already " +\
+                    f"processed {num_already_before} before!"
+                results = all_results[num_already_before:]
+                # Correct `elapsed_time_attr` values
+                elapsed_time_offset = all_results[num_already_before - 1][
+                    self.elapsed_time_attr]
+                for result in results:
+                    result[self.elapsed_time_attr] -= elapsed_time_offset
+            else:
+                results = all_results
         else:
-            status = Status.failed
+            # Run training script and fetch all results
+            trial_path = self.trial_path(trial_id)
+            os.makedirs(trial_path, exist_ok=True)
+            if self.enable_checkpointing:
+                config_copy = config.copy()
+                config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
+            else:
+                config_copy = config
+            config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
 
-        # Read all reported results
-        # Results are also read if the process failed
-        # Note that `retrieve` returns all results, even those already
-        # received before (in case the trial is resumed at least once).
-        # We only want the most recent ones here.
-        all_results = retrieve(log_lines=self.stdout(trial_id=trial_id))
-        num_already_before = self._last_metric_seen_index[trial_id]
-        assert num_already_before <= len(all_results), \
-            f"Found {len(all_results)} total results, but have already " +\
-            f"processed {num_already_before} before!"
-        results = all_results[num_already_before:]
+            def np_encoder(obj):
+                if isinstance(obj, np.generic):
+                    return obj.item()
+
+            with open(trial_path / "config.json", "w") as f:
+                # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
+                json.dump(config, f, default=np_encoder)
+            cmd = f"python {self.entry_point} {config_str}"
+            env = dict(os.environ)
+            logging.info(f"running script with command: {cmd}")
+            with open(trial_path / "std.out", 'a') as stdout:
+                with open(trial_path / "std.err", 'a') as stderr:
+                    return_status = subprocess.run(
+                        cmd.split(" "),
+                        stdout=stdout,
+                        stderr=stderr,
+                        env=env)
+            if return_status.returncode == 0:
+                status = Status.completed
+            else:
+                status = Status.failed
+            # Read all reported results
+            # Results are also read if the process failed
+            # Note that `retrieve` returns all results, even those already
+            # received before (in case the trial is resumed at least once).
+            all_results = retrieve(log_lines=self.stdout(trial_id=trial_id))
+            num_already_before = self._last_metric_seen_index[trial_id]
+            assert num_already_before <= len(all_results), \
+                f"Found {len(all_results)} total results, but have already " +\
+                f"processed {num_already_before} before!"
+            results = all_results[num_already_before:]
 
         return status, results
+
+
+class SimulatorBackendForRemoteLauncher(SimulatorBackend):
+    """
+    Subclass of :class:`SimulatorBackend` to be used with the remote launcher.
+    We need to set `_module_prefix` to where the remote launcher copies
+    sources.
+
+    """
+    def __init__(
+            self,
+            entry_point: str,
+            elapsed_time_attr: str,
+            table_class_name: Optional[str] = None,
+            simulator_config: Optional[SimulatorConfig] = None,
+            enable_checkpointing: bool = True,
+            tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
+    ):
+        super().__init__(
+            entry_point, elapsed_time_attr, table_class_name, simulator_config,
+            enable_checkpointing, tuner_sleep_time)
+        self._module_prefix = SMT_REMOTE_UPLOAD_DIR_NAME
