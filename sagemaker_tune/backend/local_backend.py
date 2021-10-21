@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 
 import numpy as np
 import subprocess
@@ -151,7 +152,7 @@ class LocalBackend(Backend):
                     # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
                     json.dump(config, f, default=np_encoder)
 
-                cmd = f"python {self.entry_point} {config_str}"
+                cmd = f"{sys.executable} {self.entry_point} {config_str}"
 
                 env = dict(os.environ)
                 self._allocate_gpu(trial_id, env)
