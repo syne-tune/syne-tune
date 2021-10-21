@@ -128,8 +128,6 @@ def parse_args(allow_lists_as_values=True):
                              'many seconds')
     parser.add_argument('--print_update_interval', type=int, default=300,
                         help='Tuner status printed every this many seconds')
-    parser.add_argument('--disable_checkpointing', action='store_true',
-                        help='Disable checkpointing for training evaluations')
     parser.add_argument('--tuner_sleep_time', type=float, default=5,
                         help='Tuner tries to fetch new results every this '
                              'many seconds')
@@ -261,8 +259,6 @@ def parse_args(allow_lists_as_values=True):
     del params['no_debug_log']
     params['rotate_gpus'] = not params['no_gpu_rotation']
     del params['no_gpu_rotation']
-    params['enable_checkpointing'] = not params['disable_checkpointing']
-    del params['disable_checkpointing']
     epochs = params.get('epochs')
     if params.get('max_resource_level') is None:
         if epochs is not None:
