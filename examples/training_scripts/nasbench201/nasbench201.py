@@ -39,6 +39,7 @@ CONFIG_KEYS = ('x0', 'x1', 'x2', 'x3', 'x4', 'x5')
 _config_space = {k: choice(x_range) for k in CONFIG_KEYS}
 
 
+# TODO: The solution of having to specify `dataset_s3_bucket` is temporary
 def nasbench201_default_params(params=None):
     dont_sleep = str(
         params is not None and params.get('backend') == 'simulated')
@@ -53,7 +54,7 @@ def nasbench201_default_params(params=None):
         'framework_version': '1.6',
         'dataset_path': './',
         'dataset_name': 'cifar10-valid',
-        'dataset_s3_bucket': 'TODO',
+        'dataset_s3_bucket': None,
         'dont_sleep': dont_sleep,
         'cost_model_type': 'linear',
     }
@@ -114,7 +115,7 @@ def get_cost_model(params):
 
 def download_datafile(dataset_path, dataset_name, s3_bucket):
     assert dataset_name in ["ImageNet16-120", "cifar10-valid", "cifar100"]
-    assert s3_bucket is not None and s3_bucket != 'TODO', \
+    assert s3_bucket is not None, \
         "TODO: Need s3_bucket to point to bucket where nasbench201 data can be downloaded"
     dataset_fname = f"nasbench201_reduced_{dataset_name}.csv"
     s3_path = 'dataset'

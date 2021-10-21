@@ -250,7 +250,11 @@ def parse_args(allow_lists_as_values=True):
     for name, value in default_params.items():
         try:
             # We don't need to set defaults here
-            parser.add_argument('--' + name, type=type(value), help=help_str)
+            if value is None:
+                _type = str
+            else:
+                _type = type(value)
+            parser.add_argument('--' + name, type=_type, help=help_str)
             have_extra_args = True
         except argparse.ArgumentError:
             pass
