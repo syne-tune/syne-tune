@@ -1,15 +1,3 @@
-# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
 from typing import Set, Tuple, Dict
 import logging
 import numbers
@@ -74,6 +62,12 @@ class Boolean(CheckType):
             "{}: Value = {} must be boolean".format(key, value)
 
 
+class Dictionary(CheckType):
+    def assert_valid(self, key: str, value):
+        assert isinstance(value, dict), \
+            "{}: Value = {} must be a dictionary".format(key, value)
+
+
 def check_and_merge_defaults(
         options: dict, mandatory: Set[str], default_options: dict,
         constraints: Dict[str, CheckType] = None, dict_name=None) -> dict:
@@ -99,6 +93,14 @@ def check_and_merge_defaults(
         if key not in result_options:
             log_msg += (prefix + "Key '{}': Imputing default value {}\n".format(key, value))
             result_options[key] = value
+
+        # if the arg is a dictionary, we need to check the values inside the dict
+        if isinstance(value, dict):
+            for kd, vd in value.items():
+                if kd not in result_options[key]:
+                    log_msg += (prefix + "Key '{}' in dict {}: Imputing default value {}\n".format(kd, key, vd))
+                    result_options[key][kd]=vd
+
     if log_msg:
         logger.info(log_msg)
     # Check constraints

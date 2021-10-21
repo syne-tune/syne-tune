@@ -1,15 +1,3 @@
-# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
 from typing import Dict, Optional, List
 import pickle
 import logging
@@ -24,9 +12,11 @@ from sagemaker_tune.optimizer.schedulers.hyperband_promotion import \
     PromotionRungSystem
 from sagemaker_tune.optimizer.schedulers.hyperband_cost_promotion import \
     CostPromotionRungSystem
+from sagemaker_tune.optimizer.schedulers.hyperband_pasha import \
+    PASHARungSystem
 from sagemaker_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults, Integer, Boolean, Categorical, \
-    filter_by_key, String
+    filter_by_key, String, Dictionary
 from sagemaker_tune.optimizer.scheduler import SchedulerDecision
 from sagemaker_tune.backend.trial_status import Trial
 
@@ -39,7 +29,7 @@ logger = logging.getLogger(__name__)
 _ARGUMENT_KEYS = {
     'resource_attr', 'grace_period', 'reduction_factor', 'brackets', 'type',
     'searcher_data', 'do_snapshots', 'rung_system_per_bracket', 'rung_levels',
-    'cost_attr'}
+    'cost_attr', 'rung_system_kwargs'}
 
 _DEFAULT_OPTIONS = {
     'resource_attr': 'epoch',
@@ -51,7 +41,10 @@ _DEFAULT_OPTIONS = {
     'searcher_data': 'rungs',
     'do_snapshots': False,
     'rung_system_per_bracket': True,
-    'cost_attr': 'elapsed_time'}
+    # TODO (matthis) move cost_attr into rung_system_kwargs
+    'cost_attr': 'elapsed_time',
+    'rung_system_kwargs': { 'ranking_criterion': 'soft_ranking', 'epsilon': 1.0, 'epsilon_scaling': 1.0}
+    }
 
 _CONSTRAINTS = {
     'resource_attr': String(),
@@ -59,11 +52,13 @@ _CONSTRAINTS = {
     'grace_period': Integer(1, None),
     'reduction_factor': Integer(2, None),
     'brackets': Integer(1, None),
-    'type': Categorical(('stopping', 'promotion', 'cost_promotion')),
+    'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha')),
     'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
     'do_snapshots': Boolean(),
     'rung_system_per_bracket': Boolean(),
-    'cost_attr': String()}
+    'cost_attr': String(),
+    'rung_system_kwargs': Dictionary()
+}
 
 
 class HyperbandScheduler(FIFOScheduler):
@@ -204,6 +199,10 @@ class HyperbandScheduler(FIFOScheduler):
                 This is a cost-aware variant of 'promotion', see
                 :class:`CostPromotionRungSystem` for details. In this case,
                 costs must be reported under the name `cost_attr` in results.
+            pasha:
+                Similar to promotion type Hyperband, but it progressively
+                expands the available resources until the ranking
+                of configurations stabilizes.
     searcher_data : str
         Relevant only if a model-based searcher is used.
         Example: For NN tuning and `resource_attr == epoch', we receive a
@@ -263,6 +262,25 @@ class HyperbandScheduler(FIFOScheduler):
         function, resumed trials are started from scratch, in which case
         additivity of cost is not needed. In this case, the cost of a trial
         is given by just the last recent resume.
+    rungs_system_kwargs : dict
+        Arguments passed to the rung system:
+            ranking_criterion : str
+                Used if `type == 'pasha'`. Specifies what strategy to use
+                for deciding if the ranking is stable and if to increase the resource.
+                Available options are soft_ranking, soft_ranking_std,
+                soft_ranking_median_dst and soft_ranking_mean_dst. The simplest
+                soft_ranking accepts a manually specified value of epsilon and
+                groups configurations with similar performance within the given range
+                of objective values. The other strategies calculate the value of epsilon
+                automatically, with the option to rescale the it using epsilon_scaling.
+            epsilon : float
+                Used if `type == 'pasha'`. Parameter for soft ranking in PASHA
+                to say which configurations should be group together based on the
+                similarity of their performance.
+            epsilon_scaling : float
+                Used if `type == 'pasha'`. When epsilon for soft ranking in
+                PASHA is calculated automatically, it is possible to rescale it
+                using epsilon_scaling.
 
     See Also
     --------
@@ -291,6 +309,7 @@ class HyperbandScheduler(FIFOScheduler):
         self.scheduler_type = scheduler_type
         self._resource_attr = kwargs['resource_attr']
         self._cost_attr = kwargs['cost_attr']
+        self._rung_system_kwargs = kwargs['rung_system_kwargs']
         # Superclass constructor
         resume = kwargs['resume']
         kwargs['resume'] = False  # Cannot be done in superclass
@@ -322,7 +341,8 @@ class HyperbandScheduler(FIFOScheduler):
             scheduler_type, self._resource_attr, self.metric, self.mode,
             self.max_t, rung_levels, brackets, rung_system_per_bracket,
             cost_attr=self._total_cost_attr(),
-            random_seed=self.random_seed_generator())
+            random_seed=self.random_seed_generator(),
+            rung_system_kwargs=self._rung_system_kwargs)
         self.do_snapshots = do_snapshots
         self.searcher_data = kwargs['searcher_data']
         # _active_trials:
@@ -853,12 +873,14 @@ class HyperbandBracketManager(object):
             See :class:`HyperbandScheduler`.
         random_seed : int
             Random seed for bracket sampling
+        rung_system_kwargs: dict
+            Dictionary of arguments passed to the rung system,
 
     """
     def __init__(
             self, scheduler_type, resource_attr, metric, mode, max_t,
             rung_levels, brackets, rung_system_per_bracket, cost_attr,
-            random_seed):
+            random_seed, rung_system_kwargs):
         self._scheduler_type = scheduler_type
         self._resource_attr = resource_attr
         self._max_t = max_t
@@ -876,6 +898,12 @@ class HyperbandBracketManager(object):
         kwargs = dict(metric=metric, mode=mode, resource_attr=resource_attr)
         if scheduler_type == 'stopping':
             rs_type = StoppingRungSystem
+        elif scheduler_type == 'pasha':
+            kwargs['max_t'] = max_t
+            kwargs['ranking_criterion'] = rung_system_kwargs['ranking_criterion']
+            kwargs['epsilon'] = rung_system_kwargs['epsilon']
+            kwargs['epsilon_scaling'] = rung_system_kwargs['epsilon_scaling']
+            rs_type = PASHARungSystem
         else:
             kwargs['max_t'] = max_t
             if scheduler_type == 'promotion':

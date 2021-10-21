@@ -1,15 +1,3 @@
-# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
 from sagemaker_tune.optimizer.schedulers.hyperband_stopping import RungEntry, \
     quantile_cutoff
 
@@ -105,6 +93,11 @@ class PromotionRungSystem(object):
         assert not curr_val[-1]  # Sanity check
         recorded[trial_id] = curr_val[:-1] + (True,)
 
+    # The following method is used in on_task_schedule to control the maximum amount of resources
+    # allocated to a single configuration during the optimization. For ASHA it's just a constant value.
+    def _effective_max_t(self):
+        return self.max_t
+
     def on_task_schedule(self):
         """
         Used to implement _promote_trial of scheduler. Searches through rungs
@@ -121,7 +114,7 @@ class PromotionRungSystem(object):
             _milestone = rung.level
             prom_quant = rung.prom_quant
             _recorded = rung.data
-            if _milestone < self.max_t:
+            if _milestone < self._effective_max_t():
                 trial_id = self._find_promotable_config(
                     _recorded, prom_quant)
             if trial_id is not None:
@@ -202,7 +195,9 @@ class PromotionRungSystem(object):
         if resource >= milestone:
             err_msg = f"resource = {resource} > {milestone} = milestone." + \
                       "Make sure to report time attributes covering all milestones"
+
             assert resource == milestone, err_msg
+
             milestone_reached = True
             try:
                 rung_pos = next(i for i, v in enumerate(self._rungs)

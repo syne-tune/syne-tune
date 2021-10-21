@@ -352,6 +352,15 @@ the `type` argument:
   Otherwise, if none of the paused trials can be resumed, a trial is started with
   a newly chosen configuration. This variant requires the back-end to pause
   and resume trials (which typically includes support for checkpointing).
+* **Progressive ASHA (PASHA)** [`type='pasha'`]:
+  This is the variant of ASHA presented in [TODO:ADDLINK](htpp://#).
+  This variant of ASHA have been developed to be resource-efficient on large datasets
+  and it works by progressively extending the maximum resources level at which configurations are trained. 
+  It is empirically shown that it is often possible to identify optimal configurations
+  early on, but it is often difficult to determine how reliable an early decision is.
+  PASHA tries to automatically identify the minimum resources level at which it can perform
+  a reliable decision. It can be used in situations where re-training a model several
+  time would be just too expensive.
 
 The full range of arguments of `HyperbandScheduler` is documented in
 [sagemaker_tune/optimizer/schedulers/hyperband.py](../sagemaker_tune/optimizer/schedulers/hyperband.py).
