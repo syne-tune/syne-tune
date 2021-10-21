@@ -187,12 +187,10 @@ class RemoteLauncher:
             self.tuner.backend.set_entrypoint(
                 f"{self.upload_dir().name}/{self.tuner.backend.entrypoint_path().name}")
 
-    @staticmethod
-    def upload_dir() -> Path:
+    def upload_dir(self) -> Path:
         return Path(sagemaker_tune.__path__[0]).parent / SMT_REMOTE_UPLOAD_DIR_NAME
 
-    @staticmethod
-    def remote_script_dir() -> Path:
+    def remote_script_dir(self) -> Path:
         return Path(__file__).parent
 
     def launch_tuning_job_on_sagemaker(self, wait: bool):
