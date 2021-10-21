@@ -128,8 +128,6 @@ def parse_args(allow_lists_as_values=True):
                              'many seconds')
     parser.add_argument('--print_update_interval', type=int, default=300,
                         help='Tuner status printed every this many seconds')
-    parser.add_argument('--disable_checkpointing', action='store_true',
-                        help='Disable checkpointing for training evaluations')
     parser.add_argument('--tuner_sleep_time', type=float, default=5,
                         help='Tuner tries to fetch new results every this '
                              'many seconds')
@@ -174,6 +172,12 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--grace_period', type=int,
                         help='Minimum resource level (e.g., epoch number) '
                              'in HyperbandScheduler',
+                        **allow_list)
+    parser.add_argument('--rung_levels', type=str,
+                        help='List of resource levels to use for the rungs '
+                             'in HyperbandScheduler. Entries must be positive '
+                             'ints. Overrides --grace_period, '
+                             '--reduction_factor if given',
                         **allow_list)
     parser.add_argument('--no_rung_system_per_bracket', action='store_true',
                         help='Parameter of HyperbandScheduler')
@@ -246,7 +250,11 @@ def parse_args(allow_lists_as_values=True):
     for name, value in default_params.items():
         try:
             # We don't need to set defaults here
-            parser.add_argument('--' + name, type=type(value), help=help_str)
+            if value is None:
+                _type = str
+            else:
+                _type = type(value)
+            parser.add_argument('--' + name, type=_type, help=help_str)
             have_extra_args = True
         except argparse.ArgumentError:
             pass
@@ -261,8 +269,6 @@ def parse_args(allow_lists_as_values=True):
     del params['no_debug_log']
     params['rotate_gpus'] = not params['no_gpu_rotation']
     del params['no_gpu_rotation']
-    params['enable_checkpointing'] = not params['disable_checkpointing']
-    del params['disable_checkpointing']
     epochs = params.get('epochs')
     if params.get('max_resource_level') is None:
         if epochs is not None:
@@ -331,6 +337,10 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
         assert scheduler.startswith(prefix)
         sch_type = scheduler[len(prefix):]
         _enter_not_none(scheduler_options, 'type', sch_type)
+        rung_levels = params.get('rung_levels')
+        if rung_levels is not None:
+            scheduler_options['rung_levels'] = sorted(
+                [int(x) for x in rung_levels.split()])
         scheduler_args = scheduler_args + (
             ('reduction_factor', int),
             ('grace_period', int),
