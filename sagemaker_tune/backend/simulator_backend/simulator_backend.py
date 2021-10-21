@@ -80,7 +80,6 @@ class SimulatorBackend(LocalBackend):
             entry_point: str,
             elapsed_time_attr: str,
             simulator_config: Optional[SimulatorConfig] = None,
-            enable_checkpointing: bool = True,
             tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
     ):
         """
@@ -111,16 +110,12 @@ class SimulatorBackend(LocalBackend):
         :param entry_point: Python main file to be tuned
         :param elapsed_time_attr: See above
         :param simulator_config: Parameters for simulator
-        :param enable_checkpointing: If True, checkpointing the state of
-            training evaluations is supported on the side of the backend (it
-            still needs to be supported by the training evaluation code as well)
         :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
             information is needed in `SimulatorCallback`
 
         """
         super().__init__(
-            entry_point=entry_point, rotate_gpus=False,
-            enable_checkpointing=enable_checkpointing)
+            entry_point=entry_point, rotate_gpus=False)
         self.elapsed_time_attr = elapsed_time_attr
         if simulator_config is None:
             self.simulator_config = SimulatorConfig()
@@ -413,11 +408,8 @@ class SimulatorBackend(LocalBackend):
             config = self._trial_dict[trial_id].config
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
-        if self.enable_checkpointing:
-            config_copy = config.copy()
-            config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
-        else:
-            config_copy = config
+        config_copy = config.copy()
+        config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
         config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
 
         def np_encoder(obj):
