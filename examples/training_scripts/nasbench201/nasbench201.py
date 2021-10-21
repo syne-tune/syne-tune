@@ -117,10 +117,10 @@ def get_cost_model(params):
         return None
 
 
-def download_datafile(dataset_path, dataset_name, s3_bucket):
+def download_datafile(dataset_path, dataset_name, dataset_s3_bucket):
     assert dataset_name in ["ImageNet16-120", "cifar10-valid", "cifar100"]
-    assert s3_bucket is not None, \
-        "TODO: Need s3_bucket to point to bucket where nasbench201 data can be downloaded"
+    assert dataset_s3_bucket is not None, \
+        "TODO: Need dataset_s3_bucket to point to bucket where nasbench201 data can be downloaded"
     dataset_fname = f"nasbench201_reduced_{dataset_name}.csv"
     s3_path = 'dataset'
     fname_local = os.path.join(dataset_path, dataset_fname)
@@ -129,11 +129,11 @@ def download_datafile(dataset_path, dataset_name, s3_bucket):
         import boto3
         s3 = boto3.resource('s3')
         s3.meta.client.download_file(
-            s3_bucket, os.path.join(s3_path, dataset_fname), fname_local)
+            dataset_s3_bucket, os.path.join(s3_path, dataset_fname), fname_local)
     return fname_local
 
 
-def get_dataframe(dataset_path, dataset_name):
+def get_dataframe(dataset_path, dataset_name, dataset_s3_bucket):
     from filelock import SoftFileLock, Timeout
     import pandas
 
@@ -143,16 +143,16 @@ def get_dataframe(dataset_path, dataset_name):
     # processes on the same instance
     lock_path = os.path.join(dataset_path, 'lock')
     lock = SoftFileLock(lock_path)
-    dataset_name = config['dataset_name']
-    s3_bucket = config['dataset_s3_bucket']
     try:
         with lock.acquire(timeout=120, poll_intervall=1):
-            fname_local = download_datafile(path, dataset_name, s3_bucket)
+            fname_local = download_datafile(
+                dataset_path, dataset_name, dataset_s3_bucket)
     except Timeout:
         print(
             "WARNING: Could not obtain lock for dataset files. Trying anyway...",
             flush=True)
-        fname_local = download_datafile(dataset_path, dataset_name, s3_bucket)
+        fname_local = download_datafile(
+            dataset_path, dataset_name, dataset_s3_bucket)
     return pandas.read_csv(fname_local)
 
 
@@ -163,7 +163,8 @@ class NASBench201Benchmark(TabulatedBenchmark):
     def __call__(self, config: dict) -> List[dict]:
         if self._data is None:
             self._data = get_dataframe(
-                config['dataset_path'], config['dataset_name'])
+                config['dataset_path'], config['dataset_name'],
+                config['dataset_s3_bucket'])
         data = self._data
         row = data.loc[(data['x0'] == config['x0']) &
                        (data['x1'] == config['x1']) &
@@ -187,7 +188,9 @@ class NASBench201Benchmark(TabulatedBenchmark):
 def objective(config):
     dont_sleep = parse_bool(config['dont_sleep'])
 
-    data = get_dataframe(config['dataset_path'], config['dataset_name'])
+    data = get_dataframe(
+        config['dataset_path'], config['dataset_name'],
+        config['dataset_s3_bucket'])
     row = data.loc[(data['x0'] == config['x0']) &
                    (data['x1'] == config['x1']) &
                    (data['x2'] == config['x2']) &

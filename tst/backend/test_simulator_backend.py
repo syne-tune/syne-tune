@@ -258,7 +258,7 @@ def test_simulator_state():
             (OnTrialResultEvent, 1, 3, 3.5),
             (CompleteEvent, 1, 'completed', 4)]
 
-
+@pytest.mark.skip("TODO: Needs solution for nasbench201 dataset_s3_bucket")
 def test_simulator_backend_with_table_class():
     from examples.training_scripts.nasbench201.nasbench201 import \
         nasbench201_default_params, nasbench201_benchmark
