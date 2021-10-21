@@ -15,7 +15,7 @@
 # function resumes training, it can start from the checkpoint, and does not
 # have to start from scatch.
 
-from typing import Dict, Callable, Any
+from typing import Dict, Callable, Any, Optional
 import argparse
 import os
 
@@ -95,44 +95,63 @@ def checkpoint_model_at_rung_level(
                   f"{resource}, local_path = {local_path}]")
 
 
+RESOURCE_NAME = 'smt_resource'
+
+STATE_DICT_PREFIX = 'smt_state_dict_'
+
+MUTABLE_STATE_PREFIX = 'smt_mutable_'
+
 def pytorch_load_save_functions(
-        model, optimizer, lr_scheduler=None, fname='checkpoint.json'):
+        state_dict_objects: dict, mutable_state: Optional[dict] = None,
+        fname: str = 'checkpoint.json'):
     """
     Provides default `load_model_fn`, `save_model_fn` functions for standard
     PyTorch models (arguments to `resume_from_checkpointed_model`,
     `checkpoint_model_at_rung_level`.
 
-    :param model: Pytorch model
-    :param optimizer: PyTorch optimizer
-    :param lr_scheduler: PyTorch LR scheduler (optional)
+    :param state_dict_objects: Dict of PyTorch objects implementing `state_dict`
+        and `load_state_dict`
+    :param mutable_state: Optional. Additional dict with elementary value
+        types
     :param fname: Name of local file (path is taken from config)
     :return: load_model_fn, save_model_fn
     """
     import torch
 
     def load_model_fn(local_path: str) -> int:
-        local_filename = os.path.join(local_path, fname)
+        _mutable_state, local_filename = _common_init(local_path)
         try:
             checkpoint = torch.load(local_filename)
-            resume_from = int(checkpoint['epoch'])
-            model.load_state_dict(checkpoint['model_state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            if lr_scheduler is not None:
-                lr_scheduler.load_state_dict(
-                    checkpoint['scheduler_state_dict'])
+            resume_from = int(checkpoint[RESOURCE_NAME])
+            for k, v in state_dict_objects.items():
+                v.load_state_dict(checkpoint[STATE_DICT_PREFIX + k])
+            for k in _mutable_state:
+                v = checkpoint[MUTABLE_STATE_PREFIX + k]
+                v_old = _mutable_state.get(k)
+                if v_old is not None:
+                    v = type(v_old)(v)
+                _mutable_state[k] = v
         except Exception:
             resume_from = 0
         return resume_from
 
-    def save_model_fn(local_path: str, epoch: int):
+    def save_model_fn(local_path: str, resource: int):
         os.makedirs(local_path, exist_ok=True)
+        _mutable_state, local_filename = _common_init(local_path)
         local_filename = os.path.join(local_path, fname)
-        data = {
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict()}
-        if lr_scheduler is not None:
-            data['scheduler_state_dict'] = lr_scheduler.state_dict()
-        torch.save(data, local_filename)
+        checkpoint = {STATE_DICT_PREFIX + k: v.state_dict()
+                      for k, v in state_dict_objects.items()}
+        checkpoint[RESOURCE_NAME] = resource
+        for k, v in _mutable_state.items():
+            checkpoint[MUTABLE_STATE_PREFIX + k] = v
+        torch.save(checkpoint, local_filename)
+
+    def _common_init(local_path: str) -> (dict, str):
+        if mutable_state is None:
+            _mutable_state = dict()
+        else:
+            _mutable_state = mutable_state
+        local_filename = os.path.join(local_path, fname)
+        return _mutable_state, local_filename
 
     return load_model_fn, save_model_fn

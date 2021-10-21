@@ -170,7 +170,8 @@ import os
 # ...
 
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
-    checkpoint_model_at_rung_level, add_checkpointing_to_argparse
+    checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
+    pytorch_load_save_functions
 # ...
 
 # Objective to tune
@@ -191,29 +192,12 @@ def objective(config):
         'lr': config['lr'],
         'best_val_loss': None}
 
-    def load_model_fn(local_path: str) -> int:
-        local_filename = os.path.join(local_path, 'checkpoint.json')
-        try:
-            checkpoint = torch.load(local_filename)
-            resume_from = int(checkpoint['epoch'])
-            model.load_state_dict(checkpoint['model_state_dict'])
-            mutable_state['lr'] = float(checkpoint['learning_rate'])
-            mutable_state['best_val_loss'] = float(checkpoint['best_val_loss'])
-        except Exception:
-            mutable_state['lr'] = config['lr']
-            mutable_state['best_val_loss'] = None
-            resume_from = 0
-        return resume_from
-
-    def save_model_fn(local_path: str, epoch: int):
-        os.makedirs(local_path, exist_ok=True)
-        local_filename = os.path.join(local_path, 'checkpoint.json')
-        data = {
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'learning_rate': mutable_state['lr'],
-            'best_val_loss': mutable_state['best_val_loss']}
-        torch.save(data, local_filename)
+    # `pytorch_load_save_functions` is a helper to create `load_model_fn`,
+    # `save_model_fn`. It accepts a dict of PyTorch objects which implement
+    # `load_state_dict` and `state_dict`, as well as (optional) a dict with
+    # standard value types (`mutable_state` here)
+    load_model_fn, save_model_fn = pytorch_load_save_functions(
+        {'model': model}, mutable_state)
 
     # Resume from checkpoint (optional)
     # [2]:
@@ -278,33 +262,15 @@ script has to be extended in two places:
   value if successful, which is returned as `resume_from`.
 
 In general, `load_model_fn` and `save_model_fn` have to be provided as part of
-the script. In our example above, the overall mutable state consists of the
-state of the model, together with the current learning rate and the best loss
-value attained so far. The latter two are part of a home-made learning rate
-schedule, and are wrapped in `mutable_state`.
+the script. For most PyTorch models, you can use `pytorch_load_save_functions`
+to this end. In general, you will want to include the model, the optimizer,
+and the learning rate scheduler. In our example above, optimizer and
+learning rate scheduler are home-made, the state of the latter is contained in
+`mutable_state`.
 
 Finally, the scheduler provides additional information about checkpointing in
 `config`. You don't have to worry about this: `add_checkpointing_to_argparse(parser)`
 in [3] adds corresponding arguments to the parser.
-
-### Saving and Loading Checkpoints for Standard PyTorch Models
-
-In the `lstm_wikitext2` example, `save_model_fn` and `load_model_fn` had to be
-provided as part of the script. This is because the mutable state is somewhat
-non-standard in that case. For standard PyTorch models, we provide
-`pytorch_load_save_functions`, as shown in the `mlp_on_fashion_mnist` example
-above:
-
-```python
-    load_model_fn, save_model_fn = pytorch_load_save_functions(
-        state['model'], state['optimizer'])
-```
-
-In this standard form example, we use a model and an optimizer, both coming
-with a well-defined mutable state. If you use a learning rate scheduler, which
-has a mutable state as well, `pytorch_load_save_functions` can take this into
-account as well (see
-[examples/training_scripts/resnet_cifar10/resnet_cifar10.py](../examples/training_scripts/resnet_cifar10/resnet_cifar10.py)).
 
 ### How does Checkpointing Work Internally?
 

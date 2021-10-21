@@ -249,8 +249,7 @@ if __name__ == '__main__':
         if backend_name == 'local':
             backend = LocalBackend(
                 entry_point=benchmark['script'],
-                rotate_gpus=params['rotate_gpus'],
-                enable_checkpointing=params['enable_checkpointing'])
+                rotate_gpus=params['rotate_gpus'])
         elif backend_name == 'simulated':
             assert benchmark.get('supports_simulated', False), \
                 f"Benchmark {params['benchmark_name']} does not support " +\
@@ -260,7 +259,6 @@ if __name__ == '__main__':
                 elapsed_time_attr=benchmark['elapsed_time_attr'],
                 table_class_name=benchmark.get('benchmark_table_class'),
                 simulator_config=SimulatorConfig(),
-                enable_checkpointing=params['enable_checkpointing'],
                 tuner_sleep_time=params['tuner_sleep_time'])
             if params['local_tuner']:
                 backend = SimulatorBackend(**backend_kwargs)
@@ -287,9 +285,7 @@ if __name__ == '__main__':
             backend = SagemakerBackend(
                 sm_estimator=sm_estimator,
                 metrics_names=[benchmark['metric']],
-                enable_checkpointing=params['enable_checkpointing'],
-                s3_path=s3_path,
-            )
+                s3_path=s3_path)
         # Setup scheduler based on backend
         setup_scheduler_from_backend(myscheduler, backend)
 

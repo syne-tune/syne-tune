@@ -42,7 +42,6 @@ class LocalBackend(Backend):
             self,
             entry_point: str,
             rotate_gpus: bool = True,
-            enable_checkpointing: bool = True,
     ):
         """
         A backend running locally by spawning sub-process concurrently.
@@ -54,9 +53,6 @@ class LocalBackend(Backend):
             scheduled on a different GPU. A new trial is preferentially
             scheduled on a free GPU, and otherwise the GPU with least prior
             assignments is chosen
-        :param enable_checkpointing: If True, checkpointing the state of
-            training evaluations is supported on the side of the backend (it
-            still needs to be supported by the training evaluation code as well)
 
         """
         super(LocalBackend, self).__init__()
@@ -65,7 +61,6 @@ class LocalBackend(Backend):
         self.entry_point = entry_point
 
         self.trial_subprocess = {}
-        self.enable_checkpointing = enable_checkpointing
 
         # GPU rotation
         # Note that the initialization is delayed until first used, so we can
@@ -144,11 +139,8 @@ class LocalBackend(Backend):
         with open(trial_path / "std.out", 'a') as stdout:
             with open(trial_path / "std.err", 'a') as stderr:
                 logging.debug(f"scheduling {trial_id}, {self.entry_point}, {config}, logging into {trial_path}")
-                if self.enable_checkpointing:
-                    config_copy = config.copy()
-                    config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
-                else:
-                    config_copy = config
+                config_copy = config.copy()
+                config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
                 config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
 
                 def np_encoder(object):

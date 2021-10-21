@@ -84,7 +84,6 @@ class SimulatorBackend(LocalBackend):
             elapsed_time_attr: str,
             table_class_name: Optional[str] = None,
             simulator_config: Optional[SimulatorConfig] = None,
-            enable_checkpointing: bool = True,
             tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
     ):
         """
@@ -123,17 +122,12 @@ class SimulatorBackend(LocalBackend):
         :param table_class_name: If given, a tabular benchmark class from
             `entry_point` is used
         :param simulator_config: Parameters for simulator
-        :param enable_checkpointing: If True, checkpointing the state of
-            training evaluations is supported on the side of the backend (it
-            still needs to be supported by the training evaluation code as
-            well). Has no effect if `table_class_name` is given
         :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
             information is needed in `SimulatorCallback`
 
         """
         super().__init__(
-            entry_point=entry_point, rotate_gpus=False,
-            enable_checkpointing=enable_checkpointing)
+            entry_point=entry_point, rotate_gpus=False)
         self.table_class_name = table_class_name
         if table_class_name is not None:
             self._module_table_class = self._module_from_script_name(

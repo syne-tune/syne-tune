@@ -39,7 +39,6 @@ class SagemakerBackend(Backend):
             self,
             sm_estimator: Framework,
             metrics_names: Optional[List[str]] = None,
-            enable_checkpointing: bool = True,
             s3_path: Optional[str] = None,
             *args,
             **sagemaker_fit_kwargs):
@@ -48,9 +47,6 @@ class SagemakerBackend(Backend):
         :param sm_client: sagemaker client, for instance obtained with `sm = boto3.client(service_name='sagemaker')`
         :param metrics_names: name of metrics passed to `report`, used to plot live curve in sagemaker (optional, only
         used for visualization purpose)
-        :param enable_checkpointing: If True, checkpointing the state of
-            training evaluations is supported on the side of the backend (it
-            still needs to be supported by the training evaluation code as well)
         :param s3_path: S3 base path used for checkpointing. The full path
             also involves the tuner name and the trial_id
         :param sagemaker_fit_kwargs: extra arguments that are passed to sagemaker.estimator.Framework when fitting the
@@ -59,7 +55,6 @@ class SagemakerBackend(Backend):
         super(SagemakerBackend, self).__init__()
         self.sm_estimator = sm_estimator
         self.metrics_names = metrics_names
-        self.enable_checkpointing = enable_checkpointing
 
         # edit the sagemaker estimator so that metrics of the user can be plotted over time by sagemaker and so that
         # the report.py code is available
@@ -132,8 +127,7 @@ class SagemakerBackend(Backend):
         return json.loads(json.dumps(dict, default=np_encoder))
 
     def _schedule(self, trial_id: int, config: Dict):
-        if self.enable_checkpointing:
-            config[SMT_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
+        config[SMT_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
         hyperparameters = config.copy()
 
         # This passes the instance type and instance count to the training function in Sagemaker as hyperparameters
@@ -152,7 +146,7 @@ class SagemakerBackend(Backend):
         else:
             self.sm_estimator.instance_count = hyperparameters[SMT_INSTANCE_COUNT]
 
-        if self.enable_checkpointing and self.sm_estimator.instance_type != "local":
+        if self.sm_estimator.instance_type != "local":
             if self.tuner_name is not None:
                 checkpoint_s3_uri = f"{self.s3_path}/{self.tuner_name}/{trial_id}/"
             else:

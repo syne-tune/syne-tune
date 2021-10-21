@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 _ARGUMENT_KEYS = {
     'resource_attr', 'grace_period', 'reduction_factor', 'brackets', 'type',
-    'searcher_data', 'do_snapshots', 'rung_system_per_bracket',' rung_levels',
+    'searcher_data', 'do_snapshots', 'rung_system_per_bracket', 'rung_levels',
     'cost_attr'}
 
 _DEFAULT_OPTIONS = {
