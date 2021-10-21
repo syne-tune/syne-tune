@@ -18,6 +18,8 @@ from examples.training_scripts.resnet_cifar10.resnet_cifar10 import \
     resnet_cifar10_benchmark, resnet_cifar10_default_params
 from examples.training_scripts.lstm_wikitext2.lstm_wikitext2 import \
     lstm_wikitext2_benchmark, lstm_wikitext2_default_params
+from examples.training_scripts.bert_classification.bert_classification import \
+    bert_classification_benchmark, bert_classification_default_params
 
 __all__ = ['supported_benchmarks',
            'benchmark_factory']
@@ -38,6 +40,8 @@ BENCHMARKS = {
         resnet_cifar10_benchmark, resnet_cifar10_default_params),
     'lstm_wikitext2': (
         lstm_wikitext2_benchmark, lstm_wikitext2_default_params),
+    'bert_classification': (
+        bert_classification_benchmark, bert_classification_default_params),
 }
 
 

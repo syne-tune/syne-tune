@@ -92,6 +92,8 @@ def impute_points_to_evaluate(
     """
     if points_to_evaluate is None:
         points_to_evaluate = [dict()]
+    elif isinstance(points_to_evaluate, dict):
+        points_to_evaluate = [points_to_evaluate]
     # Impute and filter out duplicates
     result = []
     excl_set = set()

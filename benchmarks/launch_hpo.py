@@ -365,7 +365,7 @@ if __name__ == '__main__':
                 if k in estimator_kwargs:
                     estimator_kwargs.pop(k)
                 k = 'framework'
-                if k in estimator_kwargs:
+                if k in estimator_kwargs and backend_name != 'simulated':
                     framework = estimator_kwargs.pop(k)
                 else:
                     framework = None
