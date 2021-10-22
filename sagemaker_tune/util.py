@@ -94,7 +94,7 @@ def s3_experiment_path(
     for part in (experiment_name, tuner_name):
         if part is not None:
             s3_path += '/' + part
-    return s3_sanitize_path_name(s3_path)
+    return s3_path
 
 
 def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:

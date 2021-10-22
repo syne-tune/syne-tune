@@ -11,17 +11,21 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Callable
 
+import boto3
 import pandas as pd
 
 from dataclasses import dataclass
 
+from botocore.exceptions import ClientError
+
 from sagemaker_tune.constants import SMT_TUNER_TIME, SMT_TUNER_CREATION_TIMESTAMP
 from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.util import experiment_path
+from sagemaker_tune.util import experiment_path, s3_experiment_path
 
 
 @dataclass
@@ -70,7 +74,35 @@ class ExperimentResult:
         return self.tuner.scheduler.__class__.__name__
 
 
-def load_experiment(tuner_name: str) -> ExperimentResult:
+def download_single_experiment(tuner_name: str):
+    """
+    Downloads results from s3 of a tuning experiment previously run with remote launcher.
+    :param tuner_name:
+    :return:
+    """
+    s3_path = s3_experiment_path(s3_bucket=None, tuner_name=tuner_name)
+    tgt_dir = experiment_path(tuner_name=tuner_name)
+    tgt_dir.mkdir(exist_ok=True, parents=True)
+    s3 = boto3.client('s3')
+    s3_bucket = s3_path.replace("s3://", "").split("/")[0]
+    s3_key = "/".join(s3_path.replace("s3://", "").split("/")[1:])
+    for file in ["metadata.json", "results.csv.zip", "tuner.dill"]:
+        try:
+            logging.info(f"downloading {file} on {s3_path}")
+            s3.download_file(s3_bucket, f"{s3_key}/{file}", str(tgt_dir / file))
+        except ClientError as e:
+            logging.info(f"could not find {file} on {s3_path}")
+
+
+def load_experiment(
+        tuner_name: str,
+        download_if_not_found: bool = True
+) -> ExperimentResult:
+    """
+    :param tuner_name: name of a tuning experiment previously run
+    :param download_if_not_found: whether to fetch the experiment from s3 if not found locally
+    :return:
+    """
     path = experiment_path(tuner_name)
 
     metadata_path = path / "metadata.json"
@@ -78,6 +110,9 @@ def load_experiment(tuner_name: str) -> ExperimentResult:
         with open(metadata_path, "r") as f:
             metadata = json.load(f)
     except FileNotFoundError:
+        logging.info(f"experiment {tuner_name} not found locally, trying to get it from s3.")
+        if download_if_not_found:
+            download_single_experiment(tuner_name=tuner_name)
         metadata = None
     try:
         if (path / "results.csv.zip").exists():
