@@ -278,6 +278,7 @@ class ModelStateTransformer(object):
                 f"key {key}"
             del metric_vals[key]
 
+    # TODO: Get rid of self._debug_log.trial_id call
     def _label_candidate_info_message(self, config):
         trial_id = self._debug_log.trial_id(config)
         if trial_id is not None:

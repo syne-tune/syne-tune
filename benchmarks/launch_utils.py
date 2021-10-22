@@ -329,9 +329,10 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
         random_seed_offset = 0
     random_seed = (random_seed_offset + params['run_id']) % (2 ** 32)
     scheduler_options = {'random_seed': random_seed}
+    name = 'max_resource_level' if scheduler == 'hyperband_synchronous' \
+        else 'max_t'
     _enter_not_none(
-        scheduler_options, 'max_t', params.get('max_resource_level'),
-        type=int)
+        scheduler_options, name, params.get('max_resource_level'), type=int)
     scheduler_args = (
         ('max_resource_attr', str),
     )
@@ -339,19 +340,20 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
         # Only process these arguments for HyperbandScheduler
         prefix = 'hyperband_'
         assert scheduler.startswith(prefix)
-        sch_type = scheduler[len(prefix):]
-        _enter_not_none(scheduler_options, 'type', sch_type)
-        rung_levels = params.get('rung_levels')
-        if rung_levels is not None:
-            scheduler_options['rung_levels'] = sorted(
-                [int(x) for x in rung_levels.split()])
         scheduler_args = scheduler_args + (
             ('reduction_factor', int),
             ('grace_period', int),
-            ('brackets', int),
-            ('searcher_data', str),
-            ('rung_system_per_bracket', bool),
-        )
+            ('brackets', int))
+        if scheduler != 'hyperband_synchronous':
+            sch_type = scheduler[len(prefix):]
+            _enter_not_none(scheduler_options, 'type', sch_type)
+            rung_levels = params.get('rung_levels')
+            if rung_levels is not None:
+                scheduler_options['rung_levels'] = sorted(
+                    [int(x) for x in rung_levels.split()])
+            scheduler_args = scheduler_args + (
+                ('searcher_data', str),
+                ('rung_system_per_bracket', bool))
     for name, tp in scheduler_args:
         _enter_not_none(
             scheduler_options, name, params.get(name), type=tp)

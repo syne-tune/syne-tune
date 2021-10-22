@@ -127,6 +127,7 @@ class DebugLogPrinter(object):
         assert self.config_counter is None, "config_counter already in use"
         self._configspace_ext = configspace_ext
 
+    # TODO: Remove, or at least limit its usage
     def trial_id(self, config: Configuration) -> Optional[str]:
         if self.config_counter is not None:
             return self.config_counter.config_id(config)
