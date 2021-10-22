@@ -1,4 +1,3 @@
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from sagemaker_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
 
 

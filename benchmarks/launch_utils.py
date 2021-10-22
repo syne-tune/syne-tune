@@ -184,6 +184,15 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--searcher_data', type=str,
                         help='Parameter of HyperbandScheduler',
                         **allow_list)
+    parser.add_argument('--pasha_ranking_criterion', type=str,
+                        help='Parameter of PASHA scheduler',
+                        **allow_list)
+    parser.add_argument('--pasha_epsilon', type=float,
+                        help='Parameter of PASHA scheduler',
+                        **allow_list)
+    parser.add_argument('--pasha_epsilon_scaling', type=str,
+                        help='Parameter of PASHA scheduler',
+                        **allow_list)
     # Arguments for bayesopt searcher
     parser.add_argument('--searcher_num_init_random', type=int,
                         help='Number of initial trials not chosen by searcher',

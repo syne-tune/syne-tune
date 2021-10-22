@@ -40,6 +40,7 @@ supported_schedulers = {
     'hyperband_stopping',
     'hyperband_promotion',
     'hyperband_cost_promotion',
+    'hyperband_pasha',
     'mo_asha',
     'raytune_fifo',
     'raytune_hyperband',
@@ -80,7 +81,8 @@ def scheduler_factory(
         'fifo',
         'hyperband_stopping',
         'hyperband_promotion',
-        'hyperband_cost_promotion'}
+        'hyperband_cost_promotion',
+        'hyperband_pasha'}
     if scheduler in schedulers_with_search_options:
         if do_synchronous and scheduler != 'fifo':
             raise NotImplementedError(
@@ -120,7 +122,12 @@ def scheduler_factory(
                     break
             if cost_attr is not None:
                 if scheduler == 'hyperband_cost_promotion':
-                    scheduler_options['cost_attr'] = cost_attr
+                    if 'rung_system_kwargs' in scheduler_options:
+                        scheduler_options['rung_system_kwargs'][
+                            'cost_attr'] = cost_attr
+                    else:
+                        scheduler_options['rung_system_kwargs'] = {
+                            'cost_attr': cost_attr}
                 if searcher.startswith('bayesopt_cost'):
                     search_options['cost_attr'] = cost_attr
         k = 'points_to_evaluate'
@@ -144,6 +151,17 @@ def scheduler_factory(
             search_options[k] = v
         if searcher.startswith('bayesopt_cost'):
             searcher = 'bayesopt_cost'  # Internal name
+        if scheduler == 'hyperband_pasha':
+            rung_system_kwargs = scheduler_options.get(
+                'rung_system_kwargs', dict())
+            for name, tp in (('ranking_criterion', str), ('epsilon', float),
+                             ('epsilon_scaling', float)):
+                name_cl = 'pasha_' + name
+                v = params.get(name_cl)
+                if v is not None:
+                    rung_system_kwargs[name] = tp(v)
+            if rung_system_kwargs:
+                scheduler_options['rung_system_kwargs'] = rung_system_kwargs
         # Build scheduler and searcher
         scheduler_cls = FIFOScheduler if scheduler == 'fifo' else \
             HyperbandScheduler
