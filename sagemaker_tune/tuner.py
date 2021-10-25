@@ -27,7 +27,7 @@ from sagemaker_tune.constants import SMT_TUNER_CREATION_TIMESTAMP
 from sagemaker_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from sagemaker_tune.tuner_callback import TunerCallback, StoreResultsCallback
 from sagemaker_tune.tuning_status import TuningStatus, print_best_metric_found
-from sagemaker_tune.util import RegularCallback, experiment_path, name_from_base
+from sagemaker_tune.util import RegularCallback, experiment_path, name_from_base, check_valid_sagemaker_name
 
 logger = logging.getLogger(__name__)
 
@@ -84,10 +84,9 @@ class Tuner:
         self.print_update_interval = print_update_interval
 
         if tuner_name is not None:
-            assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(tuner_name), \
-                f"{tuner_name} should consists in alpha-digits possibly separated by character -"
+            check_valid_sagemaker_name(tuner_name)
         else:
-            tuner_name = Path(self.backend.entrypoint_path()).stem
+            tuner_name = Path(self.backend.entrypoint_path()).stem.replace("_", "-")
         self.name = name_from_base(tuner_name, default="smt-tuner")
 
         # we keep track of the last result seen to send it to schedulers when trials complete.

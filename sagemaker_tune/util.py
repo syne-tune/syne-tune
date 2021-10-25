@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import os
+import re
 import string
 import random
 import time
@@ -90,6 +91,11 @@ def s3_experiment_path(
     return s3_path
 
 
+def check_valid_sagemaker_name(name: str):
+    assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(name), \
+        f"{name} should consists in alpha-digits possibly separated by character -"
+
+
 def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:
     """Append a timestamp to the provided string.
 
@@ -106,9 +112,10 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
         str: Input parameter with appended timestamp.
     """
     if base is None:
+        check_valid_sagemaker_name(default)
         base = default
     else:
-        base = base.replace("_", "-")
+        check_valid_sagemaker_name(base)
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]
