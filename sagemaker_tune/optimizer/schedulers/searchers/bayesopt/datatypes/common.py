@@ -10,7 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Union, NamedTuple, Dict
+from typing import Union, Dict
+from dataclasses import dataclass
 import numpy as np
 
 
@@ -31,7 +32,8 @@ Configuration = Dict[str, Hyperparameter]
 
 MetricValues = Union[float, Dict[str, float]]
 
-class CandidateEvaluation(NamedTuple):
+@dataclass
+class CandidateEvaluation:
     """
     For each fixed k, `metrics[k]` is either a single value or a dict. The
     latter is used, for example, for multi-fidelity schedulers, where

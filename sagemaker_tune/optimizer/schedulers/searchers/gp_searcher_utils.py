@@ -11,7 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from collections import Counter
-from typing import NamedTuple, Callable
+from typing import Callable
+from dataclasses import dataclass
 
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
@@ -21,7 +22,8 @@ from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges 
     import HyperparameterRanges
 
 
-class MapReward(NamedTuple):
+@dataclass
+class MapReward:
     forward: Callable[[float], float]
     reverse: Callable[[float], float]
 

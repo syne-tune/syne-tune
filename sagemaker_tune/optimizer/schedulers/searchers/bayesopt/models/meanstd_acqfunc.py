@@ -12,7 +12,8 @@
 # permissions and limitations under the License.
 import numpy as np
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, Optional, NamedTuple, Set, List
+from typing import Dict, Tuple, Optional, Set, List
+from dataclasses import dataclass
 import itertools
 
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
@@ -33,7 +34,8 @@ PredictionsPerOutput = Dict[str, List[Dict[str, np.ndarray]]]
 SamplePredictionsPerOutput = Dict[str, Dict[str, np.ndarray]]
 
 
-class HeadWithGradient(NamedTuple):
+@dataclass
+class HeadWithGradient:
     """
     `gradient` maps each output model to a dict of head gradients, whose keys
     are those used by `predict` (e.g., `mean`, `std`)
