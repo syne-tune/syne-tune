@@ -69,13 +69,6 @@ def experiment_path(
         return local_path
 
 
-def s3_sanitize_path_name(path: str) -> str:
-    """
-    S3 does not allow uppercase letters or underscores.
-    """
-    return path.lower().replace("_", "-")
-
-
 def s3_experiment_path(
         s3_bucket: Optional[str] = None, experiment_name: Optional[str] = None,
         tuner_name: Optional[str] = None) -> str:

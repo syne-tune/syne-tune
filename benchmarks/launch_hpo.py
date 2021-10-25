@@ -33,9 +33,10 @@ from sagemaker_tune.util import s3_experiment_path, s3_sanitize_path_name
 from launch_utils import parse_args, estimator_kwargs_from_benchmark_params
 from benchmark_factory import benchmark_factory
 from scheduler_factory import scheduler_factory, setup_scheduler_from_backend
-from utils import dict_get
+from utils import dict_get, s3_sanitize_path_name
 
 logger = logging.getLogger(__name__)
+
 
 
 if __name__ == '__main__':

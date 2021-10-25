@@ -14,7 +14,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Optional
 
 import boto3
 import pandas as pd
@@ -74,13 +74,19 @@ class ExperimentResult:
         return self.tuner.scheduler.__class__.__name__
 
 
-def download_single_experiment(tuner_name: str):
+def download_single_experiment(
+        tuner_name: str,
+        s3_bucket: Optional[str] = None,
+        experiment_name: Optional[str] = None,
+):
     """
     Downloads results from s3 of a tuning experiment previously run with remote launcher.
-    :param tuner_name:
+    :param tuner_name: named of the tuner to be retrieved.
+    :param s3_bucket: If not given, the default bucket for the SageMaker session is used
+    :param experiment_name: If given, this is used as first directory.
     :return:
     """
-    s3_path = s3_experiment_path(s3_bucket=None, tuner_name=tuner_name)
+    s3_path = s3_experiment_path(s3_bucket=s3_bucket, tuner_name=tuner_name, experiment_name=experiment_name)
     tgt_dir = experiment_path(tuner_name=tuner_name)
     tgt_dir.mkdir(exist_ok=True, parents=True)
     s3 = boto3.client('s3')
