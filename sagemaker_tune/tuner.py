@@ -63,8 +63,9 @@ class Tuner:
         :param sleep_time: time to sleep when all workers are busy
         :param results_update_interval: frequency at which results are updated and stored in seconds
         :param max_failures: max failures allowed,
-        :param tuner_name: name associated with the tuning experiment, default to a random date string. It must be
-         unique and can only consists in alpha-digits characters, possibly separated by '-'.
+        :param tuner_name: name associated with the tuning experiment, default to the name of the entrypoint.
+        It can only consists in alpha-digits characters, possibly separated by '-'. A postfix with a date time-stamp
+        is added to ensure unicity.
         :param asynchronous_scheduling: whether to use asynchronous scheduling when scheduling new trials. If `True`,
         trials are scheduled as soon as a worker is available, if `False`, the tuner waits that all trials are finished
          before scheduling a new batch.
