@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 import json
 import logging
+import re
 import time
 from collections import OrderedDict
 from pathlib import Path
@@ -26,7 +27,7 @@ from sagemaker_tune.constants import SMT_TUNER_CREATION_TIMESTAMP
 from sagemaker_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from sagemaker_tune.tuner_callback import TunerCallback, StoreResultsCallback
 from sagemaker_tune.tuning_status import TuningStatus, print_best_metric_found
-from sagemaker_tune.util import RegularCallback, experiment_path, name_from_base
+from sagemaker_tune.util import RegularCallback, experiment_path, name_from_base, check_valid_sagemaker_name
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,8 @@ class Tuner:
         :param sleep_time: time to sleep when all workers are busy
         :param results_update_interval: frequency at which results are updated and stored in seconds
         :param max_failures: max failures allowed,
-        :param tuner_name: name associated with the tuning experiment, default to a random date string. must be unique.
+        :param tuner_name: name associated with the tuning experiment, default to a random date string. It must be
+         unique and can only consists in alpha-digits characters, possibly separated by '-'.
         :param asynchronous_scheduling: whether to use asynchronous scheduling when scheduling new trials. If `True`,
         trials are scheduled as soon as a worker is available, if `False`, the tuner waits that all trials are finished
          before scheduling a new batch.
@@ -81,14 +83,14 @@ class Tuner:
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
 
+        if tuner_name is not None:
+            check_valid_sagemaker_name(tuner_name)
+        else:
+            tuner_name = Path(self.backend.entrypoint_path()).stem.replace("_", "-")
+        self.name = name_from_base(tuner_name, default="smt-tuner")
+
         # we keep track of the last result seen to send it to schedulers when trials complete.
         self.last_seen_result_per_trial = {}
-
-        if tuner_name is not None:
-            tuner_name = tuner_name.replace("_", "-")
-        else:
-            tuner_name = Path(self.backend.entrypoint_path()).stem
-        self.name = name_from_base(tuner_name, default="smt-tuner")
         self.tuner_path = Path(experiment_path(tuner_name=self.name))
 
         logger.info(f"results of trials will be saved on {self.tuner_path}")

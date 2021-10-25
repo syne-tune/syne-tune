@@ -28,14 +28,15 @@ from sagemaker_tune.tuner import Tuner
 from sagemaker_tune.remote.remote_launcher import RemoteLauncher
 from sagemaker_tune.backend.sagemaker_backend.estimator_factory import \
     sagemaker_estimator_factory
-from sagemaker_tune.util import s3_experiment_path
+from sagemaker_tune.util import s3_experiment_path, s3_sanitize_path_name
 
 from launch_utils import parse_args, estimator_kwargs_from_benchmark_params
 from benchmark_factory import benchmark_factory
 from scheduler_factory import scheduler_factory, setup_scheduler_from_backend
-from utils import dict_get
+from utils import dict_get, s3_sanitize_path_name
 
 logger = logging.getLogger(__name__)
+
 
 
 if __name__ == '__main__':
@@ -208,10 +209,11 @@ if __name__ == '__main__':
 
     # Loop over all combinations
     experiment_name = dict_get(orig_params, 'experiment_name', 'smtune')
-    s3_path = s3_experiment_path(
+    s3_path = s3_sanitize_path_name(s3_experiment_path(
         s3_bucket=orig_params.get('s3_bucket'),
         experiment_name=None if orig_params['no_experiment_subdirectory'] \
             else experiment_name)
+    )
     skip_initial_experiments = orig_params['skip_initial_experiments']
     assert skip_initial_experiments >= 0, \
         "--skip_initial_experiments must be nonnegative"

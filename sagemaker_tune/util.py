@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import os
+import re
 import string
 import random
 import time
@@ -69,13 +70,6 @@ def experiment_path(
         return local_path
 
 
-def s3_sanitize_path_name(path: str) -> str:
-    """
-    S3 does not allow uppercase letters or underscores.
-    """
-    return path.lower().replace("_", "-")
-
-
 def s3_experiment_path(
         s3_bucket: Optional[str] = None, experiment_name: Optional[str] = None,
         tuner_name: Optional[str] = None) -> str:
@@ -94,7 +88,12 @@ def s3_experiment_path(
     for part in (experiment_name, tuner_name):
         if part is not None:
             s3_path += '/' + part
-    return s3_sanitize_path_name(s3_path)
+    return s3_path
+
+
+def check_valid_sagemaker_name(name: str):
+    assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(name), \
+        f"{name} should consists in alpha-digits possibly separated by character -"
 
 
 def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:
@@ -113,9 +112,10 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
         str: Input parameter with appended timestamp.
     """
     if base is None:
+        check_valid_sagemaker_name(default)
         base = default
     else:
-        base = base.replace("_", "-")
+        check_valid_sagemaker_name(base)
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]
