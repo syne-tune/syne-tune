@@ -57,7 +57,7 @@ if __name__ == '__main__':
         mode=mode,
         metric=metric,
         type='cost_promotion',
-        cost_attr=benchmark['elapsed_time_attr'],
+        rung_system_kwargs={'cost_attr': benchmark['elapsed_time_attr']},
         random_seed=random_seed)
 
     stop_criterion = StoppingCriterion(max_wallclock_time=120)

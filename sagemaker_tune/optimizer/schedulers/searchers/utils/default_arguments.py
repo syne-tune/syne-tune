@@ -74,6 +74,12 @@ class Boolean(CheckType):
             "{}: Value = {} must be boolean".format(key, value)
 
 
+class Dictionary(CheckType):
+    def assert_valid(self, key: str, value):
+        assert isinstance(value, dict), \
+            "{}: Value = {} must be a dictionary".format(key, value)
+
+
 def check_and_merge_defaults(
         options: dict, mandatory: Set[str], default_options: dict,
         constraints: Dict[str, CheckType] = None, dict_name=None) -> dict:
@@ -99,6 +105,15 @@ def check_and_merge_defaults(
         if key not in result_options:
             log_msg += (prefix + "Key '{}': Imputing default value {}\n".format(key, value))
             result_options[key] = value
+        # If the argument is a dict, we impute only the missing entries
+        if isinstance(value, dict):
+            result_dict = result_options[key]
+            assert isinstance(result_dict, dict), \
+                f"Key '{key}': Value must be dictionary, but is {result_dict}"
+            for kd, vd in value.items():
+                if kd not in result_dict:
+                    log_msg += (prefix + "Key '{}' in dict {}: Imputing default value {}\n".format(kd, key, vd))
+                    result_dict[kd] = vd
     if log_msg:
         logger.info(log_msg)
     # Check constraints

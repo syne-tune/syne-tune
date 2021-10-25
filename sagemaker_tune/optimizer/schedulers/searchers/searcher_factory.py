@@ -29,7 +29,7 @@ __all__ = ['searcher_factory']
 
 
 _OUR_MULTIFIDELITY_SCHEDULERS = {
-    'hyperband_stopping', 'hyperband_promotion', 'hyperband_cost_promotion'}
+    'hyperband_stopping', 'hyperband_promotion', 'hyperband_cost_promotion', 'hyperband_pasha'}
 
 _OUR_SCHEDULERS = _OUR_MULTIFIDELITY_SCHEDULERS | {'fifo'}
 
