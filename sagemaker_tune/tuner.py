@@ -75,6 +75,9 @@ class Tuner:
         if tuner_name is not None:
             assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(tuner_name), \
                 f"{tuner_name} should consists in alpha-digits possibly separated by character -"
+        else:
+            tuner_name = Path(self.backend.entrypoint_path()).stem
+
         self.backend = backend
         self.scheduler = scheduler
         self.n_workers = n_workers
@@ -88,8 +91,6 @@ class Tuner:
 
         # we keep track of the last result seen to send it to schedulers when trials complete.
         self.last_seen_result_per_trial = {}
-
-        tuner_name = Path(self.backend.entrypoint_path()).stem
         self.name = name_from_base(tuner_name, default="smt-tuner")
         self.tuner_path = Path(experiment_path(tuner_name=self.name))
 
