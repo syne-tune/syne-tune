@@ -76,7 +76,3 @@ def get_cost_model_for_batch_size(
         return cost_model
     except Exception:
         return None
-
-
-def s3_sanitize_path_name(path: str) -> str:
-    return path.lower().replace("_", "-")
