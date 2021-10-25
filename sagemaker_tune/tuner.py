@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 import json
 import logging
+import re
 import time
 from collections import OrderedDict
 from pathlib import Path
@@ -62,7 +63,8 @@ class Tuner:
         :param sleep_time: time to sleep when all workers are busy
         :param results_update_interval: frequency at which results are updated and stored in seconds
         :param max_failures: max failures allowed,
-        :param tuner_name: name associated with the tuning experiment, default to a random date string. must be unique.
+        :param tuner_name: name associated with the tuning experiment, default to a random date string. It must be
+         unique and can only consists in alpha-digits characters, possibly separated by '-'.
         :param asynchronous_scheduling: whether to use asynchronous scheduling when scheduling new trials. If `True`,
         trials are scheduled as soon as a worker is available, if `False`, the tuner waits that all trials are finished
          before scheduling a new batch.
@@ -70,6 +72,8 @@ class Tuner:
         to the metadata provided by the user, `SMT_TUNER_CREATION_TIMESTAMP` is always included which measures
         the time-stamp when the tuner started to run.
         """
+        assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(tuner_name), \
+            f"{tuner_name} should consists in alpha-digits possibly separated by character -"
         self.backend = backend
         self.scheduler = scheduler
         self.n_workers = n_workers
