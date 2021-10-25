@@ -72,8 +72,9 @@ class Tuner:
         to the metadata provided by the user, `SMT_TUNER_CREATION_TIMESTAMP` is always included which measures
         the time-stamp when the tuner started to run.
         """
-        assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(tuner_name), \
-            f"{tuner_name} should consists in alpha-digits possibly separated by character -"
+        if tuner_name is not None:
+            assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(tuner_name), \
+                f"{tuner_name} should consists in alpha-digits possibly separated by character -"
         self.backend = backend
         self.scheduler = scheduler
         self.n_workers = n_workers
@@ -88,10 +89,7 @@ class Tuner:
         # we keep track of the last result seen to send it to schedulers when trials complete.
         self.last_seen_result_per_trial = {}
 
-        if tuner_name is not None:
-            tuner_name = tuner_name.replace("_", "-")
-        else:
-            tuner_name = Path(self.backend.entrypoint_path()).stem
+        tuner_name = Path(self.backend.entrypoint_path()).stem
         self.name = name_from_base(tuner_name, default="smt-tuner")
         self.tuner_path = Path(experiment_path(tuner_name=self.name))
 
