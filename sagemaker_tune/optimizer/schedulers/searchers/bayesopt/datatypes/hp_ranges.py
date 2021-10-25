@@ -15,8 +15,8 @@ from typing import Tuple, List, Iterable, Dict
 import numpy as np
 from numpy.random import RandomState
 
-from sagemaker_tune.search_space import Domain, Categorical
-from sagemaker_tune.search_space import non_constant_hyperparameter_keys
+from sagemaker_tune.search_space import Domain, Categorical, \
+    non_constant_hyperparameter_keys
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 

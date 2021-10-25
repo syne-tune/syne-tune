@@ -52,6 +52,14 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         is recommended.
     :param num_initial_candidates: how many initial candidates to generate, if
         possible
+    :param num_initial_candidates_for_batch: This is used only if
+        num_requested_candidates > 1 and greedy_batch_selection is True. In
+        this case, num_initial_candidates_for_batch overrides
+        num_initial_candidates when selecting all but the first candidate for
+        the batch. Typically, num_initial_candidates is larger than
+        num_initial_candidates_for_batch in this case, which speeds up
+        selecting large batches, but still select the first candidate very
+        thoroughly
     :param local_optimizer: local optimizer which starts from score minimizer.
         If a batch is selected in one go (not greedily), then local
         optimizations are started from the top num_requested_candidates ranked
@@ -94,6 +102,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     num_requested_candidates: int
     greedy_batch_selection: bool
     duplicate_detector: DuplicateDetector
+    num_initial_candidates_for_batch: int = None
     profiler: SimpleProfiler = None
     sample_unique_candidates: bool = False
     debug_log: Optional[DebugLogPrinter] = None
@@ -127,8 +136,14 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                         f"{len(candidates)} configs instead of {self.num_requested_candidates}")
                     break
                 just_added = False
+            if self.num_initial_candidates_for_batch is not None \
+                    and self.greedy_batch_selection and outer_iter > 0:
+                num_initial_candidates = self.num_initial_candidates_for_batch
+            else:
+                num_initial_candidates = self.num_initial_candidates
             inner_candidates = self._get_next_candidates(
-                num_inner_candidates, model=model)
+                num_inner_candidates, model=model,
+                num_initial_candidates=num_initial_candidates)
             candidates.extend(inner_candidates)
             if outer_iter < num_outer_iterations - 1 and len(inner_candidates) > 0:
                 just_added = True
@@ -153,11 +168,16 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
 
         return candidates
 
-    def _get_next_candidates(self, num_candidates: int,
-                             model: Optional[SurrogateModel]):
+    def _get_next_candidates(
+            self, num_candidates: int, model: Optional[SurrogateModel],
+            num_initial_candidates: Optional[int] = None):
+        if num_initial_candidates is None:
+            num_initial_candidates = self.num_initial_candidates
         # generate a random candidates among which to pick the ones to be
         # locally optimized
-        logger.info("BayesOpt Algorithm: Generating initial candidates.")
+        logger.info(
+            f"BayesOpt Algorithm: Generating {num_initial_candidates} "
+            "initial candidates.")
         if self.profiler is not None:
             self.profiler.push_prefix('nextcand')
             self.profiler.start('all')
@@ -166,13 +186,13 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             # This can be expensive, depending on what type Candidate is
             initial_candidates = generate_unique_candidates(
                 self.initial_candidates_generator,
-                self.num_initial_candidates, self.exclusion_candidates)
+                num_initial_candidates, self.exclusion_candidates)
         else:
             # Will not return candidates in `exclusion_candidates`, but there
             # can be duplicates
             initial_candidates = \
                 self.initial_candidates_generator.generate_candidates_en_bulk(
-                    self.num_initial_candidates,
+                    num_initial_candidates,
                     exclusion_list=self.exclusion_candidates)
         if self.profiler is not None:
             self.profiler.stop('genrandom')
