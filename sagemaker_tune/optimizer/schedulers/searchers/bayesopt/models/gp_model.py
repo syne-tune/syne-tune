@@ -10,8 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, List, Optional, NamedTuple, Union
+from typing import Dict, List, Optional, Union
+from dataclasses import dataclass
 import numpy as np
+
 import logging
 
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
@@ -122,7 +124,8 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         return candidates
 
 
-class InternalCandidateEvaluations(NamedTuple):
+@dataclass
+class InternalCandidateEvaluations:
     features: np.ndarray
     targets: np.ndarray
     mean: float

@@ -12,12 +12,14 @@
 # permissions and limitations under the License.
 import logging
 import numpy as np
-from typing import NamedTuple, Dict
+from typing import Dict
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
 
-class RungEntry(NamedTuple):
+@dataclass
+class RungEntry:
     level: int  # Rung level r_j
     prom_quant: float  # Promotion quantile q_j
     data: Dict  # Data of all previous jobs reaching the level

@@ -11,7 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from abc import ABC, abstractmethod
-from typing import List, NamedTuple
+from typing import List
+from dataclasses import dataclass
 
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Configuration
@@ -22,7 +23,8 @@ __all__ = ['CostValue',
            'CostModel']
 
 
-class CostValue(NamedTuple):
+@dataclass
+class CostValue:
     """
     Represents cost value (c0(x), c1(x)):
         c_0(x): Startup cost for evaluation at config x

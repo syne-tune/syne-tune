@@ -14,8 +14,7 @@
 # or to set up the optimization
 
 import autograd.numpy as anp
-from typing import NamedTuple
-
+from dataclasses import dataclass
 
 DEFAULT_ENCODING = "logarithm"  # the other choices is positive
 
@@ -46,14 +45,16 @@ MIN_CHOLESKY_DIAGONAL_VALUE = 1e-10
 DATA_TYPE = anp.float64
 
 
-class OptimizationConfig(NamedTuple):
+@dataclass
+class OptimizationConfig:
     lbfgs_tol: float
     lbfgs_maxiter : int
     verbose : bool
     n_starts : int
 
 
-class MCMCConfig(NamedTuple):
+@dataclass
+class MCMCConfig:
     """
     `n_samples` is the total number of samples drawn. The first `n_burnin` of
     these are dropped (burn-in), and every `n_thinning` of the rest is

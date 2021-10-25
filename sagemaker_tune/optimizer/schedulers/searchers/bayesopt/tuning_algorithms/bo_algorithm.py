@@ -10,8 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, NamedTuple, Tuple, Iterator, Optional
+from typing import List, Tuple, Iterator, Optional
 import logging
+from dataclasses import dataclass
 import numpy as np
 import itertools
 
@@ -38,7 +39,8 @@ from sagemaker_tune.optimizer.schedulers.utils.simple_profiler \
 logger = logging.getLogger(__name__)
 
 
-class BayesianOptimizationAlgorithm(NamedTuple, NextCandidatesAlgorithm):
+@dataclass
+class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     """
     Core logic of the Bayesian optimization algorithm
     :param initial_candidates_generator: generator of candidates
