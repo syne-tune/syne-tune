@@ -57,7 +57,49 @@ _CONSTRAINTS = {
 }
 
 
-class FIFOScheduler(TrialScheduler):
+class ResourceLevelsScheduler(TrialScheduler):
+    def _infer_max_resource_level_getval(self, name):
+        if name in self.config_space and name not in self._hyperparameter_keys:
+            return self.config_space[name]
+        else:
+            return None
+
+    def _infer_max_resource_level(
+            self, max_resource_level: Optional[int],
+            max_resource_attr: Optional[str]):
+        """
+        Helper to infer `max_resource_level` if not explicitly given.
+
+        :param max_resource_level: Value explicitly provided, or None
+        :param max_resource_attr: Name of max resource attribute in
+            `config_space` (optional)
+        :return:
+        """
+        inferred_max_t = None
+        names = ('epochs', 'max_t', 'max_epochs')
+        if max_resource_attr is not None:
+            names = (max_resource_attr,) + names
+        for name in names:
+            inferred_max_t = self._infer_max_resource_level_getval(name)
+            if inferred_max_t is not None:
+                break
+        if max_resource_level is not None:
+            if inferred_max_t is not None and max_resource_level != inferred_max_t:
+                logger.warning(
+                    f"max_resource_level = {max_resource_level} is different "
+                    f"from the value {inferred_max_t} inferred from "
+                    "config_space")
+        else:
+            # It is OK if max_resource_level cannot be inferred
+            if inferred_max_t is not None:
+                logger.info(
+                    f"max_resource_level = {inferred_max_t}, as inferred "
+                    "from config_space")
+            max_resource_level = inferred_max_t
+        return max_resource_level
+
+
+class FIFOScheduler(ResourceLevelsScheduler):
     r"""Simple scheduler that just runs trials in submission order.
 
     Parameters
