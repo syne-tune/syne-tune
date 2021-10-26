@@ -177,12 +177,10 @@ class BaseSearcher(ABC):
         pass
 
     def on_trial_result(
-            self, trial_id: str, config: Dict, result: Dict, update: bool,
-            time_since_start: float):
+            self, trial_id: str, config: Dict, result: Dict, update: bool):
         """Inform searcher about result
 
-        The scheduler passes every result, obtained at `time_since_start`
-        since the start of the experiment. If `update` is True, the searcher
+        The scheduler passes every result. If `update` is True, the searcher
         should update its surrogate model (if any), otherwise `result` is an
         intermediate result not modelled.
 
@@ -194,7 +192,6 @@ class BaseSearcher(ABC):
         :param config:
         :param result:
         :param update: Should surrogate model be updated?
-        :param time_since_start: Time since start of experiment
         """
         if update:
             self._update(config, result)
@@ -326,7 +323,7 @@ class RandomSearcher(BaseSearcher):
         else:
             random_seed = kwargs.get('random_seed', 31415927)
         self.random_state = np.random.RandomState(random_seed)
-        self._resource_attr = None
+        self._resource_attr = kwargs.get('resource_attr')
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)
         # Debug log printing (switched on by default)
         debug_log = kwargs.get('debug_log', True)

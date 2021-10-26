@@ -142,8 +142,8 @@ class FIFOScheduler(TrialScheduler):
         # attributes (in order): epochs, max_t, max_epochs.
         # In any case, the max_t argument takes precedence. If it is None, we use
         # the one inferred from config_space.
-        self.max_t = self._infer_max_t(
-            kwargs.get('max_t'), config_space, self.max_resource_attr)
+        self.max_t = self._infer_max_resource_level(
+            kwargs.get('max_t'), self.max_resource_attr)
         # Generator for random seeds
         random_seed = kwargs.get('random_seed')
         if random_seed is None:
@@ -215,34 +215,6 @@ class FIFOScheduler(TrialScheduler):
 
     def _extend_search_options(self, search_options: Dict) -> Dict:
         return search_options
-
-    def _infer_max_t_getval(self, name, config_space):
-        if name in config_space and name not in self._hyperparameter_keys:
-            return config_space[name]
-        else:
-            return None
-
-    def _infer_max_t(self, max_t, config_space, max_resource_attr):
-        inferred_max_t = None
-        names = ('epochs', 'max_t', 'max_epochs')
-        if max_resource_attr is not None:
-            names = (max_resource_attr,) + names
-        for name in names:
-            inferred_max_t = self._infer_max_t_getval(name, config_space)
-            if inferred_max_t is not None:
-                break
-        if max_t is not None:
-            if inferred_max_t is not None and max_t != inferred_max_t:
-                logger.warning(
-                    f"max_t = {max_t} is different from the value "
-                    f"{inferred_max_t} inferred from config_space")
-        else:
-            # It is OK if max_t cannot be inferred
-            if inferred_max_t is not None:
-                logger.info(
-                    f"max_t = {inferred_max_t}, as inferred from config_space")
-            max_t = inferred_max_t
-        return max_t
 
     def _initialize_searcher(self):
         if not self._searcher_initialized:
@@ -350,11 +322,9 @@ class FIFOScheduler(TrialScheduler):
                 logger.info(
                     f"trial_id {trial_id}: Skipping empty result")
         else:
-            time_since_start = self._elapsed_time()
             config = self._preprocess_config(trial.config)
             self.searcher.on_trial_result(
-                trial_id, config, result=result, update=False,
-                time_since_start=time_since_start)
+                trial_id, config, result=result, update=False)
             # Extra info in debug mode
             log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
             for k, is_float in (('epoch', False), ('elapsed_time', True)):
@@ -372,8 +342,7 @@ class FIFOScheduler(TrialScheduler):
             self._initialize_searcher()
             config = self._preprocess_config(trial.config)
             self.searcher.on_trial_result(
-                str(trial.trial_id), config, result=result, update=True,
-                time_since_start=self._elapsed_time())
+                str(trial.trial_id), config, result=result, update=True)
 
     def state_dict(self) -> Dict:
         record = super().state_dict()
