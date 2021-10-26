@@ -750,8 +750,7 @@ class HyperbandScheduler(FIFOScheduler):
                             msg += f" to {next_milestone}"
                         logger.info(msg)
             self.searcher.on_trial_result(
-                trial_id, config, result=result, update=do_update,
-                time_since_start=time_since_start)
+                trial_id, config, result=result, update=do_update)
         # Extra info in debug mode
         log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
         for k, is_float in (
