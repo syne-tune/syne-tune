@@ -14,7 +14,7 @@
 BERT-like models for text classification
 """
 
-from typing import Optional
+from typing import Optional, List
 import os
 import time
 
@@ -101,6 +101,7 @@ class BERTClassificationModel(nn.Module):
             eval_metric: str = 'acc',
             max_grad_norm: int = 1,
             checkpoint_config: Optional[dict] = None,
+            rung_levels: Optional[List[int]] = None,
             temp: float = 1.0):
         """
         Custom training loop for fine-tuning BERT model. Supports advanced
@@ -123,6 +124,9 @@ class BERTClassificationModel(nn.Module):
             eval_metric: The main metric to use for evaluation
             max_grad_norm: The maximum gradient norm to use for gradient clipping
             checkpoint_config: The configuration dictionary used for checkpointing
+            rung_levels: If this is given, we evaluate and report results only
+                for resource levels in this list. This is used if evaluations take
+                a significant amount of time, compared to training
             temp: The temperature parameter for distillation
         """
 
@@ -186,8 +190,11 @@ class BERTClassificationModel(nn.Module):
                 # OR when training is complete
                 evaluate_model = False
                 if n_batches_seen % n_batches_between_evals == 0 or n_batches_seen == n_batches_total:
-                    evaluate_model = True
                     n_evaluations += 1
+                    if rung_levels is None:
+                        evaluate_model = True
+                    else:
+                        evaluate_model = n_evaluations in rung_levels
 
                 # If we use a promotion-based HPO scheduler, we might want to
                 # resume training from a previous checkpoint and therefore skip

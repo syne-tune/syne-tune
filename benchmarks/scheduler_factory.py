@@ -122,6 +122,8 @@ def scheduler_factory(
         scheduler_options['mode'] = benchmark['mode']
         if scheduler != 'fifo':
             scheduler_options['resource_attr'] = benchmark['resource_attr']
+            scheduler_options['rung_levels_attr'] = benchmark.get(
+                'rung_levels_attr')
         if scheduler == 'hyperband_cost_promotion' or searcher.startswith(
                 'bayesopt_cost'):
             # Benchmark may define 'cost_attr'. If not, check for

@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 _ARGUMENT_KEYS = {
     'resource_attr', 'grace_period', 'reduction_factor', 'brackets', 'type',
     'searcher_data', 'do_snapshots', 'rung_system_per_bracket', 'rung_levels',
+    'rung_levels_attr',
     'rung_system_kwargs'}
 
 _DEFAULT_OPTIONS = {
@@ -70,6 +71,7 @@ _CONSTRAINTS = {
     'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
     'do_snapshots': Boolean(),
     'rung_system_per_bracket': Boolean(),
+    'rung_levels_attr': String(),
     'rung_system_kwargs': Dictionary(),
 }
 
@@ -262,6 +264,9 @@ class HyperbandScheduler(FIFOScheduler):
         stop signal is received.
         If given, `max_resource_attr` is also used in the mechanism to infer
         `max_t` (if not given).
+    rung_levels_attr : bool (optional)
+        If given, the list of rung levels is appended to each config returned
+        by `suggest` (as string, entries are separated by space)
     rungs_system_kwargs : dict
         Arguments passed to the rung system:
             cost_attr : str
@@ -324,6 +329,7 @@ class HyperbandScheduler(FIFOScheduler):
         self._resource_attr = kwargs['resource_attr']
         self._rung_system_kwargs = kwargs['rung_system_kwargs']
         self._cost_attr = self._rung_system_kwargs['cost_attr']
+        self._rung_levels_attr = kwargs.get('rung_levels_attr')
         # Superclass constructor
         resume = kwargs['resume']
         kwargs['resume'] = False  # Cannot be done in superclass
@@ -453,6 +459,10 @@ class HyperbandScheduler(FIFOScheduler):
             # The new trial should only run until the next milestone.
             # This needs its config to be modified accordingly.
             config[self.max_resource_attr] = kwargs['milestone']
+        if self._rung_levels_attr is not None:
+            # Communicate rung levels to training function
+            config[self._rung_levels_attr] = ' '.join(
+                [str(x) for x in self.terminator.rung_levels])
 
         self._active_trials[trial_id] = {
             'config': copy.copy(config),

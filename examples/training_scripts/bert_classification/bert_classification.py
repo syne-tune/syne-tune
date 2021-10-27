@@ -69,6 +69,8 @@ dataset_info = {
 
 MAX_RESOURCE_ATTR = 'max_num_evaluations'
 
+RUNG_LEVELS_ATTR = 'rung_levels'
+
 
 def bert_classification_default_params(params=None):
     # Set instance type depending on the backend
@@ -92,6 +94,7 @@ def bert_classification_default_params(params=None):
         'pytorch_version': '1.6',
         'py_version': 'py36',
         'points_to_evaluate': points_to_evaluate,
+        'rung_levels_attr': RUNG_LEVELS_ATTR,
     }
 
 
@@ -178,6 +181,12 @@ def objective(config: dict):
         lr_warmup_proportion=config['lr_warmup_proportion'],
         n_training_steps=len(train_loader) * config['n_epochs'])
 
+    # The scheduler may tell us at which resource levels to evaluate
+    rung_levels = config.get(RUNG_LEVELS_ATTR)
+    if rung_levels is not None:
+        rung_levels = [int(x) for x in rung_levels.split()]
+        print(f"Evaluations are only done at resource levels {rung_levels}")
+
     # Fine-tune model (set weight seed again in case we want to re-init some layers)
     print("TRAINING MODEL...")
     set_seed(config['weight_init_seed'])
@@ -195,7 +204,8 @@ def objective(config: dict):
         n_top_layers_to_reinit=config['n_top_layers_to_reinit'],
         eval_metric=dataset_info[config['dataset_name']]['eval_metric'],
         checkpoint_config={
-            key: config[key] for key in [SMT_CHECKPOINT_DIR, 'trial_id'] if key in config}
+            key: config[key] for key in [SMT_CHECKPOINT_DIR, 'trial_id'] if key in config},
+        rung_levels=rung_levels,
     )
 
 
@@ -214,6 +224,7 @@ if __name__ == '__main__':
             parser.add_argument(
                 '--' + param, type=type(default), default=default)
     parser.add_argument('--' + MAX_RESOURCE_ATTR, type=int, required=True)
+    parser.add_argument('--' + RUNG_LEVELS_ATTR, type=str)
 
     # Add tunable hyperparameters and checkpointing to parsers
     add_to_argparse(parser, _config_space)
