@@ -194,10 +194,10 @@ class BaseSearcher(ABC):
         :param update: Should surrogate model be updated?
         """
         if update:
-            self._update(config, result)
+            self._update(trial_id, config, result)
 
     @abstractmethod
-    def _update(self, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: Dict, result: Dict):
         """Update surrogate model with result
 
         :param config:
@@ -396,10 +396,9 @@ class RandomSearcher(BaseSearcher):
             logger.warning(msg)
         return new_config
 
-    def _update(self, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: Dict, result: Dict):
         if self._debug_log is not None:
             metric_val = result[self._metric]
-            trial_id = self._debug_log.trial_id(config)
             if self._resource_attr is not None:
                 # For HyperbandScheduler, also add the resource attribute
                 resource = int(result[self._resource_attr])
