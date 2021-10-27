@@ -47,8 +47,7 @@ def test_bore_xgboost():
         config = searcher.get_config(trial_id=i)
         result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
 
-        searcher.on_trial_result('%d' % i, config, result, update=True,
-                                 time_since_start=i)
+        searcher.on_trial_result('%d' % i, config, result, update=True)
 
     config = searcher.get_config(trial_id=10)
 
@@ -60,8 +59,7 @@ def test_bore_gp():
         config = searcher.get_config(trial_id=i)
         result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
 
-        searcher.on_trial_result('%d' % i, config, result, update=True,
-                                 time_since_start=i)
+        searcher.on_trial_result('%d' % i, config, result, update=True)
 
     config = searcher.get_config(trial_id=10)
 
@@ -73,8 +71,7 @@ def test_bore_mlp():
         config = searcher.get_config(trial_id=i)
         result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
 
-        searcher.on_trial_result('%d' % i, config, result, update=True,
-                                 time_since_start=i)
+        searcher.on_trial_result('%d' % i, config, result, update=True)
 
     config = searcher.get_config(trial_id=10)
 
@@ -86,8 +83,7 @@ def test_bore_rf():
         config = searcher.get_config(trial_id=i)
         result = {'accuracy': np.random.rand(), 'time': 1.0, 'step': 2}
 
-        searcher.on_trial_result('%d' % i, config, result, update=True,
-                                 time_since_start=i)
+        searcher.on_trial_result('%d' % i, config, result, update=True)
 
     config = searcher.get_config(trial_id=10)
 """

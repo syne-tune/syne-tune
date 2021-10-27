@@ -176,8 +176,7 @@ class ModelBasedSearcher(BaseSearcher):
         return crit_val
 
     def on_trial_result(
-            self, trial_id: str, config: Dict, result: Dict, update: bool,
-            time_since_start: float):
+            self, trial_id: str, config: Dict, result: Dict, update: bool):
         # If both `cost_attr` and `resource_attr` are given, cost data (if
         # given) is written out from every `result`, independent of `update`
         cattr = self._cost_attr

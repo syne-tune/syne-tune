@@ -11,11 +11,14 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Optional, Dict, Union, List, Tuple
+from typing import Optional, Dict, List
+import logging
 
 from sagemaker_tune.backend.trial_status import Trial
 from sagemaker_tune.search_space import non_constant_hyperparameter_keys, \
     cast_config_values
+
+logger = logging.getLogger(__name__)
 
 
 class SchedulerDecision:

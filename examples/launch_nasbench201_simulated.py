@@ -14,6 +14,7 @@
 Example for running the simulator back-end on a tabulated benchmark
 """
 import logging
+import argparse
 
 from sagemaker_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
@@ -29,6 +30,13 @@ from examples.training_scripts.nasbench201.nasbench201 import \
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
+    parser = argparse.ArgumentParser(
+        description='Synchronous Hyperband on NASBench201')
+    parser.add_argument(
+        '--dataset_s3_bucket', type=str, required=True,
+        help='Name of S3 bucket where NASBench201 files can be downloaded')
+    params = vars(parser.parse_args())
+    dataset_s3_bucket = params['dataset_s3_bucket']
 
     random_seed = 31415927
     n_workers = 4
@@ -44,6 +52,8 @@ if __name__ == '__main__':
     # If you don't like the default config_space, change it here. But let
     # us use the default
     config_space = benchmark['config_space']
+    # TODO: Needs better solution!
+    config_space['dataset_s3_bucket'] = dataset_s3_bucket
 
     # Simulator back-end
     # If the benchmark provides a table object, use that. Otherwise, call the

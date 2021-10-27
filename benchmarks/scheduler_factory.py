@@ -37,13 +37,32 @@ def _check_searcher(searcher, supported_searchers):
 
 supported_schedulers = {
     'fifo',
+    'fifo_synchronous',
     'hyperband_stopping',
     'hyperband_promotion',
     'hyperband_cost_promotion',
     'hyperband_pasha',
     'mo_asha',
     'raytune_fifo',
+    'raytune_fifo_synchronous',
     'raytune_hyperband',
+}
+
+
+# Note: If schedulers are the same for async and sync, only the async
+# names are listed here
+schedulers_with_search_options = {
+    'fifo': FIFOScheduler,
+    'hyperband_stopping': HyperbandScheduler,
+    'hyperband_promotion': HyperbandScheduler,
+    'hyperband_cost_promotion': HyperbandScheduler,
+    'hyperband_pasha': HyperbandScheduler,
+}
+
+
+synchronous_schedulers = {
+    'fifo_synchronous',
+    'raytune_fifo_synchronous',
 }
 
 
@@ -67,7 +86,11 @@ def scheduler_factory(
     scheduler = params['scheduler']
     assert scheduler in supported_schedulers, \
         f"scheduler = '{scheduler}' not supported ({supported_schedulers})"
-    do_synchronous = params.get('synchronous', False)
+    params['synchronous'] = scheduler in synchronous_schedulers
+    # FIFO schedulers are the same for sync or async
+    if params['synchronous']:
+        # Strip off postfix
+        scheduler = scheduler[:-len('_synchronous')]
     _default_params = dict(instance_type='ml.m4.xlarge', num_workers=4)
     _default_params.update(default_params)
     for k, v in _default_params.items():
@@ -77,18 +100,7 @@ def scheduler_factory(
         # The default value for this is num_workers + 2
         params['searcher_num_init_random'] = params['num_workers'] + 2
 
-    schedulers_with_search_options = {
-        'fifo',
-        'hyperband_stopping',
-        'hyperband_promotion',
-        'hyperband_cost_promotion',
-        'hyperband_pasha'}
     if scheduler in schedulers_with_search_options:
-        if do_synchronous and scheduler != 'fifo':
-            raise NotImplementedError(
-                "Synchronous Hyperband is not currently implemented. For "
-                "asynchronous Hyperband, drop the --synchronous. For "
-                "synchronous FIFO, use --scheduler fifo.")
         searcher = params.get('searcher')
         if searcher is None:
             searcher = 'random'
@@ -163,8 +175,7 @@ def scheduler_factory(
             if rung_system_kwargs:
                 scheduler_options['rung_system_kwargs'] = rung_system_kwargs
         # Build scheduler and searcher
-        scheduler_cls = FIFOScheduler if scheduler == 'fifo' else \
-            HyperbandScheduler
+        scheduler_cls = schedulers_with_search_options[scheduler]
         myscheduler = scheduler_cls(
             config_space,
             searcher=searcher,
@@ -190,11 +201,6 @@ def scheduler_factory(
         from sagemaker_tune.optimizer.schedulers.searchers import \
             impute_points_to_evaluate
 
-        if do_synchronous and scheduler != 'raytune_fifo':
-            raise NotImplementedError(
-                "Synchronous Hyperband is not currently implemented. For "
-                "asynchronous Hyperband, drop the --synchronous. For "
-                "synchronous FIFO, use --scheduler raytune_fifo.")
         searcher = params.get('searcher')
         if searcher is None:
             searcher = 'random'

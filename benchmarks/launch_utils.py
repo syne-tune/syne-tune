@@ -148,11 +148,6 @@ def parse_args(allow_lists_as_values=True):
                         help='The tuning job terminates once this many '
                              'training evaluations failed',
                         **allow_list)
-    parser.add_argument('--synchronous', action='store_true',
-                        help='Run synchronous (instead of asynchronous) '
-                             'scheduling: trials are started in batches of '
-                             'size num_workers. Not currently implemented for '
-                             'Hyperband scheduling.')
     parser.add_argument('--s3_bucket', type=str,
                         help='S3 bucket to write checkpoints and results to. '
                              'Defaults to default bucket of session')
@@ -166,7 +161,7 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--brackets', type=int,
                         help='Number of brackets in HyperbandScheduler',
                         **allow_list)
-    parser.add_argument('--reduction_factor', type=int,
+    parser.add_argument('--reduction_factor', type=float,
                         help='Reduction factor in HyperbandScheduler',
                         **allow_list)
     parser.add_argument('--grace_period', type=int,
