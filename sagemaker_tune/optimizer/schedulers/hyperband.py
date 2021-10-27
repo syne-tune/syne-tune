@@ -28,7 +28,7 @@ from sagemaker_tune.optimizer.schedulers.hyperband_pasha import \
     PASHARungSystem
 from sagemaker_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults, Integer, Boolean, Categorical, \
-    filter_by_key, String, Dictionary
+    filter_by_key, String, Dictionary, Float
 from sagemaker_tune.optimizer.scheduler import SchedulerDecision
 from sagemaker_tune.backend.trial_status import Trial
 
@@ -64,7 +64,7 @@ _CONSTRAINTS = {
     'resource_attr': String(),
     'resume': Boolean(),
     'grace_period': Integer(1, None),
-    'reduction_factor': Integer(2, None),
+    'reduction_factor': Float(2, None),
     'brackets': Integer(1, None),
     'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha')),
     'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
@@ -107,7 +107,7 @@ class HyperbandScheduler(FIFOScheduler):
     If `rung_levels` is not given, rung levels are specified by `grace_period`
     and `reduction_factor`:
 
-        [grace_period * (reduction_factor ** j)], j = 0, 1, ...
+        [round(grace_period * (reduction_factor ** j))], j = 0, 1, ...
 
     This is the default choice for successive halving (Hyperband).
     Note: If `rung_levels` is given, then `grace_period`, `reduction_factor`
@@ -171,7 +171,7 @@ class HyperbandScheduler(FIFOScheduler):
     grace_period : int
         Minimum resource to be used for a job. Ignored if `rung_levels` is
         given.
-    reduction_factor : int (>= 2)
+    reduction_factor : float (>= 2)
         Parameter to determine rung levels in successive halving (Hyperband).
         Ignored if `rung_levels` is given.
     rung_levels: list of int
@@ -843,14 +843,15 @@ def _get_rung_levels(rung_levels, grace_period, reduction_factor, max_t):
     else:
         # Rung levels given by grace_period, reduction_factor, max_t
         assert _is_positive_int(grace_period)
-        assert _is_positive_int(reduction_factor)
+        assert reduction_factor >= 2
         assert _is_positive_int(max_t)
         assert max_t > grace_period, \
             f"max_t ({max_t}) must be greater than grace_period ({grace_period})"
         rf = reduction_factor
         min_t = grace_period
         max_rungs = int(np.log(max_t / min_t) / np.log(rf) + 1)
-        rung_levels = [min_t * rf ** k for k in range(max_rungs)]
+        rung_levels = [int(round(min_t *  np.power(rf, k)))
+                       for k in range(max_rungs)]
         assert rung_levels[-1] <= max_t  # Sanity check
         assert len(rung_levels) >= 2, \
             f"grace_period = {grace_period}, reduction_factor = {reduction_factor}, max_t = {max_t} leads to single rung level only"

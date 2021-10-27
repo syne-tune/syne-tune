@@ -168,11 +168,8 @@ class ModelBasedSearcher(BaseSearcher):
         """
         return self._hp_ranges_in_state()
 
-    def _config_ext_update(self, config: Dict, result: Dict) -> Dict:
-        return copy.deepcopy(config)
-
     def _metric_val_update(
-            self, config_ext: Dict, crit_val: float) -> MetricValues:
+            self, config: Dict, crit_val: float, result: Dict) -> MetricValues:
         return crit_val
 
     def on_trial_result(
@@ -191,15 +188,20 @@ class ModelBasedSearcher(BaseSearcher):
         if update:
             self._update(trial_id, config, result)
 
+    def _trial_id_string(self, trial_id: str, result: Dict):
+        """
+        For multi-fidelity, we also want to output the resource level
+        """
+        return trial_id
+
     def _update(self, trial_id: str, config: Dict, result: Dict):
-        config_ext = self._config_ext_update(config, result)
         metric_val = result[self._metric]
         if self.map_reward is not None:
             crit_val = self.map_reward(metric_val)
         else:
             crit_val = metric_val
         metrics = dictionarize_objective(
-            self._metric_val_update(config_ext, crit_val))
+            self._metric_val_update(config, crit_val, result))
         # Cost value only dealt with here if `resource_attr` not given
         attr = self._cost_attr
         cost_val = None
@@ -210,7 +212,8 @@ class ModelBasedSearcher(BaseSearcher):
         self.state_transformer.label_candidate(CandidateEvaluation(
             candidate=config, metrics=metrics))
         if self.debug_log is not None:
-            msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
+            _trial_id = self._trial_id_string(trial_id, result)
+            msg = f"Update for trial_id {_trial_id}: metric = {metric_val:.3f}"
             if self.map_reward is not None:
                 msg += f", crit_val = {crit_val:.3f}"
             if cost_val is not None:
