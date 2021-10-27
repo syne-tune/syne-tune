@@ -51,6 +51,10 @@ class HyperparameterRange(ABC):
     def ndarray_size(self) -> int:
         return 1
 
+    @abstractmethod
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        pass
+
 
 def scale_from_zero_one(
         value: float, lower_bound: float, upper_bound: float, scaling: Scaling,
@@ -68,9 +72,14 @@ def scale_from_zero_one(
 class HyperparameterRangeContinuous(HyperparameterRange):
     def __init__(
             self, name: str, lower_bound: float, upper_bound: float,
-            scaling: Scaling):
+            scaling: Scaling, active_lower_bound: float = None,
+            active_upper_bound: float = None):
         """
         Real valued hyperparameter.
+        If `active_lower_bound` and/or `active_upper_bound` are given, the
+        feasible interval for values of new configs is reduced, but data can
+        still contain configs with values in `[lower_bound, upper_bound]`, and
+        internal encoding is done w.r.t. this original range.
 
         :param name: unique name of the hyperparameter.
         :param lower_bound: inclusive lower bound on all the values that
@@ -82,6 +91,8 @@ class HyperparameterRangeContinuous(HyperparameterRange):
             is internal representation of parameter, which is a real value, normally in range
             [0, 1]. To optimize the parameter, the internal is varied, and the parameter to be
             tested is calculated from such internal representation.
+        :param active_lower_bound: See above
+        :param active_upper_bound: See above
         """
         super().__init__(name)
         assert lower_bound <= upper_bound
@@ -90,6 +101,15 @@ class HyperparameterRangeContinuous(HyperparameterRange):
         self.scaling = scaling
         self.lower_internal = scaling.to_internal(lower_bound)
         self.upper_internal = scaling.to_internal(upper_bound)
+        if active_lower_bound is None:
+            active_lower_bound = lower_bound
+        if active_upper_bound is None:
+            active_upper_bound = upper_bound
+        assert lower_bound <= active_upper_bound <= upper_bound
+        assert lower_bound <= active_lower_bound <= upper_bound
+        assert active_lower_bound <= active_upper_bound
+        self._ndarray_bounds = [(self.to_ndarray(active_lower_bound)[0],
+                                 self.to_ndarray(active_upper_bound)[0])]
 
     def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
         assert self.lower_bound - EPS <= hp <= self.upper_bound + EPS, (hp, self)
@@ -120,10 +140,15 @@ class HyperparameterRangeContinuous(HyperparameterRange):
                    and self.scaling == other.scaling
         return False
 
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        return self._ndarray_bounds
+
 
 class HyperparameterRangeInteger(HyperparameterRange):
-    def __init__(self, name: str, lower_bound: int, upper_bound: int,
-                 scaling: Scaling):
+    def __init__(
+            self, name: str, lower_bound: int, upper_bound: int,
+            scaling: Scaling, active_lower_bound: int = None,
+            active_upper_bound: int = None):
         """
         Both bounds are INCLUDED in the valid values. Under the hood generates a continuous
         range from lower_bound - 0.5 to upper_bound + 0.5.
@@ -133,8 +158,14 @@ class HyperparameterRangeInteger(HyperparameterRange):
         assert lower_bound <= upper_bound
         self.lower_bound = int(lower_bound)
         self.upper_bound = int(upper_bound)
+        self.active_lower_bound = self.lower_bound if active_lower_bound is None \
+            else int(active_lower_bound)
+        self.active_upper_bound = self.upper_bound if active_upper_bound is None \
+            else int(active_upper_bound)
         self._continuous_range = HyperparameterRangeContinuous(
-            name, lower_bound - 0.5 + EPS, upper_bound + 0.5 - EPS, scaling)
+            name, self.lower_bound - 0.5 + EPS, self.upper_bound + 0.5 - EPS,
+            scaling, self.active_lower_bound - 0.5 + EPS,
+            self.active_upper_bound + 0.5 - EPS)
 
     @property
     def scaling(self) -> Scaling:
@@ -163,19 +194,37 @@ class HyperparameterRangeInteger(HyperparameterRange):
                    and self.scaling == other.scaling
         return False
 
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        return self._continuous_range.get_ndarray_bounds()
+
 
 class HyperparameterRangeCategorical(HyperparameterRange):
-    def __init__(self, name: str, choices: Tuple[str, ...]):
+    def __init__(
+            self, name: str, choices: Tuple[str, ...],
+            active_choices: Tuple[str, ...] = None):
         """
         Can take on discrete set of values.
         :param name: name of dimension.
         :param choices: possible values of the hyperparameter.
+        :param active_choices: If given, must be subset of `choices`.
         """
         super().__init__(name)
-        choices = sorted([str(x) for x in choices])
-        self.choices = choices
-        self.num_choices = len(choices)
+        self.choices = sorted([str(x) for x in choices])
+        self.num_choices = len(self.choices)
         assert self.num_choices > 1
+        if active_choices is None:
+            self._ndarray_bounds = [(0.0, 1.0)] * self.num_choices
+        else:
+            _active_choices = set(active_choices)
+            self._ndarray_bounds = [(0.0, 0.0)] * self.num_choices
+            num = 0
+            for pos, val in enumerate(self.choices):
+                if val in _active_choices:
+                    self._ndarray_bounds[pos] = (0.0, 1.0)
+                    num += 1
+            assert num == len(active_choices), \
+                f"active_choices = {active_choices} must be a subset of " +\
+                f"choices = {choices}"
 
     def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
         hp = str(hp)
@@ -203,6 +252,9 @@ class HyperparameterRangeCategorical(HyperparameterRange):
                    and self.choices == other.choices
         return False
 
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        return self._ndarray_bounds
+
 
 class HyperparameterRangesImpl(HyperparameterRanges):
     """
@@ -211,26 +263,39 @@ class HyperparameterRangesImpl(HyperparameterRanges):
 
     """
     def __init__(self, config_space: Dict, name_last_pos: str = None,
-                 value_for_last_pos=None):
-        super().__init__(config_space, name_last_pos, value_for_last_pos)
+                 value_for_last_pos=None, active_config_space: Dict = None):
+        super().__init__(config_space, name_last_pos, value_for_last_pos,
+                         active_config_space)
         hp_ranges = []
         for name in self.internal_keys:
             hp_range = self.config_space[name]
             assert isinstance(hp_range, Domain)
             tp, is_log = value_type_and_transform(hp_range, name=name)
             if tp == str:
+                if name in self.active_config_space:
+                    active_choices = tuple(
+                        self.active_config_space[name].categories)
+                else:
+                    active_choices = None
                 hp_ranges.append(HyperparameterRangeCategorical(
-                    name, choices=tuple(hp_range.categories)))
+                    name, choices=tuple(hp_range.categories),
+                    active_choices=active_choices))
             else:
                 scaling = LogScaling() if is_log else LinearScaling()
+                kwargs = {
+                    'name': name,
+                    'lower_bound': hp_range.lower,
+                    'upper_bound': hp_range.upper,
+                    'scaling': scaling}
+                if name in self.active_config_space:
+                    active_hp_range = self.active_config_space[name]
+                    kwargs.update({
+                        'active_lower_bound': active_hp_range.lower,
+                        'active_upper_bound': active_hp_range.upper})
                 if tp == float:
-                    hp_ranges.append(HyperparameterRangeContinuous(
-                        name, lower_bound=hp_range.lower,
-                        upper_bound=hp_range.upper, scaling=scaling))
+                    hp_ranges.append(HyperparameterRangeContinuous(**kwargs))
                 else:
-                    hp_ranges.append(HyperparameterRangeInteger(
-                        name, lower_bound=hp_range.lower,
-                        upper_bound=hp_range.upper, scaling=scaling))
+                    hp_ranges.append(HyperparameterRangeInteger(**kwargs))
         self._hp_ranges = hp_ranges
         self._ndarray_size = sum(d.ndarray_size() for d in hp_ranges)
 
@@ -262,7 +327,8 @@ class HyperparameterRangesImpl(HyperparameterRanges):
         return self.tuple_to_config(tuple(hps))
 
     def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
-        bounds = [(0.0, 1.0)] * self.ndarray_size()
+        bounds = [x for hp_range in self._hp_ranges
+                  for x in hp_range.get_ndarray_bounds()]
         if self.is_attribute_fixed():
             hp_range = self._hp_ranges[-1]
             assert hp_range.name == self.name_last_pos

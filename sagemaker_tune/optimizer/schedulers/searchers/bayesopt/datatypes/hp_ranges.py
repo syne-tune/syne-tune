@@ -16,7 +16,7 @@ import numpy as np
 from numpy.random import RandomState
 
 from sagemaker_tune.search_space import Domain, Categorical, \
-    non_constant_hyperparameter_keys
+    non_constant_hyperparameter_keys, value_type_and_transform
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 
@@ -41,7 +41,7 @@ def _ndarray_size(config_space: Dict) -> int:
 
 class HyperparameterRanges(ABC):
     def __init__(self, config_space: Dict, name_last_pos: str = None,
-                 value_for_last_pos=None):
+                 value_for_last_pos=None, active_config_space: Dict = None):
         """
         If name_last_pos is given, the hyperparameter of that name is assigned
         the final position in the vector returned by `to_ndarray`. This can be
@@ -59,14 +59,25 @@ class HyperparameterRanges(ABC):
         fixed when optimizing the acquisition function, but can take different
         values in the evaluation data (coming from all previous searches).
 
+        If `active_config_space` is given, it contains a subset of non-constant
+        hyperparameters in `config_space`, and the range of each entry is a
+        subset of the range of the corresponding `config_space` entry. These
+        active ranges affect the choice of new configs (by sampling). While the
+        internal encoding is based on original ranges, search is restricted to
+        active ranges (e.g., optimization of surrogate model).
+
         :param config_space: Configuration space. Constant hyperparameters are
             filtered out here
+        :param name_last_pos: See above
+        :param value_for_last_pos: See above
+        :param active_config_space: See above
         """
         self.config_space = _filter_constant_hyperparameters(config_space)
         self.name_last_pos = name_last_pos
         self.value_for_last_pos = value_for_last_pos
         self._ndarray_size = _ndarray_size(self.config_space)
         self._set_internal_keys()
+        self._set_active_config_space(active_config_space)
 
     def _set_internal_keys(self):
         keys = sorted(self.config_space.keys())
@@ -77,6 +88,23 @@ class HyperparameterRanges(ABC):
             pos = keys.index(self.name_last_pos)
             keys = keys[:pos] + keys[(pos + 1):] + [self.name_last_pos]
         self._internal_keys = keys
+
+    def _set_active_config_space(self, active_config_space: Dict):
+        if active_config_space is None:
+            self.active_config_space = dict()
+            self._config_space_for_sampling = self.config_space
+        else:
+            self._assert_sub_config_space(active_config_space)
+            self.active_config_space = active_config_space
+            self._config_space_for_sampling = dict(
+                self.config_space, **active_config_space)
+
+    def _assert_sub_config_space(self, active_config_space: Dict):
+        for k, v in active_config_space.items():
+            assert k in self.config_space and value_type_and_transform(
+                v) == value_type_and_transform(self.config_space[k]), \
+                f"active_config_space[{k}] not in config_space or has " +\
+                "different type"
 
     @property
     def internal_keys(self) -> List[str]:
@@ -127,7 +155,7 @@ class HyperparameterRanges(ABC):
 
     def _random_config(self, random_state: RandomState) -> Configuration:
         return {k: v.sample(random_state=random_state)
-                for k, v in self.config_space.items()}
+                for k, v in self._config_space_for_sampling.items()}
 
     def random_config(self, random_state: RandomState) -> Configuration:
         return self._transform_config(self._random_config(random_state))
