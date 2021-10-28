@@ -10,8 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-# TODO: This code tests HyperparameterRanges and XYZScaling.
-# If the latter code is removed, this test can go as well.
 
 from collections import Counter
 import numpy as np
@@ -23,6 +21,8 @@ from sagemaker_tune.search_space import uniform, randint, choice, loguniform, \
     lograndint
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
+from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
+    import HyperparameterRangesImpl
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
     import ExtendedConfiguration
 
@@ -203,3 +203,70 @@ def test_get_ndarray_bounds():
         val_enc_cmp = bounds[-1][0]
         assert val_enc_cmp == bounds[-1][1]
         np.testing.assert_almost_equal(val_enc, val_enc_cmp, decimal=5)
+
+
+def test_active_ranges_valid():
+    config_space = {
+        '0': uniform(1.0, 1000.0),
+        '1': loguniform(1.0, 1000.0),
+        '3': randint(1, 1000),
+        '4': lograndint(1, 1000),
+        '5': choice(['a', 'b', 'c'])}
+    invalid_active_spaces = [
+        {
+            '6': randint(0, 1),
+        },
+        {
+            '0': uniform(2.0, 500.0),
+            '5': choice(['a', 'b', 'd']),
+        },
+        {
+            '0': uniform(2.0, 1000.0),
+            '1': uniform(2.0, 500.0),
+        },
+        {
+            '3': randint(1, 100),
+            '4': lograndint(2, 1005),
+        },
+    ]
+    for active_config_space in invalid_active_spaces:
+        with pytest.raises(AssertionError):
+            hp_ranges = HyperparameterRangesImpl(
+                config_space=config_space,
+                active_config_space=active_config_space)
+
+
+@pytest.mark.parametrize('config_space,active_config_space', [
+    ({
+        '0': uniform(1.0, 2.0),
+        '1': choice(['a', 'b', 'c']),
+    },{
+        '0': uniform(1.1, 1.9),
+        '1': choice(['a', 'c']),
+     }),
+    ({
+        '0': randint(1, 3),
+        '1': choice(['a', 'c', 'b']),
+    },{
+        '0': randint(2, 3),
+        '1': choice(['b', 'c']),
+    }),
+    ({
+        '0': lograndint(3, 5),
+        '1': randint(2, 3),
+    },{
+        '0': lograndint(3, 4),
+    })
+])
+def test_active_ranges_samples(config_space, active_config_space):
+    seed = 31415927
+    random_state = np.random.RandomState(seed)
+    hp_ranges = HyperparameterRangesImpl(
+        config_space=config_space,
+        active_config_space=active_config_space)
+    configs = hp_ranges.random_configs(random_state, num_configs=100)
+    _active_config_space = dict(config_space, **active_config_space)
+    hp_ranges2 = HyperparameterRangesImpl(config_space=_active_config_space)
+    # This fails with high probability if the sampled configs fall outside of
+    # the narrower active ranges
+    features = hp_ranges2.to_ndarray_matrix(configs)
