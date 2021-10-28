@@ -365,6 +365,4 @@ class Tuner:
         """
         :return: default callback to store results
         """
-        return StoreResultsCallback(
-            csv_file=str(self.tuner_path / "results.csv.zip"), results_update_interval=self.results_update_interval
-        )
+        return StoreResultsCallback(results_update_interval=self.results_update_interval)

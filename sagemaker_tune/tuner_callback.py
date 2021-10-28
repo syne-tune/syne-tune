@@ -83,7 +83,6 @@ class StoreResultsCallback(TunerCallback):
     def __init__(
             self,
             add_wallclock_time: bool = True,
-            csv_file: Optional[str] = None,
             results_update_interval: float = 10.0,
     ):
         """
@@ -97,15 +96,13 @@ class StoreResultsCallback(TunerCallback):
         """
         self.results = []
         self.start = perf_counter() if add_wallclock_time else None
-        self.csv_file = csv_file
 
-        if self.csv_file is not None:
-            # we only save results every `results_update_frequency` seconds as this operation
-            # may be expensive on remote storage.
-            self.save_results_at_frequency = RegularCallback(
-                 lambda: self.store_results(),
-                 call_seconds_frequency=results_update_interval,
-            )
+        # we only save results every `results_update_frequency` seconds as this operation
+        # may be expensive on remote storage.
+        self.save_results_at_frequency = RegularCallback(
+             lambda: self.store_results(),
+             call_seconds_frequency=results_update_interval,
+        )
 
     def _set_time_fields(self, result: Dict):
         """
@@ -137,6 +134,11 @@ class StoreResultsCallback(TunerCallback):
 
     def dataframe(self) -> pd.DataFrame:
         return pd.DataFrame(self.results)
+
+    def on_tuning_start(self, tuner):
+        # we set the path of the csv file once the tuner is created since the path may change when the tuner is stop
+        # and resumed again on a different machine.
+        self.csv_file = str(tuner.tuner_path / "results.csv.zip")
 
     def on_tuning_end(self):
         # store the results in case some results were not commited yet (since they are saved every

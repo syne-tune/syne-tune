@@ -18,8 +18,7 @@ import argparse
 
 from sagemaker_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
-from sagemaker_tune.backend.simulator_backend.simulator_callback import \
-    create_simulator_callback, SimulatorCallback
+from sagemaker_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from sagemaker_tune.tuner import Tuner
 from sagemaker_tune.stopping_criterion import StoppingCriterion

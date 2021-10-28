@@ -330,6 +330,7 @@ if __name__ == '__main__':
 
         tuner_sleep_time = 0 if backend_name == 'simulated' \
             else params['tuner_sleep_time']
+
         local_tuner = Tuner(
             backend=backend,
             scheduler=myscheduler,
