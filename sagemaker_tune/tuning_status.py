@@ -62,7 +62,7 @@ class TuningStatus:
         self.overall_metric_statistics = MetricsStatistics()
         self.trial_metric_statistics = defaultdict(lambda: MetricsStatistics())
 
-        self.last_trial_status = OrderedDict()
+        self.last_trial_status_seen = OrderedDict()
         self.trial_rows = OrderedDict({})
 
     def update(self, trial_status_dict: Dict[int, Tuple[Trial, str]], new_results: List[Tuple[int, Dict]]):
@@ -70,7 +70,7 @@ class TuningStatus:
         Updates the tuning status given new statuses and results.
         """
 
-        self.last_trial_status.update(
+        self.last_trial_status_seen.update(
             {k: v[1] for k, v in trial_status_dict.items()})
 
         for trial_id, new_result in new_results:
@@ -98,12 +98,24 @@ class TuningStatus:
 
             self.trial_rows[trial_id] = row
 
+    def mark_running_job_as_stopped(self):
+        """
+        Update the status of all trials still running to be marked as stop.
+        """
+        self.last_trial_status_seen = {
+            k: v if v != Status.in_progress else Status.stopped
+            for k, v in self.last_trial_status_seen.items()
+        }
+        for trial_id, row in self.trial_rows.items():
+            if row["status"] == Status.in_progress:
+                row["status"] = Status.stopped
+
     @property
     def num_trials_started(self):
-        return len(self.last_trial_status)
+        return len(self.last_trial_status_seen)
 
     def _num_trials(self, status: str):
-        return sum(trial_status == status for trial_status in self.last_trial_status.values())
+        return sum(trial_status == status for trial_status in self.last_trial_status_seen.values())
 
     @property
     def num_trials_completed(self):

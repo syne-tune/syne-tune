@@ -19,7 +19,7 @@ import logging
 from ast import literal_eval
 from datetime import datetime
 from typing import List, Dict
-from time import time
+from time import time, perf_counter
 from dataclasses import dataclass
 
 from sagemaker_tune.constants import SMT_INSTANCE_TYPE, SMT_INSTANCE_COUNT, SMT_WORKER_TIME, \
@@ -54,7 +54,7 @@ class Reporter:
     def __post_init__(self):
         self.file_based |= get_backend_type() in BACKEND_TYPES_WITH_FILE_REPORTS
         if self.add_time:
-            self.start = datetime.now()
+            self.start = perf_counter()
             self.iter = 0
             # TODO dollar-cost computation is not available for file-based backends, what would be
             #  needed to add support for those backends will be to add a way to access instance-type
@@ -87,7 +87,7 @@ class Reporter:
 
         kw[SMT_WORKER_TIMESTAMP] = time()
         if self.add_time:
-            seconds_spent = (datetime.now() - self.start).seconds
+            seconds_spent = (perf_counter() - self.start)
             kw[SMT_WORKER_TIME] = seconds_spent
             # second cost will only be there if we were able to properly detect the instance-type and instance-count
             # from the environment
