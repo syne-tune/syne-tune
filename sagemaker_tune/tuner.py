@@ -173,11 +173,14 @@ class Tuner:
             all_done_trials.update(done_trials)
             running_trials_ids.difference_update(done_trials.keys())
 
+            if new_results:
+                # Save tuner state only if there have been new results
+                tuner_saver(tuner=self)
+
             running_trials_threshold = self.n_workers \
                 if self.asynchronous_scheduling else 1
             num_running_trials = len(running_trials_ids)
-            if len(new_results) == 0 and \
-                    num_running_trials >= running_trials_threshold:
+            if num_running_trials >= running_trials_threshold:
                 # Note: For synchronous scheduling, we need to sleep here if at
                 # least one worker is busy
                 logger.debug(
@@ -198,8 +201,6 @@ class Tuner:
                         break
                     running_trials_ids.add(trial_id)
 
-                # Save tuner state only if there have been new results
-                tuner_saver(tuner=self)
 
             status_printer(tuning_status)
 

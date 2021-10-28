@@ -194,14 +194,16 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
     def _hp_ranges_in_state(self):
         return self.configspace_ext.hp_ranges_ext
 
-    def _config_ext_update(self, config, result):
-        resource = int(result[self._resource_attr])
-        return self.configspace_ext.get(config, resource)
-
     def _metric_val_update(
-            self, config_ext: Dict, crit_val: float) -> MetricValues:
-        resource = self.configspace_ext.get_resource(config_ext)
+            self, config: Dict, crit_val: float, result: Dict) -> MetricValues:
+        resource = result[self._resource_attr]
         return {str(resource): crit_val}
+
+    def _trial_id_string(self, trial_id: str, result: Dict):
+        """
+        For multi-fidelity, we also want to output the resource level
+        """
+        return f"{trial_id}:{result[self._resource_attr]}"
 
     def register_pending(self, config: Configuration, milestone=None):
         """

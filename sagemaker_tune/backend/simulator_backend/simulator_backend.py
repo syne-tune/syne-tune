@@ -493,11 +493,8 @@ class SimulatorBackend(LocalBackend):
             # Run training script and fetch all results
             trial_path = self.trial_path(trial_id)
             os.makedirs(trial_path, exist_ok=True)
-            if self.enable_checkpointing:
-                config_copy = config.copy()
-                config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
-            else:
-                config_copy = config
+            config_copy = config.copy()
+            config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
             config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
 
             def np_encoder(obj):
@@ -548,10 +545,9 @@ class SimulatorBackendForRemoteLauncher(SimulatorBackend):
             elapsed_time_attr: str,
             table_class_name: Optional[str] = None,
             simulator_config: Optional[SimulatorConfig] = None,
-            enable_checkpointing: bool = True,
             tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
     ):
         super().__init__(
             entry_point, elapsed_time_attr, table_class_name, simulator_config,
-            enable_checkpointing, tuner_sleep_time)
+            tuner_sleep_time)
         self._module_prefix = SMT_REMOTE_UPLOAD_DIR_NAME
