@@ -18,7 +18,6 @@ import logging
 from pathlib import Path
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from sagemaker.mxnet import MXNet
 
@@ -28,7 +27,6 @@ from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import get_executi
 from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from sagemaker_tune.tuner import Tuner
 from sagemaker_tune.search_space import loguniform, lograndint
-from sagemaker_tune.tuner_callback import StoreResultsCallback
 
 
 if __name__ == '__main__':
@@ -98,22 +96,5 @@ if __name__ == '__main__':
         max_failures=10,
     )
 
-    # save results continuously
-    callback = StoreResultsCallback(
-        csv_file=str(Path(__file__).parent / "tuning-results-gluonts-sagemaker-hyperband.csv")
-    )
-
     # launch the tuning
-    tuner.run(
-        custom_callback=callback,
-    )
-
-    # plot best result found over time
-    df = callback.dataframe()
-    if "time" in df:
-        df = df.sort_values("time")
-        df.loc[:, 'best'] = df.loc[:, metric].cummin()
-        df.plot(x="time", y="best")
-        plt.xlabel("wallclock time")
-        plt.ylabel(metric)
-        plt.show()
+    tuner.run()
