@@ -18,18 +18,7 @@ import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
-from sagemaker_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from sagemaker_tune.tuner import Tuner
-
-
-def get_tuner_callbacks(tuner: Tuner):
-    from sagemaker_tune.backend.simulator_backend.simulator_callback import \
-        SimulatorBackend
-    backend = tuner.backend
-    if isinstance(backend, SimulatorBackend):
-        return [SimulatorCallback()]
-    else:
-        return None
 
 
 if __name__ == '__main__':
@@ -53,8 +42,7 @@ if __name__ == '__main__':
 
     # Run the tuner on the sagemaker instance. If the simulation back-end is
     # used, this needs a specific callback
-    tuner_callbacks = get_tuner_callbacks(tuner)
     if args.no_tuner_logging == 'True':
         logging.getLogger('sagemaker_tune.tuner').setLevel(logging.ERROR)
     logging.info("starting remote tuning")
-    tuner.run(callbacks=tuner_callbacks)
+    tuner.run()
