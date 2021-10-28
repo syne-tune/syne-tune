@@ -189,9 +189,9 @@ class ModelBasedSearcher(BaseSearcher):
             self.state_transformer.label_candidate(CandidateEvaluation(
                 candidate=config, metrics=metrics))
         if update:
-            self._update(config, result)
+            self._update(trial_id, config, result)
 
-    def _update(self, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: Dict, result: Dict):
         config_ext = self._config_ext_update(config, result)
         metric_val = result[self._metric]
         if self.map_reward is not None:
@@ -210,14 +210,12 @@ class ModelBasedSearcher(BaseSearcher):
         self.state_transformer.label_candidate(CandidateEvaluation(
             candidate=config, metrics=metrics))
         if self.debug_log is not None:
-            trial_id = self.debug_log.trial_id(config_ext)
-            if trial_id is not None:
-                msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
-                if self.map_reward is not None:
-                    msg += f", crit_val = {crit_val:.3f}"
-                if cost_val is not None:
-                    msg += f", cost_val = {cost_val:.2f}"
-                logger.info(msg)
+            msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
+            if self.map_reward is not None:
+                msg += f", crit_val = {crit_val:.3f}"
+            if cost_val is not None:
+                msg += f", cost_val = {cost_val:.2f}"
+            logger.info(msg)
 
     def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
             Optional[Configuration]:

@@ -170,7 +170,7 @@ class Bore(BaseSearcher):
 
         return config
 
-    def _update(self, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: Dict, result: Dict):
         """Update surrogate model with result
 
         :param config: new configuration

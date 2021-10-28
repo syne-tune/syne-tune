@@ -57,11 +57,11 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         self._constraint_attr = kwargs_int.pop('constraint_attr')
         super()._call_create_internal(**kwargs_int)
 
-    def _update(self, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: Dict, result: Dict):
         # We can call the superclass method, because
         # `state_transformer.label_candidate` can be called two times
         # with parts of the metrics
-        super()._update(config, result)
+        super()._update(trial_id, config, result)
         # Get constraint metric
         assert self._constraint_attr in result, \
             f"Constraint metric {self._constraint_attr} not included in " +\
