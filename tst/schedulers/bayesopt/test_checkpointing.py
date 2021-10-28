@@ -44,12 +44,13 @@ def test_pickle_gp_fifo_searcher():
     searcher_options['debug_log'] = False
     searcher1 = GPFIFOSearcher(**searcher_options)
     # Feed searcher1 with some data
-    for eval in data['state'].candidate_evaluations[:num_data]:
+    for trial_id, eval in enumerate(
+            data['state'].candidate_evaluations[:num_data]):
         reward = eval.metrics[INTERNAL_METRIC_NAME]
         map_reward = searcher1.map_reward
         if map_reward is not None:
             reward = map_reward.reverse(reward)
-        searcher1._update(eval.candidate, {reward_attr: reward})
+        searcher1._update(str(trial_id), eval.candidate, {reward_attr: reward})
     # Calling next_config is forcing a GP hyperparameter update
     next_config = searcher1.get_config()
     # Register some pending evaluations
@@ -106,13 +107,16 @@ def test_pickle_constrained_gp_fifo_searcher():
     searcher_options['constraint_attr'] = constraint_attr
     searcher1 = ConstrainedGPFIFOSearcher(**searcher_options)
     # Feed searcher1 with some data
-    for eval in data['state'].candidate_evaluations[:num_data]:
+    for trial_id, eval in enumerate(
+            data['state'].candidate_evaluations[:num_data]):
         reward = eval.metrics[INTERNAL_METRIC_NAME]
         map_reward = searcher1.map_reward
         if map_reward is not None:
             reward = map_reward.reverse(reward)
         constraint = 1.0  # dummy value
-        searcher1._update(eval.candidate, {reward_attr: reward, constraint_attr: constraint})
+        searcher1._update(
+            str(trial_id), eval.candidate,
+            {reward_attr: reward, constraint_attr: constraint})
     # Calling next_config is forcing a GP hyperparameter update
     next_config = searcher1.get_config()
     # Register some pending evaluations
@@ -170,13 +174,15 @@ def test_pickle_cost_aware_gp_fifo_searcher():
     searcher_options['debug_log'] = False
     searcher1 = CostAwareGPFIFOSearcher(**searcher_options)
     # Feed searcher1 with some data
-    for eval in data['state'].candidate_evaluations[:num_data]:
+    for trial_id, eval in enumerate(
+            data['state'].candidate_evaluations[:num_data]):
         reward = eval.metrics[INTERNAL_METRIC_NAME]
         map_reward = searcher1.map_reward
         if map_reward is not None:
             reward = map_reward.reverse(reward)
         train_time = 1.0  # dummy value
-        searcher1._update(eval.candidate, {reward_attr: reward, cost_attr: train_time})
+        searcher1._update(str(trial_id), eval.candidate,
+                          {reward_attr: reward, cost_attr: train_time})
     # Calling next_config is forcing a GP hyperparameter update
     next_config = searcher1.get_config()
     # Register some pending evaluations
