@@ -85,7 +85,7 @@ class SimulatorCallback(StoreResultsCallback):
             tuner.stop_criterion = new_stop_criterion
 
     def on_tuning_start(self, tuner: "Tuner"):
-        self.csv_file = str(tuner.tuner_path / "results.csv.zip")
+        super(SimulatorCallback, self).on_tuning_start(tuner=tuner)
 
         backend = tuner.backend
         assert isinstance(backend, SimulatorBackend), \
