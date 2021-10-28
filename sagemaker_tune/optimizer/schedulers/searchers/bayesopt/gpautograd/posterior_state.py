@@ -116,8 +116,9 @@ class GaussProcPosteriorState(object):
 
         :return: Negative log (marginal) likelihood
         """
-        return negative_log_marginal_likelihood(
+        critval = negative_log_marginal_likelihood(
             self.chol_fact, self.pred_mat)
+        return critval
 
     def backward_gradient(
             self, input: np.ndarray,
@@ -163,7 +164,6 @@ class GaussProcPosteriorState(object):
             return pred_mean_sum + pred_std_sum
         
         test_feature_gradient = grad(diff_test_feature)
-        
         return np.reshape(test_feature_gradient(test_feature), input.shape)
 
 

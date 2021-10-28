@@ -18,3 +18,5 @@ from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.fa
     import *
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.product_kernel \
     import *
+from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.freeze_thaw \
+    import *

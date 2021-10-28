@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, Dict
+from typing import Dict
 import logging
 
 from sagemaker_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
@@ -18,24 +18,18 @@ from sagemaker_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
 from sagemaker_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from sagemaker_tune.optimizer.schedulers.searchers.gp_fifo_searcher \
-    import ModelBasedSearcher, create_initial_candidates_scorer, decode_state
+    import GPFIFOSearcher, decode_state
 from sagemaker_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
     ResourceForAcquisitionMap
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import PendingEvaluation, Configuration, MetricValues, INTERNAL_METRIC_NAME
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
-    import ExtendedConfiguration
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm \
-    import BayesianOptimizationAlgorithm
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
-    import DuplicateDetectorIdentical
 
 logger = logging.getLogger(__name__)
 
 __all__ = ['GPMultiFidelitySearcher']
 
 
-class GPMultiFidelitySearcher(ModelBasedSearcher):
+class GPMultiFidelitySearcher(GPFIFOSearcher):
     """Gaussian process Bayesian optimization for Hyperband scheduler
 
     This searcher must be used with `HyperbandScheduler`. It provides a novel
@@ -90,6 +84,9 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
     cost_attr : str (optional)
         Name of cost attribute in data obtained from reporter (e.g., elapsed
         training time). Needed only by cost-aware searchers.
+    model : str
+        Selects surrogate model (learning curve model) to be used. Choices
+        are 'gp_multitask' (default), 'gp_issm', 'gp_expdecay'
     random_seed : int
         Seed for pseudo-random number generator used.
     num_init_random : int
@@ -115,6 +112,7 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
     map_reward : str or MapReward
         See :class:`GPFIFOSearcher`
     gp_resource_kernel : str
+        Only relevant for `model == 'gp_multitask'`.
         Surrogate model over criterion function f(x, r), x the config, r the
         resource. Note that x is encoded to be a vector with entries in [0, 1],
         and r is linearly mapped to [0, 1], while the criterion data is
@@ -130,33 +128,28 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
         'exp-decay-combined' (exponential decay kernel, with delta in [0, 1]
         a hyperparameter).
     resource_acq : str
+        Only relevant for `model == 'gp_multitask'`.
         Determines how the EI acquisition function is used (see above).
         Values: 'bohb', 'first'
     opt_skip_num_max_resource : bool
         Parameter for hyperparameter fitting, skip predicate. If True, and
         number of observations above `opt_skip_init_length`, fitting is done
         only when there is a new datapoint at r = max_t, and skipped otherwise.
+    issm_gamma_one : bool
+        Only relevant for `model == 'gp_issm'`.
+        If True, the gamma parameter of the ISSM is fixed to 1, otherwise it
+        is optimized over.
+    expdecay_normalize_inputs : bool
+        Only relevant for `model == 'gp_expdecay'`.
+        If True, resource values r are normalized to [0, 1] as input to the
+        exponential decay surrogate model.
 
     See Also
     --------
     GPFIFOSearcher
     """
     def __init__(self, configspace, **kwargs):
-        if configspace is not None:
-            super().__init__(
-                configspace, metric=kwargs.get('metric'),
-                points_to_evaluate=kwargs.get('points_to_evaluate'))
-            kwargs['configspace'] = configspace
-            kwargs_int = self._create_kwargs_int(kwargs)
-        else:
-            # Internal constructor, bypassing the factory
-            kwargs_int = kwargs.copy()
-        self.configspace_ext = ExtendedConfiguration(
-            kwargs_int['hp_ranges'],
-            resource_attr_key=kwargs_int['resource_attr'],
-            resource_attr_range=kwargs_int['resource_attr_range'])
-        self._process_kwargs_int(kwargs_int)
-        self._call_create_internal(**kwargs_int)
+        super().__init__(configspace, **kwargs)
         if self.debug_log is not None:
             # Configure DebugLogPrinter
             self.debug_log.set_configspace_ext(self.configspace_ext)
@@ -169,17 +162,19 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         return kwargs_int
 
-    def _process_kwargs_int(self, kwargs_int):
-        self.resource_for_acquisition = kwargs_int.pop(
-            'resource_for_acquisition')
-        assert isinstance(self.resource_for_acquisition,
-                          ResourceForAcquisitionMap)
-        del kwargs_int['resource_attr_range']
-
-    def _call_create_internal(self, **kwargs_int):
+    def _call_create_internal(self, kwargs_int):
         """
         Part of constructor which can be different in subclasses
         """
+        k = 'resource_for_acquisition'
+        self.resource_for_acquisition = kwargs_int.get(k)
+        if self.resource_for_acquisition is not None:
+            kwargs_int.pop(k)
+            assert isinstance(self.resource_for_acquisition,
+                              ResourceForAcquisitionMap)
+        self.configspace_ext = kwargs_int.pop('configspace_ext')
+        self._predictions_use_extended_configs = \
+            kwargs_int['model_factory'].predictions_use_extended_configs()
         self._create_internal(**kwargs_int)
 
     def configure_scheduler(self, scheduler):
@@ -194,8 +189,18 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
     def _hp_ranges_in_state(self):
         return self.configspace_ext.hp_ranges_ext
 
+    def _hp_ranges_for_prediction(self):
+        if self._predictions_use_extended_configs:
+            return self.configspace_ext.hp_ranges_ext
+        else:
+            return self.configspace_ext.hp_ranges
+
+    def _config_ext_update(self, config, result):
+        resource = int(result[self._resource_attr])
+        return self.configspace_ext.get(config, resource)
+
     def _metric_val_update(
-            self, config: Dict, crit_val: float, result: Dict) -> MetricValues:
+            self, crit_val: float, result: Dict) -> MetricValues:
         resource = result[self._resource_attr]
         return {str(resource): crit_val}
 
@@ -232,6 +237,8 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
                     This configuration at milestone {milestone} is already registered as labeled:
                        Position of labeled candidate: {pos_cand}
                        Label values: {values}
+                       config: {config}
+                       config_labeled: {state.candidate_evaluations[pos_cand].candidate}
                     """
                     assert False, error_msg
             self.state_transformer.append_candidate(config_ext)
@@ -249,67 +256,24 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
         :param kwargs:
         :return:
         """
-        state = self.state_transformer.state
-        # BO should only search over configs at resource level
-        # target_resource
-        if state.candidate_evaluations:
-            target_resource = self.resource_for_acquisition(state, **kwargs)
-        else:
-            # Any valid value works here:
-            target_resource = self.configspace_ext.resource_attr_range[0]
-        self.configspace_ext.hp_ranges_ext.value_for_last_pos = target_resource
-        if self.debug_log is not None:
-            self.debug_log.append_extra(
-                f"Score values computed at target_resource = {target_resource}")
+        if self.resource_for_acquisition is not None:
+            # Only have to do this for 'gp_multitask' model
+            state = self.state_transformer.state
+            # BO should only search over configs at resource level
+            # target_resource
+            if state.candidate_evaluations:
+                target_resource = self.resource_for_acquisition(state, **kwargs)
+            else:
+                # Any valid value works here:
+                target_resource = self.configspace_ext.resource_attr_range[0]
+            self.configspace_ext.hp_ranges_ext.value_for_last_pos = target_resource
+            if self.debug_log is not None:
+                self.debug_log.append_extra(
+                    f"Score values computed at target_resource = {target_resource}")
 
-    def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
-            Optional[Configuration]:
-        config = None
-        # Obtain current SurrogateModel from state transformer. Based on
-        # this, the BO algorithm components can be constructed
-        if self.do_profile:
-            self.profiler.push_prefix('getconfig')
-            self.profiler.start('all')
-            self.profiler.start('gpmodel')
-        # Note: Asking for the model triggers the posterior computation
-        model = self.state_transformer.model()
-        if self.do_profile:
-            self.profiler.stop('gpmodel')
-        # Select and fix target resource attribute
-        self._fix_resource_attribute(**kwargs)
-        # Create BO algorithm
-        initial_candidates_scorer = create_initial_candidates_scorer(
-            self.initial_scoring, model, self.acquisition_class,
-            self.random_state)
-        # We search over the same type of configs (normal or extended) which
-        # we predict for
-        local_optimizer = self.local_minimizer_class(
-            hp_ranges=self._hp_ranges_for_prediction(),
-            model=model,
-            acquisition_class=self.acquisition_class,
-            active_metric=INTERNAL_METRIC_NAME)
-        bo_algorithm = BayesianOptimizationAlgorithm(
-            initial_candidates_generator=self.random_generator,
-            initial_candidates_scorer=initial_candidates_scorer,
-            num_initial_candidates=self.num_initial_candidates,
-            local_optimizer=local_optimizer,
-            pending_candidate_state_transformer=None,
-            exclusion_candidates=exclusion_candidates,
-            num_requested_candidates=1,
-            greedy_batch_selection=False,
-            duplicate_detector=DuplicateDetectorIdentical(),
-            profiler=self.profiler,
-            sample_unique_candidates=False,
-            debug_log=self.debug_log)
-        # Next candidate decision
-        _config = bo_algorithm.next_candidates()
-        if len(_config) > 0:
-            # If _config[0] is normal, nothing is removed
-            config = self.configspace_ext.remove_resource(_config[0])
-        if self.do_profile:
-            self.profiler.stop('all')
-            self.profiler.pop_prefix()  # getconfig
-        return config
+    def _postprocess_config(self, config: dict) -> dict:
+        # If `config` is normal (not extended), nothing is removed
+        return self.configspace_ext.remove_resource(config)
 
     def evaluation_failed(self, config: Configuration):
         # Remove all pending evaluations for config
@@ -346,18 +310,18 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
-        init_state = decode_state(
-            state['state'], self.configspace_ext.hp_ranges_ext)
+        init_state = decode_state(state['state'], self._hp_ranges_in_state())
         skip_optimization = state['skip_optimization']
+        model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPMultiFidelitySearcher(
             configspace=None,
             hp_ranges=self.hp_ranges,
-            resource_attr_range=self.configspace_ext.resource_attr_range,
+            configspace_ext=self.configspace_ext,
             random_seed=self.random_seed,
-            model_factory=self.state_transformer._model_factory,
-            map_reward=self.map_reward,
+            model_factory=model_factory,
             acquisition_class=self.acquisition_class,
+            map_reward=self.map_reward,
             resource_for_acquisition=self.resource_for_acquisition,
             init_state=init_state,
             local_minimizer_class=self.local_minimizer_class,
@@ -365,7 +329,7 @@ class GPMultiFidelitySearcher(ModelBasedSearcher):
             num_initial_candidates=self.num_initial_candidates,
             num_initial_random_choices=self.num_initial_random_choices,
             initial_scoring=self.initial_scoring,
-            cost_attr = self._cost_attr,
+            cost_attr=self._cost_attr,
             resource_attr=self._resource_attr)
         self._clone_from_state_common(new_searcher, state)
         # Invalidate self (must not be used afterwards)

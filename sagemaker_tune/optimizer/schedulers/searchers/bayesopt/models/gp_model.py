@@ -11,10 +11,9 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, List, Optional, Union
-from dataclasses import dataclass
 import numpy as np
-
 import logging
+from dataclasses import dataclass
 
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
     import TransformerModelFactory
@@ -30,6 +29,8 @@ from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regres
     import GaussianProcessRegression
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc \
     import GPRegressionMCMC
+from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state \
+    import GaussProcPosteriorState
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import SurrogateModel
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
@@ -81,24 +82,24 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         self.fantasy_samples = fantasy_samples
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
-        predictions_list_denormalized = []
-        for posterior_mean, posterior_variance in self._gpmodel.predict(
+        predictions_list = []
+        for post_mean, post_variance in self._gpmodel.predict(
                 inputs):
-            assert posterior_mean.shape[0] == inputs.shape[0], \
-                (posterior_mean.shape, inputs.shape)
-            assert posterior_variance.shape == (inputs.shape[0],), \
-                (posterior_variance.shape, inputs.shape)
+            assert post_mean.shape[0] == inputs.shape[0], \
+                (post_mean.shape, inputs.shape)
+            assert post_variance.shape == (inputs.shape[0],), \
+                (post_variance.shape, inputs.shape)
             # Undo normalization applied to targets
-            mean_denorm = posterior_mean * self.std + self.mean
-            std_denorm = np.sqrt(posterior_variance) * self.std
-            predictions_list_denormalized.append(
+            mean_denorm = post_mean * self.std + self.mean
+            std_denorm = np.sqrt(post_variance) * self.std
+            predictions_list.append(
                 {'mean': mean_denorm, 'std': std_denorm})
-        return predictions_list_denormalized
+        return predictions_list
 
     def backward_gradient(
             self, input: np.ndarray,
             head_gradients: List[Dict[str, np.ndarray]]) -> List[np.ndarray]:
-        poster_states = self._gpmodel.states
+        poster_states = self.posterior_states
         assert poster_states is not None, \
             "Cannot run backward_gradient without a posterior state"
         assert len(poster_states) == len(head_gradients), \
@@ -112,6 +113,10 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
 
     def does_mcmc(self):
         return isinstance(self._gpmodel, GPRegressionMCMC)
+
+    @property
+    def posterior_states(self) -> Optional[List[GaussProcPosteriorState]]:
+        return self._gpmodel.states
 
     def current_best_filter_candidates(self, candidates):
         hp_ranges = self.state.hp_ranges
@@ -140,7 +145,8 @@ def get_internal_candidate_evaluations(
         num_fantasy_samples: int) -> InternalCandidateEvaluations:
     candidates, evaluation_values = state.observed_data_for_metric(
         metric_name=active_metric)
-    features = state.hp_ranges.to_ndarray_matrix(candidates)
+    hp_ranges = state.hp_ranges
+    features = hp_ranges.to_ndarray_matrix(candidates)
     # Normalize
     # Note: The fantasy values in state.pending_evaluations are sampled
     # from the model fit to normalized targets, so they are already
@@ -165,7 +171,7 @@ def get_internal_candidate_evaluations(
                 "All state.pending_evaluations entries must have length {}".format(
                     num_fantasy_samples)
             fanta_lst.append(fantasies.reshape((1, -1)))
-            cand_lst.append(state.hp_ranges.to_ndarray(pending_eval.candidate))
+            cand_lst.append(hp_ranges.to_ndarray(pending_eval.candidate))
         targets = np.vstack([targets * np.ones((1, num_fantasy_samples))] + fanta_lst)
         features = np.vstack([features] + cand_lst)
     return InternalCandidateEvaluations(features, targets, mean, std)

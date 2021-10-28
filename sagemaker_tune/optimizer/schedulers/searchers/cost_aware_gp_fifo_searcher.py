@@ -40,7 +40,7 @@ class MultiModelGPFIFOSearcher(GPFIFOSearcher):
     replace the state transformer by a multi-model one.
 
     """
-    def _call_create_internal(self, **kwargs_int):
+    def _call_create_internal(self, kwargs_int):
         output_model_factory = kwargs_int.pop('output_model_factory')
         output_skip_optimization = kwargs_int.pop('output_skip_optimization')
         kwargs_int['model_factory'] = \
@@ -49,9 +49,10 @@ class MultiModelGPFIFOSearcher(GPFIFOSearcher):
             output_skip_optimization[INTERNAL_METRIC_NAME]
         self._create_internal(**kwargs_int)
         # Replace `state_transformer`
+        init_state = self.state_transformer.state
         self.state_transformer = ModelStateTransformer(
             model_factory=output_model_factory,
-            init_state=self.state_transformer.state,
+            init_state=init_state,
             skip_optimization=output_skip_optimization)
 
 
@@ -79,27 +80,30 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
         _kwargs = check_and_merge_defaults(
             kwargs, *cost_aware_gp_fifo_searcher_defaults(),
             dict_name='search_options')
+        # If `resource_attr` is specified, we do fine-grained, otherwise
+        # coarse-grained
         if kwargs.get('resource_attr') is not None:
-            logger.info("Modelling cost values c(x, r) obtained at every " +\
-                        "resource level r")
+            logger.info("Fine-grained: Modelling cost values c(x, r) " +\
+                        "obtained at every resource level r")
             kwargs_int = cost_aware_fine_gp_fifo_searcher_factory(**_kwargs)
         else:
-            logger.info("Modelling cost values c(x) obtained together " + \
-                        "metric values")
+            logger.info("Coarse-grained: Modelling cost values c(x) " +\
+                        "obtained together with metric values")
             kwargs_int = cost_aware_coarse_gp_fifo_searcher_factory(**_kwargs)
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         return kwargs_int
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
-        init_state = decode_state(state['state'], self.hp_ranges)
+        init_state = decode_state(state['state'], self._hp_ranges_in_state())
         output_skip_optimization = state['skip_optimization']
+        output_model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = CostAwareGPFIFOSearcher(
             configspace=None,
             hp_ranges=self.hp_ranges,
             random_seed=self.random_seed,
-            output_model_factory=self.state_transformer._model_factory,
+            output_model_factory=output_model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,
             init_state=init_state,

@@ -25,8 +25,8 @@ from sagemaker_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
 from sagemaker_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, Configuration, MetricValues, dictionarize_objective, INTERNAL_METRIC_NAME, \
-    INTERNAL_COST_NAME
+    import CandidateEvaluation, Configuration, MetricValues, \
+    dictionarize_objective, INTERNAL_METRIC_NAME, INTERNAL_COST_NAME
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
@@ -169,7 +169,7 @@ class ModelBasedSearcher(BaseSearcher):
         return self._hp_ranges_in_state()
 
     def _metric_val_update(
-            self, config: Dict, crit_val: float, result: Dict) -> MetricValues:
+            self, crit_val: float, result: Dict) -> MetricValues:
         return crit_val
 
     def on_trial_result(
@@ -201,7 +201,7 @@ class ModelBasedSearcher(BaseSearcher):
         else:
             crit_val = metric_val
         metrics = dictionarize_objective(
-            self._metric_val_update(config, crit_val, result))
+            self._metric_val_update(crit_val, result))
         # Cost value only dealt with here if `resource_attr` not given
         attr = self._cost_attr
         cost_val = None
@@ -238,9 +238,11 @@ class ModelBasedSearcher(BaseSearcher):
         state = self.state_transformer.state
         if self.do_profile:
             # Start new profiler block
+            skip_optimization = self.state_transformer.skip_optimization
+            if isinstance(skip_optimization, dict):
+                skip_optimization = skip_optimization[INTERNAL_METRIC_NAME]
             meta = {
-                'fit_hyperparams': not self.state_transformer.skip_optimization(
-                    state),
+                'fit_hyperparams': not skip_optimization(state),
                 'num_observed': len(state.candidate_evaluations),
                 'num_pending': len(state.pending_evaluations)
             }
@@ -467,18 +469,18 @@ class GPFIFOSearcher(ModelBasedSearcher):
         else:
             # Internal constructor, bypassing the factory
             kwargs_int = kwargs.copy()
-        self._call_create_internal(**kwargs_int)
+        self._call_create_internal(kwargs_int)
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
             kwargs, *gp_fifo_searcher_defaults(),
             dict_name='search_options')
-        # Extra arguments not parsed in factory
         kwargs_int = gp_fifo_searcher_factory(**_kwargs)
+        # Extra arguments not parsed in factory
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         return kwargs_int
 
-    def _call_create_internal(self, **kwargs_int):
+    def _call_create_internal(self, kwargs_int):
         """
         Part of constructor which can be different in subclasses
         """
@@ -515,9 +517,14 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 assert False, error_msg
             self.state_transformer.append_candidate(config)
 
+    def _fix_resource_attribute(self, **kwargs):
+        pass
+
+    def _postprocess_config(self, config: dict) -> dict:
+        return config
+
     def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
             Optional[Configuration]:
-        state = self.state_transformer.state
         # Obtain current SurrogateModel from state transformer. Based on
         # this, the BO algorithm components can be constructed
         if self.do_profile:
@@ -528,12 +535,14 @@ class GPFIFOSearcher(ModelBasedSearcher):
         model = self.state_transformer.model()
         if self.do_profile:
             self.profiler.stop('gpmodel')
+        # Select and fix target resource attribute (relevant in subclasses)
+        self._fix_resource_attribute(**kwargs)
         # Create BO algorithm
         initial_candidates_scorer = create_initial_candidates_scorer(
             self.initial_scoring, model, self.acquisition_class,
             self.random_state)
         local_optimizer = self.local_minimizer_class(
-            hp_ranges=state.hp_ranges,
+            hp_ranges=self._hp_ranges_for_prediction(),
             model=model,
             acquisition_class=self.acquisition_class,
             active_metric=INTERNAL_METRIC_NAME)
@@ -553,7 +562,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         # Next candidate decision
         _config = bo_algorithm.next_candidates()
         if len(_config) > 0:
-            config = _config[0]
+            config = self._postprocess_config(_config[0])
         else:
             config = None
         if self.do_profile:
@@ -570,15 +579,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
-        init_state = decode_state(state['state'], self.hp_ranges)
+        init_state = decode_state(state['state'], self._hp_ranges_in_state())
         skip_optimization = state['skip_optimization']
-        model_factory = self.state_transformer._model_factory
-        if isinstance(model_factory, dict):
-            # this is a single-key dictionary, so we extract the only value it contains
-            model_factory = next(iter(model_factory.values()))
-        if isinstance(skip_optimization, dict):
-            # this is a single-key dictionary, so we extract the only value it contains
-            skip_optimization = next(iter(skip_optimization.values()))
+        model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPFIFOSearcher(
             configspace=None,

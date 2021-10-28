@@ -48,7 +48,7 @@ class BaseSurrogateModel(SurrogateModel):
         candidates += self.state.pending_candidates
         assert len(candidates) > 0, \
             "Cannot predict means at current candidates with no candidates at all"
-        inputs = self.state.hp_ranges.to_ndarray_matrix(candidates)
+        inputs = self.hp_ranges_for_prediction().to_ndarray_matrix(candidates)
         all_means = []
         # Loop over MCMC samples (if any)
         for prediction in self.predict(inputs):

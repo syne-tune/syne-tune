@@ -87,6 +87,7 @@ class ExclusionList(object):
         if is_new:
             self.hp_ranges = state.hp_ranges
             keys = self.hp_ranges.internal_keys
+            # Remove resource attribute from `self.keys` if present
             resource_attr = self.hp_ranges.name_last_pos
             if resource_attr is None:
                 self.keys = keys
