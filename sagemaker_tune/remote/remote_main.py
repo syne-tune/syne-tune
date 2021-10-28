@@ -18,19 +18,16 @@ import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
+from sagemaker_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from sagemaker_tune.tuner import Tuner
 
 
 def get_tuner_callbacks(tuner: Tuner):
     from sagemaker_tune.backend.simulator_backend.simulator_callback import \
-        create_simulator_callback
-    from sagemaker_tune.backend.simulator_backend.simulator_callback import \
         SimulatorBackend
-
     backend = tuner.backend
     if isinstance(backend, SimulatorBackend):
-        simulator_callback = create_simulator_callback(tuner)
-        return [simulator_callback]
+        return [SimulatorCallback()]
     else:
         return None
 

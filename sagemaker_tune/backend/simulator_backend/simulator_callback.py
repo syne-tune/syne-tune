@@ -106,20 +106,3 @@ class SimulatorCallback(StoreResultsCallback):
         # Restore `stop_criterion`
         self._tuner.stop_criterion = self._backup_stop_criterion
         self._tuner = None
-
-
-def create_simulator_callback(tuner: Tuner):
-    """
-    Helper function to create correct `SimulatorCallback` object given a
-    `Tuner` object, whose back-end must be a simulator.
-
-    :param tuner:
-    :return: SimulatorCallback
-    """
-    backend = tuner.backend
-    assert isinstance(backend, SimulatorBackend)
-    csv_file = tuner._default_callback().csv_file
-    results_update_interval = tuner.results_update_interval
-    return SimulatorCallback(
-        csv_file=csv_file,
-        results_update_interval=results_update_interval)

@@ -19,7 +19,7 @@ import argparse
 from sagemaker_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
 from sagemaker_tune.backend.simulator_backend.simulator_callback import \
-    create_simulator_callback
+    create_simulator_callback, SimulatorCallback
 from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from sagemaker_tune.tuner import Tuner
 from sagemaker_tune.stopping_criterion import StoppingCriterion
@@ -94,10 +94,10 @@ if __name__ == '__main__':
         sleep_time=0,
         results_update_interval=results_update_interval,
         print_update_interval=print_update_interval,
+        # This callback is required in order to make things work with the
+        # simulator callback. It makes sure that results are stored with
+        # simulated time (rather than real time), and that the time_keeper
+        # is advanced properly whenever the tuner loop sleeps
+        callbacks=[SimulatorCallback()],
     )
-    # This callback is required in order to make things work with the
-    # simulator callback. It makes sure that results are stored with
-    # simulated time (rather than real time), and that the time_keeper
-    # is advanced properly whenever the tuner loop sleeps
-    simulator_callback = create_simulator_callback(tuner)
-    tuner.run(callbacks=[simulator_callback])
+    tuner.run()

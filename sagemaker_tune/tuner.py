@@ -48,6 +48,7 @@ class Tuner:
             max_failures: int = 1,
             tuner_name: Optional[str] = None,
             asynchronous_scheduling: bool = True,
+            callbacks: Optional[List[TunerCallback]] = None,
             metadata: Optional[Dict] = None,
     ):
         """
@@ -69,6 +70,8 @@ class Tuner:
         :param asynchronous_scheduling: whether to use asynchronous scheduling when scheduling new trials. If `True`,
         trials are scheduled as soon as a worker is available, if `False`, the tuner waits that all trials are finished
          before scheduling a new batch.
+        :param callbacks: called when events happens in the tuning loop such as when a result is seen, by default
+        a callback that stores results every `results_update_interval` is used.
         :param metadata: dictionary of user-metadata that will be persistend in {tuner_path}/metadata.json, in addition
         to the metadata provided by the user, `SMT_TUNER_CREATION_TIMESTAMP` is always included which measures
         the time-stamp when the tuner started to run.
@@ -99,21 +102,15 @@ class Tuner:
         # inform the backend to the name of the tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
         self.backend.set_path(results_root=self.tuner_path, tuner_name=self.name)
+        self.callbacks = callbacks if callbacks is not None else [self._default_callback()]
 
-    def run(
-            self,
-            callbacks: Optional[List[TunerCallback]] = None,
-    ) -> TuningStatus:
+    def run(self) -> TuningStatus:
         """
         Launches the tuning.
-        :param callbacks: called when events happens in the tuning loop such as when a result is seen, by default
-        a callback that stores results every `results_update_interval` is used.
         :return: the tuning status when finished
         """
-        if callbacks is None:
-            callbacks = [self._default_callback()]
 
-        for callback in callbacks:
+        for callback in self.callbacks:
             callback.on_tuning_start(self)
 
         self.tuner_path.mkdir(exist_ok=True, parents=True)
@@ -147,13 +144,13 @@ class Tuner:
         )
 
         while not self.stop_criterion(tuning_status) and tuning_status.num_trials_failed < self.max_failures:
-            for callback in callbacks:
+            for callback in self.callbacks:
                 callback.on_loop_start()
 
             # fetch new results
             trial_status_dict, new_results = self.backend.fetch_status_results(trial_ids=list(running_trials_ids))
 
-            for callback in callbacks:
+            for callback in self.callbacks:
                 callback.on_fetch_status_results(trial_status_dict=trial_status_dict, new_results=new_results)
 
             # update status with new results and all done trials
@@ -167,7 +164,7 @@ class Tuner:
             # gets list of trials that are done with the new results (could be because they completed or because the
             # scheduler decided to interrupt them
             # Note: `done_trials` includes trials which are paused
-            done_trials = self._update_running_trials(trial_status_dict, new_results, callbacks=callbacks)
+            done_trials = self._update_running_trials(trial_status_dict, new_results, callbacks=self.callbacks)
 
             # update the list of done trials and remove those from `running_trials_ids`
             all_done_trials.update(done_trials)
@@ -188,7 +185,7 @@ class Tuner:
                     f"busy, wait for {self.sleep_time} seconds")
                 time.sleep(self.sleep_time)
 
-                for callback in callbacks:
+                for callback in self.callbacks:
                     callback.on_tuning_sleep(self.sleep_time)
 
             else:
@@ -204,7 +201,7 @@ class Tuner:
 
             status_printer(tuning_status)
 
-            for callback in callbacks:
+            for callback in self.callbacks:
                 callback.on_loop_end()
 
         print_best_metric_found(
@@ -223,7 +220,7 @@ class Tuner:
         if tuning_status.num_trials_failed >= self.max_failures:
             self._handle_failure(all_done_trials=all_done_trials)
 
-        for callback in callbacks:
+        for callback in self.callbacks:
             callback.on_tuning_end()
 
         return tuning_status

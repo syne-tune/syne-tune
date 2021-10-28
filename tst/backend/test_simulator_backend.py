@@ -118,6 +118,12 @@ def test_compare_local_simulator_backends(scheduler_name):
 
         _tuner_sleep_time = 0 if backend_name == 'simulated' \
             else tuner_sleep_time
+        # Run experiment
+        if backend_name == 'local':
+            # Duplicates callback used in `tuner.run`, but we have access
+            result_callback = StoreResultsCallback()
+        else:
+            result_callback = SimulatorCallback()
         local_tuner = Tuner(
             backend=backend,
             scheduler=scheduler,
@@ -126,14 +132,9 @@ def test_compare_local_simulator_backends(scheduler_name):
             sleep_time=_tuner_sleep_time,
             results_update_interval=100,
             print_update_interval=100,
+            callbacks=[result_callback],
         )
-        # Run experiment
-        if backend_name == 'local':
-            # Duplicates callback used in `tuner.run`, but we have access
-            result_callback = StoreResultsCallback()
-        else:
-            result_callback = SimulatorCallback()
-        local_tuner.run(callbacks=[result_callback])
+        local_tuner.run()
         results[backend_name] = result_callback.results
 
     # Compare results. Note that times are not comparable. We may not see
