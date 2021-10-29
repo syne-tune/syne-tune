@@ -16,7 +16,7 @@ import numpy as np
 from numpy.random import RandomState
 
 from sagemaker_tune.search_space import Domain, Categorical, \
-    non_constant_hyperparameter_keys, value_type_and_transform
+    non_constant_hyperparameter_keys, is_log_space
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 
@@ -101,10 +101,12 @@ class HyperparameterRanges(ABC):
 
     def _assert_sub_config_space(self, active_config_space: Dict):
         for k, v in active_config_space.items():
-            assert k in self.config_space and value_type_and_transform(
-                v) == value_type_and_transform(self.config_space[k]), \
-                f"active_config_space[{k}] not in config_space or has " +\
-                "different type"
+            assert k in self.config_space, f"active_config_space[{k}] not in config_space"
+            same_value_type = v.value_type == self.config_space[k].value_type
+            same_log_type = is_log_space(v) == is_log_space(self.config_space[k])
+            same_domain_type = type(v) == type(self.config_space[k])
+            assert k in self.config_space and same_value_type and same_log_type and same_domain_type, \
+                f"active_config_space[{k}] has different type"
 
     @property
     def internal_keys(self) -> List[str]:
