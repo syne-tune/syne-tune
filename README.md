@@ -148,6 +148,10 @@ tuner = Tuner(
 tuner.run()
 ```
 
+An important part of this script is the definition of `config_space`, the
+configuration space (or search space). [This tutorial](docs/search_space.md)
+provides some advice on this choice.
+
 Using the local backend `LocalBackend(entry_point=...)` allows to run the trials (4 at the same time) 
 on the local machine. If instead, users prefer to evaluate trials on SageMaker, then SageMaker backend 
 can be used which allow to tune any SageMaker Framework (see 
@@ -362,6 +366,7 @@ Once tunings experiments are finished, `show_experiment_results.py` gives an exa
 
 Do you want to know more? Here are a number of short tutorials.
 * [Using the built-in schedulers](docs/schedulers.md)
+* [Choosing a configuration space](docs/search_space.md)
 * [Using the command line launcher to benchmark schedulers](docs/command_line.md)
 * [Using and extending the list of benchmarks](docs/benchmarks.md)
 

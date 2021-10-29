@@ -109,10 +109,19 @@ class Uniform(Sampler):
         return "Uniform"
 
 
+EXP_ONE = np.exp(1.0)
+
+
 class LogUniform(Sampler):
-    def __init__(self, base: float = 10):
-        self.base = base
-        assert self.base > 0, "Base has to be strictly greater than 0"
+    """
+    Note: We keep the argument `base` for compatibility with Ray Tune.
+    Since `base` has no effect on the distribution, we don't use it
+    internally.
+
+    """
+    def __init__(self, base: float = EXP_ONE):
+        assert base > 0, "Base has to be strictly greater than 0"
+        self.base = base  # Not really used internally
 
     def __str__(self):
         return "LogUniform"
@@ -166,12 +175,14 @@ class Float(Domain):
                 "LogUniform needs a lower bound greater than 0"
             assert 0 < domain.upper < float("inf"), \
                 "LogUniform needs a upper bound greater than 0"
-            logmin = np.log(domain.lower) / np.log(self.base)
-            logmax = np.log(domain.upper) / np.log(self.base)
+            # Note: We don't use `self.base` here, because it does not make a
+            # difference
+            logmin = np.log(domain.lower)
+            logmax = np.log(domain.upper)
             if random_state is None:
                 random_state = np.random
-            items = self.base**(random_state.uniform(
-                logmin, logmax, size=size))
+            log_items = random_state.uniform(logmin, logmax, size=size)
+            items = np.exp(log_items)
             return items if len(items) > 1 else domain.cast(items[0])
 
     class _Normal(Normal):
@@ -213,7 +224,7 @@ class Float(Domain):
         new.set_sampler(self._Uniform())
         return new
 
-    def loguniform(self, base: float = 10):
+    def loguniform(self):
         if not self.lower > 0:
             raise ValueError(
                 "LogUniform requires a lower bound greater than 0."
@@ -227,7 +238,7 @@ class Float(Domain):
                 "been log-transformed? If so, pass the non-transformed value "
                 "instead.")
         new = copy(self)
-        new.set_sampler(self._LogUniform(base))
+        new.set_sampler(self._LogUniform())
         return new
 
     def normal(self, mean=0., sd=1.):
@@ -290,12 +301,14 @@ class Integer(Domain):
                 "LogUniform needs a lower bound greater than 0"
             assert 0 < domain.upper < float("inf"), \
                 "LogUniform needs a upper bound greater than 0"
-            logmin = np.log(domain.lower) / np.log(self.base)
-            logmax = np.log(domain.upper) / np.log(self.base)
+            # Note: We don't use `self.base` here, because it does not make a
+            # difference
+            logmin = np.log(domain.lower)
+            logmax = np.log(domain.upper)
             if random_state is None:
                 random_state = np.random
-            items = self.base**(random_state.uniform(
-                logmin, logmax, size=size))
+            log_items = random_state.uniform(logmin, logmax, size=size)
+            items = np.exp(log_items)
             items = np.round(items).astype(int)
             return items if len(items) > 1 else domain.cast(items[0])
 
@@ -319,7 +332,7 @@ class Integer(Domain):
         new.set_sampler(self._Uniform())
         return new
 
-    def loguniform(self, base: float = 10):
+    def loguniform(self):
         if not self.lower > 0:
             raise ValueError(
                 "LogUniform requires a lower bound greater than 0."
@@ -333,7 +346,7 @@ class Integer(Domain):
                 "been log-transformed? If so, pass the non-transformed value "
                 "instead.")
         new = copy(self)
-        new.set_sampler(self._LogUniform(base))
+        new.set_sampler(self._LogUniform())
         return new
 
     def is_valid(self, value: int):
@@ -478,6 +491,59 @@ class Quantized(Sampler):
         return list(quantized)
 
 
+class FiniteRange(Domain):
+    """
+    Represents a finite range `[lower, ..., upper]` with `size` values
+    equally spaced in linear or log domain.
+
+    """
+    def __init__(self, lower: float, upper: float, size: int,
+                 log_scale: bool = False):
+        assert lower < upper
+        assert size >= 2
+        if log_scale:
+            assert lower > 0.0
+        self._uniform_int = randint(0, size - 1)
+        self.lower = lower
+        self.upper = upper
+        self.log_scale = log_scale
+        if not log_scale is None:
+            self._lower_internal = lower
+            self._step_internal = (upper - lower) / (size - 1)
+        else:
+            self._lower_internal = np.log(lower)
+            upper_internal = np.log(upper)
+            self._step_internal = \
+                (upper_internal - self._lower_internal) / (size - 1)
+
+    def _map_from_int(self, x: int) -> float:
+        y = x * self._step_internal + self._lower_internal
+        if self.log_scale is not None:
+            y = np.exp(y)
+        return np.clip(y, self.lower, self.upper)
+
+    @property
+    def value_type(self):
+        return float
+
+    def set_sampler(self, sampler, allow_override=False):
+        raise NotImplementedError()
+
+    def get_sampler(self):
+        return None
+
+    def sample(self, spec=None, size=1, random_state=None):
+        return [self._map_from_int(x)
+                for x in self._uniform_int.sample(spec, size, random_state)]
+
+    @property
+    def domain_str(self):
+        return f"({self.lower}, {self.upper}, {self.__len__()})"
+
+    def __len__(self):
+        return len(self._uniform_int)
+
+
 def sample_from(func: Callable[[Dict], Any]):
     """Specify that tune should sample configuration values from this function.
 
@@ -510,19 +576,21 @@ def quniform(lower: float, upper: float, q: float):
     return Float(lower, upper).uniform().quantized(q)
 
 
-def loguniform(lower: float, upper: float, base: float = 10):
+def loguniform(lower: float, upper: float):
     """Sugar for sampling in different orders of magnitude.
+
+    Note: Ray Tune has an argument `base` here, but since this does not
+    affect the distribution, we drop it.
 
     Args:
         lower (float): Lower boundary of the output interval (e.g. 1e-4)
         upper (float): Upper boundary of the output interval (e.g. 1e-2)
-        base (int): Base of the log. Defaults to 10.
 
     """
-    return Float(lower, upper).loguniform(base)
+    return Float(lower, upper).loguniform()
 
 
-def qloguniform(lower: float, upper: float, q: float, base: float = 10):
+def qloguniform(lower: float, upper: float, q: float):
     """Sugar for sampling in different orders of magnitude.
 
     The value will be quantized, i.e. rounded to an integer increment of ``q``.
@@ -534,10 +602,9 @@ def qloguniform(lower: float, upper: float, q: float, base: float = 10):
         upper (float): Upper boundary of the output interval (e.g. 1e-2)
         q (float): Quantization number. The result will be rounded to an
             integer increment of this value.
-        base (int): Base of the log. Defaults to 10.
 
     """
-    return Float(lower, upper).loguniform(base).quantized(q)
+    return Float(lower, upper).loguniform().quantized(q)
 
 
 def choice(categories: List):
@@ -564,14 +631,15 @@ def randint(lower: int, upper: int):
     return Integer(lower, upper).uniform()
 
 
-def lograndint(lower: int, upper: int, base: float = 10):
-    """Sample an integer value log-uniformly between ``lower`` and ``upper``,
-    with ``base`` being the base of logarithm.
+def lograndint(lower: int, upper: int):
+    """Sample an integer value log-uniformly between ``lower`` and ``upper``
 
     ``lower`` and ``upper` are inclusive.
 
+    Note: Ray Tune has an argument `base` here, but since this does not
+    affect the distribution, we drop it.
     """
-    return Integer(lower, upper).loguniform(base)
+    return Integer(lower, upper).loguniform()
 
 
 def qrandint(lower: int, upper: int, q: int = 1):
@@ -586,9 +654,8 @@ def qrandint(lower: int, upper: int, q: int = 1):
     return Integer(lower, upper).uniform().quantized(q)
 
 
-def qlograndint(lower: int, upper: int, q: int, base: float = 10):
-    """Sample an integer value log-uniformly between ``lower`` and ``upper``,
-    with ``base`` being the base of logarithm.
+def qlograndint(lower: int, upper: int, q: int):
+    """Sample an integer value log-uniformly between ``lower`` and ``upper``
 
     ``lower`` is inclusive, ``upper`` is also inclusive (!).
 
@@ -596,7 +663,7 @@ def qlograndint(lower: int, upper: int, q: int, base: float = 10):
     Quantization makes the upper bound inclusive.
 
     """
-    return Integer(lower, upper).loguniform(base).quantized(q)
+    return Integer(lower, upper).loguniform().quantized(q)
 
 
 def randn(mean: float = 0., sd: float = 1.):
@@ -625,9 +692,37 @@ def qrandn(mean: float, sd: float, q: float):
     return Float(None, None).normal(mean, sd).quantized(q)
 
 
+def finrange(lower: float, upper: float, size: int):
+    """
+    Finite range `[lower, ..., upper]` with `size` entries, which are
+    equi-spaced. Finite alternative to `uniform`.
+
+    :param lower: Smallest feasible value
+    :param upper: Largest feasible value
+    :param size: Size of (finite) domain, must be >= 2
+    """
+    return FiniteRange(lower, upper, size)
+
+
+def logfinrange(lower: float, upper: float, size: int):
+    """
+    Finite range `[lower, ..., upper]` with `size` entries, which are
+    equi-spaced in the log domain. Finite alternative to `loguniform`.
+
+    :param lower: Smallest feasible value (positive)
+    :param upper: Largest feasible value (positive)
+    :param size: Size of (finite) domain, must be >= 2
+    """
+    return FiniteRange(lower, upper, size, log_scale=True)
+
+
 def is_log_space(domain: Domain) -> bool:
-    sampler = domain.get_sampler()
-    return isinstance(sampler, Float._LogUniform) or isinstance(sampler, Integer._LogUniform)
+    if isinstance(domain, FiniteRange):
+        return domain.log_scale
+    else:
+        sampler = domain.get_sampler()
+        return isinstance(sampler, Float._LogUniform) \
+               or isinstance(sampler, Integer._LogUniform)
 
 
 def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):

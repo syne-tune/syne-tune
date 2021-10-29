@@ -18,7 +18,7 @@ from numpy.testing import assert_allclose, assert_almost_equal
 from pytest import approx
 
 from sagemaker_tune.search_space import uniform, randint, choice, loguniform, \
-    lograndint
+    lograndint, finrange, logfinrange
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
@@ -33,26 +33,36 @@ def _assert_allclose_config(c1, c2, hp_ranges):
     assert_allclose(c1_tpl, c2_tpl)
 
 
-@pytest.mark.parametrize('lower,upper,external_hp,internal_ndarray,domain', [
-    (0.0, 8.0, 0.0, 0.0, uniform),
-    (0.0, 8.0, 8.0, 1.0, uniform),
-    (0.0, 8.0, 2.0, 0.25, uniform),
-    (100.2, 100.6, 100.4, 0.5, uniform),
-    (-2.0, 8.0, 0.0, 0.2, uniform),
-    (-11.0, -1.0, -10.0, 0.1, uniform),
-    (1.0, 8.0, 1.0, 0.0, loguniform),
-    (1.0, 8.0, 8.0, 1.0, loguniform),
-    (1.0, 10000.0, 10.0, 0.25, loguniform),
-    (1.0, 10000.0, 100.0, 0.5, loguniform),
-    (1.0, 10000.0, 1000.0, 0.75, loguniform),
-    (0.001, 0.1, 0.01, 0.5, loguniform),
-    (0.1, 100, 1.0, 1.0/3, loguniform),
-    (1, 10001, 5001, 0.5, randint),
-    (-10, 10, 0, 0.5, randint),
+@pytest.mark.parametrize('lower,upper,external_hp,internal_ndarray,domain,size', [
+    (0.0, 8.0, 0.0, 0.0, uniform, None),
+    (0.0, 8.0, 8.0, 1.0, uniform, None),
+    (0.0, 8.0, 2.0, 0.25, uniform, None),
+    (100.2, 100.6, 100.4, 0.5, uniform, None),
+    (-2.0, 8.0, 0.0, 0.2, uniform, None),
+    (-11.0, -1.0, -10.0, 0.1, uniform, None),
+    (1.0, 8.0, 1.0, 0.0, loguniform, None),
+    (1.0, 8.0, 8.0, 1.0, loguniform, None),
+    (1.0, 10000.0, 10.0, 0.25, loguniform, None),
+    (1.0, 10000.0, 100.0, 0.5, loguniform, None),
+    (1.0, 10000.0, 1000.0, 0.75, loguniform, None),
+    (0.001, 0.1, 0.01, 0.5, loguniform, None),
+    (0.1, 100, 1.0, 1.0/3, loguniform, None),
+    (1, 10001, 5001, 0.5, randint, None),
+    (-10, 10, 0, 0.5, randint, None),
+    (0.1, 1.0, 0.1, 0.5/10, finrange, 10),
+    (0.1, 1.0, 1.0, 9.5/10, finrange, 10),
+    (0.1, 1.0, 0.5, 4.5/10, finrange, 10),
+    (np.exp(0.1), np.exp(1.0), np.exp(0.1), 0.5/10, logfinrange, 10),
+    (np.exp(0.1), np.exp(1.0), np.exp(1.0), 9.5/10, logfinrange, 10),
+    (np.exp(0.1), np.exp(1.0), np.exp(0.5), 4.5/10, logfinrange, 10)
 ])
 def test_continuous_to_and_from_ndarray(
-        lower, upper, external_hp, internal_ndarray, domain):
-    hp_ranges = make_hyperparameter_ranges({'a': domain(lower, upper)})
+        lower, upper, external_hp, internal_ndarray, domain, size):
+    if size is None:
+        hp_range = domain(lower, upper)
+    else:
+        hp_range = domain(lower, upper, size=size)
+    hp_ranges = make_hyperparameter_ranges({'a': hp_range})
     config = hp_ranges.tuple_to_config((external_hp,))
     config_enc = np.array([internal_ndarray])
     assert_allclose(hp_ranges.to_ndarray(config), config_enc)

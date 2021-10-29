@@ -10,8 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import pytest
+import numpy as np
+
 from sagemaker_tune.search_space import randint, lograndint, uniform, \
-    loguniform, choice, search_space_size, randn, to_dict, from_dict
+    loguniform, choice, search_space_size, randn, to_dict, from_dict, \
+    finrange, logfinrange
 
 
 def test_convert_config_space():
@@ -23,7 +27,7 @@ def test_convert_config_space():
         'int': randint(1, 2),
         'logint': lograndint(3, 4),
         'float': uniform(5.5, 6.5),
-        'logfloat': loguniform(7.5, 8.5, 2.0),
+        'logfloat': loguniform(7.5, 8.5),
         'categorical': choice(['a', 'b', 'c']),
         'normal': randn(2.0, 1.0),
         'const_str': 'constant'}
@@ -47,7 +51,7 @@ def test_convert_config_space():
     v = ray_config_space['logfloat']
     assert isinstance(v, Float) and \
         isinstance(v.get_sampler(), Float._LogUniform) and \
-        v.lower == 7.5 and v.upper == 8.5 and v.get_sampler().base == 2.0
+        v.lower == 7.5 and v.upper == 8.5
     v = ray_config_space['categorical']
     assert isinstance(v, Categorical) and \
         set(v.categories) == set(config_space['categorical'].categories)
@@ -66,7 +70,7 @@ def test_serialization():
         randint(1, 2),
         lograndint(3, 4),
         uniform(5.5, 6.5),
-        loguniform(7.5, 8.5, 2.0),
+        loguniform(7.5, 8.5),
         choice(['a', 'b', 'c']),
         randn(2.0, 1.0),
     ]
@@ -102,3 +106,26 @@ def test_search_space_size():
         _size = search_space_size(cs)
         assert _size == size, \
             f"search_space_size(cs) = {_size} != {size}\n{cs}"
+
+
+@pytest.mark.parametrize('domain,value_set', [
+    (finrange(0.1, 1.0, 10),
+     np.arange(0.1, 1.1, 0.1)),
+    (finrange(0.5, 1.5, 2),
+     np.array([0.5, 1.5])),
+    (logfinrange(np.exp(0.1), np.exp(1.0), 10),
+     np.exp(np.arange(0.1, 1.1, 0.1))),
+    (logfinrange(0.0001, 1.0, 5),
+     np.array([0.0001, 0.001, 0.01, 0.1, 1.0]))
+])
+def test_finrange_domain(domain, value_set):
+    seed = 31415927
+    random_state = np.random.RandomState(seed)
+    num_samples = 500
+    sampled_values = np.array(
+        domain.sample(size=num_samples,
+                      random_state=random_state)).reshape((-1, 1))
+    min_distances = np.min(np.abs(
+        sampled_values - value_set.reshape((1, -1))), axis=1)
+    assert np.max(min_distances) < 1e-8
+
