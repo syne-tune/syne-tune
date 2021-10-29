@@ -106,10 +106,9 @@ def test_scheduler(scheduler, random_seed):
         sleep_time=0.02,
         n_workers=num_workers,
         stop_criterion=stop_criterion,
-    )
-    tuner1.run(
         callbacks=[callback1],
     )
+    tuner1.run()
 
     backend = temporary_local_backend(entry_point=entry_point)
     callback2 = StoreConfigCallback()
@@ -119,10 +118,9 @@ def test_scheduler(scheduler, random_seed):
         sleep_time=0.02,
         n_workers=num_workers,
         stop_criterion=stop_criterion,
-    )
-    tuner2.run(
         callbacks=[callback2],
     )
+    tuner2.run()
     configs1 = callback1.configs
     configs2 = callback2.configs
     len1 = len(configs1)

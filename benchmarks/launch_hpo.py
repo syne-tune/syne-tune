@@ -21,8 +21,7 @@ from sagemaker_tune.backend.sagemaker_backend.sagemaker_backend import \
     SagemakerBackend
 from sagemaker_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend, SimulatorConfig, SimulatorBackendForRemoteLauncher
-from sagemaker_tune.backend.simulator_backend.simulator_callback import \
-    create_simulator_callback
+from sagemaker_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from sagemaker_tune.stopping_criterion import StoppingCriterion
 from sagemaker_tune.tuner import Tuner
 from sagemaker_tune.remote.remote_launcher import RemoteLauncher
@@ -331,6 +330,7 @@ if __name__ == '__main__':
 
         tuner_sleep_time = 0 if backend_name == 'simulated' \
             else params['tuner_sleep_time']
+
         local_tuner = Tuner(
             backend=backend,
             scheduler=myscheduler,
@@ -343,6 +343,7 @@ if __name__ == '__main__':
             max_failures=params['max_failures'],
             asynchronous_scheduling=not params['synchronous'],
             print_update_interval=params['print_update_interval'],
+            callbacks=[SimulatorCallback()] if params['local_tuner'] and backend_name == 'simulated' else None
         )
         last_tuner_name = local_tuner.name
         if exp_id == 0:
@@ -353,11 +354,7 @@ if __name__ == '__main__':
             if params['no_tuner_logging']:
                 logging.getLogger('sagemaker_tune.tuner').setLevel(
                     logging.ERROR)
-            callbacks = None
-            if backend_name == 'simulated':
-                simulator_callback = create_simulator_callback(local_tuner)
-                callbacks = [simulator_callback]
-            local_tuner.run(callbacks=callbacks)
+            local_tuner.run()
         else:
             if backend_name != 'sagemaker':
                 # Local backend: Configure SageMaker estimator to what the
