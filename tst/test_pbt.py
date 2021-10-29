@@ -27,13 +27,16 @@ metric = "mean_loss"
 total_steps = 10
 population_size = 2
 
+random_seed = 31415927
+
 pbt = PopulationBasedTraining(config_space=config_space,
                               metric=metric,
                               resource_attr=resource_attr,
                               population_size=population_size,
                               mode='min',
                               max_t=total_steps,
-                              perturbation_interval=1)
+                              perturbation_interval=1,
+                              random_seed=random_seed)
 
 
 def update_state(suggest, state):

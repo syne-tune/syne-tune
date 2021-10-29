@@ -44,7 +44,6 @@ def height_with_cost_default_params(params=None):
         'num_workers': 4,
         'framework': 'PyTorch',
         'framework_version': '1.6',
-        'dataset_path': './',
         'dont_sleep': dont_sleep,
     }
 

@@ -267,10 +267,7 @@ instance type via `--instance_type`, valid values are
 'ml.m4.xlarge' (note that leading 'ml.' prefix). The built-in benchmarks come
 with suitable defaults for instance types. Also, you do not need the benchmark
 dependencies to be installed on your instance (in fact, you can launch
-experiments remotely from your laptop). For the built-in benchmarks,
-dependencies are managed automatically by SageMaker frameworks. For complex
-models (e.g., coming from Hugging Face), this can be a major advantage: you do
-not have to set things up locally.
+experiments remotely from your laptop).
 
 
 ## How Results are Stored and Downloaded
@@ -377,6 +374,28 @@ relevant:
   this is done and uploaded to ECR, its URI is passed using this argument.
 * `s3_bucket`: S3 bucket where checkpoints are stored. If not given, the
   default bucket for the session is used.
+
+
+### SageMaker frameworks
+
+A very convenient aspect of SageMaker are its
+[frameworks](https://sagemaker.readthedocs.io/en/stable/frameworks/index.html).
+Essentially, a framework manages dependencies for customers, which may include
+AWS specific optimizations or simplifications. Not making use of a framework
+often means that you have to create your own Docker image, or at least manage
+your dependencies on top of a more generic framework.
+
+SageMaker Tune currently supports frameworks only with the `sagemaker` back-end.
+For remote tuning with the local back-end, while each tuning experiment maps to
+a SageMaker training job, these jobs use the PyTorch framework together with a
+pre-built image containing the SageMaker Tune dependencies. If your benchmark
+code requires additional dependencies on top of PyTorch, you can specify them
+in `dependencies.txt`. For example, if your training script uses Hugging Face,
+you need to add `transformers` and `datasets` to `dependencies.txt`. This works
+because Hugging Face itself runs on top of PyTorch. If your benchmark uses
+TensorFlow or requires other specific dependencies which cannot be based on top
+of PyTorch, you currently cannot use remote tuning with the local back-end.
+More details are given in the [benchmarks tutorial](benchmarks.md).
 
 
 ### Remote Tuning with SageMaker Back-end
