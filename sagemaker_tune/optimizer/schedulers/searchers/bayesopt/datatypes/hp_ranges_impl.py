@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Dict, List
 import numpy as np
 
-from sagemaker_tune.search_space import Domain, value_type_and_transform
+from sagemaker_tune.search_space import Domain, is_log_space
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
@@ -270,7 +270,8 @@ class HyperparameterRangesImpl(HyperparameterRanges):
         for name in self.internal_keys:
             hp_range = self.config_space[name]
             assert isinstance(hp_range, Domain)
-            tp, is_log = value_type_and_transform(hp_range, name=name)
+            is_log = is_log_space(hp_range)
+            tp = hp_range.value_type
             if tp == str:
                 if name in self.active_config_space:
                     active_choices = tuple(

@@ -16,7 +16,7 @@ import logging
 from sagemaker_tune.optimizer.scheduler import TrialScheduler, \
     TrialSuggestion
 from sagemaker_tune.backend.trial_status import Trial
-from sagemaker_tune.search_space import Domain, value_type_and_transform
+import sagemaker_tune.search_space as sp
 
 __all__ = ['RayTuneScheduler']
 
@@ -180,28 +180,39 @@ class RayTuneScheduler(TrialScheduler):
         :param config_space:
         :return:
         """
-        from ray import tune
+        import ray.tune.sample as ray_sp
 
         ray_config_space = dict()
         for name, hp_range in config_space.items():
-            ray_val = hp_range
-            if isinstance(hp_range, Domain):
-                tp, is_log = value_type_and_transform(hp_range, name=name)
-                if tp == float:
-                    if is_log:
-                        ray_val = tune.loguniform(
-                            hp_range.lower, hp_range.upper)
-                    else:
-                        ray_val = tune.uniform(hp_range.lower, hp_range.upper)
-                elif tp == int:
-                    if is_log:
-                        ray_val = tune.lograndint(
-                            hp_range.lower, hp_range.upper)
-                    else:
-                        # Note: `tune.randint` has exclusive upper!
-                        ray_val = tune.randint(
-                            hp_range.lower, hp_range.upper + 1)
-                else:
-                    ray_val = tune.choice(hp_range.categories)
-            ray_config_space[name] = ray_val
+            if isinstance(hp_range, sp.Domain):
+                cls_mapping = {
+                    sp.Integer: ray_sp.Integer,
+                    sp.Float: ray_sp.Float,
+                    sp.LogUniform: ray_sp.LogUniform,
+                    sp.Categorical: ray_sp.Categorical,
+                    sp.Normal: ray_sp.Normal,
+                }
+                sampler_mapping = {
+                    sp.Integer._Uniform: ray_sp.Integer._Uniform,
+                    sp.Integer._LogUniform: ray_sp.Integer._LogUniform,
+                    sp.Float._Uniform: ray_sp.Float._Uniform,
+                    sp.Float._LogUniform: ray_sp.Float._LogUniform,
+                    sp.Categorical._Uniform: ray_sp.Categorical._Uniform,
+                    sp.Float._Normal: ray_sp.Float._Normal,
+                }
+
+                ray_cls = cls_mapping[type(hp_range)]
+                domain_kwargs = {k: v for k, v in hp_range.__dict__.items() if k != 'sampler'}
+
+                # Note: `tune.randint` has exclusive upper while we have inclusive
+                if isinstance(hp_range, sp.Integer):
+                    domain_kwargs['upper'] = domain_kwargs['upper'] + 1
+
+                ray_domain = ray_cls(**domain_kwargs)
+                ray_sampler = sampler_mapping[type(hp_range.get_sampler())](**hp_range.get_sampler().__dict__)
+                ray_domain.set_sampler(ray_sampler)
+                ray_config_space[name] = ray_domain
+            else:
+                ray_config_space[name] = hp_range
+
         return ray_config_space

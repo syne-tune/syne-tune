@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+
 # This file has been taken from Ray. The reason for reusing the file is to be able to support the same API when
 # defining search space while avoiding to have Ray as a required dependency. We may want to add functionality in the
 # future.
@@ -39,9 +40,13 @@ class Domain:
     sampler = None
     default_sampler_cls = None
 
+    @property
+    def value_type(self):
+        raise NotImplementedError
+
     def cast(self, value):
         """Cast value to domain type"""
-        return value
+        return self.value_type(value)
 
     def set_sampler(self, sampler, allow_override=False):
         if self.sampler and not allow_override:
@@ -52,7 +57,7 @@ class Domain:
                                  sampler))
         self.sampler = sampler
 
-    def get_sampler(self):
+    def get_sampler(self) -> "Sampler":
         sampler = self.sampler
         if not sampler:
             sampler = self.default_sampler_cls()
@@ -92,7 +97,6 @@ class Sampler:
                size: int = 1,
                random_state: Optional[np.random.RandomState] = None):
         raise NotImplementedError
-
 
 class BaseSampler(Sampler):
     def __str__(self):
@@ -191,8 +195,9 @@ class Float(Domain):
         self.lower = lower if lower is not None else float("-inf")
         self.upper = upper if upper is not None else float("inf")
 
-    def cast(self, value):
-        return float(value)
+    @property
+    def value_type(self):
+        return float
 
     def uniform(self):
         if not self.lower > float("-inf"):
@@ -299,8 +304,9 @@ class Integer(Domain):
         self.lower = self.cast(lower)
         self.upper = self.cast(upper)
 
-    def cast(self, value):
-        return int(value)
+    @property
+    def value_type(self):
+        return int
 
     def quantized(self, q: int):
         new = copy(self)
@@ -357,7 +363,11 @@ class Categorical(Domain):
     default_sampler_cls = _Uniform
 
     def __init__(self, categories: Sequence):
+        assert len(categories) > 0
         self.categories = list(categories)
+        if not isinstance(self.value_type, int) and not isinstance(self.value_type, str):
+            logger.info("Categorical value will be converted to string to avoid float conversion and "
+                        "serialization issues.")
 
     def uniform(self):
         new = copy(self)
@@ -377,6 +387,13 @@ class Categorical(Domain):
 
     def is_valid(self, value: Any):
         return value in self.categories
+
+    @property
+    def value_type(self):
+        if isinstance(type(self.categories[0]), int):
+            return int
+        else:
+            return str
 
     @property
     def domain_str(self):
@@ -458,14 +475,6 @@ class Quantized(Sampler):
         if not isinstance(quantized, np.ndarray):
             return domain.cast(quantized)
         return list(quantized)
-
-
-# TODO (krfricke): Remove tune.function
-def function(func):
-    logger.warning(
-        "DeprecationWarning: wrapping {} with tune.function() is no "
-        "longer needed".format(func))
-    return func
 
 
 def sample_from(func: Callable[[Dict], Any]):
@@ -615,42 +624,9 @@ def qrandn(mean: float, sd: float, q: float):
     return Float(None, None).normal(mean, sd).quantized(q)
 
 
-def _value_type(domain):
-    tp = None
-    if isinstance(domain, Float):
-        tp = float
-    elif isinstance(domain, Integer):
-        tp = int
-    elif isinstance(domain, Categorical):
-        tp = str
-    return tp
-
-
-def value_type_and_transform(domain, name=None):
-    tp = None
-    is_log = False
-    if isinstance(domain, Categorical):
-        tp = str
-    else:
-        sampler = domain.get_sampler()
-        if name is not None:
-            prefix = f"Parameter {name} "
-        else:
-            prefix = f"Domain {domain}"
-        if isinstance(domain, Float):
-            tp = float
-            is_log = isinstance(sampler, Float._LogUniform)
-            # TODO this code does not work for qloguniform
-            assert is_log or isinstance(sampler, Float._Uniform), \
-                prefix + "is neither uniform nor loguniform"
-        else:
-            assert isinstance(domain, Integer), \
-                prefix + "must be of type Float, Integer, or Categorical"
-            tp = int
-            is_log = isinstance(sampler, Integer._LogUniform)
-            assert is_log or isinstance(sampler, Integer._Uniform), \
-                prefix + "is neither uniform nor loguniform"
-    return tp, is_log
+def is_log_space(domain: Domain) -> bool:
+    sampler = domain.get_sampler()
+    return isinstance(sampler, Float._LogUniform) or isinstance(sampler, Integer._LogUniform)
 
 
 def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):
@@ -663,13 +639,8 @@ def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):
     :return:
     """
     for name, domain in config_space.items():
-        tp = _value_type(domain)
-        if tp is not None:
-            parser.add_argument(f"--{name}", type=tp, required=True)
-
-
-# def _decode_value(v: str) -> Any:
-#     return literal_eval(v)
+        tp = domain.value_type if isinstance(domain, Domain) else type(domain)
+        parser.add_argument(f"--{name}", type=tp, required=True)
 
 
 def cast_config_values(config: Dict, config_space: Dict) -> Dict:
@@ -681,13 +652,11 @@ def cast_config_values(config: Dict, config_space: Dict) -> Dict:
     :param config_space:
     :return: New config with values casted to correct types
     """
-    new_config = config.copy()
-    for name, domain in config_space.items():
-        tp = _value_type(domain)
-        if tp is not None:
-            new_config[name] = tp(config[name])
-            # new_config[name] = tp(_decode_value(config[name]))
-    return new_config
+    return {
+        name: domain.cast(config[name]) if isinstance(domain, Domain) else config[name]
+        for name, domain in config_space.items()
+        if name in config
+    }
 
 
 def non_constant_hyperparameter_keys(config_space: Dict) -> List[str]:
