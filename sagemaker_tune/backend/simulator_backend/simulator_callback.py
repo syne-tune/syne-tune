@@ -47,12 +47,11 @@ class SimulatorCallback(StoreResultsCallback):
     time keeper.
 
     """
-    def __init__(self, results_update_interval: float = 600.0):
+    def __init__(self):
         # Note: `results_update_interval` is w.r.t. real time, not
         # simulated time. Storing results intermediately is not important for
         # the simulator back-end, so the default is larger
-        super().__init__(add_wallclock_time=True,
-                         results_update_interval=results_update_interval)
+        super().__init__(add_wallclock_time=True)
         self._tuner_sleep_time = None
         self._time_keeper = None
         self._tuner = None

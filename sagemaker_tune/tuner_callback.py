@@ -83,7 +83,6 @@ class StoreResultsCallback(TunerCallback):
     def __init__(
             self,
             add_wallclock_time: bool = True,
-            results_update_interval: float = 10.0,
     ):
         """
         Minimal callback that enables plotting results over time,
@@ -92,17 +91,12 @@ class StoreResultsCallback(TunerCallback):
         :param add_wallclock_time: whether to add wallclock time to results.
         :param csv_file: if passed results are updated into the csv file, support local and S3 paths. In case an S3 path
         is used `fsspec` and `s3fs` should be installed.
-        :param results_update_interval: frequency at which results are saved
         """
         self.results = []
         self.start = perf_counter() if add_wallclock_time else None
 
-        # we only save results every `results_update_frequency` seconds as this operation
-        # may be expensive on remote storage.
-        self.save_results_at_frequency = RegularCallback(
-             lambda: self.store_results(),
-             call_seconds_frequency=results_update_interval,
-        )
+        self.csv_file = None
+        self.save_results_at_frequency = None
 
     def _set_time_fields(self, result: Dict):
         """
@@ -113,6 +107,8 @@ class StoreResultsCallback(TunerCallback):
             result[SMT_TUNER_TIME] = perf_counter() - self.start
 
     def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+        assert self.save_results_at_frequency is not None, \
+            "on_tuning_start must always be called before on_trial_result."
         result = copy.copy(result)
         result[SMT_DECISION] = decision
         result[SMT_STATUS] = status
@@ -139,6 +135,13 @@ class StoreResultsCallback(TunerCallback):
         # we set the path of the csv file once the tuner is created since the path may change when the tuner is stop
         # and resumed again on a different machine.
         self.csv_file = str(tuner.tuner_path / "results.csv.zip")
+
+        # we only save results every `results_update_frequency` seconds as this operation
+        # may be expensive on remote storage.
+        self.save_results_at_frequency = RegularCallback(
+             lambda: self.store_results(),
+             call_seconds_frequency=tuner.results_update_interval,
+        )
 
     def on_tuning_end(self):
         # store the results in case some results were not commited yet (since they are saved every

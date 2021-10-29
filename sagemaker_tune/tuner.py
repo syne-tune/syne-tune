@@ -365,4 +365,4 @@ class Tuner:
         """
         :return: default callback to store results
         """
-        return StoreResultsCallback(results_update_interval=self.results_update_interval)
+        return StoreResultsCallback()
