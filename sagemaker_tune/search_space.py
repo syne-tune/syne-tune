@@ -390,7 +390,7 @@ class Categorical(Domain):
 
     @property
     def value_type(self):
-        if isinstance(type(self.categories[0]), int):
+        if isinstance(self.categories[0], int):
             return int
         else:
             return str

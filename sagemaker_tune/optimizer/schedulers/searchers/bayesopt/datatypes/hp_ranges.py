@@ -104,7 +104,8 @@ class HyperparameterRanges(ABC):
             assert k in self.config_space, f"active_config_space[{k}] not in config_space"
             same_value_type = v.value_type == self.config_space[k].value_type
             same_log_type = is_log_space(v) == is_log_space(self.config_space[k])
-            assert k in self.config_space and same_value_type and same_log_type, \
+            same_domain_type = type(v) == self.config_space[k]
+            assert k in self.config_space and same_value_type and same_log_type and same_domain_type, \
                 f"active_config_space[{k}] has different type"
 
     @property
