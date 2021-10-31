@@ -35,7 +35,7 @@ from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
 from sagemaker_tune.optimizer.schedulers.utils.simple_profiler \
     import SimpleProfiler
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import INTERNAL_METRIC_NAME
+    import INTERNAL_METRIC_NAME, ConfigurationFilter
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,8 @@ class GaussProcISSSurrogateModel(BaseSurrogateModel):
             self, state: TuningJobState, active_metric: str,
             gpmodel: GaussianProcessISSModel,
             hp_ranges: HyperparameterRanges,
-            means_observed_candidates: np.ndarray):
+            means_observed_candidates: np.ndarray,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         Gaussian Process Innovation State Space (GP-ISS) surrogate model, where
         model parameters are fit by marginal likelihood maximization.
@@ -61,7 +62,7 @@ class GaussProcISSSurrogateModel(BaseSurrogateModel):
         :param hp_ranges: HyperparameterRanges for predictions
         :param means_observed_candidates: Used for `current_best`
         """
-        super().__init__(state, active_metric)
+        super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
         self._hp_ranges = hp_ranges
         self._means_observed_candidates = means_observed_candidates
@@ -119,7 +120,8 @@ class GaussProcISSModelFactory(TransformerModelFactory):
             self, gpmodel: GaussianProcessISSModel,
             active_metric: str = INTERNAL_METRIC_NAME,
             profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None):
+            debug_log: Optional[DebugLogPrinter] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         Pending evaluations in `state` are not taken into account here.
         Note that `state` contains extended configs (x, r), while the GP
@@ -135,6 +137,7 @@ class GaussProcISSModelFactory(TransformerModelFactory):
         self._configspace_ext = None  # Set later
         self._debug_log = debug_log
         self._profiler = profiler
+        self._filter_observed_data = filter_observed_data
 
     def set_configspace_ext(self, configspace_ext: ExtendedConfiguration):
         """
@@ -188,7 +191,8 @@ class GaussProcISSModelFactory(TransformerModelFactory):
             gpmodel=self._gpmodel,
             hp_ranges=self._configspace_ext.hp_ranges,
             means_observed_candidates=self._predict_mean_current_candidates(
-                data))
+                data),
+            filter_observed_data=self._filter_observed_data)
 
     def _predict_mean_current_candidates(self, data: Dict) -> np.ndarray:
         """

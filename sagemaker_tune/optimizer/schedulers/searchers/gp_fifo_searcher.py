@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import numpy as np
 from typing import Type, Optional, Dict
-import copy
 import logging
 
 from sagemaker_tune.optimizer.schedulers.searchers.searcher import \
@@ -26,7 +25,7 @@ from sagemaker_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import CandidateEvaluation, Configuration, MetricValues, dictionarize_objective, INTERNAL_METRIC_NAME, \
-    INTERNAL_COST_NAME
+    INTERNAL_COST_NAME, ConfigurationFilter
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
@@ -108,7 +107,8 @@ class ModelBasedSearcher(BaseSearcher):
             num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
             initial_scoring: Optional[str] = None,
             cost_attr: Optional[str] = None,
-            resource_attr: Optional[str] = None):
+            resource_attr: Optional[str] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         self.hp_ranges = hp_ranges
         self.random_seed = random_seed
         self.num_initial_candidates = num_initial_candidates
@@ -139,6 +139,7 @@ class ModelBasedSearcher(BaseSearcher):
         self.set_profiler(model_factory.profiler)
         self._cost_attr = cost_attr
         self._resource_attr = resource_attr
+        self._filter_observed_data = filter_observed_data
         self._random_searcher = None
         if model_factory.debug_log is not None:
             deb_msg = "[ModelBasedSearcher.__init__]\n"
@@ -225,7 +226,9 @@ class ModelBasedSearcher(BaseSearcher):
         raise NotImplementedError()
 
     def _get_exclusion_candidates(self, **kwargs) -> ExclusionList:
-        return ExclusionList(self.state_transformer.state)
+        return ExclusionList(
+            self.state_transformer.state,
+            filter_observed_data=self._filter_observed_data)
 
     def get_config(self, **kwargs) -> Configuration:
         """
@@ -456,6 +459,22 @@ class GPFIFOSearcher(ModelBasedSearcher):
         because criterion is only used internally. Also note that criterion
         data is always normalized to mean 0, variance 1 before fitted with a
         GP.
+    transfer_learning_task_attr : str (optional)
+        Used to support transfer HPO, where the state contains observed data
+        from several tasks, one of which is the active one. To this end,
+        `configspace` must contain a categorical parameter of name
+        `transfer_learning_task_attr`, whose range are all task IDs. Also,
+        `transfer_learning_active_task` must denote the active task, and
+        `transfer_learning_active_config_space` is used as
+        `active_config_space` argument in :class:`HyperparameterRanges` (this
+        allows us to use a narrower search space for the active task than for
+        the union of all tasks (`configspace` must be that).
+    transfer_learning_active_task : str (optional)
+        See `transfer_learning_task_attr`.
+    transfer_learning_active_config_space : Dict (optional)
+        See `transfer_learning_task_attr`. If not given, `configspace` is the
+        search space for the active task as well.
+
     """
     def __init__(self, configspace, **kwargs):
         if configspace is not None:
@@ -594,7 +613,8 @@ class GPFIFOSearcher(ModelBasedSearcher):
             num_initial_random_choices=self.num_initial_random_choices,
             initial_scoring=self.initial_scoring,
             cost_attr=self._cost_attr,
-            resource_attr=self._resource_attr)
+            resource_attr=self._resource_attr,
+            filter_observed_data=self._filter_observed_data)
         self._clone_from_state_common(new_searcher, state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict
+from typing import Dict, Optional, List
 import logging
 
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
@@ -22,8 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 def make_hyperparameter_ranges(
-        config_space: Dict, name_last_pos: str = None,
-        value_for_last_pos=None) -> HyperparameterRanges:
+        config_space: Dict,
+        name_last_pos: Optional[str] = None,
+        value_for_last_pos=None,
+        active_config_space: Optional[Dict] = None,
+        prefix_keys: Optional[List[str]] = None) -> HyperparameterRanges:
     hp_ranges = HyperparameterRangesImpl(
-        config_space, name_last_pos, value_for_last_pos)
+        config_space,
+        name_last_pos=name_last_pos,
+        value_for_last_pos=value_for_last_pos,
+        active_config_space=active_config_space,
+        prefix_keys=prefix_keys)
     return hp_ranges

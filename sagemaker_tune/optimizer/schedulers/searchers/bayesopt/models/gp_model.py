@@ -21,7 +21,8 @@ from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.model_transfo
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.model_base \
     import BaseSurrogateModel
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import FantasizedPendingEvaluation, Configuration, INTERNAL_METRIC_NAME
+    import FantasizedPendingEvaluation, Configuration, INTERNAL_METRIC_NAME, \
+    ConfigurationFilter
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
@@ -54,7 +55,8 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
             self, state: TuningJobState, gpmodel: GPModel,
             fantasy_samples: List[FantasizedPendingEvaluation],
             active_metric: str = None, normalize_mean: float = 0.0,
-            normalize_std: float = 1.0):
+            normalize_std: float = 1.0,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         Both `state` and `gpmodel` are immutable. If parameters of the latter
         are to be fit, this has to be done before.
@@ -74,7 +76,7 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         :param normalize_std: Stddev used to normalize targets
 
         """
-        super().__init__(state, active_metric)
+        super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
         self.mean = normalize_mean
         self.std = normalize_std
@@ -113,7 +115,8 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     def does_mcmc(self):
         return isinstance(self._gpmodel, GPRegressionMCMC)
 
-    def current_best_filter_candidates(self, candidates):
+    def _current_best_filter_candidates(self, candidates):
+        candidates = super()._current_best_filter_candidates(candidates)
         hp_ranges = self.state.hp_ranges
         candidates = hp_ranges.filter_for_last_pos_value(candidates)
         assert candidates, \
@@ -176,7 +179,8 @@ class GaussProcModelFactory(TransformerModelFactory):
             self, gpmodel: GPModel, active_metric: str,
             normalize_targets: bool = True,
             profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None):
+            debug_log: Optional[DebugLogPrinter] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -195,6 +199,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         self._profiler = profiler
         self._mean = None
         self._std = None
+        self._filter_observed_data = filter_observed_data
 
     @property
     def debug_log(self) -> Optional[DebugLogPrinter]:
@@ -247,7 +252,8 @@ class GaussProcModelFactory(TransformerModelFactory):
         return GaussProcSurrogateModel(
             state=state, active_metric=self.active_metric,
             gpmodel=self._gpmodel, fantasy_samples=fantasy_samples,
-            normalize_mean=self._mean, normalize_std=self._std)
+            normalize_mean=self._mean, normalize_std=self._std,
+            filter_observed_data=self._filter_observed_data)
 
     def _get_num_fantasy_samples(self) -> int:
         raise NotImplementedError()
@@ -341,7 +347,8 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
             active_metric: str = INTERNAL_METRIC_NAME,
             normalize_targets: bool = True,
             profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None):
+            debug_log: Optional[DebugLogPrinter] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -358,7 +365,7 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         super().__init__(
             gpmodel=gpmodel, active_metric=active_metric,
             normalize_targets=normalize_targets, profiler=profiler,
-            debug_log=debug_log)
+            debug_log=debug_log, filter_observed_data=filter_observed_data)
         self.num_fantasy_samples = num_fantasy_samples
 
     def get_params(self):

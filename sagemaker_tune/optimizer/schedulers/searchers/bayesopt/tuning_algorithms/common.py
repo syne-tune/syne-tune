@@ -10,14 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Iterator, List, Union
+from typing import Iterator, List, Union, Callable, Optional
 import numpy as np
 import logging
 
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import CandidateGenerator
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
+    import Configuration, ConfigurationFilter
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
@@ -82,7 +82,9 @@ class ExclusionList(object):
     is removed from the config.
 
     """
-    def __init__(self, state: Union[TuningJobState, dict]):
+    def __init__(
+            self, state: Union[TuningJobState, dict],
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         is_new = isinstance(state, TuningJobState)
         if is_new:
             self.hp_ranges = state.hp_ranges
@@ -93,7 +95,10 @@ class ExclusionList(object):
             else:
                 pos = keys.index(resource_attr)
                 self.keys = keys[:pos] + keys[(pos + 1):]
-            _elist = [x.candidate for x in state.candidate_evaluations] + \
+            if filter_observed_data is None:
+                filter_observed_data = lambda config: True
+            _elist = [x.candidate for x in state.candidate_evaluations
+                      if filter_observed_data(x.candidate)] +\
                      state.pending_candidates + state.failed_candidates
             self.excl_set = set([self._to_tuple(x) for x in _elist])
         else:
