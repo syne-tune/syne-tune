@@ -15,8 +15,6 @@ import logging
 import os
 from datetime import timedelta
 import copy
-from importlib import import_module
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
@@ -82,7 +80,6 @@ class SimulatorBackend(LocalBackend):
             self,
             entry_point: str,
             elapsed_time_attr: str,
-            table_class_name: Optional[str] = None,
             simulator_config: Optional[SimulatorConfig] = None,
             tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
     ):
@@ -107,20 +104,9 @@ class SimulatorBackend(LocalBackend):
         `simulator_state` are processed whose time is before the current time
         in `time_keeper`. The method ends by `time_keeper.mark_exit()`.
 
-        If `table_class_name` is not given, `entry_point` is a script to be
-        executed (as in any other backend). Otherwise, it is a Python file
-        containing a subclass of class:`TabulatedBenchmark`, named
-        `table_class_name`. In the latter case, the table object returns
-        results for a config directly, no script has to be called. This is
-        faster, and our recommended way to implement tabulated training
-        functions. The class needs to have `__init__` without any arguments.
-        If arguments are needed, they need to be passed as part of the configs.
-
         :param entry_point: Python main file to be tuned, or Python file
             containing `TabulatedBenchmark` class
         :param elapsed_time_attr: See above
-        :param table_class_name: If given, a tabular benchmark class from
-            `entry_point` is used
         :param simulator_config: Parameters for simulator
         :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
             information is needed in `SimulatorCallback`
@@ -128,13 +114,6 @@ class SimulatorBackend(LocalBackend):
         """
         super().__init__(
             entry_point=entry_point, rotate_gpus=False)
-        self.table_class_name = table_class_name
-        if table_class_name is not None:
-            self._module_table_class = self._module_from_script_name(
-                entry_point)
-        else:
-            self._module_table_class = None
-        self._tabulated_benchmark = None
         self.elapsed_time_attr = elapsed_time_attr
         if simulator_config is None:
             self.simulator_config = SimulatorConfig()
@@ -145,25 +124,7 @@ class SimulatorBackend(LocalBackend):
         self._simulator_state = SimulatorState()
         self._time_keeper = SimulatedTimeKeeper()
         self._next_results_to_fetch = dict()
-        self._module_prefix = None  # See `_create_tabulated_benchmark`
         logger.setLevel(logging.INFO)  # Suppress DEBUG for this class
-
-    @staticmethod
-    def _module_from_script_name(entry_point: str):
-        st_prefix = Path(syne_tune.__path__[0]).parent
-        parts = list(Path(entry_point).parts)
-        if entry_point.startswith(str(st_prefix)):
-            prefix_parts = list(st_prefix.parts)
-            parts = parts[len(prefix_parts):]
-        else:
-            logger.warning(
-                f"entry_point = {entry_point} does not start with "
-                f"st_prefix = {st_prefix}. Don't strip prefix off.")
-        fname = parts[-1]
-        assert fname[-3:] == '.py'
-        parts[-1] = fname[:-3]
-        module = '.'.join(parts)
-        return module
 
     def _create_tabulated_benchmark(self):
         """
@@ -356,9 +317,9 @@ class SimulatorBackend(LocalBackend):
                     f"= {len(result_list)}")
             logger.warning('\n'.join(warn_msg))
             self._next_results_to_fetch = dict()
-        if self.table_class_name is None:
-            results = sorted(
-                results, key=lambda result: result[1][SMT_WORKER_TIMESTAMP])
+
+        if len(results) > 0 and SMT_WORKER_TIMESTAMP in results[0]:
+            results = sorted(results, key=lambda result: result[1][SMT_WORKER_TIMESTAMP])
 
         trial_status_dict = dict()
         for trial_id in trial_ids:
@@ -394,7 +355,7 @@ class SimulatorBackend(LocalBackend):
             StartEvent(trial_id=trial_id), event_time=time_start)
         self._debug_message('StartEvent', time=time_start, trial_id=trial_id,
                             pushed=True)
-        logger.info(f"Simulated time since start: {_time_start:.2f} secs")
+        logger.debug(f"Simulated time since start: {_time_start:.2f} secs")
         self._time_keeper.mark_exit()
 
     def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
@@ -471,83 +432,44 @@ class SimulatorBackend(LocalBackend):
             f"Trial with trial_id = {trial_id} not registered with back-end"
         if config is None:
             config = self._trial_dict[trial_id].config
-        if self.table_class_name is not None:
-            # Fetch all results for this trial from the table
-            self._create_tabulated_benchmark()
-            all_results = self._tabulated_benchmark(config)
+
+        # Run training script and fetch all results
+        trial_path = self.trial_path(trial_id)
+        os.makedirs(trial_path, exist_ok=True)
+        config_copy = config.copy()
+        config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
+        config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
+
+        def np_encoder(obj):
+            if isinstance(obj, np.generic):
+                return obj.item()
+
+        with open(trial_path / "config.json", "w") as f:
+            # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
+            json.dump(config, f, default=np_encoder)
+        cmd = f"python {self.entry_point} {config_str}"
+        env = dict(os.environ)
+        logging.info(f"running script with command: {cmd}")
+        with open(trial_path / "std.out", 'a') as stdout:
+            with open(trial_path / "std.err", 'a') as stderr:
+                return_status = subprocess.run(
+                    cmd.split(" "),
+                    stdout=stdout,
+                    stderr=stderr,
+                    env=env)
+        if return_status.returncode == 0:
             status = Status.completed
-            num_already_before = self._last_metric_seen_index[trial_id]
-            if num_already_before > 0:
-                assert num_already_before <= len(all_results), \
-                    f"Found {len(all_results)} total results, but have already " +\
-                    f"processed {num_already_before} before!"
-                results = all_results[num_already_before:]
-                # Correct `elapsed_time_attr` values
-                elapsed_time_offset = all_results[num_already_before - 1][
-                    self.elapsed_time_attr]
-                for result in results:
-                    result[self.elapsed_time_attr] -= elapsed_time_offset
-            else:
-                results = all_results
         else:
-            # Run training script and fetch all results
-            trial_path = self.trial_path(trial_id)
-            os.makedirs(trial_path, exist_ok=True)
-            config_copy = config.copy()
-            config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
-            config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
-
-            def np_encoder(obj):
-                if isinstance(obj, np.generic):
-                    return obj.item()
-
-            with open(trial_path / "config.json", "w") as f:
-                # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
-                json.dump(config, f, default=np_encoder)
-            cmd = f"python {self.entry_point} {config_str}"
-            env = dict(os.environ)
-            logging.info(f"running script with command: {cmd}")
-            with open(trial_path / "std.out", 'a') as stdout:
-                with open(trial_path / "std.err", 'a') as stderr:
-                    return_status = subprocess.run(
-                        cmd.split(" "),
-                        stdout=stdout,
-                        stderr=stderr,
-                        env=env)
-            if return_status.returncode == 0:
-                status = Status.completed
-            else:
-                status = Status.failed
-            # Read all reported results
-            # Results are also read if the process failed
-            # Note that `retrieve` returns all results, even those already
-            # received before (in case the trial is resumed at least once).
-            all_results = retrieve(log_lines=self.stdout(trial_id=trial_id))
-            num_already_before = self._last_metric_seen_index[trial_id]
-            assert num_already_before <= len(all_results), \
-                f"Found {len(all_results)} total results, but have already " +\
-                f"processed {num_already_before} before!"
-            results = all_results[num_already_before:]
+            status = Status.failed
+        # Read all reported results
+        # Results are also read if the process failed
+        # Note that `retrieve` returns all results, even those already
+        # received before (in case the trial is resumed at least once).
+        all_results = retrieve(log_lines=self.stdout(trial_id=trial_id))
+        num_already_before = self._last_metric_seen_index[trial_id]
+        assert num_already_before <= len(all_results), \
+            f"Found {len(all_results)} total results, but have already " +\
+            f"processed {num_already_before} before!"
+        results = all_results[num_already_before:]
 
         return status, results
-
-
-class SimulatorBackendForRemoteLauncher(SimulatorBackend):
-    """
-    Subclass of :class:`SimulatorBackend` to be used with the remote launcher.
-    We need to set `_module_prefix` to where the remote launcher copies
-    sources.
-
-    """
-    def __init__(
-            self,
-            entry_point: str,
-            elapsed_time_attr: str,
-            table_class_name: Optional[str] = None,
-            simulator_config: Optional[SimulatorConfig] = None,
-            tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
-    ):
-        super().__init__(
-            entry_point, elapsed_time_attr, table_class_name, simulator_config,
-            tuner_sleep_time)
-        self._module_prefix = SMT_REMOTE_UPLOAD_DIR_NAME

@@ -21,8 +21,6 @@ from typing import List
 
 from syne_tune.report import Reporter
 from syne_tune.search_space import choice, add_to_argparse
-from syne_tune.backend.simulator_backend.tabulated_benchmark import \
-    TabulatedBenchmark
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse
 from benchmarks.utils import parse_bool
@@ -154,35 +152,6 @@ def get_dataframe(dataset_path, dataset_name, dataset_s3_bucket):
         fname_local = download_datafile(
             dataset_path, dataset_name, dataset_s3_bucket)
     return pandas.read_csv(fname_local)
-
-
-class NASBench201Benchmark(TabulatedBenchmark):
-    def __init__(self):
-        self._data = None
-
-    def __call__(self, config: dict) -> List[dict]:
-        if self._data is None:
-            self._data = get_dataframe(
-                config['dataset_path'], config['dataset_name'],
-                config['dataset_s3_bucket'])
-        data = self._data
-        row = data.loc[(data['x0'] == config['x0']) &
-                       (data['x1'] == config['x1']) &
-                       (data['x2'] == config['x2']) &
-                       (data['x3'] == config['x3']) &
-                       (data['x4'] == config['x4']) &
-                       (data['x5'] == config['x5'])]
-        eval_time_epoch = float(row['eval_time_epoch'])
-        results = [
-            {
-                'epoch': epoch,
-                'objective': float(row['lc_valid_epoch_{}'.format(
-                    epoch - 1)]) / 100,
-                'elapsed_time': eval_time_epoch * epoch
-            }
-            for epoch in range(1, config['epochs'] + 1)
-        ]
-        return results
 
 
 def objective(config):
