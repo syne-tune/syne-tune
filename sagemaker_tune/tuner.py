@@ -223,6 +223,10 @@ class Tuner:
         return done_trials_statuses, new_results
 
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
+        """
+        Schedules new tasks if ressources are available or sleep.
+        :param running_trials_ids: set if trial-ids currently running, gets updated if new trials are scheduled.
+        """
         running_trials_threshold = self.n_workers \
             if self.asynchronous_scheduling else 1
         num_running_trials = len(running_trials_ids)
