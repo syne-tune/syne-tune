@@ -10,30 +10,23 @@ To install it "bare bones", you can do:
 
 ```bash
 pip install --upgrade pip
-git clone ssh://git.amazon.com/pkg/SagemakerTune
-cd SagemakerTune
+git clone git@github.com:awslabs/sagemaker-tune.git
+cd sagemaker-tune
 pip install -e .[core]
 ```
 
 The `core` will allow you to run custom schedulers with different backends.
 
-If you want Ray Tune or our own Gaussian process based optimizers, plus a number of
-tuning benchmarks (mostly PyTorch models), you can run the same command replacing
-`core` by `raytune`, `gpsearchers`, `benchmarks`, or several of them. You'll need:
-* `gpsearchers`: For built-in Gaussian process based optimizers (`searcher=bayesopt`)
+If you want Ray Tune, our own Gaussian process based optimizers, or Bore optimizer, 
+you can run the same command replacing `core` by `raytune`, `gpsearchers`, `bore`, or several of them. You'll need:
+* `gpsearchers`: For built-in Gaussian process based optimizers
 * `raytune`: For Ray Tune optimizers
-* `benchmarks`: For [benchmark examples](docs/benchmarks.md) in `benchmarks/scripts/`
+* `bore`: For Bore optimizer
 
 In order to install everything, use:
 
 ```bash
 pip install -e .[extra]
-```
-
-If you want our built-in optimizers only (not those of Ray Tune):
-
-```bash
-pip install -e .[gpsearchers]
 ```
 
 ## How to enable tuning and tuning script conventions
@@ -78,9 +71,10 @@ In addition to user metrics, SageMaker Tune will automatically add the following
 Since trials may be paused and resumed (either by schedulers or when using spot-instances), 
 the user has the possibility to checkpoint intermediate results. Model outputs and 
 checkpoints must be written into a specific local path given by the command line argument 
-checkpoint_dir. Saving/loading model checkpoint from this directory enables to save/load
+`smt_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load
  the state when the job is stopped/resumed (setting the folder correctly and uniquely per
-  trial is the responsibility of the backend), see checkpoint_example.py to see a fully
+  trial is the responsibility of the backend), see 
+  [checkpoint_example.py](`examples/training_scripts/checkpoint_example/checkpoint_example.py`) to see a fully
    working example of a tuning script with checkpoint enabled.
 
 Under the hood, we use [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) 
@@ -89,8 +83,11 @@ backend. Checkpoints are saved in `s3://{s3_bucket}/sagemaker-tune/{tuner-name}/
 where `s3_bucket` can be configured (defaults to `default_bucket` of the
 session).
 
-We refer to `checkpoint_example.py` for a complete example of a script with checkpoint enabled.
-Many other examples of scripts that can be tuned are are available in `examples/training_scripts`.
+We refer to [checkpoint_example.py](`examples/training_scripts/checkpoint_example/checkpoint_example.py`) for a complete
+ example of a script with checkpoint enabled.
+
+Many other examples of scripts that can be tuned are are available in 
+[examples/training_scripts](`examples/training_scripts`).
 
 ## Launching a tuning job
 
@@ -153,7 +150,8 @@ tuner.run()
 
 Using the local backend `LocalBackend(entry_point=...)` allows to run the trials (4 at the same time) 
 on the local machine. If instead, users prefer to evaluate trials on SageMaker, then SageMaker backend 
-can be used which allow to tune any SageMaker Framework (see `launch_height_sagemaker.py` for an example), 
+can be used which allow to tune any SageMaker Framework (see 
+[launch_height_sagemaker.py](examples/launch_height_sagemaker.py) for an example), 
 here is one example to run a PyTorch estimator on a GPU
 
 ```python
@@ -179,7 +177,8 @@ Note that SageMakerTune code is sent with the SageMaker Framework so that the `i
  that imports the reporter works when executing the training script, as such there is no need to install SageMaker Tune 
  in the docker image of the SageMaker Framework.
 
-In addition, users can decide to run the tuning loop on a remote instance. This is helpful to avoid the need of letting a developer machine run and to benchmark many seed/model options.
+In addition, users can decide to run the tuning loop on a remote instance. This is helpful to avoid the need of letting 
+a developer machine run and to benchmark many seed/model options.
 
 ```python
 tuner = RemoteLauncher(
@@ -253,7 +252,7 @@ The results obtained load_experiment have the following schema.
 ```python
 class ExperimentResult:
     name: str
-    results: pd.DataFrame
+    results: pandas.DataFrame
     metadata: Dict
     tuner: Tuner
 ```
@@ -284,31 +283,31 @@ evaluation code making good use of multiple GPUs.
 ## Examples
 
 Once you have a tuning script, you can call Tuner with any scheduler to perform your HPO.
-You will find the following examples:
-* [examples/launch_height_local.py](examples/launch_height_local.py):
+You will find the following examples in [examples/](examples/) folder:
+* [launch_height_local.py](examples/launch_height_local.py):
   launches HPO locally, tuning a simple script
    [train_height_example.py](examples/training_scripts/height_example/train_height.py)  
-* [examples/launch_height_ray.py](examples/launch_height_ray.py):
+* [launch_height_ray.py](examples/launch_height_ray.py):
   launches HPO locally with [Ray Tune](https://docs.ray.io/en/master/tune/index.html)
   scheduler
-* [examples/launch_fashionmnist.py](examples/launch_fashionmnist.py):
+* [launch_fashionmnist.py](examples/launch_fashionmnist.py):
   launches HPO locally tuning a multi-layer perceptron on Fashion MNIST. This
   employs an easy-to-use benchmark convention
-* [examples/launch_height_moasha.py](examples/launch_height_moasha.py):
+* [launch_height_moasha.py](examples/launch_height_moasha.py):
   shows how to tune a script reporting multiple-objectives with multiobjective Asynchronous Hyperband (MOASHA)
-* [examples/launch_height_standalone_scheduler.py](examples/launch_height_standalone_scheduler.py):
+* [launch_height_standalone_scheduler.py](examples/launch_height_standalone_scheduler.py):
   launches HPO locally with a custom scheduler that cuts any trial that is not
   in the top 80%
-* [examples/launch_height_sagemaker_remotely.py](examples/launch_height_sagemaker_remotely.py):
+* [launch_height_sagemaker_remotely.py](examples/launch_height_sagemaker_remotely.py):
   launches the HPO loop on SageMaker rather than a local machine, trial can be executed either
   the remote machine or distributed again as separate SageMaker training jobs
-* [examples/launch_height_sagemaker.py](examples/launch_height_sagemaker.py):
+* [launch_height_sagemaker.py](examples/launch_height_sagemaker.py):
   launches HPO on SageMaker to tune a SageMaker Pytorch estimator
-* [examples/launch_huggingface_classification.py](examples/launch_huggingface_classification.py):
+* [launch_huggingface_classification.py](examples/launch_huggingface_classification.py):
   launches HPO on SageMaker to tune a SageMaker Hugging Face estimator for sentiment classification
-* [examples/launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py):
+* [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py):
   launches HPO on SageMaker to tune a entry point with a custom docker image
-* [examples/launch_plot_results.py](examples/launch_plot_results.py): shows how to plot
+* [launch_plot_results.py](examples/launch_plot_results.py): shows how to plot
   results of a HPO experiment
 
 
@@ -340,10 +339,8 @@ The following example should then work which will schedule the tuning on SageMak
 python examples/launch_height_sagemaker_remotely.py
 ```
 
-To run on SageMaker, you can also use custom docker images (that could be built using 
-[container/build_container.sh](container/build_custom_container.sh) if you don't have one, this script is inspired 
-from SageMaker examples). 
-See [examples/launch_height_standalone_scheduler.py](examples/launch_height_standalone_scheduler.py)
+To run on SageMaker, you can also use any custom docker images available on ECR.
+See [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py)
 for an example on how to run with a script with a custom docker image.
 
 

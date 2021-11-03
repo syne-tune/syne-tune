@@ -11,11 +11,11 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from sagemaker_tune.search_space import randint, lograndint, uniform, \
-    loguniform, choice, search_space_size, randn, Normal
+    loguniform, choice, search_space_size, randn, to_dict, from_dict
 
 
 def test_convert_config_space():
-    from ray.tune.sample import Float, Integer, Categorical, Uniform, LogUniform
+    from ray.tune.sample import Float, Integer, Categorical
     from sagemaker_tune.optimizer.schedulers.ray_scheduler import \
         RayTuneScheduler
 
@@ -59,6 +59,25 @@ def test_convert_config_space():
     for v in config_space.values():
         if hasattr(v, "sample"):
             v.sample()
+
+
+def test_serialization():
+    config_space = [
+        randint(1, 2),
+        lograndint(3, 4),
+        uniform(5.5, 6.5),
+        loguniform(7.5, 8.5, 2.0),
+        choice(['a', 'b', 'c']),
+        randn(2.0, 1.0),
+    ]
+
+    for x in config_space:
+        x2 = from_dict(to_dict(x))
+        assert type(x) == type(x2)
+        assert x.sampler.__dict__ == x2.sampler.__dict__
+        assert type(x.sampler) == type(x2.sampler)
+        assert {k: v for k, v in x.__dict__.items() if k != "sampler"} == {k: v for k, v in x2.__dict__.items() if k != "sampler"}
+
 
 def test_search_space_size():
     upper_limit = 2 ** 20

@@ -18,6 +18,7 @@ import logging
 from copy import copy
 from inspect import signature
 from math import isclose
+import sys
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import argparse
 
@@ -685,3 +686,24 @@ def search_space_size(config_space: Dict, upper_limit: int = 2 ** 20) -> Optiona
             if size > upper_limit:
                 return None
     return size
+
+
+def to_dict(x: "Domain") -> Dict:
+    domain_kwargs = {k: v for k, v in x.__dict__.items() if k != 'sampler'}
+    return {
+        "domain_cls": x.__class__.__name__,
+        "domain_kwargs": domain_kwargs,
+        "sampler_cls": str(x.sampler),
+        "sampler_kwargs": x.get_sampler().__dict__
+    }
+
+
+def from_dict(d: Dict) -> Domain:
+    domain_cls = getattr(sys.modules[__name__], d["domain_cls"])
+    domain_kwargs = d["domain_kwargs"]
+    sampler_cls = getattr(domain_cls, "_" + d["sampler_cls"])
+    sampler_kwargs = d["sampler_kwargs"]
+    domain = domain_cls(**domain_kwargs)
+    sampler = sampler_cls(**sampler_kwargs)
+    domain.set_sampler(sampler)
+    return domain
