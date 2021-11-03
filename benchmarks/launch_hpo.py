@@ -343,7 +343,7 @@ if __name__ == '__main__':
             max_failures=params['max_failures'],
             asynchronous_scheduling=not params['synchronous'],
             print_update_interval=params['print_update_interval'],
-            callbacks=[SimulatorCallback()] if params['local_tuner'] and backend_name == 'simulated' else None
+            callbacks=[SimulatorCallback()] if backend_name == 'simulated' else None
         )
         last_tuner_name = local_tuner.name
         if exp_id == 0:
