@@ -18,9 +18,8 @@ from typing import Optional, List
 import os
 
 import boto3
+from sagemaker.pytorch import PyTorch
 
-from sagemaker_tune.backend.sagemaker_backend.estimator_factory import \
-    sagemaker_estimator_factory
 from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import \
     add_sagemaker_tune_dependency, get_execution_role
 from sagemaker_tune.tuner import Tuner
@@ -37,12 +36,11 @@ class RemoteLauncher:
             role: Optional[str] = None,
             instance_type: str = "ml.m5.xlarge",
             dependencies: Optional[List[str]] = None,
-            framework: Optional[str] = None,
-            estimator_kwargs: Optional[dict] = None,
             store_logs_localbackend: bool = False,
             log_level: Optional[int] = None,
             s3_path: Optional[str] = None,
             no_tuner_logging: bool = False,
+            **estimator_kwargs,
     ):
         """
         This class allows to launch a tuning job remotely
@@ -55,12 +53,7 @@ class RemoteLauncher:
         :param role: sagemaker role to be used to launch the remote tuning instance.
         :param instance_type: instance where the tuning is going to happen.
         :param dependencies: list of folders that should be included as dependencies for the backend script to run
-        :param framework: SageMaker framework used for the tuning code. If the
-            local backend is used, this should be the framework required by the
-            training script. Default is PyTorch.
-            NOTE: SkLearn as default may be a more lightweight choice
-        :param estimator_kwargs: Extra arguments for creating the SageMaker
-            estimator for the tuning code. Depends on framework
+        :param estimator_kwargs: Extra arguments for creating the SageMaker estimator for the tuning code.
         :param store_logs_localbackend: whether to store logs of trials when using the local backend.
             When using Sagemaker backend, logs are persisted by Sagemaker.
         :param log_level: Logging level. Default is logging.INFO, while
@@ -82,15 +75,10 @@ class RemoteLauncher:
             for dep in dependencies:
                 assert Path(dep).exists(), f"dependency {dep} was not found."
         self.dependencies = dependencies
-        if framework is None:
-            framework = 'PyTorch'
-        self.framework = framework
         if estimator_kwargs is None:
             estimator_kwargs = dict()
-        k = 'framework_version'
-        if self.framework == 'PyTorch' and k not in estimator_kwargs:
-            estimator_kwargs[k] = '1.6'
         self.estimator_kwargs = estimator_kwargs
+
         self.store_logs_localbackend = store_logs_localbackend
         self.log_level = log_level
         if s3_path is None:
@@ -165,7 +153,6 @@ class RemoteLauncher:
             shutil.copy(endpoint_requirements, tgt_requirement)
             pass
 
-
     def get_source_dir(self) -> Path:
         # note: this logic would be better moved to the backend.
         if self.is_source_dir_specified():
@@ -210,18 +197,23 @@ class RemoteLauncher:
         }
         if self.log_level is not None:
             hyperparameters['log_level'] = self.log_level
-        factory_kwargs = dict(
-            self.estimator_kwargs,
+
+        # the choice of the estimator is arbitrary here since we use a base image of SageMaker tune.
+        tuner_estimator = PyTorch(
+            # path which calls the tuner
             entry_point="remote_main.py",
-            instance_type=self.instance_type,
-            framework=self.framework,
-            role=self.role,
             source_dir=str(self.remote_script_dir()),
+            instance_type=self.instance_type,
+            instance_count=1,
+            role=self.role,
+            py_version="py3",
+            framework_version='1.6',
             image_uri=self.sagemaker_tune_image_uri(),
             hyperparameters=hyperparameters,
             checkpoint_s3_uri=checkpoint_s3_uri,
+            **self.estimator_kwargs,
         )
-        tuner_estimator = sagemaker_estimator_factory(**factory_kwargs)
+
         add_sagemaker_tune_dependency(tuner_estimator)
 
         # ask Sagemaker to send the path containing entrypoint script and tuner.
