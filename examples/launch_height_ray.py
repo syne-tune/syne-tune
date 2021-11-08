@@ -68,7 +68,6 @@ if __name__ == '__main__':
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,
-        print_update_interval=10,
     )
 
     tuner.run()
