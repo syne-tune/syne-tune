@@ -35,3 +35,4 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+        python examples/launch_height_local.py
