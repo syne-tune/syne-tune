@@ -18,6 +18,7 @@ benchmarks.
 SAGEMAKER_TUNE_FOLDER = "sagemaker-tune"
 
 SMT_TUNER_CREATION_TIMESTAMP = "smt_tuner_creation_timestamp"
+SMT_TUNER_START_TIMESTAMP = "smt_tuner_start_timestamp"
 
 # constants of keys that are written by `report`
 SMT_WORKER_ITER = "smt_worker_iter"
