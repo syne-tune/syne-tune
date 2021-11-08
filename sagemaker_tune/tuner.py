@@ -210,18 +210,19 @@ class Tuner:
         for callback in self.callbacks:
             callback.on_fetch_status_results(trial_status_dict=trial_status_dict, new_results=new_results)
 
-        # update status with new results and all done trials
-        self.tuning_status.update(
-            trial_status_dict=trial_status_dict,
-            new_results=new_results
-        )
-
         assert len(running_trials_ids) <= self.n_workers
 
         # gets list of trials that are done with the new results (could be because they completed or because the
         # scheduler decided to interrupt them
         # Note: `done_trials` includes trials which are paused
         done_trials_statuses = self._update_running_trials(trial_status_dict, new_results, callbacks=self.callbacks)
+        trial_status_dict.update(done_trials_statuses)
+
+        # update status with new results and all done trials
+        self.tuning_status.update(
+            trial_status_dict=trial_status_dict,
+            new_results=new_results
+        )
 
         return done_trials_statuses, new_results
 
