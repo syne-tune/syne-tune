@@ -165,6 +165,9 @@ class Tuner:
                     callback.on_loop_end()
 
         finally:
+            # graceful termination block called when the tuner reached its stop condition, when an error happened or
+            # when the job got interrupted (can happen in spot-instances or when sending a SIGINT signal with ctrl+C).
+            # the block displays the best configuration found and stops trials that may still be running.
             print_best_metric_found(
                 tuning_status=self.tuning_status,
                 metric_names=self.scheduler.metric_names(),
