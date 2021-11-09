@@ -104,10 +104,7 @@ class Tuner:
         self.backend.set_path(results_root=self.tuner_path, tuner_name=self.name)
         self.callbacks = callbacks if callbacks is not None else [self._default_callback()]
 
-        self.tuning_status = TuningStatus(
-            metric_names=self.scheduler.metric_names(),
-            metric_mode=self.scheduler.metric_mode()
-        )
+        self.tuning_status = None
 
     def run(self):
         """
@@ -115,6 +112,11 @@ class Tuner:
         :return: the tuning status when finished
         """
         try:
+            if self.tuning_status is None:
+                self.tuning_status = TuningStatus(
+                    metric_names=self.scheduler.metric_names(),
+                    metric_mode=self.scheduler.metric_mode()
+                )
             # prints the status every print_update_interval seconds
             self.status_printer = RegularCallback(
                 call_seconds_frequency=self.print_update_interval,
