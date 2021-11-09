@@ -13,7 +13,6 @@
 import time
 from argparse import ArgumentParser
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from sagemaker_tune.report import Reporter
@@ -29,6 +28,7 @@ def f(t, theta):
 
 
 def plot_function():
+    import matplotlib.pyplot as plt
     ts = np.linspace(0, 27, num=5)
     thetas = np.linspace(0, 1) * np.pi / 2
     y1s = []
