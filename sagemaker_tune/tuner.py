@@ -187,7 +187,7 @@ class Tuner:
                 callback.on_tuning_end()
 
             # in case too many errors were triggered, show log of last failed job and terminates with an error
-            if self.tuning_status.num_trials_failed >= self.max_failures:
+            if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
 
     def _save_metadata(self):
@@ -195,7 +195,7 @@ class Tuner:
             json.dump(self.metadata, f)
 
     def _stop_condition(self) -> bool:
-        return self.stop_criterion(self.tuning_status) and self.tuning_status.num_trials_failed < self.max_failures
+        return self.stop_criterion(self.tuning_status) or self.tuning_status.num_trials_failed > self.max_failures
 
     def _process_new_results(self, running_trials_ids: Set[int]):
         """
@@ -285,9 +285,9 @@ class Tuner:
                 trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config)
             return suggestion.checkpoint_trial_id
 
-    def _handle_failure(self, done_trials_statuses: Dict[int, str]):
+    def _handle_failure(self, done_trials_statuses: Dict[int, Tuple[Trial, str]]):
         logger.error(f"Stopped as {self.max_failures} failures were reached")
-        for trial_id, status in done_trials_statuses.items():
+        for trial_id, (_, status) in done_trials_statuses.items():
             if status == Status.failed:
                 logger.error(f"showing log of first failure")
                 stdout = "".join(self.backend.stdout(trial_id))
@@ -321,7 +321,7 @@ class Tuner:
             trial_status_dict: Dict[int, Tuple[Trial, str]],
             new_results: List[Tuple[int, Dict]],
             callbacks: List[TunerCallback],
-    ) -> Dict[int, str]:
+    ) -> Dict[int, Tuple[Trial, str]]:
         """
         Updates schedulers with new results and sends decision to stop/pause trials to the backend.
         :return: dictionary mapping trial-ids that are finished to status.
@@ -385,7 +385,7 @@ class Tuner:
             if status == Status.failed:
                 logger.info(f"Trial trial_id {trial_id} failed.")
                 self.scheduler.on_trial_error(trial)
-                done_trials[trial_id] = status
+                done_trials[trial_id] = (trial, status)
 
         return done_trials
 

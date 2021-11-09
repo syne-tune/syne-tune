@@ -56,7 +56,7 @@ if __name__ == '__main__':
         metric=metric,
         random_seed=random_seed)
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=60)
+    stop_criterion = StoppingCriterion(max_wallclock_time=30)
     tuner = Tuner(
         backend=backend,
         scheduler=scheduler,

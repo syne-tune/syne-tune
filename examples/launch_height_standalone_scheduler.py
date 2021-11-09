@@ -93,7 +93,7 @@ if __name__ == '__main__':
         config_space=config_space,
         metric=metric)
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=60)
+    stop_criterion = StoppingCriterion(max_wallclock_time=30)
     tuner = Tuner(
         backend=backend,
         scheduler=scheduler,
