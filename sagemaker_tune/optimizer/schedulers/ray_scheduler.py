@@ -184,6 +184,8 @@ class RayTuneScheduler(TrialScheduler):
 
         ray_config_space = dict()
         for name, hp_range in config_space.items():
+            assert not isinstance(hp_range, sp.FiniteRange), \
+                f"'{name}' has type FiniteRange, not supported by Ray Tune"
             if isinstance(hp_range, sp.Domain):
                 cls_mapping = {
                     sp.Integer: ray_sp.Integer,

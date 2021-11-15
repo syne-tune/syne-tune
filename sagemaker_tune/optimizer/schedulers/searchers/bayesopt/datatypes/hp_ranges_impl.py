@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Dict, List
 import numpy as np
 
-from sagemaker_tune.search_space import Domain, is_log_space
+from sagemaker_tune.search_space import Domain, is_log_space, FiniteRange
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
@@ -198,6 +198,70 @@ class HyperparameterRangeInteger(HyperparameterRange):
         return self._continuous_range.get_ndarray_bounds()
 
 
+class HyperparameterRangeFiniteRange(HyperparameterRange):
+    def __init__(
+            self, name: str, lower_bound: float, upper_bound: float,
+            size: int, scaling: Scaling):
+        """
+        See :class:`FiniteRange` in `search_space`. Internally, we use an int
+        with linear scaling.
+        Note: Different to `HyperparameterRangeContinuous`, we require that
+        `lower_bound < upper_bound` and `size >=2`.
+
+        """
+        super().__init__(name)
+        assert lower_bound < upper_bound
+        assert size >= 2
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+        self._scaling = scaling
+        self._lower_internal = scaling.to_internal(lower_bound)
+        self._upper_internal = scaling.to_internal(upper_bound)
+        self._step_internal = \
+            (self._upper_internal - self._lower_internal) / (size - 1)
+        self._range_int = HyperparameterRangeInteger(
+            name=name + '_INTERNAL', lower_bound=0, upper_bound=size - 1,
+            scaling=LinearScaling())
+
+    @property
+    def scaling(self) -> Scaling:
+        return self._scaling
+
+    def _map_from_int(self, x: int) -> float:
+        y = x * self._step_internal + self._lower_internal
+        return np.clip(self._scaling.from_internal(y), self.lower_bound,
+                       self.upper_bound)
+
+    def _map_to_int(self, y: float) -> int:
+        y_int = np.clip(self._scaling.to_internal(y), self._lower_internal,
+                        self._upper_internal)
+        return int(round((y_int - self._lower_internal) / self._step_internal))
+
+    def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
+        return self._range_int.to_ndarray(self._map_to_int(hp))
+
+    def from_ndarray(self, ndarray: np.ndarray) -> Hyperparameter:
+        int_val = self._range_int.from_ndarray(ndarray)
+        return self._map_from_int(int_val)
+
+    def __repr__(self) -> str:
+        return "{}({}, {}, {}, {})".format(
+            self.__class__.__name__, repr(self.name),
+            repr(self.scaling), repr(self.lower_bound), repr(self.upper_bound))
+
+    def __eq__(self, other):
+        if isinstance(other, HyperparameterRangeFiniteRange):
+            return self.name == other.name \
+                   and self.lower_bound == other.lower_bound \
+                   and self.upper_bound == other.upper_bound \
+                   and self._scaling == other._scaling \
+                   and self._range_int.upper_bound == other.   _range_int.upper_bound
+        return False
+
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        return self._range_int.get_ndarray_bounds()
+
+
 class HyperparameterRangeCategorical(HyperparameterRange):
     def __init__(
             self, name: str, choices: Tuple[str, ...],
@@ -288,15 +352,25 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                     'lower_bound': hp_range.lower,
                     'upper_bound': hp_range.upper,
                     'scaling': scaling}
-                if name in self.active_config_space:
-                    active_hp_range = self.active_config_space[name]
-                    kwargs.update({
-                        'active_lower_bound': active_hp_range.lower,
-                        'active_upper_bound': active_hp_range.upper})
-                if tp == float:
-                    hp_ranges.append(HyperparameterRangeContinuous(**kwargs))
+                if isinstance(hp_range, FiniteRange):
+                    assert name not in self.active_config_space, \
+                        f"Parameter '{name}' of type FiniteRange cannot be used in active_config_space"
+                    hp_ranges.append(HyperparameterRangeFiniteRange(
+                        **kwargs, size=len(hp_range)))
                 else:
-                    hp_ranges.append(HyperparameterRangeInteger(**kwargs))
+                    # Note: If `hp_range` is logarithmic, it has a base.
+                    # Since both the loguniform distribution and the internal
+                    # encoding are independent of this base, we can just ignore
+                    # it here (we use natural logarithms internally).
+                    if name in self.active_config_space:
+                        active_hp_range = self.active_config_space[name]
+                        kwargs.update({
+                            'active_lower_bound': active_hp_range.lower,
+                            'active_upper_bound': active_hp_range.upper})
+                    if tp == float:
+                        hp_ranges.append(HyperparameterRangeContinuous(**kwargs))
+                    else:
+                        hp_ranges.append(HyperparameterRangeInteger(**kwargs))
         self._hp_ranges = hp_ranges
         self._ndarray_size = sum(d.ndarray_size() for d in hp_ranges)
 
