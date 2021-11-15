@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = ['parse_args',
            'make_searcher_and_scheduler',
-           'estimator_kwargs_from_benchmark_params']
+           ]
 
 
 def parse_args(allow_lists_as_values=True):
@@ -357,10 +357,3 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
             scheduler_options, name, params.get(name), type=tp)
 
     return search_options, scheduler_options
-
-
-def estimator_kwargs_from_benchmark_params(default_params: dict) -> dict:
-    keys = {
-        'instance_type', 'framework', 'framework_version', 'pytorch_version'}
-    result = {k: v for k, v in default_params.items() if k in keys}
-    return result

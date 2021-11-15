@@ -22,7 +22,6 @@ from sagemaker_tune.stopping_criterion import StoppingCriterion
 from scheduler_factory import short_name_scheduler_factory, \
     supported_short_name_schedulers
 from benchmark_factory import benchmark_factory
-from launch_utils import estimator_kwargs_from_benchmark_params
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -85,17 +84,6 @@ if __name__ == '__main__':
                     stop_criterion=stop_criterion,
                     metadata=metadata,
                 )
-                # Configure the SageMaker framework/estimator according to what
-                # the benchmark needs
-                estimator_kwargs = estimator_kwargs_from_benchmark_params(params)
-                k = 'instance_type'
-                if k in estimator_kwargs:
-                    estimator_kwargs.pop(k)
-                k = 'framework'
-                if k in estimator_kwargs:
-                    framework = estimator_kwargs.pop(k)
-                else:
-                    framework = None
                 tuner = RemoteLauncher(
                     tuner=tuner,
                     dependencies=[str(Path(__file__).parent.parent / "benchmarks/")],
@@ -103,8 +91,6 @@ if __name__ == '__main__':
                     # the tuning to finish. The instance-type where the tuning job runs can be different than the
                     # instance-type used for evaluating the training jobs in case of a Sagemaker Backend.
                     instance_type=params['instance_type'],
-                    framework=framework,
-                    estimator_kwargs=estimator_kwargs,
                 )
                 # todo option to wait in case ResourceLimitExceeded is reached
                 tuner.run(wait=False)

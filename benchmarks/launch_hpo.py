@@ -25,11 +25,10 @@ from sagemaker_tune.backend.simulator_backend.simulator_callback import Simulato
 from sagemaker_tune.stopping_criterion import StoppingCriterion
 from sagemaker_tune.tuner import Tuner
 from sagemaker_tune.remote.remote_launcher import RemoteLauncher
-from sagemaker_tune.backend.sagemaker_backend.estimator_factory import \
-    sagemaker_estimator_factory
 from sagemaker_tune.util import s3_experiment_path
 
-from launch_utils import parse_args, estimator_kwargs_from_benchmark_params
+from estimator_factory import sagemaker_estimator_factory
+from launch_utils import parse_args
 from benchmark_factory import benchmark_factory
 from scheduler_factory import scheduler_factory, setup_scheduler_from_backend
 from utils import dict_get
@@ -360,20 +359,10 @@ if __name__ == '__main__':
                 # Local backend: Configure SageMaker estimator to what the
                 # benchmark needs
                 instance_type = params['instance_type']
-                estimator_kwargs = estimator_kwargs_from_benchmark_params(params)
-                k = 'instance_type'
-                if k in estimator_kwargs:
-                    estimator_kwargs.pop(k)
-                k = 'framework'
-                if k in estimator_kwargs:
-                    framework = estimator_kwargs.pop(k)
-                else:
-                    framework = None
             else:
                 # Instance type for tuning, can be different from
                 # instance type for workers
                 instance_type = params['tuner_instance_type']
-                framework = None
                 estimator_kwargs = dict()
             estimator_kwargs['disable_profiler'] = \
                 not params['enable_sagemaker_profiler']
@@ -388,11 +377,10 @@ if __name__ == '__main__':
                 tuner=local_tuner,
                 dependencies=[str(Path(__file__).parent.parent / "benchmarks/")],
                 instance_type=instance_type,
-                framework=framework,
-                estimator_kwargs=estimator_kwargs,
                 log_level=log_level,
                 s3_path=s3_path,
                 no_tuner_logging=params['no_tuner_logging'],
+                **estimator_kwargs,
             )
             tuner.run(wait=False)
 
