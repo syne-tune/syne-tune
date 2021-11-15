@@ -51,5 +51,4 @@ def get_num_gpus() -> int:
             _num_gpus = 0
             return 0
     else:
-        print("here")
         return _num_gpus
