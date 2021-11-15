@@ -13,13 +13,13 @@
 from datetime import datetime
 
 from sagemaker_tune.backend.trial_status import Trial
-from sagemaker_tune.search_space import randint
+from sagemaker_tune.search_space import loguniform
 from sagemaker_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 
 max_steps = 10
 
 config_space = {
-    "width": randint(0, 20),
+    "learning_rate": loguniform(1e-3, 1),
 }
 resource_attr = "step"
 metric = "mean_loss"
