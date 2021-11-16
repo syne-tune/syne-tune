@@ -10,12 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List
+from typing import List, Optional
 import numpy as np
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
+    import ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import SurrogateModel
 
@@ -28,9 +30,11 @@ class BaseSurrogateModel(SurrogateModel):
 
     """
     def __init__(
-            self, state: TuningJobState, active_metric: str = None):
+            self, state: TuningJobState, active_metric: str = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         super().__init__(state, active_metric)
         self._current_best = None
+        self._filter_observed_data = filter_observed_data
 
     def predict_mean_current_candidates(self) -> List[np.ndarray]:
         """
@@ -46,6 +50,7 @@ class BaseSurrogateModel(SurrogateModel):
         """
         candidates, _ = self.state.observed_data_for_metric(self.active_metric)
         candidates += self.state.pending_candidates
+        candidates = self._current_best_filter_candidates(candidates)
         assert len(candidates) > 0, \
             "Cannot predict means at current candidates with no candidates at all"
         inputs = self.state.hp_ranges.to_ndarray_matrix(candidates)
@@ -65,10 +70,14 @@ class BaseSurrogateModel(SurrogateModel):
             self._current_best = result
         return self._current_best
 
-    def current_best_filter_candidates(self, candidates):
+    def _current_best_filter_candidates(self, candidates):
         """
         In some subclasses, 'current_best' is not computed over all (observed
         and pending) candidates: they need to implement this filter.
 
         """
-        return candidates  # Default: No filtering
+        if self._filter_observed_data is None:
+            return candidates  # Default: No filtering
+        else:
+            return [config for config in candidates
+                    if self._filter_observed_data(config)]
