@@ -14,6 +14,7 @@ from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.constants import SMT_WORKER_TIME
 from syne_tune.backend.backend import Backend
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
@@ -42,6 +43,7 @@ supported_schedulers = {
     'hyperband_promotion',
     'hyperband_cost_promotion',
     'hyperband_pasha',
+    'pbt',
     'mo_asha',
     'raytune_fifo',
     'raytune_fifo_synchronous',
@@ -57,6 +59,7 @@ schedulers_with_search_options = {
     'hyperband_promotion': HyperbandScheduler,
     'hyperband_cost_promotion': HyperbandScheduler,
     'hyperband_pasha': HyperbandScheduler,
+    'pbt': PopulationBasedTraining,
 }
 
 
@@ -174,6 +177,15 @@ def scheduler_factory(
                     rung_system_kwargs[name] = tp(v)
             if rung_system_kwargs:
                 scheduler_options['rung_system_kwargs'] = rung_system_kwargs
+        if scheduler == 'pbt':
+            for name, tp in (
+                    ('population_size', int), ('perturbation_interval', float),
+                    ('quantile_fraction', float),
+                    ('resample_probability', float)):
+                name_cl = 'pbt_' + name
+                v = params.get(name_cl)
+                if v is not None:
+                    scheduler_options[name] = tp(v)
         # Build scheduler and searcher
         scheduler_cls = schedulers_with_search_options[scheduler]
         myscheduler = scheduler_cls(

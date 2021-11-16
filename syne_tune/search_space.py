@@ -526,6 +526,16 @@ class FiniteRange(Domain):
     def value_type(self):
         return float
 
+    def cast(self, value):
+        int_value = np.clip(value, self.lower, self.upper)
+        if self.log_scale:
+            int_value = np.log(int_value)
+        sz = len(self._uniform_int)
+        int_value = int(np.clip(round(
+            (int_value - self._lower_internal) / self._step_internal),
+            0, sz - 1))
+        return self._map_from_int(int_value)
+
     def set_sampler(self, sampler, allow_override=False):
         raise NotImplementedError()
 
