@@ -198,7 +198,7 @@ class RemoteLauncher:
         if self.log_level is not None:
             hyperparameters['log_level'] = self.log_level
 
-        # the choice of the estimator is arbitrary here since we use a base image of SageMaker tune.
+        # the choice of the estimator is arbitrary here since we use a base image of Syne Tune.
         tuner_estimator = PyTorch(
             # path which calls the tuner
             entry_point="remote_main.py",
@@ -227,13 +227,13 @@ class RemoteLauncher:
 
     def syne_tune_image_uri(self) -> str:
         """
-        :return: sagemaker tune docker uri, if not present try to build it and returns an error if this failed.
+        :return: syne tune docker uri, if not present try to build it and returns an error if this failed.
         """
-        docker_image_name = "smt-cpu-py36"
+        docker_image_name = "syne-tune-cpu-py36"
         account_id = boto3.client("sts").get_caller_identity()["Account"]
         image_uri = f"{account_id}.dkr.ecr.us-west-2.amazonaws.com/{docker_image_name}"
         try:
-            logging.info(f"Fetching sagemaker tune image {image_uri}")
+            logging.info(f"Fetching Syne Tune image {image_uri}")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
         except Exception:
             # todo RepositoryNotFoundException should be caught but I did not manage to import it
