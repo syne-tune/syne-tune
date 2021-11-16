@@ -118,11 +118,6 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--searcher', type=str,
                         help='Searcher name',
                         **allow_list)
-    # This is a legacy argument, previously needed for 'nasbench201' benchmark,
-    # but its better to use 'nasbench201_XYZ' for 'benchmark_name', where XYZ
-    # is 'dataset_name'.
-    parser.add_argument('--dataset_name', type=str,
-                        help='Additional argument for some benchmarks')
     parser.add_argument('--results_update_interval', type=int, default=300,
                         help='Results and tuner state are stored every this '
                              'many seconds')
@@ -188,6 +183,17 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--pasha_epsilon_scaling', type=str,
                         help='Parameter of PASHA scheduler',
                         **allow_list)
+    parser.add_argument('--pbt_population_size', type=int,
+                        help='Population size for PBT')
+    parser.add_argument('--pbt_perturbation_interval', type=float,
+                        help='Models are considered for pertubation each '
+                             'this many resources')
+    parser.add_argument('--pbt_quantile_fraction', type=float,
+                        help='Parameters of trials in top q fraction are '
+                             'transferred to the trials in the bottom q '
+                             'fraction')
+    parser.add_argument('--pbt_resample_probability', type=float,
+                        help='Parameter for PBT')
     # Arguments for bayesopt searcher
     parser.add_argument('--searcher_num_init_random', type=int,
                         help='Number of initial trials not chosen by searcher',
@@ -335,10 +341,9 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
     scheduler_args = (
         ('max_resource_attr', str),
     )
-    if scheduler != 'fifo':
+    prefix = 'hyperband_'
+    if scheduler.startswith(prefix):
         # Only process these arguments for HyperbandScheduler
-        prefix = 'hyperband_'
-        assert scheduler.startswith(prefix)
         sch_type = scheduler[len(prefix):]
         _enter_not_none(scheduler_options, 'type', sch_type)
         rung_levels = params.get('rung_levels')

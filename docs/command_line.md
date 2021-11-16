@@ -267,10 +267,7 @@ instance type via `--instance_type`, valid values are
 'ml.m4.xlarge' (note that leading 'ml.' prefix). The built-in benchmarks come
 with suitable defaults for instance types. Also, you do not need the benchmark
 dependencies to be installed on your instance (in fact, you can launch
-experiments remotely from your laptop). For the built-in benchmarks,
-dependencies are managed automatically by SageMaker frameworks. For complex
-models (e.g., coming from Hugging Face), this can be a major advantage: you do
-not have to set things up locally.
+experiments remotely from your laptop).
 
 
 ## How Results are Stored and Downloaded
@@ -284,11 +281,11 @@ the CLI is used, additional points apply:
   contained. Results can later on be filtered and aggregated based on
   meta-data values.
 * When results are uploaded to S3, a slightly different path name convention is
-  used. Recall that by default, results are stored in `f"syne_tune/{tuner_name}"`,
+  used. Recall that by default, results are stored in `f"syne-tune/{tuner_name}"`,
   where `tuner_name` has the form `f"{experiment_name}-{datetime}-{hash}"`,
   where `datetime` is the datetime of launch, `hash` is a 3-digit hash. For
   example: `height-tuning-2021-07-02-10-04-37-233`. When using the command line
-  launcher, the S3 path is `f"syne_tune/{experiment_name}/{tuner_name}"`
+  launcher, the S3 path is `f"syne-tune/{experiment_name}/{tuner_name}"`
   instead, so that all results for the same `experiment_name` are grouped in a
   subdirectory. This convention can be switched off by `--no_experiment_subdirectory`.
 * The S3 bucket for storing results (and checkpoints) can be configured with
@@ -377,6 +374,28 @@ relevant:
   this is done and uploaded to ECR, its URI is passed using this argument.
 * `s3_bucket`: S3 bucket where checkpoints are stored. If not given, the
   default bucket for the session is used.
+
+
+### SageMaker frameworks
+
+A very convenient aspect of SageMaker are its
+[frameworks](https://sagemaker.readthedocs.io/en/stable/frameworks/index.html).
+Essentially, a framework manages dependencies for customers, which may include
+AWS specific optimizations or simplifications. Not making use of a framework
+often means that you have to create your own Docker image, or at least manage
+your dependencies on top of a more generic framework.
+
+Syne Tune currently supports frameworks only with the `sagemaker` back-end.
+For remote tuning with the local back-end, while each tuning experiment maps to
+a SageMaker training job, these jobs use the PyTorch framework together with a
+pre-built image containing the Syne Tune dependencies. If your benchmark
+code requires additional dependencies on top of PyTorch, you can specify them
+in `dependencies.txt`. For example, if your training script uses Hugging Face,
+you need to add `transformers` and `datasets` to `dependencies.txt`. This works
+because Hugging Face itself runs on top of PyTorch. If your benchmark uses
+TensorFlow or requires other specific dependencies which cannot be based on top
+of PyTorch, you currently cannot use remote tuning with the local back-end.
+More details are given in the [benchmarks tutorial](benchmarks.md).
 
 
 ### Remote Tuning with SageMaker Back-end

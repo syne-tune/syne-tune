@@ -1,4 +1,4 @@
-# SagemakerTune: Using and Extending Benchmarks
+# Syne Tune: Using and Extending Benchmarks
 
 
 ## Why Benchmarks?
@@ -90,10 +90,6 @@ dictionary are:
 * `instance_type`: Choose a default instance type for which your benchmark
   runs most economically (used with `sagemaker` back-end or remote tuning, see
   [here](command_line.md)).
-* `framework`: Selects SageMaker framework which covers the essential
-  dependencies of the training scripts (more details below).
-* `framework_version`: Version of SageMaker framework to be used (more details
-  below).
 * `num_workers`: Default for number of workers, i.e. the maximum number of
   parallel evaluations. The exact number of evaluations running in parallel
   may change with time, and is bounded by the instance limits (e.g., number
@@ -109,6 +105,10 @@ dictionary are:
   information to set the maximum epoch parameter in the config of a job to be
   executed. This saves overhead, since the job need not be stopped by the
   back-end, but terminates on its own.
+* `framework`: Selects SageMaker framework which covers the essential
+  dependencies of the training scripts (more details below).
+* `framework_version`: Version of SageMaker framework to be used (more details
+  below).
 
 
 ### SageMaker-specific Aspects
@@ -120,10 +120,10 @@ scikit-learn). SageMaker provides different ways for customers to manage these
 dependencies, which will have to be installed and setup automatically on an
 instance of chosen type before the code can be executed.
 
-The simplest case from a customer perspective is if the essential dependencies
-of the training evaluation code are covered by a
-[SageMaker framework](https://sagemaker.readthedocs.io/en/stable/frameworks/index.html).
-The benchmarking mechanism of SageMaker Tune currently supports the following
+If you use the SageMaker back-end (`--backend sagemaker` in the
+[command line launcher](command_line.md)), you can make use of
+[SageMaker frameworks](https://sagemaker.readthedocs.io/en/stable/frameworks/index.html).
+The benchmarking mechanism of Syne Tune currently supports the following
 frameworks:
 
 * PyTorch
@@ -147,6 +147,14 @@ benchmark on your own, you can specify the URI in `default_params['image_uri']`.
 Note that the Docker image does not have to contain the code for your
 benchmark, which is copied by SageMaker separately. In particular, you can
 change your source code without having to rebuild the image.
+
+If you use the local back-end (the default in the command line launcher),
+Syne Tune currently does not support SageMaker frameworks, and the
+settings in `default_params['framework']` and `default_params['framework_version']`
+are ignored. As explained in detail in the [command line launcher](command_line.md)
+tutorial, you can still run your experiments as SageMaker training jobs (a feature
+called *remote tuning*), but these training jobs use the PyTorch framework. If
+you need additional depedencies, you need to specify them in `dependencies.txt`.
 
 
 ## Checkpointing

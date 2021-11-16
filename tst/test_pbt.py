@@ -13,13 +13,13 @@
 from datetime import datetime
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.search_space import randint
+from syne_tune.search_space import loguniform
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 
 max_steps = 10
 
 config_space = {
-    "width": randint(0, 20),
+    "learning_rate": loguniform(1e-3, 1),
 }
 resource_attr = "step"
 metric = "mean_loss"
@@ -27,13 +27,16 @@ metric = "mean_loss"
 total_steps = 10
 population_size = 2
 
+random_seed = 31415927
+
 pbt = PopulationBasedTraining(config_space=config_space,
                               metric=metric,
                               resource_attr=resource_attr,
                               population_size=population_size,
                               mode='min',
                               max_t=total_steps,
-                              perturbation_interval=1)
+                              perturbation_interval=1,
+                              random_seed=random_seed)
 
 
 def update_state(suggest, state):
