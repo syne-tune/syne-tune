@@ -13,13 +13,13 @@
 import numpy
 import autograd.numpy as anp
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import Matern52, FabolasKernelFunction, ProductKernelFunction
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
     import SquaredDistance
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import DATA_TYPE
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
     import LogarithmScalarEncoding, PositiveScalarEncoding
 
 

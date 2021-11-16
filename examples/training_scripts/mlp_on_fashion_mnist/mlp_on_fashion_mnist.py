@@ -18,8 +18,8 @@ import argparse
 import logging
 import time
 
-from sagemaker_tune.report import Reporter
-from sagemaker_tune.search_space import randint, uniform, loguniform, \
+from syne_tune.report import Reporter
+from syne_tune.search_space import randint, uniform, loguniform, \
     add_to_argparse
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
@@ -78,7 +78,7 @@ def mlp_fashionmnist_benchmark(params):
 
 def get_cost_model(params):
     try:
-        from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
+        from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
             import FixedLayersMLPCostModel
 
         num_inputs = 28 * 28

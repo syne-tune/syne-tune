@@ -36,10 +36,10 @@ Here is a launcher script using `FIFOScheduler`:
 ```python
 import logging
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.stopping_criterion import StoppingCriterion
 
 from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import \
     mlp_fashionmnist_benchmark
@@ -100,7 +100,7 @@ What happens in this launcher script?
   of workers. The experiment is started by `tuner.run()`.
 
 The full range of arguments of `FIFOScheduler` is documented in
-[sagemaker_tune/optimizer/schedulers/fifo.py](../sagemaker_tune/optimizer/schedulers/fifo.py).
+[syne_tune/optimizer/schedulers/fifo.py](../syne_tune/optimizer/schedulers/fifo.py).
 Here, we list the most important ones:
 
 * `config_space`: Hyperparameter search space. This argument is mandatory. Apart
@@ -174,7 +174,7 @@ of Bayesian optimization for HPO is provided in
 Options for configuring the searcher are given in `search_options`. These
 include options for the random searcher. The full range of arguments of
 `GPFIFOSearcher` is documented in
-[sagemaker_tune/optimizer/schedulers/searchers/gp_fifo_searcher.py](../sagemaker_tune/optimizer/schedulers/searchers/gp_fifo_searcher.py).
+[syne_tune/optimizer/schedulers/searchers/gp_fifo_searcher.py](../syne_tune/optimizer/schedulers/searchers/gp_fifo_searcher.py).
 Here, we list the most important ones:
 
 * `num_init_random`: Number of initial configurations chosen at random (or via
@@ -225,10 +225,10 @@ Here is a launcher script using `HyperbandScheduler`:
 ```python
 import logging
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.stopping_criterion import StoppingCriterion
 
 from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import \
     mlp_fashionmnist_benchmark
@@ -363,7 +363,7 @@ the `type` argument:
   time would be just too expensive.
 
 The full range of arguments of `HyperbandScheduler` is documented in
-[sagemaker_tune/optimizer/schedulers/hyperband.py](../sagemaker_tune/optimizer/schedulers/hyperband.py).
+[syne_tune/optimizer/schedulers/hyperband.py](../syne_tune/optimizer/schedulers/hyperband.py).
 It includes all those of `FIFOScheduler`. Here, we list the most important ones:
 
 * `max_t`, `grace_period`, `reduction_factor`: As detailed above, these determine
@@ -424,7 +424,7 @@ MOBSTER uses a multi-task Gaussian process surrogate model for metrics data
 observed at all resource levels. Options for configuring the searcher are given
 in `search_options`. These include options for the random searcher. The full
 range of arguments of `GPMultiFidelitySearcher` is documented in
-[sagemaker_tune/optimizer/schedulers/searchers/gp_multifidelity_searcher.py](../sagemaker_tune/optimizer/schedulers/searchers/gp_multifidelity_searcher.py).
+[syne_tune/optimizer/schedulers/searchers/gp_multifidelity_searcher.py](../syne_tune/optimizer/schedulers/searchers/gp_multifidelity_searcher.py).
 Here, we list the most important ones:
 
 * `num_init_random`: See `FIFOSearcher`, `searcher='bayesopt'`.

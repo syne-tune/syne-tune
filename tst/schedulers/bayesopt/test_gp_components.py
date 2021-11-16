@@ -12,16 +12,16 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState, CandidateEvaluation
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model \
     import get_internal_candidate_evaluations
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import dictionarize_objective, \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import dictionarize_objective, \
     INTERNAL_METRIC_NAME
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import dimensionality_and_warping_ranges
-from sagemaker_tune.search_space import uniform, randint, choice, loguniform
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
+from syne_tune.search_space import uniform, randint, choice, loguniform
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 
 

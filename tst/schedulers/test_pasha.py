@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from sagemaker_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
+from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
 
 
 def create_pasha_rung_system(mode='max', epsilon=1.0, epsilon_scaling=1.0, ranking_criterion='soft_ranking'):

@@ -16,13 +16,13 @@ import pytest
 import autograd.numpy as anp
 from autograd import grad
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import Matern52
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import ScalarMeanFunction
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood \
     import MarginalLikelihood
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
     import encode_unwrap_parameter
 
 

@@ -13,10 +13,10 @@
 from typing import Dict
 import numpy as np
 
-from sagemaker_tune.search_space import randint, lograndint, uniform, \
+from syne_tune.search_space import randint, lograndint, uniform, \
     loguniform, choice
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.optimizer.schedulers.searchers import RandomSearcher
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.searchers import RandomSearcher
 
 
 def _to_int(a, lower, upper):
@@ -150,9 +150,9 @@ def test_points_to_evaluate():
 
 def test_points_to_evaluate_raytune():
     from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
-    from sagemaker_tune.optimizer.schedulers.ray_scheduler import \
+    from syne_tune.optimizer.schedulers.ray_scheduler import \
         RayTuneScheduler
-    from sagemaker_tune.optimizer.schedulers.searchers import \
+    from syne_tune.optimizer.schedulers.searchers import \
         impute_points_to_evaluate
 
     config_space, configs, testcases = _prepare_test()

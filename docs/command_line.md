@@ -1,4 +1,4 @@
-# SagemakerTune: Using the Command Line Launcher
+# Syne Tune: Using the Command Line Launcher
 
 
 ## Running HPO on a Benchmark Problem
@@ -143,7 +143,7 @@ stochastic search behavior (exploration), and it is best practice to repeat a
 setup several times, averaging over results. It is quite painful and slow to do
 any of this if each experiment is blocking its instance.
 
-SageMaker Tune allows you to launch experiments on a remote instance. For
+Syne Tune allows you to launch experiments on a remote instance. For
 example:
 
 ```bash
@@ -284,11 +284,11 @@ the CLI is used, additional points apply:
   contained. Results can later on be filtered and aggregated based on
   meta-data values.
 * When results are uploaded to S3, a slightly different path name convention is
-  used. Recall that by default, results are stored in `f"sagemaker_tune/{tuner_name}"`,
+  used. Recall that by default, results are stored in `f"syne_tune/{tuner_name}"`,
   where `tuner_name` has the form `f"{experiment_name}-{datetime}-{hash}"`,
   where `datetime` is the datetime of launch, `hash` is a 3-digit hash. For
   example: `height-tuning-2021-07-02-10-04-37-233`. When using the command line
-  launcher, the S3 path is `f"sagemaker_tune/{experiment_name}/{tuner_name}"`
+  launcher, the S3 path is `f"syne_tune/{experiment_name}/{tuner_name}"`
   instead, so that all results for the same `experiment_name` are grouped in a
   subdirectory. This convention can be switched off by `--no_experiment_subdirectory`.
 * The S3 bucket for storing results (and checkpoints) can be configured with
@@ -297,10 +297,10 @@ the CLI is used, additional points apply:
 Say you ran a number of experiments with a particular `experiment_name`, say
 `myexperiment_1`. You can download relevant results needed for analysis as follows:
 ```bash
-aws s3 sync s3://${BUCKET_NAME}/sagemaker-tune/myexperiment-1/ ~/sagemaker-tune/ \
+aws s3 sync s3://${BUCKET_NAME}/syne-tune/myexperiment-1/ ~/syne-tune/ \
     --exclude "*" --include "*metadata.json" --include "*results.csv.zip"
 ```
-Note that SageMaker Tune stores a large number of additional files to S3,
+Note that Syne Tune stores a large number of additional files to S3,
 including checkpoints and logs for every trial. A normal `aws s3 sync` takes a
 very long time. Also, note that `myexperiment_1` becomes `myexperiment-1` in
 the result path. This is because S3 paths must not include `'_'`.
@@ -312,7 +312,7 @@ If you intend to compare different methods with each other, or you like to
 ensure that a new version of your code behaves like the previous version, it
 is important to control random seeds.
 
-In SageMaker Tune, a random seed offset is drawn for each call of
+In Syne Tune, a random seed offset is drawn for each call of
 `launch_hpo.py`. This seed is printed in the log, and also stored in the experiment
 meta-data. It is an integer in `0, ..., 2 ** 32 - 1`. Now, the random seed used
 for each experiment is this random seed offset plus `run_id` modulo `2 ** 32`, so
@@ -334,7 +334,7 @@ training evaluations ("workers") are running on the same instance. For local
 tuning, this is the instance where the CL launcher is started. For remote
 tuning, it is a SageMaker training job on a different instance.
 
-SageMaker Tune also supports the `sagemaker` back-end. For example:
+Syne Tune also supports the `sagemaker` back-end. For example:
 
 ```bash
 python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \

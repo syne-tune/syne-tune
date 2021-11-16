@@ -16,7 +16,7 @@ Example similar to Raytune, https://github.com/ray-project/ray/blob/master/pytho
 import logging
 import time
 
-from sagemaker_tune.report import Reporter
+from syne_tune.report import Reporter
 from argparse import ArgumentParser
 
 
@@ -39,6 +39,6 @@ if __name__ == '__main__':
     height = args.height
     for step in range(args.steps):
         dummy_score = (0.1 + width * step / 100) ** (-1) + height * 0.1
-        # Feed the score back to Sagemaker Tune.
+        # Feed the score back to Syne Tune.
         report(step=step, mean_loss=dummy_score, epoch=step + 1)
         time.sleep(args.sleep_time)

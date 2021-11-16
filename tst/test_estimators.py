@@ -15,7 +15,7 @@ from pathlib import Path
 from benchmarks.estimator_factory import sagemaker_estimator_factory
 from benchmarks.benchmark_factory import benchmark_factory, \
     supported_benchmarks
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import \
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     get_execution_role
 
 

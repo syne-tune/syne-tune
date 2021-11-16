@@ -18,11 +18,11 @@ from pathlib import Path
 
 import numpy as np
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.search_space import uniform
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.tuner import Tuner
+from syne_tune.search_space import uniform
+from syne_tune.stopping_criterion import StoppingCriterion
 
 
 if __name__ == '__main__':

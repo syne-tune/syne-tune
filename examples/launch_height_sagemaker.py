@@ -18,12 +18,12 @@ from pathlib import Path
 
 from sagemaker.pytorch import PyTorch
 
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.search_space import randint
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.search_space import randint
+from syne_tune.stopping_criterion import StoppingCriterion
 
 
 if __name__ == '__main__':

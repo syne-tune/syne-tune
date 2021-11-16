@@ -10,16 +10,16 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm \
     import _pick_from_locally_optimized, _lazily_locally_optimize
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components \
     import NoOptimization
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
     import DuplicateDetectorIdentical
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from sagemaker_tune.search_space import uniform, randint, choice
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
+from syne_tune.search_space import uniform, randint, choice
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import tuples_to_configs, create_exclusion_set
 
 def test_pick_from_locally_optimized():

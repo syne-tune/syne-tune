@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# allows to build a docker image that can be used to run Sagemaker Tune.
+# allows to build a docker image that can be used to run Syne Tune.
 set -x
 
 CONTEXT="cpu-py36"
@@ -14,7 +14,7 @@ echo "installing the following dependencies in the docker image"
 echo `cat ./source/requirements.txt`
 
 # Name passed to the command
-image="smt-$CONTEXT"
+image="syne-tune-$CONTEXT"
 
 # Get the account number associated with the current IAM credentials
 # this will be a 12 digit number (the main AWS); assumes you've done

@@ -12,14 +12,14 @@
 # permissions and limitations under the License.
 import pytest
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
     CandidateEvaluation, dictionarize_objective
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
     TuningJobState
-from sagemaker_tune.search_space import uniform, choice, randint
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
+from syne_tune.search_space import uniform, choice, randint
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import tuples_to_configs
 
 

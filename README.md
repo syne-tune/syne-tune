@@ -1,4 +1,4 @@
-# SageMaker Tune
+# Syne Tune
 
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) where trials 
  can be evaluated with several backend options (local backend to evaluate them locally; SageMaker to evaluate them as 
@@ -10,8 +10,8 @@ To install it "bare bones", you can do:
 
 ```bash
 pip install --upgrade pip
-git clone git@github.com:awslabs/sagemaker-tune.git
-cd sagemaker-tune
+git clone git@github.com:awslabs/syne-tune.git
+cd syne-tune
 pip install -e .[core]
 ```
 
@@ -54,7 +54,7 @@ You should call a function to report metrics after each epochs or at the end of 
 For example:
 
 ```python
-from sagemaker_tune.report import report
+from syne_tune.report import report
 for epoch in range(1, num_epochs + 1):
    # ... do something
    train_acc = compute_accuracy()
@@ -79,7 +79,7 @@ checkpoints must be written into a specific local path given by the command line
 
 Under the hood, we use [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) 
 to enable checkpointing when running tuning remotely or when using the SageMaker
-backend. Checkpoints are saved in `s3://{s3_bucket}/sagemaker-tune/{tuner-name}/{trial-id}/`,
+backend. Checkpoints are saved in `s3://{s3_bucket}/syne-tune/{tuner-name}/{trial-id}/`,
 where `s3_bucket` can be configured (defaults to `default_bucket` of the
 session).
 
@@ -112,11 +112,11 @@ Below is a minimal example showing how to tune a script `train_height.py` with R
 
 ```python
 from pathlib import Path
-from sagemaker_tune.search_space import randint
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.stopping_criterion import StoppingCriterion
-from sagemaker_tune.tuner import Tuner
+from syne_tune.search_space import randint
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.tuner import Tuner
 
 config_space = {
     "steps": 100,
@@ -160,8 +160,8 @@ here is one example to run a PyTorch estimator on a GPU
 
 ```python
 from sagemaker.pytorch import PyTorch
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 
 backend = SagemakerBackend(
     # we tune a PyTorch Framework from Sagemaker
@@ -177,7 +177,7 @@ backend = SagemakerBackend(
 )
 ```
 
-Note that SageMakerTune code is sent with the SageMaker Framework so that the `import sagemaker_tune.report`
+Note that SageMakerTune code is sent with the SageMaker Framework so that the `import syne_tune.report`
  that imports the reporter works when executing the training script, as such there is no need to install SageMaker Tune 
  in the docker image of the SageMaker Framework.
 
@@ -265,12 +265,12 @@ Where metadata contains the metadata provided by the user (`{'description': 'jus
 
 **Output of a tuning job when running tuning on SageMaker.**
 When the tuning runs remotely on SageMaker, the results are stored at a regular
-cadence to `s3://{s3_bucket}/sagemaker-tune/{tuner-name}/`, where `s3_bucket`
+cadence to `s3://{s3_bucket}/syne-tune/{tuner-name}/`, where `s3_bucket`
 can be configured (defaults to `default_bucket` of the session). For instance,
 if the above experiment is run remotely, the following path is used for
 checkpointing results and states:
 
-`s3://sagemaker-us-west-2-{aws_account_id}/sagemaker-tune/height-tuning-2021-07-02-10-04-37-233/results.csv.zip`
+`s3://sagemaker-us-west-2-{aws_account_id}/syne-tune/height-tuning-2021-07-02-10-04-37-233/results.csv.zip`
 
 **Multiple GPUs.** If your instance has multiple GPUs, the local backend can run
 different trials in parallel, each on its own GPU (with the option

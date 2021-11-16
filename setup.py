@@ -24,13 +24,13 @@ if k in required_benchmarks:
 required_benchmarks = list(required_benchmarks)
 
 setup(
-    name='sagemaker_tune',
+    name='syne_tune',
     version='0.1',
     description='Distributed Hyperparameter Optimization on SageMaker',
     author='',
     packages=find_packages(include=[
-        'sagemaker_tune',
-        'sagemaker_tune.*',
+        'syne_tune',
+        'syne_tune.*',
     ]),
     extras_require={
         'raytune': required_ray,

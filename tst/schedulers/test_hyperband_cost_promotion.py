@@ -12,10 +12,10 @@
 # permissions and limitations under the License.
 from datetime import datetime
 
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.search_space import randint, uniform
-from sagemaker_tune.backend.trial_status import Trial
-from sagemaker_tune.optimizer.scheduler import SchedulerDecision
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.search_space import randint, uniform
+from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
 def _make_result(epoch, metric, cost):

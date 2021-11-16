@@ -15,8 +15,8 @@ import os
 import tempfile
 import json
 
-from sagemaker_tune.backend.backend import get_backend_type, BACKEND_TYPES, ENV_BACKEND
-from sagemaker_tune.report import Reporter, retrieve
+from syne_tune.backend.backend import get_backend_type, BACKEND_TYPES, ENV_BACKEND
+from syne_tune.report import Reporter, retrieve
 
 
 def test_report_logger():

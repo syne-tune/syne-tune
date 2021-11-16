@@ -13,11 +13,11 @@
 import pytest
 import itertools
 
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.search_space import randint
-from sagemaker_tune.util import script_checkpoint_example_path
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.search_space import randint
+from syne_tune.util import script_checkpoint_example_path
 from tst.util_test import temporary_local_backend
 
 _parameterizations = list(itertools.product(

@@ -16,12 +16,12 @@ from functools import partial
 import pytest
 import numpy as np
 
-from sagemaker_tune.backend.trial_status import Trial
-from sagemaker_tune.optimizer.scheduler import SchedulerDecision
-from sagemaker_tune.optimizer.schedulers.multiobjective.moasha import MOASHA, _Bracket
-from sagemaker_tune.optimizer.schedulers.multiobjective.multiobjective_priority import FixedObjectivePriority, \
+from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.scheduler import SchedulerDecision
+from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA, _Bracket
+from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import FixedObjectivePriority, \
     LinearScalarizationPriority, NonDominatedPriority
-from sagemaker_tune.search_space import randint
+from syne_tune.search_space import randint
 
 
 def test_bucket():

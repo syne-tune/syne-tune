@@ -13,14 +13,14 @@
 import pytest
 import numpy as np
 
-from sagemaker_tune.search_space import randint, lograndint, uniform, \
+from syne_tune.search_space import randint, lograndint, uniform, \
     loguniform, choice, search_space_size, randn, to_dict, from_dict, \
     finrange, logfinrange
 
 
 def test_convert_config_space():
     from ray.tune.sample import Float, Integer, Categorical
-    from sagemaker_tune.optimizer.schedulers.ray_scheduler import \
+    from syne_tune.optimizer.schedulers.ray_scheduler import \
         RayTuneScheduler
 
     config_space = {

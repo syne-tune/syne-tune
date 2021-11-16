@@ -18,12 +18,12 @@ from pathlib import Path
 
 from sagemaker.huggingface import HuggingFace
 
-import sagemaker_tune
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+import syne_tune
+from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.stopping_criterion import StoppingCriterion
 
 from examples.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
     distilbert_imdb_benchmark, distilbert_imdb_default_params
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     config_space = benchmark['config_space']
 
     # Define Hugging Face SageMaker estimator
-    root = Path(sagemaker_tune.__path__[0]).parent
+    root = Path(syne_tune.__path__[0]).parent
     huggingface_estimator = HuggingFace(
         entry_point=benchmark['script'],
         base_job_name='hpo-transformer',

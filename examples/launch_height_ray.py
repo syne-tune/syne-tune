@@ -17,11 +17,11 @@ from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.suggest.skopt import SkOptSearch
 import numpy as np
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.search_space import randint
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.search_space import randint
+from syne_tune.stopping_criterion import StoppingCriterion
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)

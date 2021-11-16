@@ -12,12 +12,12 @@
 # permissions and limitations under the License.
 import pytest
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
     import DuplicateDetectorIdentical, DuplicateDetectorNoDetection
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from sagemaker_tune.search_space import uniform, randint, choice
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
+from syne_tune.search_space import uniform, randint, choice
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import create_exclusion_set
 
 

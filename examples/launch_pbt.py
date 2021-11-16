@@ -13,11 +13,11 @@
 import logging
 from pathlib import Path
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.optimizer.schedulers.pbt import PopulationBasedTraining
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.search_space import loguniform
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
+from syne_tune.tuner import Tuner
+from syne_tune.search_space import loguniform
+from syne_tune.stopping_criterion import StoppingCriterion
 
 
 if __name__ == '__main__':

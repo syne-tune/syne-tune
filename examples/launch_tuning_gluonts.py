@@ -21,12 +21,12 @@ import numpy as np
 
 from sagemaker.mxnet import MXNet
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.search_space import loguniform, lograndint
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.search_space import loguniform, lograndint
 
 
 if __name__ == '__main__':

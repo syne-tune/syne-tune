@@ -13,17 +13,17 @@
 import numpy as np
 import pickle
 
-from sagemaker_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
+from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
     gp_fifo_searcher_defaults, constrained_gp_fifo_searcher_defaults, cost_aware_gp_fifo_searcher_defaults
-from sagemaker_tune.optimizer.schedulers.searchers.gp_fifo_searcher import \
+from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import \
     GPFIFOSearcher
-from sagemaker_tune.optimizer.schedulers.searchers.constrained_gp_fifo_searcher import \
+from syne_tune.optimizer.schedulers.searchers.constrained_gp_fifo_searcher import \
     ConstrainedGPFIFOSearcher
-from sagemaker_tune.optimizer.schedulers.searchers.cost_aware_gp_fifo_searcher import \
+from syne_tune.optimizer.schedulers.searchers.cost_aware_gp_fifo_searcher import \
     CostAwareGPFIFOSearcher
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import INTERNAL_METRIC_NAME, \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import INTERNAL_METRIC_NAME, \
     INTERNAL_CONSTRAINT_NAME
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy \
     import Ackley, sample_data, assert_equal_candidates,\
     assert_equal_randomstate
 

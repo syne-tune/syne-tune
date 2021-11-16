@@ -17,7 +17,7 @@ from autograd import grad
 #from autograd.test_util import check_grads
 import time
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.custom_op \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.custom_op \
     import cholesky_factorization
 
 

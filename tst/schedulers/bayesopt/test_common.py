@@ -13,20 +13,20 @@
 from typing import List, Set, Tuple
 import pytest
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import CandidateEvaluation, PendingEvaluation, Configuration, dictionarize_objective
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
     import ExclusionList, generate_unique_candidates
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import RepeatedCandidateGenerator
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from sagemaker_tune.search_space import uniform, randint, choice
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
+from syne_tune.search_space import uniform, randint, choice
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import tuples_to_configs, create_exclusion_set
 
 

@@ -14,21 +14,21 @@ import math
 import pytest
 import numpy as np
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.backend.simulator_backend.simulator_backend import \
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend, SimulatorConfig
-from sagemaker_tune.backend.simulator_backend.events import SimulatorState, \
+from syne_tune.backend.simulator_backend.events import SimulatorState, \
     StartEvent, CompleteEvent, OnTrialResultEvent
-from sagemaker_tune.backend.simulator_backend.simulator_callback import \
+from syne_tune.backend.simulator_backend.simulator_callback import \
     SimulatorCallback
-from sagemaker_tune.backend.trial_status import Status
-from sagemaker_tune.tuner_callback import StoreResultsCallback
-from sagemaker_tune.stopping_criterion import StoppingCriterion
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.constants import SMT_DECISION, SMT_TRIAL_ID
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.optimizer.scheduler import SchedulerDecision
+from syne_tune.backend.trial_status import Status
+from syne_tune.tuner_callback import StoreResultsCallback
+from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.tuner import Tuner
+from syne_tune.constants import SMT_DECISION, SMT_TRIAL_ID
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
 def _compare_results(res_local: dict, res_simul: dict, num: int):

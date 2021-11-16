@@ -18,8 +18,8 @@ import os
 import random
 import time
 
-from sagemaker_tune.report import Reporter
-from sagemaker_tune.constants import SMT_CHECKPOINT_DIR
+from syne_tune.report import Reporter
+from syne_tune.constants import SMT_CHECKPOINT_DIR
 
 report = Reporter()
 
@@ -46,7 +46,7 @@ def pbt_function(config):
     faster convergence. Training will not converge without PBT.
     """
     lr = config["lr"]
-    checkpoint_dir = config.get('smt_checkpoint_dir')
+    checkpoint_dir = config.get('st_checkpoint_dir')
     accuracy = 0.0  # end = 1000
     start = 1
     if checkpoint_dir and os.path.isdir(checkpoint_dir):

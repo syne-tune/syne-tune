@@ -10,13 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from sagemaker_tune.optimizer.scheduler import TrialScheduler
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from sagemaker_tune.constants import SMT_WORKER_TIME
-from sagemaker_tune.backend.backend import Backend
-from sagemaker_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
+from syne_tune.optimizer.scheduler import TrialScheduler
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.constants import SMT_WORKER_TIME
+from syne_tune.backend.backend import Backend
+from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 
 from launch_utils import make_searcher_and_scheduler
 from utils import dict_get
@@ -196,9 +196,9 @@ def scheduler_factory(
         from ray.tune.schedulers import AsyncHyperBandScheduler
         from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
         from ray.tune.suggest.skopt import SkOptSearch
-        from sagemaker_tune.optimizer.schedulers.ray_scheduler import \
+        from syne_tune.optimizer.schedulers.ray_scheduler import \
             RayTuneScheduler
-        from sagemaker_tune.optimizer.schedulers.searchers import \
+        from syne_tune.optimizer.schedulers.searchers import \
             impute_points_to_evaluate
 
         searcher = params.get('searcher')

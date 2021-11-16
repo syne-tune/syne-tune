@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from autograd import numpy as np
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon \
     import Parameter, ParameterDict, Block
 
 
