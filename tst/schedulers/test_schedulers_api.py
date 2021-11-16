@@ -7,14 +7,14 @@ from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.suggest.skopt import SkOptSearch
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
-from sagemaker_tune.backend.trial_status import Trial
-from sagemaker_tune.optimizer.scheduler import SchedulerDecision
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from sagemaker_tune.optimizer.schedulers.pbt import PopulationBasedTraining
-from sagemaker_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-import sagemaker_tune.search_space as sp
+from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.scheduler import SchedulerDecision
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
+from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+import syne_tune.search_space as sp
 
 
 config_space = {

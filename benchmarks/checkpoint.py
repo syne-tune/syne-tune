@@ -19,7 +19,7 @@ from typing import Dict, Callable, Any, Optional
 import argparse
 import os
 
-from sagemaker_tune.constants import SMT_CHECKPOINT_DIR
+from syne_tune.constants import SMT_CHECKPOINT_DIR
 
 __all__ = ['add_checkpointing_to_argparse',
            'resume_from_checkpointed_model',
@@ -95,11 +95,11 @@ def checkpoint_model_at_rung_level(
                   f"{resource}, local_path = {local_path}]")
 
 
-RESOURCE_NAME = 'smt_resource'
+RESOURCE_NAME = 'st_resource'
 
-STATE_DICT_PREFIX = 'smt_state_dict_'
+STATE_DICT_PREFIX = 'st_state_dict_'
 
-MUTABLE_STATE_PREFIX = 'smt_mutable_'
+MUTABLE_STATE_PREFIX = 'st_mutable_'
 
 def pytorch_load_save_functions(
         state_dict_objects: dict, mutable_state: Optional[dict] = None,

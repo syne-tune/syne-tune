@@ -13,11 +13,11 @@
 import numpy
 import autograd.numpy as anp
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state \
     import IncrementalUpdateGPPosteriorState, GaussProcPosteriorState
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
     import GaussianProcessRegression
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import Matern52
 
 

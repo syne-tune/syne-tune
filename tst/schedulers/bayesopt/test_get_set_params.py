@@ -12,12 +12,12 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from sagemaker_tune.optimizer.schedulers.searchers.gp_searcher_factory \
+from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory \
     import gp_multifidelity_searcher_defaults
-from sagemaker_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher \
+from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher \
     import GPMultiFidelitySearcher
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy \
     import Ackley, sample_data
 
 

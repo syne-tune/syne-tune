@@ -12,9 +12,9 @@
 # permissions and limitations under the License.
 from datetime import datetime
 
-from sagemaker_tune.backend.trial_status import Trial
-from sagemaker_tune.search_space import randint
-from sagemaker_tune.optimizer.schedulers.pbt import PopulationBasedTraining
+from syne_tune.backend.trial_status import Trial
+from syne_tune.search_space import randint
+from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 
 max_steps = 10
 

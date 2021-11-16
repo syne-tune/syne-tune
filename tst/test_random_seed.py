@@ -16,15 +16,15 @@ import pytest
 import itertools
 import logging
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.optimizer.schedulers.fifo import FIFOScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.tuner_callback import TunerCallback
-from sagemaker_tune.backend.trial_status import Trial
-from sagemaker_tune.optimizer.scheduler import TrialScheduler
-from sagemaker_tune.search_space import randint
-from sagemaker_tune.util import script_height_example_path
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.tuner_callback import TunerCallback
+from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.scheduler import TrialScheduler
+from syne_tune.search_space import randint
+from syne_tune.util import script_height_example_path
 from tst.util_test import temporary_local_backend
 
 
@@ -96,7 +96,7 @@ def test_scheduler(scheduler, random_seed):
         myscheduler1 = HyperbandScheduler(config_space, **kwargs)
         myscheduler2 = HyperbandScheduler(config_space, **kwargs)
 
-    logging.getLogger('sagemaker_tune.tuner').setLevel(logging.ERROR)
+    logging.getLogger('syne_tune.tuner').setLevel(logging.ERROR)
 
     stop_criterion = lambda status: status.wallclock_time > 0.5
     callback1 = StoreConfigCallback()

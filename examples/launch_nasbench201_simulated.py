@@ -16,12 +16,12 @@ Example for running the simulator back-end on a tabulated benchmark
 import logging
 import argparse
 
-from sagemaker_tune.backend.simulator_backend.simulator_backend import \
+from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
-from sagemaker_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from sagemaker_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.tuner import Tuner
+from syne_tune.stopping_criterion import StoppingCriterion
 
 from examples.training_scripts.nasbench201.nasbench201 import \
     nasbench201_benchmark, nasbench201_default_params

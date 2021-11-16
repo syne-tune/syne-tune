@@ -17,9 +17,9 @@ from typing import Dict
 from matplotlib import cm
 import numpy as np
 
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_utils import download_sagemaker_results
-from sagemaker_tune.constants import SMT_TUNER_TIME
-from sagemaker_tune.experiments import load_experiments_df, split_per_task
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import download_sagemaker_results
+from syne_tune.constants import SMT_TUNER_TIME
+from syne_tune.experiments import load_experiments_df, split_per_task
 import matplotlib.pyplot as plt
 
 

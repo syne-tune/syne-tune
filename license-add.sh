@@ -14,7 +14,7 @@ add_license_folder() {
 	done
 }
 
-add_license_folder "sagemaker_tune/"
+add_license_folder "syne_tune/"
 add_license_folder "examples/"
 add_license_folder "benchmarks/"
 add_license_folder "tst/"

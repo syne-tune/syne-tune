@@ -18,7 +18,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
 
-from sagemaker_tune.report import Reporter
+from syne_tune.report import Reporter
 from argparse import ArgumentParser
 
 

@@ -14,21 +14,21 @@ import numpy
 import autograd.numpy as anp
 import pytest
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd import \
     SliceException
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.slice \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.slice \
     import SliceSampler, slice_sampler_step_out, slice_sampler_step_in
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution \
     import Normal, LogNormal, Horseshoe, Uniform
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping \
     import Warping, WarpedKernel
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import Matern52
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import ScalarMeanFunction
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood \
     import MarginalLikelihood
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc \
     import GPRegressionMCMC, _get_gp_hps, _set_gp_hps, _create_likelihood
 
 

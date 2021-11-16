@@ -13,11 +13,11 @@
 import numpy
 import autograd.numpy as anp
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping \
     import OneDimensionalWarping, Warping
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import DATA_TYPE, NUMERICAL_JITTER
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
     import LogarithmScalarEncoding, PositiveScalarEncoding
 
 

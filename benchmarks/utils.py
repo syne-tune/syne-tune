@@ -56,12 +56,12 @@ def get_cost_model_for_batch_size(
         if cost_model_type is None:
             cost_model_type = 'quadratic_spline'
         if cost_model_type == 'biasonly':
-            from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
+            from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
                 import BiasOnlyLinearCostModel
 
             cost_model = BiasOnlyLinearCostModel()
         else:
-            from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.cost.sklearn_cost_model \
+            from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.sklearn_cost_model \
                 import UnivariateSplineCostModel
 
             def scalar_attribute(config_dct):

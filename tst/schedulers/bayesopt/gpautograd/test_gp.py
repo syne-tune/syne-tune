@@ -13,17 +13,17 @@
 import numpy
 import autograd.numpy as anp
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import ScalarMeanFunction
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import Matern52
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood \
     import MarginalLikelihood
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
     import GaussianProcessRegression
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import NOISE_VARIANCE_LOWER_BOUND, INVERSE_BANDWIDTHS_LOWER_BOUND
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
     import LogarithmScalarEncoding, PositiveScalarEncoding
 
 

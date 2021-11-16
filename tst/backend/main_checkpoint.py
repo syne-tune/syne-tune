@@ -21,8 +21,8 @@ import logging
 import os
 from pathlib import Path
 
-from sagemaker_tune.constants import SMT_CHECKPOINT_DIR
-from sagemaker_tune.report import Reporter
+from syne_tune.constants import SMT_CHECKPOINT_DIR
+from syne_tune.report import Reporter
 
 
 def load_checkpoint(checkpoint_path: Path):

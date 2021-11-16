@@ -19,9 +19,9 @@ import logging
 import time
 from typing import List
 
-from sagemaker_tune.report import Reporter
-from sagemaker_tune.search_space import choice, add_to_argparse
-from sagemaker_tune.backend.simulator_backend.tabulated_benchmark import \
+from syne_tune.report import Reporter
+from syne_tune.search_space import choice, add_to_argparse
+from syne_tune.backend.simulator_backend.tabulated_benchmark import \
     TabulatedBenchmark
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse
@@ -90,7 +90,7 @@ def get_cost_model(params):
         if cost_model_type is None:
             cost_model_type = 'linear'
         if cost_model_type.startswith('linear'):
-            from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
+            from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
                 import NASBench201LinearCostModel
 
             map_config_values = {
@@ -108,7 +108,7 @@ def get_cost_model(params):
                 conv_separate_features=conv_separate_features,
                 count_sum=count_sum)
         else:
-            from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.cost.sklearn_cost_model \
+            from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.sklearn_cost_model \
                 import ScikitLearnCostModel
 
             cost_model = ScikitLearnCostModel(cost_model_type)

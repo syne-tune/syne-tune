@@ -13,8 +13,8 @@
 import time
 from datetime import datetime
 
-from sagemaker_tune.backend.trial_status import Trial, Status
-from sagemaker_tune.tuning_status import TuningStatus, print_best_metric_found
+from syne_tune.backend.trial_status import Trial, Status
+from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 
 
 def test_status():

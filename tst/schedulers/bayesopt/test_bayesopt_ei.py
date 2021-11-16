@@ -13,28 +13,28 @@
 from typing import List
 import numpy as np
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
     CandidateEvaluation, dictionarize_objective, INTERNAL_METRIC_NAME
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from sagemaker_tune.search_space import uniform
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
+from syne_tune.search_space import uniform
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
     TuningJobState
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
     DEFAULT_MCMC_CONFIG, DEFAULT_OPTIMIZATION_CONFIG
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl \
     import EIAcquisitionFunction
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc \
     import ActiveMetricCurrentBestProvider
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import \
     GaussProcSurrogateModel, GaussProcEmpiricalBayesModelFactory
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model \
     import GaussProcMCMCModelFactory
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import \
     LBFGSOptimizeAcquisition
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import \
     default_gpmodel, default_gpmodel_mcmc
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import tuples_to_configs
 
 

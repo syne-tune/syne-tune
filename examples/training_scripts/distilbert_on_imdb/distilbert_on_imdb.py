@@ -17,8 +17,8 @@ import argparse
 import logging
 import time
 
-from sagemaker_tune.report import Reporter
-from sagemaker_tune.search_space import loguniform, add_to_argparse
+from syne_tune.report import Reporter
+from syne_tune.search_space import loguniform, add_to_argparse
 
 
 _config_space = {
@@ -126,7 +126,7 @@ def objective(config):
         eval_dataset=eval_dataset,
     )
 
-    # add a callback so that accuracy is sent to Sagemaker Tune whenever it is computed
+    # add a callback so that accuracy is sent to Syne Tune whenever it is computed
     class Callback(TrainerCallback):
         def __init__(self):
             self.step = 1

@@ -14,8 +14,8 @@ import time
 import logging
 from pathlib import Path
 
-from sagemaker_tune.backend.trial_status import Status
-from sagemaker_tune.util import script_checkpoint_example_path
+from syne_tune.backend.trial_status import Status
+from syne_tune.util import script_checkpoint_example_path
 from tst.util_test import temporary_local_backend
 
 

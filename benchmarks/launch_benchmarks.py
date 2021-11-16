@@ -14,10 +14,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.remote.remote_launcher import RemoteLauncher
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.remote.remote_launcher import RemoteLauncher
+from syne_tune.tuner import Tuner
+from syne_tune.stopping_criterion import StoppingCriterion
 
 from scheduler_factory import short_name_scheduler_factory, \
     supported_short_name_schedulers

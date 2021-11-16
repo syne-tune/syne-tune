@@ -17,7 +17,7 @@ import os
 import time
 from pathlib import Path
 
-from sagemaker_tune.report import Reporter
+from syne_tune.report import Reporter
 
 
 report = Reporter()
@@ -43,8 +43,8 @@ if __name__ == '__main__':
     parser.add_argument('--multiplier', type=float, default=1)
     parser.add_argument('--sleep-time', type=float, default=0.1)
 
-    # convention the path where to serialize and deserialize is given as smt_checkpoint_dir
-    parser.add_argument('--smt_checkpoint_dir', type=str)
+    # convention the path where to serialize and deserialize is given as st_checkpoint_dir
+    parser.add_argument('--st_checkpoint_dir', type=str)
 
     args, _ = parser.parse_known_args()
 
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     checkpoint_path = None
     start_epoch = 0
     current_value = 0
-    if args.smt_checkpoint_dir is not None:
-        checkpoint_path = Path(args.smt_checkpoint_dir) / "checkpoint.json"
+    if args.st_checkpoint_dir is not None:
+        checkpoint_path = Path(args.st_checkpoint_dir) / "checkpoint.json"
         if checkpoint_path.exists():
             state = load_checkpoint(checkpoint_path)
             logging.info(f"resuming from previous checkpoint {state}")

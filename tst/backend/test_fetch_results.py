@@ -12,9 +12,9 @@
 # permissions and limitations under the License.
 from typing import List, Dict, Optional
 
-from sagemaker_tune.backend.backend import Backend
-from sagemaker_tune.backend.trial_status import TrialResult, Status
-from sagemaker_tune.constants import SMT_WORKER_TIMESTAMP
+from syne_tune.backend.backend import Backend
+from syne_tune.backend.trial_status import TrialResult, Status
+from syne_tune.constants import SMT_WORKER_TIMESTAMP
 
 
 class DeterministicBackend(Backend):
@@ -153,7 +153,7 @@ def test_fetch_results_status():
     backend.generate_event(trial_id=7, metrics=[{'metric': 14}], status=Status.in_progress)
 
     trial_statuses, metrics = get_status_metrics(backend, trial_ids)
-    assert metrics == [(3, {'metric': 6, 'smt_worker_timestamp': 0}), (7, {'metric': 14, 'smt_worker_timestamp': 1})]
+    assert metrics == [(3, {'metric': 6, 'st_worker_timestamp': 0}), (7, {'metric': 14, 'st_worker_timestamp': 1})]
     assert trial_statuses == {3: Status.in_progress, 7: Status.in_progress}
 
     # check that status gets updated to failed
@@ -169,7 +169,7 @@ def test_fetch_results_status():
     # 6 6 6
     trial_statuses, metrics = get_status_metrics(backend, trial_ids)
 
-    assert metrics == [(3, {'metric': 6, 'smt_worker_timestamp': 2}), (3, {'metric': 6, 'smt_worker_timestamp': 3})]
+    assert metrics == [(3, {'metric': 6, 'st_worker_timestamp': 2}), (3, {'metric': 6, 'st_worker_timestamp': 3})]
     assert trial_statuses == {3: Status.completed, 7: Status.failed}
 
     #       v

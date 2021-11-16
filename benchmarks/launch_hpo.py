@@ -16,16 +16,16 @@ import itertools
 import copy
 import numpy as np
 
-from sagemaker_tune.backend.local_backend import LocalBackend
-from sagemaker_tune.backend.sagemaker_backend.sagemaker_backend import \
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_backend import \
     SagemakerBackend
-from sagemaker_tune.backend.simulator_backend.simulator_backend import \
+from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend, SimulatorConfig, SimulatorBackendForRemoteLauncher
-from sagemaker_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from sagemaker_tune.stopping_criterion import StoppingCriterion
-from sagemaker_tune.tuner import Tuner
-from sagemaker_tune.remote.remote_launcher import RemoteLauncher
-from sagemaker_tune.util import s3_experiment_path
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.tuner import Tuner
+from syne_tune.remote.remote_launcher import RemoteLauncher
+from syne_tune.util import s3_experiment_path
 
 from estimator_factory import sagemaker_estimator_factory
 from launch_utils import parse_args
@@ -206,7 +206,7 @@ if __name__ == '__main__':
             f"Launching {num_experiments} experiments in total")
 
     # Loop over all combinations
-    experiment_name = dict_get(orig_params, 'experiment_name', 'smtune')
+    experiment_name = dict_get(orig_params, 'experiment_name', 'stune')
     s3_path = s3_experiment_path(
         s3_bucket=orig_params.get('s3_bucket'),
         experiment_name=None if orig_params['no_experiment_subdirectory'] \
@@ -351,7 +351,7 @@ if __name__ == '__main__':
         if params['local_tuner']:
             # Tuning experiment is run locally
             if params['no_tuner_logging']:
-                logging.getLogger('sagemaker_tune.tuner').setLevel(
+                logging.getLogger('syne_tune.tuner').setLevel(
                     logging.ERROR)
             local_tuner.run()
         else:

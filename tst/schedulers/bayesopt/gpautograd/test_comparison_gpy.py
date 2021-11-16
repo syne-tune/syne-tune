@@ -17,24 +17,22 @@ import pickle
 import tempfile
 import pytest
 
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import INTERNAL_METRIC_NAME
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import INTERNAL_METRIC_NAME
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model \
     import GaussProcEmpiricalBayesModelFactory
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
     import GaussianProcessRegression
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import Matern52
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import ZeroMeanFunction
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import INITIAL_COVARIANCE_SCALE, INITIAL_INVERSE_BANDWIDTHS, \
     INVERSE_BANDWIDTHS_LOWER_BOUND, INVERSE_BANDWIDTHS_UPPER_BOUND, \
     COVARIANCE_SCALE_LOWER_BOUND, COVARIANCE_SCALE_UPPER_BOUND, \
     INITIAL_NOISE_VARIANCE, NOISE_VARIANCE_LOWER_BOUND, \
     NOISE_VARIANCE_UPPER_BOUND, OptimizationConfig, DEFAULT_OPTIMIZATION_CONFIG
-#from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy import Branin, \
-#    ThreeHumpCamel, Ackley, sample_data, compare_gpy_predict_posterior_marginals
-from sagemaker_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy \
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy \
     import expand_data
 
 
