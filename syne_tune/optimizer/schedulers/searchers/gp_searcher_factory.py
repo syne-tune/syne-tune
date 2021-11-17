@@ -97,7 +97,8 @@ def _create_hp_ranges(**kwargs) -> HyperparameterRanges:
         assert isinstance(hp_range, Categorical), \
             f"config_space[{task_attr}] must be a categorical parameter"
         assert active_task in hp_range.categories, \
-            f"'{active_task}' must be value in config_space[{task_attr}]"
+            f"'{active_task}' must be value in config_space[{task_attr}] " +\
+            f"(values: {hp_range.categories})"
         prefix_keys = [task_attr]
         active_config_space = kwargs.get(
             'transfer_learning_active_config_space')
