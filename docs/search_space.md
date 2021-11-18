@@ -1,4 +1,4 @@
-# SagemakerTune: How to Choose a Configuration Space
+# Syne Tune: How to Choose a Configuration Space
 
 One important step in applying hyperparameter optimization to your tuning
 problem is to define a configuration space (or search space). Doing this
@@ -10,7 +10,7 @@ this tutorial you will learn about the basics and some gotchas.
 
 Here is an example for a configuration space:
 ```python
-from sagemaker_tune.search_space import randint, uniform, loguniform, \
+from syne_tune.search_space import randint, uniform, loguniform, \
     choice
 
 

@@ -61,11 +61,11 @@ for epoch in range(1, num_epochs + 1):
    report(train_acc=train_acc, epoch=epoch)
 ```
 reports artificial results obtained in a dummy loop. 
-In addition to user metrics, SageMaker Tune will automatically add the following metrics:
+In addition to user metrics, Syne Tune will automatically add the following metrics:
 
-* `smt_worker_timestamp`: the time stamp when report was called
-* `smt_worker_time`: the total time spent when report was called since the creation of the reporter
-* `smt_worker_cost` (only when running on SageMaker): the dollar-cost spent since the creation of the reporter
+* `st_worker_timestamp`: the time stamp when report was called
+* `st_worker_time`: the total time spent when report was called since the creation of the reporter
+* `st_worker_cost` (only when running on SageMaker): the dollar-cost spent since the creation of the reporter
 
 **Model output and checkpointing (optional).** 
 Since trials may be paused and resumed (either by schedulers or when using spot-instances), 
@@ -177,8 +177,8 @@ backend = SagemakerBackend(
 )
 ```
 
-Note that SageMakerTune code is sent with the SageMaker Framework so that the `import syne_tune.report`
- that imports the reporter works when executing the training script, as such there is no need to install SageMaker Tune 
+Note that Syne Tune code is sent with the SageMaker Framework so that the `import syne_tune.report`
+ that imports the reporter works when executing the training script, as such there is no need to install Syne Tune 
  in the docker image of the SageMaker Framework.
 
 In addition, users can decide to run the tuning loop on a remote instance. This is helpful to avoid the need of letting 
@@ -350,7 +350,7 @@ for an example on how to run with a script with a custom docker image.
 
 ## Benchmarks
 
-SageMaker Tune comes with a range of benchmarks for testing and demonstration.
+Syne Tune comes with a range of benchmarks for testing and demonstration.
 [Turning your own tuning problem into a benchmark](docs/benchmarks.md) is simple
 and comes with a number of advantages. As detailed in
 [this tutorial](docs/command_line.md), you can use the CL launcher

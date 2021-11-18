@@ -78,7 +78,7 @@ class Reporter:
         activated).
         :param kwargs: key word arguments of the metrics to report, for instance `report(epoch=1, loss=1.2)` the only
         constrain is that values must be serializable with json and keys should not start with `st_` which is a
-        reserved namespace for SagemakerTune internals.
+        reserved namespace for Syne Tune internals.
         """
         for key in kw.keys():
             assert not key.startswith("st_"),\

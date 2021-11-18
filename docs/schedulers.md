@@ -1,4 +1,4 @@
-# SagemakerTune: Using the Built-in Schedulers
+# Syne Tune: Using the Built-in Schedulers
 
 In this tutorial, you will learn how to use and configure the built-in HPO
 algorithms. Alternatively, you can also use most algorithms from
@@ -214,7 +214,7 @@ which is different. The papers cited below provide a detailed overview of
 asynchronous variants of successive halving, and of the algorithms discussed
 here. Experiments therein indicate that asynchronous scheduling can be far more
 efficient for HPO than synchronous scheduling. The latter is not yet supported
-in `SagemakerTune`.
+in Syne Tune.
 
 Hyperband is an extension of successive halving to multiple brackets. We will
 discuss successive halving, mentioning Hyperband later. In our experience so
