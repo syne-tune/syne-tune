@@ -20,8 +20,6 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils \
     ResourceForAcquisitionMap
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory \
     import resource_kernel_factory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
-    import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
@@ -58,6 +56,10 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler \
     import SimpleProfiler
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import Integer, Categorical, Boolean, Float
+from syne_tune.optimizer.schedulers.searchers.utils.warmstarting import \
+    create_hp_ranges_for_warmstarting, \
+    create_filter_observed_data_for_warmstarting, \
+    create_base_gp_kernel_for_warmstarting
 
 __all__ = ['gp_fifo_searcher_factory',
            'gp_multifidelity_searcher_factory',
@@ -74,66 +76,6 @@ __all__ = ['gp_fifo_searcher_factory',
 logger = logging.getLogger(__name__)
 
 
-def _create_hp_ranges(**kwargs) -> HyperparameterRanges:
-    """
-    See :class:`GPFIFOSearcher` for details on transfer_learning_task_attr',
-    'transfer_learning_active_task', 'transfer_learning_active_config_space'
-    as optional fields in `kwargs`. If given, they determine
-    `active_config_space` and `prefix_keys` of `hp_ranges` created here,
-    and they also places constraints on 'configspace'.
-
-    """
-    task_attr = kwargs.get('transfer_learning_task_attr')
-    config_space = kwargs['configspace']
-    prefix_keys = None
-    active_config_space = None
-    if task_attr is not None:
-        from syne_tune.search_space import Categorical
-
-        active_task = kwargs.get('transfer_learning_active_task')
-        assert active_task is not None, \
-            "transfer_learning_active_task is needed if transfer_learning_task_attr is given"
-        hp_range = config_space.get(task_attr)
-        assert isinstance(hp_range, Categorical), \
-            f"config_space[{task_attr}] must be a categorical parameter"
-        assert active_task in hp_range.categories, \
-            f"'{active_task}' must be value in config_space[{task_attr}] " +\
-            f"(values: {hp_range.categories})"
-        prefix_keys = [task_attr]
-        active_config_space = kwargs.get(
-            'transfer_learning_active_config_space')
-        if active_config_space is None:
-            active_config_space = config_space
-        # The parameter `task_attr` in `active_config_space` must be restricted
-        # to `active_task` as a single value
-        task_param = Categorical(categories=[active_task])
-        active_config_space = dict(
-            active_config_space, **{task_attr: task_param})
-    return make_hyperparameter_ranges(
-        config_space, active_config_space=active_config_space,
-        prefix_keys=prefix_keys)
-
-
-def _create_filter_observed_data(**kwargs) -> Optional[ConfigurationFilter]:
-    """
-    See :class:`GPFIFOSearcher` for details on transfer_learning_task_attr',
-    'transfer_learning_active_task' as optional fields in `kwargs`.
-
-    """
-    task_attr = kwargs.get('transfer_learning_task_attr')
-    if task_attr is not None:
-        active_task = kwargs.get('transfer_learning_active_task')
-        assert active_task is not None, \
-            "transfer_learning_active_task is needed if transfer_learning_task_attr is given"
-
-        def filter_observed_data(config: Configuration) -> bool:
-            return config[task_attr] == active_task
-
-        return filter_observed_data
-    else:
-        return None
-
-
 def _create_base_gp_kernel(hp_ranges: HyperparameterRanges,
                            **kwargs) -> KernelFunction:
     """
@@ -144,19 +86,9 @@ def _create_base_gp_kernel(hp_ranges: HyperparameterRanges,
     parameters.
 
     """
-    task_attr = kwargs.get('transfer_learning_task_attr')
-    if task_attr is not None:
-        hp_range = hp_ranges.config_space.get(task_attr)
-        # Note: This attribute is the first in `hp_ranges`, see
-        # `_create_hp_ranges`
-        assert hp_ranges.internal_keys[0] == task_attr  # Sanity check
-        categ_dim = len(hp_range)
-        full_dim = hp_ranges.ndarray_size()
-        # Kernel is a product of Matern with single length scale on task_id
-        # attribute, and Matern ARD kernel on the rest
-        kernel1 = Matern52(categ_dim, ARD=False)
-        kernel2 = Matern52(full_dim - categ_dim, ARD=True)
-        kernel = ProductKernelFunction(kernel1, kernel2)
+    if kwargs.get('transfer_learning_task_attr') is not None:
+        # Transfer learning: Specific base kernel
+        kernel = create_base_gp_kernel_for_warmstarting(hp_ranges, **kwargs)
     else:
         kernel = Matern52(dimension=hp_ranges.ndarray_size(), ARD=True)
     return kernel
@@ -179,7 +111,8 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
         debug_log = DebugLogPrinter()
     else:
         debug_log = None
-    filter_observed_data = _create_filter_observed_data(**kwargs)
+    filter_observed_data = create_filter_observed_data_for_warmstarting(
+        **kwargs)
     return opt_warmstart, kernel, mean, optimization_config, profiler, \
            debug_log, filter_observed_data
 
@@ -234,7 +167,7 @@ def _create_common_objects(is_issm=False, is_multi_output=False, **kwargs):
         "GP-ISS model only together with hyperband_* scheduler"
     assert (not is_multi_output) or (not is_hyperband), \
         "MultiOutput BO only together with FIFO scheduler"
-    hp_ranges = _create_hp_ranges(**kwargs)
+    hp_ranges = create_hp_ranges_for_warmstarting(**kwargs)
     key = 'random_seed_generator'
     if key in kwargs:
         rs_generator = kwargs[key]
