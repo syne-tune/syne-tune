@@ -336,15 +336,40 @@ Or run the following example that evaluates trials on SageMaker.
 python examples/launch_height_sagemaker.py
 ```
 
-If you want to launch HPO remotely and not just on your machine, you will also need `docker` installed on your local
-machine, see [this link](https://docs.docker.com/get-docker/) to install it on your machine.
-The following example should then work which will schedule the tuning on SageMaker rather than on your machine:
+This example does not require you to build a docker image, since the training code runs
+in a SageMaker framework. However, there are working modes that require building an image, as
+we discuss next.
+
+First, Syne Tune allows you to launch HPO experiments remotely on SageMaker, instead of them
+running on your local machine. This is particularly interesting for running many
+experiments in parallel. Here is an example:
 ```bash
 python examples/launch_height_sagemaker_remotely.py
 ```
+If you run this for the first time, it will take a while, building a docker image with the
+Syne Tune dependencies and pushing it to ECR. This has to be done only once, even if Syne
+Tune source code is modified later on.
 
-To run on SageMaker, you can also use any custom docker images available on ECR.
-See [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py)
+If running this example script fails, you are probably not setup to build docker images and
+push them to ECR on your local machine. In order to enable this, you need to install both
+`awscli` and `docker` (see [this link](https://docs.docker.com/get-docker/)),
+and make sure the docker demon is running. However, since many Syne Tune workflows
+do not require building docker images, you may alternatively build the required image
+on a SageMaker notebook instance. To do so, log into such an instance and install
+Syne Tune there, then run:
+```bash
+cd container
+bash build_syne_tune_container.sh
+```
+
+Assuming that `launch_height_sagemaker_remotely.py` is working for you now, you
+should note that the script returns immediately after starting the experiment, which is
+running as a SageMaker training job. This allows you to run many experiments in
+parallel, possibly by using the [command line launcher](docs/command_line.md).
+
+You can also run Syne Tune on training code in a custom docker image, circumventing
+SageMaker frameworks entirely. See
+[launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py)
 for an example on how to run with a script with a custom docker image.
 
 
