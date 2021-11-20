@@ -14,7 +14,7 @@ from typing import Dict
 import numpy as np
 
 from syne_tune.search_space import randint, lograndint, uniform, \
-    loguniform, choice
+    loguniform, choice, finrange, logfinrange
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.searchers import RandomSearcher
 
@@ -52,6 +52,12 @@ def _impute_config(config: Dict) -> Dict:
     k = 'categorical'
     if k not in config:
         new_config[k] = 'a'
+    k = 'finrange'
+    if k not in config:
+        new_config[k] = 0.5
+    k = 'logfinrange'
+    if k not in config:
+        new_config[k] = np.exp(3.0)
     return new_config
 
 
@@ -88,7 +94,7 @@ def _prepare_for_compare(configs1, configs2, hp_ranges):
     return res1, res2
 
 
-def _prepare_test():
+def _prepare_test(is_ray_tune=False):
     np.random.seed(2838748673)
     num_extra_cases = 30
 
@@ -97,8 +103,8 @@ def _prepare_test():
         'logint': lograndint(3, 15),
         'float': uniform(5.5, 6.5),
         'logfloat': loguniform(7.5, 8.5),
-        'categorical': choice(['a', 'b', 'c'])}
-
+        'categorical': choice(['a', 'b', 'c']),
+    }
     configs = [
         dict(),
         {'float': 5.75, 'categorical': 'b'},
@@ -108,6 +114,16 @@ def _prepare_test():
         {'float': 6.125},
         {'categorical': 'c'},
     ]
+    if not is_ray_tune:
+        config_space.update({
+            'finrange': finrange(0.1, 0.9, 9),
+            'logfinrange': logfinrange(1.0, np.exp(6.0), 7),
+        })
+        configs.extend([
+            {'finrange': 0.3},
+            {'logfinrange': np.exp(2.0)},
+        ])
+
     num_configs = len(configs)
     config_pairs = [(c, _impute_config(c)) for c in configs]
     #for a, b in config_pairs:
@@ -155,7 +171,7 @@ def test_points_to_evaluate_raytune():
     from syne_tune.optimizer.schedulers.searchers import \
         impute_points_to_evaluate
 
-    config_space, configs, testcases = _prepare_test()
+    config_space, configs, testcases = _prepare_test(is_ray_tune=True)
     # This is just to get hp_ranges, which is needed for comparisons below
     _myscheduler = FIFOScheduler(
         config_space, searcher='random', mode='min', metric='bogus')

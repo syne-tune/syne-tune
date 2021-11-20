@@ -510,7 +510,7 @@ class FiniteRange(Domain):
         self.lower = lower
         self.upper = upper
         self.log_scale = log_scale
-        if not log_scale is None:
+        if not log_scale:
             self._lower_internal = lower
             self._step_internal = (upper - lower) / (size - 1)
         else:
@@ -521,7 +521,7 @@ class FiniteRange(Domain):
 
     def _map_from_int(self, x: int) -> float:
         y = x * self._step_internal + self._lower_internal
-        if self.log_scale is not None:
+        if self.log_scale:
             y = np.exp(y)
         return np.clip(y, self.lower, self.upper)
 
