@@ -322,6 +322,9 @@ class Integer(Domain):
     def value_type(self):
         return int
 
+    def cast(self, value):
+        return int(round(value))
+
     def quantized(self, q: int):
         new = copy(self)
         new.set_sampler(Quantized(new.get_sampler(), q), allow_override=True)

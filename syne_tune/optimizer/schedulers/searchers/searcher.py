@@ -15,7 +15,8 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, List, Tuple
 
-from syne_tune.search_space import Domain, is_log_space
+from syne_tune.search_space import Domain, is_log_space, Categorical, \
+    Integer
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
@@ -34,9 +35,8 @@ def _impute_default_config(default_config, configspace):
     new_config = dict()
     for name, hp_range in configspace.items():
         if isinstance(hp_range, Domain):
-            tp = hp_range.value_type
             if name not in default_config:
-                if tp == str:
+                if isinstance(hp_range, Categorical):
                     # For categorical: Pick first entry
                     new_config[name] = hp_range.categories[0]
                 else:
@@ -46,15 +46,18 @@ def _impute_default_config(default_config, configspace):
                     else:
                         midpoint = np.exp(0.5 * (
                                 np.log(upper) + np.log(lower)))
-                    if tp == int:
-                        midpoint = int(round(midpoint))
+                    # Casting may involve rounding to nearest value in
+                    # a finite range
+                    midpoint = hp_range.cast(midpoint)
                     midpoint = np.clip(
                         midpoint, hp_range.lower, hp_range.upper)
                     new_config[name] = midpoint
             else:
                 # Check validity
-                val = default_config[name]
-                if tp == str:
+                # Note: For `FiniteRange`, the value is mapped to
+                # the closest one in the range
+                val = hp_range.cast(default_config[name])
+                if isinstance(hp_range, Categorical):
                     assert val in hp_range.categories, \
                         f"default_config[{name}] = {val} is not in " +\
                         f"categories = {hp_range.categories}"
