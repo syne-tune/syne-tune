@@ -39,7 +39,8 @@ on the single instance you are on, and the algorithm stops suggesting new trials
 after 120 seconds (and terminates running ones).
 
 The most important arguments for running HPO locally are:
-* `benchmark_name`: Name of benchmark to run.
+* `benchmark_name`: Name of benchmark to run, as defined in
+  [benchmarks/benchmark_factory.py](../_benchmarks/benchmark_factory.py)
 * `scheduler`: Selects the optimization algorithm. The simplest one is `fifo`.
   For neural network models, multi-fidelity HPO is often a better choice:
   `hyperband_stopping`, `hyperband_promotion` are two variants of asynchronous
@@ -143,8 +144,8 @@ stochastic search behavior (exploration), and it is best practice to repeat a
 setup several times, averaging over results. It is quite painful and slow to do
 any of this if each experiment is blocking its instance.
 
-Syne Tune allows you to launch experiments on a remote instance. For
-example:
+Syne Tune allows you to launch experiments on a remote instance (this requires
+[some setup](../README.md#running-on-sagemaker)). For example:
 
 ```bash
 python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
@@ -158,7 +159,8 @@ convenient to use, it is the default, and "local tuning" needs to be asked
 for explicitly by appending `--local_tuner`.
 
 You can also launch multiple experiments with a single command, which not only
-saves typing but also waiting for experiments getting launched. For example:
+saves typing but also allows you to go for a coffee while your experiments are
+getting launched. For example:
 
 ```bash
 python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
@@ -252,14 +254,6 @@ distinct nonnegative integers. Here, `--num_runs 5` is short for
 `--run_id 0 1 2 3 4`. If `--run_id` is given, `--num_runs` is ignored.
 If neither of the two is given, the default is `run_id = 0`.
 
-When multiple experiments are launched in this way, you can use the
-`--skip_initial_experiments` argument in order to skip this number of initial
-experiments before launching the remaining ones. This is useful if a
-previous call failed to launch all intended experiments (e.g., because an
-AWS instance limit was reached). If the initial K experiments were in
-fact launched, a subsequent call with `--skip_initial_experiments K` will
-launch only the remaining ones.
-
 **Note**: Launching experiments remotely, as SageMaker training jobs, comes
 with different properties than running them locally. You can now select the
 instance type via `--instance_type`, valid values are
@@ -272,9 +266,9 @@ experiments remotely from your laptop).
 
 ## How Results are Stored and Downloaded
 
-This is detailed in [Output of a tuning job](../README.md). If tuning is run
-remotely on SageMaker, results are uploaded to S3 in regular intervals. When
-the CLI is used, additional points apply:
+This is detailed in [Output of a tuning job](../README.md#launching-a-tuning-job).
+If tuning is run remotely on SageMaker, results are uploaded to S3 in regular
+intervals. When the CLI is used, additional points apply:
 * The meta-data in `metadata.json` contains all parameters specified on the
   command line, as well as benchmark-specific defaults. Parameters which are
   neither specified on the CL nor have a benchmark-specific default, are not
@@ -292,15 +286,14 @@ the CLI is used, additional points apply:
   `--s3_bucket`. The default is the bucket assigned to the SM session.
 
 Say you ran a number of experiments with a particular `experiment_name`, say
-`myexperiment_1`. You can download relevant results needed for analysis as follows:
+`myexperiment-1`. You can download relevant results needed for analysis as follows:
 ```bash
 aws s3 sync s3://${BUCKET_NAME}/syne-tune/myexperiment-1/ ~/syne-tune/ \
     --exclude "*" --include "*metadata.json" --include "*results.csv.zip"
 ```
 Note that Syne Tune stores a large number of additional files to S3,
 including checkpoints and logs for every trial. A normal `aws s3 sync` takes a
-very long time. Also, note that `myexperiment_1` becomes `myexperiment-1` in
-the result path. This is because S3 paths must not include `'_'`.
+very long time.
 
 
 ## Random Seeds
@@ -315,12 +308,17 @@ meta-data. It is an integer in `0, ..., 2 ** 32 - 1`. Now, the random seed used
 for each experiment is this random seed offset plus `run_id` modulo `2 ** 32`, so
 that two experiments started with the same call have the same seed iff their
 `run_id` is the same. For example, if you compare random search with Bayesian
-optimization, the initial random choices are the same for the same `run_id`, but
-inherent randomness is quantified by using a number of `run_id`'s.
+optimization, the initial random choices are the same for the same `run_id`,
+allowing for a paired comparison, but inherent randomness is quantified by using
+a number of `run_id`'s.
 
 The random seed offset can be specified with `--random_seed_offset`. This way,
 you can compare different variants without launching them with a single call,
 or even do comparisons across different `experiment_name`'s.
+
+Note that the seeds controlled this way only affect random choices in Syne Tune,
+not in the training code to be tuned (e.g., weight initialization, ordering of
+data batches, data set splits).
 
 
 ## Different Back-Ends
@@ -391,8 +389,7 @@ a SageMaker training job, these jobs use the PyTorch framework together with a
 pre-built image containing the Syne Tune dependencies. If your benchmark
 code requires additional dependencies on top of PyTorch, you can specify them
 in `dependencies.txt`. For example, if your training script uses Hugging Face,
-you need to add `transformers` and `datasets` to `dependencies.txt`. This works
-because Hugging Face itself runs on top of PyTorch. If your benchmark uses
+you need to add `transformers` and `datasets` to `dependencies.txt`. If your benchmark uses
 TensorFlow or requires other specific dependencies which cannot be based on top
 of PyTorch, you currently cannot use remote tuning with the local back-end.
 More details are given in the [benchmarks tutorial](benchmarks.md).

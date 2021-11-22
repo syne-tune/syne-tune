@@ -80,13 +80,8 @@ dictionary are:
   `max_resource_level`.
 * `points_to_evaluate`: Allows to specify a list of configurations which are
   evaluated first. If your training code corresponds to some open source ML
-  algorithm, you may want to use the defaults provided in the code. The
-  entry (or entries) in `points_to_evaluate` do not have to specify values
-  for all hyperparameters. For any hyperparameter not listed there, the
-  following rule is used to choose a default. For `float` and `int` value
-  type, the mid-point of the search range is used (in linear or log
-  scaling). For categorical value type, the first entry in the value set
-  is used.
+  algorithm, you may want to use the defaults provided in the code. More details
+  are given [here](schedulers.md#fifoscheduler).
 * `instance_type`: Choose a default instance type for which your benchmark
   runs most economically (used with `sagemaker` back-end or remote tuning, see
   [here](command_line.md)).

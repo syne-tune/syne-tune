@@ -213,8 +213,10 @@ read about **synchronous scheduling** of parallel evaluations, while both
 which is different. The papers cited below provide a detailed overview of
 asynchronous variants of successive halving, and of the algorithms discussed
 here. Experiments therein indicate that asynchronous scheduling can be far more
-efficient for HPO than synchronous scheduling. The latter is not yet supported
-in Syne Tune.
+efficient for HPO than synchronous scheduling. At present, Syne Tune supports
+synchronous random search (by passing the argument `asynchronous_scheduling=False`
+when creating the `Tuner` object), but does not yet support synchronous
+Hyperband.
 
 Hyperband is an extension of successive halving to multiple brackets. We will
 discuss successive halving, mentioning Hyperband later. In our experience so
@@ -435,8 +437,9 @@ Here, we list the most important ones:
 * `gp_resource_kernel`: Values are `'matern52', 'matern52-res-warp',
    'exp-decay-sum', 'exp-decay-delta1', 'exp-decay-combined'`. Selects different
    multi-task GP surrogate models. For details, please see the code. The
-   default choice is `'exp-decay-sum'`, which is the kernel proposed in
-   [Freeze-Thaw Bayesian Optimization](https://arxiv.org/abs/1406.3896).
+   default choice is `'exp-decay-sum'`, which is closely related to the kernel
+   proposed in[Freeze-Thaw Bayesian Optimization](https://arxiv.org/abs/1406.3896),
+   but without the conditional independence assumptions made there.
 *  `opt_skip_num_max_resource`: Alternative to `opt_skip_period`. If `True`,
    the GP surrogate model hyperparameters are refit only when a trial reaches
    level `max_t`.
@@ -476,18 +479,16 @@ schedulers.
 
 * If you can afford it for your problem, random search (`FIFOScheduler`,
   `searcher='random'`) is a useful baseline. However, if even a single
-  full evaluation takes a long time, try ASHA with the stopping variant
-  instead (`HyperbandScheduler`, `searcher='random'`, `type='stopping'`).
+  full evaluation takes a long time, try ASHA instead (`HyperbandScheduler`,
+  `searcher='random'`, `type='stopping'` or `type='promotion'`).
 * Use these baseline runs to get an idea how long your experiment needs
   to run. It is recommended to use a stopping criterion of the form
-  `stop_criterion=lambda status: status.wallclock_time >= X`. Trials are
-  stopped after time range `X` (in seconds).
+  `stop_criterion=StoppingCriterion(max_wallclock_time=X)`, so that the
+  experiment is stopped after `X` seconds.
 * If your tuning problem comes with an obvious resource parameter, make sure
   to implement it such that results are reported during the evaluation, not
   only at the end. When training a neural network model, choose the number
-  of epochs as resource. If computing the validation metric is much cheaper
-  than training for an epoch, you may also consider reporting several times
-  during an epoch. In other situations, choosing a resource parameter may be
+  of epochs as resource. In other situations, choosing a resource parameter may be
   more difficult. Our schedulers require positive (or non-negative) integers.
   Make sure that evaluations for the same configuration scale linearly in
   the resource parameter: an evaluation up to `2 * r` should be roughly
@@ -503,7 +504,8 @@ schedulers.
   than choosing the first configuration at random, this may not be very good.
 * For `HyperbandScheduler`, you need to choose between `type='stopping'` and
   `type='promotion'`. For neural network tuning, start with `'stopping'`,
-  which is simpler and does not need checkpointing. For some problems, the
+  which is simpler and does not need checkpointing. However, if checkpointing
+  is in place, try both of them. For some problems, the
   notion of stopping and checkpointing does not apply, and `'promotion'` may
   be more natural. For example, you may train your model on subsamples of size
   `(r / 10) * total_size`, `r=1,...,10` (assuming that training scales roughly

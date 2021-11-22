@@ -363,9 +363,8 @@ if __name__ == '__main__':
                 # Instance type for tuning, can be different from
                 # instance type for workers
                 instance_type = params['tuner_instance_type']
-                estimator_kwargs = dict()
-            estimator_kwargs['disable_profiler'] = \
-                not params['enable_sagemaker_profiler']
+            estimator_kwargs = {
+                'disable_profiler': not params['enable_sagemaker_profiler']}
             if scheduler_timeout is not None \
                     and scheduler_timeout > 12 * 60 * 60:
                 # Make sure that the SageMaker training job running the tuning
