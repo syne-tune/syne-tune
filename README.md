@@ -352,11 +352,10 @@ Tune source code is modified later on.
 
 If running this example script fails, you are probably not setup to build docker images and
 push them to ECR on your local machine. In order to enable this, you need to install both
-`awscli` and `docker` (see [this link](https://docs.docker.com/get-docker/)),
-and make sure the docker demon is running. However, since many Syne Tune workflows
-do not require building docker images, you may alternatively build the required image
-on a SageMaker notebook instance. To do so, log into such an instance and install
-Syne Tune there, then run:
+`awscli` (see [this link](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html))
+and `docker` (see [this link](https://docs.docker.com/get-docker/)), and make sure
+the docker daemon is running. These prerequisites are met on SageMaker notebook instances,
+so you may also launch one of these and install Syne Tune there. The docker image is then built as follows:
 ```bash
 cd container
 bash build_syne_tune_container.sh
@@ -367,9 +366,8 @@ should note that the script returns immediately after starting the experiment, w
 running as a SageMaker training job. This allows you to run many experiments in
 parallel, possibly by using the [command line launcher](docs/command_line.md).
 
-You can also run Syne Tune on training code in a custom docker image, circumventing
-SageMaker frameworks entirely. See
-[launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py)
+To run on SageMaker, you can also use any custom docker images available on ECR.
+See [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py)
 for an example on how to run with a script with a custom docker image.
 
 
