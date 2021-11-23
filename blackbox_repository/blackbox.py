@@ -14,8 +14,6 @@ class Blackbox:
     ):
         """
         Interface aiming at following [HPOBench](https://github.com/automl/HPOBench) for compatibility.
-        :param configuration_space:
-        :param fidelity_space:
         """
         self.configuration_space = configuration_space
         self.fidelity_space = fidelity_space
@@ -30,7 +28,7 @@ class Blackbox:
         """
         Returns an evaluation of the blackbox, first perform data check and then call `_objective_function` that should
         be overriden in the child class.
-        :param configuration:
+        :param configuration: configuration to be evaluated, should belong to `self.configuration_space`
         :param fidelity: not passing a fidelity is possible if either the blackbox does not have a fidelity space
         or if it has a single fidelity in its fidelity space. In the latter case, all fidelities are returned in form
         of a tensor with shape (num_fidelities, num_objectives).
