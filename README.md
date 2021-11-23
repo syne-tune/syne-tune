@@ -6,26 +6,35 @@ This package provides state-of-the-art distributed hyperparameter optimizers (HP
 
 ## Installing
 
-To install it "bare bones", you can do:
+To install Syne Tune from pip, you can simply do:
+
+```bash
+pip install syne-tune
+```
+
+This will install a bare-bone version. If you want in addition to install our own Gaussian process based optimizers, Ray Tune or Bore optimizer, 
+you can run `pip install syne-tune[X]` where `X` can be 
+* `gpsearchers`: For built-in Gaussian process based optimizers
+* `raytune`: For Ray Tune optimizers
+* `benchmarks`: For installing all dependencies required to run all benchmarks
+* `extra`: For installing all the above
+* `bore`: For Bore optimizer
+
+For instance, `pip install syne-tune[gpsearchers]` will install Syne Tune along with many built-in Gaussian process 
+optimizers.
+
+To install the latest version from git, run the following:
+
+```bash
+pip install git+https://github.com/awslabs/syne-tune.git
+```
+
+For local development, we recommend to use the following setup which will enable you to easily test your changes: 
 
 ```bash
 pip install --upgrade pip
 git clone git@github.com:awslabs/syne-tune.git
 cd syne-tune
-pip install -e .[core]
-```
-
-The `core` will allow you to run custom schedulers with different backends.
-
-If you want Ray Tune, our own Gaussian process based optimizers, or Bore optimizer, 
-you can run the same command replacing `core` by `raytune`, `gpsearchers`, `bore`, or several of them. You'll need:
-* `gpsearchers`: For built-in Gaussian process based optimizers
-* `raytune`: For Ray Tune optimizers
-* `bore`: For Bore optimizer
-
-In order to install everything, use:
-
-```bash
 pip install -e .[extra]
 ```
 
@@ -71,7 +80,7 @@ In addition to user metrics, Syne Tune will automatically add the following metr
 Since trials may be paused and resumed (either by schedulers or when using spot-instances), 
 the user has the possibility to checkpoint intermediate results. Model outputs and 
 checkpoints must be written into a specific local path given by the command line argument 
-`smt_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load
+`st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load
  the state when the job is stopped/resumed (setting the folder correctly and uniquely per
   trial is the responsibility of the backend), see 
   [checkpoint_example.py](`examples/training_scripts/checkpoint_example/checkpoint_example.py`) to see a fully
@@ -261,7 +270,7 @@ class ExperimentResult:
     tuner: Tuner
 ```
 Where metadata contains the metadata provided by the user (`{'description': 'just an example'} in this case) as well`
- as smt_tuner_creation_timestamp which stores the time-stamp when the tuning actually started.
+ as `st_tuner_creation_timestamp` which stores the time-stamp when the tuning actually started.
 
 **Output of a tuning job when running tuning on SageMaker.**
 When the tuning runs remotely on SageMaker, the results are stored at a regular
@@ -318,13 +327,18 @@ You will find the following examples in [examples/](examples/) folder:
 ## Running on SageMaker
 
 If you want to launch experiments on SageMaker rather than on your local machine,
- you will need access to AWS and SageMaker on your machine.
+ you will need access to AWS and SageMaker on your machine. 
  
- A SageMaker role should have been created (see 
+Make sure that:
+* `awscli` is installed (see [this link](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html))
+* `docker` is installed and running (see [this link](https://docs.docker.com/get-docker/))
+* A SageMaker role have been created (see 
  [this page](https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role-sagemaker-notebook.html) for instructions if 
  you created a SageMaker notebook in the past, this role should have been created for you).
+* AWS credentials have been set properly (see [this link](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)).
 
-You should set up AWS credentials, in case you do not have credentials available on your machine already. 
+Note: all those conditions are already met if you run in a SageMaker notebook, they are only relevant
+if you run in your local machine or on another environment.
   
 The following command should run without error if your credentials are available:
 ```bash
@@ -336,11 +350,7 @@ Or run the following example that evaluates trials on SageMaker.
 python examples/launch_height_sagemaker.py
 ```
 
-This example does not require you to build a docker image, since the training code runs
-in a SageMaker framework. However, there are working modes that require building an image, as
-we discuss next.
-
-First, Syne Tune allows you to launch HPO experiments remotely on SageMaker, instead of them
+Syne Tune allows you to launch HPO experiments remotely on SageMaker, instead of them
 running on your local machine. This is particularly interesting for running many
 experiments in parallel. Here is an example:
 ```bash
@@ -350,21 +360,19 @@ If you run this for the first time, it will take a while, building a docker imag
 Syne Tune dependencies and pushing it to ECR. This has to be done only once, even if Syne
 Tune source code is modified later on.
 
-If running this example script fails, you are probably not setup to build docker images and
-push them to ECR on your local machine. In order to enable this, you need to install both
-`awscli` (see [this link](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html))
-and `docker` (see [this link](https://docs.docker.com/get-docker/)), and make sure
-the docker daemon is running. These prerequisites are met on SageMaker notebook instances,
-so you may also launch one of these and install Syne Tune there. The docker image is then built as follows:
-```bash
-cd container
-bash build_syne_tune_container.sh
-```
-
 Assuming that `launch_height_sagemaker_remotely.py` is working for you now, you
 should note that the script returns immediately after starting the experiment, which is
 running as a SageMaker training job. This allows you to run many experiments in
 parallel, possibly by using the [command line launcher](docs/command_line.md).
+
+If running this example fails, you are probably not setup to build docker images and
+push them to ECR on your local machine. Check that aws-cli is installed and that docker is running on your machine. 
+After checking that those conditions are met (consider using a SageMaker notebook if not since AWS access and docker 
+are configured automatically), you can try to building the image again by running with the following:
+```bash
+cd container
+bash build_syne_tune_container.sh
+```
 
 To run on SageMaker, you can also use any custom docker images available on ECR.
 See [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py)
