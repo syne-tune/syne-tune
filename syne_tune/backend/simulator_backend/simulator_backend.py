@@ -126,33 +126,6 @@ class SimulatorBackend(LocalBackend):
         self._next_results_to_fetch = dict()
         logger.setLevel(logging.INFO)  # Suppress DEBUG for this class
 
-    def _create_tabulated_benchmark(self):
-        """
-        If `_tabulated_benchmark` has been created already, this method does
-        nothing.
-
-        If `entry_point` is a class name, the corresponding table object is
-        created here. By default, `entry_point` has a complete module prefix.
-        If `self._module_prefix` is given, this is used instead (this is
-        required for :class:`RemoteLauncher`).
-
-        Example: `entry_point` could be
-        'examples.training_scripts.nasbench201.nasbench201.NASBench201Benchmark'.
-        If `self._module_prefix` is 'tuner', we would use
-        'tuner.nasbench201.NASBench201Benchmark'.
-
-        :param module_prefix: See above
-        """
-        if self.table_class_name is not None and \
-                self._tabulated_benchmark is None:
-            mod_name = self._module_table_class
-            if self._module_prefix is not None:
-                _, postfix = mod_name.rsplit('.', 1)
-                mod_name = self._module_prefix + '.' + postfix
-            mod = import_module(mod_name)
-            cls = getattr(mod, self.table_class_name)
-            self._tabulated_benchmark = cls()
-
     @property
     def time_keeper(self) -> SimulatedTimeKeeper:
         return self._time_keeper
