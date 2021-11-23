@@ -8,7 +8,6 @@ import urllib
 import tarfile
 
 from pathlib import Path
-import matplotlib.pyplot as plt
 
 import pandas as pd
 import numpy as np
@@ -144,9 +143,8 @@ def generate_fcnet():
         upload(blackbox_name)
 
 
-if __name__ == '__main__':
-    generate_fcnet()
-
+def plot_learning_curves():
+    import matplotlib.pyplot as plt
     from blackbox_repository import load
     # plot one learning-curve for sanity-check
     bb_dict = load("fcnet")
@@ -159,3 +157,9 @@ if __name__ == '__main__':
         res = b.objective_function(configuration=configuration, fidelity={'epochs': i})
         errors.append(res['metric_valid_loss'])
     plt.plot(errors)
+
+
+if __name__ == '__main__':
+    generate_fcnet()
+
+    # plot_learning_curves()
