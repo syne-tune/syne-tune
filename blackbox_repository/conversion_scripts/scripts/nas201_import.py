@@ -80,21 +80,21 @@ def convert_dataset(df_dataset: pd.DataFrame, dataset: str):
     )
 
 
-def plot_learning_curve():
-    import matplotlib.pyplot as plt
-    bb_dict = load("amper-nas201")
-    bb = bb_dict['cifar100']
-    for _ in range(5):
-        configuration = {k: v.sample() for k, v in bb.configuration_space.items()}
-
-        print(configuration)
-        errors = []
-        for i in range(1, 201):
-            res = bb.objective_function(configuration=configuration, fidelity={'epochs': i})
-            errors.append(res['metric_error'])
-        plt.plot(errors)
-    plt.show()
-
+# def plot_learning_curve():
+#     import matplotlib.pyplot as plt
+#     bb_dict = load("amper-nas201")
+#     bb = bb_dict['cifar100']
+#     for _ in range(5):
+#         configuration = {k: v.sample() for k, v in bb.configuration_space.items()}
+#
+#         print(configuration)
+#         errors = []
+#         for i in range(1, 201):
+#             res = bb.objective_function(configuration=configuration, fidelity={'epochs': i})
+#             errors.append(res['metric_error'])
+#         plt.plot(errors)
+#     plt.show()
+#
 
 def generate_nas201():
     df = load_nas201_df()
@@ -110,4 +110,4 @@ def generate_nas201():
 
 if __name__ == '__main__':
     generate_nas201()
-    plot_learning_curve()
+    # plot_learning_curve()
