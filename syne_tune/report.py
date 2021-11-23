@@ -17,7 +17,6 @@ import numpy as np
 import json
 import logging
 from ast import literal_eval
-from datetime import datetime
 from typing import List, Dict
 from time import time, perf_counter
 from dataclasses import dataclass
@@ -27,7 +26,7 @@ from syne_tune.constants import SMT_INSTANCE_TYPE, SMT_INSTANCE_COUNT, SMT_WORKE
 from syne_tune.backend.backend import BACKEND_TYPES, get_backend_type
 
 # this is required so that metrics are written
-from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfo, InstanceInfos
+from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfos
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
