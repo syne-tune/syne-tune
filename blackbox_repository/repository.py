@@ -32,10 +32,10 @@ def load(name: str, skip_if_present: bool = True) -> BlackboxOffline:
     else:
         tgt_folder.mkdir(exist_ok=True, parents=True)
         fs = s3fs.S3FileSystem()
-        data_on_s3 = fs.exists(f"{s3_blackbox_folder}/{name}/metadata.json")
+        data_on_s3 = fs.exists(f"{s3_blackbox_folder()}/{name}/metadata.json")
         if data_on_s3:
             # download files from s3 to repository_path
-            for src in fs.glob(f"{s3_blackbox_folder}/{name}/*"):
+            for src in fs.glob(f"{s3_blackbox_folder()}/{name}/*"):
                 tgt = tgt_folder / Path(src).name
                 print(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
