@@ -7,28 +7,39 @@ def load_requirements(filename):
         return f.read().splitlines()
 
 
+def load_benchmark_requirements():
+    # the requirements of benchmarks are placed into the same directory as the examples script
+    res = set()
+    for fname in Path(__file__).parent.glob("examples/training_scripts/*/requirements.txt"):
+        res.update(load_requirements(fname))
+    # gluon-ts is not added as the git dependency does not work with setup.py
+    k = 'git+https://github.com/awslabs/gluon-ts.git'
+    if k in res:
+        res.remove(k)
+    return list(res)
+
+
+def read_version():
+    with open(Path(__file__).parent / "version.py", "r") as f:
+        return f.readline()
+
+
 required_core = load_requirements('requirements.txt')
 required_ray = load_requirements('requirements-ray.txt')
 required_gpsearchers = load_requirements('requirements-gpsearchers.txt')
 required_bore = load_requirements('requirements-bore.txt')
 required_blackbox_repository = load_requirements('requirements-blackbox-repository.txt')
+required_benchmarks = load_benchmark_requirements()
 
-# the requirements of benchmarks are placed into the same directory as the examples script, this allows to install
-# them on the fly when using Sagemaker frameworks
-required_benchmarks = set()
-for fname in Path(__file__).parent.glob("examples/training_scripts/*/requirements.txt"):
-    required_benchmarks.update(load_requirements(fname))
-# Fix:
-k = 'git+https://github.com/awslabs/gluon-ts.git'
-if k in required_benchmarks:
-    required_benchmarks.remove(k)
-required_benchmarks = list(required_benchmarks)
+long_description = (Path(__file__).parent / "README.md").read_text()
 
 setup(
     name='syne_tune',
-    version='0.1',
+    version=read_version(),
     description='Distributed Hyperparameter Optimization on SageMaker',
-    author='',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    author='AWS',
     packages=find_packages(include=[
         'syne_tune',
         'syne_tune.*',
@@ -43,4 +54,12 @@ setup(
     },
     install_requires=required_core,
     include_package_data=True,
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 3.8',
+    ],
 )

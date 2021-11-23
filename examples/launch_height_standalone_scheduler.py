@@ -15,7 +15,7 @@ Example showing how to implement a new Scheduler.
 """
 import logging
 from pathlib import Path
-from typing import Optional, Union, Dict, List
+from typing import Optional, Dict, List
 
 import numpy as np
 

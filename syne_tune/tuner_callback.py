@@ -11,8 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from abc import ABC
-from time import perf_counter, time
-from typing import Dict, Optional, List, Tuple
+from time import perf_counter
+from typing import Dict, List, Tuple
 import copy
 
 from syne_tune.backend.trial_status import Trial
