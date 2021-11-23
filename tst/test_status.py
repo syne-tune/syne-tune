@@ -10,9 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import time
-from datetime import datetime
-
 from syne_tune.backend.trial_status import Trial, Status
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 

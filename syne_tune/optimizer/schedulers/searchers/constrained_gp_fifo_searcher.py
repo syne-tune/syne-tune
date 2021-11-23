@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, INTERNAL_METRIC_NAME, INTERNAL_CONSTRAINT_NAME
+    import CandidateEvaluation, INTERNAL_CONSTRAINT_NAME
 
 logger = logging.getLogger(__name__)
 

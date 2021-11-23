@@ -255,7 +255,6 @@ if __name__ == '__main__':
     from tqdm import tqdm
     import torch
     import torch.nn.functional as F
-    from torch.nn import Module
     from torch.utils.data.sampler import SubsetRandomSampler
     from torchvision import datasets, transforms
     from torchvision.models import resnet18
