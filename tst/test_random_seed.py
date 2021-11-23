@@ -10,19 +10,16 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import tempfile
 from typing import Dict
 import pytest
 import itertools
 import logging
 
-from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.tuner import Tuner
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.search_space import randint
 from syne_tune.util import script_height_example_path
 from tst.util_test import temporary_local_backend
