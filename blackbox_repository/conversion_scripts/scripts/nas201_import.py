@@ -10,7 +10,6 @@ import numpy as np
 import s3fs
 
 import syne_tune.search_space as sp
-from blackbox_repository import load
 from blackbox_repository.blackbox_tabular import BlackboxTabular, serialize
 from blackbox_repository.conversion_scripts.utils import repository_path, upload
 
