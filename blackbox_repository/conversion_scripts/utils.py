@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -7,6 +8,11 @@ import sagemaker
 
 @lru_cache(maxsize=1)
 def s3_blackbox_folder():
+    if 'AWS_DEFAULT_REGION' not in os.environ:
+        # avoids error "Must setup local AWS configuration with a region supported by SageMaker."
+        # in case no region is explicitely configured
+        os.environ['AWS_DEFAULT_REGION'] = 'us-west-2'
+
     return f"{sagemaker.Session().default_bucket()}/blackbox-repository"
 
 

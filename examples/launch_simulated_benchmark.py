@@ -1,8 +1,11 @@
 import logging
+import numpy as np
+import pandas as pd
+import syne_tune.search_space as sp
 
 from blackbox_repository import load, add_surrogate
 from blackbox_repository.blackbox_tabular import BlackboxTabular
-from blackbox_repository.tabulated_benchmark import TabulatedBenchmarkBackend
+from blackbox_repository.tabulated_benchmark import TabulatedBenchmarkBackend, UserBlackboxBackend
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
@@ -11,9 +14,6 @@ from syne_tune.tuner import Tuner
 
 
 def example_blackbox():
-    import numpy as np
-    import pandas as pd
-    import syne_tune.search_space as sp
     n = 100
     x1 = np.arange(n)
     x2 = np.arange(n)[::-1]
@@ -47,34 +47,13 @@ def example_blackbox():
     ))
 
 
-if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.INFO)
-
-    n_workers = 4
-
-    # example of loading nas201 for simulation
-    blackbox_name, dataset, metric, elapsed_time_attr = "nas201", "cifar100", "metric_error", 'metric_runtime'
-    blackbox = load(blackbox_name)[dataset]
-
-    # example of loading fcnet for simulation
-    # blackbox_name, dataset, metric, elapsed_time_attr = "fcnet", "protein_structure", "metric_valid_loss", "metric_runtime"
-    # blackbox = load(blackbox_name)[dataset]
-    #
-    # example of loading a blackbox with custom code for simulation
-    # blackbox = example_blackbox()
-    # elapsed_time_attr, metric = "runtime", "metric_error"
-
-    backend = TabulatedBenchmarkBackend(
-        blackbox=blackbox,
-        elapsed_time_attr=elapsed_time_attr,
-    )
-
+def simulate_benchmark(blackbox, backend, metric):
     # Random search without stopping
     scheduler = HyperbandScheduler(
-        backend.blackbox.configuration_space,
+        blackbox.configuration_space,
         searcher="random",
-        max_t=max(backend.fidelities),
-        resource_attr=backend.resource_attr,
+        max_t=max(blackbox.fidelity_values),
+        resource_attr=next(iter(blackbox.fidelity_space.keys())),
         mode='min',
         metric=metric,
         random_seed=31415927
@@ -96,3 +75,29 @@ if __name__ == '__main__':
         callbacks=[SimulatorCallback()],
     )
     tuner.run()
+
+
+if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.INFO)
+
+    n_workers = 4
+
+    ## example of loading nas201 and then simulating tuning
+    blackbox_name, dataset, metric, elapsed_time_attr = "nas201", "cifar100", "metric_error", 'metric_runtime'
+    blackbox = load(blackbox_name)[dataset]
+    backend = TabulatedBenchmarkBackend(
+        blackbox_name=blackbox_name,
+        dataset=dataset,
+        # blackbox=blackbox,
+        elapsed_time_attr=elapsed_time_attr,
+    )
+    simulate_benchmark(blackbox=blackbox, backend=backend, metric=metric)
+
+    ## example of loading a blackbox with custom code and then simulating tuning
+    metric = "metric_error"
+    blackbox = example_blackbox()
+    backend = UserBlackboxBackend(
+        blackbox=blackbox,
+        elapsed_time_attr="runtime",
+    )
+    simulate_benchmark(blackbox=blackbox, backend=backend, metric=metric)

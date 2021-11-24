@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import List
 
@@ -27,19 +28,20 @@ def load(name: str, skip_if_present: bool = True) -> BlackboxOffline:
     """
     tgt_folder = Path(repository_path) / name
     if tgt_folder.exists() and (tgt_folder / "metadata.json").exists() and skip_if_present:
-        print(f"skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload")
+        logging.info(f"skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload")
     else:
         tgt_folder.mkdir(exist_ok=True, parents=True)
         fs = s3fs.S3FileSystem()
         data_on_s3 = fs.exists(f"{s3_blackbox_folder()}/{name}/metadata.json")
         if data_on_s3:
+            logging.info("found blackbox on S3, copying it locally")
             # download files from s3 to repository_path
             for src in fs.glob(f"{s3_blackbox_folder()}/{name}/*"):
                 tgt = tgt_folder / Path(src).name
-                print(f"copying {src} to {tgt}")
+                logging.info(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
         else:
-            print("did not find blackbox files locally nor on s3, regenerating it locally and persisting it on S3.")
+            logging.info("did not find blackbox files locally nor on s3, regenerating it locally and persisting it on S3.")
             generate_blackbox_recipe[name]()
 
     if (tgt_folder / "hyperparameters.parquet").exists():

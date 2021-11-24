@@ -13,26 +13,32 @@
 from pathlib import Path
 from typing import List, Optional
 
+from blackbox_repository import load
 from blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
 
 
-class TabulatedBenchmarkBackend(SimulatorBackend):
+class _BlackboxBackend(SimulatorBackend):
 
-    def __init__(
-            self,
-            blackbox: BlackboxTabular,
-            elapsed_time_attr: str,
-    ):
+    def __init__(self, elapsed_time_attr: str):
+        """
+        Allows to simulate any blackbox from blackbox-repository, can be either a blackbox from a registered
+        tabulated benchmark (in this case, you should use `TabulatedBenchmarkBackend`) or a blackbox given from custom
+        code (in this case, you should use `UserBlackboxBackend`), see `examples/launch_simulated_benchmark.py` for
+        an example on how to use.
+        :param elapsed_time_attr: name of the metric in the dictionary that indicates runtime, it is required in order
+        to run simulations.
+        """
         super().__init__(
             # TODO we feed a dummy value for entry_point since they are not required
             entry_point=str(Path(__file__)),
             elapsed_time_attr=elapsed_time_attr,
         )
-        self.blackbox = blackbox
-        self.fidelities = sorted(self.blackbox.fidelity_values)
-        self.resource_attr = next(iter(self.blackbox.fidelity_space.keys()))
+
+    @property
+    def resource_attr(self):
+        return next(iter(self.blackbox.fidelity_space.keys()))
 
     def config_objectives(self, config: dict) -> List[dict]:
         # returns all the fidelities evaluations of a configuration
@@ -74,3 +80,54 @@ class TabulatedBenchmarkBackend(SimulatorBackend):
         else:
             results = all_results
         return status, results
+
+
+class TabulatedBenchmarkBackend(_BlackboxBackend):
+
+    def __init__(
+            self,
+            blackbox_name: str,
+            elapsed_time_attr: str,
+            dataset: Optional[str] = None,
+    ):
+        """
+        Backend for evaluations from the blackbox-repository, name of the blackbox and dataset should be present in the
+        repository. See `examples/launch_simulated_benchmark.py` for an example on how to use.
+        If you want to add a new dataset, see the section `Adding a new dataset section` of 
+        `blackbox_repository/README.md`.
+        :param blackbox_name: name of a blackbox, should have been registered in blackbox repository.
+        :param elapsed_time_attr: name of the metric in the dictionary that indicates runtime, it is required in order
+        to run simulations.
+        :param dataset:
+        """
+        super().__init__(elapsed_time_attr=elapsed_time_attr)
+        self.blackbox_name = blackbox_name
+        self.dataset = dataset
+        self._blackbox = None
+
+    @property
+    def blackbox(self):
+        if self._blackbox is not None:
+            return self._blackbox
+        else:
+            if self.dataset is None:
+                self._blackbox = load(self.blackbox_name)
+            else:
+                self._blackbox = load(self.blackbox_name)[self.dataset]
+            return self._blackbox
+
+
+class UserBlackboxBackend(_BlackboxBackend):
+    def __init__(
+            self,
+            blackbox,
+            elapsed_time_attr: str,
+    ):
+        """
+        Backend to run simulation from a user blackbox.
+        :param blackbox: blackbox to be used for simulation, see `examples/launch_simulated_benchmark.py` for an example
+        on how to use.
+        :param elapsed_time_attr:
+        """
+        super().__init__(elapsed_time_attr=elapsed_time_attr)
+        self.blackbox = blackbox
