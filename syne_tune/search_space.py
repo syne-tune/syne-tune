@@ -382,9 +382,12 @@ class Categorical(Domain):
     def __init__(self, categories: Sequence):
         assert len(categories) > 0
         self.categories = list(categories)
-        if not isinstance(self.value_type, int) and not isinstance(self.value_type, str):
-            logger.info("Categorical value will be converted to string to avoid float conversion and "
-                        "serialization issues.")
+        if isinstance(self.value_type, float):
+            logger.warning(
+                "The search space contains a categorical value with float type. "
+                "When performing remote execution, floats are converted to string which can cause rounding "
+                "issues. In case of problem, consider using string to represent the float."
+            )
 
     def uniform(self):
         new = copy(self)
@@ -407,10 +410,7 @@ class Categorical(Domain):
 
     @property
     def value_type(self):
-        if isinstance(self.categories[0], int):
-            return int
-        else:
-            return str
+        return type(self.categories[0])
 
     @property
     def domain_str(self):
@@ -811,6 +811,7 @@ def from_dict(d: Dict) -> Domain:
     domain_kwargs = d["domain_kwargs"]
     sampler_cls = getattr(domain_cls, "_" + d["sampler_cls"])
     sampler_kwargs = d["sampler_kwargs"]
+
     domain = domain_cls(**domain_kwargs)
     sampler = sampler_cls(**sampler_kwargs)
     domain.set_sampler(sampler)

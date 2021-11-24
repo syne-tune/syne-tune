@@ -28,8 +28,8 @@ required_core = load_requirements('requirements.txt')
 required_ray = load_requirements('requirements-ray.txt')
 required_gpsearchers = load_requirements('requirements-gpsearchers.txt')
 required_bore = load_requirements('requirements-bore.txt')
+required_blackbox_repository = load_requirements('blackbox_repository/requirements.txt')
 required_benchmarks = load_benchmark_requirements()
-
 
 long_description = (Path(__file__).parent / "README.md").read_text()
 
@@ -49,7 +49,8 @@ setup(
         'bore': required_bore,
         'gpsearchers': required_gpsearchers,
         'benchmarks': required_benchmarks,
-        'extra': required_ray + required_gpsearchers + required_benchmarks,
+        'blackbox-repository': required_blackbox_repository,
+        'extra': required_ray + required_gpsearchers + required_benchmarks + required_blackbox_repository,
     },
     install_requires=required_core,
     include_package_data=True,

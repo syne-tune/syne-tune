@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Dict, List
 import numpy as np
 
-from syne_tune.search_space import Domain, is_log_space, FiniteRange
+from syne_tune.search_space import Domain, is_log_space, FiniteRange, Categorical
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
@@ -336,7 +336,7 @@ class HyperparameterRangesImpl(HyperparameterRanges):
             assert isinstance(hp_range, Domain)
             is_log = is_log_space(hp_range)
             tp = hp_range.value_type
-            if tp == str:
+            if isinstance(hp_range, Categorical):
                 if name in self.active_config_space:
                     active_choices = tuple(
                         self.active_config_space[name].categories)

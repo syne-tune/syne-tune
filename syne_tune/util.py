@@ -19,6 +19,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import sagemaker
+from time import perf_counter
+from contextlib import contextmanager
+
 
 from syne_tune.constants import SYNE_TUNE_FOLDER
 
@@ -149,3 +152,13 @@ def script_height_example_path():
     path = root / "examples" / "training_scripts" / "height_example" / "train_height.py"
     assert path.exists()
     return path
+
+
+@contextmanager
+def catchtime(name: str) -> float:
+    start = perf_counter()
+    try:
+        print(f"start: {name}")
+        yield lambda: perf_counter() - start
+    finally:
+        print(f"Time for {name}: {perf_counter() - start:.4f} secs")
