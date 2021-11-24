@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 
 import s3fs as s3fs
-import sagemaker
 
 from blackbox_repository import BlackboxOffline
 from blackbox_repository.blackbox_offline import deserialize as deserialize_offline

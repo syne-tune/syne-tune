@@ -17,7 +17,7 @@ from tqdm import tqdm as tqdm
 
 from blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 import syne_tune.search_space as sp
-from blackbox_repository.conversion_scripts.utils import repository_path, upload
+from blackbox_repository.conversion_scripts.utils import repository_path
 from syne_tune.util import catchtime
 
 

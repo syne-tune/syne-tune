@@ -4,8 +4,6 @@ Convert evaluations from
  David Salinas Huibin Shen Valerio Perrone
  http://proceedings.mlr.press/v119/salinas20a/salinas20a.pdf
 """
-from pathlib import Path
-
 import pandas as pd
 import numpy as np
 from blackbox_repository.blackbox_offline import serialize, BlackboxOffline
