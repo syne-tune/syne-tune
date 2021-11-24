@@ -17,7 +17,6 @@ import os
 import argparse
 import logging
 import time
-from typing import List
 
 from syne_tune.report import Reporter
 from syne_tune.search_space import choice, add_to_argparse

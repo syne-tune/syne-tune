@@ -30,9 +30,8 @@ from syne_tune.backend.simulator_backend.time_keeper import \
 from syne_tune.backend.simulator_backend.events import SimulatorState, \
     StartEvent, CompleteEvent, StopEvent, OnTrialResultEvent
 from syne_tune.constants import SMT_CHECKPOINT_DIR, SMT_WORKER_TIMESTAMP, \
-    SMT_TUNER_TIME, SMT_REMOTE_UPLOAD_DIR_NAME
+    SMT_TUNER_TIME
 from syne_tune.tuner import DEFAULT_SLEEP_TIME
-import syne_tune
 
 logger = logging.getLogger(__name__)
 
