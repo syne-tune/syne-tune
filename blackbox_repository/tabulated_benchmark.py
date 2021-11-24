@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import List, Optional
 
 from blackbox_repository import load
-from blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
 
