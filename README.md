@@ -1,5 +1,7 @@
 # Syne Tune
 
+[![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://anaconda.org/conda-forge/awswrangler)
+
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) where trials 
  can be evaluated with several backend options (local backend to evaluate them locally; SageMaker to evaluate them as 
  separate SageMaker training jobs; another backend with fast startup times is also in the making).
