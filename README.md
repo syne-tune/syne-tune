@@ -1,5 +1,9 @@
 # Syne Tune
 
+[![Release](https://img.shields.io/badge/release-0.11-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![Python Version](https://img.shields.io/badge/python-3.8-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) where trials 
  can be evaluated with several backend options (local backend to evaluate them locally; SageMaker to evaluate them as 
  separate SageMaker training jobs; another backend with fast startup times is also in the making).
