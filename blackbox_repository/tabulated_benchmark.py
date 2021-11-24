@@ -106,7 +106,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
 
     @property
     def blackbox(self) -> Blackbox:
-        if self._blackbox is not None:
+        if self._blackbox is None:
             if self.dataset is None:
                 self._blackbox = load(self.blackbox_name)
             else:
