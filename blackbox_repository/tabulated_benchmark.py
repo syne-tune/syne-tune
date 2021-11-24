@@ -13,12 +13,12 @@
 from pathlib import Path
 from typing import List, Optional
 
-from blackbox_repository import load
+from blackbox_repository import load, Blackbox
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
 
 
-class _BlackboxBackend(SimulatorBackend):
+class _BlackboxSimulatorBackend(SimulatorBackend):
 
     def __init__(self, elapsed_time_attr: str):
         """
@@ -81,7 +81,7 @@ class _BlackboxBackend(SimulatorBackend):
         return status, results
 
 
-class TabulatedBenchmarkBackend(_BlackboxBackend):
+class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
 
     def __init__(
             self,
@@ -116,10 +116,10 @@ class TabulatedBenchmarkBackend(_BlackboxBackend):
             return self._blackbox
 
 
-class UserBlackboxBackend(_BlackboxBackend):
+class UserBlackboxBackend(_BlackboxSimulatorBackend):
     def __init__(
             self,
-            blackbox,
+            blackbox: Blackbox,
             elapsed_time_attr: str,
     ):
         """

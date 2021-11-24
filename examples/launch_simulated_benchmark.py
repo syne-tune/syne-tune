@@ -5,7 +5,7 @@ import syne_tune.search_space as sp
 
 from blackbox_repository import load, add_surrogate
 from blackbox_repository.blackbox_tabular import BlackboxTabular
-from blackbox_repository.tabulated_benchmark import TabulatedBenchmarkBackend, UserBlackboxBackend
+from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend, UserBlackboxBackend
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     ## example of loading nas201 and then simulating tuning
     blackbox_name, dataset, metric, elapsed_time_attr = "nas201", "cifar100", "metric_error", 'metric_runtime'
     blackbox = load(blackbox_name)[dataset]
-    backend = TabulatedBenchmarkBackend(
+    backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         dataset=dataset,
         # blackbox=blackbox,
