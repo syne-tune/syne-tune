@@ -10,6 +10,8 @@
 
 set -e
 
+rm -rf dist/*
+
 version=$1
 version_file=version.py
 
@@ -22,6 +24,6 @@ git push
 
 # requires a test Pypi and a Pypi account
 # checks upload on testpypi first
-twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*
+# twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*
 
 twine upload --verbose dist/*
