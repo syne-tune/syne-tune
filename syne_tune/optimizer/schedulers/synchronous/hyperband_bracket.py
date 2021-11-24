@@ -76,6 +76,10 @@ class SynchronousHyperbandBracket(object):
     def num_rungs(self) -> int:
         return len(self._rungs)
 
+    @staticmethod
+    def _trial_ids(rung: List[Tuple[int, float]]) -> List[int]:
+        return [x[0] for x in rung]
+
     def next_slots(self) -> Optional[Tuple[List[Optional[int]], int]]:
         """
         Returns tuple `(trials, milestone)`, where `trials` is a list of trial_id's
@@ -86,13 +90,13 @@ class SynchronousHyperbandBracket(object):
 
         Finally, if the bracket is complete, `None` is returned instead
 
-        :return: trials, milestone; or None
+        :return: (trials, milestone) or None
         """
         if self.is_bracket_complete():
             return None
         rung, milestone = self._rungs[self.current_rung]
         pos = self._first_free_pos
-        return [x[0] for x in rung[pos:]], milestone
+        return self._trial_ids(rung[pos:]), milestone
 
     def on_results(self, results: List[Tuple[int, float]]) -> bool:
         """
@@ -123,7 +127,7 @@ class SynchronousHyperbandBracket(object):
             f"There are only {len(_next_slots)} free slots in the current " +\
             f"bracket, but len(results) = {num_results}"
         if self.current_rung > 0:
-            trial_ids_results = [x[0] for x in results]
+            trial_ids_results = self._trial_ids(results)
             assert trial_ids_results == _next_slots[:num_results], \
                 f"trial_ids of results ({trial_ids_results}) not the same " +\
                 f"as trial_ids of free slots ({_next_slots[:num_results]})"
@@ -140,6 +144,7 @@ class SynchronousHyperbandBracket(object):
                 top_list = sorted(rung, key=itemgetter(1),
                                   reverse=self._mode == 'max')[:new_len]
                 # For the (trial_id, metric_val) entries, only trial_id is
-                # valid for positions >= self._first_free_pos
+                # valid (while metric_val is arbitrary) for positions
+                # >= self._first_free_pos
                 self._rungs[pos] = (top_list, milestone)
         return is_complete

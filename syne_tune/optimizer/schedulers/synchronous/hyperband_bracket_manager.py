@@ -56,13 +56,13 @@ class SynchronousHyperbandBracketManager(object):
                 f"have size {self.max_num_rungs - offset}"
             SynchronousHyperbandBracket.assert_check_rungs(rungs)
         self._bracket_rungs = copy.deepcopy(bracket_rungs)
-        # Primary bracket
-        self._primary_bracket_id = 0
-        self._primary_offset = 0
-        self._next_bracket_id = 0
         # Dictionary of all active brackets
         self._brackets = dict()
-        self._create_new_bracket(self._primary_offset)
+        # Primary bracket
+        self._primary_offset = 0
+        self._next_bracket_id = 0
+        self._primary_bracket_id = self._create_new_bracket(
+            self._primary_offset)
         # Maps offset to secondary bracket_id
         self._offset_to_secondary_bracket_id = [None] * self.num_brackets
 
@@ -78,6 +78,10 @@ class SynchronousHyperbandBracketManager(object):
         return bracket_id
 
     def _bracket_id_from_offset(self, offset: int):
+        """
+        Creates new secondary bracket if it does not exist already
+
+        """
         bracket_id = self._offset_to_secondary_bracket_id[offset]
         if bracket_id is None:
             bracket_id = self._create_new_bracket(offset)
@@ -100,6 +104,10 @@ class SynchronousHyperbandBracketManager(object):
         assigned to the primary bracket, but if this is not possible, a secondary
         bracket is also used (possibly even several ones).
 
+        Returns list of `(bracket_id, (trials, milestone))`, where
+        `(trials, milestone)` come from `next_slots` of bracket `bracket_id`.
+        There, the sum of `len(trials)` is equal to `num_jobs`.
+
         :param num_jobs:
         :return:
         """
@@ -107,7 +115,7 @@ class SynchronousHyperbandBracketManager(object):
         num_done = self._assign_jobs(
             self._primary_bracket_id, num_jobs, result)
         if num_done < num_jobs:
-            # num_jobs - num_done jobs to be assigned to secondary brackets
+            # num_jobs - num_done jobs to be assigned to secondary bracket(s)
             primary_bracket = self._brackets[self._primary_bracket_id]
             rung_ind = primary_bracket.current_rung
             # Determine preferred offset for secondary bracket
@@ -121,6 +129,7 @@ class SynchronousHyperbandBracketManager(object):
                 secondary_offset, secondary_offset + self.num_brackets)]
             while num_done < num_jobs and offsets:
                 secondary_offset = offsets.pop(0)
+                # Creates new bracket for `secondary_offset` if none exists
                 bracket_id = self._bracket_id_from_offset(secondary_offset)
                 num_extra = self._assign_jobs(
                     bracket_id, num_jobs - num_done, result)
