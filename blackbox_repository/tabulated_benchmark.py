@@ -18,7 +18,7 @@ from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBacke
 from syne_tune.backend.trial_status import Status
 
 
-class TabulatedBenchmark(SimulatorBackend):
+class TabulatedBenchmarkBackend(SimulatorBackend):
 
     def __init__(
             self,
@@ -32,7 +32,7 @@ class TabulatedBenchmark(SimulatorBackend):
         )
         self.blackbox = blackbox
         self.fidelities = sorted(self.blackbox.fidelity_values)
-        self.ressource_attr = next(iter(self.blackbox.fidelity_space.keys()))
+        self.resource_attr = next(iter(self.blackbox.fidelity_space.keys()))
 
     def config_objectives(self, config: dict) -> List[dict]:
         # returns all the fidelities evaluations of a configuration
@@ -40,7 +40,7 @@ class TabulatedBenchmark(SimulatorBackend):
         objective_values = self.blackbox._objective_function(config)
         for fidelity, value in enumerate(self.blackbox.fidelity_values):
             res_dict = dict(zip(self.blackbox.objectives_names, objective_values[fidelity]))
-            res_dict[self.ressource_attr] = value
+            res_dict[self.resource_attr] = value
             res.append(res_dict)
         return res
 
@@ -48,10 +48,6 @@ class TabulatedBenchmark(SimulatorBackend):
             self, trial_id: int,
             config: Optional[dict] = None) -> (str, List[dict]):
         """
-        Runs training evaluation script for trial `trial_id`, using the config
-        `trial(trial_id).config`. This is a blocking call, we wait for the
-        script to finish, then parse all its results and return them.
-
         :param trial_id:
         :return: (final status, list of all results reported)
         """

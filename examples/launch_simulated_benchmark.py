@@ -2,7 +2,7 @@ import logging
 
 from blackbox_repository import load, add_surrogate
 from blackbox_repository.blackbox_tabular import BlackboxTabular
-from blackbox_repository.tabulated_benchmark import TabulatedBenchmark
+from blackbox_repository.tabulated_benchmark import TabulatedBenchmarkBackend
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
@@ -52,16 +52,19 @@ if __name__ == '__main__':
 
     n_workers = 4
 
+    # example of loading nas201 for simulation
     blackbox_name, dataset, metric, elapsed_time_attr = "nas201", "cifar100", "metric_error", 'metric_runtime'
     blackbox = load(blackbox_name)[dataset]
 
-    blackbox_name, dataset, metric, elapsed_time_attr = "fcnet", "protein_structure", "metric_valid_loss", "metric_runtime"
-    blackbox = load(blackbox_name)[dataset]
+    # example of loading fcnet for simulation
+    # blackbox_name, dataset, metric, elapsed_time_attr = "fcnet", "protein_structure", "metric_valid_loss", "metric_runtime"
+    # blackbox = load(blackbox_name)[dataset]
+    #
+    # example of loading a blackbox with custom code for simulation
+    # blackbox = example_blackbox()
+    # elapsed_time_attr, metric = "runtime", "metric_error"
 
-    blackbox = example_blackbox()
-    elapsed_time_attr, metric = "runtime", "metric_error"
-
-    backend = TabulatedBenchmark(
+    backend = TabulatedBenchmarkBackend(
         blackbox=blackbox,
         elapsed_time_attr=elapsed_time_attr,
     )
@@ -71,7 +74,7 @@ if __name__ == '__main__':
         backend.blackbox.configuration_space,
         searcher="random",
         max_t=max(backend.fidelities),
-        resource_attr=backend.ressource_attr,
+        resource_attr=backend.resource_attr,
         mode='min',
         metric=metric,
         random_seed=31415927
