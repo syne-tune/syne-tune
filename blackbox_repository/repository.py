@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Union, Dict
 
 import s3fs as s3fs
 
@@ -20,7 +20,7 @@ def blackbox_list() -> List[str]:
     return list(generate_blackbox_recipe.keys())
 
 
-def load(name: str, skip_if_present: bool = True) -> BlackboxOffline:
+def load(name: str, skip_if_present: bool = True) -> Union[Dict[str, BlackboxOffline], BlackboxOffline]:
     """
     :param name: name of a blackbox present in the repository, see list() to get list of available blackboxes
     :param skip_if_present: skip the download if the file locally exists

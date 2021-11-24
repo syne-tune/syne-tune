@@ -23,7 +23,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
     def __init__(self, elapsed_time_attr: str):
         """
         Allows to simulate any blackbox from blackbox-repository, can be either a blackbox from a registered
-        tabulated benchmark (in this case, you should use `TabulatedBenchmarkBackend`) or a blackbox given from custom
+        tabulated benchmark (in this case, you should use `BlackboxRepositoryBackend`) or a blackbox given from custom
         code (in this case, you should use `UserBlackboxBackend`), see `examples/launch_simulated_benchmark.py` for
         an example on how to use.
         :param elapsed_time_attr: name of the metric in the dictionary that indicates runtime, it is required in order
@@ -105,15 +105,13 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self._blackbox = None
 
     @property
-    def blackbox(self):
+    def blackbox(self) -> Blackbox:
         if self._blackbox is not None:
-            return self._blackbox
-        else:
             if self.dataset is None:
                 self._blackbox = load(self.blackbox_name)
             else:
                 self._blackbox = load(self.blackbox_name)[self.dataset]
-            return self._blackbox
+        return self._blackbox
 
 
 class UserBlackboxBackend(_BlackboxSimulatorBackend):
