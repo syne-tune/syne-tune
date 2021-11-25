@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 from typing import Optional, List, Tuple
 from operator import itemgetter
+import numpy as np
 
 
 class SynchronousHyperbandBracket(object):
@@ -141,8 +142,18 @@ class SynchronousHyperbandBracket(object):
             if not self.is_bracket_complete():
                 pos = self.current_rung
                 new_len, milestone = self._rungs[pos]
-                top_list = sorted(rung, key=itemgetter(1),
-                                  reverse=self._mode == 'max')[:new_len]
+                # Failed trials insert NaN's
+                rung_valid = [x for x in rung if not np.isnan(x[1])]
+                num_valid = len(rung_valid)
+                if num_valid >= new_len:
+                    top_list = sorted(rung_valid, key=itemgetter(1),
+                                      reverse=self._mode == 'max')[:new_len]
+                else:
+                    # Not enough valid entries to fill the new rung (this is
+                    # very unlikely to happen). In this case, some failed trials
+                    # are still promoted to the next rung.
+                    rung_invalid = [x for x in rung if np.isnan(x[1])]
+                    top_list = rung_valid + rung_invalid[:(new_len - num_valid)]
                 # For the (trial_id, metric_val) entries, only trial_id is
                 # valid (while metric_val is arbitrary) for positions
                 # >= self._first_free_pos

@@ -254,48 +254,80 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             self._trial_to_write_back[str(trial_id)] = write_back
         return suggestion
 
+    def _on_trial_result(
+            self, trial: Trial, result: Dict,
+            call_searcher: bool = True) -> str:
+        if self._phase == 'collect':
+            trial_id = str(trial.trial_id)
+            write_back = self._trial_to_write_back.get(trial_id)
+            assert write_back is not None, \
+                f"Trial trial_id = {trial_id} is not pending. " +\
+                f"_trial_to_writeback = {self._trial_to_write_back}"
+            assert self.metric in result, \
+                f"Result for trial_id {trial_id} does not contain " +\
+                f"'{self.metric}' field"
+            metric_val = float(result[self.metric])
+            assert self._resource_attr in result, \
+                f"Result for trial_id {trial_id} does not contain " +\
+                f"'{self._resource_attr}' field"
+            resource = int(result[self._resource_attr])
+            milestone = write_back.milestone
+            trial_decision = SchedulerDecision.CONTINUE
+            if resource >= milestone:
+                job_result = self._bracket_to_results[write_back.bracket_id]
+                pos = write_back.pos
+                assert job_result[pos][0] == trial.trial_id, \
+                    (write_back, job_result[pos], trial.trial_id)
+                if resource == milestone:
+                    job_result[pos] = (trial.trial_id, metric_val)
+                    trial_decision = SchedulerDecision.PAUSE
+                    self._num_collected += 1
+                    if self._num_collected == self.batch_size:
+                        # All results have been collected
+                        self.bracket_manager.on_results(self._bracket_to_results)
+                        self._phase = 'suggest'
+                        self._trial_to_write_back = dict()
+                else:
+                    assert job_result[pos][1] is not None, \
+                        f"Trial trial_id {trial_id}: Obtained result for " +\
+                        f"resource = {resource}, but not for {milestone}. " +\
+                        "Training script must not skip rung levels!"
+            if call_searcher:
+                self.searcher.on_trial_result(
+                    trial_id=trial_id, config=self._trial_to_config[trial_id],
+                    result=result, update=(resource == milestone))
+        else:
+            # We may receive results in 'suggest' phase, because trials
+            # were not properly paused. These results are simply ignored
+            logger.warning(
+                f"Received result for trial_id {trial.trial_id} in suggest " +\
+                f"phase. This result will be ignored:\n{result}")
+            trial_decision = SchedulerDecision.STOP
+        return trial_decision
+
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
+        return self._on_trial_result(trial, result, call_searcher=True)
+
+    def on_trial_error(self, trial: Trial):
+        """
+        Given the `trial` is currently pending, we send a result at its
+        milestone for metric value NaN. Such trials are ranked after all others
+        and will most likely not be promoted.
+
+        """
         assert self._phase == 'collect', \
-            "Cannot process on_trial_result in suggest phase. _job_queue " +\
+            "Cannot process on_trial_error in suggest phase. _job_queue " +\
             f"= {self._job_queue}"
         trial_id = str(trial.trial_id)
+        self.searcher.evaluation_failed(config=self._trial_to_config[trial_id])
         write_back = self._trial_to_write_back.get(trial_id)
-        assert write_back is not None, \
-            f"Trial trial_id = {trial_id} is not pending. " +\
-            f"_trial_to_writeback = {self._trial_to_write_back}"
-        assert self.metric in result, \
-            f"Result for trial_id {trial_id} does not contain " +\
-            f"'{self.metric}' field"
-        metric_val = float(result[self.metric])
-        assert self._resource_attr in result, \
-            f"Result for trial_id {trial_id} does not contain " +\
-            f"'{self._resource_attr}' field"
-        resource = int(result[self._resource_attr])
-        milestone = write_back.milestone
-        trial_decision = SchedulerDecision.CONTINUE
-        if resource >= milestone:
-            job_result = self._bracket_to_results[write_back.bracket_id]
-            pos = write_back.pos
-            assert job_result[pos][0] == trial.trial_id, \
-                (write_back, job_result[pos], trial.trial_id)
-            if resource == milestone:
-                job_result[pos] = (trial.trial_id, metric_val)
-                trial_decision = SchedulerDecision.PAUSE
-                self._num_collected += 1
-                if self._num_collected == self.batch_size:
-                    # All results have been collected
-                    self.bracket_manager.on_results(self._bracket_to_results)
-                    self._phase = 'suggest'
-                    self._trial_to_write_back = dict()
-            else:
-                assert job_result[pos][1] is not None, \
-                    f"Trial trial_id {trial_id}: Obtained result for " +\
-                    f"resource = {resource}, but not for {milestone}. " +\
-                    "Training script must not skip rung levels!"
-        self.searcher.on_trial_result(
-            trial_id=trial_id, config=self._trial_to_config[trial_id],
-            result=result, update=(resource == milestone))
-        return trial_decision
+        if write_back is not None:
+            # Reaction to a failed trial is to pass a NaN metric value for
+            # its milestone
+            result = {
+                self._resource_attr: write_back.milestone,
+                self.metric: np.NAN}
+            self._on_trial_result(trial, result, call_searcher=False)
 
     _STANDARD_MEMBERS = (
         '_job_queue', '_phase', '_num_collected', '_trial_to_write_back',
