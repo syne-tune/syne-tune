@@ -1,13 +1,12 @@
 import bz2
 import pickle
-
-import matplotlib.pyplot as plt
-
 import pandas as pd
 import numpy as np
+
 from blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-import sagemaker_tune.search_space as sp
 from blackbox_repository.conversion_scripts.utils import repository_path
+
+from syne_tune import search_space
 from syne_tune.util import catchtime
 
 
@@ -16,11 +15,12 @@ def str_to_list(arch_str):
     node_strs = arch_str.split('+')
     config = []
     for i, node_str in enumerate(node_strs):
-        inputs = list(filter(lambda x: x != '', node_str.split('|')))
-        for xinput in inputs: assert len(xinput.split('~')) == 2, 'invalid input length : {:}'.format(xinput)
+        inputs = [x for x in node_str.split('|') if x != '']
+        for xinput in inputs:
+            assert len(xinput.split('~')) == 2, 'invalid input length : {:}'.format(xinput)
         inputs = (xi.split('~') for xi in inputs )
 
-        config.extend(op for (op, IDX) in inputs)
+        config.extend(op for (op, idx) in inputs)
 
     return config
 
@@ -63,14 +63,11 @@ def convert_dataset(data, dataset):
     n_seeds = 3
 
     objective_evaluations = np.empty((n_hps, n_seeds, n_fidelities, n_objectives)).astype('float32')
+    name_index = {name: i for i, name in enumerate(objective_names)}
 
     def save_objective_values_helper(name, values):
         assert values.shape == (n_hps, n_seeds, n_fidelities)
 
-        name_index = dict(zip(
-            objective_names,
-            range(len(objective_names)))
-        )
         objective_evaluations[..., name_index[name]] = values
 
     ve = np.empty((n_hps, n_seeds, n_fidelities)).astype('float32')
@@ -79,19 +76,19 @@ def convert_dataset(data, dataset):
 
     for ai in range(n_hps):
         for si, seed in enumerate([777, 888, 999]):
-            for ei in range(n_fidelities):
+
                 try:
-                    validation_error = 1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es']['x-test@%d' % ei] / 100
-                    train_error = 1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'][ei] / 100
-                    runtime = data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei]
+                    validation_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es']['x-test@%d' % ei] / 100 for ei in range(n_fidelities)]
+                    train_error = 1 - np.array(data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'] ) / 100
+                    runtime = data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times']
 
                 except KeyError:
-                    validation_error = np.nan
-                    train_error = np.nan
-                    runtime = np.nan
-                ve[ai, si, ei] = validation_error
-                te[ai, si, ei] = train_error
-                rt[ai, si, ei] = runtime
+                    validation_error = [np.nan] * n_fidelities
+                    train_error = [np.nan] * n_fidelities
+                    runtime = [np.nan] * n_fidelities
+                ve[ai, si, :] = validation_error
+                te[ai, si, :] = train_error
+                rt[ai, si, :] = runtime
 
     def impute(values):
         idx = np.isnan(values)
@@ -101,6 +98,10 @@ def convert_dataset(data, dataset):
             m = np.mean(np.delete(l, si))
             values[ai, si, ei] = m
         return values
+
+    # The original data contains missing values, since not all architectures were evaluated for all three seed
+    # We impute these missing values by taking the average of the available datapoints for the corresponding
+    # architecture and time step
 
     save_objective_values_helper('valid_error', impute(ve))
     save_objective_values_helper('train_error', impute(te))
@@ -122,12 +123,12 @@ def convert_dataset(data, dataset):
     save_objective_values_helper('params', params)
 
     configuration_space = {
-        node: sp.choice(['avg_pool_3x3', 'nor_conv_3x3', 'skip_connect', 'nor_conv_1x1', 'none'])
+        node: search_space.choice(['avg_pool_3x3', 'nor_conv_3x3', 'skip_connect', 'nor_conv_1x1', 'none'])
         for node in hp_cols
     }
 
     fidelity_space = {
-        "hp_epoch": sp.randint(lower=1, upper=201)
+        "hp_epoch": search_space.randint(lower=1, upper=201)
     }
 
     return BlackboxTabular(
@@ -183,7 +184,7 @@ def generate_nasbench201():
 
     with catchtime("converting"):
         bb_dict = {}
-        for dataset in ['cifar10', 'cifar100', 'ImageNet16-120']:
+        for dataset in ['cifar10', 'cifar100', 'ImageNet16-120'][:1]:
             print(f"converting {dataset}")
             bb_dict[dataset] = convert_dataset(data, dataset)
 
@@ -205,6 +206,9 @@ if __name__ == '__main__':
     b = bb_dict['cifar10']
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}
     errors = []
+
+    import matplotlib.pyplot as plt
+
     for i in range(1, 201):
         res = b.objective_function(configuration=configuration, fidelity={'epochs': i})
         errors.append(res['metric_valid_error'])
