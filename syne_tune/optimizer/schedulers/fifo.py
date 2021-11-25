@@ -349,13 +349,13 @@ class FIFOScheduler(ResourceLevelsScheduler):
             "Your training evaluation function needs to report values " +\
             f"for the key {key}:\n   report({key}=..., ...)"
 
-    def _check_keys_of_result(self, result: Dict):
+    def _check_result(self, result: Dict):
         self._check_key_of_result(result, self.metric)
 
     # Not doing much. Note the result at the end of the trial run is
     # passed to `on_trial_complete`
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
-        self._check_keys_of_result(result)
+        self._check_result(result)
         trial_id = str(trial.trial_id)
         trial_decision = SchedulerDecision.CONTINUE
         if len(result) == 0:

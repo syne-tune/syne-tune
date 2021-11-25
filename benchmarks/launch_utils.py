@@ -118,11 +118,6 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--searcher', type=str,
                         help='Searcher name',
                         **allow_list)
-    # This is a legacy argument, previously needed for 'nasbench201' benchmark,
-    # but its better to use 'nasbench201_XYZ' for 'benchmark_name', where XYZ
-    # is 'dataset_name'.
-    parser.add_argument('--dataset_name', type=str,
-                        help='Additional argument for some benchmarks')
     parser.add_argument('--results_update_interval', type=int, default=300,
                         help='Results and tuner state are stored every this '
                              'many seconds')
@@ -157,6 +152,9 @@ def parse_args(allow_lists_as_values=True):
                              'on different GPU cores (GPU rotation). If '
                              'this is set, all GPU cores are used for a '
                              'single evaluation')
+    parser.add_argument('--blackbox_repo_s3_root', type=str,
+                        help='S3 root directory for blackbox repository. '
+                             'Defaults to default bucket of session')
     # Arguments for scheduler
     parser.add_argument('--brackets', type=int,
                         help='Number of brackets in HyperbandScheduler',
@@ -333,9 +331,7 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
         else 'max_t'
     _enter_not_none(
         scheduler_options, name, params.get('max_resource_level'), type=int)
-    scheduler_args = (
-        ('max_resource_attr', str),
-    )
+    scheduler_args = ()
     if scheduler != 'fifo':
         # Only process these arguments for HyperbandScheduler
         prefix = 'hyperband_'

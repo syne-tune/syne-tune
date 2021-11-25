@@ -50,7 +50,6 @@ def resnet_cifar10_default_params(params=None):
         'epochs': 27,
         'grace_period': 1,
         'reduction_factor': 3,
-        'max_resource_attr': 'epochs',
         'instance_type': instance_type,
         'num_workers': 4,
         'framework': 'PyTorch',
@@ -71,6 +70,7 @@ def resnet_cifar10_benchmark(params):
         'mode': 'max',
         'resource_attr': 'epoch',
         'elapsed_time_attr': 'elapsed_time',
+        'max_resource_attr': 'epochs',
         'map_reward': '1_minus_x',
         'config_space': config_space,
         'cost_model': get_cost_model_for_batch_size(

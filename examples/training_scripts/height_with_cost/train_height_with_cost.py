@@ -39,7 +39,6 @@ def height_with_cost_default_params(params=None):
         'max_resource_level': 100,
         'grace_period': 1,
         'reduction_factor': 3,
-        'max_resource_attr': 'epochs',
         'instance_type': 'ml.m5.large',
         'num_workers': 4,
         'framework': 'PyTorch',
@@ -59,6 +58,7 @@ def height_with_cost_benchmark(params):
         'mode': 'min',
         'resource_attr': 'epoch',
         'elapsed_time_attr': 'elapsed_time',
+        'max_resource_attr': 'epochs',
         'config_space': config_space,
         'supports_simulated': True,
     }

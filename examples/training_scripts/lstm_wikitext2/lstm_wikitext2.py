@@ -57,7 +57,6 @@ def lstm_wikitext2_default_params(params=None):
         'max_resource_level': 81,
         'grace_period': 1,
         'reduction_factor': 3,
-        'max_resource_attr': 'epochs',
         'instance_type': instance_type,
         'num_workers': num_workers,
         'framework': 'PyTorch',
@@ -80,6 +79,7 @@ def lstm_wikitext2_benchmark(params):
         'mode': 'max',
         'resource_attr': 'epoch',
         'elapsed_time_attr': 'elapsed_time',
+        'max_resource_attr': 'epochs',
         'map_reward': 'minus_x',
         'config_space': config_space,
         'cost_model': get_cost_model_for_batch_size(
