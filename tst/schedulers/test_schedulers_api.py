@@ -14,8 +14,6 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
-    SynchronousGeometricHyperbandScheduler
 import syne_tune.search_space as sp
 
 
