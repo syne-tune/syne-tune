@@ -14,6 +14,8 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+    SynchronousGeometricHyperbandScheduler
 import syne_tune.search_space as sp
 
 
@@ -25,7 +27,7 @@ config_space = {
 }
 metric1 = "objective1"
 metric2 = "objective2"
-ressource_attr = 'step'
+resource_attr = 'step'
 max_t = 10
 
 
@@ -41,25 +43,25 @@ def make_ray_skopt():
 @pytest.mark.parametrize("scheduler", [
     FIFOScheduler(config_space, searcher='random', metric=metric1),
     FIFOScheduler(config_space, searcher='bayesopt', metric=metric1),
-    HyperbandScheduler(config_space, searcher='random', resource_attr=ressource_attr, max_t=max_t, metric=metric1),
-    HyperbandScheduler(config_space, searcher='bayesopt', resource_attr=ressource_attr, max_t=max_t, metric=metric1),
+    HyperbandScheduler(config_space, searcher='random', resource_attr=resource_attr, max_t=max_t, metric=metric1),
+    HyperbandScheduler(config_space, searcher='bayesopt', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(
-        config_space, searcher='random', type='pasha', max_t=max_t, resource_attr=ressource_attr, metric=metric1
+        config_space, searcher='random', type='pasha', max_t=max_t, resource_attr=resource_attr, metric=metric1
     ),
-    MOASHA(config_space=config_space, time_attr=ressource_attr, metrics=[metric1, metric2]),
-    PopulationBasedTraining(config_space=config_space, metric=metric1, resource_attr=ressource_attr, max_t=max_t),
+    MOASHA(config_space=config_space, time_attr=resource_attr, metrics=[metric1, metric2]),
+    PopulationBasedTraining(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     RayTuneScheduler(
         config_space=config_space,
-        ray_scheduler=AsyncHyperBandScheduler(max_t=max_t, time_attr=ressource_attr, mode='min', metric=metric1)
+        ray_scheduler=AsyncHyperBandScheduler(max_t=max_t, time_attr=resource_attr, mode='min', metric=metric1)
     ),
     RayTuneScheduler(
         config_space=config_space,
-        ray_scheduler=AsyncHyperBandScheduler(max_t=max_t, time_attr=ressource_attr, mode='min', metric=metric1),
+        ray_scheduler=AsyncHyperBandScheduler(max_t=max_t, time_attr=resource_attr, mode='min', metric=metric1),
         ray_searcher=make_ray_skopt(),
     ),
     SimpleScheduler(config_space=config_space, metric=metric1),
 ])
-def test_schedulers_api(scheduler):
+def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
 
     if isinstance(scheduler, MOASHA):
@@ -80,7 +82,7 @@ def test_schedulers_api(scheduler):
         scheduler.on_trial_add(trial=trial)
 
     # checks results can be transmitted with appropriate scheduling decisions
-    make_metric = lambda t, x: {ressource_attr: t, metric1: x, metric2: -x}
+    make_metric = lambda t, x: {resource_attr: t, metric1: x, metric2: -x}
     for i, trial in enumerate(trials):
         for t in range(1, max_t + 1):
             decision = scheduler.on_trial_result(trial, make_metric(t, i))
@@ -96,3 +98,5 @@ def test_schedulers_api(scheduler):
             dill.dump(scheduler, f)
         with open(Path(local_path) / "scheduler.dill", "rb") as f:
             dill.load(f)
+
+# TODO: Equivalent test for synchronous schedulers!
