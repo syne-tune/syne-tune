@@ -13,8 +13,9 @@
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+    SynchronousGeometricHyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.constants import SMT_WORKER_TIME
 from syne_tune.backend.backend import Backend
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
@@ -43,7 +44,7 @@ supported_schedulers = {
     'hyperband_promotion',
     'hyperband_cost_promotion',
     'hyperband_pasha',
-    'pbt',
+    'hyperband_synchronous',
     'mo_asha',
     'raytune_fifo',
     'raytune_fifo_synchronous',
@@ -59,13 +60,14 @@ schedulers_with_search_options = {
     'hyperband_promotion': HyperbandScheduler,
     'hyperband_cost_promotion': HyperbandScheduler,
     'hyperband_pasha': HyperbandScheduler,
-    'pbt': PopulationBasedTraining,
+    'hyperband_synchronous': SynchronousGeometricHyperbandScheduler,
 }
 
 
 synchronous_schedulers = {
     'fifo_synchronous',
     'raytune_fifo_synchronous',
+    'hyperband_synchronous',
 }
 
 
@@ -91,7 +93,7 @@ def scheduler_factory(
         f"scheduler = '{scheduler}' not supported ({supported_schedulers})"
     params['synchronous'] = scheduler in synchronous_schedulers
     # FIFO schedulers are the same for sync or async
-    if params['synchronous']:
+    if params['synchronous'] and scheduler != 'hyperband_synchronous':
         # Strip off postfix
         scheduler = scheduler[:-len('_synchronous')]
     _default_params = dict(instance_type='ml.m4.xlarge', num_workers=4)
@@ -114,6 +116,8 @@ def scheduler_factory(
                 supported_searchers.update(
                     {'bayesopt_cost_coarse', 'bayesopt_cost_fine',
                      'bayesopt_constrained'})
+            elif scheduler == 'hyperband_synchronous':
+                supported_searchers = {'random'}
             else:
                 supported_searchers.update(
                     {'bayesopt_cost', 'bayesopt_issm'})
@@ -177,15 +181,8 @@ def scheduler_factory(
                     rung_system_kwargs[name] = tp(v)
             if rung_system_kwargs:
                 scheduler_options['rung_system_kwargs'] = rung_system_kwargs
-        if scheduler == 'pbt':
-            for name, tp in (
-                    ('population_size', int), ('perturbation_interval', float),
-                    ('quantile_fraction', float),
-                    ('resample_probability', float)):
-                name_cl = 'pbt_' + name
-                v = params.get(name_cl)
-                if v is not None:
-                    scheduler_options[name] = tp(v)
+        if scheduler == 'hyperband_synchronous':
+            scheduler_options['batch_size'] = params['num_workers']
         # Build scheduler and searcher
         scheduler_cls = schedulers_with_search_options[scheduler]
         myscheduler = scheduler_cls(
