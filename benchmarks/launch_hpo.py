@@ -27,11 +27,11 @@ from syne_tune.tuner import Tuner
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune.util import s3_experiment_path
 
-from estimator_factory import sagemaker_estimator_factory
-from launch_utils import parse_args
-from benchmark_factory import benchmark_factory
-from scheduler_factory import scheduler_factory, setup_scheduler_from_backend
-from utils import dict_get
+from benchmarks.estimator_factory import sagemaker_estimator_factory
+from benchmarks.launch_utils import parse_args
+from benchmarks.benchmark_factory import benchmark_factory
+from benchmarks.scheduler_factory import scheduler_factory, setup_scheduler_from_backend
+from benchmarks.utils import dict_get
 
 logger = logging.getLogger(__name__)
 

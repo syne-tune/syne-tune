@@ -20,8 +20,8 @@ from syne_tune.constants import SMT_WORKER_TIME
 from syne_tune.backend.backend import Backend
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 
-from launch_utils import make_searcher_and_scheduler
-from utils import dict_get
+from benchmarks.launch_utils import make_searcher_and_scheduler
+from benchmarks.utils import dict_get
 
 __all__ = ['scheduler_factory',
            'short_name_scheduler_factory',
