@@ -184,7 +184,7 @@ def generate_nasbench201():
 
     with catchtime("converting"):
         bb_dict = {}
-        for dataset in ['cifar10', 'cifar100', 'ImageNet16-120'][:1]:
+        for dataset in ['cifar10', 'cifar100', 'ImageNet16-120']:
             print(f"converting {dataset}")
             bb_dict[dataset] = convert_dataset(data, dataset)
 
