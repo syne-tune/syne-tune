@@ -83,7 +83,7 @@ if __name__ == '__main__':
     n_workers = 4
 
     ## example of loading nas201 and then simulating tuning
-    blackbox_name, dataset, metric, elapsed_time_attr = "nas201", "cifar100", "metric_error", 'metric_runtime'
+    blackbox_name, dataset, metric, elapsed_time_attr = "nasbench201", "cifar100", "metric_error", 'metric_runtime'
     blackbox = load(blackbox_name)[dataset]
     backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
