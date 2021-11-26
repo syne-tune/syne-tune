@@ -19,9 +19,9 @@ from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
 
-from scheduler_factory import short_name_scheduler_factory, \
+from benchmarks.scheduler_factory import short_name_scheduler_factory, \
     supported_short_name_schedulers
-from benchmark_factory import benchmark_factory
+from benchmarks.benchmark_factory import benchmark_factory
 
 logging.getLogger().setLevel(logging.INFO)
 
