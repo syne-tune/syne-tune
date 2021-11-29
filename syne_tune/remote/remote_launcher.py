@@ -108,7 +108,7 @@ class RemoteLauncher:
         """
         self.prepare_upload()
 
-        if 'AWS_DEFAULT_REGION' not in os.environ:
+        if boto3.Session().region_name is None:
             # launching in this is needed to send a default configuration on the tuning loop running on Sagemaker
             # todo restore the env variable if present to avoid a side effect
             os.environ['AWS_DEFAULT_REGION'] = 'us-west-2'

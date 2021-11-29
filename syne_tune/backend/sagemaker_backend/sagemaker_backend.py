@@ -238,7 +238,7 @@ class SagemakerBackend(Backend):
             self.sm_estimator.dependencies = [Path(dep).name for dep in self.sm_estimator.dependencies]
 
     def initialize_sagemaker_session(self):
-        if 'AWS_DEFAULT_REGION' not in os.environ:
+        if boto3.Session().region_name is None:
             # avoids error "Must setup local AWS configuration with a region supported by SageMaker."
             # in case no region is explicitely configured
             os.environ['AWS_DEFAULT_REGION'] = 'us-west-2'
