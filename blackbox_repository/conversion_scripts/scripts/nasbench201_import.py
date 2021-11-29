@@ -78,9 +78,9 @@ def convert_dataset(data, dataset):
         for si, seed in enumerate([777, 888, 999]):
 
                 try:
-                    validation_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es']['x-test@%d' % ei] / 100 for ei in range(n_fidelities)]
-                    train_error = 1 - np.array(data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'] ) / 100
-                    runtime = data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times']
+                    validation_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es']['ori-test@%d' % ei] / 100 for ei in range(n_fidelities)]
+                    train_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'][ei] / 100 for ei in range(n_fidelities)]
+                    runtime = [data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei] / 100 for ei in range(n_fidelities)]
 
                 except KeyError:
                     validation_error = [np.nan] * n_fidelities
@@ -99,7 +99,7 @@ def convert_dataset(data, dataset):
             values[ai, si, ei] = m
         return values
 
-    # The original data contains missing values, since not all architectures were evaluated for all three seed
+    # The original data contains missing values, since not all architectures were evaluated for all three seeds
     # We impute these missing values by taking the average of the available datapoints for the corresponding
     # architecture and time step
 
