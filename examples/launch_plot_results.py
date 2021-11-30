@@ -15,7 +15,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from syne_tune.backend.local_backend import LocalBackend
-from syne_tune.constants import SMT_TUNER_TIME
+from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.tuner import Tuner
@@ -66,9 +66,9 @@ if __name__ == '__main__':
 
     tuning_experiment = load_experiment(tuner.name)
     print(tuning_experiment)
-    df = tuning_experiment.results.sort_values(SMT_TUNER_TIME)
+    df = tuning_experiment.results.sort_values(ST_TUNER_TIME)
     df.loc[:, 'best'] = df.loc[:, metric].cummin()
-    df.plot(x=SMT_TUNER_TIME, y="best")
+    df.plot(x=ST_TUNER_TIME, y="best")
     plt.xlabel("wallclock time")
     plt.ylabel(metric)
     plt.show()

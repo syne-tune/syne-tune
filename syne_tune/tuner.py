@@ -22,7 +22,7 @@ import dill as dill
 from syne_tune.backend.backend import Backend
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
 from syne_tune.backend.trial_status import Status, Trial
-from syne_tune.constants import SMT_TUNER_CREATION_TIMESTAMP, SMT_TUNER_START_TIMESTAMP
+from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.tuner_callback import TunerCallback, StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
@@ -83,7 +83,7 @@ class Tuner:
         self.stop_criterion = stop_criterion
         self.asynchronous_scheduling = asynchronous_scheduling
         self.metadata = metadata if metadata is not None else {}
-        self.metadata[SMT_TUNER_CREATION_TIMESTAMP] = time.time()
+        self.metadata[ST_TUNER_CREATION_TIMESTAMP] = time.time()
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
 
@@ -128,7 +128,7 @@ class Tuner:
                 call_seconds_frequency=self.results_update_interval
             )
 
-            self.metadata[SMT_TUNER_START_TIMESTAMP] = time.time()
+            self.metadata[ST_TUNER_START_TIMESTAMP] = time.time()
 
             for callback in self.callbacks:
                 callback.on_tuning_start(self)

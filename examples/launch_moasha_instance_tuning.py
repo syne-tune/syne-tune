@@ -21,7 +21,7 @@ from sagemaker.huggingface import HuggingFace
 from syne_tune.backend.sagemaker_backend.instance_info import select_instance_type
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from syne_tune.constants import SMT_WORKER_TIME, SMT_WORKER_COST
+from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune.stopping_criterion import StoppingCriterion
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     scheduler = MOASHA(
         max_t=epochs,
         time_attr="step",
-        metrics=[metric, SMT_WORKER_COST, SMT_WORKER_TIME],
+        metrics=[metric, ST_WORKER_COST, ST_WORKER_TIME],
         mode=['max', 'min', 'min'],
         config_space=config_space,
     )

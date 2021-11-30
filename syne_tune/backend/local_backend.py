@@ -24,9 +24,9 @@ from typing import Dict, List, Optional
 
 from syne_tune.num_gpu import get_num_gpus
 from syne_tune.report import retrieve
-from syne_tune.backend.backend import Backend, BACKEND_TYPES, ENV_BACKEND
+from syne_tune.backend.backend import Backend
 from syne_tune.backend.trial_status import TrialResult, Status
-from syne_tune.constants import SMT_CHECKPOINT_DIR
+from syne_tune.constants import ST_CHECKPOINT_DIR
 from syne_tune.util import experiment_path, random_string
 
 logger = logging.getLogger(__name__)
@@ -103,8 +103,6 @@ class LocalBackend(Backend):
             else:
                 # Nothing to rotate over
                 self.rotate_gpus = False
-        # Extra setup code needed on the tuning instance
-        os.environ[ENV_BACKEND] = BACKEND_TYPES['local']
 
     def _gpu_for_new_trial(self) -> int:
         """
@@ -141,7 +139,7 @@ class LocalBackend(Backend):
             with open(trial_path / "std.err", 'a') as stderr:
                 logging.debug(f"scheduling {trial_id}, {self.entry_point}, {config}, logging into {trial_path}")
                 config_copy = config.copy()
-                config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
+                config_copy[ST_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
                 config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
 
                 def np_encoder(object):

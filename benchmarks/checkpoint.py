@@ -19,7 +19,7 @@ from typing import Dict, Callable, Any, Optional
 import argparse
 import os
 
-from syne_tune.constants import SMT_CHECKPOINT_DIR
+from syne_tune.constants import ST_CHECKPOINT_DIR
 
 __all__ = ['add_checkpointing_to_argparse',
            'resume_from_checkpointed_model',
@@ -35,7 +35,7 @@ def add_checkpointing_to_argparse(parser: argparse.ArgumentParser):
 
     :param parser:
     """
-    parser.add_argument(f"--{SMT_CHECKPOINT_DIR}", type=str)
+    parser.add_argument(f"--{ST_CHECKPOINT_DIR}", type=str)
 
 
 def resume_from_checkpointed_model(
@@ -57,7 +57,7 @@ def resume_from_checkpointed_model(
     :return: resume_from (0 if no checkpoint has been loaded)
     """
     resume_from = 0
-    local_path = config.get(SMT_CHECKPOINT_DIR)
+    local_path = config.get(ST_CHECKPOINT_DIR)
     if local_path is not None and os.path.exists(local_path):
         resume_from = load_model_fn(local_path)
         trial_id = config.get('trial_id')
@@ -86,7 +86,7 @@ def checkpoint_model_at_rung_level(
     :param save_model_fn:
     :param resource:
     """
-    local_path = config.get(SMT_CHECKPOINT_DIR)
+    local_path = config.get(ST_CHECKPOINT_DIR)
     if local_path is not None:
         save_model_fn(local_path, resource)
         trial_id = config.get('trial_id')

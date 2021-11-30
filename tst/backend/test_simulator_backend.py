@@ -25,14 +25,14 @@ from syne_tune.backend.trial_status import Status
 from syne_tune.tuner_callback import StoreResultsCallback
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
-from syne_tune.constants import SMT_DECISION, SMT_TRIAL_ID
+from syne_tune.constants import ST_DECISION, ST_TRIAL_ID
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
 def _compare_results(res_local: dict, res_simul: dict, num: int):
-    for key in (SMT_TRIAL_ID, SMT_DECISION, 'epoch', 'mean_loss'):
+    for key in (ST_TRIAL_ID, ST_DECISION, 'epoch', 'mean_loss'):
         rloc = res_local[key]
         rsim = res_simul[key]
         if key != 'mean_loss':
@@ -150,9 +150,9 @@ def test_compare_local_simulator_backends(scheduler_name):
     max_resource_when_stopped = dict()
     stop_decisions = {SchedulerDecision.STOP, SchedulerDecision.PAUSE}
     for result in results['local']:
-        decision = result[SMT_DECISION]
+        decision = result[ST_DECISION]
         if decision in stop_decisions:
-            trial_id = result[SMT_TRIAL_ID]
+            trial_id = result[ST_TRIAL_ID]
             resource = int(result['epoch'])
             max_resource_when_stopped[trial_id] = resource
     for trial_id, max_resource in max_resource_when_stopped.items():
@@ -162,9 +162,9 @@ def test_compare_local_simulator_backends(scheduler_name):
                 break
     new_local = []
     for result in results['local']:
-        trial_id = result[SMT_TRIAL_ID]
+        trial_id = result[ST_TRIAL_ID]
         resource = int(result['epoch'])
-        decision = result[SMT_DECISION]
+        decision = result[ST_DECISION]
         if decision not in stop_decisions or \
                 resource <= max_resource_when_stopped[trial_id]:
             new_local.append(result)
@@ -175,7 +175,7 @@ def test_compare_local_simulator_backends(scheduler_name):
         print(f"{scheduler_name}: num_results_local = {num_local}, num_results_simul = {num_simul}")
 
     def sort_key(result):
-        return (result[SMT_TRIAL_ID], result['epoch'])
+        return (result[ST_TRIAL_ID], result['epoch'])
 
     if num_local <= num_simul:
         k_short = 'local'

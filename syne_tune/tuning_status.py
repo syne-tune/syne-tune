@@ -19,7 +19,7 @@ import pandas as pd
 from syne_tune.backend.trial_status import Status, Trial
 import numpy as np
 
-from syne_tune.constants import SMT_WORKER_TIME, SMT_WORKER_COST
+from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
 
 
 class MetricsStatistics:
@@ -91,10 +91,10 @@ class TuningStatus:
             else:
                 row.update(self.trial_metric_statistics[trial_id].max_metrics)
 
-            if SMT_WORKER_TIME in self.trial_metric_statistics[trial_id].max_metrics:
-                row["worker-time"] = self.trial_metric_statistics[trial_id].max_metrics[SMT_WORKER_TIME]
-            if SMT_WORKER_COST in self.trial_metric_statistics[trial_id].max_metrics:
-                row["worker-cost"] = self.trial_metric_statistics[trial_id].max_metrics[SMT_WORKER_COST]
+            if ST_WORKER_TIME in self.trial_metric_statistics[trial_id].max_metrics:
+                row["worker-time"] = self.trial_metric_statistics[trial_id].max_metrics[ST_WORKER_TIME]
+            if ST_WORKER_COST in self.trial_metric_statistics[trial_id].max_metrics:
+                row["worker-cost"] = self.trial_metric_statistics[trial_id].max_metrics[ST_WORKER_COST]
 
             self.trial_rows[trial_id] = row
 
@@ -151,9 +151,9 @@ class TuningStatus:
         """
         :return: the total user time spent in the workers
         """
-        if SMT_WORKER_TIME in self.overall_metric_statistics.metric_names:
+        if ST_WORKER_TIME in self.overall_metric_statistics.metric_names:
             usertime_per_trial = [
-                metric.max_metrics.get(SMT_WORKER_TIME, 0)
+                metric.max_metrics.get(ST_WORKER_TIME, 0)
                 for trial, metric in self.trial_metric_statistics.items()
             ]
             return sum(usertime_per_trial)
@@ -165,9 +165,9 @@ class TuningStatus:
         """
         :return: the estimated dollar-cost spent while tuning
         """
-        if SMT_WORKER_COST in self.overall_metric_statistics.metric_names:
+        if ST_WORKER_COST in self.overall_metric_statistics.metric_names:
             cost_per_trial = [
-                metric.max_metrics.get(SMT_WORKER_COST, 0)
+                metric.max_metrics.get(ST_WORKER_COST, 0)
                 for trial, metric in self.trial_metric_statistics.items()
             ]
             return sum(cost_per_trial)

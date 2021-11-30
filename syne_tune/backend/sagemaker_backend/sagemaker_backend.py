@@ -20,7 +20,7 @@ from botocore.exceptions import ClientError
 import numpy as np
 from sagemaker import LocalSession, Session
 
-from syne_tune.constants import SMT_INSTANCE_TYPE, SMT_INSTANCE_COUNT, SMT_CHECKPOINT_DIR
+from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_CHECKPOINT_DIR
 from syne_tune.util import s3_experiment_path
 from syne_tune.backend.backend import Backend
 from syne_tune.backend.trial_status import TrialResult, Status
@@ -127,7 +127,7 @@ class SagemakerBackend(Backend):
         return json.loads(json.dumps(dict, default=np_encoder))
 
     def _schedule(self, trial_id: int, config: Dict):
-        config[SMT_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
+        config[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
         hyperparameters = config.copy()
 
         # This passes the instance type and instance count to the training function in Sagemaker as hyperparameters
@@ -137,14 +137,14 @@ class SagemakerBackend(Backend):
         # This allows to: 1) measure cost in the worker 2) tune instance_type and instance_count by having
         # `st_instance_type` or `st_instance_count` in the config space.
         # TODO once we have a multiobjective scheduler, we should add an example on how to tune instance-type/count.
-        if SMT_INSTANCE_TYPE not in hyperparameters:
-            hyperparameters[SMT_INSTANCE_TYPE] = self.sm_estimator.instance_type
+        if ST_INSTANCE_TYPE not in hyperparameters:
+            hyperparameters[ST_INSTANCE_TYPE] = self.sm_estimator.instance_type
         else:
-            self.sm_estimator.instance_type = hyperparameters[SMT_INSTANCE_TYPE]
-        if SMT_INSTANCE_COUNT not in hyperparameters:
-            hyperparameters[SMT_INSTANCE_COUNT] = self.sm_estimator.instance_count
+            self.sm_estimator.instance_type = hyperparameters[ST_INSTANCE_TYPE]
+        if ST_INSTANCE_COUNT not in hyperparameters:
+            hyperparameters[ST_INSTANCE_COUNT] = self.sm_estimator.instance_count
         else:
-            self.sm_estimator.instance_count = hyperparameters[SMT_INSTANCE_COUNT]
+            self.sm_estimator.instance_count = hyperparameters[ST_INSTANCE_COUNT]
 
         if self.sm_estimator.instance_type != "local":
             if self.tuner_name is not None:

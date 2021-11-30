@@ -21,9 +21,8 @@ from typing import List, Dict
 from time import time, perf_counter
 from dataclasses import dataclass
 
-from syne_tune.constants import SMT_INSTANCE_TYPE, SMT_INSTANCE_COUNT, SMT_WORKER_TIME, \
-    SMT_WORKER_COST, SMT_WORKER_TIMESTAMP, SMT_WORKER_ITER
-from syne_tune.backend.backend import BACKEND_TYPES, get_backend_type
+from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_WORKER_TIME, \
+    ST_WORKER_COST, ST_WORKER_TIMESTAMP, ST_WORKER_ITER
 
 # this is required so that metrics are written
 from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfos
@@ -31,16 +30,9 @@ from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfos
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
-BACKEND_TYPES_WITH_FILE_REPORTS = (BACKEND_TYPES['queue'],)
-
 
 @dataclass
 class Reporter:
-    # Whether the report is file based or log based, for file based, each time a metric is reported a file is created
-    # for log based, the metric dictionary is writting into a log. Local and Sagemaker backend supports log based
-    # reporter.
-    file_based: bool = False
-
     # Whether to add automatically `st_worker_time` information on the metric reported by the worker which measures
     # the number of seconds spent since the creation of the Reporter.
     add_time: bool = True
@@ -51,17 +43,16 @@ class Reporter:
     add_cost: bool = True
 
     def __post_init__(self):
-        self.file_based |= get_backend_type() in BACKEND_TYPES_WITH_FILE_REPORTS
         if self.add_time:
             self.start = perf_counter()
             self.iter = 0
             # TODO dollar-cost computation is not available for file-based backends, what would be
             #  needed to add support for those backends will be to add a way to access instance-type
             #  information.
-            if self.add_cost and not self.file_based:
+            if self.add_cost:
                 # add instance_type and instance count so that cost can be computed easily
-                self.instance_type = os.getenv(f"SM_HP_{SMT_INSTANCE_TYPE.upper()}", None)
-                self.instance_count = literal_eval(os.getenv(f"SM_HP_{SMT_INSTANCE_COUNT.upper()}", "1"))
+                self.instance_type = os.getenv(f"SM_HP_{ST_INSTANCE_TYPE.upper()}", None)
+                self.instance_count = literal_eval(os.getenv(f"SM_HP_{ST_INSTANCE_COUNT.upper()}", "1"))
                 logger.info(f"detected instance-type/instance-count to {self.instance_type}/{self.instance_count}")
                 if self.instance_type is not None:
                     cost_per_hour = InstanceInfos()(instance_type=self.instance_type).cost_per_hour
@@ -80,40 +71,26 @@ class Reporter:
         reserved namespace for Syne Tune internals.
         """
         for key in kw.keys():
-            assert not key.startswith("st_"),\
+            assert not key.startswith("st_"), \
                 "The metric prefix 'st_' is used by Syne Tune internals, " \
                 "please use a metric name that does not start with 'st_'."
 
-        kw[SMT_WORKER_TIMESTAMP] = time()
+        kw[ST_WORKER_TIMESTAMP] = time()
         if self.add_time:
             seconds_spent = (perf_counter() - self.start)
-            kw[SMT_WORKER_TIME] = seconds_spent
+            kw[ST_WORKER_TIME] = seconds_spent
             # second cost will only be there if we were able to properly detect the instance-type and instance-count
             # from the environment
             if hasattr(self, "dollar_cost"):
-                kw[SMT_WORKER_COST] = seconds_spent * self.dollar_cost
-        kw[SMT_WORKER_ITER] = self.iter
+                kw[ST_WORKER_COST] = seconds_spent * self.dollar_cost
+        kw[ST_WORKER_ITER] = self.iter
         self.iter += 1
-        if not self.file_based:
-            _report_logger(**kw)
-        else:
-            _report_file(**kw)
+        _report_logger(**kw)
 
 
 def _report_logger(**kwargs):
     print(f"[tune-metric]: {_serialize_report_dict(kwargs)}")
     sys.stdout.flush()
-
-
-def _report_file(**kwargs):
-    """
-    Write a serialized report to a file with the timestamp in the file name. This will
-    error if the report is non-serializable or if the corresponding file is too big.
-    """
-    timestamp = time()
-    report_str = _serialize_report_dict(kwargs)
-    with open(f'report_{round(timestamp * 10_000)}.json', 'w') as outf:
-        outf.write(report_str)
 
 
 def _serialize_report_dict(report_dict: Dict) -> str:
