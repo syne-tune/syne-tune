@@ -71,7 +71,7 @@ class Reporter:
         reserved namespace for Syne Tune internals.
         """
         for key in kw.keys():
-            assert not key.startswith("st_"),\
+            assert not key.startswith("st_"), \
                 "The metric prefix 'st_' is used by Syne Tune internals, " \
                 "please use a metric name that does not start with 'st_'."
 
@@ -85,8 +85,12 @@ class Reporter:
                 kw[ST_WORKER_COST] = seconds_spent * self.dollar_cost
         kw[ST_WORKER_ITER] = self.iter
         self.iter += 1
-        print(f"[tune-metric]: {_serialize_report_dict(kw)}")
-        sys.stdout.flush()
+        _report_logger(**kw)
+
+
+def _report_logger(**kwargs):
+    print(f"[tune-metric]: {_serialize_report_dict(kwargs)}")
+    sys.stdout.flush()
 
 
 def _serialize_report_dict(report_dict: Dict) -> str:

@@ -24,9 +24,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.scaling \
 
 __all__ = ['HyperparameterRangesImpl']
 
-
-# This code could be made faster by using.
-
 # Epsilon margin to account for numerical errors
 EPS = 1e-8
 
