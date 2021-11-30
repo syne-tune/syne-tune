@@ -11,14 +11,13 @@ from syne_tune.util import catchtime
 
 
 def str_to_list(arch_str):
-
     node_strs = arch_str.split('+')
     config = []
     for i, node_str in enumerate(node_strs):
         inputs = [x for x in node_str.split('|') if x != '']
         for xinput in inputs:
             assert len(xinput.split('~')) == 2, 'invalid input length : {:}'.format(xinput)
-        inputs = (xi.split('~') for xi in inputs )
+        inputs = (xi.split('~') for xi in inputs)
 
         config.extend(op for (op, idx) in inputs)
 
@@ -26,7 +25,6 @@ def str_to_list(arch_str):
 
 
 def convert_dataset(data, dataset):
-
     hp_cols = [f"hp_x{i}" for i in range(6)]
 
     hps = dict()
@@ -77,18 +75,24 @@ def convert_dataset(data, dataset):
     for ai in range(n_hps):
         for si, seed in enumerate([777, 888, 999]):
 
-                try:
-                    validation_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es']['ori-test@%d' % ei] / 100 for ei in range(n_fidelities)]
-                    train_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'][ei] / 100 for ei in range(n_fidelities)]
-                    runtime = [data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei] for ei in range(n_fidelities)]
+            try:
+                validation_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es'][
+                    'ori-test@%d' % ei] / 100 for ei in range(n_fidelities)]
+                train_error = [
+                    1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'][ei] / 100 for ei
+                    in range(n_fidelities)]
+                runtime = [data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei] +
+                           data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_times'][
+                               'ori-test@%d' % ei] for ei in
+                           range(n_fidelities)]
 
-                except KeyError:
-                    validation_error = [np.nan] * n_fidelities
-                    train_error = [np.nan] * n_fidelities
-                    runtime = [np.nan] * n_fidelities
-                ve[ai, si, :] = validation_error
-                te[ai, si, :] = train_error
-                rt[ai, si, :] = runtime
+            except KeyError:
+                validation_error = [np.nan] * n_fidelities
+                train_error = [np.nan] * n_fidelities
+                runtime = [np.nan] * n_fidelities
+            ve[ai, si, :] = validation_error
+            te[ai, si, :] = train_error
+            rt[ai, si, :] = runtime
 
     def impute(values):
         idx = np.isnan(values)
@@ -107,7 +111,8 @@ def convert_dataset(data, dataset):
     save_objective_values_helper('train_error', impute(te))
     save_objective_values_helper('runtime', impute(rt))
 
-    latency = np.array([data['arch2infos'][ai]['200']['all_results'][(dataset, 777)]['latency'][0] for ai in range(n_hps)])
+    latency = np.array(
+        [data['arch2infos'][ai]['200']['all_results'][(dataset, 777)]['latency'][0] for ai in range(n_hps)])
     latency = np.repeat(np.expand_dims(latency, axis=-1), n_seeds, axis=-1)
     latency = np.repeat(np.expand_dims(latency, axis=-1), n_fidelities, axis=-1)
     save_objective_values_helper('latency', latency)
@@ -201,16 +206,20 @@ if __name__ == '__main__':
 
     # plot one learning-curve for sanity-check
     from blackbox_repository import load
+
     bb_dict = load("nasbench201")
 
     b = bb_dict['cifar10']
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}
     errors = []
+    runtime = []
 
     import matplotlib.pyplot as plt
 
     for i in range(1, 201):
         res = b.objective_function(configuration=configuration, fidelity={'epochs': i})
         errors.append(res['metric_valid_error'])
-    plt.plot(errors)
+        runtime.append(res['metric_runtime'])
+
+    plt.plot(np.cumsum(runtime), errors)
     plt.show()
