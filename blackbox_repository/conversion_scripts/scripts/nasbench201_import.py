@@ -81,6 +81,7 @@ def convert_dataset(data, dataset):
                 train_error = [
                     1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'][ei] / 100 for ei
                     in range(n_fidelities)]
+                # runtime measure the time for a single epoch
                 runtime = [data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei] +
                            data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_times'][
                                'ori-test@%d' % ei] for ei in
