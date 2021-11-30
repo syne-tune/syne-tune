@@ -80,7 +80,7 @@ def convert_dataset(data, dataset):
                 try:
                     validation_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es']['ori-test@%d' % ei] / 100 for ei in range(n_fidelities)]
                     train_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'][ei] / 100 for ei in range(n_fidelities)]
-                    runtime = [data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei] / 100 for ei in range(n_fidelities)]
+                    runtime = [data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei] for ei in range(n_fidelities)]
 
                 except KeyError:
                     validation_error = [np.nan] * n_fidelities
