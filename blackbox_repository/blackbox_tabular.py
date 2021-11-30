@@ -158,7 +158,7 @@ class BlackboxTabular(Blackbox):
             "seeds": num_seeds,
             "fidelities": num_fidelities,
             "objectives": self.objectives_names,
-            "hyperparameter": self.configuration_space.get_hyperparameter_names()
+            "hyperparameter": list(self.configuration_space.keys())
         }
         stats_str = ", ".join([f"{k}: {v}" for k, v in stats.items()])
         return f"tabular blackbox: {stats_str}"
