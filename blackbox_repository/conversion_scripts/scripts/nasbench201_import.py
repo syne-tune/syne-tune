@@ -76,16 +76,12 @@ def convert_dataset(data, dataset):
         for si, seed in enumerate([777, 888, 999]):
 
             try:
-                validation_error = [1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_acc1es'][
-                    'ori-test@%d' % ei] / 100 for ei in range(n_fidelities)]
-                train_error = [
-                    1 - data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_acc1es'][ei] / 100 for ei
-                    in range(n_fidelities)]
+                entry = data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]
+                validation_error = [1 - entry['eval_acc1es']['ori-test@%d' % ei] / 100 for ei in range(n_fidelities)]
+                train_error = [1 - entry['train_acc1es'][ei] / 100 for ei in range(n_fidelities)]
                 # runtime measure the time for a single epoch
-                runtime = [data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['train_times'][ei] +
-                           data['arch2infos'][ai]['200']['all_results'][(dataset, seed)]['eval_times'][
-                               'ori-test@%d' % ei] for ei in
-                           range(n_fidelities)]
+                runtime = [entry['train_times'][ei] + entry['eval_times']['ori-test@%d' % ei]
+                           for ei in range(n_fidelities)]
 
             except KeyError:
                 validation_error = [np.nan] * n_fidelities
