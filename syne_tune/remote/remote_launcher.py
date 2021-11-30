@@ -231,7 +231,8 @@ class RemoteLauncher:
         """
         docker_image_name = "syne-tune-cpu-py36"
         account_id = boto3.client("sts").get_caller_identity()["Account"]
-        image_uri = f"{account_id}.dkr.ecr.us-west-2.amazonaws.com/{docker_image_name}"
+        region_name = boto3.Session().region_name
+        image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
         try:
             logging.info(f"Fetching Syne Tune image {image_uri}")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
