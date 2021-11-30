@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import os
 from collections import defaultdict
 
 from datetime import datetime
@@ -18,19 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 from syne_tune.backend.trial_status import TrialResult, Trial, Status
-from syne_tune.constants import SMT_WORKER_TIMESTAMP
-
-ENV_BACKEND = 'SMT_BACKEND'
-BACKEND_TYPES = dict(
-    local='LOCAL',
-    sagemaker='SAGEMAKER',
-    queue='QUEUE',
-    unknown='UNKNOWN'
-)
-
-
-def get_backend_type() -> str:
-    return os.getenv(ENV_BACKEND, BACKEND_TYPES['unknown'])
+from syne_tune.constants import ST_WORKER_TIMESTAMP
 
 
 class Backend(object):
@@ -184,7 +171,7 @@ class Backend(object):
                 creation_time=trial_result.creation_time,
             )
             trial_status_dict[trial_id] = (trial, trial_result.status)
-        results = sorted(results, key=lambda result: result[1][SMT_WORKER_TIMESTAMP])
+        results = sorted(results, key=lambda result: result[1][ST_WORKER_TIMESTAMP])
         return trial_status_dict, results
 
     def stdout(self, trial_id: int) -> List[str]:

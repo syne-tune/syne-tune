@@ -17,26 +17,26 @@ benchmarks.
 
 SYNE_TUNE_FOLDER = "syne-tune"
 
-SMT_TUNER_CREATION_TIMESTAMP = "st_tuner_creation_timestamp"
-SMT_TUNER_START_TIMESTAMP = "st_tuner_start_timestamp"
+ST_TUNER_CREATION_TIMESTAMP = "st_tuner_creation_timestamp"
+ST_TUNER_START_TIMESTAMP = "st_tuner_start_timestamp"
 
 # constants of keys that are written by `report`
-SMT_WORKER_ITER = "st_worker_iter"
-SMT_WORKER_TIMESTAMP = "st_worker_timestamp"
-SMT_WORKER_TIME = "st_worker_time"
-SMT_WORKER_COST = "st_worker_cost"
-SMT_INSTANCE_TYPE = "st_instance_type"
-SMT_INSTANCE_COUNT = "st_instance_count"
+ST_WORKER_ITER = "st_worker_iter"
+ST_WORKER_TIMESTAMP = "st_worker_timestamp"
+ST_WORKER_TIME = "st_worker_time"
+ST_WORKER_COST = "st_worker_cost"
+ST_INSTANCE_TYPE = "st_instance_type"
+ST_INSTANCE_COUNT = "st_instance_count"
 
 # constants for tuner results
-SMT_TRIAL_ID = "trial_id"
-SMT_TUNER_TIMESTAMP = "st_tuner_timestamp"
-SMT_TUNER_TIME = "st_tuner_time"
-SMT_DECISION = "st_decision"
-SMT_STATUS = "st_status"
+ST_TRIAL_ID = "trial_id"
+ST_TUNER_TIMESTAMP = "st_tuner_timestamp"
+ST_TUNER_TIME = "st_tuner_time"
+ST_DECISION = "st_decision"
+ST_STATUS = "st_status"
 
 # constant for the hyperparameter name that contains the checkpoint directory
-SMT_CHECKPOINT_DIR = "st_checkpoint_dir"
+ST_CHECKPOINT_DIR = "st_checkpoint_dir"
 
 # Name for `upload_dir` in `RemoteTuner`
-SMT_REMOTE_UPLOAD_DIR_NAME = "tuner"
+ST_REMOTE_UPLOAD_DIR_NAME = "tuner"

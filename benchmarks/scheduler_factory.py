@@ -16,7 +16,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from syne_tune.constants import SMT_WORKER_TIME
+from syne_tune.constants import ST_WORKER_TIME
 from syne_tune.backend.backend import Backend
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 
@@ -194,7 +194,7 @@ def scheduler_factory(
         # Use the mode for the first metric as given in the benchmark and
         # minimize time
         mode = [benchmark['mode'], 'min']
-        metrics = [benchmark['metric'], SMT_WORKER_TIME]
+        metrics = [benchmark['metric'], ST_WORKER_TIME]
         myscheduler = MOASHA(
             config_space,
             mode=mode,

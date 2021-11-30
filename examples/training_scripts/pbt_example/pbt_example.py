@@ -19,7 +19,7 @@ import random
 import time
 
 from syne_tune.report import Reporter
-from syne_tune.constants import SMT_CHECKPOINT_DIR
+from syne_tune.constants import ST_CHECKPOINT_DIR
 
 report = Reporter()
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', type=float)
-    parser.add_argument(f"--{SMT_CHECKPOINT_DIR}", type=str)
+    parser.add_argument(f"--{ST_CHECKPOINT_DIR}", type=str)
 
     args, _ = parser.parse_known_args()
 

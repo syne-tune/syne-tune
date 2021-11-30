@@ -19,7 +19,7 @@ from syne_tune.backend.trial_status import Trial
 
 import pandas as pd
 
-from syne_tune.constants import SMT_DECISION, SMT_TRIAL_ID, SMT_STATUS, SMT_TUNER_TIME
+from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TIME
 from syne_tune.util import RegularCallback
 
 
@@ -103,16 +103,16 @@ class StoreResultsCallback(TunerCallback):
         Note that we only add wallclock time to the result if this has not
         already been done (by the back-end)
         """
-        if self.start is not None and SMT_TUNER_TIME not in result:
-            result[SMT_TUNER_TIME] = perf_counter() - self.start
+        if self.start is not None and ST_TUNER_TIME not in result:
+            result[ST_TUNER_TIME] = perf_counter() - self.start
 
     def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
         assert self.save_results_at_frequency is not None, \
             "on_tuning_start must always be called before on_trial_result."
         result = copy.copy(result)
-        result[SMT_DECISION] = decision
-        result[SMT_STATUS] = status
-        result[SMT_TRIAL_ID] = trial.trial_id
+        result[ST_DECISION] = decision
+        result[ST_STATUS] = status
+        result[ST_TRIAL_ID] = trial.trial_id
 
         for key in trial.config:
             result[f'config_{key}'] = trial.config[key]

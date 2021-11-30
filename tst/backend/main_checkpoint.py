@@ -21,7 +21,7 @@ import logging
 import os
 from pathlib import Path
 
-from syne_tune.constants import SMT_CHECKPOINT_DIR
+from syne_tune.constants import ST_CHECKPOINT_DIR
 from syne_tune.report import Reporter
 
 
@@ -43,11 +43,11 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, required=True)
 
     # convention the path where to serialize and deserialize is given as checkpoint-dir
-    parser.add_argument(f'--{SMT_CHECKPOINT_DIR}', type=str, default="./")
+    parser.add_argument(f'--{ST_CHECKPOINT_DIR}', type=str, default="./")
 
     args, _ = parser.parse_known_args()
 
-    checkpoint_path = Path(getattr(args, SMT_CHECKPOINT_DIR)) / "checkpoint.txt"
+    checkpoint_path = Path(getattr(args, ST_CHECKPOINT_DIR)) / "checkpoint.txt"
     os.makedirs(checkpoint_path.parent, exist_ok=True)
 
     if checkpoint_path.exists():

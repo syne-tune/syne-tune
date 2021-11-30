@@ -16,7 +16,7 @@ from syne_tune.tuner_callback import StoreResultsCallback
 from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
 from syne_tune.tuner import Tuner
-from syne_tune.constants import SMT_TUNER_TIME
+from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.stopping_criterion import StoppingCriterion
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class SimulatorCallback(StoreResultsCallback):
 
     Second, we need to make sure that results written out are annotated by
     simulated time, not real time. This is already catered for by
-    `SimulatorBackend` adding SMT_TUNER_TIME entries to each result it
+    `SimulatorBackend` adding ST_TUNER_TIME entries to each result it
     receives.
 
     Third (and most subtle), we need to make sure the stop criterion in
@@ -41,7 +41,7 @@ class SimulatorCallback(StoreResultsCallback):
     a decision based on `max_wallclock_time`. By default, `StoppingCriterion`
     takes `TuningStatus` as an input, which counts real time and knows nothing
     about simulated time. To this end, we modify `stop_criterion` of the tuner
-    to instead depend on the SMT_TUNER_TIME fields in the results received.
+    to instead depend on the ST_TUNER_TIME fields in the results received.
     This allows us to keep both `Tuner` and `TuningStatus` independent of the
     time keeper.
 
@@ -69,8 +69,8 @@ class SimulatorCallback(StoreResultsCallback):
         elif stop_criterion.max_wallclock_time is not None:
             # Since `TuningStatus` is measuring real time, not simulated time,
             # we need to replace the `max_wallclock_time` part of this criterion
-            # by `max_metric_value` w.r.t. SMT_TUNER_TIME. Note that
-            # `SimulatorBackend` is adding SMT_TUNER_TIME to any result it
+            # by `max_metric_value` w.r.t. ST_TUNER_TIME. Note that
+            # `SimulatorBackend` is adding ST_TUNER_TIME to any result it
             # receives
             self._backup_stop_criterion = stop_criterion
             max_wallclock_time = stop_criterion.max_wallclock_time
@@ -79,7 +79,7 @@ class SimulatorCallback(StoreResultsCallback):
                 max_num_trials_completed=stop_criterion.max_num_trials_completed,
                 max_cost=stop_criterion.max_cost,
                 max_num_trials_finished=stop_criterion.max_num_trials_finished,
-                max_metric_value = {SMT_TUNER_TIME: max_wallclock_time})
+                max_metric_value = {ST_TUNER_TIME: max_wallclock_time})
             tuner.stop_criterion = new_stop_criterion
 
     def on_tuning_start(self, tuner: "Tuner"):

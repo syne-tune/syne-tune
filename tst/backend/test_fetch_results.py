@@ -14,7 +14,7 @@ from typing import List, Dict, Optional
 
 from syne_tune.backend.backend import Backend
 from syne_tune.backend.trial_status import TrialResult, Status
-from syne_tune.constants import SMT_WORKER_TIMESTAMP
+from syne_tune.constants import ST_WORKER_TIMESTAMP
 
 
 class DeterministicBackend(Backend):
@@ -30,7 +30,7 @@ class DeterministicBackend(Backend):
 
     def generate_event(self, trial_id: int, metrics: List[Dict], status: Optional[str] = None):
         for m in metrics:
-            m[SMT_WORKER_TIMESTAMP] = self.timestamp
+            m[ST_WORKER_TIMESTAMP] = self.timestamp
             self.timestamp += 1
 
         if trial_id in self.trialid_to_results:
@@ -76,17 +76,17 @@ def test_dummybackend():
     backend.generate_event(trial_id=3, metrics=[{'metric': 6}])
     backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
     metrics = [trial.metrics for trial in backend._all_trial_results(trial_ids)]
-    assert metrics == [[{'metric': 6, SMT_WORKER_TIMESTAMP: 0}], [{'metric': 14, SMT_WORKER_TIMESTAMP: 1}]]
+    assert metrics == [[{'metric': 6, ST_WORKER_TIMESTAMP: 0}], [{'metric': 14, ST_WORKER_TIMESTAMP: 1}]]
 
     backend.generate_event(trial_id=3, metrics=[{'metric': 6}])
     backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
     metrics = [trial.metrics for trial in backend._all_trial_results(trial_ids)]
     assert metrics == [[
-        {'metric': 6, SMT_WORKER_TIMESTAMP: 0},
-        {'metric': 6, SMT_WORKER_TIMESTAMP: 2}
+        {'metric': 6, ST_WORKER_TIMESTAMP: 0},
+        {'metric': 6, ST_WORKER_TIMESTAMP: 2}
     ], [
-        {'metric': 14, SMT_WORKER_TIMESTAMP: 1},
-        {'metric': 14, SMT_WORKER_TIMESTAMP: 3}
+        {'metric': 14, ST_WORKER_TIMESTAMP: 1},
+        {'metric': 14, ST_WORKER_TIMESTAMP: 3}
     ]
     ]
 
@@ -100,12 +100,12 @@ def test_fetch_results_metrics():
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == []
 
-    backend.generate_event(trial_id=3, metrics=[{'metric': 6, SMT_WORKER_TIMESTAMP: 0}])
+    backend.generate_event(trial_id=3, metrics=[{'metric': 6, ST_WORKER_TIMESTAMP: 0}])
     backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == [
-        (3, {'metric': 6, SMT_WORKER_TIMESTAMP: 0}),
-        (7, {'metric': 14, SMT_WORKER_TIMESTAMP: 1})
+        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 0}),
+        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 1})
     ]
 
     _, metrics = backend.fetch_status_results(trial_ids)
@@ -115,8 +115,8 @@ def test_fetch_results_metrics():
     backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == [
-        (3, {'metric': 6, SMT_WORKER_TIMESTAMP: 2}),
-        (7, {'metric': 14, SMT_WORKER_TIMESTAMP: 3})
+        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 2}),
+        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 3})
     ]
 
     _, metrics = backend.fetch_status_results(trial_ids)
@@ -128,10 +128,10 @@ def test_fetch_results_metrics():
 
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == [
-        (3, {'metric': 6, SMT_WORKER_TIMESTAMP: 4}),
-        (7, {'metric': 14, SMT_WORKER_TIMESTAMP: 5}),
-        (3, {'metric': 6, SMT_WORKER_TIMESTAMP: 6}),
-        (7, {'metric': 14, SMT_WORKER_TIMESTAMP: 7})
+        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 4}),
+        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 5}),
+        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 6}),
+        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 7})
     ]
 
     _, metrics = backend.fetch_status_results(trial_ids)

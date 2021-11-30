@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import download_sagemaker_results
-from syne_tune.constants import SMT_TUNER_TIME
+from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiments_df, split_per_task
 
 
@@ -38,8 +38,8 @@ def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
             df_scheduler = df_task[df_task.scheduler == scheduler]
             for i, tuner_name in enumerate(df_scheduler.tuner_name.unique()):
                 sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
-                sub_df = sub_df.sort_values(SMT_TUNER_TIME)
-                t = sub_df.loc[:, SMT_TUNER_TIME].values
+                sub_df = sub_df.sort_values(ST_TUNER_TIME)
+                t = sub_df.loc[:, ST_TUNER_TIME].values
                 y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:, metric].cummin().values
                 if show_seeds:
                     ax.plot(t, y_best, color=colors[scheduler], alpha=0.2)

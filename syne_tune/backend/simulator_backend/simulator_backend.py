@@ -22,15 +22,14 @@ import numpy as np
 import subprocess
 
 from syne_tune.report import retrieve
-from syne_tune.backend.backend import BACKEND_TYPES, ENV_BACKEND
 from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.backend.trial_status import TrialResult, Status, Trial
 from syne_tune.backend.simulator_backend.time_keeper import \
     SimulatedTimeKeeper
 from syne_tune.backend.simulator_backend.events import SimulatorState, \
     StartEvent, CompleteEvent, StopEvent, OnTrialResultEvent
-from syne_tune.constants import SMT_CHECKPOINT_DIR, SMT_WORKER_TIMESTAMP, \
-    SMT_TUNER_TIME
+from syne_tune.constants import ST_CHECKPOINT_DIR, ST_WORKER_TIMESTAMP, \
+    ST_TUNER_TIME
 from syne_tune.tuner import DEFAULT_SLEEP_TIME
 
 logger = logging.getLogger(__name__)
@@ -205,7 +204,7 @@ class SimulatorBackend(LocalBackend):
                 # Append timestamps to `result`. This is done here, but not in
                 # the other back-ends, for which timestamps are only added when
                 # results are written out.
-                result[SMT_TUNER_TIME] = time_event
+                result[ST_TUNER_TIME] = time_event
                 if trial_id in self._next_results_to_fetch:
                     self._next_results_to_fetch[trial_id].append(result)
                 else:
@@ -290,8 +289,8 @@ class SimulatorBackend(LocalBackend):
             logger.warning('\n'.join(warn_msg))
             self._next_results_to_fetch = dict()
 
-        if len(results) > 0 and SMT_WORKER_TIMESTAMP in results[0]:
-            results = sorted(results, key=lambda result: result[1][SMT_WORKER_TIMESTAMP])
+        if len(results) > 0 and ST_WORKER_TIMESTAMP in results[0]:
+            results = sorted(results, key=lambda result: result[1][ST_WORKER_TIMESTAMP])
 
         trial_status_dict = dict()
         for trial_id in trial_ids:
@@ -318,7 +317,6 @@ class SimulatorBackend(LocalBackend):
         here (in the future), but is not yet processed.
         """
         self._advance_by_outside_time()
-        os.environ[ENV_BACKEND] = BACKEND_TYPES['local']
         # Process all events in the past
         self._process_events_until_now()
         _time_start = self._time_keeper.time()
@@ -409,7 +407,7 @@ class SimulatorBackend(LocalBackend):
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
         config_copy = config.copy()
-        config_copy[SMT_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
+        config_copy[ST_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
         config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
 
         def np_encoder(obj):

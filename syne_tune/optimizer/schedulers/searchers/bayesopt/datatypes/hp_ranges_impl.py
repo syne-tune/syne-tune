@@ -25,8 +25,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.scaling \
 __all__ = ['HyperparameterRangesImpl']
 
 
-# This is code (slightly modified) from AmperCorePython. It is rather slow.
-# Making use of Pandas would be faster.
+# This code could be made faster by using.
 
 # Epsilon margin to account for numerical errors
 EPS = 1e-8
@@ -322,9 +321,7 @@ class HyperparameterRangeCategorical(HyperparameterRange):
 
 class HyperparameterRangesImpl(HyperparameterRanges):
     """
-    Basic implementation of :class:`HyperparameterRanges`. This is using code
-    from AmperCorePython, which can be pretty slow.
-
+    Basic implementation of :class:`HyperparameterRanges`. 
     """
     def __init__(self, config_space: Dict, name_last_pos: str = None,
                  value_for_last_pos=None, active_config_space: Dict = None):

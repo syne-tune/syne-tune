@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 from botocore.exceptions import ClientError
 
-from syne_tune.constants import SMT_TUNER_TIME, SMT_TUNER_CREATION_TIMESTAMP
+from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
 from syne_tune.tuner import Tuner
 from syne_tune.util import experiment_path, s3_experiment_path
 
@@ -45,7 +45,7 @@ class ExperimentResult:
         return res
 
     def creation_date(self):
-        return datetime.fromtimestamp(self.metadata[SMT_TUNER_CREATION_TIMESTAMP])
+        return datetime.fromtimestamp(self.metadata[ST_TUNER_CREATION_TIMESTAMP])
 
     def plot(self, **plt_kwargs):
         import matplotlib.pyplot as plt
@@ -53,8 +53,8 @@ class ExperimentResult:
         scheduler = self.tuner.scheduler
         metric = self.metric_name()
         df = self.results
-        df = df.sort_values(SMT_TUNER_TIME)
-        x = df.loc[:, SMT_TUNER_TIME]
+        df = df.sort_values(ST_TUNER_TIME)
+        x = df.loc[:, ST_TUNER_TIME]
         y = df.loc[:, metric].cummax() if self.metric_mode() == "max" else df.loc[:, metric].cummin()
         plt.plot(x, y, **plt_kwargs)
         plt.xlabel("wallclock time")
@@ -149,7 +149,7 @@ def list_experiments(experiment_filter: Callable[[ExperimentResult], bool] = Non
         if experiment_filter is None or experiment_filter(exp):
             if exp.results is not None and exp.tuner is not None and exp.metadata is not None:
                 res.append(exp)
-    return sorted(res, key=lambda exp: exp.metadata.get(SMT_TUNER_CREATION_TIMESTAMP, 0), reverse=True)
+    return sorted(res, key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0), reverse=True)
 
 
 
@@ -159,7 +159,7 @@ def scheduler_name(scheduler):
     from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
     if isinstance(scheduler, FIFOScheduler):
-        scheduler_name = f"SMT-{scheduler.__class__.__name__}"
+        scheduler_name = f"ST-{scheduler.__class__.__name__}"
         searcher = scheduler.searcher.__class__.__name__
         return "-".join([scheduler_name, searcher])
     else:

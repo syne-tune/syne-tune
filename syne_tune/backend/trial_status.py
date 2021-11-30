@@ -18,7 +18,7 @@ from typing_extensions import Literal
 
 import pandas as pd
 
-from syne_tune.constants import SMT_WORKER_COST
+from syne_tune.constants import ST_WORKER_COST
 
 
 class Status:
@@ -67,7 +67,7 @@ class TrialResult(Trial):
     @property
     def cost(self):
         if len(self.metrics) > 0:
-            return self.metrics[-1].get(SMT_WORKER_COST, None)
+            return self.metrics[-1].get(ST_WORKER_COST, None)
         else:
             return None
 

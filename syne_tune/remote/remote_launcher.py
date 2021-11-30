@@ -24,7 +24,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     add_syne_tune_dependency, get_execution_role
 from syne_tune.tuner import Tuner
 from syne_tune.util import s3_experiment_path
-from syne_tune.constants import SMT_REMOTE_UPLOAD_DIR_NAME
+from syne_tune.constants import ST_REMOTE_UPLOAD_DIR_NAME
 
 import syne_tune
 
@@ -175,7 +175,7 @@ class RemoteLauncher:
                 f"{self.upload_dir().name}/{self.tuner.backend.entrypoint_path().name}")
 
     def upload_dir(self) -> Path:
-        return Path(syne_tune.__path__[0]).parent / SMT_REMOTE_UPLOAD_DIR_NAME
+        return Path(syne_tune.__path__[0]).parent / ST_REMOTE_UPLOAD_DIR_NAME
 
     def remote_script_dir(self) -> Path:
         return Path(__file__).parent
