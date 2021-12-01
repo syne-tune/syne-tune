@@ -194,6 +194,7 @@ class RemoteLauncher:
             "tuner_path": f"{self.upload_dir().name}/",
             "store_logs": self.store_logs_localbackend,
             "no_tuner_logging": self.no_tuner_logging,
+            "region_name": boto3.Session().region_name,
         }
         if self.log_level is not None:
             hyperparameters['log_level'] = self.log_level
