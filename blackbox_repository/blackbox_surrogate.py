@@ -127,7 +127,9 @@ class BlackboxSurrogate(Blackbox):
             # convert prediction to dictionary
             return dict(zip(self.objectives_names, prediction))
         else:
-            # returns all fidelities
+            # when no fidelity is given and a fidelity space exists, we return all fidelities
+            # we construct a input dataframe with all fidelity for the configuration given to call the transformer
+            # at once which is more efficient due to vectorization
             surrogate_input_df = pd.DataFrame([surrogate_input] * len(self.fidelity_values))
             surrogate_input_df[next(iter(self.fidelity_space.keys()))] = self.fidelity_values
             objectives_values = self.surrogate_pipeline.predict(surrogate_input_df)
