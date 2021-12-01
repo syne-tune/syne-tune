@@ -13,7 +13,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from blackbox_repository import load, Blackbox
+from blackbox_repository import load, Blackbox, add_surrogate
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
 
@@ -88,6 +88,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             blackbox_name: str,
             elapsed_time_attr: str,
             dataset: Optional[str] = None,
+            surrogate=None,
     ):
         """
         Backend for evaluations from the blackbox-repository, name of the blackbox and dataset should be present in the
@@ -98,11 +99,17 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         :param elapsed_time_attr: name of the metric in the dictionary that indicates runtime, it is required in order
         to run simulations.
         :param dataset:
+        :param surrogate: optionally, a model that is fitted to predict objectives given any configuration.
+        Possible examples: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator obeying Scikit-learn API.
+        The model is fit on top of pipeline that applies basic feature-processing to convert hyperparameters
+        rows in X to vectors. The configuration_space hyperparameters types are used to deduce the types of columns in
+         X (for instance CategoricalHyperparameter are one-hot encoded).
         """
         super().__init__(elapsed_time_attr=elapsed_time_attr)
         self.blackbox_name = blackbox_name
         self.dataset = dataset
         self._blackbox = None
+        self._surrogate = surrogate
 
     @property
     def blackbox(self) -> Blackbox:
@@ -111,7 +118,24 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
                 self._blackbox = load(self.blackbox_name)
             else:
                 self._blackbox = load(self.blackbox_name)[self.dataset]
+            if self._surrogate is not None:
+                self._blackbox = add_surrogate(self._blackbox, surrogate=self._surrogate)
+
         return self._blackbox
+
+    def __getstate__(self):
+        # we serialize only required metadata information since the blackbox data is contained in the repository and
+        # its raw data does not need to be saved.
+        return {
+            'blackbox_name': self.blackbox_name,
+            'dataset': self.dataset,
+            'surrogate': self._surrogate,
+        }
+
+    def __setstate__(self, state):
+        self.blackbox_name = state['blackbox_name']
+        self.dataset = state['dataset']
+        self._blackbox = None
 
 
 class UserBlackboxBackend(_BlackboxSimulatorBackend):
