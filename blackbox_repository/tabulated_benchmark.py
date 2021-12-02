@@ -66,6 +66,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         )
         self._time_this_resource_attr = time_this_resource_attr
         self._max_resource_attr = max_resource_attr
+        self.simulatorbackend_kwargs = simulatorbackend_kwargs
 
     @property
     def resource_attr(self):
@@ -162,7 +163,6 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self.dataset = dataset
         self._blackbox = None
         self._surrogate = surrogate
-        self.simulatorbackend_kwargs = simulatorbackend_kwargs
 
     @property
     def blackbox(self) -> Blackbox:
