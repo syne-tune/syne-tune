@@ -66,7 +66,6 @@ def nasbench201_benchmark(params):
         'resource_attr': RESOURCE_ATTR,
         'elapsed_time_attr': METRIC_ELAPSED_TIME,
         'max_resource_attr': 'epochs',
-        'map_reward': '1_minus_x',
         'config_space': config_space,
         'cost_model': _get_cost_model(params),
         'supports_simulated': True,
