@@ -155,13 +155,22 @@ class Tuner:
                     # Save tuner state only if there have been new results
                     self.tuner_saver(tuner=self)
 
+                # update the list of done trials and remove those from `running_trials_ids`
+                # Note: It is important to update `running_trials_ids` before
+                # calling `_schedule_new_tasks`.
+                # Otherwise, a trial can be registered as paused in
+                # `_process_new_results`, and immediately be resumed in
+                # `_schedule_new_tasks`. If `new_done_trial_statuses` is subtracted from
+                # `running_trials_ids` afterwards only, this trial is removed from
+                # `running_trials_ids` even though it is running. Also, its status remains
+                # paused, because the next call of `_process_new_results` only considers
+                # trials in `running_trials_ids`.
+                done_trials_statuses.update(new_done_trial_statuses)
+                running_trials_ids.difference_update(new_done_trial_statuses.keys())
+
                 self._schedule_new_tasks(running_trials_ids=running_trials_ids)
 
                 self.status_printer(self.tuning_status)
-
-                # update the list of done trials and remove those from `running_trials_ids`
-                done_trials_statuses.update(new_done_trial_statuses)
-                running_trials_ids.difference_update(new_done_trial_statuses.keys())
 
                 for callback in self.callbacks:
                     callback.on_loop_end()
@@ -255,6 +264,7 @@ class Tuner:
                     logger.info("Searcher ran out of candidates, tuning job is stopping.")
                     # todo should also stop parent loop
                     break
+
                 running_trials_ids.add(trial_id)
 
     def _schedule_new_task(self) -> Optional[int]:
