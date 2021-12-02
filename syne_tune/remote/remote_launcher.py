@@ -194,10 +194,15 @@ class RemoteLauncher:
             "tuner_path": f"{self.upload_dir().name}/",
             "store_logs": self.store_logs_localbackend,
             "no_tuner_logging": self.no_tuner_logging,
-            "region_name": boto3.Session().region_name,
         }
         if self.log_level is not None:
             hyperparameters['log_level'] = self.log_level
+
+        # avoids error "Must setup local AWS configuration with a region supported by SageMaker."
+        # in case no region is explicitely configured by providing a default region
+        environment = self.estimator_kwargs.get("environment", {})
+        if "AWS_DEFAULT_REGION" not in environment:
+          environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
 
         # the choice of the estimator is arbitrary here since we use a base image of Syne Tune.
         tuner_estimator = PyTorch(
@@ -212,6 +217,7 @@ class RemoteLauncher:
             image_uri=self.syne_tune_image_uri(),
             hyperparameters=hyperparameters,
             checkpoint_s3_uri=checkpoint_s3_uri,
+            environment=environment,
             **self.estimator_kwargs,
         )
 
