@@ -186,13 +186,16 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             'blackbox_name': self.blackbox_name,
             'dataset': self.dataset,
             'surrogate': self._surrogate,
+            'elapsed_time_attr': self.elapsed_time_attr,
         }
 
     def __setstate__(self, state):
+        super().__init__(elapsed_time_attr=state['elapsed_time_attr'])
         self.blackbox_name = state['blackbox_name']
         self.dataset = state['dataset']
         self._surrogate = state['surrogate']
         self._blackbox = None
+        self._surrogate = state['surrogate']
 
 
 class UserBlackboxBackend(_BlackboxSimulatorBackend):
