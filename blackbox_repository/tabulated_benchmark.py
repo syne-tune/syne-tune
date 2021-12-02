@@ -66,6 +66,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         )
         self._time_this_resource_attr = time_this_resource_attr
         self._max_resource_attr = max_resource_attr
+        self.simulatorbackend_kwargs = simulatorbackend_kwargs
 
     @property
     def resource_attr(self):
@@ -186,9 +187,17 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             'blackbox_name': self.blackbox_name,
             'dataset': self.dataset,
             'surrogate': self._surrogate,
+            'elapsed_time_attr': self.elapsed_time_attr,
+            'max_resource_attr': self._max_resource_attr,
+            'simulatorbackend_kwargs': self.simulatorbackend_kwargs,
         }
 
     def __setstate__(self, state):
+        super().__init__(
+            elapsed_time_attr=state['elapsed_time_attr'],
+            max_resource_attr=state['max_resource_attr'],
+            **state['simulatorbackend_kwargs'],
+        )
         self.blackbox_name = state['blackbox_name']
         self.dataset = state['dataset']
         self._surrogate = state['surrogate']
