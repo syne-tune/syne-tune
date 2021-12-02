@@ -19,3 +19,5 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.fabolas
     import *  # noqa: F401
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.product_kernel \
     import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.freeze_thaw \
+    import *  # noqa: F401

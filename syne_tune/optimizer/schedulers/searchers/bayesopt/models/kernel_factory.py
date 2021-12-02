@@ -12,7 +12,8 @@
 # permissions and limitations under the License.
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import KernelFunction, Matern52, ExponentialDecayResourcesKernelFunction, \
-    ExponentialDecayResourcesMeanFunction
+    ExponentialDecayResourcesMeanFunction, FreezeThawKernelFunction, \
+    FreezeThawMeanFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping \
     import WarpedKernel, Warping
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
@@ -45,6 +46,9 @@ def resource_kernel_factory(
             kernel=Matern52(dimension=dim_x + 1, ARD=True),
             warping=res_warping)
         res_mean = mean_x
+    elif name == 'freeze-thaw':
+        res_kernel = FreezeThawKernelFunction(kernel_x, mean_x)
+        res_mean = FreezeThawMeanFunction(kernel=res_kernel)
     else:
         if name == 'exp-decay-sum':
             delta_fixed_value = 0.0

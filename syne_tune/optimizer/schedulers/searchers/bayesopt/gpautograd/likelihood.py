@@ -64,6 +64,10 @@ class MarginalLikelihood(Block):
         return encode_unwrap_parameter(
             self.noise_variance_internal, self.encoding)
 
+    def get_posterior_state(self, features, targets):
+        return GaussProcPosteriorState(
+            features, targets, self.mean, self.kernel, self._noise_variance())
+
     def forward(self, features, targets):
         """
         Actual computation of the marginal likelihood
@@ -72,9 +76,7 @@ class MarginalLikelihood(Block):
         :param features: input data matrix X of size (n, d)
         :param targets: targets corresponding to X, of size (n, 1)
         """
-        state = GaussProcPosteriorState(
-            features, targets, self.mean, self.kernel, self._noise_variance())
-        return state.neg_log_likelihood()
+        return self.get_posterior_state(features, targets).neg_log_likelihood()
 
     def param_encoding_pairs(self):
         """

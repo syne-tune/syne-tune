@@ -49,13 +49,16 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
             dict_name='search_options')
         kwargs_int = constrained_gp_fifo_searcher_factory(**_kwargs)
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
-        k = 'constraint_attr'
-        kwargs_int[k] = kwargs.get(k)
         return kwargs_int
 
-    def _call_create_internal(self, **kwargs_int):
+    def _copy_kwargs_to_kwargs_int(self, kwargs_int: Dict, kwargs: Dict):
+        super()._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
+        k = 'constraint_attr'
+        kwargs_int[k] = kwargs[k]
+
+    def _call_create_internal(self, kwargs_int):
         self._constraint_attr = kwargs_int.pop('constraint_attr')
-        super()._call_create_internal(**kwargs_int)
+        super()._call_create_internal(kwargs_int)
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
         # We can call the superclass method, because
@@ -75,24 +78,26 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
-        init_state = decode_state(state['state'], self.hp_ranges)
-        skip_optimization = state['skip_optimization']
+        init_state = decode_state(state['state'], self._hp_ranges_in_state())
+        output_skip_optimization = state['skip_optimization']
+        output_model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = ConstrainedGPFIFOSearcher(
             configspace=None,
             hp_ranges=self.hp_ranges,
             random_seed=self.random_seed,
-            output_model_factory=self.state_transformer._model_factory,
-            constraint_attr=self._constraint_attr,
+            output_model_factory=output_model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,
             init_state=init_state,
             local_minimizer_class=self.local_minimizer_class,
-            output_skip_optimization=skip_optimization,
+            output_skip_optimization=output_skip_optimization,
             num_initial_candidates=self.num_initial_candidates,
             num_initial_random_choices=self.num_initial_random_choices,
             initial_scoring=self.initial_scoring,
-            cost_attr=self._cost_attr)
+            cost_attr=self._cost_attr,
+            constraint_attr=self._constraint_attr,
+            resource_attr = self._resource_attr)
         self._clone_from_state_common(new_searcher, state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None

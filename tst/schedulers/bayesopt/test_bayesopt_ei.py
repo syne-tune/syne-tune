@@ -189,9 +189,8 @@ def test_optimization_improves():
     random = np.random.RandomState(42)
     for model in default_models():
         ei = EIAcquisitionFunction(model)
-        opt = LBFGSOptimizeAcquisition(
-            model.state.hp_ranges, model, EIAcquisitionFunction)
-        hp_ranges = model.state.hp_ranges
+        hp_ranges = model.hp_ranges_for_prediction()
+        opt = LBFGSOptimizeAcquisition(hp_ranges, model, EIAcquisitionFunction)
         if debug_output:
             print('\n\nGP MCMC' if model.does_mcmc() else 'GP Opt')
             fzero = ei.compute_acq(np.zeros((1, 2)))[0]

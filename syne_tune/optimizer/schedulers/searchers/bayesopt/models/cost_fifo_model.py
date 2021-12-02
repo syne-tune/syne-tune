@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 import numpy as np
 import logging
 
@@ -22,6 +22,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model \
     import CostModel
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
+    import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import SurrogateModel
 
@@ -47,23 +49,34 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     """
     def __init__(
             self, state: TuningJobState, model: CostModel,
-            fixed_resource: int, num_samples: int = 1):
+            fixed_resource: int, num_samples: int = 1,
+            hp_ranges_for_prediction: Optional[HyperparameterRanges] = None):
         """
         :param state: TuningJobSubState
         :param model: CostModel. Model parameters must have been fit
         :param fixed_resource: c(x, r) is predicted for this resource level r
         :param num_samples: Number of samples drawn in `predict`. Use this for
             random cost models only
+        :param hp_ranges_for_prediction: Overrides
+            `hp_ranges_for_prediction`
 
         """
         super().__init__(state, active_metric=model.cost_metric_name)
         self._model = model
         self._fixed_resource = fixed_resource
         self._num_samples = num_samples
+        self._hp_ranges_for_prediction = hp_ranges_for_prediction
+
 
     @staticmethod
     def keys_predict() -> Set[str]:
         return {'mean'}
+
+    def hp_ranges_for_prediction(self) -> HyperparameterRanges:
+        if self._hp_ranges_for_prediction is None:
+            return super().hp_ranges_for_prediction()
+        else:
+            return self._hp_ranges_for_prediction
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         # Inputs are encoded. For cost models, need to decode them back
@@ -72,7 +85,7 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
         # configs (where one attribute is the resource level). This is not
         # a problem, since the resource attribute is simply ignored by the
         # cost model.
-        hp_ranges = self.state.hp_ranges
+        hp_ranges = self.hp_ranges_for_prediction()
         candidates = [hp_ranges.from_ndarray(enc_config)
                       for enc_config in inputs]
         resources = [self._fixed_resource] * len(candidates)
@@ -106,7 +119,8 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
 
 class CostSurrogateModelFactory(TransformerModelFactory):
     def __init__(
-            self, model: CostModel, fixed_resource: int, num_samples: int = 1):
+            self, model: CostModel, fixed_resource: int, num_samples: int = 1,
+            hp_ranges_for_prediction: Optional[HyperparameterRanges] = None):
         """
         The name of the cost metric is `model.cost_metric_name`.
 
@@ -114,11 +128,14 @@ class CostSurrogateModelFactory(TransformerModelFactory):
         :param fixed_resource: c(x, r) is predicted for this resource level r
         :param num_samples: Number of samples drawn in `predict`. Use this for
             random cost models only
+        :param hp_ranges_for_prediction: Overrides
+            `CostFixedResourceSurrogateModel.hp_ranges_for_prediction`
 
         """
         self._model = model
         self._num_samples = num_samples
         self.set_fixed_resource(fixed_resource)
+        self._hp_ranges_for_prediction = hp_ranges_for_prediction
 
     def get_params(self):
         return dict()
@@ -144,4 +161,5 @@ class CostSurrogateModelFactory(TransformerModelFactory):
         return CostFixedResourceSurrogateModel(
             state=state, model=self._model,
             fixed_resource=self._fixed_resource,
-            num_samples=self._num_samples)
+            num_samples=self._num_samples,
+            hp_ranges_for_prediction=self._hp_ranges_for_prediction)

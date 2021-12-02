@@ -45,6 +45,16 @@ def _to_key(
     return config_tpl, resource
 
 
+def _param_dict_to_str(params: dict) -> str:
+    parts = []
+    for name, param in params.items():
+        if isinstance(param, float):
+            parts.append(f"{name}: {param:.4e}")
+        else:
+            parts.append(f"{name}: {param}")
+    return '{' + ', '.join(parts) + '}'
+
+
 class ConfigCounter(object):
     """
     Maps a config (non-extended) to a config IDs 0, 1, 2, ...
@@ -187,7 +197,7 @@ class DebugLogPrinter(object):
 
     def set_model_params(self, params: dict):
         assert self.get_config_type == 'BO', "Need to be in 'BO' block"
-        msg = 'Model params:' + str(params)
+        msg = 'Model params: ' + _param_dict_to_str(params)
         self.block_info['params'] = msg
 
     def set_fantasies(self, fantasies: np.ndarray):
@@ -233,10 +243,10 @@ class DebugLogPrinter(object):
             for name in ('state', 'targets', 'params'):
                 v = info.get(name)
                 if v is not None:
-                    if v == 'targets':
-                        debug_parts.append(v)
-                    else:
+                    if name == 'params':
                         parts.append(v)
+                    else:
+                        debug_parts.append(v)
                 else:
                     logger.info(
                         "debug_log.write_block: '{}' part is missing!".format(

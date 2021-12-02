@@ -10,12 +10,15 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Union, Optional, Dict
 import autograd.numpy as anp
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.model_params \
     import ISSModelParameters
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.posterior_state \
-    import GaussProcISSMPosteriorState
+    import GaussProcISSMPosteriorState, GaussProcExpDecayPosteriorState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
+    import ExponentialDecayBaseKernelFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import INITIAL_NOISE_VARIANCE, NOISE_VARIANCE_LOWER_BOUND, \
     NOISE_VARIANCE_UPPER_BOUND, DEFAULT_ENCODING
@@ -29,25 +32,36 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
     import KernelFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import ScalarMeanFunction, MeanFunction
+from syne_tune.optimizer.schedulers.utils.simple_profiler \
+    import SimpleProfiler
+
+
+LCModel = Union[ISSModelParameters, ExponentialDecayBaseKernelFunction]
 
 
 class MarginalLikelihood(Block):
     """
     Marginal likelihood of joint learning curve model, where each curve is
-    modelled by a Gaussian ISSM with power-law decay, and values at r_max are
-    modelled by a Gaussian process.
+    modelled as sum of a Gaussian process over x (for the value at r_max)
+    and a Gaussian model over r.
+
+    The latter `res_model` is either an ISSM or another Gaussian process with
+    exponential decay covariance function.
 
     :param kernel: Kernel function k(x, x')
-    :param iss_model: ISS model
+    :param res_model: Gaussian model over r
     :param mean: Mean function mu(x)
     :param initial_noise_variance: A scalar to initialize the value of the
         residual noise variance
     """
     def __init__(
-            self, kernel: KernelFunction, iss_model: ISSModelParameters,
+            self, kernel: KernelFunction, res_model: LCModel,
             mean: MeanFunction = None, initial_noise_variance=None,
             encoding_type=None, **kwargs):
         super(MarginalLikelihood, self).__init__(**kwargs)
+        assert isinstance(res_model, (ISSModelParameters,
+                                      ExponentialDecayBaseKernelFunction)), \
+            "res_model must be ISSModelParameters or ExponentialDecayBaseKernelFunction"
         if mean is None:
             mean = ScalarMeanFunction()
         if initial_noise_variance is None:
@@ -59,25 +73,38 @@ class MarginalLikelihood(Block):
              NOISE_VARIANCE_UPPER_BOUND, 1, Gamma(mean=0.1, alpha=0.1))
         self.mean = mean
         self.kernel = kernel
-        self.iss_model = iss_model
-        self._components = [
-            ('kernel_', self.kernel), ('mean_', self.mean),
-            ('issm_', self.iss_model)]
+        self.res_model = res_model
+        if isinstance(res_model, ISSModelParameters):
+            tag = 'issm_'
+            self._type = GaussProcISSMPosteriorState
+        else:
+            tag = 'expdecay_'
+            self._type = GaussProcExpDecayPosteriorState
+        self._components = [('kernel_', self.kernel), ('mean_', self.mean),
+                            (tag, self.res_model)]
+        self._profiler = None
         with self.name_scope():
             self.noise_variance_internal = register_parameter(
                 self.params, 'noise_variance', self.encoding)
 
-    def forward(self, data):
+    def set_profiler(self, profiler: Optional[SimpleProfiler]):
+        self._profiler = profiler
+
+    def get_posterior_state(self, data: Dict):
+        return self._type(
+            data, self.mean, self.kernel, self.res_model,
+            noise_variance=self.get_noise_variance(), profiler=self._profiler)
+
+    def forward(self, data: Dict):
         """
         The criterion is the negative log marginal likelihood of `data`, which
         is obtained from `issm.prepare_data`.
+        Depending on `self._type`, `data` may also have to contain precomputed
+        values.
 
         :param data: Input points (features, configs), targets
         """
-        state = GaussProcISSMPosteriorState(
-            data, self.mean, self.kernel, self.iss_model,
-            self.get_noise_variance())
-        return state.neg_log_likelihood()
+        return self.get_posterior_state(data).neg_log_likelihood()
 
     def param_encoding_pairs(self):
         """
@@ -88,7 +115,7 @@ class MarginalLikelihood(Block):
                                      self.encoding)]
         return own_param_encoding_pairs + self.mean.param_encoding_pairs() + \
                self.kernel.param_encoding_pairs() + \
-               self.iss_model.param_encoding_pairs()
+               self.res_model.param_encoding_pairs()
 
     def box_constraints_internal(self):
         """
@@ -124,3 +151,11 @@ class MarginalLikelihood(Block):
                 if k.startswith(pref)}
             func.set_params(stripped_dict)
         self.set_noise_variance(param_dict['noise_variance'])
+
+    def data_precomputations(self, data: Dict):
+        """
+        For some `res_model` types, precomputations on top of `data` are
+        needed. This is done here, and the precomputed variables are appended
+        to `data` as extra entries.
+        """
+        self._type.data_precomputations(data)

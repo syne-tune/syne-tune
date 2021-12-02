@@ -152,9 +152,6 @@ def parse_args(allow_lists_as_values=True):
                              'on different GPU cores (GPU rotation). If '
                              'this is set, all GPU cores are used for a '
                              'single evaluation')
-    parser.add_argument('--blackbox_repo_s3_root', type=str,
-                        help='S3 root directory for blackbox repository. '
-                             'Defaults to default bucket of session')
     # Arguments for scheduler
     parser.add_argument('--brackets', type=int,
                         help='Number of brackets in HyperbandScheduler',
@@ -177,6 +174,9 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--searcher_data', type=str,
                         help='Parameter of HyperbandScheduler',
                         **allow_list)
+    parser.add_argument('--not_normalize_targets', action='store_true',
+                        help='Do not normalize targets to mean 0, variance 1'
+                             ' before fitting surrogate model')
     parser.add_argument('--pasha_ranking_criterion', type=str,
                         help='Parameter of PASHA scheduler',
                         **allow_list)
@@ -187,6 +187,10 @@ def parse_args(allow_lists_as_values=True):
                         help='Parameter of PASHA scheduler',
                         **allow_list)
     # Arguments for bayesopt searcher
+    parser.add_argument('--searcher_model', type=str,
+                        help='Surrogate model for bayesopt searcher with '
+                             'HyperbandScheduler',
+                        **allow_list)
     parser.add_argument('--searcher_num_init_random', type=int,
                         help='Number of initial trials not chosen by searcher',
                         **allow_list)
@@ -235,6 +239,13 @@ def parse_args(allow_lists_as_values=True):
                         help='Exponent of cost term in cost-aware expected '
                              'improvement acquisition function',
                         **allow_list)
+    parser.add_argument('--searcher_expdecay_normalize_inputs', action='store_true',
+                        help='Normalize resource values to [0, 1] in '
+                             'GP-expdecay surrogate model (only if '
+                             'searcher_model = gp_expdecay)')
+    parser.add_argument('--searcher_use_old_code',
+                        action='store_true',
+                        help='DEBUG: Use old code for gp_issm, gp_expdecay')
 
     # First pass: All global arguments
     # Why do we parse all global args here, and not just benchmark_name?
@@ -283,7 +294,11 @@ def parse_args(allow_lists_as_values=True):
     if 'epochs' in params:
         del params['epochs']
     params['rung_system_per_bracket'] = not params['no_rung_system_per_bracket']
-
+    del params['no_rung_system_per_bracket']
+    params['normalize_targets'] = not params['not_normalize_targets']
+    del params['not_normalize_targets']
+    params['searcher_use_new_code'] = not params['searcher_use_old_code']
+    del params['searcher_use_old_code']
     return params
 
 
@@ -299,26 +314,44 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
     search_options = dict()
     _enter_not_none(
         search_options, 'debug_log', params.get('debug_log'), type=bool)
+    _enter_not_none(
+        search_options, 'normalize_targets', params.get('normalize_targets'),
+        type=bool)
+    model = params.get('searcher_model')
+    _enter_not_none(search_options, 'model', model)
+
     # Options for bayesopt searcher
     searcher_args = (
-        ('num_init_random', int),
-        ('num_init_candidates', int),
-        ('num_fantasy_samples', int),
-        ('resource_acq', str),
-        ('resource_acq_bohb_threshold', int),
-        ('gp_resource_kernel', str),
-        ('opt_skip_period', int),
-        ('opt_skip_init_length', int),
-        ('opt_skip_num_max_resource', bool),
-        ('opt_nstarts', int),
-        ('opt_maxiter', int),
-        ('initial_scoring', str),
-        ('issm_gamma_one', bool),
-        ('exponent_cost', float),
+        ('num_init_random', int, False),
+        ('num_init_candidates', int, False),
+        ('num_fantasy_samples', int, True),
+        ('resource_acq', str, True),
+        ('resource_acq_bohb_threshold', int, True),
+        ('gp_resource_kernel', str, True),
+        ('opt_skip_period', int, False),
+        ('opt_skip_init_length', int, False),
+        ('opt_skip_num_max_resource', bool, False),
+        ('opt_nstarts', int, False),
+        ('opt_maxiter', int, False),
+        ('initial_scoring', str, False),
+        ('issm_gamma_one', bool, False),
+        ('exponent_cost', float, False),
+        ('expdecay_normalize_inputs', bool, False),
+        ('use_new_code', bool, False),
     )
-    for name, tp in searcher_args:
+    gp_add_models = {'gp_issm', 'gp_expdecay'}
+    for name, tp, warn in searcher_args:
         _enter_not_none(
             search_options, name, params.get('searcher_' + name), type=tp)
+        if warn and name in search_options and model in gp_add_models:
+            logger.warning(f"{name} not used with searcher_model = {model}")
+    if 'issm_gamma_one' in search_options and model != 'gp_issm':
+        logger.warning(
+            f"searcher_issm_gamma_one not used with searcher_model = {model}")
+    if 'expdecay_normalize_inputs' in search_options and model != 'gp_expdecay':
+        logger.warning(
+            "searcher_expdecay_normalize_inputs not used with searcher_model "
+            f"= {model}")
 
     # Options for scheduler
     scheduler = params['scheduler']
@@ -353,5 +386,16 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
     for name, tp in scheduler_args:
         _enter_not_none(
             scheduler_options, name, params.get(name), type=tp)
+
+    # Special constraints
+    searcher = params['searcher']
+    if scheduler != 'fifo' and searcher.startswith('bayesopt') \
+            and model in gp_add_models:
+        searcher_data = scheduler_options.get('searcher_data')
+        if searcher_data is not None and searcher_data != 'all':
+            logger.warning(
+                f"searcher_model = '{model}' requires "
+                f"searcher_data = 'all' (and not '{searcher_data}')")
+        scheduler_options['searcher_data'] = 'all'
 
     return search_options, scheduler_options
