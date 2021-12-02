@@ -26,8 +26,7 @@ from benchmarks.utils import dict_get
 __all__ = ['scheduler_factory',
            'short_name_scheduler_factory',
            'supported_schedulers',
-           'supported_short_name_schedulers',
-           'setup_scheduler_from_backend']
+           'supported_short_name_schedulers']
 
 
 def _check_searcher(searcher, supported_searchers):
@@ -277,16 +276,3 @@ def short_name_scheduler_factory(
     scheduler, searcher = _SHORT_NAMES[name]
     params = dict(params, scheduler=scheduler, searcher=searcher)
     return scheduler_factory(params, benchmark, default_params)
-
-
-def setup_scheduler_from_backend(
-        scheduler: TrialScheduler, backend: Backend):
-    """
-    Once both scheduler and backend are created, this allows to modify the
-    scheduler based on the backend.
-    """
-    if isinstance(backend, SimulatorBackend):
-        # Those schedulers which use local timers, need to be assigned with
-        # the time keeper of the simulator back-end
-        if isinstance(scheduler, FIFOScheduler):
-            scheduler.set_time_keeper(backend.time_keeper)
