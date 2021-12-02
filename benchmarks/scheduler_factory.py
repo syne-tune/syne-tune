@@ -17,8 +17,6 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.constants import ST_WORKER_TIME
-from syne_tune.backend.backend import Backend
-from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 
 from benchmarks.launch_utils import make_searcher_and_scheduler
 from benchmarks.utils import dict_get
