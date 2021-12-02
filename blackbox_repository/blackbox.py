@@ -2,6 +2,7 @@ from numbers import Number
 
 import pandas as pd
 from typing import Dict, Optional, Callable, List, Tuple, Union
+import numpy as np
 
 
 class Blackbox:
@@ -84,6 +85,13 @@ class Blackbox:
         one contains objective values, this is used when fitting a surrogate model.
         """
         pass
+
+    @property
+    def fidelity_values(self) -> Optional[np.array]:
+        """
+        :return: Fidelity values; or None if the blackbox has none
+        """
+        return None
 
 
 def from_function(

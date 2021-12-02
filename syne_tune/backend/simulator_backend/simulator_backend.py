@@ -80,6 +80,7 @@ class SimulatorBackend(LocalBackend):
             elapsed_time_attr: str,
             simulator_config: Optional[SimulatorConfig] = None,
             tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
+            debug_resource_attr: Optional[str] = None,
     ):
         """
         This simulator back-end drives experiments with tabulated training
@@ -102,8 +103,14 @@ class SimulatorBackend(LocalBackend):
         `simulator_state` are processed whose time is before the current time
         in `time_keeper`. The method ends by `time_keeper.mark_exit()`.
 
-        :param entry_point: Python main file to be tuned, or Python file
-            containing `TabulatedBenchmark` class
+        Note: In this basic version of the simulator back-end, we still call a
+        Python main function as a subprocess, which returns the requested
+        metrics by looking them up or running a surrogate. This is flexible,
+        but has the overhead of loading a table at every call. For faster
+        simulations, use :class:`BlackboxRepositoryBackend` after bringing your
+        tabulated data or surrogate benchmark into the blackbox repository.
+
+        :param entry_point: Python main file to be tuned
         :param elapsed_time_attr: See above
         :param simulator_config: Parameters for simulator
         :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
@@ -118,6 +125,7 @@ class SimulatorBackend(LocalBackend):
         else:
             self.simulator_config = simulator_config
         self.tuner_sleep_time = tuner_sleep_time
+        self._debug_resource_attr = debug_resource_attr
         # Start with empty event queue
         self._simulator_state = SimulatorState()
         self._time_keeper = SimulatedTimeKeeper()
@@ -278,14 +286,19 @@ class SimulatorBackend(LocalBackend):
                     results.append((trial_id, result))
                 del self._next_results_to_fetch[trial_id]
         if self._next_results_to_fetch:
-            warn_msg = ['fetch_results: The following trials reported '
-                        'results, but are not covered by trial_ids. These '
-                        'results will be ignored:']
+            warn_msg = [
+                'The following trials reported results, but are not covered '
+                'by trial_ids. These results will be ignored:']
             for trial_id, result_list in self._next_results_to_fetch.items():
                 status = self._trial_dict[trial_id].status
-                warn_msg.append(
-                    f"  trial_id {trial_id}: status = {status}, num_results "
-                    f"= {len(result_list)}")
+                msg_line = f"  trial_id {trial_id}: status = {status}, "
+                if self._debug_resource_attr is None:
+                    msg_line += f"num_results = {len(result_list)}"
+                else:
+                    resources = [result[self._debug_resource_attr]
+                                 for result in result_list]
+                    msg_line += f"resources = {resources}"
+                warn_msg.append(msg_line)
             logger.warning('\n'.join(warn_msg))
             self._next_results_to_fetch = dict()
 
@@ -391,9 +404,6 @@ class SimulatorBackend(LocalBackend):
         Runs training evaluation script for trial `trial_id`, using the config
         `trial(trial_id).config`. This is a blocking call, we wait for the
         script to finish, then parse all its results and return them.
-
-        Note: Currently, this is just using code from :class:`LocalBackend`,
-        which is probably overkill.
 
         :param trial_id:
         :return: (final status, list of all results reported)

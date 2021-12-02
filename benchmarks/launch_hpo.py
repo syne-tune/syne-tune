@@ -20,7 +20,7 @@ from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import \
     SagemakerBackend
 from syne_tune.backend.simulator_backend.simulator_backend import \
-    SimulatorBackend, SimulatorConfig
+    SimulatorBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
@@ -248,6 +248,7 @@ if __name__ == '__main__':
         # Create backend
         backend_name = params['backend']
         if backend_name == 'local':
+            logger.info(f"Using 'local' back-end with entry_point = {benchmark['script']}")
             backend = LocalBackend(
                 entry_point=benchmark['script'],
                 rotate_gpus=params['rotate_gpus'])
@@ -255,19 +256,36 @@ if __name__ == '__main__':
             assert benchmark.get('supports_simulated', False), \
                 f"Benchmark {params['benchmark_name']} does not support " +\
                 "the simulation back-end (has to be tabulated)"
-            # NOTE: `table_class_name` removed (will be replaced by
-            # BB repository shortly)
+            blackbox_name = benchmark.get('blackbox_name')
             backend_kwargs = dict(
-                entry_point=benchmark['script'],
                 elapsed_time_attr=benchmark['elapsed_time_attr'],
-                simulator_config=SimulatorConfig(),
-                tuner_sleep_time=params['tuner_sleep_time'])
-            backend = SimulatorBackend(**backend_kwargs)
+                tuner_sleep_time=params['tuner_sleep_time'],
+                debug_resource_attr=benchmark['resource_attr'])
+            if blackbox_name is None:
+                logger.info(f"Using 'simulated' back-end with entry_point = {benchmark['script']}")
+                # Tabulated benchmark given by a script
+                backend_kwargs['entry_point'] = benchmark['script']
+                backend = SimulatorBackend(**backend_kwargs)
+            else:
+                from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
+
+                # Tabulated benchmark from the blackbox repository (simulation
+                # runs faster)
+                logger.info(f"Using 'simulated' back-end with blackbox_name = {blackbox_name}")
+                backend_kwargs.update({
+                    'blackbox_name': blackbox_name,
+                    'dataset': params.get('dataset_name'),
+                    'time_this_resource_attr': benchmark.get(
+                        'time_this_resource_attr'),
+                    'max_resource_attr': benchmark.get('max_resource_attr'),
+                })
+                backend = BlackboxRepositoryBackend(**backend_kwargs)
         else:
             assert backend_name == 'sagemaker'
             for k in ('instance_type',):
                 assert params.get(k) is not None, \
                     f"For 'sagemaker' backend, --{k} is needed"
+            logger.info(f"Using 'sagemaker' back-end with entry_point = {benchmark['script']}")
             script_path = Path(benchmark['script'])
             sm_estimator = sagemaker_estimator_factory(
                 entry_point=script_path.name,
@@ -370,9 +388,13 @@ if __name__ == '__main__':
                 estimator_kwargs['max_run'] = int(1.01 * scheduler_timeout)
             log_level = logging.DEBUG if params['debug_log_level'] \
                 else logging.INFO
+            root_path = Path(__file__).parent.parent
+            dependencies = [
+                str(root_path / module)
+                for module in ("benchmarks", "blackbox_repository")]
             tuner = RemoteLauncher(
                 tuner=local_tuner,
-                dependencies=[str(Path(__file__).parent.parent / "benchmarks/")],
+                dependencies=dependencies,
                 instance_type=instance_type,
                 log_level=log_level,
                 s3_path=s3_path,

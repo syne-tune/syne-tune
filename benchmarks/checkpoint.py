@@ -10,11 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-# Provides helper functions for endowing benchmarks with model checkpointing.
-# Model checkpointing is useful for pause/resume schedulers: once a benchmark
-# function resumes training, it can start from the checkpoint, and does not
-# have to start from scatch.
-
 from typing import Dict, Callable, Any, Optional
 import argparse
 import os

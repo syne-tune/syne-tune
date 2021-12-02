@@ -620,14 +620,19 @@ class HyperbandScheduler(FIFOScheduler):
                     config, milestone=int(result[self._resource_attr]) + 1)
         return do_update
 
-    def _check_keys_of_result(self, result: Dict):
-        super()._check_keys_of_result(result)
+    def _check_result(self, result: Dict):
+        super()._check_result(result)
         self._check_key_of_result(result, self._resource_attr)
         if self.scheduler_type == 'cost_promotion':
             self._check_key_of_result(result, self._cost_attr)
+        resource = result[self._resource_attr]
+        assert resource >= 1 and round(resource) == resource, \
+            "Your training evaluation function needs to report positive " +\
+            f"integer values for key {self._resource_attr}. Obtained " +\
+            f"value {resource}, which is not permitted"
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
-        self._check_keys_of_result(result)
+        self._check_result(result)
         trial_id = str(trial.trial_id)
         debug_log = self.searcher.debug_log
         trial_decision = SchedulerDecision.CONTINUE

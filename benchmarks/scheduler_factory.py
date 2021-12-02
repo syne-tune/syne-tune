@@ -124,11 +124,9 @@ def scheduler_factory(
             _check_searcher(searcher, supported_searchers)
         # Searcher and scheduler options from params
         search_options, scheduler_options = make_searcher_and_scheduler(params)
-        metric = benchmark['metric']
-        scheduler_options['metric'] = metric
-        scheduler_options['mode'] = benchmark['mode']
-        if scheduler != 'fifo':
-            scheduler_options['resource_attr'] = benchmark['resource_attr']
+        for k in ('metric', 'mode', 'max_resource_attr', 'resource_attr'):
+            if k in benchmark:
+                scheduler_options[k] = benchmark[k]
         if scheduler == 'hyperband_cost_promotion' or searcher.startswith(
                 'bayesopt_cost'):
             # Benchmark may define 'cost_attr'. If not, check for
@@ -152,10 +150,10 @@ def scheduler_factory(
         k = 'points_to_evaluate'
         if k in params:
             scheduler_options[k] = params.get(k)
+        # Transfer benchmark -> search_options
         k = 'map_reward'
         if k in benchmark:
             search_options[k] = benchmark[k]
-        # Transfer benchmark -> search_options
         if searcher == 'bayesopt_cost_fine' or searcher == 'bayesopt_cost':
             keys = ('cost_model', 'resource_attr')
         elif searcher == 'bayesopt_constrained':

@@ -1,7 +1,9 @@
+from typing import Optional
 import bz2
 import pickle
 import pandas as pd
 import numpy as np
+import logging
 
 from blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from blackbox_repository.conversion_scripts.utils import repository_path
@@ -9,6 +11,20 @@ from blackbox_repository.conversion_scripts.utils import repository_path
 from syne_tune import search_space
 from syne_tune.util import catchtime
 
+logger = logging.getLogger(__name__)
+
+
+BLACKBOX_NAME = 'nasbench201'
+
+CONFIG_KEYS = ('hp_x0', 'hp_x1', 'hp_x2', 'hp_x3', 'hp_x4', 'hp_x5')
+
+METRIC_VALID_ERROR = 'metric_valid_error'
+
+# This is time required for the given epoch, not time elapsed
+# since start of training
+METRIC_TIME_THIS_RESOURCE = 'metric_runtime'
+
+RESOURCE_ATTR = 'hp_epoch'
 
 def str_to_list(arch_str):
     node_strs = arch_str.split('+')
@@ -25,7 +41,7 @@ def str_to_list(arch_str):
 
 
 def convert_dataset(data, dataset):
-    hp_cols = [f"hp_x{i}" for i in range(6)]
+    hp_cols = list(CONFIG_KEYS)
 
     hps = dict()
 
@@ -38,7 +54,7 @@ def convert_dataset(data, dataset):
         config = str_to_list(data['arch2infos'][i]['200']['arch_str'])
 
         for j, hp in enumerate(config):
-            hps[f"hp_x{j}"].append(hp)
+            hps[CONFIG_KEYS[j]].append(hp)
 
     hyperparameters = pd.DataFrame(
         data=hps,
@@ -130,72 +146,86 @@ def convert_dataset(data, dataset):
     }
 
     fidelity_space = {
-        "hp_epoch": search_space.randint(lower=1, upper=201)
+        RESOURCE_ATTR: search_space.randint(lower=1, upper=201)
     }
 
+    objective_names = [f"metric_{m}" for m in objective_names]
+    # Sanity checks:
+    assert objective_names[0] == METRIC_VALID_ERROR
+    assert objective_names[2] == METRIC_TIME_THIS_RESOURCE
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=configuration_space,
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
         fidelity_values=fidelity_values,
-        objectives_names=[f"metric_{m}" for m in objective_names],
+        objectives_names=objective_names,
     )
 
 
-def generate_nasbench201():
-    blackbox_name = "nasbench201"
+# TODO: Try to save dummy file to S3 at start, to fail fast if the user
+# has no write access
+def generate_nasbench201(s3_root: Optional[str] = None):
+    logger.info(
+        "\nGenerating NASBench201 blackbox from sources and persisting to S3:\n"
+        "This takes quite some time, a substantial amount of memory, and about "
+        "1.8 GB of local disk space.\n"
+        "If this procedure fails, please re-run it on a machine with sufficient resources"
+    )
     file_name = repository_path / "NATS-tss-v1_0-3ffb9.pickle.pbz2"
     if not file_name.exists():
-        print(f"did not find {file_name}, downloading")
-        import requests
+        logger.info(f"did not find {file_name}, downloading")
+        with catchtime("downloading compressed file"):
+            import requests
 
-        def download_file_from_google_drive(id, destination):
-            URL = "https://docs.google.com/uc?export=download"
+            def download_file_from_google_drive(id, destination):
+                URL = "https://docs.google.com/uc?export=download"
 
-            session = requests.Session()
+                session = requests.Session()
 
-            response = session.get(URL, params={'id': id}, stream=True)
-            token = get_confirm_token(response)
+                response = session.get(URL, params={'id': id}, stream=True)
+                token = get_confirm_token(response)
 
-            if token:
-                params = {'id': id, 'confirm': token}
-                response = session.get(URL, params=params, stream=True)
+                if token:
+                    params = {'id': id, 'confirm': token}
+                    response = session.get(URL, params=params, stream=True)
 
-            save_response_content(response, destination)
+                save_response_content(response, destination)
 
-        def get_confirm_token(response):
-            for key, value in response.cookies.items():
-                if key.startswith('download_warning'):
-                    return value
+            def get_confirm_token(response):
+                for key, value in response.cookies.items():
+                    if key.startswith('download_warning'):
+                        return value
 
-            return None
+                return None
 
-        def save_response_content(response, destination):
-            CHUNK_SIZE = 32768
+            def save_response_content(response, destination):
+                CHUNK_SIZE = 32768
 
-            with open(destination, "wb") as f:
-                for chunk in response.iter_content(CHUNK_SIZE):
-                    if chunk:  # filter out keep-alive new chunks
-                        f.write(chunk)
+                with open(destination, "wb") as f:
+                    for chunk in response.iter_content(CHUNK_SIZE):
+                        if chunk:  # filter out keep-alive new chunks
+                            f.write(chunk)
 
-        download_file_from_google_drive('1vzyK0UVH2D3fTpa1_dSWnp1gvGpAxRul', file_name)
+            download_file_from_google_drive('1vzyK0UVH2D3fTpa1_dSWnp1gvGpAxRul', file_name)
+    else:
+        logger.info(f"found {file_name} locally, will use that one")
 
-    f = bz2.BZ2File(file_name, 'rb')
-    data = pickle.load(f)
+    with catchtime("uncompressing and loading"):
+        f = bz2.BZ2File(file_name, 'rb')
+        data = pickle.load(f)
 
-    with catchtime("converting"):
-        bb_dict = {}
-        for dataset in ['cifar10', 'cifar100', 'ImageNet16-120']:
-            print(f"converting {dataset}")
+    bb_dict = {}
+    for dataset in ['cifar10', 'cifar100', 'ImageNet16-120']:
+        with catchtime(f"converting {dataset}"):
             bb_dict[dataset] = convert_dataset(data, dataset)
 
     with catchtime("saving to disk"):
-        serialize(bb_dict=bb_dict, path=repository_path / blackbox_name)
+        serialize(bb_dict=bb_dict, path=repository_path / BLACKBOX_NAME)
 
-    with catchtime("uploading to s3"):
+    with catchtime("uploading to S3"):
         from blackbox_repository.conversion_scripts.utils import upload
-        upload(blackbox_name)
+        upload(BLACKBOX_NAME, s3_root=s3_root)
 
 
 if __name__ == '__main__':
@@ -204,7 +234,7 @@ if __name__ == '__main__':
     # plot one learning-curve for sanity-check
     from blackbox_repository import load
 
-    bb_dict = load("nasbench201")
+    bb_dict = load(BLACKBOX_NAME)
 
     b = bb_dict['cifar10']
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}
@@ -215,8 +245,8 @@ if __name__ == '__main__':
 
     for i in range(1, 201):
         res = b.objective_function(configuration=configuration, fidelity={'epochs': i})
-        errors.append(res['metric_valid_error'])
-        runtime.append(res['metric_runtime'])
+        errors.append(res[METRIC_VALID_ERROR])
+        runtime.append(res[METRIC_TIME_THIS_RESOURCE])
 
     plt.plot(np.cumsum(runtime), errors)
     plt.show()

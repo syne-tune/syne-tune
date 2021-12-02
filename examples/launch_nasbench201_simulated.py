@@ -14,53 +14,43 @@
 Example for running the simulator back-end on a tabulated benchmark
 """
 import logging
-import argparse
 
-from syne_tune.backend.simulator_backend.simulator_backend import \
-    SimulatorBackend
+from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
 
-from examples.training_scripts.nasbench201.nasbench201 import \
+from benchmarks.definitions.nasbench201 import \
     nasbench201_benchmark, nasbench201_default_params
 
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
-    parser = argparse.ArgumentParser(
-        description='Synchronous Hyperband on NASBench201')
-    parser.add_argument(
-        '--dataset_s3_bucket', type=str, required=True,
-        help='Name of S3 bucket where NASBench201 files can be downloaded')
-    params = vars(parser.parse_args())
-    dataset_s3_bucket = params['dataset_s3_bucket']
 
     random_seed = 31415927
     n_workers = 4
-    # By default, the `nasbench201` benchmark sleeps for the time taken by
-    # computations, but this is not done for the simulator back-end
     default_params = nasbench201_default_params({'backend': 'simulated'})
     benchmark = nasbench201_benchmark(default_params)
     # Benchmark must be tabulated to support simulation:
     assert benchmark.get('supports_simulated', False)
     mode = benchmark['mode']
     metric = benchmark['metric']
+    blackbox_name = benchmark.get('blackbox_name')
+    # NASBench201 is a blackbox from the repository
+    assert blackbox_name is not None
+    dataset_name = 'cifar100'
 
     # If you don't like the default config_space, change it here. But let
     # us use the default
     config_space = benchmark['config_space']
-    # TODO: Needs better solution!
-    config_space['dataset_s3_bucket'] = dataset_s3_bucket
 
-    # Simulator back-end
-    # If the benchmark provides a table object, use that. Otherwise, call the
-    # training script
-    backend = SimulatorBackend(
-        entry_point=benchmark['script'],
+    # Simulator back-end specialized to tabulated blackboxes
+    backend = BlackboxRepositoryBackend(
+        blackbox_name=blackbox_name,
         elapsed_time_attr=benchmark['elapsed_time_attr'],
-        table_class_name=benchmark.get('benchmark_table_class'))
+        time_this_resource_attr=benchmark.get('time_this_resource_attr'),
+        dataset=dataset_name)
 
     searcher = 'random'
     # Hyperband (or successive halving) scheduler of the stopping type.

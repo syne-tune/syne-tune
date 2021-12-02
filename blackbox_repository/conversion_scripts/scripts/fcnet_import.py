@@ -8,7 +8,7 @@ import urllib
 import tarfile
 
 from pathlib import Path
-
+from typing import Optional
 import pandas as pd
 import numpy as np
 import ast
@@ -117,7 +117,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     )
 
 
-def generate_fcnet():
+def generate_fcnet(s3_root: Optional[str] = None):
     blackbox_name = "fcnet"
     fcnet_file = repository_path / "fcnet_tabular_benchmarks.tar.gz"
     if not (repository_path / "fcnet_tabular_benchmarks.tar.gz").exists():
@@ -140,7 +140,7 @@ def generate_fcnet():
 
     with catchtime("uploading to s3"):
         from blackbox_repository.conversion_scripts.utils import upload
-        upload(blackbox_name)
+        upload(blackbox_name, s3_root=s3_root)
 
 
 def plot_learning_curves():

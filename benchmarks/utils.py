@@ -13,7 +13,6 @@
 from typing import Tuple
 
 
-
 def dict_get(params: dict, key: str, default):
     """
     Returns `params[key]` if this exists and is not None, and `default` otherwise.

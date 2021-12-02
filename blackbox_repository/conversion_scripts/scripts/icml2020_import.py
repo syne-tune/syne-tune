@@ -4,6 +4,7 @@ Convert evaluations from
  David Salinas Huibin Shen Valerio Perrone
  http://proceedings.mlr.press/v119/salinas20a/salinas20a.pdf
 """
+from typing import Optional
 import pandas as pd
 import numpy as np
 from blackbox_repository.blackbox_offline import serialize, BlackboxOffline
@@ -89,14 +90,14 @@ def serialize_xgboost():
     )
 
 
-def generate_deepar():
+def generate_deepar(s3_root: Optional[str] = None):
     serialize_deepar()
-    upload(name="icml-deepar")
+    upload(name="icml-deepar", s3_root=s3_root)
 
 
-def generate_xgboost():
+def generate_xgboost(s3_root: Optional[str] = None):
     serialize_xgboost()
-    upload(name="icml-xgboost")
+    upload(name="icml-xgboost", s3_root=s3_root)
 
 
 if __name__ == '__main__':

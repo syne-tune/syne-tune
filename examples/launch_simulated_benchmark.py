@@ -82,14 +82,19 @@ if __name__ == '__main__':
 
     n_workers = 4
 
-    ## example of loading nas201 and then simulating tuning
-    blackbox_name, dataset, metric, elapsed_time_attr = "nasbench201", "cifar100", "metric_error", 'metric_runtime'
+    ## example of loading nasbench201 and then simulating tuning
+    blackbox_name, dataset, metric = "nasbench201", "cifar100", "metric_error"
+    # Note: The nasbench201 blackbox does not have an `elapsed_time_attr`,
+    # but only a `time_this_resource_attr`. The former is appended as the
+    # cumulative sum of the latter in the backend implementation.
+    time_this_resource_attr = 'metric_runtime'
+    elapsed_time_attr = 'metric_elapsed_time'
     blackbox = load(blackbox_name)[dataset]
     backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         dataset=dataset,
-        # blackbox=blackbox,
         elapsed_time_attr=elapsed_time_attr,
+        time_this_resource_attr=time_this_resource_attr,
     )
     simulate_benchmark(blackbox=blackbox, backend=backend, metric=metric)
 

@@ -61,7 +61,11 @@ class BlackboxSurrogate(Blackbox):
         self.surrogate = surrogate
         self.fit_surrogate(surrogate)
         self.name = name
-        self.fidelity_values = fidelity_values
+        self._fidelity_values = fidelity_values
+
+    @property
+    def fidelity_values(self) -> np.array:
+        return self._fidelity_values
 
     def fit_surrogate(self, surrogate=KNeighborsRegressor(n_neighbors=1)) -> Blackbox:
         """
@@ -155,6 +159,6 @@ def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=
         y=y,
         configuration_space=blackbox.configuration_space,
         fidelity_space=blackbox.fidelity_space,
-        fidelity_values=blackbox.fidelity_values if hasattr(blackbox, "fidelity_values") else None,
+        fidelity_values=blackbox.fidelity_values,
         surrogate=surrogate,
     )

@@ -10,14 +10,18 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
+
+from benchmarks.definitions.nasbench201 import nasbench201_benchmark, \
+    nasbench201_default_params
 from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist \
     import mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
-from examples.training_scripts.nasbench201.nasbench201 import \
-    nasbench201_benchmark, nasbench201_default_params
 from examples.training_scripts.resnet_cifar10.resnet_cifar10 import \
     resnet_cifar10_benchmark, resnet_cifar10_default_params
 from examples.training_scripts.lstm_wikitext2.lstm_wikitext2 import \
     lstm_wikitext2_benchmark, lstm_wikitext2_default_params
+
+logger = logging.getLogger(__name__)
 
 __all__ = ['supported_benchmarks',
            'benchmark_factory']
@@ -28,7 +32,7 @@ BENCHMARKS = {
         mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params),
     'nasbench201': (
         nasbench201_benchmark, nasbench201_default_params),
-    'nasbench201_cifar10-valid': (
+    'nasbench201_cifar10': (
         nasbench201_benchmark, nasbench201_default_params),
     'nasbench201_cifar100': (
         nasbench201_benchmark, nasbench201_default_params),
