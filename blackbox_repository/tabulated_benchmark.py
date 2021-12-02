@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from pathlib import Path
 from typing import List, Optional
-import numpy as np
 import logging
 
 from blackbox_repository import load, Blackbox, add_surrogate
