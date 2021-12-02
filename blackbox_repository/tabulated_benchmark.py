@@ -202,7 +202,6 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self.dataset = state['dataset']
         self._surrogate = state['surrogate']
         self._blackbox = None
-        self._surrogate = state['surrogate']
 
 
 class UserBlackboxBackend(_BlackboxSimulatorBackend):
