@@ -108,7 +108,7 @@ class RemoteLauncher:
         """
         self.prepare_upload()
 
-        if 'AWS_DEFAULT_REGION' not in os.environ:
+        if boto3.Session().region_name is None:
             # launching in this is needed to send a default configuration on the tuning loop running on Sagemaker
             # todo restore the env variable if present to avoid a side effect
             os.environ['AWS_DEFAULT_REGION'] = 'us-west-2'
@@ -194,6 +194,7 @@ class RemoteLauncher:
             "tuner_path": f"{self.upload_dir().name}/",
             "store_logs": self.store_logs_localbackend,
             "no_tuner_logging": self.no_tuner_logging,
+            "region_name": boto3.Session().region_name,
         }
         if self.log_level is not None:
             hyperparameters['log_level'] = self.log_level
@@ -231,7 +232,8 @@ class RemoteLauncher:
         """
         docker_image_name = "syne-tune-cpu-py36"
         account_id = boto3.client("sts").get_caller_identity()["Account"]
-        image_uri = f"{account_id}.dkr.ecr.us-west-2.amazonaws.com/{docker_image_name}"
+        region_name = boto3.Session().region_name
+        image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
         try:
             logging.info(f"Fetching Syne Tune image {image_uri}")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)

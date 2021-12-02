@@ -14,6 +14,7 @@
 Entrypoint script that allows to launch a tuning job remotely.
 It loads the tuner from a specified path then runs it.
 """
+import os
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
@@ -27,10 +28,13 @@ if __name__ == '__main__':
     parser.add_argument('--store_logs', dest='store_logs', action='store_true', default=False)
     parser.add_argument('--log_level', type=int, default=logging.INFO)
     parser.add_argument('--no_tuner_logging', type=str, default='False')
+    parser.add_argument('--region_name', type=str, default='us-west-2')
     args, _ = parser.parse_known_args()
 
     root = logging.getLogger()
     root.setLevel(args.log_level)
+
+    os.environ['AWS_DEFAULT_REGION'] = args.region_name
 
     tuner_path = Path(args.tuner_path)
     logging.info(f"load tuner from path {args.tuner_path}")
