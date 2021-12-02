@@ -122,9 +122,14 @@ def scheduler_factory(
                 supported_searchers.update(
                     {'bayesopt_cost', 'bayesopt_issm'})
             _check_searcher(searcher, supported_searchers)
+
         # Searcher and scheduler options from params
         search_options, scheduler_options = make_searcher_and_scheduler(params)
-        for k in ('metric', 'mode', 'max_resource_attr', 'resource_attr'):
+        for k in ('metric', 'mode', 'max_resource_attr'):
+            if k in benchmark:
+                scheduler_options[k] = benchmark[k]
+        if scheduler.startswith('hyperband'):
+            k = 'resource_attr'
             if k in benchmark:
                 scheduler_options[k] = benchmark[k]
         if scheduler == 'hyperband_cost_promotion' or searcher.startswith(
