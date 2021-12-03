@@ -30,7 +30,7 @@ from syne_tune.util import s3_experiment_path
 from benchmarks.estimator_factory import sagemaker_estimator_factory
 from benchmarks.launch_utils import parse_args
 from benchmarks.benchmark_factory import benchmark_factory
-from benchmarks.scheduler_factory import scheduler_factory, setup_scheduler_from_backend
+from benchmarks.scheduler_factory import scheduler_factory
 from benchmarks.utils import dict_get
 
 logger = logging.getLogger(__name__)
@@ -303,8 +303,6 @@ if __name__ == '__main__':
                 sm_estimator=sm_estimator,
                 metrics_names=[benchmark['metric']],
                 s3_path=s3_path)
-        # Setup scheduler based on backend
-        setup_scheduler_from_backend(myscheduler, backend)
 
         # Stopping criterion
         num_trials = params.get('num_trials')
