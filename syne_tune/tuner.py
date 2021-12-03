@@ -97,11 +97,9 @@ class Tuner:
         self.last_seen_result_per_trial = {}
         self.tuner_path = Path(experiment_path(tuner_name=self.name))
 
-        logger.info(f"results of trials will be saved on {self.tuner_path}")
-
-        # inform the backend to the name of the tuner. This allows the local backend
+        # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
-        self.backend.set_path(results_root=self.tuner_path, tuner_name=self.name)
+        self.backend.set_path(results_root=self.tuner_path)
         self.callbacks = callbacks if callbacks is not None else [self._default_callback()]
 
         self.tuning_status = None
@@ -112,6 +110,8 @@ class Tuner:
         :return: the tuning status when finished
         """
         try:
+            logger.info(f"results of trials will be saved on {self.tuner_path}")
+
             if self.tuning_status is None:
                 self.tuning_status = TuningStatus(
                     metric_names=self.scheduler.metric_names(),

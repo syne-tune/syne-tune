@@ -21,24 +21,36 @@ from pathlib import Path
 from syne_tune.tuner import Tuner
 
 
+def decode_bool(hp: str):
+    # Sagemaker encodes hyperparameters in estimators as literals which are compatible with Python,
+    # except for true and false that are respectively encoded as 'True' and 'False'.
+    assert hp in ['True', 'False']
+    return hp == 'True'
+
+
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--tuner_path', type=str, default="tuner/")
-    parser.add_argument('--store_logs', dest='store_logs', action='store_true', default=False)
+    parser.add_argument('--store_logs', type=str, default="false")
     parser.add_argument('--log_level', type=int, default=logging.INFO)
-    parser.add_argument('--no_tuner_logging', type=str, default='False')
+    parser.add_argument('--no_tuner_logging', type=str, default="false")
     args, _ = parser.parse_known_args()
 
     root = logging.getLogger()
     root.setLevel(args.log_level)
 
+    args.store_logs = decode_bool(args.store_logs)
+    args.no_tuner_logging = decode_bool(args.no_tuner_logging)
+
     tuner_path = Path(args.tuner_path)
     logging.info(f"load tuner from path {args.tuner_path}")
     tuner = Tuner.load(tuner_path)
-
     if args.store_logs:
         # inform the backend of the desired path so that logs are persisted
-        tuner.backend.set_path(results_root='/opt/ml/checkpoints', tuner_name=tuner.name)
+        tuner.backend.set_path(results_root=tuner.tuner_path)
+    else:
+        # sets a path where logs will not be stored
+        tuner.backend.set_path(results_root=str(Path('~/').expanduser()), tuner_name=tuner.name)
 
     # Run the tuner on the sagemaker instance. If the simulation back-end is
     # used, this needs a specific callback
