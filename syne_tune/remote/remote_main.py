@@ -31,9 +31,9 @@ def decode_bool(hp: str):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--tuner_path', type=str, default="tuner/")
-    parser.add_argument('--store_logs', type=str, default="false")
+    parser.add_argument('--store_logs', type=str, default="False")
     parser.add_argument('--log_level', type=int, default=logging.INFO)
-    parser.add_argument('--no_tuner_logging', type=str, default="false")
+    parser.add_argument('--no_tuner_logging', type=str, default="False")
     args, _ = parser.parse_known_args()
 
     root = logging.getLogger()
