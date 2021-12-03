@@ -58,8 +58,8 @@ class RemoteLauncher:
             When using Sagemaker backend, logs are persisted by Sagemaker.
         :param log_level: Logging level. Default is logging.INFO, while
             logging.DEBUG gives more messages
-        :param s3_path: S3 base path used for checkpointing. The full path
-            also involves the tuner name
+        :param s3_path: S3 base path used for checkpointing, outputs of tuning will be stored under
+        {s3_path}/{tuner_name}. The logs of the local backend are only stored if `store_logs_localbackend` is True.
         :param no_tuner_logging: If True, the logging level for
             syne_tune.tuner is set to ERROR
         """
@@ -85,7 +85,7 @@ class RemoteLauncher:
             s3_path = s3_experiment_path()
         self.s3_path = s3_path
         assert isinstance(no_tuner_logging, bool)
-        self.no_tuner_logging = str(no_tuner_logging)
+        self.no_tuner_logging = no_tuner_logging
 
     def is_lambda(self, f):
         """
@@ -183,12 +183,12 @@ class RemoteLauncher:
     def launch_tuning_job_on_sagemaker(self, wait: bool):
         # todo add Sagemaker cloudwatch metrics to visualize live results of tuning best results found over time.
         if self.instance_type != "local":
-            checkpoint_s3_uri = f"{self.s3_path}/{self.tuner.name}/"
-            logging.info(f"Tuner will checkpoint results to {checkpoint_s3_uri}")
+            checkpoint_s3_root = f"{self.s3_path}/"
+            logging.info(f"Tuner will checkpoint results to {checkpoint_s3_root}/{self.tuner.name}")
         else:
             # checkpointing is not supported in local mode. When using local mode with remote tuner (for instance for
             # debugging), results are not stored.
-            checkpoint_s3_uri = None
+            checkpoint_s3_root = None
         # Create SM estimator for tuning code
         hyperparameters = {
             "tuner_path": f"{self.upload_dir().name}/",
@@ -216,7 +216,7 @@ class RemoteLauncher:
             framework_version='1.6',
             image_uri=self.syne_tune_image_uri(),
             hyperparameters=hyperparameters,
-            checkpoint_s3_uri=checkpoint_s3_uri,
+            checkpoint_s3_uri=checkpoint_s3_root,
             environment=environment,
             **self.estimator_kwargs,
         )
