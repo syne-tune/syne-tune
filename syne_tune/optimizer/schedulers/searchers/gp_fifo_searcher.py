@@ -504,13 +504,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
             if pos_cand is not None:
                 evals = state.candidate_evaluations
                 num_labeled = len(evals)
-                error_msg = """
-                This configuration is already registered as labeled:
-                   Position of labeled candidate: {} of {}
-                   Label value: {}
-                """.format(
-                    pos_cand, num_labeled,
-                    evals[pos_cand].metrics[INTERNAL_METRIC_NAME])
+                config_labeled = evals[pos_cand].candidate
+                error_msg = \
+                    "This configuration is already registered as labeled:\n" +\
+                    f"config:\n   {config}\n" +\
+                    f"labeled config [{pos_cand} of {num_labeled}]:\n   {config_labeled}"
                 assert False, error_msg
             self.state_transformer.append_candidate(config)
 
