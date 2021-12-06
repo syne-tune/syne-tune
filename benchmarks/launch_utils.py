@@ -152,6 +152,9 @@ def parse_args(allow_lists_as_values=True):
                              'on different GPU cores (GPU rotation). If '
                              'this is set, all GPU cores are used for a '
                              'single evaluation')
+    parser.add_argument('--blackbox_repo_s3_root', type=str,
+                        help='S3 root directory for blackbox repository. '
+                             'Defaults to default bucket of session')
     # Arguments for scheduler
     parser.add_argument('--brackets', type=int,
                         help='Number of brackets in HyperbandScheduler',
