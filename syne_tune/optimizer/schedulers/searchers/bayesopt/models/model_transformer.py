@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
 from typing import Dict, Optional, List, Callable, Union
 import logging
 import copy
@@ -37,28 +36,25 @@ def _assert_same_keys(dict1, dict2):
         f'{list(dict1.keys())} and {list(dict2.keys())} need to be the same keys. '
 
 
-class TransformerModelFactory(ABC):
+class TransformerModelFactory(object):
     """
     Interface for model factories used in :class:`ModelStateTransformer`. A model
     factory provides access to tunable model parameters, and `model` creates
     :class:`SurrogateModel` instances.
 
     """
-    @abstractmethod
     def get_params(self) -> Dict:
         """
         :return: Current tunable model parameters
         """
-        pass
+        raise NotImplementedError()
 
-    @abstractmethod
     def set_params(self, param_dict: Dict):
         """
         :param param_dict: New model parameters
         """
-        pass
+        raise NotImplementedError()
 
-    @abstractmethod
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
         """
         Creates a `SurrogateModel` based on data in `state`. This involves
@@ -73,7 +69,7 @@ class TransformerModelFactory(ABC):
         :param fit_params: See above
         :return: SurrogateModel, wrapping the posterior state for predictions
         """
-        pass
+        raise NotImplementedError()
 
     @property
     def debug_log(self) -> Optional[DebugLogPrinter]:
@@ -82,6 +78,16 @@ class TransformerModelFactory(ABC):
     @property
     def profiler(self) -> Optional[SimpleProfiler]:
         return None
+
+    def predictions_use_extended_configs(self) -> bool:
+        """
+        Relevant only for surrogate models supporting multi-fidelity
+        scheduling (e.g., learning curve models).
+
+        :return: Predictions are based on extended configs (where resource
+            level is appended)? If not, they are based on normal configs
+        """
+        return True
 
 
 # Convenience types allowing for multi-output HPO. These are used for methods that work both in the standard case
@@ -156,7 +162,7 @@ class ModelStateTransformer(object):
             model_factory = dictionarize_objective(model_factory)
             skip_optimization = dictionarize_objective(skip_optimization)
         self._model_factory = model_factory
-        self.skip_optimization = skip_optimization
+        self._skip_optimization = skip_optimization
         self._state = copy.copy(init_state)
         # SurrogateOutputModel computed on demand
         self._model: SurrogateOutputModel = None
@@ -169,16 +175,23 @@ class ModelStateTransformer(object):
     def state(self) -> TuningJobState:
         return self._state
 
+    def _unwrap_from_dict(self, x):
+        if self._use_single_model:
+            return next(iter(x.values()))
+        else:
+            return x
+
     @property
     def model_factory(self) -> TransformerOutputModelFactory:
-        if self._use_single_model:
-            return next(iter(self._model_factory.values()))
-        else:
-            return self._model_factory
+        return self._unwrap_from_dict(self._model_factory)
+
+    @property
+    def skip_optimization(self) -> SkipOptimizationOutputPredicate:
+        return self._unwrap_from_dict(self._skip_optimization)
 
     def model(self, **kwargs) -> SurrogateOutputModel:
         """
-        If skip_optimization is given, it overrides the self.skip_optimization
+        If skip_optimization is given, it overrides the self._skip_optimization
         predicate.
 
         :return: SurrogateModel for current state in the standard single model case;
@@ -188,23 +201,12 @@ class ModelStateTransformer(object):
         if self._model is None:
             skip_optimization = kwargs.get('skip_optimization')
             self._compute_model(skip_optimization=skip_optimization)
-        if self._use_single_model:
-            # in this case output_models is a single-key dictionary,
-            # so we extract the only value it contains
-            model = next(iter(self._model.values()))
-        else:
-            model = self._model
-        return model
+        return self._unwrap_from_dict(self._model)
 
     def get_params(self):
         params = {output_name: output_model.get_params()
                   for output_name, output_model in self._model_factory.items()}
-        if self._use_single_model:
-            assert len(params) == 1
-            # in this case params is a single-key dictionary,
-            # so we extract the only value it contains
-            params = next(iter(params.values()))
-        return params
+        return self._unwrap_from_dict(params)
 
     def set_params(self, param_dict):
         if self._use_single_model:
@@ -251,11 +253,6 @@ class ModelStateTransformer(object):
         if pos != -1:
             self._model = None  # Invalidate
             self._state.pending_evaluations.pop(pos)
-            if self._debug_log is not None:
-                deb_msg = "[ModelStateTransformer.drop_candidate]\n"
-                deb_msg += ("- len(pending_evaluations) afterwards = {}\n".format(
-                    len(self.state.pending_evaluations)))
-                logger.info(deb_msg)
         return (pos != -1)
 
     def remove_observed_case(
@@ -338,11 +335,6 @@ class ModelStateTransformer(object):
         new_pending_evaluations = list(filter(
             filter_pred, self._state.pending_evaluations))
         if len(new_pending_evaluations) != len(self._state.pending_evaluations):
-            if self._debug_log is not None:
-                deb_msg = "[ModelStateTransformer.filter_pending_evaluations]\n"
-                deb_msg += ("- from len {} to {}".format(
-                    len(self.state.pending_evaluations), len(new_pending_evaluations)))
-                logger.info(deb_msg)
             self._model = None  # Invalidate
             del self._state.pending_evaluations[:]
             self._state.pending_evaluations.extend(new_pending_evaluations)
@@ -353,7 +345,7 @@ class ModelStateTransformer(object):
     def _compute_model(self, skip_optimization=None):
         if skip_optimization is None:
             skip_optimization = dict()
-            for output_name, output_skip_optimization in self.skip_optimization.items():
+            for output_name, output_skip_optimization in self._skip_optimization.items():
                 skip_optimization[output_name] = output_skip_optimization(self._state)
         elif self._use_single_model:
             skip_optimization = dictionarize_objective(skip_optimization)

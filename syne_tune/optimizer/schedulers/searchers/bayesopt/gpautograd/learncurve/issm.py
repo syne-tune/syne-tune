@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import numpy as np
 import autograd.numpy as anp
@@ -27,11 +27,19 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
     import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
     import ExtendedConfiguration
+from syne_tune.optimizer.schedulers.utils.simple_profiler \
+    import SimpleProfiler
 
 
 def prepare_data(
         state: TuningJobState, configspace_ext: ExtendedConfiguration,
         active_metric: str, normalize_targets: bool = False) -> Dict:
+    # Group w.r.t. configs
+    # data maps config_to_tuple(config) -> (config, observed), where
+    # observed = [(r_j, y_j)], r_j resource values, y_j reward values. The
+    # key is easily hashable, while config may not be.
+    # The lists returned ('configs', 'targets') are sorted in decreasing
+    # order w.r.t. the number of targets.
     r_min, r_max = configspace_ext.resource_attr_range
     hp_ranges = configspace_ext.hp_ranges
     data_lst = []
@@ -40,7 +48,9 @@ def prepare_data(
     for candidate in state.candidate_evaluations:
         metric_vals = candidate.metrics[active_metric]
         assert isinstance(metric_vals, dict)
-        observed = list(sorted(metric_vals.items(), key=lambda x: x[0]))
+        observed = list(sorted(
+            ((int(k), v) for k, v in metric_vals.items()),
+            key=lambda x: x[0]))
         data_lst.append((candidate.candidate, observed))
         targets += [x[1] for x in observed]
     mean = 0.0
@@ -49,7 +59,6 @@ def prepare_data(
         std = max(np.std(targets), 1e-9)
         mean = np.mean(targets)
     configs = [x[0] for x in data_lst]
-    features = hp_ranges.to_ndarray_matrix(configs)
     targets = []
     for config, observed in data_lst:
         # Observations must be from r_min without any missing
@@ -60,6 +69,10 @@ def prepare_data(
             f"Config {config} has observations at {obs_res}, but " +\
             f"we need observations at {test}"
         targets.append([(x[1] - mean) / std for x in observed])
+    # Sort in decreasing order w.r.t. number of targets
+    configs, targets = zip(*sorted(
+        zip(configs, targets), key=lambda x: -len(x[1])))
+    features = hp_ranges.to_ndarray_matrix(configs)
     result = {
         'configs': configs,
         'features': features,
@@ -71,23 +84,71 @@ def prepare_data(
         result['std_targets'] = std
     return result
 
-def issm_likelihood_computations(
-        targets: List[list], issm_params: Dict, r_min: int, r_max: int,
-        skip_c_d: bool = False) -> Dict:
+def issm_likelihood_precomputations(targets: List[tuple], r_min: int) -> Dict:
     """
-    Given target values `targets` and ISSM parameters `issm_params`, compute
-    quantities required for inference and marginal likelihood computation,
-    pertaining to the ISSM likelihood.
+    Precomputations required by `issm_likelihood_computations`.
 
-    The index for r is range(r_min, r_max + 1). `targets` contains n target
-    vectors, each of size <= R = r_max + 1 - r_min. `targets[i]` contains the
-    targets y[r_min], y[r_min + 1], ... for the i-th configuration.
-    Observations must be contiguous from r_min. The ISSM parameters are:
+    Importantly, `prepare_data` orders datapoints by nonincreasing number of
+    targets `ydims[i]`. For `0 <= j < ydim_max`, `ydim_max = ydims[0] =
+    max(ydims)`, `num_configs[j]` is the number of datapoints i for which
+    `ydims[i] > j`.
+    `deltay` is a flat vector consisting of `ydim_max` parts, where part j is
+    of size `num_configs[j]` and contains `y[j] - y[j-1]` for targets of
+    those i counted in `num_configs[j]`, the term needed in the recurrence to
+    compute `w[j]`.
+    'logr` is a flat vector consisting of `ydim_max - 1` parts, where part j
+    (starting from 1) is of size `num_configs[j]` and contains the logarithmic
+    term for computing `a[j-1]` and `e[j]`.
+
+    :param targets: Targets from data representation returned by
+        `prepare_data`
+    :param r_min: Value of r_min, as returned by `prepare_data`
+    :return: See above
+    """
+    ydims = [len(y) for y in targets]
+    ydim_max = ydims[0]
+    num_configs = list(np.sum(
+        np.array(ydims).reshape((-1, 1)) > np.arange(ydim_max).reshape((1, -1)),
+        axis=0).reshape((-1,)))
+    assert num_configs[0] == len(targets), (num_configs, len(targets))
+    assert num_configs[-1] > 0, num_configs
+    total_size = sum(num_configs)
+    assert total_size == sum(ydims)
+    deltay = np.zeros(total_size)
+    yprev = np.array([y[-1] for y in targets])
+    off = num_configs[0]
+    deltay[:off] = yprev
+    log_r = []
+    for pos, num in enumerate(num_configs[1:], start=1):
+        ycurr = np.array([y[-(pos + 1)] for y in targets[:num]])
+        deltay[off:(off + num)] = ycurr - yprev[:num]
+        off += num
+        yprev = ycurr
+        logr_curr = [np.log(ydim + r_min - pos) for ydim in ydims[:num]]
+        log_r.extend(logr_curr)
+    assert off == total_size
+    assert len(log_r) == total_size - num_configs[0]
+    return {
+        'ydims': ydims,
+        'num_configs': num_configs,
+        'deltay': deltay,
+        'logr': np.array(log_r)}
+
+
+def issm_likelihood_computations(
+        precomputed: Dict, issm_params: Dict, r_min: int, r_max: int,
+        skip_c_d: bool = False,
+        profiler: Optional[SimpleProfiler] = None) -> Dict:
+    """
+    Given `precomputed` from `issm_likelihood_precomputations` and ISSM
+    parameters `issm_params`, compute quantities required for inference and
+    marginal likelihood computation, pertaining to the ISSM likelihood.
+
+    The index for r is range(r_min, r_max + 1). Observations must be contiguous
+    from r_min. The ISSM parameters are:
     - alpha: n-vector, negative
     - beta: n-vector
     - gamma: scalar, positive
-
-    Likelihood computations are detailed in an internal report.
 
     Results returned are:
     - c: n-vector [c_i], negative
@@ -96,7 +157,7 @@ def issm_likelihood_computations(
     - wtv: n-vector [(w_i)^T v_i]
     - wtw: n-vector [|w_i|^2]
 
-    :param targets: Target vectors
+    :param precomputed: Output of `issm_likelihood_precomputations`
     :param issm_params: Parameters of ISSM likelihood
     :param r_min: Smallest resource value
     :param r_max: Largest resource value
@@ -104,34 +165,32 @@ def issm_likelihood_computations(
     :return: Quantities required for inference and learning criterion
 
     """
-    num_configs = len(targets)
+    num_all_configs = precomputed['num_configs'][0]
     num_res = r_max + 1 - r_min
-    assert num_configs > 0, "targets must not be empty"
+    assert num_all_configs > 0, "targets must not be empty"
     assert num_res > 0, f"r_min = {r_min} must be <= r_max = {r_max}"
     alphas = anp.reshape(issm_params['alpha'], (-1,))
     betas = anp.reshape(issm_params['beta'], (-1,))
     gamma = issm_params['gamma']
-    n = getval(alphas.shape[0])
-    assert n == num_configs, f"alpha.size = {n} != {num_configs}"
-    n = getval(betas.shape[0])
-    assert n == num_configs, f"beta.size = {n} != {num_configs}"
-    # Outer loop over configurations
-    c_lst = []
-    d_lst = []
-    vtv_lst = []
-    wtv_lst = []
-    wtw_lst = []
-    num_data = 0
-    for i, yvec in enumerate(targets):
-        alpha = alphas[i]
-        alpha_m1 = alpha - 1.0
-        beta = betas[i]
-        ydim = len(yvec)
-        num_data += ydim
-        r_obs = r_min + ydim  # Observed in range(r_min, r_obs)
-        assert 0 < ydim <= num_res,\
-            f"len(y[{i}]) = {ydim}, num_res = {num_res}"
-        if not skip_c_d:
+    n = getval(alphas.size)
+    assert n == num_all_configs, f"alpha.size = {n} != {num_all_configs}"
+    n = getval(betas.size)
+    assert n == num_all_configs, f"beta.size = {n} != {num_all_configs}"
+
+    if not skip_c_d:
+        # We could probably refactor this to fit into the loop below, but it
+        # seems subdominant
+        if profiler is not None:
+            profiler.start('issm_part1')
+        c_lst = []
+        d_lst = []
+        for i, ydim in enumerate(precomputed['ydims']):
+            alpha = alphas[i]
+            alpha_m1 = alpha - 1.0
+            beta = betas[i]
+            r_obs = r_min + ydim  # Observed in range(r_min, r_obs)
+            assert 0 < ydim <= num_res,\
+                f"len(y[{i}]) = {ydim}, num_res = {num_res}"
             # c_i, d_i
             if ydim < num_res:
                 lrvec = anp.array(
@@ -145,35 +204,73 @@ def issm_likelihood_computations(
             else:
                 c_lst.append(0.0)
                 d_lst.append(0.0)
-        # Inner loop for v_i, w_i
-        yprev = yvec[-1]  # y_{j-1}
-        vprev = 1.0  # v_{j-1}
-        wprev = yprev  # w_{j-1}
-        vtv = vprev * vprev
-        wtv = wprev * vprev
-        wtw = wprev * wprev
-        for j in range(1, ydim):
-            ycurr = yvec[ydim - j - 1]  # y_j
-            # a_{j-1}
-            ascal = alpha * anp.exp(np.log(r_obs - j) * alpha_m1 + beta)
-            escal = gamma * ascal + 1.0
-            vcurr = escal * vprev  # v_j
-            wcurr = escal * wprev + ycurr - yprev + ascal  # w_j
-            vtv = vtv + vcurr * vcurr
-            wtv = wtv + wcurr * vcurr
-            wtw = wtw + wcurr * wcurr
-            yprev = ycurr
-            vprev = vcurr
-            wprev = wcurr
-        vtv_lst.append(vtv)
-        wtv_lst.append(wtv)
-        wtw_lst.append(wtw)
+        if profiler is not None:
+            profiler.stop('issm_part1')
+
+    # Loop over ydim
+    if profiler is not None:
+        profiler.start('issm_part2')
+    deltay = precomputed['deltay']
+    logr = precomputed['logr']
+    off_dely = num_all_configs
+    vvec = anp.ones(off_dely)
+    wvec = deltay[:off_dely]  # [y_0]
+    vtv = anp.ones(off_dely)
+    wtv = wvec.copy()
+    wtw = anp.square(wvec)
+    # Note: We need the detour via `vtv_lst`, etc, because `autograd` does not
+    # support overwriting the content of an `ndarray`. Their role is to collect
+    # parts of the final vectors, in reverse ordering
+    vtv_lst = []
+    wtv_lst = []
+    wtw_lst = []
+    alpham1s = alphas - 1
+    num_prev = off_dely
+    for num in precomputed['num_configs'][1:]:
+        if num < num_prev:
+            # Size of working vectors is shrinking
+            assert vtv.size == num_prev
+            # These parts are done: Collect them in the lists
+            vtv_lst.append(vtv[num:])
+            wtv_lst.append(wtv[num:])
+            wtw_lst.append(wtw[num:])
+            # All vectors are resized to `num`, dropping the tails
+            vtv = vtv[:num]
+            wtv = wtv[:num]
+            wtw = wtw[:num]
+            alphas = alphas[:num]
+            alpham1s = alpham1s[:num]
+            betas = betas[:num]
+            vvec = vvec[:num]
+            wvec = wvec[:num]
+            num_prev = num
+        # [a_{j-1}]
+        off_logr = off_dely - num_all_configs
+        logr_curr = logr[off_logr:(off_logr + num)]
+        avec = alphas * anp.exp(logr_curr * alpham1s + betas)
+        evec = avec * gamma + 1  # [e_j]
+        vvec = vvec * evec  # [v_j]
+        deltay_curr = deltay[off_dely:(off_dely + num)]
+        off_dely += num
+        wvec = wvec * evec + deltay_curr + avec  # [w_j]
+        vtv = vtv + anp.square(vvec)
+        wtw = wtw + anp.square(wvec)
+        wtv = wtv + wvec * vvec
+    vtv_lst.append(vtv)
+    wtv_lst.append(wtv)
+    wtw_lst.append(wtw)
+    vtv_all = anp.concatenate(tuple(reversed(vtv_lst)), axis=0)
+    wtv_all = anp.concatenate(tuple(reversed(wtv_lst)), axis=0)
+    wtw_all = anp.concatenate(tuple(reversed(wtw_lst)), axis=0)
+    if profiler is not None:
+        profiler.stop('issm_part2')
+
     # Compile results
     result = {
-        'num_data': num_data,
-        'vtv': anp.array(vtv_lst),
-        'wtv': anp.array(wtv_lst),
-        'wtw': anp.array(wtw_lst)}
+        'num_data': sum(precomputed['ydims']),
+        'vtv': vtv_all,
+        'wtv': wtv_all,
+        'wtw': wtw_all}
     if not skip_c_d:
         result['c'] = anp.array(c_lst)
         result['d'] = anp.array(d_lst)
@@ -257,7 +354,8 @@ def posterior_computations(
         'chol_fact': lfact,
         'svec': svec,
         'pvec': pvec,
-        'criterion': criterion}
+        'criterion': criterion,
+        'likelihood': issm_likelihood}
 
 
 def predict_posterior_marginals(
@@ -285,6 +383,7 @@ def sample_posterior_marginals(
     return anp.multiply(post_stds, n01_mat) + _colvec(post_means)
 
 
+# TODO!! Use precomputation and `issm_likelihood_computations` !!
 def sample_posterior_joint(
         poster_state: Dict, mean, kernel, feature, targets: List,
         issm_params: Dict, r_min: int, r_max: int, random_state: RandomState,
@@ -372,13 +471,13 @@ def sample_posterior_joint(
             'alpha': alpha * onevec,
             'beta': beta * onevec,
             'gamma': gamma}
-        issm_likelihood = issm_likelihood_computations(
+        issm_likelihood = issm_likelihood_slow_computations(
             [_flatvec(v) for v in ycols], _issm_params, r_min, r_max,
             skip_c_d=True)
         vtv = issm_likelihood['vtv']
         wtv = issm_likelihood['wtv']
         # v^T v, w^T v for observed (last entry)
-        issm_likelihood = issm_likelihood_computations(
+        issm_likelihood = issm_likelihood_slow_computations(
             [targets], issm_params, r_min, r_max)
         vtv = _rowvec(
             anp.concatenate((vtv, issm_likelihood['vtv']), axis=None))
@@ -409,3 +508,97 @@ def sample_posterior_joint(
     return {
         'f': fsamples,
         'y': ysamples}
+
+
+def issm_likelihood_slow_computations(
+        targets: List[tuple], issm_params: Dict, r_min: int, r_max: int,
+        skip_c_d: bool = False,
+        profiler: Optional[SimpleProfiler] = None) -> Dict:
+    """
+    Naive implementation of `issm_likelihood_computations`, which does not
+    require precomputations, but is much slower. Here, results are computed
+    one datapoint at a time, instead of en bulk.
+
+    This code is used in unit testing only.
+    """
+    num_configs = len(targets)
+    num_res = r_max + 1 - r_min
+    assert num_configs > 0, "targets must not be empty"
+    assert num_res > 0, f"r_min = {r_min} must be <= r_max = {r_max}"
+    alphas = anp.reshape(issm_params['alpha'], (-1,))
+    betas = anp.reshape(issm_params['beta'], (-1,))
+    gamma = issm_params['gamma']
+    n = getval(alphas.shape[0])
+    assert n == num_configs, f"alpha.size = {n} != {num_configs}"
+    n = getval(betas.shape[0])
+    assert n == num_configs, f"beta.size = {n} != {num_configs}"
+    # Outer loop over configurations
+    c_lst = []
+    d_lst = []
+    vtv_lst = []
+    wtv_lst = []
+    wtw_lst = []
+    num_data = 0
+    for i, yvec in enumerate(targets):
+        alpha = alphas[i]
+        alpha_m1 = alpha - 1.0
+        beta = betas[i]
+        ydim = len(yvec)
+        if profiler is not None:
+            profiler.start('issm_part1')
+        num_data += ydim
+        r_obs = r_min + ydim  # Observed in range(r_min, r_obs)
+        assert 0 < ydim <= num_res,\
+            f"len(y[{i}]) = {ydim}, num_res = {num_res}"
+        if not skip_c_d:
+            # c_i, d_i
+            if ydim < num_res:
+                lrvec = anp.array(
+                    [np.log(r) for r in range(r_obs, r_max + 1)]) *\
+                        alpha_m1 + beta
+                c_scal = alpha * anp.exp(logsumexp(lrvec))
+                d_scal = anp.square(gamma * alpha) * anp.exp(
+                    logsumexp(lrvec * 2.0))
+                c_lst.append(c_scal)
+                d_lst.append(d_scal)
+            else:
+                c_lst.append(0.0)
+                d_lst.append(0.0)
+        # Inner loop for v_i, w_i
+        if profiler is not None:
+            profiler.stop('issm_part1')
+            profiler.start('issm_part2')
+        yprev = yvec[-1]  # y_{j-1}
+        vprev = 1.0  # v_{j-1}
+        wprev = yprev  # w_{j-1}
+        vtv = vprev * vprev
+        wtv = wprev * vprev
+        wtw = wprev * wprev
+        for j in range(1, ydim):
+            ycurr = yvec[ydim - j - 1]  # y_j
+            # a_{j-1}
+            ascal = alpha * anp.exp(np.log(r_obs - j) * alpha_m1 + beta)
+            escal = gamma * ascal + 1.0
+            vcurr = escal * vprev  # v_j
+            wcurr = escal * wprev + ycurr - yprev + ascal  # w_j
+            vtv = vtv + vcurr * vcurr
+            wtv = wtv + wcurr * vcurr
+            wtw = wtw + wcurr * wcurr
+            yprev = ycurr
+            vprev = vcurr
+            wprev = wcurr
+        vtv_lst.append(vtv)
+        wtv_lst.append(wtv)
+        wtw_lst.append(wtw)
+        if profiler is not None:
+            profiler.stop('issm_part2')
+    # Compile results
+    result = {
+        'num_data': num_data,
+        'vtv': anp.array(vtv_lst),
+        'wtv': anp.array(wtv_lst),
+        'wtw': anp.array(wtw_lst)}
+    if not skip_c_d:
+        result['c'] = anp.array(c_lst)
+        result['d'] = anp.array(d_lst)
+    return result

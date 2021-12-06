@@ -263,9 +263,9 @@ def test_optimization_improves():
     for active_model, constraint_model in zip(active_models, constraint_models):
         models = {INTERNAL_METRIC_NAME: active_model, INTERNAL_CONSTRAINT_NAME: constraint_model}
         cei = CEIAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
+        hp_ranges = active_model.hp_ranges_for_prediction()
         opt = LBFGSOptimizeAcquisition(
-            models[INTERNAL_METRIC_NAME].state.hp_ranges, models, CEIAcquisitionFunction, INTERNAL_METRIC_NAME)
-        hp_ranges = active_model.state.hp_ranges
+            hp_ranges, models, CEIAcquisitionFunction, INTERNAL_METRIC_NAME)
         non_zero_acq_at_least_once = False
         initial_point = random.uniform(low=0.0, high=0.1, size=(2,))
         acq0, df0 = cei.compute_acq_with_gradient(initial_point)

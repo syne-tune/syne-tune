@@ -181,9 +181,9 @@ def test_optimization_improves():
     for active_model, cost_model in zip(active_models, cost_models):
         models = {INTERNAL_METRIC_NAME: active_model, COST_METRIC_NAME: cost_model}
         eipu = EIpuAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
+        hp_ranges = active_model.hp_ranges_for_prediction()
         opt = LBFGSOptimizeAcquisition(
-            models[INTERNAL_METRIC_NAME].state.hp_ranges, models, EIpuAcquisitionFunction, INTERNAL_METRIC_NAME)
-        hp_ranges = active_model.state.hp_ranges
+            hp_ranges, models, EIpuAcquisitionFunction, INTERNAL_METRIC_NAME)
         non_zero_acq_at_least_once = False
         initial_point = random.uniform(low=0.0, high=0.1, size=(2,))
         acq0, df0 = eipu.compute_acq_with_gradient(initial_point)

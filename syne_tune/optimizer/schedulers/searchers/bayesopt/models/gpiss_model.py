@@ -25,46 +25,55 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.gpiss_model \
-    import GaussianProcessISSModel
+    import GaussianProcessLearningCurveModel
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
     import prepare_data
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.posterior_state \
+    import GaussProcAdditivePosteriorState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import SurrogateModel
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 from syne_tune.optimizer.schedulers.utils.simple_profiler \
     import SimpleProfiler
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import INTERNAL_METRIC_NAME
 
 logger = logging.getLogger(__name__)
 
 
-class GaussProcISSSurrogateModel(BaseSurrogateModel):
+class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
     def __init__(
             self, state: TuningJobState, active_metric: str,
-            gpmodel: GaussianProcessISSModel,
+            gpmodel: GaussianProcessLearningCurveModel,
             hp_ranges: HyperparameterRanges,
-            means_observed_candidates: np.ndarray):
+            means_observed_candidates: np.ndarray,
+            normalize_mean: float = 0.0, normalize_std: float = 1.0):
         """
-        Gaussian Process Innovation State Space (GP-ISS) surrogate model, where
-        model parameters are fit by marginal likelihood maximization.
+        Gaussian Process additive surrogate model, where model parameters are
+        fit by marginal likelihood maximization.
 
         Pending evaluations in `state` are not taken into account here.
         Note that `state` contains extended configs (x, r), while the GP
-        part of the GP-ISSM is over configs x (it models the function
-        at r_max).
+        part of the model is over configs x (it models the function at r_max).
+
+        `means_observed_candidates` are what is returned by
+        `predict_mean_current_candidates`, after denormalization.
 
         :param state: TuningJobSubState
         :param active_metric: Name of the metric to optimize.
-        :param gpmodel: GaussianProcessISSModel
+        :param gpmodel: GaussianProcessLearningCurveModel
         :param hp_ranges: HyperparameterRanges for predictions
-        :param means_observed_candidates: Used for `current_best`
+        :param means_observed_candidates: What is returned by
+            `predict_mean_current_candidates`
+        :param normalize_mean: Mean used to normalize targets
+        :param normalize_std: Stddev used to normalize targets
         """
         super().__init__(state, active_metric)
         self._gpmodel = gpmodel
         self._hp_ranges = hp_ranges
-        self._means_observed_candidates = means_observed_candidates
+        self._means_observed_candidates = \
+            means_observed_candidates * normalize_std + normalize_mean
+        self.mean = normalize_mean
+        self.std = normalize_std
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         """
@@ -81,12 +90,14 @@ class GaussProcISSSurrogateModel(BaseSurrogateModel):
                 (post_mean.shape, inputs.shape)
             assert post_variance.shape == (inputs.shape[0],), \
                 (post_variance.shape, inputs.shape)
-            post_std = np.sqrt(post_variance)
+            # Undo normalization applied to targets
+            mean_denorm = post_mean * self.std + self.mean
+            std_denorm = np.sqrt(post_variance) * self.std
             predictions_list.append(
-                {'mean': post_mean, 'std': post_std})
+                {'mean': mean_denorm, 'std': std_denorm})
         return predictions_list
 
-    def _hp_ranges_for_prediction(self) -> HyperparameterRanges:
+    def hp_ranges_for_prediction(self) -> HyperparameterRanges:
         """
         For this model, predictions are done on normal configs, not on extended
         ones (as self.state.hp_ranges would do).
@@ -96,57 +107,57 @@ class GaussProcISSSurrogateModel(BaseSurrogateModel):
     def backward_gradient(
             self, input: np.ndarray,
             head_gradients: List[Dict[str, np.ndarray]]) -> List[np.ndarray]:
-        poster_states = self._gpmodel.states
+        poster_states = self.posterior_states
         assert poster_states is not None, \
             "Cannot run backward_gradient without a posterior state"
         assert len(poster_states) == len(head_gradients), \
             "len(posterior_states) = {} != {} = len(head_gradients)".format(
                 len(poster_states), len(head_gradients))
         return [
-            poster_state.backward_gradient(input, head_gradient)
+            poster_state.backward_gradient(
+                input, head_gradient, self.mean, self.std)
             for poster_state, head_gradient in zip(
                 poster_states, head_gradients)]
 
+    def does_mcmc(self):
+        return False
+
+    @property
+    def posterior_states(self) -> Optional[List[GaussProcAdditivePosteriorState]]:
+        return self._gpmodel.states
+
     def predict_mean_current_candidates(self) -> List[np.ndarray]:
-        return [self._means_observed_candidates.reshape((-1, 1))]
+        return [self._means_observed_candidates]
 
 
-# TODO:
-# DebugLogPrinter has parts which are specific to GaussProcSurrogateModel,
-# these are not used here (does this go through?)
-class GaussProcISSModelFactory(TransformerModelFactory):
+class GaussProcAdditiveModelFactory(TransformerModelFactory):
     def __init__(
-            self, gpmodel: GaussianProcessISSModel,
-            active_metric: str = INTERNAL_METRIC_NAME,
+            self, active_metric: str,
+            gpmodel: GaussianProcessLearningCurveModel,
+            configspace_ext: ExtendedConfiguration,
             profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None):
+            debug_log: Optional[DebugLogPrinter] = None,
+            normalize_targets: bool = False):
         """
         Pending evaluations in `state` are not taken into account here.
         Note that `state` contains extended configs (x, r), while the GP
         part of the GP-ISSM is over configs x (it models the function
         at r_max).
 
-        :param gpmodel: GaussianProcessISSModel
         :param active_metric: Name of the metric to optimize.
+        :param gpmodel: GaussianProcessLearningCurveModel
+        :param configspace_ext: ExtendedConfiguration
 
         """
         self._gpmodel = gpmodel
         self.active_metric = active_metric
-        self._configspace_ext = None  # Set later
-        self._debug_log = debug_log
-        self._profiler = profiler
-
-    def set_configspace_ext(self, configspace_ext: ExtendedConfiguration):
-        """
-        Delayed assignment of `configspace_ext`.
-
-        :param configspace_ext: ExtendedConfiguration to deal with extended
-            configs (x, r) in `state`
-        """
         r_min, r_max = configspace_ext.resource_attr_range
         assert 0 < r_min < r_max, \
             f"r_min = {r_min}, r_max = {r_max}: Need 0 < r_min < r_max"
         self._configspace_ext = configspace_ext
+        self._debug_log = debug_log
+        self._profiler = profiler
+        self.normalize_targets = normalize_targets
 
     @property
     def debug_log(self) -> Optional[DebugLogPrinter]:
@@ -171,33 +182,51 @@ class GaussProcISSModelFactory(TransformerModelFactory):
         if self._debug_log is not None:
             self._debug_log.set_state(state)
         # Prepare data in format required by GP-ISSM
-        data = prepare_data(state, self._configspace_ext, self.active_metric)
+        data = prepare_data(
+            state, self._configspace_ext, self.active_metric,
+            normalize_targets=self.normalize_targets)
+        # Precomputations (optional)
+        self._gpmodel.data_precomputations(data)
 
         if not fit_params:
             logger.info("Recomputing posterior state")
-            self._gpmodel.recompute_states(data, profiler=self._profiler)
+            self._gpmodel.recompute_states(data)
         else:
             logger.info(f"Fitting surrogate model for {self.active_metric}")
             self._gpmodel.fit(data, profiler=self._profiler)
         if self._debug_log is not None:
             self._debug_log.set_model_params(self.get_params())
 
-        return GaussProcISSSurrogateModel(
+        if self.normalize_targets:
+            extra_kwargs = {
+                'normalize_mean': data['mean_targets'],
+                'normalize_std': data['std_targets']}
+        else:
+            extra_kwargs = dict()
+        return GaussProcAdditiveSurrogateModel(
             state=state,
             active_metric=self.active_metric,
             gpmodel=self._gpmodel,
             hp_ranges=self._configspace_ext.hp_ranges,
             means_observed_candidates=self._predict_mean_current_candidates(
-                data))
+                data), **extra_kwargs)
 
     def _predict_mean_current_candidates(self, data: Dict) -> np.ndarray:
         """
         Returns the predictive mean (signal with key 'mean') at all current
         candidate configurations (both state.candidate_evaluations and
         state.pending_evaluations). Different to multi-task GP models, these
-        means are over f(x, r_max) only.
+        means are over f(x, r_max) only. They are normalized, so have to be
+        denormalized first.
 
         :return: List of predictive means
         """
         means, _ = self._gpmodel.predict(data['features'])[0]
         return means.reshape((-1, 1))
+
+    def predictions_use_extended_configs(self) -> bool:
+        """
+        Even though `TuningJobState` uses extended configs, predictions do
+        not.
+        """
+        return False

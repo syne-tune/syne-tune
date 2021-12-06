@@ -16,7 +16,7 @@ from typing import List, Iterator, Iterable, Tuple, Type, Optional, Set, Dict, \
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration, dictionarize_objective, INTERNAL_METRIC_NAME
+    import Configuration, INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
@@ -44,8 +44,6 @@ def assign_active_metric(model, active_metric):
 
 class NextCandidatesAlgorithm:
     def next_candidates(self) -> List[Configuration]:
-        # Not using ABC otherwise it will be difficult to create a subclass that also is a
-        # NamedTuple(as both define their own metaclass)
         raise NotImplemented("Abstract method")
 
 
@@ -108,7 +106,7 @@ class SurrogateModel(ABC):
         """
         pass
 
-    def _hp_ranges_for_prediction(self) -> HyperparameterRanges:
+    def hp_ranges_for_prediction(self) -> HyperparameterRanges:
         """
         :return: HyperparameterRanges to be used for predictions. By default,
             this is self.state.hp_ranges
@@ -122,7 +120,7 @@ class SurrogateModel(ABC):
         candidates, which are encoded to input points here.
         """
         return self.predict(
-            self._hp_ranges_for_prediction().to_ndarray_matrix(candidates))
+            self.hp_ranges_for_prediction().to_ndarray_matrix(candidates))
 
     @abstractmethod
     def current_best(self) -> List[np.ndarray]:
@@ -226,11 +224,12 @@ class AcquisitionFunction(ScoringFunction):
     def score(self, candidates: Iterable[Configuration], model: Optional[SurrogateOutputModel] = None) -> List[float]:
         if model is None:
             model = self.model
-        elif isinstance(model, SurrogateModel):
-            model = dictionarize_objective(model)
-        assert set(model.keys()) == set(self.model.keys())
-        active_model = model[self.active_metric]
-        inputs = active_model.state.hp_ranges.to_ndarray_matrix(candidates)
+        if isinstance(model, dict):
+            active_model = model[self.active_metric]
+        else:
+            active_model = model
+        hp_ranges = active_model.hp_ranges_for_prediction()
+        inputs = hp_ranges.to_ndarray_matrix(candidates)
         return list(self.compute_acq(inputs, model=model))
 
 
