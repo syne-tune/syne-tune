@@ -209,10 +209,6 @@ def resource_kernel_likelihood_computations(
     works for any resource kernel and mean function, not just for
     :class:`ExponentialDecayBaseKernelFunction`.
 
-    Likelihood computations are detailed in the report
-
-    SyneDocs/MatthiasS/mlp_tuning/gpmodel_hb.tex, Section 5.4.
-
     Results returned are:
     - c: n-vector [c_i]
     - d: n-vector [d_i], positive
