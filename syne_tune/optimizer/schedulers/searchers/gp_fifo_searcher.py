@@ -509,7 +509,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
                     "This configuration is already registered as labeled:\n" +\
                     f"config:\n   {config}\n" +\
                     f"labeled config [{pos_cand} of {num_labeled}]:\n   {config_labeled}"
-                assert False, error_msg
+                raise ValueError(error_msg)
             self.state_transformer.append_candidate(config)
 
     def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
