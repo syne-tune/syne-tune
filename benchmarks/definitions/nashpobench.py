@@ -12,22 +12,24 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from syne_tune.search_space import choice, randint
+from syne_tune.search_space import choice, randint, uniform, loguniform
 from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
     METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
 
+from sklearn.ensemble import RandomForestRegressor
+
 
 _config_space = {
-        "hp_activation_fn_1": choice(["tanh", "relu"]),
-        "hp_activation_fn_2": choice(["tanh", "relu"]),
-        "hp_batch_size": randint(0, 4),
-        "hp_dropout_1": randint(0, 3),
-        "hp_dropout_2": randint(0, 3),
-        "hp_init_lr": randint(0, 5),
-        'hp_lr_schedule': choice(["cosine", "const"]),
-        'hp_n_units_1': randint(0, 5),
-        'hp_n_units_2': randint(0, 5),
-    }
+    "hp_activation_fn_1": choice(["tanh", "relu"]),
+    "hp_activation_fn_2": choice(["tanh", "relu"]),
+    "hp_batch_size": randint(8, 64),
+    "hp_dropout_1": uniform(0.0, 0.6),
+    "hp_dropout_2": uniform(0.0, 0.6),
+    "hp_init_lr": loguniform(0.0005, 0.1),
+    'hp_lr_schedule': choice(["cosine", "const"]),
+    'hp_n_units_1': randint(16, 512),
+    'hp_n_units_2': randint(16, 512),
+}
 
 
 def nashpobench_default_params(params=None):
@@ -60,7 +62,7 @@ def nashpobench_benchmark(params):
         dont_sleep=params['dont_sleep'],
         blackbox_repo_s3_root=params.get('blackbox_repo_s3_root'))
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" / "training_scripts" / "nas_hpo_bench" / "nas_hpo_bench.py",
+        'script': Path(__file__).parent.parent.parent / "examples" / "training_scripts" / "nashpobench" / "nashpobench.py",
         'metric': METRIC_VALID_LOSS,
         'mode': 'min',
         'resource_attr': RESOURCE_ATTR,
@@ -70,6 +72,7 @@ def nashpobench_benchmark(params):
         'cost_model': None,
         'supports_simulated': True,
         'blackbox_name': BLACKBOX_NAME,
+        'surrogate': RandomForestRegressor(),
         'time_this_resource_attr': METRIC_ELAPSED_TIME,
     }
 

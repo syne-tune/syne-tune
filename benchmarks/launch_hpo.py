@@ -275,6 +275,7 @@ if __name__ == '__main__':
                 backend_kwargs.update({
                     'blackbox_name': blackbox_name,
                     'dataset': params.get('dataset_name'),
+                    'surrogate': benchmark.get('surrogate'),
                     'time_this_resource_attr': benchmark.get(
                         'time_this_resource_attr'),
                     'max_resource_attr': benchmark.get('max_resource_attr'),

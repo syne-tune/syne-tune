@@ -79,14 +79,20 @@ class BlackboxSurrogate(Blackbox):
         # gets hyperparameters types, categorical for CategoricalHyperparameter, numeric for everything else
         numeric = []
         categorical = []
-        features = list(self.configuration_space.keys())
-        if self.fidelity_space is not None:
-            features += self.fidelity_space.keys()
-        for hp in features:
+        for hp_name in self.configuration_space:
+            hp = self.configuration_space[hp_name]
             if isinstance(hp, sp.Categorical):
-                categorical.append(hp)
+                categorical.append(hp_name)
             else:
-                numeric.append(hp)
+                numeric.append(hp_name)
+
+        if self.fidelity_space is not None:
+            for fideltiy_name in self.fidelity_space:
+                hp = self.fidelity_space[fideltiy_name]
+                if isinstance(hp, sp.Categorical):
+                    categorical.append(fideltiy_name)
+                else:
+                    numeric.append(fideltiy_name)
 
         # apply transformation to columns according its type
         print(f"fitting surrogate predicting {self.y.columns} given numerical cols {numeric} and "

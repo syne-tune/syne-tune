@@ -23,6 +23,8 @@ from benchmarks.utils import parse_bool
 from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
     METRIC_VALID_LOSS, METRIC_ELAPSED_TIME, RESOURCE_ATTR,  BLACKBOX_NAME, CONFIG_SPACE
 
+METRIC_RUNTIME = 'metric_runtime'
+
 
 def objective(config):
     dont_sleep = parse_bool(config['dont_sleep'])
@@ -31,15 +33,9 @@ def objective(config):
     s3_root = config.get('blackbox_repo_s3_root')
     blackbox = load_blackbox(
         BLACKBOX_NAME, s3_root=s3_root)[config['dataset_name']]
-    # We load metric values for all epochs required here
+
     essential_config = {
         k: config[k] for k in CONFIG_SPACE}
-
-    # cast integers back to categoricals
-    for k in CONFIG_SPACE:
-        if k in ["hp_batch_size", "hp_dropout_1", "hp_dropout_2",
-                 "hp_init_lr", 'hp_n_units_1', 'hp_n_units_2']:
-            essential_config[k] = CONFIG_SPACE[k].categories[config[k]]
 
     fidelity_range = (1, config['epochs'])
     all_metrics = metrics_for_configuration(
@@ -78,7 +74,7 @@ def objective(config):
     elapsed_time = 0
     for epoch in range(resume_from + 1, config['epochs'] + 1):
         metrics_this_epoch = all_metrics[epoch - 1]
-        time_this_epoch = metrics_this_epoch[METRIC_ELAPSED_TIME]
+        time_this_epoch = metrics_this_epoch[METRIC_RUNTIME]
         valid_error = metrics_this_epoch[METRIC_VALID_LOSS]
         elapsed_time += time_this_epoch
 
@@ -116,7 +112,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_name', type=str, required=True)
     parser.add_argument('--dont_sleep', type=str, required=True)
     parser.add_argument('--blackbox_repo_s3_root', type=str)
-    for name in CONFIG_KEYS:
+    for name in CONFIG_SPACE:
         parser.add_argument(f"--{name}", type=str, required=True)
     add_checkpointing_to_argparse(parser)
 
