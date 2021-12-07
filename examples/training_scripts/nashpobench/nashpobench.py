@@ -39,7 +39,7 @@ def objective(config):
     for k in CONFIG_SPACE:
         if k in ["hp_batch_size", "hp_dropout_1", "hp_dropout_2",
                  "hp_init_lr", 'hp_n_units_1', 'hp_n_units_2']:
-            config[k] = CONFIG_SPACE[k].categories[config[k]]
+            essential_config[k] = CONFIG_SPACE[k].categories[config[k]]
 
     fidelity_range = (1, config['epochs'])
     all_metrics = metrics_for_configuration(
