@@ -16,7 +16,6 @@ import logging
 import time
 
 from syne_tune.report import Reporter
-from syne_tune.search_space import Categorical
 
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse

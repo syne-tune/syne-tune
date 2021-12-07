@@ -14,7 +14,7 @@ import logging
 
 from benchmarks.definitions.nasbench201 import nasbench201_benchmark, \
     nasbench201_default_params
-from benchmarks.definitions.nas_hpo_bench import nashpobench_benchmark, nashpobench_default_params
+from benchmarks.definitions.nashpobench import nashpobench_benchmark, nashpobench_default_params
 
 from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist \
     import mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
