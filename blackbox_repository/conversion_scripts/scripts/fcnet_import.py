@@ -21,6 +21,15 @@ from blackbox_repository.conversion_scripts.utils import repository_path
 from syne_tune.util import catchtime
 
 
+BLACKBOX_NAME = 'fcnet'
+
+METRIC_VALID_LOSS = 'metric_valid_loss'
+
+METRIC_ELAPSED_TIME = 'metric_elapsed_time'
+
+RESOURCE_ATTR = 'hp_epoch'
+
+
 def convert_dataset(dataset_path: Path, max_rows: int = None):
     data = h5py.File(dataset_path, "r")
     keys = data.keys()
@@ -33,12 +42,9 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     objective_names = [
         'valid_loss',
         'train_loss',
-        # only use train/valid loss as mse are the same numbers
-        # 'valid_mse',
-        # 'train_mse',
         'final_test_error',
         'n_params',
-        'runtime',
+        'elapsed_time',
     ]
 
     # todo for now only full metrics
@@ -80,9 +86,9 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     # (n_hps, n_seeds, n_epochs)
     # todo utilize expand dim instead of reshape
     epochs = np.repeat(np.arange(1, 101).reshape(1, -1), n_hps * n_seeds, axis=0).reshape(n_hps, n_seeds, -1)
-    runtime_per_epoch = (100 / epochs) * runtime.reshape((n_hps, n_seeds, 1))
+    elapsed_time = (epochs / 100) * runtime.reshape((n_hps, n_seeds, 1))
     
-    save_objective_values_helper('runtime', runtime_per_epoch)
+    save_objective_values_helper('elapsed_time', elapsed_time)
 
     # metrics that are fully observed, only use train/valid loss as mse are the same numbers
     # for m in ['train_loss', 'train_mse', 'valid_loss', 'valid_mse']:
@@ -104,21 +110,25 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
         'hp_n_units_2': sp.choice([16, 32, 64, 128, 256, 512]),
     }
     fidelity_space = {
-        "hp_epoch": sp.randint(lower=1, upper=100)
+        RESOURCE_ATTR: sp.randint(lower=1, upper=100)
     }
 
+    objective_names = [f"metric_{m}" for m in objective_names]
+    # Sanity checks:
+    assert objective_names[0] == METRIC_VALID_LOSS
+    assert objective_names[4] == METRIC_ELAPSED_TIME
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=configuration_space,
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
         fidelity_values=fidelity_values,
-        objectives_names=[f"metric_{m}" for m in objective_names],
+        objectives_names=objective_names,
     )
 
 
 def generate_fcnet(s3_root: Optional[str] = None):
-    blackbox_name = "fcnet"
+    blackbox_name = BLACKBOX_NAME
     fcnet_file = repository_path / "fcnet_tabular_benchmarks.tar.gz"
     if not (repository_path / "fcnet_tabular_benchmarks.tar.gz").exists():
         src = "http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz"
@@ -147,7 +157,7 @@ def plot_learning_curves():
     import matplotlib.pyplot as plt
     from blackbox_repository import load
     # plot one learning-curve for sanity-check
-    bb_dict = load("fcnet")
+    bb_dict = load(BLACKBOX_NAME)
 
     b = bb_dict['naval_propulsion']
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}
@@ -155,7 +165,7 @@ def plot_learning_curves():
     errors = []
     for i in range(1, 101):
         res = b.objective_function(configuration=configuration, fidelity={'epochs': i})
-        errors.append(res['metric_valid_loss'])
+        errors.append(res[METRIC_VALID_LOSS])
     plt.plot(errors)
 
 
