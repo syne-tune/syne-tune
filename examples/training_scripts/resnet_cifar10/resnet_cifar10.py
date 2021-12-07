@@ -21,7 +21,6 @@ from syne_tune.search_space import randint, uniform, loguniform, \
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
     pytorch_load_save_functions
-from benchmarks.utils import get_cost_model_for_batch_size
 
 
 BATCH_SIZE_LOWER = 8
@@ -30,6 +29,12 @@ BATCH_SIZE_UPPER = 256
 
 BATCH_SIZE_KEY = 'batch_size'
 
+METRIC_NAME = 'objective'
+
+RESOURCE_ATTR = 'epoch'
+
+ELAPSED_TIME_ATTR = 'elapsed_time'
+
 
 _config_space = {
     BATCH_SIZE_KEY: randint(BATCH_SIZE_LOWER, BATCH_SIZE_UPPER),
@@ -37,46 +42,6 @@ _config_space = {
     'weight_decay': loguniform(1e-5, 1e-3),
     'lr': loguniform(1e-3, 0.1)
 }
-
-
-def resnet_cifar10_default_params(params=None):
-    if params is not None and params.get('backend') == 'sagemaker':
-        instance_type = 'ml.g4dn.xlarge'
-    else:
-        # For local backend, GPU cores serve different workers, so we
-        # need more memory
-        instance_type = 'ml.g4dn.12xlarge'
-    return {
-        'epochs': 27,
-        'grace_period': 1,
-        'reduction_factor': 3,
-        'instance_type': instance_type,
-        'num_workers': 4,
-        'framework': 'PyTorch',
-        'framework_version': '1.6',
-        'num_gpus': 1,
-        'cost_model_type': 'quadratic_spline',
-    }
-
-def resnet_cifar10_benchmark(params):
-    config_space = dict(
-        _config_space,
-        epochs=params['max_resource_level'],
-        dataset_path=params['dataset_path'],
-        num_gpus=params['num_gpus'])
-    return {
-        'script': __file__,
-        'metric': 'objective',
-        'mode': 'max',
-        'resource_attr': 'epoch',
-        'elapsed_time_attr': 'elapsed_time',
-        'max_resource_attr': 'epochs',
-        'map_reward': '1_minus_x',
-        'config_space': config_space,
-        'cost_model': get_cost_model_for_batch_size(
-            params, batch_size_key=BATCH_SIZE_KEY,
-            batch_size_range=(BATCH_SIZE_LOWER, BATCH_SIZE_UPPER)),
-    }
 
 
 # ATTENTION: train_dataset, valid_dataset are both based on the CIFAR10
@@ -233,10 +198,9 @@ def objective(config):
         elapsed_time = time.time() - ts_start
 
         # Feed the score back back to Tune.
-        report(
-            epoch=epoch,
-            objective=y,
-            elapsed_time=elapsed_time)
+        report(**{RESOURCE_ATTR: epoch,
+                  METRIC_NAME: y,
+                  ELAPSED_TIME_ATTR: elapsed_time})
 
         # Write checkpoint (optional)
         checkpoint_model_at_rung_level(config, save_model_fn, epoch)
@@ -258,7 +222,6 @@ if __name__ == '__main__':
     from torch.utils.data.sampler import SubsetRandomSampler
     from torchvision import datasets, transforms
     from torchvision.models import resnet18
-
 
     # Superclass reference torch.nn.Module requires torch to be defined
     class Model(torch.nn.Module):

@@ -60,7 +60,8 @@ def nasbench201_benchmark(params):
         dont_sleep=params['dont_sleep'],
         blackbox_repo_s3_root=params.get('blackbox_repo_s3_root'))
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" / "training_scripts" / "nasbench201" / "nasbench201.py",
+        'script': Path(__file__).parent.parent.parent / "examples" /
+                  "training_scripts" / "nasbench201" / "nasbench201.py",
         'metric': METRIC_VALID_ERROR,
         'mode': 'min',
         'resource_attr': RESOURCE_ATTR,

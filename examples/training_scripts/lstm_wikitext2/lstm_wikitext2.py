@@ -25,7 +25,7 @@ from syne_tune.search_space import randint, uniform, loguniform, \
 from benchmarks.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
     pytorch_load_save_functions
-from benchmarks.utils import parse_bool, get_cost_model_for_batch_size
+from benchmarks.utils import parse_bool
 
 
 BATCH_SIZE_LOWER = 8
@@ -33,6 +33,12 @@ BATCH_SIZE_LOWER = 8
 BATCH_SIZE_UPPER = 256
 
 BATCH_SIZE_KEY = 'batch_size'
+
+METRIC_NAME = 'objective'
+
+RESOURCE_ATTR = 'epoch'
+
+ELAPSED_TIME_ATTR = 'elapsed_time'
 
 
 _config_space = {
@@ -42,50 +48,6 @@ _config_space = {
     'clip': uniform(0.1, 2),
     'lr_factor': loguniform(1, 100)
 }
-
-
-def lstm_wikitext2_default_params(params=None):
-    if params is not None and params.get('backend') == 'sagemaker':
-        instance_type = 'ml.g4dn.xlarge'
-        num_workers = 8
-    else:
-        # For local backend, GPU cores serve different workers, so we
-        # need more memory
-        instance_type = 'ml.g4dn.12xlarge'
-        num_workers = 4
-    return {
-        'max_resource_level': 81,
-        'grace_period': 1,
-        'reduction_factor': 3,
-        'instance_type': instance_type,
-        'num_workers': num_workers,
-        'framework': 'PyTorch',
-        'framework_version': '1.6',
-        'report_current_best': 'False',
-        'dataset_path': './',
-        'cost_model_type': 'quadratic_spline',
-    }
-
-
-def lstm_wikitext2_benchmark(params):
-    config_space = dict(
-        _config_space,
-        dataset_path=params['dataset_path'],
-        epochs=params['max_resource_level'],
-        report_current_best=params['report_current_best'])
-    return {
-        'script': __file__,
-        'metric': 'objective',
-        'mode': 'max',
-        'resource_attr': 'epoch',
-        'elapsed_time_attr': 'elapsed_time',
-        'max_resource_attr': 'epochs',
-        'map_reward': 'minus_x',
-        'config_space': config_space,
-        'cost_model': get_cost_model_for_batch_size(
-            params, batch_size_key=BATCH_SIZE_KEY,
-            batch_size_range=(BATCH_SIZE_LOWER, BATCH_SIZE_UPPER)),
-    }
 
 
 DATASET_PATH = 'https://raw.githubusercontent.com/pytorch/examples/master/word_language_model/data/wikitext-2/'
@@ -342,10 +304,9 @@ def objective(config):
         # Feed the score back back to Tune.
         _loss = best_val_loss if report_current_best else val_loss
         objective = -math.exp(_loss)
-        report(
-            epoch=epoch,
-            objective=objective,
-            elapsed_time=elapsed_time)
+        report(**{RESOURCE_ATTR: epoch,
+                  METRIC_NAME: objective,
+                  ELAPSED_TIME_ATTR: elapsed_time})
 
         # Write checkpoint (optional)
         checkpoint_model_at_rung_level(config, save_model_fn, epoch)
@@ -365,7 +326,6 @@ if __name__ == '__main__':
     import torch
     import torch.nn as nn
     import torch.nn.functional as F
-
 
     # References to superclasses require torch and torch.nn to be defined here
 
