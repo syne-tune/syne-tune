@@ -280,7 +280,7 @@ class UnivariateSplineCostModel(NonLinearCostModel):
         weight_lst = [1] * num_data0
         data_config = dict()
         for config, target in dataset[num_data0:]:
-            config_key = str(self.hp_ranges.config_to_tuple(config))
+            config_key = self.hp_ranges.config_to_match_string(config)
             if config_key in data_config:
                 data_config[config_key][1].append(target)
             else:

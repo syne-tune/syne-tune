@@ -228,14 +228,14 @@ class ModelStateTransformer(object):
     # Note: Comparison by x.candidate == candidate does not work
     # here.
     def _find_candidate(self, candidate: Configuration, lst: List):
-        def _to_tuple(config):
-            return self._state.hp_ranges.config_to_tuple(config)
+        def _to_matchstr(config):
+            return self._state.hp_ranges.config_to_match_string(config)
 
-        cand_tpl = _to_tuple(candidate)
+        cand_tpl = _to_matchstr(candidate)
         try:
             pos = next(
                 i for i, x in enumerate(lst)
-                if _to_tuple(x.candidate) == cand_tpl)
+                if _to_matchstr(x.candidate) == cand_tpl)
         except StopIteration:
             pos = -1
         return pos

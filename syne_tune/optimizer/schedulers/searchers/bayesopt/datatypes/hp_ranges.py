@@ -16,7 +16,7 @@ import numpy as np
 from numpy.random import RandomState
 
 from syne_tune.search_space import Domain, Categorical, \
-    non_constant_hyperparameter_keys, is_log_space
+    non_constant_hyperparameter_keys, is_log_space, config_to_match_string
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 
@@ -229,3 +229,24 @@ class HyperparameterRanges(ABC):
             if skip_last and self.name_last_pos is not None:
                 keys = keys[:-1]  # Skip last pos
         return dict(zip(keys, config_tpl))
+
+    def config_to_match_string(
+            self, config: Configuration, keys=None,
+            skip_last: bool = False) -> str:
+        """
+        Maps configuration to  match string, used to compare for approximate
+        equality. Two configurations are considered to be different if their
+        match strings are not the same.
+
+        :param config: Configuration
+        :param keys: Overrides `_internal_keys`
+        :param skip_last: If True and `name_last_pos` is used, the
+            corresponding attribute is skipped, so that config and
+            tuple are non-extended
+        :return: Match string
+        """
+        if keys is None:
+            keys = self.internal_keys
+            if skip_last and self.name_last_pos is not None:
+                keys = keys[:-1]  # Skip last pos
+        return config_to_match_string(config, self.config_space, keys)

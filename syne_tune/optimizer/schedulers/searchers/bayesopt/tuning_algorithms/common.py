@@ -96,21 +96,21 @@ class ExclusionList(object):
                 self.keys = keys[:pos] + keys[(pos + 1):]
             _elist = [x.candidate for x in state.candidate_evaluations] + \
                      state.pending_candidates + state.failed_candidates
-            self.excl_set = set([self._to_tuple(x) for x in _elist])
+            self.excl_set = set([self._to_matchstr(x) for x in _elist])
         else:
             self.hp_ranges = state['hp_ranges']
             self.excl_set = state['excl_set']
             self.keys = state['keys']
         self.configspace_size = search_space_size(self.hp_ranges.config_space)
 
-    def _to_tuple(self, config) -> tuple:
-        return self.hp_ranges.config_to_tuple(config, keys=self.keys)
+    def _to_matchstr(self, config) -> str:
+        return self.hp_ranges.config_to_match_string(config, keys=self.keys)
 
     def contains(self, config: Configuration) -> bool:
-        return self._to_tuple(config) in self.excl_set
+        return self._to_matchstr(config) in self.excl_set
 
     def add(self, config: Configuration):
-        self.excl_set.add(self._to_tuple(config))
+        self.excl_set.add(self._to_matchstr(config))
 
     def copy(self) -> 'ExclusionList':
         return ExclusionList(

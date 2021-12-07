@@ -90,6 +90,18 @@ class Domain:
         """
         raise NotImplementedError
 
+    def match_string(self, value) -> str:
+        """
+        Returns string representation of `value` (which must be of domain type)
+        which is to match configurations for (approximate) equality.
+        For discrete types (e.g., `Integer`, `Categorical`), this matches for
+        exact equality.
+
+        :param value: Value of domain type (use `cast` to be safe)
+        :return: String representation useful for matching
+        """
+        raise NotImplementedError
+
 
 class Sampler:
     def sample(self,
@@ -275,6 +287,9 @@ class Float(Domain):
         else:
             return 1
 
+    def match_string(self, value) -> str:
+        return f"{value:.7e}"
+
 
 class Integer(Domain):
     class _Uniform(Uniform):
@@ -362,6 +377,9 @@ class Integer(Domain):
     def __len__(self):
         return self.upper - self.lower + 1
 
+    def match_string(self, value) -> str:
+        return str(value)
+
 
 class Categorical(Domain):
     class _Uniform(Uniform):
@@ -382,6 +400,9 @@ class Categorical(Domain):
     def __init__(self, categories: Sequence):
         assert len(categories) > 0
         self.categories = list(categories)
+        value_type = self.value_type
+        assert all(type(x) == value_type for x in self.categories), \
+            f"All entries in categories = {self.categories} must have the same type"
         if isinstance(self.value_type, float):
             logger.warning(
                 "The search space contains a categorical value with float type. "
@@ -415,6 +436,25 @@ class Categorical(Domain):
     @property
     def domain_str(self):
         return f"{self.categories}"
+
+    def cast(self, value):
+        value = self.value_type(value)
+        if value not in self.categories:
+            assert isinstance(value, float), \
+                f"value = {value} not contained in categories = {self.categories}"
+            # For value type float, we do nearest neighbor matching, in order to
+            # avoid meaningless mistakes due to round-off or conversions from
+            # string and back
+            categ_arr = np.array(self.categories)
+            distances = np.abs(categ_arr - value)
+            minind = np.argmin(distances)
+            assert distances[minind] < 0.01 * abs(categ_arr[minind]), \
+                f"value = {value} not contained or close to any in categories = {self.categories}"
+            value = self.categories[minind]
+        return value
+
+    def match_string(self, value) -> str:
+        return str(self.categories.index(value))
 
 
 class Function(Domain):
@@ -529,15 +569,17 @@ class FiniteRange(Domain):
     def value_type(self):
         return float
 
-    def cast(self, value):
+    def _map_to_int(self, value) -> int:
         int_value = np.clip(value, self.lower, self.upper)
         if self.log_scale:
             int_value = np.log(int_value)
         sz = len(self._uniform_int)
-        int_value = int(np.clip(round(
+        return int(np.clip(round(
             (int_value - self._lower_internal) / self._step_internal),
             0, sz - 1))
-        return self._map_from_int(int_value)
+
+    def cast(self, value):
+        return self._map_from_int(self._map_to_int(value))
 
     def set_sampler(self, sampler, allow_override=False):
         raise NotImplementedError()
@@ -555,6 +597,9 @@ class FiniteRange(Domain):
 
     def __len__(self):
         return len(self._uniform_int)
+
+    def match_string(self, value) -> str:
+        return str(self._map_to_int(value))
 
 
 def sample_from(func: Callable[[Dict], Any]):
@@ -794,6 +839,24 @@ def search_space_size(config_space: Dict, upper_limit: int = 2 ** 20) -> Optiona
             if size > upper_limit:
                 return None
     return size
+
+
+def config_to_match_string(config: Dict, config_space: Dict, keys: List[str]) -> str:
+    """
+    Maps configuration to a match string, which can be used to compare configs
+    for (approximate) equality. Only keys in `keys` are used, in that ordering.
+
+    :param config: Configuration to be encoded in match string
+    :param config_space: Configuration space
+    :param keys: Keys of parameters to be encoded
+    :return: Match string
+    """
+    parts = []
+    for key in keys:
+        domain = config_space[key]
+        value = config[key]
+        parts.append(f"{key}:{domain.match_string(value)}")
+    return ",".join(parts)
 
 
 def to_dict(x: "Domain") -> Dict:

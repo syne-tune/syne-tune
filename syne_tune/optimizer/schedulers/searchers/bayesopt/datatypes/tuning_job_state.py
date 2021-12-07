@@ -58,8 +58,8 @@ class TuningJobState(object):
     def _config_key(self, config: Configuration) -> str:
         # If self.hp_ranges serves extended configs, the resource attribute
         # is skipped, so that `config` is always non-extended
-        return str(self.hp_ranges.config_to_tuple(
-            config, skip_last=True))
+        return self.hp_ranges.config_to_match_string(
+            config, skip_last=True)
 
     @property
     def config_pos(self) -> Dict[str, int]:

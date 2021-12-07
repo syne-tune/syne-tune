@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from abc import ABC, abstractmethod
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Any
 import numpy as np
 
 from syne_tune.search_space import Domain, is_log_space, FiniteRange, Categorical
@@ -260,8 +260,8 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
 
 class HyperparameterRangeCategorical(HyperparameterRange):
     def __init__(
-            self, name: str, choices: Tuple[str, ...],
-            active_choices: Tuple[str, ...] = None):
+            self, name: str, choices: Tuple[Any, ...],
+            active_choices: Tuple[Any, ...] = None):
         """
         Can take on discrete set of values.
         :param name: name of dimension.
@@ -269,12 +269,14 @@ class HyperparameterRangeCategorical(HyperparameterRange):
         :param active_choices: If given, must be subset of `choices`.
         """
         super().__init__(name)
-        self.choices = sorted([str(x) for x in choices])
+        self._assert_choices(choices)
+        self.choices = list(choices)
         self.num_choices = len(self.choices)
         assert self.num_choices > 1
         if active_choices is None:
             self._ndarray_bounds = [(0.0, 1.0)] * self.num_choices
         else:
+            self._assert_choices(active_choices)
             _active_choices = set(active_choices)
             self._ndarray_bounds = [(0.0, 0.0)] * self.num_choices
             num = 0
@@ -286,8 +288,22 @@ class HyperparameterRangeCategorical(HyperparameterRange):
                 f"active_choices = {active_choices} must be a subset of " +\
                 f"choices = {choices}"
 
+    @staticmethod
+    def _assert_value_type(value):
+        assert isinstance(value, str) or isinstance(value, int) or \
+            isinstance(value, float), \
+            f"value = {value} has type {type(value)}, must be str, int, or float"
+
+    @staticmethod
+    def _assert_choices(choices: Tuple[Any, ...]):
+        assert len(choices) > 0
+        HyperparameterRangeCategorical._assert_value_type(choices[0])
+        value_type = type(choices[0])
+        assert any(type(x) == value_type for x in choices), \
+            f"All entries in choices = {choices} must have the same type {value_type}"
+
     def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
-        hp = str(hp)
+        self._assert_value_type(hp)
         assert hp in self.choices, "{} not in {}".format(hp, self)
         idx = self.choices.index(hp)
         result = np.zeros(shape=(self.num_choices,))
