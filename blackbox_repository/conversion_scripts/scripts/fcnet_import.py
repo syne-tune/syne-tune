@@ -29,6 +29,18 @@ METRIC_ELAPSED_TIME = 'metric_elapsed_time'
 
 RESOURCE_ATTR = 'hp_epoch'
 
+CONFIG_SPACE = {
+    "hp_activation_fn_1": sp.choice(["tanh", "relu"]),
+    "hp_activation_fn_2": sp.choice(["tanh", "relu"]),
+    "hp_batch_size": sp.choice([8, 16, 32, 64]),
+    "hp_dropout_1": sp.choice([0.0, 0.3, 0.6]),
+    "hp_dropout_2": sp.choice([0.0, 0.3, 0.6]),
+    "hp_init_lr": sp.choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
+    'hp_lr_schedule': sp.choice(["cosine", "const"]),
+    'hp_n_units_1': sp.choice([16, 32, 64, 128, 256, 512]),
+    'hp_n_units_2': sp.choice([16, 32, 64, 128, 256, 512]),
+}
+
 
 def convert_dataset(dataset_path: Path, max_rows: int = None):
     data = h5py.File(dataset_path, "r")
@@ -98,17 +110,6 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
             np.stack([data[key][m][:].astype('float32') for key in tqdm(keys)])
         )
 
-    configuration_space = {
-        "hp_activation_fn_1": sp.choice(["tanh", "relu"]),
-        "hp_activation_fn_2": sp.choice(["tanh", "relu"]),
-        "hp_batch_size": sp.choice([8, 16, 32, 64]),
-        "hp_dropout_1": sp.choice([0.0, 0.3, 0.6]),
-        "hp_dropout_2": sp.choice([0.0, 0.3, 0.6]),
-        "hp_init_lr": sp.choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
-        'hp_lr_schedule': sp.choice(["cosine", "const"]),
-        'hp_n_units_1': sp.choice([16, 32, 64, 128, 256, 512]),
-        'hp_n_units_2': sp.choice([16, 32, 64, 128, 256, 512]),
-    }
     fidelity_space = {
         RESOURCE_ATTR: sp.randint(lower=1, upper=100)
     }
@@ -119,7 +120,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     assert objective_names[4] == METRIC_ELAPSED_TIME
     return BlackboxTabular(
         hyperparameters=hyperparameters,
-        configuration_space=configuration_space,
+        configuration_space=CONFIG_SPACE,
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
         fidelity_values=fidelity_values,
