@@ -33,16 +33,13 @@ def _to_key(
         (str, Optional[int]):
     if configspace_ext is None:
         resource = None
-        config_tpl = tuple(
-            v for _, v in sorted(config.items(), key=lambda x: x[0]))
+        config_key = str(tuple(
+            v for _, v in sorted(config.items(), key=lambda x: x[0])))
     else:
-        attr = configspace_ext.resource_attr_name
-        resource = config.get(attr)
-        if resource is not None:
-            config = config.copy()
-            del config[attr]
-        config_tpl = configspace_ext.hp_ranges.config_to_tuple(config)
-    return config_tpl, resource
+        resource = config.get(configspace_ext.resource_attr_name)
+        config_key = configspace_ext.hp_ranges.config_to_match_string(
+            config, skip_last=True)
+    return config_key, resource
 
 
 def _param_dict_to_str(params: dict) -> str:

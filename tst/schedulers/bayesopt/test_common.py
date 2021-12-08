@@ -95,18 +95,18 @@ def _map_pending_evaluations(lst, hp_ranges: HyperparameterRanges):
 
 @pytest.mark.parametrize('candidate_evaluations,failed_candidates,pending_candidates,expected', [
     ([], [], [], set()),
-    ([((123, 'a'), 9.87)], [], [], {(123, 'a')}),
-    ([], [(123, 'a')], [], {(123, 'a')}),
-    ([], [], [(123, 'a')], {(123, 'a')}),
+    ([((123, 'a'), 9.87)], [], [], {'hp1:123,hp2:0'}),
+    ([], [(123, 'a')], [], {'hp1:123,hp2:0'}),
+    ([], [], [(123, 'a')], {'hp1:123,hp2:0'}),
     ([((1, 'a'), 9.87)], [(2, 'b')], [(3, 'c')],
-     {(1, 'a'), (2, 'b'), (3, 'c')})
+     {'hp1:1,hp2:0', 'hp1:2,hp2:1', 'hp1:3,hp2:2'})
 ])
 def test_compute_blacklisted_candidates(
         hp_ranges: HyperparameterRanges,
         candidate_evaluations: List[Tuple],
         failed_candidates: List[Tuple],
         pending_candidates: List[Tuple],
-        expected: Set[Tuple]):
+        expected: Set[str]):
     state = TuningJobState(
         hp_ranges,
         candidate_evaluations=_map_candidate_evaluations(
@@ -120,7 +120,7 @@ def test_compute_blacklisted_candidates(
 
 def _assert_no_duplicates(
         candidates: List[Configuration], hp_ranges: HyperparameterRanges):
-    cands_tpl = [hp_ranges.config_to_tuple(x) for x in candidates]
+    cands_tpl = [hp_ranges.config_to_match_string(x) for x in candidates]
     assert len(candidates) == len(set(cands_tpl))
 
 

@@ -280,3 +280,40 @@ def test_active_ranges_samples(config_space, active_config_space):
     # This fails with high probability if the sampled configs fall outside of
     # the narrower active ranges
     features = hp_ranges2.to_ndarray_matrix(configs)
+
+
+def _cast_config(config, config_space):
+    return {name: domain.cast(config[name])
+            for name, domain in config_space.items()}
+
+
+@pytest.mark.parametrize('config1,config2,match', [
+    ({'1': 1}, {'1': 1}, True),
+    ({'0': 0.546003}, {}, False),
+    ({'1': 3}, {}, False),
+    ({'2': 'b'}, {}, False),
+    ({'3': 0.3}, {}, False),
+    ({'4': 1}, {}, False),
+    ({'5': 0.0001}, {}, False),
+    ({'5': 0.0010005}, {}, True),
+    ({'0': 0.546000000000001}, {}, True),
+    ({'5': 0.01}, {'5': 0.01000001}, True),
+])
+def test_config_to_match_string(config1, config2, match):
+    config_space = {
+        '0': uniform(0.0, 1.0),
+        '1': randint(1, 10),
+        '2': choice(['a', 'b', 'c']),
+        '3': finrange(0.1, 1.0, 10),
+        '4': choice([3, 2, 1]),
+        '5': choice([0.01, 0.001, 0.0001, 0.00001]),
+    }
+    hp_ranges = make_hyperparameter_ranges(config_space)
+
+    config_base = {'0': 0.546, '1': 4, '2': 'a', '3': 0.4, '4': 3, '5': 0.001}
+    _config1 = _cast_config(dict(config_base, **config1), config_space)
+    _config2 = _cast_config(dict(config_base, **config2), config_space)
+    match_str1 = hp_ranges.config_to_match_string(_config1)
+    match_str2 = hp_ranges.config_to_match_string(_config2)
+    assert (match_str1 == match_str2) == match, \
+        f"match = {match}\nmatch_str1 = {match_str1}\nmatch_str2 = {match_str2}"
