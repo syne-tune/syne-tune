@@ -31,6 +31,12 @@ NUM_UNITS_1 = 'n_units_1'
 
 NUM_UNITS_2 = 'n_units_2'
 
+METRIC_NAME = 'accuracy'
+
+RESOURCE_ATTR = 'epoch'
+
+ELAPSED_TIME_ATTR = 'elapsed_time'
+
 
 _config_space = {
     NUM_UNITS_1: randint(4, 1024),
@@ -41,58 +47,6 @@ _config_space = {
     'learning_rate': loguniform(1e-6, 1),
     'wd': loguniform(1e-8, 1)
 }
-
-
-def mlp_fashionmnist_default_params(params=None):
-    return {
-        'max_resource_level': 81,
-        'grace_period': 1,
-        'reduction_factor': 3,
-        'instance_type': 'ml.c5.4xlarge',
-        'num_workers': 4,
-        'framework': 'PyTorch',
-        'framework_version': '1.6',
-        'dataset_path': './',
-        'report_current_best': 'False',
-    }
-
-
-def mlp_fashionmnist_benchmark(params):
-    config_space = dict(
-        _config_space,
-        dataset_path=params['dataset_path'],
-        epochs=params['max_resource_level'],
-        report_current_best=params['report_current_best'])
-    return {
-        'script': __file__,
-        'metric': 'accuracy',
-        'mode': 'max',
-        'resource_attr': 'epoch',
-        'elapsed_time_attr': 'elapsed_time',
-        'max_resource_attr': 'epochs',
-        'map_reward': '1_minus_x',
-        'config_space': config_space,
-        'cost_model': get_cost_model(params),
-    }
-
-
-def get_cost_model(params):
-    try:
-        from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
-            import FixedLayersMLPCostModel
-
-        num_inputs = 28 * 28
-        num_outputs = 10
-        num_units_keys = [NUM_UNITS_1, NUM_UNITS_2]
-        expected_hidden_layer_width, exp_vals = \
-            FixedLayersMLPCostModel.get_expected_hidden_layer_width(
-                _config_space, num_units_keys)
-        return FixedLayersMLPCostModel(
-            num_inputs=num_inputs, num_outputs=num_outputs,
-            num_units_keys=num_units_keys,
-            expected_hidden_layer_width=expected_hidden_layer_width)
-    except Exception:
-        return None
 
 
 # Boilerplate for objective
@@ -220,11 +174,9 @@ def objective(config):
             current_best = accuracy
         # Feed the score back to Tune.
         objective = current_best if report_current_best else accuracy
-        report(
-            epoch=epoch,
-            accuracy=objective,
-            elapsed_time=elapsed_time
-        )
+        report(**{RESOURCE_ATTR: epoch,
+                  METRIC_NAME: objective,
+                  ELAPSED_TIME_ATTR: elapsed_time})
         # Write checkpoint (optional)
         checkpoint_model_at_rung_level(config, save_model_fn, epoch)
         if debug_log:
@@ -242,7 +194,6 @@ if __name__ == '__main__':
     from torch.utils.data.sampler import SubsetRandomSampler
     from torchvision import datasets
     from torchvision import transforms
-
 
     root = logging.getLogger()
     root.setLevel(logging.INFO)

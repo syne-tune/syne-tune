@@ -14,11 +14,11 @@ import logging
 
 from benchmarks.definitions.nasbench201 import nasbench201_benchmark, \
     nasbench201_default_params
-from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist \
+from benchmarks.definitions.mlp_on_fashion_mnist \
     import mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
-from examples.training_scripts.resnet_cifar10.resnet_cifar10 import \
+from benchmarks.definitions.resnet_cifar10 import \
     resnet_cifar10_benchmark, resnet_cifar10_default_params
-from examples.training_scripts.lstm_wikitext2.lstm_wikitext2 import \
+from benchmarks.definitions.lstm_wikitext2 import \
     lstm_wikitext2_benchmark, lstm_wikitext2_default_params
 
 logger = logging.getLogger(__name__)

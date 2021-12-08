@@ -21,36 +21,14 @@ from syne_tune.report import Reporter
 from syne_tune.search_space import loguniform, add_to_argparse
 
 
+METRIC_ACCURACY = 'accuracy'
+
+RESOURCE_ATTR = 'step'
+
 _config_space = {
     'learning_rate': loguniform(1e-6, 1e-4),
     'weight_decay': loguniform(1e-6, 1e-4)
 }
-
-
-def distilbert_imdb_default_params(params=None):
-    return {
-        'max_resource_level': 15,
-        'instance_type': 'ml.g4dn.xlarge',
-        'num_workers': 4,
-        'framework': 'HuggingFace',
-        'framework_version': '4.4',
-        'pytorch_version': '1.6',
-        'dataset_path': './'
-    }
-
-
-def distilbert_imdb_benchmark(params):
-    config_space = dict(
-        _config_space,
-        dataset_path=params['dataset_path'],
-        max_steps=params['max_resource_level'])
-    return {
-        'script': __file__,
-        'metric': 'accuracy',
-        'mode': 'max',
-        'resource_attr': 'step',
-        'config_space': config_space,
-    }
 
 
 def download_data(config):
@@ -133,7 +111,9 @@ def objective(config):
 
         def on_evaluate(self, args, state, control, metrics, **kwargs):
             # Feed the validation accuracy back to Tune
-            report(step=self.step, accuracy=metrics['eval_accuracy'])
+            report_dct = {RESOURCE_ATTR: self.step,
+                          METRIC_ACCURACY: metrics['eval_accuracy']}
+            report(**report_dct)
             self.step += 1
 
     trainer.add_callback(Callback())
