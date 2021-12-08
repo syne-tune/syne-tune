@@ -200,10 +200,17 @@ if __name__ == '__main__':
         keys.append(k)
         list_values.append(v)
         num_experiments *= len(v)
+
+    skip_initial_experiments = orig_params['skip_initial_experiments']
+    assert skip_initial_experiments >= 0, \
+        "--skip_initial_experiments must be nonnegative"
     if num_experiments > 1:
-        logger.info(
-            f"The following arguments have list values: {keys_with_list}\n"
-            f"Launching {num_experiments} experiments in total")
+        msg = f"The following arguments have list values: {keys_with_list}\n" +\
+              f"Total number of experiments: {num_experiments}"
+        if skip_initial_experiments > 0:
+            msg += f"\nSkipping {skip_initial_experiments}, launching " +\
+                   f"{num_experiments - skip_initial_experiments}"
+        logger.info(msg)
 
     # Loop over all combinations
     experiment_name = dict_get(orig_params, 'experiment_name', 'stune')
@@ -213,12 +220,10 @@ if __name__ == '__main__':
             else experiment_name
     )
 
-    skip_initial_experiments = orig_params['skip_initial_experiments']
-    assert skip_initial_experiments >= 0, \
-        "--skip_initial_experiments must be nonnegative"
     if not list_values:
         list_values = [None]
     first_tuner_name, last_tuner_name = None, None
+    is_first_iteration = True
     for exp_id, values in enumerate(itertools.product(*list_values)):
         if exp_id < skip_initial_experiments:
             continue
@@ -364,8 +369,9 @@ if __name__ == '__main__':
             callbacks=[SimulatorCallback()] if backend_name == 'simulated' else None
         )
         last_tuner_name = local_tuner.name
-        if exp_id == 0:
+        if is_first_iteration:
             first_tuner_name = copy.copy(last_tuner_name)
+            is_first_iteration = False
 
         if params['local_tuner']:
             # Tuning experiment is run locally
