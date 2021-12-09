@@ -19,7 +19,7 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils \
     ResourceForAcquisitionBOHB, ResourceForAcquisitionFirstMilestone, \
     ResourceForAcquisitionMap
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory \
-    import resource_kernel_factory
+    import resource_kernel_factory, SUPPORTED_RESOURCE_MODELS
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
@@ -52,8 +52,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
     import EIAcquisitionFunction, CEIAcquisitionFunction, EIpuAcquisitionFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults \
     import DEFAULT_NUM_INITIAL_CANDIDATES, DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import INTERNAL_METRIC_NAME, \
-    INTERNAL_CONSTRAINT_NAME, INTERNAL_COST_NAME
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
+    import INTERNAL_METRIC_NAME, INTERNAL_CONSTRAINT_NAME, INTERNAL_COST_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 from syne_tune.optimizer.schedulers.utils.simple_profiler \
@@ -110,9 +110,11 @@ def _create_gp_standard_model(
     kernel = result['kernel']
     mean = result['mean']
     if is_hyperband:
+        # The `cross-validation` kernel needs an additional argument
+        kernel_kwargs = {'num_folds': kwargs['max_epochs']}
         kernel, mean = resource_kernel_factory(
             kwargs['gp_resource_kernel'],
-            kernel_x=kernel, mean_x=mean)
+            kernel_x=kernel, mean_x=mean, **kernel_kwargs)
     gpmodel = GaussianProcessRegression(
         kernel=kernel, mean=mean,
         optimization_config=result['optimization_config'],
@@ -274,11 +276,11 @@ def gp_fifo_searcher_factory(**kwargs) -> Dict:
     result = _create_common_objects(**kwargs)
 
     return dict(**result,
-        acquisition_class=EIAcquisitionFunction,
-        num_initial_candidates=kwargs['num_init_candidates'],
-        num_initial_random_choices=kwargs['num_init_random'],
-        initial_scoring=kwargs['initial_scoring'],
-        cost_attr=kwargs['cost_attr'])
+                acquisition_class=EIAcquisitionFunction,
+                num_initial_candidates=kwargs['num_init_candidates'],
+                num_initial_random_choices=kwargs['num_init_random'],
+                initial_scoring=kwargs['initial_scoring'],
+                cost_attr=kwargs['cost_attr'])
 
 
 def _resource_for_acquisition(
@@ -317,12 +319,12 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict:
     result = _create_common_objects(**kwargs)
 
     kwargs_int = dict(**result,
-        resource_attr=kwargs['resource_attr'],
-        acquisition_class=EIAcquisitionFunction,
-        num_initial_candidates=kwargs['num_init_candidates'],
-        num_initial_random_choices=kwargs['num_init_random'],
-        initial_scoring=kwargs['initial_scoring'],
-        cost_attr=kwargs['cost_attr'])
+                      resource_attr=kwargs['resource_attr'],
+                      acquisition_class=EIAcquisitionFunction,
+                      num_initial_candidates=kwargs['num_init_candidates'],
+                      num_initial_random_choices=kwargs['num_init_random'],
+                      initial_scoring=kwargs['initial_scoring'],
+                      cost_attr=kwargs['cost_attr'])
     if kwargs['model'] == 'gp_multitask':
         kwargs_int['resource_for_acquisition'] = _resource_for_acquisition(
             kwargs, result['hp_ranges'])
@@ -370,13 +372,13 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict:
                                 INTERNAL_CONSTRAINT_NAME: skip_optimization_constraint}
 
     return dict(**result,
-        output_model_factory=output_model_factory,
-        output_skip_optimization=output_skip_optimization,
-        acquisition_class=CEIAcquisitionFunction,
-        num_initial_candidates=kwargs['num_init_candidates'],
-        num_initial_random_choices=kwargs['num_init_random'],
-        initial_scoring=kwargs['initial_scoring'],
-        cost_attr=kwargs['cost_attr'])
+                output_model_factory=output_model_factory,
+                output_skip_optimization=output_skip_optimization,
+                acquisition_class=CEIAcquisitionFunction,
+                num_initial_candidates=kwargs['num_init_candidates'],
+                num_initial_random_choices=kwargs['num_init_random'],
+                initial_scoring=kwargs['initial_scoring'],
+                cost_attr=kwargs['cost_attr'])
 
 
 def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
@@ -425,13 +427,13 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
                                 INTERNAL_COST_NAME: skip_optimization_cost}
 
     return dict(**result,
-        output_model_factory=output_model_factory,
-        output_skip_optimization=output_skip_optimization,
-        acquisition_class=acquisition_class,
-        num_initial_candidates=kwargs['num_init_candidates'],
-        num_initial_random_choices=kwargs['num_init_random'],
-        initial_scoring=kwargs['initial_scoring'],
-        cost_attr=kwargs['cost_attr'])
+                output_model_factory=output_model_factory,
+                output_skip_optimization=output_skip_optimization,
+                acquisition_class=acquisition_class,
+                num_initial_candidates=kwargs['num_init_candidates'],
+                num_initial_random_choices=kwargs['num_init_random'],
+                initial_scoring=kwargs['initial_scoring'],
+                cost_attr=kwargs['cost_attr'])
 
 
 def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict:
@@ -452,13 +454,13 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict:
             kwargs['scheduler'])
     cost_model = kwargs.get('cost_model')
     assert cost_model is not None, \
-        "If search_options['resource_attr'] is given, a CostModel has " +\
+        "If search_options['resource_attr'] is given, a CostModel has " + \
         "to be specified in search_options['cost_model']"
     fixed_resource = kwargs.get('max_epochs')
     assert fixed_resource is not None, \
-        "If search_options['resource_attr'] is given, the maximum " +\
-        "resource level has to be specified in " +\
-        "search_options['max_epochs'], or (simpler) as max_t when " +\
+        "If search_options['resource_attr'] is given, the maximum " + \
+        "resource level has to be specified in " + \
+        "search_options['max_epochs'], or (simpler) as max_t when " + \
         "creating FIFOScheduler"
     # Common objects
     result = _create_common_objects(**kwargs)
@@ -482,14 +484,14 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict:
                                 INTERNAL_COST_NAME: skip_optimization_cost}
 
     return dict(**result,
-        output_model_factory=output_model_factory,
-        output_skip_optimization=output_skip_optimization,
-        acquisition_class=acquisition_class,
-        num_initial_candidates=kwargs['num_init_candidates'],
-        num_initial_random_choices=kwargs['num_init_random'],
-        initial_scoring=kwargs['initial_scoring'],
-        cost_attr=kwargs['cost_attr'],
-        resource_attr=kwargs['resource_attr'])
+                output_model_factory=output_model_factory,
+                output_skip_optimization=output_skip_optimization,
+                acquisition_class=acquisition_class,
+                num_initial_candidates=kwargs['num_init_candidates'],
+                num_initial_random_choices=kwargs['num_init_random'],
+                initial_scoring=kwargs['initial_scoring'],
+                cost_attr=kwargs['cost_attr'],
+                resource_attr=kwargs['resource_attr'])
 
 
 def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict:
@@ -508,7 +510,7 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict:
             supp_schedulers, kwargs['scheduler'])
     cost_model = kwargs.get('cost_model')
     assert cost_model is not None, \
-        "If search_options['resource_attr'] is given, a CostModel has " +\
+        "If search_options['resource_attr'] is given, a CostModel has " + \
         "to be specified in search_options['cost_model']"
     # Common objects
     result = _create_common_objects(**kwargs)
@@ -541,15 +543,15 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict:
     resource_for_acquisition = _resource_for_acquisition(
         kwargs, result['hp_ranges'])
     return dict(**result,
-        resource_attr=kwargs['resource_attr'],
-        output_model_factory=output_model_factory,
-        output_skip_optimization=output_skip_optimization,
-        resource_for_acquisition=resource_for_acquisition,
-        acquisition_class=acquisition_class,
-        num_initial_candidates=kwargs['num_init_candidates'],
-        num_initial_random_choices=kwargs['num_init_random'],
-        initial_scoring=kwargs['initial_scoring'],
-        cost_attr=kwargs['cost_attr'])
+                resource_attr=kwargs['resource_attr'],
+                output_model_factory=output_model_factory,
+                output_skip_optimization=output_skip_optimization,
+                resource_for_acquisition=resource_for_acquisition,
+                acquisition_class=acquisition_class,
+                num_initial_candidates=kwargs['num_init_candidates'],
+                num_initial_random_choices=kwargs['num_init_random'],
+                initial_scoring=kwargs['initial_scoring'],
+                cost_attr=kwargs['cost_attr'])
 
 
 def _common_defaults(is_hyperband: bool, is_multi_output: bool) -> (Set[str], dict, dict):
@@ -608,9 +610,8 @@ def _common_defaults(is_hyperband: bool, is_multi_output: bool) -> (Set[str], di
         constraints['model'] = Categorical(
             choices=('gp_multitask', 'gp_issm', 'gp_expdecay'))
         constraints['opt_skip_num_max_resource'] = Boolean()
-        constraints['gp_resource_kernel'] = Categorical(choices=(
-            'exp-decay-sum', 'exp-decay-combined', 'exp-decay-delta1',
-            'freeze-thaw', 'matern52', 'matern52-res-warp'))
+        constraints['gp_resource_kernel'] = Categorical(
+            choices=SUPPORTED_RESOURCE_MODELS)
         constraints['resource_acq'] = Categorical(
             choices=('bohb', 'first'))
         constraints['issm_gamma_one'] = Boolean()
