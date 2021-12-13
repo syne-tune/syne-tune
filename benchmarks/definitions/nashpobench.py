@@ -11,12 +11,35 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
+import numpy as np
 
 from syne_tune.search_space import choice, randint, uniform, loguniform
 from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
     METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
 
 from sklearn.ensemble import RandomForestRegressor
+
+
+class SubsamplingSurrogate(object):
+
+    def __init__(self, ratio=0.01):
+        self.ratio = ratio
+
+    def fit(self, X, y):
+        n = int(X.shape[0] * self.ratio)
+        idx = [i for i in range(X.shape[0])]
+        from random import shuffle
+        shuffle(idx)
+        idx = idx[:n]
+        X_train = X[idx]
+        y_train = np.array(y)[idx]
+
+        self.model = RandomForestRegressor()
+        self.model.fit(X_train, y_train)
+        return self
+
+    def predict(self, X_test):
+        return self.model.predict(X_test)
 
 
 _config_space = {
@@ -72,7 +95,7 @@ def nashpobench_benchmark(params):
         'cost_model': None,
         'supports_simulated': True,
         'blackbox_name': BLACKBOX_NAME,
-        'surrogate': RandomForestRegressor(),
+        'surrogate': SubsamplingSurrogate(),
         'time_this_resource_attr': METRIC_ELAPSED_TIME,
     }
 
