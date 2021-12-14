@@ -12,12 +12,14 @@
 # permissions and limitations under the License.
 from pathlib import Path
 import numpy as np
-
-from syne_tune.search_space import choice, randint, uniform, loguniform
-from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
-    METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
+from random import shuffle
 
 from sklearn.ensemble import RandomForestRegressor
+
+from syne_tune.search_space import choice, randint, uniform, loguniform
+
+from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
+    METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
 
 
 class SubsamplingSurrogate(object):
@@ -28,7 +30,7 @@ class SubsamplingSurrogate(object):
     def fit(self, X, y):
         n = int(X.shape[0] * self.ratio)
         idx = [i for i in range(X.shape[0])]
-        from random import shuffle
+
         shuffle(idx)
         idx = idx[:n]
         X_train = X[idx]

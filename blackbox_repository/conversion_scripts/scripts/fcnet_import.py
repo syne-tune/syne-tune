@@ -16,10 +16,9 @@ import h5py
 from tqdm import tqdm as tqdm
 
 from blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+import syne_tune.search_space as sp
 from blackbox_repository.conversion_scripts.utils import repository_path
-
 from syne_tune.util import catchtime
-from syne_tune.search_space import choice, randint, loguniform, uniform
 
 
 BLACKBOX_NAME = 'fcnet'
@@ -29,30 +28,6 @@ METRIC_VALID_LOSS = 'metric_valid_loss'
 METRIC_ELAPSED_TIME = 'metric_elapsed_time'
 
 RESOURCE_ATTR = 'hp_epoch'
-
-# CONFIG_SPACE = {
-#     "hp_activation_fn_1": sp.choice(["tanh", "relu"]),
-#     "hp_activation_fn_2": sp.choice(["tanh", "relu"]),
-#     "hp_batch_size": sp.choice([8, 16, 32, 64]),
-#     "hp_dropout_1": sp.choice([0.0, 0.3, 0.6]),
-#     "hp_dropout_2": sp.choice([0.0, 0.3, 0.6]),
-#     "hp_init_lr": sp.choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
-#     'hp_lr_schedule': sp.choice(["cosine", "const"]),
-#     'hp_n_units_1': sp.choice([16, 32, 64, 128, 256, 512]),
-#     'hp_n_units_2': sp.choice([16, 32, 64, 128, 256, 512]),
-# }
-
-CONFIG_SPACE = {
-    "hp_activation_fn_1": choice(["tanh", "relu"]),
-    "hp_activation_fn_2": choice(["tanh", "relu"]),
-    "hp_batch_size": randint(8, 64),
-    "hp_dropout_1": uniform(0.0, 0.6),
-    "hp_dropout_2": uniform(0.0, 0.6),
-    "hp_init_lr": loguniform(0.0005, 0.1),
-    'hp_lr_schedule': choice(["cosine", "const"]),
-    'hp_n_units_1': randint(16, 512),
-    'hp_n_units_2': randint(16, 512),
-}
 
 
 def convert_dataset(dataset_path: Path, max_rows: int = None):
@@ -123,8 +98,19 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
             np.stack([data[key][m][:].astype('float32') for key in tqdm(keys)])
         )
 
+    configuration_space = {
+        "hp_activation_fn_1": sp.choice(["tanh", "relu"]),
+        "hp_activation_fn_2": sp.choice(["tanh", "relu"]),
+        "hp_batch_size": sp.choice([8, 16, 32, 64]),
+        "hp_dropout_1": sp.choice([0.0, 0.3, 0.6]),
+        "hp_dropout_2": sp.choice([0.0, 0.3, 0.6]),
+        "hp_init_lr": sp.choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
+        'hp_lr_schedule': sp.choice(["cosine", "const"]),
+        'hp_n_units_1': sp.choice([16, 32, 64, 128, 256, 512]),
+        'hp_n_units_2': sp.choice([16, 32, 64, 128, 256, 512]),
+    }
     fidelity_space = {
-        RESOURCE_ATTR: randint(lower=1, upper=100)
+        RESOURCE_ATTR: sp.randint(lower=1, upper=100)
     }
 
     objective_names = [f"metric_{m}" for m in objective_names]
@@ -133,7 +119,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     assert objective_names[4] == METRIC_ELAPSED_TIME
     return BlackboxTabular(
         hyperparameters=hyperparameters,
-        configuration_space=CONFIG_SPACE,
+        configuration_space=configuration_space,
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
         fidelity_values=fidelity_values,
