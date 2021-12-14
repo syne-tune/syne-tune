@@ -23,7 +23,12 @@ from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
 
 
 class SubsamplingSurrogate(object):
+    """
+    Fits a random forest to project the discrete space back to the original space with continuous and integer
+    hyperparameters. The entire dataset is quite large (for each config we have 4 seeds, 100 epochs, 4 metrics). To
+    reduce building time, we subsample the original dataset first before feeding it to the Random Forest.
 
+    """
     def __init__(self, ratio=0.01):
         self.ratio = ratio
 
@@ -70,7 +75,6 @@ def nashpobench_default_params(params=None):
         'framework_version': '1.6',
         'dataset_name': 'protein_structure',
         'dont_sleep': dont_sleep,
-        'cost_model_type': 'linear',
     }
 
 
