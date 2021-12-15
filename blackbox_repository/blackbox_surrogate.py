@@ -81,7 +81,7 @@ class BlackboxSurrogate(Blackbox):
         categorical = []
 
         if self.fidelity_space is not None:
-            surrogate_hps = dict(self.configurations_space.items() + self.fidelity_space.items())
+            surrogate_hps = dict(self.configuration_space.items() + self.fidelity_space.items())
         else:
             surrogate_hps = self.configuration_space
 
