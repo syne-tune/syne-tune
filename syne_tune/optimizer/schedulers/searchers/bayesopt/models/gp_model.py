@@ -20,9 +20,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base \
     import BaseSurrogateModel
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import FantasizedPendingEvaluation, Configuration, INTERNAL_METRIC_NAME
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
+    import FantasizedPendingEvaluation, INTERNAL_METRIC_NAME, \
+    ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
@@ -55,7 +54,8 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
             self, state: TuningJobState, gpmodel: GPModel,
             fantasy_samples: List[FantasizedPendingEvaluation],
             active_metric: str = None, normalize_mean: float = 0.0,
-            normalize_std: float = 1.0):
+            normalize_std: float = 1.0,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         Both `state` and `gpmodel` are immutable. If parameters of the latter
         are to be fit, this has to be done before.
@@ -75,7 +75,7 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         :param normalize_std: Stddev used to normalize targets
 
         """
-        super().__init__(state, active_metric)
+        super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
         self.mean = normalize_mean
         self.std = normalize_std
@@ -118,7 +118,8 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     def posterior_states(self) -> Optional[List[GaussProcPosteriorState]]:
         return self._gpmodel.states
 
-    def current_best_filter_candidates(self, candidates):
+    def _current_best_filter_candidates(self, candidates):
+        candidates = super()._current_best_filter_candidates(candidates)
         hp_ranges = self.state.hp_ranges
         candidates = hp_ranges.filter_for_last_pos_value(candidates)
         assert candidates, \
@@ -160,9 +161,10 @@ def get_internal_candidate_evaluations(
         targets = (targets - mean) / std
     if state.pending_evaluations:
         # In this case, y becomes a matrix, where the observed values are
-        # broadcasted
+        # broadcast
+        cand_lst = [hp_ranges.to_ndarray(config)
+                    for config in state.pending_configurations()]
         fanta_lst = []
-        cand_lst = []
         for pending_eval in state.pending_evaluations:
             assert isinstance(pending_eval, FantasizedPendingEvaluation), \
                 "state.pending_evaluations has to contain FantasizedPendingEvaluation"
@@ -171,7 +173,6 @@ def get_internal_candidate_evaluations(
                 "All state.pending_evaluations entries must have length {}".format(
                     num_fantasy_samples)
             fanta_lst.append(fantasies.reshape((1, -1)))
-            cand_lst.append(hp_ranges.to_ndarray(pending_eval.candidate))
         targets = np.vstack([targets * np.ones((1, num_fantasy_samples))] + fanta_lst)
         features = np.vstack([features] + cand_lst)
     return InternalCandidateEvaluations(features, targets, mean, std)
@@ -182,7 +183,8 @@ class GaussProcModelFactory(TransformerModelFactory):
             self, gpmodel: GPModel, active_metric: str,
             normalize_targets: bool = True,
             profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None):
+            debug_log: Optional[DebugLogPrinter] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -191,7 +193,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         :param gpmodel: GPModel model
         :param active_metric: Name of the metric to optimize.
         :param normalize_targets: Normalize target values in
-            state.candidate_evaluations?
+            state.trials_evaluations?
 
         """
         self._gpmodel = gpmodel
@@ -201,6 +203,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         self._profiler = profiler
         self._mean = None
         self._std = None
+        self._filter_observed_data = filter_observed_data
 
     @property
     def debug_log(self) -> Optional[DebugLogPrinter]:
@@ -228,22 +231,22 @@ class GaussProcModelFactory(TransformerModelFactory):
         if state.pending_evaluations:
             no_pending_state = TuningJobState(
                 hp_ranges=state.hp_ranges,
-                candidate_evaluations=state.candidate_evaluations,
-                failed_candidates=state.failed_candidates,
-                pending_evaluations=[])
+                config_for_trial=state.config_for_trial,
+                trials_evaluations=state.trials_evaluations,
+                failed_trials=state.failed_trials)
         self._posterior_for_state(
             no_pending_state, fit_params=fit_params, profiler=self._profiler)
         if state.pending_evaluations:
-            # Sample fantasy values for pending evals
-            new_pending = self._draw_fantasy_values(
-                state.hp_ranges, state.pending_candidates)
+            # Sample fantasy values for pending evaluations
+            new_pending = self._draw_fantasy_values(state)
             # Compute posterior for state with pending evals
             # Note: profiler is not passed here, this would overwrite the
             # results from the first call
             with_pending_state = TuningJobState(
                 hp_ranges=state.hp_ranges,
-                candidate_evaluations=state.candidate_evaluations,
-                failed_candidates=state.failed_candidates,
+                config_for_trial=state.config_for_trial,
+                trials_evaluations=state.trials_evaluations,
+                failed_trials=state.failed_trials,
                 pending_evaluations=new_pending)
             self._posterior_for_state(
                 with_pending_state, fit_params=False, profiler=None)
@@ -253,7 +256,8 @@ class GaussProcModelFactory(TransformerModelFactory):
         return GaussProcSurrogateModel(
             state=state, active_metric=self.active_metric,
             gpmodel=self._gpmodel, fantasy_samples=fantasy_samples,
-            normalize_mean=self._mean, normalize_std=self._std)
+            normalize_mean=self._mean, normalize_std=self._std,
+            filter_observed_data=self._filter_observed_data)
 
     def _get_num_fantasy_samples(self) -> int:
         raise NotImplementedError()
@@ -308,8 +312,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         raise NotImplementedError()
 
     def _draw_fantasy_values(
-            self, hp_ranges: HyperparameterRanges,
-            candidates: List[Configuration]) -> List[FantasizedPendingEvaluation]:
+            self, state: TuningJobState) -> List[FantasizedPendingEvaluation]:
         """
         Note: The fantasy values need not be de-normalized, because they are
         only used internally here (e.g., get_internal_candidate_evaluations).
@@ -322,11 +325,12 @@ class GaussProcModelFactory(TransformerModelFactory):
         In this case, we draw num_fantasy_samples i.i.d.
 
         """
-        if candidates:
-            features_new = hp_ranges.to_ndarray_matrix(candidates)
+        if state.pending_evaluations:
+            configs = state.pending_configurations()
+            features_new = state.hp_ranges.to_ndarray_matrix(configs)
             num_samples = self._num_samples_for_fantasies()
             # We need joint sampling for >1 new candidates
-            num_candidates = len(candidates)
+            num_candidates = len(configs)
             sample_func = self._gpmodel.sample_joint if num_candidates > 1 else \
                 self._gpmodel.sample_marginals
             targets_new = sample_func(
@@ -334,8 +338,9 @@ class GaussProcModelFactory(TransformerModelFactory):
                 (num_candidates, -1))
             return [
                 FantasizedPendingEvaluation(
-                    candidate, {self.active_metric: y_new.reshape((1, -1))})
-                for candidate, y_new in zip(candidates, targets_new)
+                    trial_id=ev.trial_id, resource=ev.resource,
+                    fantasies={self.active_metric: y_new.reshape((1, -1))})
+                for ev, y_new in zip(state.pending_evaluations, targets_new)
             ]
         else:
             return []
@@ -347,7 +352,8 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
             active_metric: str = INTERNAL_METRIC_NAME,
             normalize_targets: bool = True,
             profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None):
+            debug_log: Optional[DebugLogPrinter] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -357,14 +363,14 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         :param num_fantasy_samples: See above
         :param active_metric: Name of the metric to optimize.
         :param normalize_targets: Normalize target values in
-            state.candidate_evaluations?
+            state.trials_evaluations?
 
         """
         assert num_fantasy_samples > 0
         super().__init__(
             gpmodel=gpmodel, active_metric=active_metric,
             normalize_targets=normalize_targets, profiler=profiler,
-            debug_log=debug_log)
+            debug_log=debug_log, filter_observed_data=filter_observed_data)
         self.num_fantasy_samples = num_fantasy_samples
 
     def get_params(self):

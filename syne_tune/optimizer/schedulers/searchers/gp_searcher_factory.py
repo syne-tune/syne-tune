@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Set, Dict
+from typing import Set, Dict, Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils \
@@ -20,8 +20,6 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils \
     ResourceForAcquisitionMap
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory \
     import resource_kernel_factory, SUPPORTED_RESOURCE_MODELS
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
-    import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
     import ExtendedConfiguration
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
@@ -31,7 +29,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
     import GaussianProcessRegression
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
-    import Matern52
+    import Matern52, KernelFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import ScalarMeanFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
@@ -60,6 +58,10 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler \
     import SimpleProfiler
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import Integer, Categorical, Boolean, Float
+from syne_tune.optimizer.schedulers.searchers.utils.warmstarting import \
+    create_hp_ranges_for_warmstarting, \
+    create_filter_observed_data_for_warmstarting, \
+    create_base_gp_kernel_for_warmstarting
 
 __all__ = ['gp_fifo_searcher_factory',
            'gp_multifidelity_searcher_factory',
@@ -71,15 +73,32 @@ __all__ = ['gp_fifo_searcher_factory',
            'gp_multifidelity_searcher_defaults',
            'constrained_gp_fifo_searcher_defaults',
            'cost_aware_gp_fifo_searcher_defaults',
-           'cost_aware_gp_multifidelity_searcher_defaults',
-           ]
+           'cost_aware_gp_multifidelity_searcher_defaults']
 
 logger = logging.getLogger(__name__)
 
 
-def _create_gp_common(hp_ranges_cs, **kwargs):
+def _create_base_gp_kernel(hp_ranges: HyperparameterRanges,
+                           **kwargs) -> KernelFunction:
+    """
+    The default base kernel is :class:`Matern52` with ARD parameters.
+    But in the transfer learning case, the base kernel is a product of
+    two `Matern52` kernels, the first non-ARD over the categorical
+    parameter determining the task, the second ARD over the remaining
+    parameters.
+
+    """
+    if kwargs.get('transfer_learning_task_attr') is not None:
+        # Transfer learning: Specific base kernel
+        kernel = create_base_gp_kernel_for_warmstarting(hp_ranges, **kwargs)
+    else:
+        kernel = Matern52(dimension=hp_ranges.ndarray_size(), ARD=True)
+    return kernel
+
+
+def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
     opt_warmstart = kwargs.get('opt_warmstart', False)
-    kernel = Matern52(dimension=hp_ranges_cs.ndarray_size(), ARD=True)
+    kernel = _create_base_gp_kernel(hp_ranges, **kwargs)
     mean = ScalarMeanFunction()
     optimization_config = OptimizationConfig(
         lbfgs_tol=DEFAULT_OPTIMIZATION_CONFIG.lbfgs_tol,
@@ -94,6 +113,8 @@ def _create_gp_common(hp_ranges_cs, **kwargs):
         debug_log = DebugLogPrinter()
     else:
         debug_log = None
+    filter_observed_data = create_filter_observed_data_for_warmstarting(
+        **kwargs)
     return {
         'opt_warmstart': opt_warmstart,
         'kernel': kernel,
@@ -101,12 +122,14 @@ def _create_gp_common(hp_ranges_cs, **kwargs):
         'optimization_config': optimization_config,
         'profiler': profiler,
         'debug_log': debug_log,
+        'filter_observed_data': filter_observed_data,
     }
 
 
 def _create_gp_standard_model(
-        hp_ranges_cs, active_metric, random_seed, is_hyperband, **kwargs):
-    result = _create_gp_common(hp_ranges_cs, **kwargs)
+        hp_ranges: HyperparameterRanges, active_metric: Optional[str],
+        random_seed: int, is_hyperband: bool, **kwargs):
+    result = _create_gp_common(hp_ranges, **kwargs)
     kernel = result['kernel']
     mean = result['mean']
     if is_hyperband:
@@ -120,20 +143,23 @@ def _create_gp_standard_model(
         optimization_config=result['optimization_config'],
         random_seed=random_seed,
         fit_reset_params=not result['opt_warmstart'])
+    filter_observed_data = result['filter_observed_data']
     model_factory = GaussProcEmpiricalBayesModelFactory(
         active_metric=active_metric,
         gpmodel=gpmodel,
         num_fantasy_samples=kwargs['num_fantasy_samples'],
         normalize_targets=kwargs.get('normalize_targets', True),
         profiler=result['profiler'],
-        debug_log=result['debug_log'])
-    return model_factory
+        debug_log=result['debug_log'],
+        filter_observed_data=filter_observed_data)
+    return model_factory, filter_observed_data
 
 
 def _create_gp_additive_model(
-        model, hp_ranges_cs, active_metric, random_seed, configspace_ext,
+        model: str, hp_ranges: HyperparameterRanges,
+        active_metric: Optional[str], random_seed: int, configspace_ext,
         **kwargs):
-    result = _create_gp_common(hp_ranges_cs, **kwargs)
+    result = _create_gp_common(hp_ranges, **kwargs)
     if model == 'gp_issm':
         res_model = IndependentISSModelParameters(
             gamma_is_one=kwargs.get('issm_gamma_one', False))
@@ -148,21 +174,24 @@ def _create_gp_additive_model(
         optimization_config=result['optimization_config'],
         random_seed=random_seed, fit_reset_params=not result['opt_warmstart'],
         use_precomputations=use_precomputations)
+    filter_observed_data = result['filter_observed_data']
     model_factory = GaussProcAdditiveModelFactory(
-        active_metric=active_metric, gpmodel=gpmodel,
-        configspace_ext=configspace_ext, profiler=result['profiler'],
+        active_metric=active_metric,
+        gpmodel=gpmodel,
+        configspace_ext=configspace_ext,
+        profiler=result['profiler'],
         debug_log=result['debug_log'],
+        filter_observed_data=filter_observed_data,
         normalize_targets=kwargs.get('normalize_targets', True))
-    return model_factory
+    return model_factory, filter_observed_data
 
 
 def _create_common_objects(model=None, **kwargs):
     scheduler = kwargs['scheduler']
-    config_space = kwargs['configspace']
     is_hyperband = scheduler.startswith('hyperband')
     assert model is None or is_hyperband, \
         f"model = {model} only together with hyperband_* scheduler"
-    hp_ranges = make_hyperparameter_ranges(config_space)
+    hp_ranges = create_hp_ranges_for_warmstarting(**kwargs)
     key = 'random_seed_generator'
     if key in kwargs:
         rs_generator = kwargs[key]
@@ -206,7 +235,8 @@ def _create_common_objects(model=None, **kwargs):
                 # Example: '1_minus_x' => const = 1
                 offset = len(_map_reward_name) - len('_minus_x')
                 const = float(_map_reward_name[:offset])
-            _map_reward: MapReward = map_reward_const_minus_x(const=const)
+            _map_reward: Optional[MapReward] = map_reward_const_minus_x(
+                const=const)
         else:
             assert isinstance(_map_reward, MapReward), \
                 "map_reward must either be string or of MapReward type"
@@ -233,21 +263,22 @@ def _create_common_objects(model=None, **kwargs):
 
     # Create model factory
     if model is None or model == 'gp_multitask':
-        model_factory = _create_gp_standard_model(
-            hp_ranges_cs=hp_ranges,
+        model_factory, filter_observed_data = _create_gp_standard_model(
+            hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
             random_seed=random_seed1,
             is_hyperband=is_hyperband,
             **_kwargs)
     else:
-        model_factory = _create_gp_additive_model(
+        model_factory, filter_observed_data = _create_gp_additive_model(
             model=model,
-            hp_ranges_cs=hp_ranges,
+            hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
             random_seed=random_seed1,
             configspace_ext=result['configspace_ext'],
             **_kwargs)
     result['model_factory'] = model_factory
+    result['filter_observed_data'] = filter_observed_data
 
     return result
 
@@ -355,8 +386,8 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict:
         _kwargs = {k: v for k, v in kwargs.items() if k != key}
     else:
         _kwargs = kwargs
-    model_factory_constraint = _create_gp_standard_model(
-        hp_ranges_cs=result['hp_ranges'],
+    model_factory_constraint, _ = _create_gp_standard_model(
+        hp_ranges=result['hp_ranges'],
         active_metric=INTERNAL_CONSTRAINT_NAME,
         random_seed=result['random_seed'],
         is_hyperband=False,
@@ -407,8 +438,8 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
         _kwargs = {k: v for k, v in kwargs.items() if k != key}
     else:
         _kwargs = kwargs
-    model_factory_cost = _create_gp_standard_model(
-        hp_ranges_cs=result['hp_ranges'],
+    model_factory_cost, _ = _create_gp_standard_model(
+        hp_ranges=result['hp_ranges'],
         active_metric=INTERNAL_COST_NAME,
         random_seed=result['random_seed'],
         is_hyperband=False,

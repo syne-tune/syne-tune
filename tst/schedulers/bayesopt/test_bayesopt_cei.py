@@ -15,12 +15,10 @@ import numpy as np
 import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
-    CandidateEvaluation, PendingEvaluation, INTERNAL_METRIC_NAME, INTERNAL_CONSTRAINT_NAME
+    INTERNAL_METRIC_NAME, INTERNAL_CONSTRAINT_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from syne_tune.search_space import uniform
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
-    TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
     DEFAULT_MCMC_CONFIG, DEFAULT_OPTIMIZATION_CONFIG
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import \
@@ -34,20 +32,14 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import \
     default_gpmodel, default_gpmodel_mcmc
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import tuples_to_configs
+    import create_tuning_job_state
 
 
 def _construct_models(X, Y, metric, hp_ranges, do_mcmc, with_pending):
-    X = tuples_to_configs(X, hp_ranges)
-
-    pending_candidates = []
-    if with_pending:
-        pending_candidates = [PendingEvaluation(hp_ranges.tuple_to_config((0.5, 0.5))),
-                              PendingEvaluation(hp_ranges.tuple_to_config((0.2, 0.2)))]
-    state = TuningJobState(
-        hp_ranges,
-        [CandidateEvaluation(x, y) for x, y in zip(X, Y)],
-        [], pending_candidates)
+    pending_tuples = [(0.5, 0.5), (0.2, 0.2)] if with_pending else None
+    state = create_tuning_job_state(
+        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y,
+        pending_tuples=pending_tuples)
     random_seed = 0
 
     gpmodel = default_gpmodel(

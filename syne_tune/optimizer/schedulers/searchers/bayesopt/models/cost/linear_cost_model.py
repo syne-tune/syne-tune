@@ -68,14 +68,15 @@ class LinearCostModel(CostModel):
 
     def update(self, state: TuningJobState):
         # Compile feature matrix and targets for linear regression problem
-        candidates = [x.candidate for x in state.candidate_evaluations]
-        features0, features1 = self.feature_matrices(candidates)
+        configs = [state.config_for_trial[ev.trial_id]
+                   for ev in state.trials_evaluations]
+        features0, features1 = self.feature_matrices(configs)
         dim0 = features0.shape[1]
         feature_parts = []
         cost_parts = []
-        for feature0, feature1, cand_eval in zip(
-                features0, features1, state.candidate_evaluations):
-            metric_vals = cand_eval.metrics.get(self.cost_metric_name)
+        for feature0, feature1, ev in zip(
+                features0, features1, state.trials_evaluations):
+            metric_vals = ev.metrics.get(self.cost_metric_name)
             if metric_vals is not None:
                 assert isinstance(metric_vals, dict)
                 resource_values, cost_values = zip(*metric_vals.items())

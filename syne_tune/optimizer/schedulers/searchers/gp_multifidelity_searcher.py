@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict
+from typing import Dict, Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher \
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
     ResourceForAcquisitionMap
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import PendingEvaluation, Configuration, MetricValues, INTERNAL_METRIC_NAME
+    import PendingEvaluation, MetricValues
 
 logger = logging.getLogger(__name__)
 
@@ -150,9 +150,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     """
     def __init__(self, configspace, **kwargs):
         super().__init__(configspace, **kwargs)
-        if self.debug_log is not None:
-            # Configure DebugLogPrinter
-            self.debug_log.set_configspace_ext(self.configspace_ext)
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -210,38 +207,26 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         """
         return f"{trial_id}:{result[self._resource_attr]}"
 
-    def register_pending(self, config: Configuration, milestone=None):
+    def register_pending(
+            self, trial_id: str, config: Optional[Dict] = None,
+            milestone=None):
         """
-        Registers config as pending for resource level milestone. This means
+        Registers trial as pending for resource level `milestone`. This means
         the corresponding evaluation task is running and should reach that
         level later, when update is called for it.
 
-        :param config:
-        :param milestone:
         """
         assert milestone is not None, \
             "This searcher works with a multi-fidelity scheduler only"
         # It is OK for the candidate already to be registered as pending, in
         # which case we do nothing
         state = self.state_transformer.state
-        config_ext = self.configspace_ext.get(config, milestone)
-        if config_ext not in state.pending_candidates:
-            pos_cand = state.pos_of_config(config)
-            if pos_cand is not None:
-                active_metric_for_config = state.candidate_evaluations[
-                    pos_cand].metrics.get(INTERNAL_METRIC_NAME)
-                if active_metric_for_config is not None \
-                        and str(milestone) in active_metric_for_config:
-                    values = list(active_metric_for_config.items())
-                    error_msg = f"""
-                    This configuration at milestone {milestone} is already registered as labeled:
-                       Position of labeled candidate: {pos_cand}
-                       Label values: {values}
-                       config: {config}
-                       config_labeled: {state.candidate_evaluations[pos_cand].candidate}
-                    """
-                    assert False, error_msg
-            self.state_transformer.append_candidate(config_ext)
+        if not state.is_pending(trial_id, resource=milestone):
+            assert not state.is_labeled(trial_id, resource=milestone), \
+                f"Trial trial_id = {trial_id} already has observation at " +\
+                f"resource = {milestone}, so cannot be pending there"
+            self.state_transformer.append_trial(
+                trial_id, config=config, resource=milestone)
 
     def _fix_resource_attribute(self, **kwargs):
         """
@@ -261,7 +246,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             state = self.state_transformer.state
             # BO should only search over configs at resource level
             # target_resource
-            if state.candidate_evaluations:
+            if state.trials_evaluations:
                 target_resource = self.resource_for_acquisition(state, **kwargs)
             else:
                 # Any valid value works here:
@@ -275,38 +260,30 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         # If `config` is normal (not extended), nothing is removed
         return self.configspace_ext.remove_resource(config)
 
-    def evaluation_failed(self, config: Configuration):
-        # Remove all pending evaluations for config
-        self.cleanup_pending(config)
-        # Mark config as failed (which means it will be blacklisted in
-        # future get_config calls)
-        # We need to create an extended config by appending a resource
-        # attribute. Its value does not matter, because of how the blacklist
-        # is created
-        lowest_attr_value = self.configspace_ext.resource_attr_range[0]
-        config_ext = self.configspace_ext.get(config, lowest_attr_value)
-        self.state_transformer.mark_candidate_failed(config_ext)
+    def evaluation_failed(self, trial_id: str):
+        # Remove all pending evaluations for trial
+        self.cleanup_pending(trial_id)
+        # Mark config as failed (which means it will not be suggested again)
+        self.state_transformer.mark_trial_failed(trial_id)
 
-    def cleanup_pending(self, config: Configuration):
+    def cleanup_pending(self, trial_id: str):
         """
-        Removes all pending candidates whose configuration (i.e., lacking the
-        resource attribute) is equal to config.
+        Removes all pending evaluations for a trial.
         This should be called after an evaluation terminates. For various
         reasons (e.g., termination due to convergence), pending candidates
         for this evaluation may still be present.
         It is also called for a failed evaluation.
 
-        :param config: See above
         """
         def filter_pred(x: PendingEvaluation) -> bool:
-            x_dct = self.configspace_ext.remove_resource(x.candidate)
-            return x_dct != config
+            return x.trial_id == trial_id
 
         self.state_transformer.filter_pending_evaluations(filter_pred)
 
-    def remove_case(self, config, **kwargs):
+    def remove_case(self, trial_id: str, **kwargs):
         resource = kwargs[self._resource_attr]
-        self.state_transformer.remove_observed_case(config, key=str(resource))
+        self.state_transformer.remove_observed_case(
+            trial_id, key=str(resource))
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'

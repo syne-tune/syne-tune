@@ -28,7 +28,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_h
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import MeanFunction
 
-__all__ = ['KernelFunction', 'Matern52']
+__all__ = ['KernelFunction',
+           'Matern52']
 
 
 class KernelFunction(MeanFunction):

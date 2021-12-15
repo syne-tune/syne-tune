@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from abc import ABC, abstractmethod
-from typing import Tuple, List, Iterable, Dict
+from typing import Tuple, List, Iterable, Dict, Optional
 import numpy as np
 from numpy.random import RandomState
 
@@ -40,8 +40,11 @@ def _ndarray_size(config_space: Dict) -> int:
 
 
 class HyperparameterRanges(ABC):
-    def __init__(self, config_space: Dict, name_last_pos: str = None,
-                 value_for_last_pos=None, active_config_space: Dict = None):
+    def __init__(
+            self, config_space: Dict, name_last_pos: Optional[str] = None,
+            value_for_last_pos=None,
+            active_config_space: Optional[Dict] = None,
+            prefix_keys: Optional[List[str]] = None):
         """
         If name_last_pos is given, the hyperparameter of that name is assigned
         the final position in the vector returned by `to_ndarray`. This can be
@@ -71,16 +74,24 @@ class HyperparameterRanges(ABC):
         :param name_last_pos: See above
         :param value_for_last_pos: See above
         :param active_config_space: See above
+        :param prefix_keys: If given, these keys into `config_space` come first
+            in the internal ordering, which determines the internal
+            encoding
         """
         self.config_space = _filter_constant_hyperparameters(config_space)
         self.name_last_pos = name_last_pos
         self.value_for_last_pos = value_for_last_pos
         self._ndarray_size = _ndarray_size(self.config_space)
-        self._set_internal_keys()
+        self._set_internal_keys(prefix_keys)
         self._set_active_config_space(active_config_space)
 
-    def _set_internal_keys(self):
+    def _set_internal_keys(self, prefix_keys: Optional[List[str]]):
         keys = sorted(self.config_space.keys())
+        if prefix_keys is not None:
+            pk_set = set(prefix_keys)
+            assert pk_set.issubset(set(keys)), \
+                f"prefix_keys = {prefix_keys} is not a subset of {keys}"
+            keys = prefix_keys + [key for key in keys if key not in pk_set]
         if self.name_last_pos is not None:
             assert self.name_last_pos in keys, \
                 f"name_last_pos = '{self.name_last_pos}' not among " +\
@@ -104,7 +115,7 @@ class HyperparameterRanges(ABC):
             assert k in self.config_space, f"active_config_space[{k}] not in config_space"
             same_value_type = v.value_type == self.config_space[k].value_type
             same_log_type = is_log_space(v) == is_log_space(self.config_space[k])
-            same_domain_type = type(v) == type(self.config_space[k])
+            same_domain_type = isinstance(v, type(self.config_space[k]))
             assert k in self.config_space and same_value_type and same_log_type and same_domain_type, \
                 f"active_config_space[{k}] has different type"
 

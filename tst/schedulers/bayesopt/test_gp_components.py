@@ -12,14 +12,12 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState, CandidateEvaluation
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model \
     import get_internal_candidate_evaluations
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import dictionarize_objective, \
     INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import dimensionality_and_warping_ranges
+    import dimensionality_and_warping_ranges, create_tuning_job_state
 from syne_tune.search_space import uniform, randint, choice, loguniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
@@ -34,20 +32,15 @@ def test_get_internal_candidate_evaluations():
         'a': randint(0, 10),
         'b': uniform(0.0, 10.0),
         'c': choice(['X', 'Y'])})
-    candidate_evaluations = [
-        CandidateEvaluation(hp_ranges.tuple_to_config((2, 3.3, 'X')),
-                            dictionarize_objective(5.3)),
-        CandidateEvaluation(hp_ranges.tuple_to_config((1, 9.9, 'Y')),
-                            dictionarize_objective(10.9)),
-        CandidateEvaluation(hp_ranges.tuple_to_config((7, 6.1, 'X')),
-                            dictionarize_objective(13.1))]
+    cand_tuples = [
+        (2, 3.3, 'X'),
+        (1, 9.9, 'Y'),
+        (7, 6.1, 'X')]
+    metrics = [dictionarize_objective(y) for y in (5.3, 10.9, 13.1)]
 
-    state = TuningJobState(
-        hp_ranges=hp_ranges,
-        candidate_evaluations=candidate_evaluations,
-        failed_candidates=[candidate_evaluations[0].candidate],  # these should be ignored by the model
-        pending_evaluations=[]
-    )
+    state = create_tuning_job_state(
+        hp_ranges=hp_ranges, cand_tuples=cand_tuples, metrics=metrics)
+    state.failed_trials.append('0')  # First trial with observation also failed
 
     result = get_internal_candidate_evaluations(
         state, INTERNAL_METRIC_NAME, normalize_targets=True,
@@ -56,7 +49,7 @@ def test_get_internal_candidate_evaluations():
     assert len(result.features.shape) == 2, "Input should be a matrix"
     assert len(result.targets.shape) == 2, "Output should be a matrix"
 
-    assert result.features.shape[0] == len(candidate_evaluations)
+    assert result.features.shape[0] == len(cand_tuples)
     assert result.targets.shape[-1] == 1, \
         "Only single output value per row is suppored"
 

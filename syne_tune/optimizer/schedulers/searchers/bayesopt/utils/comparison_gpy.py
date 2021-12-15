@@ -17,7 +17,7 @@ import copy
 
 from syne_tune.search_space import uniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, Configuration, dictionarize_objective, \
+    import TrialEvaluations, Configuration, dictionarize_objective, \
     INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
@@ -150,18 +150,19 @@ def expand_data(data: dict) -> dict:
 
 
 # Recall that inputs in data are encoded, so we have to decode them to their
-# native ranges for candidate_evaluations
+# native ranges for `trials_evaluations`
 def data_to_state(data: dict) -> TuningJobState:
     configs, cs = decode_inputs(data['train_inputs'], data['ss_limits'])
-    _evaluations = [
-        CandidateEvaluation(candidate=config,
-                            metrics=dictionarize_objective(y))
-        for config, y in zip(configs, data['train_targets'])]
+    config_for_trial = {
+        str(trial_id): config for trial_id, config in enumerate(configs)}
+    trials_evaluations = [
+        TrialEvaluations(trial_id=str(trial_id),
+                         metrics=dictionarize_objective(y))
+        for trial_id, y in enumerate(data['train_targets'])]
     return TuningJobState(
         hp_ranges=make_hyperparameter_ranges(cs),
-        candidate_evaluations=_evaluations,
-        failed_candidates=[],
-        pending_evaluations=[])
+        config_for_trial=config_for_trial,
+        trials_evaluations=trials_evaluations)
 
 
 def decode_inputs(inputs: np.ndarray, ss_limits) -> \

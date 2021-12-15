@@ -23,3 +23,5 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.freeze_
     import *  # noqa: F401
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.cross_validation \
     import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.range_kernel \
+    import *  # noqa: F401

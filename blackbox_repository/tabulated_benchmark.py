@@ -89,6 +89,10 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         self._seed_for_trial = dict()
 
     @property
+    def blackbox(self) -> Blackbox:
+        raise NotImplementedError()
+
+    @property
     def resource_attr(self):
         return next(iter(self.blackbox.fidelity_space.keys()))
 
@@ -265,4 +269,8 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
             max_resource_attr=max_resource_attr,
             seed=seed,
             **simulatorbackend_kwargs)
-        self.blackbox = blackbox
+        self._blackbox = blackbox
+
+    @property
+    def blackbox(self) -> Blackbox:
+        return self._blackbox

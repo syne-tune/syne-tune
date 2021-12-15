@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Union, Dict
+from typing import Union, Dict, Optional, Callable
 from dataclasses import dataclass
 import numpy as np
 
@@ -30,17 +30,20 @@ Hyperparameter = Union[str, int, float]
 Configuration = Dict[str, Hyperparameter]
 
 
+ConfigurationFilter = Callable[[Configuration], bool]
+
+
 MetricValues = Union[float, Dict[str, float]]
 
 @dataclass
-class CandidateEvaluation:
+class TrialEvaluations:
     """
     For each fixed k, `metrics[k]` is either a single value or a dict. The
     latter is used, for example, for multi-fidelity schedulers, where
     `metrics[k][str(r)]` is the value at resource level r.
 
     """
-    candidate: Configuration
+    trial_id: str
     metrics: Dict[str, MetricValues]
 
     def num_cases(self, metric_name: str = INTERNAL_METRIC_NAME) -> int:
@@ -60,13 +63,17 @@ class PendingEvaluation(object):
 
     The minimum information is the candidate which has been queried.
     """
-    def __init__(self, candidate: Configuration):
-        super(PendingEvaluation, self).__init__()
-        self._candidate = candidate
+    def __init__(self, trial_id: str, resource: Optional[int] = None):
+        self._trial_id = trial_id
+        self._resource = resource
 
     @property
-    def candidate(self):
-        return self._candidate
+    def trial_id(self) -> str:
+        return self._trial_id
+
+    @property
+    def resource(self) -> Optional[int]:
+        return self._resource
 
 
 class FantasizedPendingEvaluation(PendingEvaluation):
@@ -75,8 +82,9 @@ class FantasizedPendingEvaluation(PendingEvaluation):
     also called "fantasies".
 
     """
-    def __init__(self, candidate: Configuration, fantasies: Dict[str, np.ndarray]):
-        super(FantasizedPendingEvaluation, self).__init__(candidate)
+    def __init__(self, trial_id: str, fantasies: Dict[str, np.ndarray],
+                 resource: Optional[int] = None):
+        super().__init__(trial_id, resource)
         fantasy_sizes = [
             fantasy_values.size for fantasy_values in fantasies.values()]
         assert all(fantasy_size > 0 for fantasy_size in fantasy_sizes), \
