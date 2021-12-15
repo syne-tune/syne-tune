@@ -11,8 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
-import numpy as np
-from random import shuffle
 
 from sklearn.ensemble import RandomForestRegressor
 
@@ -20,33 +18,6 @@ from syne_tune.search_space import choice, randint, uniform, loguniform
 
 from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
     METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
-
-
-class SubsamplingSurrogate(object):
-    """
-    Fits a random forest to project the discrete space back to the original space with continuous and integer
-    hyperparameters. The entire dataset is quite large (for each config we have 4 seeds, 100 epochs, 4 metrics). To
-    reduce building time, we subsample the original dataset first before feeding it to the Random Forest.
-
-    """
-    def __init__(self, ratio=0.01):
-        self.ratio = ratio
-
-    def fit(self, X, y):
-        n = int(X.shape[0] * self.ratio)
-        idx = [i for i in range(X.shape[0])]
-
-        shuffle(idx)
-        idx = idx[:n]
-        X_train = X[idx]
-        y_train = np.array(y)[idx]
-
-        self.model = RandomForestRegressor()
-        self.model.fit(X_train, y_train)
-        return self
-
-    def predict(self, X_test):
-        return self.model.predict(X_test)
 
 
 _config_space = {
@@ -91,7 +62,6 @@ def nashpobench_benchmark(params):
         dont_sleep=params['dont_sleep'],
         blackbox_repo_s3_root=params.get('blackbox_repo_s3_root'))
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" / "training_scripts" / "nashpobench" / "nashpobench.py",
         'metric': METRIC_VALID_LOSS,
         'mode': 'min',
         'resource_attr': RESOURCE_ATTR,
@@ -101,7 +71,7 @@ def nashpobench_benchmark(params):
         'cost_model': None,
         'supports_simulated': True,
         'blackbox_name': BLACKBOX_NAME,
-        'surrogate': SubsamplingSurrogate(),
+        'surrogate': RandomForestRegressor(max_samples=0.01, bootstrap=True),
         'time_this_resource_attr': METRIC_ELAPSED_TIME,
     }
 
