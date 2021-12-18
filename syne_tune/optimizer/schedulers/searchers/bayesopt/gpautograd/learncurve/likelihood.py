@@ -77,9 +77,17 @@ class MarginalLikelihood(Block):
         if isinstance(res_model, ISSModelParameters):
             tag = 'issm_'
             self._type = GaussProcISSMPosteriorState
+            self._posterstate_kwargs = {
+                'mean': self.mean,
+                'kernel': self.kernel,
+                'iss_model': self.res_model}
         else:
             tag = 'expdecay_'
             self._type = GaussProcExpDecayPosteriorState
+            self._posterstate_kwargs = {
+                'mean': self.mean,
+                'kernel': self.kernel,
+                'res_kernel': self.res_model}
         self._components = [('kernel_', self.kernel), ('mean_', self.mean),
                             (tag, self.res_model)]
         self._profiler = None
@@ -90,10 +98,12 @@ class MarginalLikelihood(Block):
     def set_profiler(self, profiler: Optional[SimpleProfiler]):
         self._profiler = profiler
 
-    def get_posterior_state(self, data: Dict):
+    def get_posterior_state(self, data: Dict, crit_only: bool = False):
+        _kwargs = dict(self._posterstate_kwargs,
+                       allow_sample_curves=not crit_only)
         return self._type(
-            data, self.mean, self.kernel, self.res_model,
-            noise_variance=self.get_noise_variance(), profiler=self._profiler)
+            data, **_kwargs, noise_variance=self.get_noise_variance(),
+            profiler=self._profiler)
 
     def forward(self, data: Dict):
         """
@@ -104,15 +114,16 @@ class MarginalLikelihood(Block):
 
         :param data: Input points (features, configs), targets
         """
-        return self.get_posterior_state(data).neg_log_likelihood()
+        return self.get_posterior_state(
+            data, crit_only=True).neg_log_likelihood()
 
     def param_encoding_pairs(self):
         """
         Return a list of tuples with the Gluon parameters of the likelihood and
         their respective encodings
         """
-        own_param_encoding_pairs = [(self.noise_variance_internal,
-                                     self.encoding)]
+        own_param_encoding_pairs = [
+            (self.noise_variance_internal, self.encoding)]
         return own_param_encoding_pairs + self.mean.param_encoding_pairs() + \
                self.kernel.param_encoding_pairs() + \
                self.res_model.param_encoding_pairs()

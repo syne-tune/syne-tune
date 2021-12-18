@@ -15,6 +15,7 @@ from typing import List, Dict
 import numpy as np
 import autograd.numpy as anp
 from autograd.scipy.linalg import solve_triangular
+from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.exponential_decay \
     import ExponentialDecayResourcesKernelFunction
@@ -25,7 +26,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.custom_op \
     import cholesky_factorization
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
-    import _flatvec, _colvec, _rowvec, _squared_norm, _inner_product
+    import _flatvec, _colvec, _rowvec, _squared_norm, _inner_product, \
+    predict_posterior_marginals
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
     import EPS
 
@@ -151,7 +153,7 @@ def logdet_cholfact_cov_resource(likelihood: Dict) -> float:
     #   w_j = sum_i I[ydims[i] > j], j = 0, 1, ...
     weights = anp.sum(
         _colvec(anp.array(ydims)) > _rowvec(anp.arange(dim)), axis=0)
-    return _inner_product(log_diag, weights)
+    return _inner_product(log_diag[:dim], weights)
 
 
 def resource_kernel_likelihood_precomputations(targets: List[tuple]) -> Dict:
@@ -198,7 +200,8 @@ def resource_kernel_likelihood_precomputations(targets: List[tuple]) -> Dict:
 
 def resource_kernel_likelihood_computations(
         precomputed: Dict, res_kernel: ExponentialDecayBaseKernelFunction,
-        noise_variance, skip_c_d: bool = False) -> Dict:
+        noise_variance, skip_c_d: bool = False,
+        cholfact_max_size: bool = True) -> Dict:
     """
     Given `precomputed` from `resource_kernel_likelihood_precomputations` and
     resource kernel function `res_kernel`, compute quantities required for
@@ -215,14 +218,19 @@ def resource_kernel_likelihood_computations(
     - vtv: n-vector [|v_i|^2]
     - wtv: n-vector [(w_i)^T v_i]
     - wtw: n-vector [|w_i|^2]
-    - lfact_all: Cholesky factor for kernel matrix corrresponding to largest
-        target vector size
+    - lfact_all: Cholesky factor for kernel matrix corresponding to largest
+        target vector size. If `cholfact_max_size` is True, the factor is for
+        the full-size kernel matrix, independent of target vector sizes
     - ydims: Target vector sizes (copy from `precomputed`)
 
     :param precomputed: Output of `resource_kernel_likelihood_precomputations`
     :param res_kernel: Kernel k(r, r') over resources
     :param noise_variance: Noise variance sigma^2
     :param skip_c_d: If True, c and d are not computed
+    :param cholfact_max_size: If True, the `lfact_all` Cholesky factor is for
+        the full-size kernel matrix (r_max - r_min + 1), not just the largest
+        target vector size. This is needed for joint posterior sampling, but
+        not for marginal likelihood computations
     :return: Quantities required for inference and learning criterion
 
     """
@@ -233,12 +241,16 @@ def resource_kernel_likelihood_computations(
     assert num_all_configs > 0, "targets must not be empty"
     assert num_res > 0, f"r_min = {r_min} must be <= r_max = {r_max}"
 
-    # Compute Cholesky factor for largest target vector size
+    # Compute Cholesky factor for largest target vector size, or for full size
     ydims = precomputed['ydims']
-    ydim_max = ydims[0]
-    rvals = _colvec(anp.arange(r_min, r_min + ydim_max))
+    if cholfact_max_size:
+        lfact_size = r_max - r_min + 1
+    else:
+        lfact_size = ydims[0]
+    rvals = _colvec(anp.arange(r_min, r_min + lfact_size))
     means_all = _flatvec(res_kernel.mean_function(rvals))
-    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(anp.ones(ydim_max))
+    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(
+        anp.ones(lfact_size))
     # TODO: Do we need AddJitterOp here?
     lfact_all = cholesky_factorization(amat)  # L (Cholesky factor)
 
@@ -275,8 +287,8 @@ def resource_kernel_likelihood_computations(
         vvec = anp.concatenate((vvec, v_new), axis=1)
     wtv_lst.append(_flatvec(anp.matmul(vvec, wmat)))
     wtw_lst.append(_flatvec(anp.sum(anp.square(wmat), axis=0)))
-    wtv_all = anp.concatenate(reversed(wtv_lst), axis=0)
-    wtw_all = anp.concatenate(reversed(wtw_lst), axis=0)
+    wtv_all = anp.concatenate(tuple(reversed(wtv_lst)), axis=0)
+    wtw_all = anp.concatenate(tuple(reversed(wtw_lst)), axis=0)
     vtv_for_ydim = anp.cumsum(anp.square(vvec))
     vtv_all = anp.array([vtv_for_ydim[ydim - 1] for ydim in ydims])
     # Compile results
@@ -286,6 +298,7 @@ def resource_kernel_likelihood_computations(
         'wtv': wtv_all,
         'wtw': wtw_all,
         'lfact_all': lfact_all,
+        'means_all': means_all,
         'ydims': ydims}
     if not skip_c_d:
         result['c'] = anp.zeros(num_all_configs)
@@ -295,7 +308,8 @@ def resource_kernel_likelihood_computations(
 
 def resource_kernel_likelihood_slow_computations(
         targets: List[list], res_kernel: ExponentialDecayBaseKernelFunction,
-        noise_variance, skip_c_d: bool = False) -> Dict:
+        noise_variance, skip_c_d: bool = False,
+        cholfact_max_size: bool = True) -> Dict:
     """
     Naive implementation of `resource_kernel_likelihood_computations`, which
     does not require precomputations, but is somewhat slower. Here, results are
@@ -309,10 +323,14 @@ def resource_kernel_likelihood_slow_computations(
     assert num_configs > 0, "targets must not be empty"
     # Compute Cholesky factor for largest target vector size
     ydims = [len(yvec) for yvec in targets]
-    ydim_max = max(ydims)
-    rvals = _colvec(anp.arange(r_min, r_min + ydim_max))
+    if cholfact_max_size:
+        lfact_size = r_max - r_min + 1
+    else:
+        lfact_size = ydims[0]
+    rvals = _colvec(anp.arange(r_min, r_min + lfact_size))
     means_all = _flatvec(res_kernel.mean_function(rvals))
-    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(anp.ones(ydim_max))
+    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(
+        anp.ones(lfact_size))
     # TODO: Do we need AddJitterOp here?
     lfact_all = cholesky_factorization(amat)  # L (Cholesky factor)
     # Outer loop over configurations
@@ -340,8 +358,90 @@ def resource_kernel_likelihood_slow_computations(
         'wtv': anp.array(wtv_lst),
         'wtw': anp.array(wtw_lst),
         'lfact_all': lfact_all,
+        'means_all': means_all,
         'ydims': ydims}
     if not skip_c_d:
         result['c'] = anp.zeros(num_configs)
         result['d'] = anp.zeros(num_configs)
     return result
+
+
+def sample_posterior_joint(
+        poster_state: Dict, mean, kernel, feature, targets: List,
+        res_kernel: ExponentialDecayBaseKernelFunction, noise_variance,
+        lfact_all, means_all, random_state: RandomState,
+        num_samples: int = 1) -> Dict:
+    """
+    Given `poster_state` for some data plus one additional configuration
+    with data (`feature`, `targets`), draw joint samples of unobserved
+    targets for this configuration. `targets` may be empty, but must not
+    be complete (there must be some unobserved targets). The additional
+    configuration must not be in the dataset used to compute `poster_state`.
+
+    If `targets` correspond to resource values range(r_min, r_obs), we
+    sample latent target values y_r corresponding to range(r_obs, r_max+1),
+    returning a dict with [y_r] under `y` (matrix with `num_samples`
+    columns).
+
+    :param poster_state: Posterior state for data
+    :param mean: Mean function
+    :param kernel: Kernel function
+    :param feature: Features for additional config
+    :param targets: Target values for additional config
+    :param res_kernel: Kernel k(r, r') over resources
+    :param noise_variance: Noise variance sigma^2
+    :param lfact_all: Cholesky factor of complete resource kernel matrix
+        (computed in `resource_kernel_likelihood_computations`, with
+        `cholfact_max_size=True`)
+    :param means_all: See `lfact_all`
+    :param random_state: numpy.random.RandomState
+    :param num_samples: Number of joint samples to draw (default: 1)
+    :return: See above
+    """
+    r_min, r_max = res_kernel.r_min, res_kernel.r_max
+    num_res = r_max + 1 - r_min
+    ydim = len(targets)
+    assert ydim < num_res, f"len(targets) = {ydim} must be < {num_res}"
+    assert lfact_all.shape == (num_res, num_res), \
+        f"lfact_all.shape = {lfact_all.shape}, must be {(num_res, num_res)}. " +\
+        "Call resource_kernel_likelihood_computations with cholfact_max_size=True"
+    assert means_all.size == num_res, \
+        f"means_all.size = {means_all.size}, must be {num_res}. " + \
+        "Call resource_kernel_likelihood_computations with cholfact_max_size=True"
+
+    # Posterior mean and variance of h for additional config
+    post_mean, post_variance = predict_posterior_marginals(
+        poster_state, mean, kernel, _rowvec(feature))
+    post_mean = post_mean[0]
+    post_variance = post_variance[0]
+    # Draw samples from joint distribution
+    epsmat = random_state.normal(size=(num_res, num_samples))
+    joint_samples = anp.matmul(lfact_all, epsmat) * anp.sqrt(noise_variance) +\
+        anp.reshape(means_all, (-1, 1))
+    hvec = random_state.normal(
+        size=(1, num_samples)) * anp.sqrt(post_variance) + post_mean
+    joint_samples = joint_samples + hvec
+    if ydim > 0:
+        # There are observed targets, so have to transform the joint sample
+        # into a conditional one
+        targets_obs = anp.array(targets).reshape((-1, 1))
+        targets_samp = joint_samples[:ydim, :]
+        lfact = lfact_all[:ydim, :ydim]  # L_Q
+        rhs = anp.ones((ydim, 1))
+        vvec = solve_triangular(lfact, rhs, lower=True)  # v
+        vtv = _squared_norm(vvec)  # alpha
+        # w_hat - w
+        w_delta = solve_triangular(
+            lfact, targets_obs - targets_samp, lower=True)
+        kappa = post_variance / noise_variance
+        fact = kappa / (vtv * kappa + 1.0)
+        # rho_hat - rho
+        rho_delta = anp.matmul(_rowvec(vvec), w_delta) * fact
+        tmpmat = w_delta - vvec * rho_delta
+        lfact_pq = lfact[ydim:, :ydim]  # L_{P, Q}
+        ysamples = joint_samples[ydim:, :] + anp.matmul(lfact_pq, tmpmat) + \
+                   rho_delta
+    else:
+        # Nothing to condition on
+        ysamples = joint_samples
+    return {'y': ysamples}
