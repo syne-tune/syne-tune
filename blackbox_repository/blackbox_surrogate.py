@@ -82,8 +82,8 @@ class BlackboxSurrogate(Blackbox):
 
         if self.fidelity_space is not None:
             surrogate_hps = dict()
-            surrogate_hps.update(self.configuration_space.items())
-            surrogate_hps.update(self.fidelity_space.items())
+            surrogate_hps.update(self.configuration_space)
+            surrogate_hps.update(self.fidelity_space)
         else:
             surrogate_hps = self.configuration_space
 
