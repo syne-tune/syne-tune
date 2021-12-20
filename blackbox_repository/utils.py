@@ -17,7 +17,8 @@ from blackbox_repository.blackbox import Blackbox
 
 def metrics_for_configuration(
         blackbox: Blackbox, config: dict, resource_attr: str,
-        fidelity_range: Optional[Tuple[float, float]] = None) -> List[dict]:
+        fidelity_range: Optional[Tuple[float, float]] = None,
+        fixed_seed: Optional[int] = None) -> List[dict]:
     """
     Returns all results for configuration `config` at fidelities in range
     `fidelity_range`.
@@ -27,6 +28,8 @@ def metrics_for_configuration(
     :param resource_attr: Name of resource attribute
     :param fidelity_range: Range [min_f, max_f], only fidelities in this range
         (both ends inclusive) are returned. Default is no filtering
+    :param fixed_seed: Seed for queries to blackbox. Drawn at random if not
+        given
     :return: List of result dicts
 
     """
@@ -40,7 +43,7 @@ def metrics_for_configuration(
         assert len(fidelity_range) == 2 \
                and fidelity_range[0] <= fidelity_range[1], \
         f"fidelity_range = {fidelity_range} must be tuple (min, max), min <= max"
-    objective_values = blackbox._objective_function(config)
+    objective_values = blackbox._objective_function(config, seed=fixed_seed)
     for fidelity, value in enumerate(all_fidelities):
         if value >= fidelity_range[0] and value <= fidelity_range[1]:
             res_dict = dict(zip(blackbox.objectives_names,

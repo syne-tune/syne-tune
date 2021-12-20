@@ -27,6 +27,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
     def __init__(self, elapsed_time_attr: str,
                  time_this_resource_attr: Optional[str] = None,
                  max_resource_attr: Optional[str] = None,
+                 fixed_seed: Optional[int] = None,
                  **simulatorbackend_kwargs):
         """
         Allows to simulate any blackbox from blackbox-repository, can be either a blackbox from a registered
@@ -54,9 +55,13 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         resource. This is used by schedulers which limit each evaluation by
         setting this argument (e.g., promotion-based Hyperband).
 
+        If `fixed_seed` is given, entries of the blackbox are queried for this
+        seed, otherwise the seed is drawn at random for every query.
+
         :param elapsed_time_attr: See above
         :param time_this_resource_attr: See above
         :param max_resource_attr: See above
+        :param fixed_seed: See above
         """
         super().__init__(
             # TODO we feed a dummy value for entry_point since they are not required
@@ -67,6 +72,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         self._time_this_resource_attr = time_this_resource_attr
         self._max_resource_attr = max_resource_attr
         self.simulatorbackend_kwargs = simulatorbackend_kwargs
+        self._fixed_seed = fixed_seed
 
     @property
     def resource_attr(self):
@@ -81,7 +87,8 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
             fidelity_range = None  # All fidelity values
         return metrics_for_configuration(
             blackbox=self.blackbox, config=config,
-            resource_attr=self.resource_attr, fidelity_range=fidelity_range)
+            resource_attr=self.resource_attr, fidelity_range=fidelity_range,
+            fixed_seed=self._fixed_seed)
 
     def _run_job_and_collect_results(
             self, trial_id: int,
@@ -118,10 +125,6 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
                 result[self.elapsed_time_attr] -= elapsed_time_offset
         else:
             results = all_results
-        # DEBUG
-        debug_results = [f"_run_job_and_collect_results: trial_id {trial_id}"] +\
-                        [config] + results[:3] + ['...'] + results[-2:]
-        logger.debug('\n'.join([str(x) for x in debug_results]))
         return status, results
 
 
@@ -133,6 +136,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr: str,
             time_this_resource_attr: Optional[str] = None,
             max_resource_attr: Optional[str] = None,
+            fixed_seed: Optional[int] = None,
             dataset: Optional[str] = None,
             surrogate=None,
             **simulatorbackend_kwargs,
@@ -158,6 +162,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=elapsed_time_attr,
             time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
+            fixed_seed=fixed_seed,
             **simulatorbackend_kwargs)
         self.blackbox_name = blackbox_name
         self.dataset = dataset
@@ -213,6 +218,7 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr: str,
             time_this_resource_attr: Optional[str] = None,
             max_resource_attr: Optional[str] = None,
+            fixed_seed: Optional[int] = None,
             **simulatorbackend_kwargs,
     ):
         """
@@ -228,5 +234,6 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=elapsed_time_attr,
             time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
+            fixed_seed=fixed_seed,
             **simulatorbackend_kwargs)
         self.blackbox = blackbox
