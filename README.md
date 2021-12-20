@@ -391,9 +391,10 @@ and comes with a number of advantages. As detailed in
 [this tutorial](docs/command_line.md), you can use the CL launcher
 [launch_hpo.py](benchmarks/launch_hpo.py) in order to start one or more
 experiments, adjusting many parameters of benchmark, back-end, tuner, or
-scheduler from the command line. The simpler
-[benchmark_main.py](benchmarks/benchmark_loop/README.md) can also be used to
-launch experiments that loops over many schedulers and benchmarks..
+scheduler from the command line. 
+
+The simpler [benchmark_main.py](benchmarks/benchmark_loop/README.md) can also be used to
+launch experiments that loops over many schedulers and benchmarks.
 
 ## Tutorials
 
