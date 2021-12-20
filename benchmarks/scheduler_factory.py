@@ -22,9 +22,8 @@ from benchmarks.launch_utils import make_searcher_and_scheduler
 from benchmarks.utils import dict_get
 
 __all__ = ['scheduler_factory',
-           'short_name_scheduler_factory',
            'supported_schedulers',
-           'supported_short_name_schedulers']
+           ]
 
 
 def _check_searcher(searcher, supported_searchers):
