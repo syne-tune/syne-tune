@@ -272,12 +272,16 @@ if __name__ == '__main__':
                 # Tabulated benchmark from the blackbox repository (simulation
                 # runs faster)
                 logger.info(f"Using 'simulated' back-end with blackbox_name = {blackbox_name}")
+                seed = params.get('blackbox_seed')
+                if seed is not None:
+                    logger.info(f"Using blackbox with blackbox_seed = {seed}")
                 backend_kwargs.update({
                     'blackbox_name': blackbox_name,
                     'dataset': params.get('dataset_name'),
                     'time_this_resource_attr': benchmark.get(
                         'time_this_resource_attr'),
                     'max_resource_attr': benchmark.get('max_resource_attr'),
+                    'seed': seed,
                 })
                 backend = BlackboxRepositoryBackend(**backend_kwargs)
         else:

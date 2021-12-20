@@ -86,7 +86,7 @@ class BlackboxTabular(Blackbox):
             seed: Optional[int] = None
     ) -> Dict:
         if seed is not None:
-            assert seed < self.num_seeds
+            assert 0 <= seed < self.num_seeds
         try:
             key = tuple([configuration[key] for key in self._hp_cols])
             matching_index = self.hyperparameters_index.loc[key].values

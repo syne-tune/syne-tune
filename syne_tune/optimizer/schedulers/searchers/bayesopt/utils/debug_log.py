@@ -240,10 +240,10 @@ class DebugLogPrinter(object):
             for name in ('state', 'targets', 'params'):
                 v = info.get(name)
                 if v is not None:
-                    if name == 'params':
-                        parts.append(v)
-                    else:
+                    if name == 'targets':
                         debug_parts.append(v)
+                    else:
+                        parts.append(v)
                 else:
                     logger.info(
                         "debug_log.write_block: '{}' part is missing!".format(
