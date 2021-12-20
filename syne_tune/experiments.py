@@ -223,20 +223,6 @@ def load_experiments_df(
     return pd.concat(dfs, ignore_index=True)
 
 
-def split_per_task(df) -> Dict[str, pd.DataFrame]:
-    # split by endpoint script
-    dfs = {}
-    for entry_point in df.entry_point_name.unique():
-        df_entry_point = df.loc[df.entry_point_name == entry_point, :].dropna(axis=1, how='all')
-        if "config_dataset_name" in df_entry_point:
-            for dataset in df_entry_point.loc[:, "config_dataset_name"].unique():
-                dataset_mask = df_entry_point.loc[:, "config_dataset_name"] == dataset
-                dfs[f"{entry_point}-{dataset}"] = df_entry_point.loc[dataset_mask, :]
-        else:
-            dfs[entry_point] = df_entry_point
-    return dfs
-
-
 if __name__ == '__main__':
     for exp in list_experiments():
         if exp.results is not None:
