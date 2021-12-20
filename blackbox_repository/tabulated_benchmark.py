@@ -29,7 +29,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
     def __init__(self, elapsed_time_attr: str,
                  time_this_resource_attr: Optional[str] = None,
                  max_resource_attr: Optional[str] = None,
-                 fixed_seed: Optional[int] = None,
+                 seed: Optional[int] = None,
                  **simulatorbackend_kwargs):
         """
         Allows to simulate any blackbox from blackbox-repository, can be either a blackbox from a registered
@@ -57,7 +57,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         resource. This is used by schedulers which limit each evaluation by
         setting this argument (e.g., promotion-based Hyperband).
 
-        If `fixed_seed` is given, entries of the blackbox are queried for this
+        If `seed` is given, entries of the blackbox are queried for this
         seed. Otherwise, a seed is drawn at random for every trial, but the
         same seed is used for all `_run_job_and_collect_results` calls for the
         same trial. This is important for pause and resume scheduling.
@@ -65,7 +65,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         :param elapsed_time_attr: See above
         :param time_this_resource_attr: See above
         :param max_resource_attr: See above
-        :param fixed_seed: See above
+        :param seed: See above
         """
         super().__init__(
             # TODO we feed a dummy value for entry_point since they are not required
@@ -76,7 +76,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         self._time_this_resource_attr = time_this_resource_attr
         self._max_resource_attr = max_resource_attr
         self.simulatorbackend_kwargs = simulatorbackend_kwargs
-        self._fixed_seed = fixed_seed
+        self._seed = seed
         self._seed_for_trial = dict()
 
     @property
@@ -93,7 +93,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         return metrics_for_configuration(
             blackbox=self.blackbox, config=config,
             resource_attr=self.resource_attr, fidelity_range=fidelity_range,
-            fixed_seed=seed)
+            seed=seed)
 
     def _run_job_and_collect_results(
             self, trial_id: int,
@@ -110,8 +110,8 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         # Seed for query to blackbox. It is important to use the same
         # seed for all queries for the same `trial_id`
         seed = None
-        if self._fixed_seed is not None:
-            seed = self._fixed_seed
+        if self._seed is not None:
+            seed = self._seed
         elif isinstance(self.blackbox, BlackboxTabular):
             seed = self._seed_for_trial.get(trial_id)
             if seed is None:
@@ -152,7 +152,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr: str,
             time_this_resource_attr: Optional[str] = None,
             max_resource_attr: Optional[str] = None,
-            fixed_seed: Optional[int] = None,
+            seed: Optional[int] = None,
             dataset: Optional[str] = None,
             surrogate=None,
             **simulatorbackend_kwargs,
@@ -178,7 +178,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=elapsed_time_attr,
             time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
-            fixed_seed=fixed_seed,
+            seed=seed,
             **simulatorbackend_kwargs)
         self.blackbox_name = blackbox_name
         self.dataset = dataset
@@ -234,7 +234,7 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr: str,
             time_this_resource_attr: Optional[str] = None,
             max_resource_attr: Optional[str] = None,
-            fixed_seed: Optional[int] = None,
+            seed: Optional[int] = None,
             **simulatorbackend_kwargs,
     ):
         """
@@ -250,6 +250,6 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=elapsed_time_attr,
             time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
-            fixed_seed=fixed_seed,
+            seed=seed,
             **simulatorbackend_kwargs)
         self.blackbox = blackbox

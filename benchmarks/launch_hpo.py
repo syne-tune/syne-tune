@@ -278,7 +278,7 @@ if __name__ == '__main__':
                     'time_this_resource_attr': benchmark.get(
                         'time_this_resource_attr'),
                     'max_resource_attr': benchmark.get('max_resource_attr'),
-                    'fixed_seed': params.get('blackbox_fixed_seed'),
+                    'seed': params.get('blackbox_fixed_seed'),
                 })
                 backend = BlackboxRepositoryBackend(**backend_kwargs)
         else:
