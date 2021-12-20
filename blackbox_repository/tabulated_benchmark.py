@@ -13,8 +13,10 @@
 from pathlib import Path
 from typing import List, Optional
 import logging
+import numpy as np
 
 from blackbox_repository import load, Blackbox, add_surrogate
+from blackbox_repository.blackbox_tabular import BlackboxTabular
 from blackbox_repository.utils import metrics_for_configuration
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
@@ -56,7 +58,9 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         setting this argument (e.g., promotion-based Hyperband).
 
         If `fixed_seed` is given, entries of the blackbox are queried for this
-        seed, otherwise the seed is drawn at random for every query.
+        seed. Otherwise, a seed is drawn at random for every trial, but the
+        same seed is used for all `_run_job_and_collect_results` calls for the
+        same trial. This is important for pause and resume scheduling.
 
         :param elapsed_time_attr: See above
         :param time_this_resource_attr: See above
@@ -73,12 +77,13 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         self._max_resource_attr = max_resource_attr
         self.simulatorbackend_kwargs = simulatorbackend_kwargs
         self._fixed_seed = fixed_seed
+        self._seed_for_trial = dict()
 
     @property
     def resource_attr(self):
         return next(iter(self.blackbox.fidelity_space.keys()))
 
-    def config_objectives(self, config: dict) -> List[dict]:
+    def config_objectives(self, config: dict, seed: int) -> List[dict]:
         if self._max_resource_attr is not None \
                 and self._max_resource_attr in config:
             max_resource = int(config[self._max_resource_attr])
@@ -88,7 +93,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         return metrics_for_configuration(
             blackbox=self.blackbox, config=config,
             resource_attr=self.resource_attr, fidelity_range=fidelity_range,
-            fixed_seed=self._fixed_seed)
+            fixed_seed=seed)
 
     def _run_job_and_collect_results(
             self, trial_id: int,
@@ -102,8 +107,19 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         if config is None:
             config = self._trial_dict[trial_id].config
 
+        # Seed for query to blackbox. It is important to use the same
+        # seed for all queries for the same `trial_id`
+        seed = None
+        if self._fixed_seed is not None:
+            seed = self._fixed_seed
+        elif isinstance(self.blackbox, BlackboxTabular):
+            seed = self._seed_for_trial.get(trial_id)
+            if seed is None:
+                seed = np.random.randint(0, self.blackbox.num_seeds)
+                self._seed_for_trial[trial_id] = seed
+
         # Fetch all results for this trial from the table
-        all_results = self.config_objectives(config)
+        all_results = self.config_objectives(config, seed=seed)
         # Compute and append `elapsed_time_attr` if not provided
         if self._time_this_resource_attr is not None:
             cumulative_sum = 0
