@@ -155,7 +155,7 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--blackbox_repo_s3_root', type=str,
                         help='S3 root directory for blackbox repository. '
                              'Defaults to default bucket of session')
-    parser.add_argument('--blackbox_fixed_seed', type=int,
+    parser.add_argument('--blackbox_seed', type=int,
                         help='Fixed seeds of blackbox queries to this value '
                              '(0 is safe), so that they return the same '
                              'metric values for the same config')
