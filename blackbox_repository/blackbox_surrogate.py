@@ -111,7 +111,6 @@ class BlackboxSurrogate(Blackbox):
             ('model', surrogate)
         ])
 
-        print(self.X.shape)
         self.surrogate_pipeline.fit(
             X=self.X,
             y=self.y
