@@ -71,7 +71,7 @@ def nashpobench_benchmark(params):
         'cost_model': None,
         'supports_simulated': True,
         'blackbox_name': BLACKBOX_NAME,
-        'surrogate': RandomForestRegressor(max_samples=0.01, bootstrap=True),
+        'surrogate': RandomForestRegressor(max_samples=0.005, bootstrap=True),
         'time_this_resource_attr': METRIC_ELAPSED_TIME,
     }
 

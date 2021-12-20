@@ -81,7 +81,9 @@ class BlackboxSurrogate(Blackbox):
         categorical = []
 
         if self.fidelity_space is not None:
-            surrogate_hps = dict(self.configuration_space.items() + self.fidelity_space.items())
+            surrogate_hps = dict()
+            surrogate_hps.update(self.configuration_space.items())
+            surrogate_hps.update(self.fidelity_space.items())
         else:
             surrogate_hps = self.configuration_space
 
@@ -109,6 +111,7 @@ class BlackboxSurrogate(Blackbox):
             ('model', surrogate)
         ])
 
+        print(self.X.shape)
         self.surrogate_pipeline.fit(
             X=self.X,
             y=self.y
