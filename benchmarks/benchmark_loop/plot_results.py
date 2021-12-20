@@ -11,16 +11,18 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
+from argparse import ArgumentParser
 from pathlib import Path
 from typing import Dict
 
+import sagemaker
 from matplotlib import cm
 import numpy as np
-import matplotlib.pyplot as plt
 
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import download_sagemaker_results
-from syne_tune.constants import ST_TUNER_TIME
+from syne_tune.constants import ST_TUNER_TIME, SYNE_TUNE_FOLDER
 from syne_tune.experiments import load_experiments_df, split_per_task
+import matplotlib.pyplot as plt
 
 
 def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
@@ -31,18 +33,18 @@ def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
 
         fig, ax = plt.subplots()
 
-        for scheduler in sorted(df_task.scheduler.unique()):
+        for algorithm in sorted(df_task.algorithm.unique()):
             ts = []
             ys = []
 
-            df_scheduler = df_task[df_task.scheduler == scheduler]
+            df_scheduler = df_task[df_task.algorithm == algorithm]
             for i, tuner_name in enumerate(df_scheduler.tuner_name.unique()):
                 sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
                 sub_df = sub_df.sort_values(ST_TUNER_TIME)
                 t = sub_df.loc[:, ST_TUNER_TIME].values
                 y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:, metric].cummin().values
                 if show_seeds:
-                    ax.plot(t, y_best, color=colors[scheduler], alpha=0.2)
+                    ax.plot(t, y_best, color=colors[algorithm], alpha=0.2)
                 ts.append(t)
                 ys.append(y_best)
 
@@ -66,9 +68,9 @@ def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
             std = y_ranges.std(axis=0)
             ax.fill_between(
                 t_range, mean - std, mean + std,
-                color=colors[scheduler], alpha=0.1,
+                color=colors[algorithm], alpha=0.1,
             )
-            ax.plot(t_range, mean, color=colors[scheduler], label=scheduler)
+            ax.plot(t_range, mean, color=colors[algorithm], label=algorithm)
 
         ax.set_xlabel("wallclock time")
         ax.set_ylabel(metric)
@@ -81,16 +83,25 @@ def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
     plt.show()
 
 
-
 if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--experiment_tag", type=str, required=True,
+        help="the experiment tag that was displayed when running launch_rl_benchmark.py"
+    )
+    args, _ = parser.parse_known_args()
+    experiment_tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
-    download_sagemaker_results()
-    df = load_experiments_df()
-    df_per_task = split_per_task(df)
-    print("evaluation recorded per endpoint script: ")
-    print(df.entry_point_name.value_counts().to_string())
 
-    cmap = cm.Set3
-    colors = {scheduler: cmap(i) for i, scheduler in enumerate(df.scheduler.unique())}
-    for task, df_task in df_per_task.items():
-        show_results(df_task=df_task, title=task, colors=colors)
+    print(f"In case you ran experiments remotely, we assume that you pulled your results by running in a terminal: \n"          
+          f"aws s3 sync s3://{sagemaker.Session().default_bucket()}/{SYNE_TUNE_FOLDER}/{experiment_tag}/ ~/syne-tune/")
+    experiment_filter = lambda exp: exp.metadata.get("tag") == experiment_tag
+    name_filter = lambda path: experiment_tag in path
+    df = load_experiments_df(name_filter, experiment_filter)
+    benchmarks = df.benchmark.unique()
+
+    for benchmark in benchmarks:
+        df_task = df.loc[df.benchmark == benchmark, :]
+        cmap = cm.Set3
+        colors = {algorithm: cmap(i) for i, algorithm in enumerate(df.algorithm.unique())}
+        show_results(df_task=df_task, title=benchmark, colors=colors)

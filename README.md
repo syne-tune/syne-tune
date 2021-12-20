@@ -392,10 +392,8 @@ and comes with a number of advantages. As detailed in
 [launch_hpo.py](benchmarks/launch_hpo.py) in order to start one or more
 experiments, adjusting many parameters of benchmark, back-end, tuner, or
 scheduler from the command line. The simpler
-[launch_benchmarks.py](benchmarks/launch_benchmarks.py) can also be used to
-launch experiments.
-
-Once tunings experiments are finished, `show_experiment_results.py` gives an example of how results can be retrieved and plotted.
+[benchmark_main.py](benchmarks/benchmark_loop/README.md) can also be used to
+launch experiments that loops over many schedulers and benchmarks..
 
 ## Tutorials
 
