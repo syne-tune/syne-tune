@@ -88,16 +88,6 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         self._seed = seed
         self._seed_for_trial = dict()
 
-    def __getstate__(self):
-        return {
-            'elapsed_time_attr': self.elapsed_time_attr,
-            'time_this_resource_attr': self._time_this_resource_attr,
-            'max_resource_attr': self._max_resource_attr,
-            'seed': self._seed,
-            'seed_for_trial': self._seed_for_trial,
-            'simulatorbackend_kwargs': self.simulatorbackend_kwargs,
-        }
-
     @property
     def resource_attr(self):
         return next(iter(self.blackbox.fidelity_space.keys()))
@@ -223,12 +213,17 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
     def __getstate__(self):
         # we serialize only required metadata information since the blackbox data is contained in the repository and
         # its raw data does not need to be saved.
-        result = super().__getstate__()
-        return dict(
-            result,
-            blackbox_name=self.blackbox_name,
-            dataset=self.dataset,
-            surrogate= self._surrogate)
+        return {
+            'elapsed_time_attr': self.elapsed_time_attr,
+            'time_this_resource_attr': self._time_this_resource_attr,
+            'max_resource_attr': self._max_resource_attr,
+            'seed': self._seed,
+            'seed_for_trial': self._seed_for_trial,
+            'simulatorbackend_kwargs': self.simulatorbackend_kwargs,
+            'blackbox_name': self.blackbox_name,
+            'dataset': self.dataset,
+            'surrogate': self._surrogate,
+        }
 
     def __setstate__(self, state):
         super().__init__(
