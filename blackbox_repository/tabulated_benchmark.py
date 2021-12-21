@@ -52,6 +52,15 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         values of `elapsed_time_attr` will then be generated as cumulative sums
         and appended to results when passing them to the simulator back-end.
 
+        ATTENTION: If the blackbox maintains cumulative time (elapsed_time),
+        this is different from what :class:`SimulatorBackend` requires for
+        `elapsed_time_attr`, if a pause and resume scheduler is used.
+        Namely, the back-end requires the time since the start of the last recent
+        resume. This conversion is done here internally in
+        `_run_job_and_collect_results`, which is called for each resume. This
+        means that the field `elapsed_time_attr` is not what is received from
+        the blackbox table, but instead what the back-end needs.
+
         `max_resource_attr` plays the same role as in :class:`HyperbandScheduler`.
         If given, it is the key in a configuration `config` for the maximum
         resource. This is used by schedulers which limit each evaluation by
@@ -205,13 +214,15 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         # we serialize only required metadata information since the blackbox data is contained in the repository and
         # its raw data does not need to be saved.
         return {
-            'blackbox_name': self.blackbox_name,
-            'dataset': self.dataset,
-            'surrogate': self._surrogate,
             'elapsed_time_attr': self.elapsed_time_attr,
             'time_this_resource_attr': self._time_this_resource_attr,
             'max_resource_attr': self._max_resource_attr,
+            'seed': self._seed,
+            'seed_for_trial': self._seed_for_trial,
             'simulatorbackend_kwargs': self.simulatorbackend_kwargs,
+            'blackbox_name': self.blackbox_name,
+            'dataset': self.dataset,
+            'surrogate': self._surrogate,
         }
 
     def __setstate__(self, state):
@@ -219,8 +230,10 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=state['elapsed_time_attr'],
             time_this_resource_attr=state['time_this_resource_attr'],
             max_resource_attr=state['max_resource_attr'],
+            seed=state['seed'],
             **state['simulatorbackend_kwargs'],
         )
+        self._seed_for_trial = state['seed_for_trial']
         self.blackbox_name = state['blackbox_name']
         self.dataset = state['dataset']
         self._surrogate = state['surrogate']
