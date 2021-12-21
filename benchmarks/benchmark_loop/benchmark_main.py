@@ -39,19 +39,12 @@ if __name__ == '__main__':
 
         print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
 
-        if benchmark.time_this_resource_attr is None:
-            backend = BlackboxRepositoryBackend(
-                elapsed_time_attr=benchmark.elapsed_time_attr,
-                blackbox_name=benchmark.blackbox_name,
-                dataset=benchmark.dataset_name,
-            )
-        else:
-            backend = BlackboxRepositoryBackend(
-                elapsed_time_attr=benchmark.elapsed_time_attr,
-                time_this_resource_attr=benchmark.time_this_resource_attr,
-                blackbox_name=benchmark.blackbox_name,
-                dataset=benchmark.dataset_name,
-            )
+        backend = BlackboxRepositoryBackend(
+            elapsed_time_attr=benchmark.elapsed_time_attr,
+            time_this_resource_attr=benchmark.time_this_resource_attr,
+            blackbox_name=benchmark.blackbox_name,
+            dataset=benchmark.dataset_name,
+        )
 
         max_t = max(backend.blackbox.fidelity_values)
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
