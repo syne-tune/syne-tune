@@ -125,7 +125,7 @@ def load_experiment(
             results = pd.read_csv(path / "results.csv.zip")
         else:
             results = pd.read_csv(path / "results.csv")
-    except FileNotFoundError:
+    except Exception:
         results = None
     try:
         tuner = Tuner.load(path)
@@ -142,13 +142,17 @@ def load_experiment(
     )
 
 
-def list_experiments(experiment_filter: Callable[[ExperimentResult], bool] = None) -> List[ExperimentResult]:
+def list_experiments(
+        name_filter: Callable[[str], bool] = None,
+        experiment_filter: Callable[[ExperimentResult], bool] = None
+) -> List[ExperimentResult]:
     res = []
     for path in experiment_path().rglob("*/results.csv*"):
-        exp = load_experiment(path.parent.name)
-        if experiment_filter is None or experiment_filter(exp):
-            if exp.results is not None and exp.tuner is not None and exp.metadata is not None:
-                res.append(exp)
+        if name_filter is None or name_filter(str(path)):
+            exp = load_experiment(path.parent.name)
+            if experiment_filter is None or experiment_filter(exp):
+                if exp.results is not None and exp.tuner is not None and exp.metadata is not None:
+                    res.append(exp)
     return sorted(res, key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0), reverse=True)
 
 
@@ -173,8 +177,12 @@ def scheduler_name(scheduler):
             return scheduler.__class__.__name__
 
 
-def load_experiments_df(experiment_filter: Callable[[ExperimentResult], bool] = None) -> pd.DataFrame:
+def load_experiments_df(
+        name_filter: Callable[[str], bool] = None,
+        experiment_filter: Callable[[ExperimentResult], bool] = None
+) -> pd.DataFrame:
     """
+    :param: name_filter: if specified, only experiment whose name matches the filter will be kept.
     :param experiment_filter: only experiment where the filter is True are kept, default to None and returns everything.
     :return: a dataframe that contains all evaluations reported by tuners according to the filter given.
     The columns contains trial-id, hyperparameter evaluated, metrics observed by `report`:
@@ -188,7 +196,7 @@ def load_experiments_df(experiment_filter: Callable[[ExperimentResult], bool] = 
      `entry_point_name`/`entry_point_path` name and path of the entry point that was tuned
     """
     dfs = []
-    for experiment in list_experiments(experiment_filter=experiment_filter):
+    for experiment in list_experiments(name_filter=name_filter, experiment_filter=experiment_filter):
         assert experiment.tuner is not None
         assert experiment.results is not None
         assert experiment.metadata is not None
@@ -197,9 +205,8 @@ def load_experiments_df(experiment_filter: Callable[[ExperimentResult], bool] = 
         df["tuner_name"] = experiment.name
         df["scheduler"] = scheduler_name(experiment.tuner.scheduler)
         df["backend"] = experiment.tuner.backend.__class__.__name__
-        df["entry_point"] = experiment.tuner.backend.entrypoint_path()
-        df["entry_point_name"] = Path(experiment.tuner.backend.entrypoint_path()).stem
-
+        for k, v in experiment.metadata.items():
+            df[k] = v
         metrics = experiment.tuner.scheduler.metric_names()
         if len(metrics) == 1:
             df["metric"] = experiment.tuner.scheduler.metric_names()[0]
@@ -214,20 +221,6 @@ def load_experiments_df(experiment_filter: Callable[[ExperimentResult], bool] = 
             df["mode"] = scheduler_mode[0]
         dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
-
-
-def split_per_task(df) -> Dict[str, pd.DataFrame]:
-    # split by endpoint script
-    dfs = {}
-    for entry_point in df.entry_point_name.unique():
-        df_entry_point = df.loc[df.entry_point_name == entry_point, :].dropna(axis=1, how='all')
-        if "config_dataset_name" in df_entry_point:
-            for dataset in df_entry_point.loc[:, "config_dataset_name"].unique():
-                dataset_mask = df_entry_point.loc[:, "config_dataset_name"] == dataset
-                dfs[f"{entry_point}-{dataset}"] = df_entry_point.loc[dataset_mask, :]
-        else:
-            dfs[entry_point] = df_entry_point
-    return dfs
 
 
 if __name__ == '__main__':

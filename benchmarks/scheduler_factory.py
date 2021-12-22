@@ -22,9 +22,8 @@ from benchmarks.launch_utils import make_searcher_and_scheduler
 from benchmarks.utils import dict_get
 
 __all__ = ['scheduler_factory',
-           'short_name_scheduler_factory',
            'supported_schedulers',
-           'supported_short_name_schedulers']
+           ]
 
 
 def _check_searcher(searcher, supported_searchers):
@@ -246,31 +245,3 @@ def scheduler_factory(
             points_to_evaluate=points_to_evaluate)
 
     return myscheduler, params
-
-
-# This list is missing the hyperband_promotion types (ASHA) of
-# HyperbandScheduler. It also misses that we can run model-based
-# HyperbandScheduler with different surrogate models now.
-_SHORT_NAMES = {
-    'RS': ('fifo', 'random'),
-    'GP': ('fifo', 'bayesopt'),
-    'HB': ('hyperband_stopping', 'random'),  # type = promotion ?
-    'Mobster': ('hyperband_stopping', 'bayesopt'),  # type = promotion ?
-    'HB-raytune': ('raytune_hyperband', 'random'),
-    'HB-GP-raytune': ('raytune_hyperband', 'bayesopt'),
-    'MOASHA': ('mo_asha', None),
-}
-
-
-supported_short_name_schedulers = list(_SHORT_NAMES.keys())
-
-
-def short_name_scheduler_factory(
-        name: str, params: dict, benchmark: dict,
-        default_params: dict) -> (TrialScheduler, dict):
-    assert name in _SHORT_NAMES, \
-        f"name = {name} not supported as scheduler short name " +\
-        f"({list(_SHORT_NAMES.keys())})"
-    scheduler, searcher = _SHORT_NAMES[name]
-    params = dict(params, scheduler=scheduler, searcher=searcher)
-    return scheduler_factory(params, benchmark, default_params)
