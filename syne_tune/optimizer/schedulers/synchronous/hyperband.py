@@ -319,7 +319,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             "Cannot process on_trial_error in suggest phase. _job_queue " +\
             f"= {self._job_queue}"
         trial_id = str(trial.trial_id)
-        self.searcher.evaluation_failed(config=self._trial_to_config[trial_id])
+        self.searcher.evaluation_failed(trial_id)
         write_back = self._trial_to_write_back.get(trial_id)
         if write_back is not None:
             # Reaction to a failed trial is to pass a NaN metric value for

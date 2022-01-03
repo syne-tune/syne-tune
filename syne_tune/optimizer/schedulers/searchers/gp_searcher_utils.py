@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, PendingEvaluation, INTERNAL_METRIC_NAME
+    import TrialEvaluations, PendingEvaluation, INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 
@@ -50,28 +50,92 @@ DEFAULT_INITIAL_SCORING = 'thompson_indep'
 
 
 def encode_state(state: TuningJobState) -> dict:
-    candidate_evaluations = [
-        {'candidate': x.candidate,
-         'metrics': x.metrics}
-        for x in state.candidate_evaluations]
+    trials_evaluations = [
+        {'trial_id': x.trial_id, 'metrics': x.metrics}
+        for x in state.trials_evaluations]
+    pending_evaluations = [
+        {'trial_id': x.trial_id, 'resource': x.resource}
+        if x.resource is not None else {'trial_id': x.trial_id}
+        for x in state.pending_evaluations]
     enc_state = {
-        'candidate_evaluations': candidate_evaluations,
-        'failed_candidates': state.failed_candidates,
-        'pending_candidates': state.pending_candidates}
+        'config_for_trial': state.config_for_trial,
+        'trials_evaluations': trials_evaluations,
+        'failed_trials': state.failed_trials,
+        'pending_evaluations': pending_evaluations}
     return enc_state
 
 
 def decode_state(enc_state: dict, hp_ranges: HyperparameterRanges) \
         -> TuningJobState:
-    candidate_evaluations = [
-        CandidateEvaluation(x['candidate'], x['metrics'])
-        for x in enc_state['candidate_evaluations']]
+    trials_evaluations = [
+        TrialEvaluations(**x) for x in enc_state['trials_evaluations']]
     pending_evaluations = [
-        PendingEvaluation(x) for x in enc_state['pending_candidates']]
+        PendingEvaluation(**x) for x in enc_state['pending_evaluations']]
     return TuningJobState(
         hp_ranges=hp_ranges,
-        candidate_evaluations=candidate_evaluations,
-        failed_candidates=enc_state['failed_candidates'],
+        config_for_trial=enc_state['config_for_trial'],
+        trials_evaluations=trials_evaluations,
+        failed_trials=enc_state['failed_trials'],
+        pending_evaluations=pending_evaluations)
+
+
+def _get_trial_id(
+        hp_ranges: HyperparameterRanges, config: dict, config_for_trial: dict,
+        trial_for_config: dict) -> str:
+    match_str = hp_ranges.config_to_match_string(config, skip_last=True)
+    trial_id = trial_for_config.get(match_str)
+    if trial_id is None:
+        trial_id = str(len(trial_for_config))
+        trial_for_config[match_str] = trial_id
+        config_for_trial[trial_id] = config
+    return trial_id
+
+
+def decode_state_from_old_encoding(
+        enc_state: dict, hp_ranges: HyperparameterRanges) -> TuningJobState:
+    """
+    Decodes `TuningJobState` from encoding done for the old definition of
+    `TuningJobState`. Code maintained for backwards compatibility.
+
+    Note: Since the old `TuningJobState` did not contain `trial_id`, we need
+    to make them up here. We assign these IDs in the order
+    `candidate_evaluations`, `failed_candidates`, `pending_candidates`,
+    matching for duplicates.
+
+    :param enc_state:
+    :param hp_ranges:
+    :return:
+    """
+    config_for_trial = dict()
+    trial_for_config = dict()
+    trials_evaluations = []
+    for cand_eval in enc_state['candidate_evaluations']:
+        config = cand_eval['candidate']
+        trial_id = _get_trial_id(
+            hp_ranges, config, config_for_trial, trial_for_config)
+        trials_evaluations.append(TrialEvaluations(
+            trial_id, cand_eval['metrics']))
+    failed_trials = []
+    for failed_cand in enc_state['failed_candidates']:
+        failed_trials.append(_get_trial_id(
+            hp_ranges, failed_cand, config_for_trial, trial_for_config))
+    pending_evaluations = []
+    resource_attr_name = hp_ranges.name_last_pos
+    for pending_cand in enc_state['pending_candidates']:
+        resource = None
+        if resource_attr_name is not None and resource_attr_name in pending_cand:
+            # Extended config (multi-fidelity)
+            resource = int(pending_cand[resource_attr_name])
+            pending_cand = pending_cand.copy()
+            del pending_cand[resource_attr_name]
+        trial_id = _get_trial_id(
+            hp_ranges, pending_cand, config_for_trial, trial_for_config)
+        pending_evaluations.append(PendingEvaluation(trial_id, resource))
+    return TuningJobState(
+        hp_ranges=hp_ranges,
+        config_for_trial=config_for_trial,
+        trials_evaluations=trials_evaluations,
+        failed_trials=failed_trials,
         pending_evaluations=pending_evaluations)
 
 
@@ -90,7 +154,7 @@ class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
         assert state.num_observed_cases(self.active_metric) > 0, \
             f"state must have data for metric {self.active_metric}"
         all_resources = []
-        for cand_eval in state.candidate_evaluations:
+        for cand_eval in state.trials_evaluations:
             all_resources += [
                 int(r) for r in cand_eval.metrics[self.active_metric].keys()]
         histogram = Counter(all_resources)

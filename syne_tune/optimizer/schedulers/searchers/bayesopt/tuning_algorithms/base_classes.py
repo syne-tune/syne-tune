@@ -59,7 +59,7 @@ class CandidateGenerator(ABC):
     def generate_candidates_en_bulk(
             self, num_cands: int, exclusion_list=None) -> List[Configuration]:
         """
-        :param num_cands: Number of candidates to geneate
+        :param num_cands: Number of candidates to generate
         :param exclusion_list: If given, these candidates must not be returned
         :return: List of `num_cands` candidates. If `exclusion_list` is given,
             the number of candidates returned can be `< num_cands`
@@ -128,7 +128,7 @@ class SurrogateModel(ABC):
         Returns the so-called incumbent, to be used in acquisition functions
         such as expected improvement. This is the minimum of predictive means
         (signal with key 'mean') at all current candidate locations (both
-        state.candidate_evaluations and state.pending_evaluations).
+        state.trials_evaluations and state.pending_evaluations).
         Normally, a scalar is returned, but if the model supports fantasizing
         and the state contains pending evaluations, there is one incumbent
         per fantasy sample, so a vector is returned.

@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, INTERNAL_CONSTRAINT_NAME
+    import TrialEvaluations, INTERNAL_CONSTRAINT_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
         # We can call the superclass method, because
-        # `state_transformer.label_candidate` can be called two times
+        # `state_transformer.label_trial` can be called two times
         # with parts of the metrics
         super()._update(trial_id, config, result)
         # Get constraint metric
@@ -71,8 +71,8 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
             "reported result. Make sure your evaluation function reports it."
         constr_val = float(result[self._constraint_attr])
         metrics = {INTERNAL_CONSTRAINT_NAME: constr_val}
-        self.state_transformer.label_candidate(CandidateEvaluation(
-            candidate=config, metrics=metrics))
+        self.state_transformer.label_trial(TrialEvaluations(
+            trial_id=trial_id, metrics=metrics), config=config)
         if self.debug_log is not None:
             logger.info(f"constraint_val = {constr_val}")
 
@@ -97,7 +97,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
             initial_scoring=self.initial_scoring,
             cost_attr=self._cost_attr,
             constraint_attr=self._constraint_attr,
-            resource_attr = self._resource_attr)
+            resource_attr=self._resource_attr)
         self._clone_from_state_common(new_searcher, state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None

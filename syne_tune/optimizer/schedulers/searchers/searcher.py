@@ -208,20 +208,23 @@ class BaseSearcher(ABC):
         """
         pass
 
-    def register_pending(self, config, milestone=None):
+    def register_pending(
+            self, trial_id: str, config: Optional[Dict] = None,
+            milestone=None):
         """
-        Signals to searcher that evaluation for config has started, but not
+        Signals to searcher that evaluation for trial has started, but not
         yet finished, which allows model-based searchers to register this
         evaluation as pending.
         For multi-fidelity schedulers, milestone is the next milestone the
         evaluation will attend, so that model registers (config, milestone)
         as pending.
-        In general, the searcher may assume that update is called with that
-        config at a later time.
+        The configuration for the trial has to be passed in `config` for a
+        new trial, which the searcher has not seen before. If the trial is
+        already registered with th searcher, `config` is ignored.
         """
         pass
 
-    def remove_case(self, config, **kwargs):
+    def remove_case(self, trial_id: str, **kwargs):
         """Remove data case previously appended by update
 
         For searchers which maintain the dataset of all cases (reports) passed
@@ -229,15 +232,15 @@ class BaseSearcher(ABC):
         """
         pass
 
-    def evaluation_failed(self, config):
+    def evaluation_failed(self, trial_id: str):
         """
-        Called by scheduler if an evaluation job for config failed. The
+        Called by scheduler if an evaluation job for a trial failed. The
         searcher should react appropriately (e.g., remove pending evaluations
-        for this config, and blacklist config).
+        for this trial, not suggest the configuration again).
         """
         pass
 
-    def cleanup_pending(self, config):
+    def cleanup_pending(self, trial_id: str):
         """
         Removes all pending candidates whose configuration is equal to
         `config`.
@@ -245,7 +248,6 @@ class BaseSearcher(ABC):
         reasons (e.g., termination due to convergence), pending candidates
         for this evaluation may still be present.
 
-        :param config: See above
         """
         pass
 
@@ -387,7 +389,7 @@ class RandomSearcher(BaseSearcher):
         if new_config is not None:
             self._excl_list.add(new_config)  # Should not be suggested again
             if self._debug_log is not None:
-                self._debug_log.set_final_config(new_config, trial_id=trial_id)
+                self._debug_log.set_final_config(new_config)
                 # All get_config debug log info is only written here
                 self._debug_log.write_block()
         else:
@@ -411,15 +413,11 @@ class RandomSearcher(BaseSearcher):
 
     def get_state(self):
         state = dict(super().get_state(), random_state=self.random_state)
-        if self._debug_log is not None:
-            state['debug_log'] = self._debug_log.get_mutable_state()
         return state
 
     def _restore_from_state(self, state):
         super()._restore_from_state(state)
         self.random_state = state['random_state']
-        if self._debug_log and 'debug_log' in state:
-            self._debug_log.set_mutable_state(state['debug_log'])
 
     def clone_from_state(self, state):
         new_searcher = RandomSearcher(

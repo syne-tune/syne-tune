@@ -132,8 +132,8 @@ class SkipNoMaxResourcePredicate(SkipOptimizationPredicate):
         def is_max_resource(metrics: dict) -> int:
             return int(self.max_resource in metrics[self.metric_name])
 
-        return sum(is_max_resource(eval.metrics)
-                   for eval in state.candidate_evaluations)
+        return sum(is_max_resource(ev.metrics)
+                   for ev in state.trials_evaluations)
 
     def __call__(self, state: TuningJobState) -> bool:
         if state.num_observed_cases(self.metric_name) < self.init_length:

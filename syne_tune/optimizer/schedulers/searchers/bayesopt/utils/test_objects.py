@@ -16,7 +16,7 @@
 Object definitions that are used for testing.
 """
 
-from typing import Iterator, Tuple, Dict, List
+from typing import Iterator, Tuple, Dict, List, Optional, Union
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
@@ -29,6 +29,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_facto
     import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
+    TrialEvaluations, PendingEvaluation
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import MCMCConfig, OptimizationConfig
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
@@ -173,9 +175,64 @@ def create_exclusion_set(
     """
     if not is_dict:
         candidates_tpl = tuples_to_configs(candidates_tpl, hp_ranges)
+    config_for_trial = {
+        str(trial_id): config for trial_id, config in enumerate(candidates_tpl)}
     state = TuningJobState(
         hp_ranges=hp_ranges,
-        candidate_evaluations=[],
-        failed_candidates=candidates_tpl,
-        pending_evaluations=[])
+        config_for_trial=config_for_trial,
+        trials_evaluations=[],
+        failed_trials=[str(x) for x in range(len(candidates_tpl))])
     return ExclusionList(state)
+
+
+TupleOrDict = Union[tuple, dict]
+
+
+def create_tuning_job_state(
+        hp_ranges: HyperparameterRanges, cand_tuples: List[TupleOrDict],
+        metrics: List[Dict],
+        pending_tuples: Optional[List[TupleOrDict]] = None,
+        failed_tuples: Optional[List[TupleOrDict]] = None) -> TuningJobState:
+    """
+    Builds `TuningJobState` from basics, where configs are given as tuples or
+    as dicts.
+
+    NOTE: We assume that all configs in the different lists are different!
+
+    """
+    if cand_tuples and isinstance(cand_tuples[0], tuple):
+        configs = tuples_to_configs(cand_tuples, hp_ranges)
+    else:
+        configs = cand_tuples
+    trials_evaluations = [TrialEvaluations(trial_id=str(trial_id), metrics=y)
+                          for trial_id, y in enumerate(metrics)]
+    pending_evaluations = None
+    if pending_tuples is not None:
+        sz = len(configs)
+        extra = len(pending_tuples)
+        if pending_tuples and isinstance(pending_tuples[0], tuple):
+            extra_configs = tuples_to_configs(pending_tuples, hp_ranges)
+        else:
+            extra_configs = pending_tuples
+        configs.extend(extra_configs)
+        pending_evaluations = [PendingEvaluation(trial_id=str(trial_id))
+                               for trial_id in range(sz, sz + extra)]
+    failed_trials = None
+    if failed_tuples is not None:
+        sz = len(configs)
+        extra = len(failed_tuples)
+        if failed_tuples and isinstance(failed_tuples[0], tuple):
+            extra_configs = tuples_to_configs(failed_tuples, hp_ranges)
+        else:
+            extra_configs = failed_tuples
+        configs.extend(extra_configs)
+        failed_trials = [str(x) for x in range(sz, sz + extra)]
+
+    config_for_trial = {
+        str(trial_id): config for trial_id, config in enumerate(configs)}
+    return TuningJobState(
+        hp_ranges=hp_ranges,
+        config_for_trial=config_for_trial,
+        trials_evaluations=trials_evaluations,
+        failed_trials=failed_trials,
+        pending_evaluations=pending_evaluations)

@@ -34,8 +34,8 @@ class BaseSurrogateModel(SurrogateModel):
 
     def predict_mean_current_candidates(self) -> List[np.ndarray]:
         """
-        Returns the predictive mean (signal with key 'mean') at all current candidate
-        locations (both state.candidate_evaluations and state.pending_evaluations).
+        Returns the predictive mean (signal with key 'mean') at all current candidates
+        in the state (observed, pending).
 
         If the hyperparameters of the surrogate model are being optimized (e.g.,
         by empirical Bayes), the returned list has length 1. If its
@@ -45,7 +45,7 @@ class BaseSurrogateModel(SurrogateModel):
         :return: List of predictive means
         """
         candidates, _ = self.state.observed_data_for_metric(self.active_metric)
-        candidates += self.state.pending_candidates
+        candidates += self.state.pending_configurations()
         assert len(candidates) > 0, \
             "Cannot predict means at current candidates with no candidates at all"
         inputs = self.hp_ranges_for_prediction().to_ndarray_matrix(candidates)

@@ -94,9 +94,12 @@ class ExclusionList(object):
             else:
                 pos = keys.index(resource_attr)
                 self.keys = keys[:pos] + keys[(pos + 1):]
-            _elist = [x.candidate for x in state.candidate_evaluations] + \
-                     state.pending_candidates + state.failed_candidates
-            self.excl_set = set([self._to_matchstr(x) for x in _elist])
+            _elist = set([x.trial_id for x in state.pending_evaluations] +
+                         [x.trial_id for x in state.trials_evaluations] +
+                         state.failed_trials)
+            self.excl_set = set(
+                self._to_matchstr(state.config_for_trial[trial_id])
+                for trial_id in _elist)
         else:
             self.hp_ranges = state['hp_ranges']
             self.excl_set = state['excl_set']
@@ -120,12 +123,7 @@ class ExclusionList(object):
 
     @staticmethod
     def empty_list(hp_ranges: HyperparameterRanges) -> 'ExclusionList':
-        empty_state = TuningJobState(
-            hp_ranges=hp_ranges,
-            candidate_evaluations=[],
-            failed_candidates=[],
-            pending_evaluations=[])
-        return ExclusionList(empty_state)
+        return ExclusionList(TuningJobState.empty_state(hp_ranges))
 
     def __len__(self) -> int:
         return len(self.excl_set)
@@ -150,8 +148,8 @@ def generate_unique_candidates(
         if just_added:
             if exclusion_candidates.config_space_exhausted():
                 logger.warning(
-                    "All entries of finite config space (size " +\
-                    f"{exclusion_candidates.configspace_size}) have been selected. Returning " +\
+                    "All entries of finite config space (size " +
+                    f"{exclusion_candidates.configspace_size}) have been selected. Returning " +
                     f"{len(result)} configs instead of {num_candidates}")
                 break
             just_added = False

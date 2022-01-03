@@ -305,7 +305,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
         # multiple times in a row, and the batch trials are started together.
         # If we did not register pending configs after being suggested (but
         # before getting started), fantasizing would not be used for them.
-        self.searcher.register_pending(config)
+        self.searcher.register_pending(trial_id=trial_id, config=config)
         if self.searcher.debug_log is not None:
             # For log outputs:
             config = dict(config, trial_id=trial_id)
@@ -339,10 +339,10 @@ class FIFOScheduler(ResourceLevelsScheduler):
 
     def on_trial_error(self, trial: Trial):
         self._initialize_searcher()
-        config = self._preprocess_config(trial.config)
-        self.searcher.evaluation_failed(config)
+        trial_id = str(trial.trial_id)
+        self.searcher.evaluation_failed(trial_id)
         if self.searcher.debug_log is not None:
-            logger.info(f"trial_id {trial.trial_id}: Evaluation failed!")
+            logger.info(f"trial_id {trial_id}: Evaluation failed!")
 
     def _check_key_of_result(self, result: Dict, key: str):
         assert key in result, \

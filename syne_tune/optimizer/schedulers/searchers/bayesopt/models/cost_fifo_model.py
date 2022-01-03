@@ -67,7 +67,6 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
         self._num_samples = num_samples
         self._hp_ranges_for_prediction = hp_ranges_for_prediction
 
-
     @staticmethod
     def keys_predict() -> Set[str]:
         return {'mean'}

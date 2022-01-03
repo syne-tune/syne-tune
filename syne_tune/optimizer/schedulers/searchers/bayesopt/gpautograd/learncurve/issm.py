@@ -45,13 +45,14 @@ def prepare_data(
     data_lst = []
     targets = []
 
-    for candidate in state.candidate_evaluations:
-        metric_vals = candidate.metrics[active_metric]
+    for ev in state.trials_evaluations:
+        metric_vals = ev.metrics[active_metric]
         assert isinstance(metric_vals, dict)
         observed = list(sorted(
             ((int(k), v) for k, v in metric_vals.items()),
             key=lambda x: x[0]))
-        data_lst.append((candidate.candidate, observed))
+        config = state.config_for_trial[ev.trial_id]
+        data_lst.append((config, observed))
         targets += [x[1] for x in observed]
     mean = 0.0
     std = 1.0

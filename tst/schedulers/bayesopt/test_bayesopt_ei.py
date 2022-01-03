@@ -14,12 +14,10 @@ from typing import List
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
-    CandidateEvaluation, dictionarize_objective, INTERNAL_METRIC_NAME
+    dictionarize_objective, INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from syne_tune.search_space import uniform
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
-    TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
     DEFAULT_MCMC_CONFIG, DEFAULT_OPTIMIZATION_CONFIG
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl \
@@ -35,7 +33,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import \
     default_gpmodel, default_gpmodel_mcmc
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import tuples_to_configs
+    import create_tuning_job_state
 
 
 # This setup makes little sense for good testing.
@@ -65,11 +63,8 @@ def default_models(do_mcmc=True) -> List[GaussProcSurrogateModel]:
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
     Y = [dictionarize_objective(np.sum(x) * 10.0) for x in X]
-    X = tuples_to_configs(X, hp_ranges)
-    state = TuningJobState(
-        hp_ranges,
-        [CandidateEvaluation(x, y) for x, y in zip(X, Y)],
-        [], [])
+    state = create_tuning_job_state(
+        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y)
     random_seed = 0
 
     gpmodel = default_gpmodel(
