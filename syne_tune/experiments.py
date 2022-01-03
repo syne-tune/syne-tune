@@ -102,7 +102,8 @@ def download_single_experiment(
 
 def load_experiment(
         tuner_name: str,
-        download_if_not_found: bool = True
+        download_if_not_found: bool = True,
+        load_tuner: bool = False,
 ) -> ExperimentResult:
     """
     :param tuner_name: name of a tuning experiment previously run
@@ -127,13 +128,15 @@ def load_experiment(
             results = pd.read_csv(path / "results.csv")
     except Exception:
         results = None
-    try:
-        tuner = Tuner.load(path)
-    except FileNotFoundError:
+    if load_tuner:
+        try:
+            tuner = Tuner.load(path)
+        except FileNotFoundError:
+            tuner = None
+        except Exception:
+            tuner = None
+    else:
         tuner = None
-    except Exception:
-        tuner = None
-
     return ExperimentResult(
         name=tuner.name if tuner is not None else path.stem,
         results=results,
@@ -144,14 +147,15 @@ def load_experiment(
 
 def list_experiments(
         name_filter: Callable[[str], bool] = None,
-        experiment_filter: Callable[[ExperimentResult], bool] = None
+        experiment_filter: Callable[[ExperimentResult], bool] = None,
+        load_tuner: bool = False,
 ) -> List[ExperimentResult]:
     res = []
     for path in experiment_path().rglob("*/results.csv*"):
         if name_filter is None or name_filter(str(path)):
-            exp = load_experiment(path.parent.name)
+            exp = load_experiment(path.parent.name, load_tuner=load_tuner)
             if experiment_filter is None or experiment_filter(exp):
-                if exp.results is not None and exp.tuner is not None and exp.metadata is not None:
+                if exp.results is not None and exp.metadata is not None:
                     res.append(exp)
     return sorted(res, key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0), reverse=True)
 
@@ -179,7 +183,8 @@ def scheduler_name(scheduler):
 
 def load_experiments_df(
         name_filter: Callable[[str], bool] = None,
-        experiment_filter: Callable[[ExperimentResult], bool] = None
+        experiment_filter: Callable[[ExperimentResult], bool] = None,
+        load_tuner: bool = False,
 ) -> pd.DataFrame:
     """
     :param: name_filter: if specified, only experiment whose name matches the filter will be kept.
@@ -196,29 +201,23 @@ def load_experiments_df(
      `entry_point_name`/`entry_point_path` name and path of the entry point that was tuned
     """
     dfs = []
-    for experiment in list_experiments(name_filter=name_filter, experiment_filter=experiment_filter):
-        assert experiment.tuner is not None
+    for experiment in list_experiments(
+            name_filter=name_filter, experiment_filter=experiment_filter, load_tuner=load_tuner
+    ):
         assert experiment.results is not None
         assert experiment.metadata is not None
 
         df = experiment.results
         df["tuner_name"] = experiment.name
-        df["scheduler"] = scheduler_name(experiment.tuner.scheduler)
-        df["backend"] = experiment.tuner.backend.__class__.__name__
         for k, v in experiment.metadata.items():
-            df[k] = v
-        metrics = experiment.tuner.scheduler.metric_names()
-        if len(metrics) == 1:
-            df["metric"] = experiment.tuner.scheduler.metric_names()[0]
-        else:
-            # assume error is always the first
-            df["metric"] = experiment.tuner.scheduler.metric_names()[0]
-
-        scheduler_mode = experiment.tuner.scheduler.metric_mode()
-        if isinstance(scheduler_mode, str):
-            df["mode"] = scheduler_mode
-        else:
-            df["mode"] = scheduler_mode[0]
+            if isinstance(v, List):
+                if len(v) > 1:
+                    for i, x in enumerate(v):
+                        df[f"{k}-{i}"] = x
+                else:
+                    df[k] = v[0]
+            else:
+                df[k] = v
         dfs.append(df)
     return pd.concat(dfs, ignore_index=True)
 
