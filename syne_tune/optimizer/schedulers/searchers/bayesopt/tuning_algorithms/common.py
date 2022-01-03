@@ -10,14 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Iterator, List, Union
+from typing import Iterator, List, Union, Optional
 import numpy as np
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import CandidateGenerator
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
+    import Configuration, ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
@@ -82,7 +82,9 @@ class ExclusionList(object):
     is removed from the config.
 
     """
-    def __init__(self, state: Union[TuningJobState, dict]):
+    def __init__(
+            self, state: Union[TuningJobState, dict],
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         is_new = isinstance(state, TuningJobState)
         if is_new:
             self.hp_ranges = state.hp_ranges
@@ -94,9 +96,14 @@ class ExclusionList(object):
             else:
                 pos = keys.index(resource_attr)
                 self.keys = keys[:pos] + keys[(pos + 1):]
-            _elist = set([x.trial_id for x in state.pending_evaluations] +
-                         [x.trial_id for x in state.trials_evaluations] +
-                         state.failed_trials)
+            _elist = [x.trial_id for x in state.pending_evaluations] +\
+                     state.failed_trials
+            observed_trial_ids = [x.trial_id for x in state.trials_evaluations]
+            if filter_observed_data is not None:
+                observed_trial_ids = [
+                    trial_id for trial_id in observed_trial_ids
+                    if filter_observed_data(state.config_for_trial[trial_id])]
+            _elist = set(_elist + observed_trial_ids)
             self.excl_set = set(
                 self._to_matchstr(state.config_for_trial[trial_id])
                 for trial_id in _elist)

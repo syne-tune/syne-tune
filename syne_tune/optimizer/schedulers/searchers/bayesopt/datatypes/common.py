@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Union, Dict, Optional
+from typing import Union, Dict, Optional, Callable
 from dataclasses import dataclass
 import numpy as np
 
@@ -28,6 +28,14 @@ def dictionarize_objective(x):
 Hyperparameter = Union[str, int, float]
 
 Configuration = Dict[str, Hyperparameter]
+
+
+# Type of `filter_observed_data`, which is (optionally) used to filter the
+# observed data in `TuningJobState.trials_evaluations` when determining
+# the best config (incumbent) or the exclusion list. One use case is
+# warm-starting, where the observed data can come from a number of tasks, only
+# one of which is active.
+ConfigurationFilter = Callable[[Configuration], bool]
 
 
 MetricValues = Union[float, Dict[str, float]]
