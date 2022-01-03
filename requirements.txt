@@ -3,6 +3,7 @@ sagemaker>=2.32.0
 dill
 
 # sagemaker local mode
+numpy>=1.16.0
 PyYaml
 pandas
 ujson

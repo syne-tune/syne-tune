@@ -1,5 +1,5 @@
-scipy
-autograd
+scipy>=1.3.3
+autograd>=1.3
 
 # for test
 requests
