@@ -58,7 +58,7 @@ class CostModel(ABC):
     @abstractmethod
     def cost_metric_name(self) -> str:
         """
-        :return: Name of metric in CandidateEvaluation of cases in
+        :return: Name of metric in TrialEvaluations of cases in
             TuningJobState
         """
         pass
@@ -76,7 +76,7 @@ class CostModel(ABC):
         into account that
             c(x, r) = c_0(x) + r c_1(x)
 
-        :param state: Current dataset (only candidate_evaluations is used)
+        :param state: Current dataset (only trials_evaluations is used)
         """
         pass
 
@@ -160,6 +160,6 @@ class CostModel(ABC):
     def _check_dataset_has_cost_metric(self, state: TuningJobState):
         assert all(
             self.cost_metric_name in x.metrics
-            for x in state.candidate_evaluations), \
+            for x in state.trials_evaluations), \
             "All labeled cases in state must have metrics[{}]".format(
                 self.cost_metric_name)

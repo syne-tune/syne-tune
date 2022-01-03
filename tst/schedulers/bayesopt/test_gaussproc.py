@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, PendingEvaluation, dictionarize_objective, INTERNAL_METRIC_NAME
+    import dictionarize_objective, INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
@@ -32,7 +32,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import default_gpmodel, default_gpmodel_mcmc
 from syne_tune.search_space import uniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import tuples_to_configs
+    import create_tuning_job_state, tuples_to_configs
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 
@@ -51,12 +51,8 @@ def tuning_job_state() -> TuningJobState:
          (0.0, 1.0),
          (1.0, 1.0)]
     Y = [dictionarize_objective(np.sum(x) * 10.0) for x in X]
-    X = tuples_to_configs(X, hp_ranges)
-    return TuningJobState(
-        hp_ranges=hp_ranges,
-        candidate_evaluations=[CandidateEvaluation(x, y) for x, y in zip(X, Y)],
-        failed_candidates=[],
-        pending_evaluations=[])
+    return create_tuning_job_state(
+        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y)
 
 
 def _set_seeds(seed=0):
@@ -125,12 +121,8 @@ def test_gp_mcmc_fit(tuning_job_state):
 
     def tuning_job_state_mcmc(X, Y) -> TuningJobState:
         Y = [dictionarize_objective(y) for y in Y]
-        return TuningJobState(
-            hp_ranges=hp_ranges,
-            candidate_evaluations=[
-                CandidateEvaluation(x, y) for x, y in zip(X, Y)],
-            failed_candidates=[],
-            pending_evaluations=[])
+        return create_tuning_job_state(
+            hp_ranges=hp_ranges, cand_tuples=X, metrics=Y)
 
     _set_seeds(0)
 
@@ -200,15 +192,10 @@ def test_gp_fantasizing():
     # Note: It is important to not normalize targets, because this would be
     # done on the observed targets only, not the fantasized ones, so it
     # would be hard to compare below.
-    pending_evaluations = []
-    for _ in range(num_pending):
-        pending_cand = hp_ranges.tuple_to_config(tuple(np.random.rand(2,)))
-        pending_evaluations.append(PendingEvaluation(pending_cand))
-    state = TuningJobState(
-        hp_ranges,
-        [CandidateEvaluation(x, y) for x, y in zip(X, Y)],
-        failed_candidates=[],
-        pending_evaluations=pending_evaluations)
+    pending_tuples = [tuple(np.random.rand(2,)) for _ in range(num_pending)]
+    state = create_tuning_job_state(
+        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y,
+        pending_tuples=pending_tuples)
     model, gpmodel = _make_model_gp_optimize(
         state, random_seed, num_fantasy_samples=num_fantasy_samples,
         normalize_targets=False)
@@ -223,15 +210,12 @@ def test_gp_fantasizing():
     # Do the same computation by averaging by hand
     fvals_cmp = np.empty((num_fantasy_samples,) + fvals.shape)
     grads_cmp = np.empty((num_fantasy_samples,) + grads.shape)
-    X_full = X + state.pending_candidates
+    X_full = X + state.pending_configurations()
     for it in range(num_fantasy_samples):
         Y_full = Y + [dictionarize_objective(eval.fantasies[INTERNAL_METRIC_NAME][:, it])
                       for eval in fantasy_samples]
-        state2 = TuningJobState(
-            hp_ranges,
-            [CandidateEvaluation(x, y) for x, y in zip(X_full, Y_full)],
-            failed_candidates=[],
-            pending_evaluations=[])
+        state2 = create_tuning_job_state(
+            hp_ranges=hp_ranges, cand_tuples=X_full, metrics=Y_full)
         # We have to skip parameter optimization here
         model_factory = GaussProcEmpiricalBayesModelFactory(
             active_metric=INTERNAL_METRIC_NAME, gpmodel=gpmodel,
@@ -264,13 +248,9 @@ def default_models() -> List[GaussProcSurrogateModel]:
          (0.0, 1.0),
          (1.0, 1.0)]
     Y = [dictionarize_objective(np.sum(x) * 10.0) for x in X]
-    X = tuples_to_configs(X, hp_ranges)
 
-    state = TuningJobState(
-        hp_ranges=hp_ranges,
-        candidate_evaluations=[CandidateEvaluation(x, y) for x, y in zip(X, Y)],
-        failed_candidates=[],
-        pending_evaluations=[])
+    state = create_tuning_job_state(
+        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y)
     random_seed = 0
 
     return [

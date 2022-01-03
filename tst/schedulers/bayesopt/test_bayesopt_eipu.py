@@ -15,12 +15,10 @@ import numpy as np
 import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
-    CandidateEvaluation, dictionarize_objective, INTERNAL_METRIC_NAME
+    dictionarize_objective, INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from syne_tune.search_space import uniform
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
-    TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
     DEFAULT_MCMC_CONFIG, DEFAULT_OPTIMIZATION_CONFIG
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import \
@@ -36,7 +34,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import \
     default_gpmodel, default_gpmodel_mcmc
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import tuples_to_configs
+    import create_tuning_job_state
 
 
 COST_METRIC_NAME = 'cost_metric'
@@ -56,11 +54,8 @@ def default_models(metric, do_mcmc=True) -> List[GaussProcSurrogateModel]:
              for x in X]
     else:
         raise ValueError(f"{metric} is not a valid metric")
-    X = tuples_to_configs(X, hp_ranges)
-    state = TuningJobState(
-        hp_ranges,
-        [CandidateEvaluation(x, y) for x, y in zip(X, Y)],
-        [], [])
+    state = create_tuning_job_state(
+        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y)
     random_seed = 0
 
     gpmodel = default_gpmodel(

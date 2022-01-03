@@ -444,7 +444,8 @@ class HyperbandScheduler(FIFOScheduler):
                 f"trial_id {trial_id} starts (first milestone = "
                 f"{first_milestone})")
         # Register pending evaluation with searcher
-        self.searcher.register_pending(config, milestone=first_milestone)
+        self.searcher.register_pending(
+            trial_id=trial_id, config=config, milestone=first_milestone)
         # Extra fields in `config`
         if debug_log is not None:
             # For log outputs:
@@ -510,7 +511,7 @@ class HyperbandScheduler(FIFOScheduler):
             next_milestone = extra_kwargs['milestone']
             resume_from = extra_kwargs['resume_from']
             self.searcher.register_pending(
-                config=record['config'], milestone=next_milestone)
+                trial_id=trial_id, milestone=next_milestone)
             if self.searcher.debug_log is not None:
                 logger.info(
                     f"trial_id {trial_id}: Promotion from "
@@ -572,7 +573,7 @@ class HyperbandScheduler(FIFOScheduler):
             if (record['reported_result'] is not None) and \
                     (not record['keep_case']):
                 rem_result = record['reported_result']
-                self.searcher.remove_case(config, **rem_result)
+                self.searcher.remove_case(trial_id, **rem_result)
 
     def _update_searcher(
             self, trial_id: str, config: Dict, result: Dict, task_info: Dict):
@@ -598,7 +599,8 @@ class HyperbandScheduler(FIFOScheduler):
                     next_milestone = task_info.get('next_milestone')
                     if next_milestone is not None:
                         self.searcher.register_pending(
-                            config, milestone=next_milestone)
+                            trial_id=trial_id, config=config,
+                            milestone=next_milestone)
         elif not task_info.get('ignore_data', False):
             # All results are reported to the searcher, except if
             # task_info['ignore_data'] is True. The latter happens only for
@@ -617,7 +619,8 @@ class HyperbandScheduler(FIFOScheduler):
             # removed once the task finishes.
             if task_continues:
                 self.searcher.register_pending(
-                    config, milestone=int(result[self._resource_attr]) + 1)
+                    trial_id=trial_id, config=config,
+                    milestone=int(result[self._resource_attr]) + 1)
         return do_update
 
     def _check_result(self, result: Dict):
@@ -782,8 +785,7 @@ class HyperbandScheduler(FIFOScheduler):
             if resource > largest_update_resource:
                 super().on_trial_complete(trial, result)
         # Remove pending evaluations, in case there are still some
-        config = self._preprocess_config(trial.config)
-        self.searcher.cleanup_pending(config)
+        self.searcher.cleanup_pending(trial_id)
         self._cleanup_trial(trial_id)
 
     def _get_paused_trials(self) -> Dict:

@@ -14,20 +14,18 @@ from typing import List, Set, Tuple
 import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, PendingEvaluation, Configuration, dictionarize_objective
+    import Configuration, dictionarize_objective
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
     import ExclusionList, generate_unique_candidates
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import RepeatedCandidateGenerator
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from syne_tune.search_space import uniform, randint, choice
+from syne_tune.search_space import randint, choice
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import tuples_to_configs, create_exclusion_set
+    import create_tuning_job_state, create_exclusion_set
 
 
 @pytest.fixture(scope='function')
@@ -37,63 +35,7 @@ def hp_ranges():
         'hp2': choice(['a', 'b', 'c'])})
 
 
-@pytest.fixture(scope='function')
-def multi_algo_state():
-    def _candidate_evaluations(num, hp_ranges: HyperparameterRanges):
-        return [
-            CandidateEvaluation(
-                candidate=hp_ranges.tuple_to_config((i,)),
-                metrics=dictionarize_objective(float(i)))
-            for i in range(num)]
-
-    hp_ranges0 = make_hyperparameter_ranges({'a1_hp_1': uniform(-5.0, 5.0)})
-    hp_ranges1 = make_hyperparameter_ranges(dict())
-
-    return {
-        '0': TuningJobState(
-            hp_ranges=hp_ranges0,
-            candidate_evaluations=_candidate_evaluations(2, hp_ranges0),
-            failed_candidates=tuples_to_configs(
-                [(i,) for i in range(3)], hp_ranges0),
-            pending_evaluations=[
-                PendingEvaluation(hp_ranges0.tuple_to_config((i,)))
-                for i in range(100)]),
-        '1': TuningJobState(
-            hp_ranges=hp_ranges1,
-            candidate_evaluations=_candidate_evaluations(5, hp_ranges1),
-            failed_candidates=[],
-            pending_evaluations=[]),
-        '2': TuningJobState(
-            hp_ranges=hp_ranges1,
-            candidate_evaluations=_candidate_evaluations(3, hp_ranges1),
-            failed_candidates=tuples_to_configs(
-                [(i,) for i in range(10)], hp_ranges1),
-            pending_evaluations=[
-                PendingEvaluation(hp_ranges0.tuple_to_config((i,)))
-                for i in range(1)]),
-        '3': TuningJobState(
-            hp_ranges=hp_ranges1,
-            candidate_evaluations=_candidate_evaluations(6, hp_ranges1),
-            failed_candidates=[],
-            pending_evaluations=[]),
-        '4': TuningJobState(
-            hp_ranges=hp_ranges1,
-            candidate_evaluations=_candidate_evaluations(120, hp_ranges1),
-            failed_candidates=[],
-            pending_evaluations=[]),
-    }
-
-
-def _map_candidate_evaluations(lst, hp_ranges: HyperparameterRanges):
-    return [CandidateEvaluation(hp_ranges.tuple_to_config(x), y)
-            for x, y in lst]
-
-
-def _map_pending_evaluations(lst, hp_ranges: HyperparameterRanges):
-    return [PendingEvaluation(hp_ranges.tuple_to_config(x)) for x in lst]
-
-
-@pytest.mark.parametrize('candidate_evaluations,failed_candidates,pending_candidates,expected', [
+@pytest.mark.parametrize('observed_data,failed_tuples,pending_tuples,expected', [
     ([], [], [], set()),
     ([((123, 'a'), 9.87)], [], [], {'hp1:123,hp2:0'}),
     ([], [(123, 'a')], [], {'hp1:123,hp2:0'}),
@@ -103,17 +45,20 @@ def _map_pending_evaluations(lst, hp_ranges: HyperparameterRanges):
 ])
 def test_compute_blacklisted_candidates(
         hp_ranges: HyperparameterRanges,
-        candidate_evaluations: List[Tuple],
-        failed_candidates: List[Tuple],
-        pending_candidates: List[Tuple],
+        observed_data: List[Tuple],
+        failed_tuples: List[Tuple],
+        pending_tuples: List[Tuple],
         expected: Set[str]):
-    state = TuningJobState(
-        hp_ranges,
-        candidate_evaluations=_map_candidate_evaluations(
-            candidate_evaluations, hp_ranges),
-        failed_candidates=tuples_to_configs(failed_candidates, hp_ranges),
-        pending_evaluations=_map_pending_evaluations(
-            pending_candidates, hp_ranges))
+    if observed_data:
+        cand_tuples, metrics = zip(*observed_data)
+    else:
+        cand_tuples = []
+        metrics = []
+    if metrics:
+        metrics = [dictionarize_objective(y) for y in metrics]
+    state = create_tuning_job_state(
+        hp_ranges, cand_tuples=cand_tuples, metrics=metrics,
+        pending_tuples=pending_tuples, failed_tuples=failed_tuples)
     actual = ExclusionList(state)
     assert set(expected) == actual.excl_set
 

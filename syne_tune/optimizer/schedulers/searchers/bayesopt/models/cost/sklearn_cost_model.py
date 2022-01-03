@@ -144,11 +144,11 @@ class NonLinearCostModel(CostModel):
         :return: dataset, num_data0, res_min, target_min
         """
         data_config = []
-        for cand_eval in state.candidate_evaluations:
-            metric_vals = cand_eval.metrics[self.cost_metric_name]
+        for ev in state.trials_evaluations:
+            metric_vals = ev.metrics[self.cost_metric_name]
             assert isinstance(metric_vals, dict)
-            data_config.append(
-                (cand_eval.candidate, list(metric_vals.items())))
+            config = state.config_for_trial[ev.trial_id]
+            data_config.append((config, list(metric_vals.items())))
         res_min = min(min(res for res, _ in tpls)
                       for _, tpls in data_config)
         target_min = min(min(cost for _, cost in tpls)

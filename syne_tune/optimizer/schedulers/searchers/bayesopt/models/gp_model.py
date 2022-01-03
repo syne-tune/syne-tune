@@ -20,9 +20,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base \
     import BaseSurrogateModel
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import FantasizedPendingEvaluation, Configuration, INTERNAL_METRIC_NAME
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
+    import FantasizedPendingEvaluation, INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
@@ -160,9 +158,10 @@ def get_internal_candidate_evaluations(
         targets = (targets - mean) / std
     if state.pending_evaluations:
         # In this case, y becomes a matrix, where the observed values are
-        # broadcasted
+        # broadcast
+        cand_lst = [hp_ranges.to_ndarray(config)
+                    for config in state.pending_configurations()]
         fanta_lst = []
-        cand_lst = []
         for pending_eval in state.pending_evaluations:
             assert isinstance(pending_eval, FantasizedPendingEvaluation), \
                 "state.pending_evaluations has to contain FantasizedPendingEvaluation"
@@ -171,7 +170,6 @@ def get_internal_candidate_evaluations(
                 "All state.pending_evaluations entries must have length {}".format(
                     num_fantasy_samples)
             fanta_lst.append(fantasies.reshape((1, -1)))
-            cand_lst.append(hp_ranges.to_ndarray(pending_eval.candidate))
         targets = np.vstack([targets * np.ones((1, num_fantasy_samples))] + fanta_lst)
         features = np.vstack([features] + cand_lst)
     return InternalCandidateEvaluations(features, targets, mean, std)
@@ -228,25 +226,25 @@ class GaussProcModelFactory(TransformerModelFactory):
         if state.pending_evaluations:
             no_pending_state = TuningJobState(
                 hp_ranges=state.hp_ranges,
-                candidate_evaluations=state.candidate_evaluations,
-                failed_candidates=state.failed_candidates,
-                pending_evaluations=[])
+                config_for_trial=state.config_for_trial,
+                trials_evaluations=state.trials_evaluations,
+                failed_trials=state.failed_trials)
         self._posterior_for_state(
             no_pending_state, fit_params=fit_params, profiler=self._profiler)
         if state.pending_evaluations:
-            # Sample fantasy values for pending evals
-            new_pending = self._draw_fantasy_values(
-                state.hp_ranges, state.pending_candidates)
+            # Sample fantasy values for pending evaluations
+            new_pending = self._draw_fantasy_values(state)
             # Compute posterior for state with pending evals
             # Note: profiler is not passed here, this would overwrite the
             # results from the first call
             with_pending_state = TuningJobState(
                 hp_ranges=state.hp_ranges,
-                candidate_evaluations=state.candidate_evaluations,
-                failed_candidates=state.failed_candidates,
+                config_for_trial=state.config_for_trial,
+                trials_evaluations=state.trials_evaluations,
+                failed_trials=state.failed_trials,
                 pending_evaluations=new_pending)
             self._posterior_for_state(
-                with_pending_state, fit_params=False, profiler=None)
+                    with_pending_state, fit_params=False, profiler=None)
             fantasy_samples = new_pending
         else:
             fantasy_samples = []
@@ -308,8 +306,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         raise NotImplementedError()
 
     def _draw_fantasy_values(
-            self, hp_ranges: HyperparameterRanges,
-            candidates: List[Configuration]) -> List[FantasizedPendingEvaluation]:
+            self, state: TuningJobState) -> List[FantasizedPendingEvaluation]:
         """
         Note: The fantasy values need not be de-normalized, because they are
         only used internally here (e.g., get_internal_candidate_evaluations).
@@ -322,11 +319,12 @@ class GaussProcModelFactory(TransformerModelFactory):
         In this case, we draw num_fantasy_samples i.i.d.
 
         """
-        if candidates:
-            features_new = hp_ranges.to_ndarray_matrix(candidates)
+        if state.pending_evaluations:
+            configs = state.pending_configurations()
+            features_new = state.hp_ranges.to_ndarray_matrix(configs)
             num_samples = self._num_samples_for_fantasies()
             # We need joint sampling for >1 new candidates
-            num_candidates = len(candidates)
+            num_candidates = len(configs)
             sample_func = self._gpmodel.sample_joint if num_candidates > 1 else \
                 self._gpmodel.sample_marginals
             targets_new = sample_func(
@@ -334,8 +332,9 @@ class GaussProcModelFactory(TransformerModelFactory):
                 (num_candidates, -1))
             return [
                 FantasizedPendingEvaluation(
-                    candidate, {self.active_metric: y_new.reshape((1, -1))})
-                for candidate, y_new in zip(candidates, targets_new)
+                    trial_id=ev.trial_id, resource=ev.resource,
+                    fantasies={self.active_metric: y_new.reshape((1, -1))})
+                for ev, y_new in zip(state.pending_evaluations, targets_new)
             ]
         else:
             return []

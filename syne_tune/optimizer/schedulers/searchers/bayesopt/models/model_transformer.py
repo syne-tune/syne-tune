@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, List, Callable, Union
+from typing import Dict, Optional, Callable, Union
 import logging
 import copy
 
@@ -23,7 +23,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt \
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration, PendingEvaluation, CandidateEvaluation, \
+    import Configuration, PendingEvaluation, TrialEvaluations, \
     dictionarize_objective, INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.utils.simple_profiler \
     import SimpleProfiler
@@ -112,10 +112,10 @@ class ModelStateTransformer(object):
     parameters are refit, otherwise the current ones are not changed (which
     is usually faster, but risks stale-ness).
 
-    We also track the observed data `state.candidate_evaluations`. If this
+    We also track the observed data `state.trials_evaluations`. If this
     did not change since the last recent `model` call, we do not refit the
     model parameters. This is based on the assumption that model parameter
-    fitting only depends on `state.candidate_evaluations` (observed data),
+    fitting only depends on `state.trials_evaluations` (observed data),
     not on other fields (e.g., pending evaluations).
 
     Note that model_factory and skip_optimization can also be a dictionary mapping
@@ -145,10 +145,11 @@ class ModelStateTransformer(object):
                     f'{skip_optimization} must be a Dict, consistently ' \
                     f'with {model_factory}.'
                 skip_optimization = {
-                    output_name: skip_optimization[output_name] \
-                        if skip_optimization.get(output_name) is not None \
+                    output_name: skip_optimization[output_name]
+                        if skip_optimization.get(output_name) is not None
                         else NeverSkipPredicate()
-                    for output_name in model_factory.keys()}
+                    for output_name in model_factory.keys()
+                }
             # debug_log is shared by all output models
             self._debug_log = next(iter(model_factory.values())).debug_log
         else:
@@ -165,7 +166,7 @@ class ModelStateTransformer(object):
         self._skip_optimization = skip_optimization
         self._state = copy.copy(init_state)
         # SurrogateOutputModel computed on demand
-        self._model: SurrogateOutputModel = None
+        self._model: Optional[SurrogateOutputModel] = None
         # Observed data for which model parameters were re-fit most
         # recently, separately for each model
         self._num_evaluations = {
@@ -215,91 +216,78 @@ class ModelStateTransformer(object):
         for output_name in self._model_factory:
             self._model_factory[output_name].set_params(param_dict[output_name])
 
-    def append_candidate(self, candidate: Configuration):
+    def append_trial(
+            self, trial_id: str, config: Optional[Configuration] = None,
+            resource: Optional[int] = None):
         """
-        Appends new pending candidate to the state.
+        Appends new pending evaluation to the state.
 
-        :param candidate: New pending candidate
+        :param trial_id:
+        :param config: Must be given if this trial does not yet feature in the
+            state
+        :param resource: Must be given in the multi-fidelity case, to specify
+            at which resource level the evaluation is pending
 
         """
         self._model = None  # Invalidate
-        self._state.pending_evaluations.append(PendingEvaluation(candidate))
+        self._state.append_pending(trial_id, config=config, resource=resource)
 
-    # Note: Comparison by x.candidate == candidate does not work
-    # here.
-    def _find_candidate(self, candidate: Configuration, lst: List):
-        def _to_matchstr(config):
-            return self._state.hp_ranges.config_to_match_string(config)
-
-        cand_tpl = _to_matchstr(candidate)
-        try:
-            pos = next(
-                i for i, x in enumerate(lst)
-                if _to_matchstr(x.candidate) == cand_tpl)
-        except StopIteration:
-            pos = -1
-        return pos
-
-    def drop_pending_candidate(self, candidate: Configuration) -> bool:
+    def drop_pending_evaluation(
+            self, trial_id: str, resource: Optional[int] = None) -> bool:
         """
-        Drop pending candidate from state. If the candidate is not listed as
-        pending, nothing is done
+        Drop pending evaluation from state. If it is not listed as pending,
+        nothing is done
 
-        :param candidate: Configuration to be dropped
-        :return: Was pending candidate dropped?
+        :param trial_id:
+        :param resource: Must be given in the multi-fidelity case, to specify
+            at which resource level the evaluation is pending
 
         """
-        pos = self._find_candidate(candidate, self._state.pending_evaluations)
-        if pos != -1:
-            self._model = None  # Invalidate
-            self._state.pending_evaluations.pop(pos)
-        return (pos != -1)
+        return self._state.remove_pending(trial_id, resource)
 
     def remove_observed_case(
-            self, config: Configuration,
+            self, trial_id: str,
             metric_name: str = INTERNAL_METRIC_NAME, key: str = None):
-        pos = self._state.pos_of_config(config)
-        assert pos is not None, \
-            f"config {config} not contained in state.candidate_evaluations"
-        metrics = self._state.candidate_evaluations[pos].metrics
+        """
+        Removes specific observation from the state.
+
+        :param trial_id:
+        :param metric_name:
+        :param key: Must be given in the multi-fidelity case
+
+        """
+        pos = self._state._find_labeled(trial_id)
+        assert pos != -1, \
+            f"Trial trial_id = {trial_id} has no observations"
+        metrics = self._state.trials_evaluations[pos].metrics
         assert metric_name in metrics, \
-            f"state.candidate_evaluations entry for config {config} does not " +\
-            f"contain metric {metric_name}"
+            f"state.trials_evaluations entry for trial_id = {trial_id} " +\
+            f"does not contain metric {metric_name}"
         if key is None:
             del metrics[metric_name]
         else:
             metric_vals = metrics[metric_name]
             assert isinstance(metric_vals, dict) and key in metric_vals, \
-                f"state.candidate_evaluations entry for config {config} " +\
+                f"state.trials_evaluations entry for trial_id = {trial_id} " + \
                 f"and metric {metric_name} does not contain case for " +\
                 f"key {key}"
             del metric_vals[key]
 
-    def _label_candidate_info_message(self, config):
-        trial_id = self._debug_log.trial_id(config)
-        if trial_id is not None:
-            logger.info(
-                f"Labeling {trial_id} without finding a pending evaluation")
-        else:
-            logger.info(
-                "Labeling this config without finding a pending evaluation:\n" +\
-                str(config))
-
-    def label_candidate(self, data: CandidateEvaluation):
+    def label_trial(self, data: TrialEvaluations,
+                    config: Optional[Configuration] = None):
         """
-        Adds observed data for a candidate. The config may already exist in
-        the state, in which case the new labels are appended. Otherwise, a
-        new config is appended.
-        Note that `data.metrics` can be partial. Its information is used to
-        update the entry for `data.candidate` if already present.
-        If the candidate was pending before, it is removed as pending
-        candidate.
+        Adds observed data for a trial. If it has observations in the state
+        already, `data.metrics` are appended. Otherwise, a new entry is
+        appended.
+        If new observations replace pending evaluations, these are removed.
 
-        :param data: New labeled candidate
+        `config` must be passed if the trial has not yet been registered in
+        the state (this happens normally with the `append_trial` call). If
+        already registered, `config` is ignored.
 
         """
         # Drop pending candidate if it exists
-        config = data.candidate
+        trial_id = data.trial_id
         metric_vals = data.metrics.get(INTERNAL_METRIC_NAME)
         if metric_vals is not None:
             resource_attr_name = self._state.hp_ranges.name_last_pos
@@ -307,16 +295,12 @@ class ModelStateTransformer(object):
                 assert isinstance(metric_vals, dict), \
                     f"Metric {INTERNAL_METRIC_NAME} must be dict-valued"
                 for resource in metric_vals.keys():
-                    config_ext = dict(
-                        config, **{resource_attr_name: int(resource)})
-                    if not self.drop_pending_candidate(config_ext) \
-                            and self._debug_log is not None:
-                        self._label_candidate_info_message(config_ext)
-            elif not self.drop_pending_candidate(config) \
-                    and self._debug_log is not None:
-                self._label_candidate_info_message(config)
+                    self.drop_pending_evaluation(
+                        trial_id, resource=int(resource))
+            else:
+                self.drop_pending_evaluation(trial_id)
         # Assign / append new labels
-        metrics = self._state.metrics_for_config(config)
+        metrics = self._state.metrics_for_trial(trial_id, config=config)
         for name, new_labels in data.metrics.items():
             if name not in metrics or not isinstance(new_labels, dict):
                 metrics[name] = new_labels
@@ -339,8 +323,10 @@ class ModelStateTransformer(object):
             del self._state.pending_evaluations[:]
             self._state.pending_evaluations.extend(new_pending_evaluations)
 
-    def mark_candidate_failed(self, candidate: Configuration):
-        self._state.failed_candidates.append(candidate)
+    def mark_trial_failed(self, trial_id: str):
+        failed_trials = self._state.failed_trials
+        if trial_id not in failed_trials:
+            failed_trials.append(trial_id)
 
     def _compute_model(self, skip_optimization=None):
         if skip_optimization is None:

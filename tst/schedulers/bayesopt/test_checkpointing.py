@@ -44,18 +44,20 @@ def test_pickle_gp_fifo_searcher():
     searcher_options['debug_log'] = False
     searcher1 = GPFIFOSearcher(**searcher_options)
     # Feed searcher1 with some data
-    for trial_id, eval in enumerate(
-            data['state'].candidate_evaluations[:num_data]):
-        reward = eval.metrics[INTERNAL_METRIC_NAME]
+    config_for_trial = data['state'].config_for_trial
+    for ev in data['state'].trials_evaluations[:num_data]:
+        reward = ev.metrics[INTERNAL_METRIC_NAME]
         map_reward = searcher1.map_reward
         if map_reward is not None:
             reward = map_reward.reverse(reward)
-        searcher1._update(str(trial_id), eval.candidate, {reward_attr: reward})
+        config = config_for_trial[ev.trial_id]
+        searcher1._update(ev.trial_id, config, {reward_attr: reward})
     # Calling next_config is forcing a GP hyperparameter update
     next_config = searcher1.get_config()
     # Register some pending evaluations
-    for eval in data['state'].candidate_evaluations[-num_pending:]:
-        searcher1.register_pending(eval.candidate)
+    for ev in data['state'].trials_evaluations[-num_pending:]:
+        config = config_for_trial[ev.trial_id]
+        searcher1.register_pending(ev.trial_id, config=config)
     # Pickle mutable state of searcher1
     pkl_state = pickle.dumps(searcher1.get_state())
     # Clone searcher2 from mutable state
@@ -73,18 +75,17 @@ def test_pickle_gp_fifo_searcher():
     state1 = searcher1.state_transformer.state
     state2 = searcher2.state_transformer.state
     hp_ranges = state1.hp_ranges
-    assert_equal_candidates(
-        [x.candidate for x in state1.candidate_evaluations],
-        [x.candidate for x in state2.candidate_evaluations], hp_ranges,
-        decimal=5)
+    configs1, _ = state1.observed_data_for_metric()
+    configs2, _ = state2.observed_data_for_metric()
+    assert_equal_candidates(configs1, configs2, hp_ranges, decimal=5)
     eval_targets1 = np.array([
-        x.metrics[INTERNAL_METRIC_NAME] for x in state1.candidate_evaluations])
+        x.metrics[INTERNAL_METRIC_NAME] for x in state1.trials_evaluations])
     eval_targets2 = np.array([
-        x.metrics[INTERNAL_METRIC_NAME] for x in state1.candidate_evaluations])
+        x.metrics[INTERNAL_METRIC_NAME] for x in state1.trials_evaluations])
     np.testing.assert_almost_equal(eval_targets1, eval_targets2, decimal=5)
     assert_equal_candidates(
-        state1.pending_candidates, state2.pending_candidates, hp_ranges,
-        decimal=5)
+        state1.pending_configurations(), state2.pending_configurations(),
+        hp_ranges, decimal=5)
     # Compare random_state, random_generator state
     assert_equal_randomstate(searcher1.random_state, searcher2.random_state)
 
@@ -107,21 +108,22 @@ def test_pickle_constrained_gp_fifo_searcher():
     searcher_options['constraint_attr'] = constraint_attr
     searcher1 = ConstrainedGPFIFOSearcher(**searcher_options)
     # Feed searcher1 with some data
-    for trial_id, eval in enumerate(
-            data['state'].candidate_evaluations[:num_data]):
-        reward = eval.metrics[INTERNAL_METRIC_NAME]
+    config_for_trial = data['state'].config_for_trial
+    for ev in data['state'].trials_evaluations[:num_data]:
+        reward = ev.metrics[INTERNAL_METRIC_NAME]
         map_reward = searcher1.map_reward
         if map_reward is not None:
             reward = map_reward.reverse(reward)
-        constraint = 1.0  # dummy value
+        config = config_for_trial[ev.trial_id]
         searcher1._update(
-            str(trial_id), eval.candidate,
-            {reward_attr: reward, constraint_attr: constraint})
+            ev.trial_id, config, {reward_attr: reward, constraint_attr: 1.0})
+
     # Calling next_config is forcing a GP hyperparameter update
     next_config = searcher1.get_config()
     # Register some pending evaluations
-    for eval in data['state'].candidate_evaluations[-num_pending:]:
-        searcher1.register_pending(eval.candidate)
+    for ev in data['state'].trials_evaluations[-num_pending:]:
+        config = config_for_trial[ev.trial_id]
+        searcher1.register_pending(ev.trial_id, config=config)
     # Pickle mutable state of searcher1
     pkl_state = pickle.dumps(searcher1.get_state())
     # Clone searcher2 from mutable state
@@ -140,18 +142,17 @@ def test_pickle_constrained_gp_fifo_searcher():
     state1 = searcher1.state_transformer.state
     state2 = searcher2.state_transformer.state
     hp_ranges = state1.hp_ranges
-    assert_equal_candidates(
-        [x.candidate for x in state1.candidate_evaluations],
-        [x.candidate for x in state2.candidate_evaluations], hp_ranges,
-        decimal=5)
+    configs1, _ = state1.observed_data_for_metric()
+    configs2, _ = state2.observed_data_for_metric()
+    assert_equal_candidates(configs1, configs2, hp_ranges, decimal=5)
     eval_targets1 = np.array([
-        x.metrics[INTERNAL_METRIC_NAME] for x in state1.candidate_evaluations])
+        x.metrics[INTERNAL_METRIC_NAME] for x in state1.trials_evaluations])
     eval_targets2 = np.array([
-        x.metrics[INTERNAL_METRIC_NAME] for x in state1.candidate_evaluations])
+        x.metrics[INTERNAL_METRIC_NAME] for x in state1.trials_evaluations])
     np.testing.assert_almost_equal(eval_targets1, eval_targets2, decimal=5)
     assert_equal_candidates(
-        state1.pending_candidates, state2.pending_candidates, hp_ranges,
-        decimal=5)
+        state1.pending_configurations(), state2.pending_configurations(),
+        hp_ranges, decimal=5)
     # Compare random_state, random_generator state
     assert_equal_randomstate(searcher1.random_state, searcher2.random_state)
 
@@ -174,20 +175,22 @@ def test_pickle_cost_aware_gp_fifo_searcher():
     searcher_options['debug_log'] = False
     searcher1 = CostAwareGPFIFOSearcher(**searcher_options)
     # Feed searcher1 with some data
-    for trial_id, eval in enumerate(
-            data['state'].candidate_evaluations[:num_data]):
-        reward = eval.metrics[INTERNAL_METRIC_NAME]
+    config_for_trial = data['state'].config_for_trial
+    for ev in data['state'].trials_evaluations[:num_data]:
+        reward = ev.metrics[INTERNAL_METRIC_NAME]
         map_reward = searcher1.map_reward
         if map_reward is not None:
             reward = map_reward.reverse(reward)
-        train_time = 1.0  # dummy value
-        searcher1._update(str(trial_id), eval.candidate,
-                          {reward_attr: reward, cost_attr: train_time})
+        config = config_for_trial[ev.trial_id]
+        searcher1._update(
+            ev.trial_id, config, {reward_attr: reward, cost_attr: 1.0})
+
     # Calling next_config is forcing a GP hyperparameter update
     next_config = searcher1.get_config()
     # Register some pending evaluations
-    for eval in data['state'].candidate_evaluations[-num_pending:]:
-        searcher1.register_pending(eval.candidate)
+    for ev in data['state'].trials_evaluations[-num_pending:]:
+        config = config_for_trial[ev.trial_id]
+        searcher1.register_pending(ev.trial_id, config=config)
     # Pickle mutable state of searcher1
     pkl_state = pickle.dumps(searcher1.get_state())
     # Clone searcher2 from mutable state
@@ -206,18 +209,17 @@ def test_pickle_cost_aware_gp_fifo_searcher():
     state1 = searcher1.state_transformer.state
     state2 = searcher2.state_transformer.state
     hp_ranges = state1.hp_ranges
-    assert_equal_candidates(
-        [x.candidate for x in state1.candidate_evaluations],
-        [x.candidate for x in state2.candidate_evaluations], hp_ranges,
-        decimal=5)
+    configs1, _ = state1.observed_data_for_metric()
+    configs2, _ = state2.observed_data_for_metric()
+    assert_equal_candidates(configs1, configs2, hp_ranges, decimal=5)
     eval_targets1 = np.array([
-        x.metrics[INTERNAL_METRIC_NAME] for x in state1.candidate_evaluations])
+        x.metrics[INTERNAL_METRIC_NAME] for x in state1.trials_evaluations])
     eval_targets2 = np.array([
-        x.metrics[INTERNAL_METRIC_NAME] for x in state1.candidate_evaluations])
+        x.metrics[INTERNAL_METRIC_NAME] for x in state1.trials_evaluations])
     np.testing.assert_almost_equal(eval_targets1, eval_targets2, decimal=5)
     assert_equal_candidates(
-        state1.pending_candidates, state2.pending_candidates, hp_ranges,
-        decimal=5)
+        state1.pending_configurations(), state2.pending_configurations(),
+        hp_ranges, decimal=5)
     # Compare random_state, random_generator state
     assert_equal_randomstate(searcher1.random_state, searcher2.random_state)
 

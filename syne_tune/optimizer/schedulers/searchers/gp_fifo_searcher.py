@@ -24,7 +24,7 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import CandidateEvaluation, Configuration, MetricValues, \
+    import TrialEvaluations, Configuration, MetricValues, \
     dictionarize_objective, INTERNAL_METRIC_NAME, INTERNAL_COST_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
@@ -123,11 +123,7 @@ class ModelBasedSearcher(BaseSearcher):
         # Create state transformer
         # Initial state is empty (note that the state is mutable)
         if init_state is None:
-            init_state = TuningJobState(
-                hp_ranges=self._hp_ranges_in_state(),
-                candidate_evaluations=[],
-                failed_candidates=[],
-                pending_evaluations=[])
+            init_state = TuningJobState.empty_state(self._hp_ranges_in_state())
         self.state_transformer = ModelStateTransformer(
             model_factory=model_factory,
             init_state=init_state,
@@ -182,8 +178,8 @@ class ModelBasedSearcher(BaseSearcher):
             cost_val = float(result[cattr])
             resource = str(result[rattr])
             metrics = {INTERNAL_COST_NAME: {resource: cost_val}}
-            self.state_transformer.label_candidate(CandidateEvaluation(
-                candidate=config, metrics=metrics))
+            self.state_transformer.label_trial(TrialEvaluations(
+                trial_id=trial_id, metrics=metrics), config=config)
         if update:
             self._update(trial_id, config, result)
 
@@ -208,8 +204,8 @@ class ModelBasedSearcher(BaseSearcher):
             cost_val = float(result[attr])
             if self._resource_attr is None:
                 metrics[INTERNAL_COST_NAME] = cost_val
-        self.state_transformer.label_candidate(CandidateEvaluation(
-            candidate=config, metrics=metrics))
+        self.state_transformer.label_trial(TrialEvaluations(
+            trial_id=trial_id, metrics=metrics), config=config)
         if self.debug_log is not None:
             _trial_id = self._trial_id_string(trial_id, result)
             msg = f"Update for trial_id {_trial_id}: metric = {metric_val:.3f}"
@@ -233,7 +229,6 @@ class ModelBasedSearcher(BaseSearcher):
         :return: Next config to evaluate at
         """
         self._assign_random_searcher()
-        trial_id = kwargs.get('trial_id')
         state = self.state_transformer.state
         if self.do_profile:
             # Start new profiler block
@@ -242,7 +237,7 @@ class ModelBasedSearcher(BaseSearcher):
                 skip_optimization = skip_optimization[INTERNAL_METRIC_NAME]
             meta = {
                 'fit_hyperparams': not skip_optimization(state),
-                'num_observed': len(state.candidate_evaluations),
+                'num_observed': state.num_observed_cases(),
                 'num_pending': len(state.pending_evaluations)
             }
             self.profiler.begin_block(meta)
@@ -252,10 +247,11 @@ class ModelBasedSearcher(BaseSearcher):
         if config is None:
             exclusion_candidates = self._get_exclusion_candidates(**kwargs)
             pick_random = (len(exclusion_candidates) < self.num_initial_random_choices) or \
-                (not state.candidate_evaluations)
+                (not state.trials_evaluations)
         else:
             pick_random = True  # Initial configs count as random here
         if self.debug_log is not None:
+            trial_id = kwargs.get('trial_id')
             self.debug_log.start_get_config(
                 'random' if pick_random else 'BO', trial_id=trial_id)
         if config is None:
@@ -279,7 +275,7 @@ class ModelBasedSearcher(BaseSearcher):
 
         if config is not None:
             if self.debug_log is not None:
-                self.debug_log.set_final_config(config, trial_id=trial_id)
+                self.debug_log.set_final_config(config)
                 # All get_config debug log info is only written here
                 self.debug_log.write_block()
         else:
@@ -296,7 +292,7 @@ class ModelBasedSearcher(BaseSearcher):
         return config
 
     def dataset_size(self):
-        return len(self.state_transformer.state.candidate_evaluations)
+        return self.state_transformer.state.num_observed_cases()
 
     def model_parameters(self):
         return self.state_transformer.get_params()
@@ -317,8 +313,6 @@ class ModelBasedSearcher(BaseSearcher):
             'state': encode_state(self.state_transformer.state),
             'skip_optimization': self.state_transformer.skip_optimization,
             'random_state': self.random_state}
-        if self.debug_log is not None:
-            state['debug_log'] = self.debug_log.get_mutable_state()
         if self._random_searcher is not None:
             state['random_searcher_state'] = self._random_searcher.get_state()
         return state
@@ -329,8 +323,6 @@ class ModelBasedSearcher(BaseSearcher):
         new_searcher.random_state = state['random_state']
         new_searcher.random_generator.random_state = \
             state['random_state']
-        if self.debug_log and 'debug_log' in state:
-            new_searcher.debug_log.set_mutable_state(state['debug_log'])
         if 'random_searcher_state' in state:
             # Restore self._random_searcher as well
             self._assign_random_searcher()
@@ -492,27 +484,22 @@ class GPFIFOSearcher(ModelBasedSearcher):
             "This searcher requires FIFOScheduler scheduler"
         super().configure_scheduler(scheduler)
 
-    def register_pending(self, config: Configuration, milestone=None):
+    def register_pending(
+            self, trial_id: str, config: Optional[Dict] = None,
+            milestone=None):
         """
-        Registers config as pending. This means the corresponding evaluation
-        task is running. Once it finishes, update is called for config.
+        Registers trial as pending. This means the corresponding evaluation
+        task is running. Once it finishes, update is called for this trial.
 
         """
         # It is OK for the candidate already to be registered as pending, in
         # which case we do nothing
         state = self.state_transformer.state
-        if config not in state.pending_candidates:
-            pos_cand = state.pos_of_config(config)
-            if pos_cand is not None:
-                evals = state.candidate_evaluations
-                num_labeled = len(evals)
-                config_labeled = evals[pos_cand].candidate
-                error_msg = \
-                    "This configuration is already registered as labeled:\n" +\
-                    f"config:\n   {config}\n" +\
-                    f"labeled config [{pos_cand} of {num_labeled}]:\n   {config_labeled}"
-                raise ValueError(error_msg)
-            self.state_transformer.append_candidate(config)
+        if not state.is_pending(trial_id):
+            assert not state.is_labeled(trial_id), \
+                f"Trial trial_id = {trial_id} is already labeled, so cannot " +\
+                "be pending"
+            self.state_transformer.append_trial(trial_id, config=config)
 
     def _fix_resource_attribute(self, **kwargs):
         pass
@@ -536,8 +523,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         self._fix_resource_attribute(**kwargs)
         # Create BO algorithm
         initial_candidates_scorer = create_initial_candidates_scorer(
-            self.initial_scoring, model, self.acquisition_class,
-            self.random_state)
+            initial_scoring=self.initial_scoring,
+            model=model,
+            acquisition_class=self.acquisition_class,
+            random_state=self.random_state)
         local_optimizer = self.local_minimizer_class(
             hp_ranges=self._hp_ranges_for_prediction(),
             model=model,
@@ -567,12 +556,12 @@ class GPFIFOSearcher(ModelBasedSearcher):
             self.profiler.pop_prefix()  # getconfig
         return config
 
-    def evaluation_failed(self, config: Configuration):
-        # Remove pending candidate
-        self.state_transformer.drop_pending_candidate(config)
+    def evaluation_failed(self, trial_id: str):
+        # Remove pending evaluation
+        self.state_transformer.drop_pending_evaluation(trial_id)
         # Mark config as failed (which means it will be blacklisted in
         # future get_config calls)
-        self.state_transformer.mark_candidate_failed(config)
+        self.state_transformer.mark_trial_failed(trial_id)
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
