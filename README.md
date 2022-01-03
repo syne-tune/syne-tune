@@ -67,7 +67,8 @@ You should call a function to report metrics after each epochs or at the end of 
 For example:
 
 ```python
-from syne_tune.report import report
+from syne_tune.report import Reporter
+report = Reporter()
 for epoch in range(1, num_epochs + 1):
    # ... do something
    train_acc = compute_accuracy()

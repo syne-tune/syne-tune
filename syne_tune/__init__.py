@@ -11,3 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 __all__ = ['search_space']
+
+from pathlib import Path
+def read_version():
+    with open(Path(__file__).parent / "version.py", "r") as f:
+        return f.readline().replace("\"", "")
+
+__version__ = read_version()

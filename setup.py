@@ -1,3 +1,4 @@
+from syne_tune import read_version
 from setuptools import setup, find_packages
 from pathlib import Path
 
@@ -17,12 +18,6 @@ def load_benchmark_requirements():
     if k in res:
         res.remove(k)
     return list(res)
-
-
-def read_version():
-    with open(Path(__file__).parent / "version.py", "r") as f:
-        return f.readline()
-
 
 required_core = load_requirements('requirements.txt')
 required_ray = load_requirements('requirements-ray.txt')
