@@ -32,6 +32,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.pos
     import GaussProcAdditivePosteriorState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import SurrogateModel
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
+    ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 from syne_tune.optimizer.schedulers.utils.simple_profiler \
@@ -46,6 +48,7 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
             gpmodel: GaussianProcessLearningCurveModel,
             hp_ranges: HyperparameterRanges,
             means_observed_candidates: np.ndarray,
+            filter_observed_data: Optional[ConfigurationFilter] = None,
             normalize_mean: float = 0.0, normalize_std: float = 1.0):
         """
         Gaussian Process additive surrogate model, where model parameters are
@@ -67,7 +70,7 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
         :param normalize_mean: Mean used to normalize targets
         :param normalize_std: Stddev used to normalize targets
         """
-        super().__init__(state, active_metric)
+        super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
         self._hp_ranges = hp_ranges
         self._means_observed_candidates = \
@@ -137,6 +140,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             configspace_ext: ExtendedConfiguration,
             profiler: Optional[SimpleProfiler] = None,
             debug_log: Optional[DebugLogPrinter] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None,
             normalize_targets: bool = False):
         """
         Pending evaluations in `state` are not taken into account here.
@@ -157,6 +161,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         self._configspace_ext = configspace_ext
         self._debug_log = debug_log
         self._profiler = profiler
+        self._filter_observed_data = filter_observed_data
         self.normalize_targets = normalize_targets
 
     @property
@@ -209,15 +214,15 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             gpmodel=self._gpmodel,
             hp_ranges=self._configspace_ext.hp_ranges,
             means_observed_candidates=self._predict_mean_current_candidates(
-                data), **extra_kwargs)
+                data),
+            filter_observed_data=self._filter_observed_data, **extra_kwargs)
 
     def _predict_mean_current_candidates(self, data: Dict) -> np.ndarray:
         """
         Returns the predictive mean (signal with key 'mean') at all current
-        candidate configurations (both state.candidate_evaluations and
-        state.pending_evaluations). Different to multi-task GP models, these
-        means are over f(x, r_max) only. They are normalized, so have to be
-        denormalized first.
+        candidate configurations (observed and pending). Different to
+        multi-task GP models, these means are over f(x, r_max) only. They
+        are normalized, so have to be denormalized first.
 
         :return: List of predictive means
         """
