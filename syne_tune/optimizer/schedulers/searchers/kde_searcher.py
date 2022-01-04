@@ -37,6 +37,7 @@ class KernelDensityEstimator(BaseSearcher):
             min_bandwidth: float = 1e-3,
             num_candidates: int = 64,
             bandwidth_factor: int = 3,
+            random_fraction: float = .33,
             points_to_evaluate: Optional[List[Dict]] = None,
             **kwargs
     ):
@@ -46,6 +47,7 @@ class KernelDensityEstimator(BaseSearcher):
         self.metric_name = metric
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
+        self.random_fraction = random_fraction
         self.num_minimum_observations = num_init_random_draws
         self.num_candidates = num_candidates
         self.bandwidth_factor = bandwidth_factor
@@ -144,6 +146,10 @@ class KernelDensityEstimator(BaseSearcher):
         else:
             if self.good_kde is None and self.bad_kde is None:
                 # if not enough suggestion made, sample randomly
+                suggestion = {k: v.sample()
+                    if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
+
+            elif np.random.rand() < self.random_fraction:
                 suggestion = {k: v.sample()
                     if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
             else:

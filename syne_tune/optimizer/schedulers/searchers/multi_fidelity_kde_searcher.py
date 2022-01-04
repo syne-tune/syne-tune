@@ -31,15 +31,17 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             mode: str = "min",
             num_min_data_points: int = None,
             top_n_percent: int = 15,
-            min_bandwidth: float = 1e-3,
+            min_bandwidth: float = 0.1,
             num_candidates: int = 64,
             bandwidth_factor: int = 3,
+            random_fraction: float = .33,
             resource_attr: str = 'epochs',
             points_to_evaluate: Optional[List[Dict]] = None,
             **kwargs
     ):
         super().__init__(configspace, metric, num_init_random_draws, mode, num_min_data_points,
-                         top_n_percent, min_bandwidth, num_candidates, bandwidth_factor, points_to_evaluate, **kwargs)
+                         top_n_percent, min_bandwidth, num_candidates, bandwidth_factor, random_fraction,
+                         points_to_evaluate, **kwargs)
 
         self.resource_attr = resource_attr
 
