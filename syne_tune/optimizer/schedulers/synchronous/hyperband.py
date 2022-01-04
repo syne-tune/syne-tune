@@ -33,7 +33,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
 from syne_tune.optimizer.schedulers.random_seeds import \
     RandomSeedGenerator
 
-__all__ = ['SynchronousHyperbandScheduler']
+__all__ = ['SynchronousHyperbandScheduler',
+           'SynchronousScheduler']
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,25 @@ class JobQueueEntry:
     write_back: JobResultWriteBack
 
 
-class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
+class SynchronousScheduler(object):
+    """
+    Superclass of schedulers which require a synchronous protocol. In
+    particular, we need `asynchronous_scheduling=False` in
+    :class:`Tuner`, and `n_workers` to be equal to `batch_size` here.
+
+    A synchronous protocol is what is described as suggest and collect
+    phase in :class:`SynchronousHyperbandScheduler`. Note that many
+    schedulers can be used with both synchronous and asynchronous
+    protocol. Only such schedulers which require a synchronous
+    protocol to work correctly, should inherit from this class.
+
+    """
+    @property
+    def batch_size(self) -> int:
+        raise NotImplementedError()
+
+
+class SynchronousHyperbandScheduler(ResourceLevelsScheduler, SynchronousScheduler):
     """
     Synchronous Hyperband. If W is the number of workers, jobs are scheduled in
     batches of size W. A new batch is scheduled only once all workers are free
@@ -160,8 +179,8 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         self.mode = kwargs['mode']
         self.max_resource_attr = kwargs.get('max_resource_attr')
         self._resource_attr = kwargs['resource_attr']
-        self.batch_size = kwargs.get('batch_size')
-        assert self.batch_size is not None, \
+        self._batch_size = kwargs.get('batch_size')
+        assert self._batch_size is not None, \
             "Argument 'batch_size' mandatory, must be equal to n_workers of Tuner"
         # Generator for random seeds
         random_seed = kwargs.get('random_seed')
@@ -197,6 +216,10 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
 
+    @property
+    def batch_size(self) -> int:
+        return self._batch_size
+
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         assert self._phase == 'suggest', \
             "Cannot process _suggest in collect phase. bracket_to_results " +\
@@ -205,7 +228,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             # Queue empty: Fetch new batch of jobs
             self._bracket_to_results = dict()
             for bracket_id, (trials, milestone) \
-                    in self.bracket_manager.next_jobs(self.batch_size):
+                    in self.bracket_manager.next_jobs(self._batch_size):
                 for pos, promote_trial_id in enumerate(trials):
                     write_back = JobResultWriteBack(
                         bracket_id=bracket_id, pos=pos, milestone=milestone)
@@ -213,7 +236,8 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                         trial_id=promote_trial_id, write_back=write_back))
                 # Will be written in `_suggest_next_job_in_queue`:
                 self._bracket_to_results[bracket_id] = [None] * len(trials)
-            logger.info(f"_suggest: New batch of {self.batch_size} jobs:\n" +\
+            logger.info(
+                f"_suggest: New batch of {self._batch_size} jobs:\n" +
                 '\n'.join([str(x) for x in self._job_queue]))
         if len(self._job_queue) == 1:
             # Final job in queue: Switch to collect phase
@@ -282,7 +306,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                     job_result[pos] = (trial.trial_id, metric_val)
                     trial_decision = SchedulerDecision.PAUSE
                     self._num_collected += 1
-                    if self._num_collected == self.batch_size:
+                    if self._num_collected == self._batch_size:
                         # All results have been collected
                         self.bracket_manager.on_results(self._bracket_to_results)
                         self._phase = 'suggest'
@@ -300,7 +324,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             # We may receive results in 'suggest' phase, because trials
             # were not properly paused. These results are simply ignored
             logger.warning(
-                f"Received result for trial_id {trial.trial_id} in suggest " +\
+                f"Received result for trial_id {trial.trial_id} in suggest " +
                 f"phase. This result will be ignored:\n{result}")
             trial_decision = SchedulerDecision.STOP
         return trial_decision

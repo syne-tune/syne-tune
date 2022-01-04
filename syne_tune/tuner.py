@@ -24,6 +24,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBacke
 from syne_tune.backend.trial_status import Status, Trial
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
+from syne_tune.optimizer.schedulers.synchronous.hyperband import SynchronousScheduler
 from syne_tune.tuner_callback import TunerCallback, StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 from syne_tune.util import RegularCallback, experiment_path, name_from_base, check_valid_sagemaker_name
@@ -46,7 +47,7 @@ class Tuner:
             print_update_interval: float = 30.0,
             max_failures: int = 1,
             tuner_name: Optional[str] = None,
-            asynchronous_scheduling: bool = True,
+            asynchronous_scheduling: Optional[bool] = None,
             callbacks: Optional[List[TunerCallback]] = None,
             metadata: Optional[Dict] = None,
     ):
@@ -81,12 +82,13 @@ class Tuner:
         self.sleep_time = sleep_time
         self.results_update_interval = results_update_interval
         self.stop_criterion = stop_criterion
-        self.asynchronous_scheduling = asynchronous_scheduling
         self.metadata = metadata if metadata is not None else {}
         self.metadata[ST_TUNER_CREATION_TIMESTAMP] = time.time()
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
 
+        self.asynchronous_scheduling = self._check_synchronous_scheduler(
+            asynchronous_scheduling, scheduler, n_workers)
         if tuner_name is not None:
             check_valid_sagemaker_name(tuner_name)
         else:
@@ -99,10 +101,27 @@ class Tuner:
 
         # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
-        self.backend.set_path(results_root=self.tuner_path)
+        self.backend.set_path(results_root=str(self.tuner_path))
         self.callbacks = callbacks if callbacks is not None else [self._default_callback()]
 
         self.tuning_status = None
+
+    def _check_synchronous_scheduler(
+            self, asynchronous_scheduling: Optional[bool],
+            scheduler: TrialScheduler, n_workers: int) -> bool:
+        def_value = True
+        if isinstance(scheduler, SynchronousScheduler):
+            def_value = False
+            assert n_workers == scheduler.batch_size, \
+                "Scheduler is synchronous with batch_size = " +\
+                f"{scheduler.batch_size}, which must be equal to n_workers " +\
+                f"= {n_workers}"
+        if asynchronous_scheduling is None:
+            asynchronous_scheduling = def_value
+        else:
+            assert def_value or (asynchronous_scheduling == def_value), \
+                f"Scheduler is synchronous, needs asynchronous_scheduling=False"
+        return asynchronous_scheduling
 
     def run(self):
         """
