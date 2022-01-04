@@ -16,9 +16,6 @@ import numpy as np
 import statsmodels.api as sm
 import scipy.stats as sps
 
-from syne_tune.optimizer.scheduler import TrialScheduler, \
-    TrialSuggestion, SchedulerDecision
-from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 import syne_tune.search_space as sp
 
