@@ -52,8 +52,6 @@ class KernelDensityEstimator(BaseSearcher):
         self.num_candidates = num_candidates
         self.bandwidth_factor = bandwidth_factor
         self.points_to_evaluate = points_to_evaluate
-        self.num_min_data_points = len(configspace.keys()) if num_min_data_points is None else num_min_data_points
-        assert self.num_min_data_points >= len(configspace.keys())
         self.top_n_percent = top_n_percent
         self.X = []
         self.y = []
@@ -78,6 +76,10 @@ class KernelDensityEstimator(BaseSearcher):
                 self.vartypes.append(('o', (hp.lower, hp.upper)))
             if isinstance(hp, sp.Float):
                 self.vartypes.append(('c', 0))
+
+        self.num_min_data_points = len(self.vartypes) if num_min_data_points is None else num_min_data_points
+        assert self.num_min_data_points >= len(self.vartypes)
+
 
     @staticmethod
     def to_feature(configspace, config, categorical_maps):
