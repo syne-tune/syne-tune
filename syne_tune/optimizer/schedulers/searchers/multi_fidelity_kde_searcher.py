@@ -22,12 +22,54 @@ logger = logging.getLogger(__name__)
 
 
 class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
+    """
+    Adapts the KernelDensityEstimator to the multi-fidelity setting as proposed by Falkner et al such that we can use
+    it with Hyperband. Following Falkner et al, we fit the KDE only on the highest resource level where we
+    have at least num_min_data_points.
+
+    BOHB: Robust and Efficient Hyperparameter Optimization at Scale
+    S. Falkner and A. Klein and F. Hutter
+    Proceedings of the 35th International Conference on Machine Learning
+
+
+    Parameters
+    ----------
+    config_space: dict
+        Configuration space for trial evaluation function
+    metric : str
+        Name of metric to optimize, key in result's obtained via
+        `on_trial_result`
+    mode : str
+        Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
+    num_min_data_points: int
+        Minimum number of data points that we use to fit the KDEs. If set to None than we set this to the number of
+        hyperparameters.
+    top_n_percent: int
+        Determines how many datapoints we use use to fit the first KDE model for modeling the well
+        performing configurations.
+    min_bandwidth: float
+        The minimum bandwidth for the KDE models
+    num_candidates: int
+        Number of candidates that are sampled to optimize the acquisition function
+    bandwidth_factor: int
+        We sample continuous hyperparameter from a truncated Normal. This factor is multiplied to the bandwidth to
+        define the standard deviation of this trunacted Normal.
+    random_fraction: float
+        Defines the fraction of configurations that are drawn uniformly at random instead of sampling from the model
+    points_to_evaluate: List[Dict] or None
+        List of configurations to be evaluated initially (in that order).
+        Each config in the list can be partially specified, or even be an
+        empty dict. For each hyperparameter not specified, the default value
+        is determined using a midpoint heuristic.
+        If None (default), this is mapped to [dict()], a single default config
+        determined by the midpoint heuristic. If [] (empty list), no initial
+        configurations are specified.
+    """
 
     def __init__(
             self,
             configspace: Dict,
             metric: str,
-            num_init_random_draws: int = 5,
             mode: str = "min",
             num_min_data_points: int = None,
             top_n_percent: int = 15,
@@ -39,7 +81,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             points_to_evaluate: Optional[List[Dict]] = None,
             **kwargs
     ):
-        super().__init__(configspace, metric, num_init_random_draws, mode, num_min_data_points,
+        super().__init__(configspace, metric, mode, num_min_data_points,
                          top_n_percent, min_bandwidth, num_candidates, bandwidth_factor, random_fraction,
                          points_to_evaluate, **kwargs)
 

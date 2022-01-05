@@ -25,12 +25,60 @@ logger = logging.getLogger(__name__)
 
 
 class KernelDensityEstimator(BaseSearcher):
+    """
+    Fits two kernel density estimators (KDE) to model the density of the top N configurations as well as the density
+    of the configurations that are not among the top N, respectively. New configurations are sampled by optimizing
+    the ratio of these two densities. KDE as model for Bayesian optimization has been originally proposed
+    by Bergstra et al. Compared to their original implementation TPE, we use multi-variate instead of univariate KDE
+    as proposed by Falkner et al.
+
+    Algorithms for Hyper-Parameter Optimization
+    J. Bergstra and R. Bardenet and Y. Bengio and B. K{\'e}gl
+    Proceedings of the 24th International Conference on Advances in Neural Information Processing Systems
+
+    BOHB: Robust and Efficient Hyperparameter Optimization at Scale
+    S. Falkner and A. Klein and F. Hutter
+    Proceedings of the 35th International Conference on Machine Learning
+
+
+    Parameters
+    ----------
+    config_space: dict
+        Configuration space for trial evaluation function
+    metric : str
+        Name of metric to optimize, key in result's obtained via
+        `on_trial_result`
+    mode : str
+        Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
+    num_min_data_points: int
+        Minimum number of data points that we use to fit the KDEs. If set to None than we set this to the number of
+        hyperparameters.
+    top_n_percent: int
+        Determines how many datapoints we use use to fit the first KDE model for modeling the well
+        performing configurations.
+    min_bandwidth: float
+        The minimum bandwidth for the KDE models
+    num_candidates: int
+        Number of candidates that are sampled to optimize the acquisition function
+    bandwidth_factor: int
+        We sample continuous hyperparameter from a truncated Normal. This factor is multiplied to the bandwidth to
+        define the standard deviation of this trunacted Normal.
+    random_fraction: float
+        Defines the fraction of configurations that are drawn uniformly at random instead of sampling from the model
+    points_to_evaluate: List[Dict] or None
+        List of configurations to be evaluated initially (in that order).
+        Each config in the list can be partially specified, or even be an
+        empty dict. For each hyperparameter not specified, the default value
+        is determined using a midpoint heuristic.
+        If None (default), this is mapped to [dict()], a single default config
+        determined by the midpoint heuristic. If [] (empty list), no initial
+        configurations are specified.
+    """
 
     def __init__(
             self,
             configspace: Dict,
             metric: str,
-            num_init_random_draws: int = 5,
             mode: str = "min",
             num_min_data_points: int = None,
             top_n_percent: int = 15,
@@ -42,13 +90,11 @@ class KernelDensityEstimator(BaseSearcher):
             **kwargs
     ):
         super().__init__(configspace=configspace, metric=metric, points_to_evaluate=points_to_evaluate)
-        assert num_init_random_draws >= 2
         self.mode = mode
         self.metric_name = metric
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
         self.random_fraction = random_fraction
-        self.num_minimum_observations = num_init_random_draws
         self.num_candidates = num_candidates
         self.bandwidth_factor = bandwidth_factor
         self.points_to_evaluate = points_to_evaluate
@@ -80,7 +126,6 @@ class KernelDensityEstimator(BaseSearcher):
         self.num_min_data_points = len(self.vartypes) if num_min_data_points is None else num_min_data_points
         assert self.num_min_data_points >= len(self.vartypes)
 
-
     @staticmethod
     def to_feature(configspace, config, categorical_maps):
         def numerize(value, domain, categorical_map):
@@ -89,6 +134,7 @@ class KernelDensityEstimator(BaseSearcher):
                 return res
             else:
                 return [(value - domain.lower) / (domain.upper - domain.lower)]
+
         return np.hstack([
             numerize(value=config[k], domain=v, categorical_map=categorical_maps.get(k, {}))
             for k, v in configspace.items()
@@ -110,6 +156,7 @@ class KernelDensityEstimator(BaseSearcher):
                         return values * (domain.upper - domain.lower) + domain.lower
                     else:
                         return int(values * (domain.upper - domain.lower) + domain.lower)
+
         res = {}
         curr_pos = 0
         for k, domain in configspace.items():
@@ -149,11 +196,10 @@ class KernelDensityEstimator(BaseSearcher):
             if self.good_kde is None and self.bad_kde is None:
                 # if not enough suggestion made, sample randomly
                 suggestion = {k: v.sample()
-                    if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
-
+                if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
             elif np.random.rand() < self.random_fraction:
                 suggestion = {k: v.sample()
-                    if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
+                if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
             else:
                 l = self.good_kde.pdf
                 g = self.bad_kde.pdf
@@ -203,7 +249,6 @@ class KernelDensityEstimator(BaseSearcher):
         return suggestion
 
     def train_kde(self, train_data, train_targets):
-        # split in good / poor data points
         n_good = max(self.num_min_data_points, (self.top_n_percent * train_data.shape[0]) // 100)
         n_bad = max(self.num_min_data_points, ((100 - self.top_n_percent) * train_data.shape[0]) // 100)
 
