@@ -26,6 +26,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     Adapts the KernelDensityEstimator to the multi-fidelity setting as proposed by Falkner et al such that we can use
     it with Hyperband. Following Falkner et al, we fit the KDE only on the highest resource level where we
     have at least num_min_data_points.
+    Code is based on the implementation by Falkner et al: https://github.com/automl/HpBandSter/tree/master/hpbandster
 
     BOHB: Robust and Efficient Hyperparameter Optimization at Scale
     S. Falkner and A. Klein and F. Hutter

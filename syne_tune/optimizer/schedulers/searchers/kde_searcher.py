@@ -31,6 +31,7 @@ class KernelDensityEstimator(BaseSearcher):
     the ratio of these two densities. KDE as model for Bayesian optimization has been originally proposed
     by Bergstra et al. Compared to their original implementation TPE, we use multi-variate instead of univariate KDE
     as proposed by Falkner et al.
+    Code is based on the implementation by Falkner et al: https://github.com/automl/HpBandSter/tree/master/hpbandster
 
     Algorithms for Hyper-Parameter Optimization
     J. Bergstra and R. Bardenet and Y. Bengio and B. K{\'e}gl
