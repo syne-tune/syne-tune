@@ -13,6 +13,7 @@
 import json
 import logging
 from datetime import datetime
+from json.decoder import JSONDecodeError
 from pathlib import Path
 from typing import List, Dict, Callable, Optional
 
@@ -103,7 +104,6 @@ def download_single_experiment(
 def load_experiment(
         tuner_name: str,
         download_if_not_found: bool = True,
-        load_tuner: bool = False,
 ) -> ExperimentResult:
     """
     :param tuner_name: name of a tuning experiment previously run
@@ -128,14 +128,11 @@ def load_experiment(
             results = pd.read_csv(path / "results.csv")
     except Exception:
         results = None
-    if load_tuner:
-        try:
-            tuner = Tuner.load(path)
-        except FileNotFoundError:
-            tuner = None
-        except Exception:
-            tuner = None
-    else:
+    try:
+        tuner = Tuner.load(path)
+    except FileNotFoundError:
+        tuner = None
+    except Exception:
         tuner = None
     return ExperimentResult(
         name=tuner.name if tuner is not None else path.stem,
@@ -145,15 +142,36 @@ def load_experiment(
     )
 
 
+def get_metadata(name_filter: Callable[[str], bool] = None) -> Dict[str, Dict]:
+    """
+    :param name_filter:
+    :return: dictionary from tuner name to metadata dict
+    """
+    res = {}
+    for path in experiment_path().rglob("*/metadata.json"):
+        if name_filter is None or name_filter(str(path)):
+            try:
+                tuner_name = path.parent.name
+                path = experiment_path(tuner_name)
+                metadata_path = path / "metadata.json"
+                with open(metadata_path, "r") as f:
+                    metadata = json.load(f)
+                res[tuner_name] = metadata
+            except JSONDecodeError as e:
+                print(f"could not read {path}")
+                pass
+    return res
+
+
 def list_experiments(
         name_filter: Callable[[str], bool] = None,
         experiment_filter: Callable[[ExperimentResult], bool] = None,
-        load_tuner: bool = False,
 ) -> List[ExperimentResult]:
     res = []
     for path in experiment_path().rglob("*/results.csv*"):
         if name_filter is None or name_filter(str(path)):
-            exp = load_experiment(path.parent.name, load_tuner=load_tuner)
+            print(path)
+            exp = load_experiment(path.parent.name)
             if experiment_filter is None or experiment_filter(exp):
                 if exp.results is not None and exp.metadata is not None:
                     res.append(exp)
@@ -184,7 +202,6 @@ def scheduler_name(scheduler):
 def load_experiments_df(
         name_filter: Callable[[str], bool] = None,
         experiment_filter: Callable[[ExperimentResult], bool] = None,
-        load_tuner: bool = False,
 ) -> pd.DataFrame:
     """
     :param: name_filter: if specified, only experiment whose name matches the filter will be kept.
@@ -202,7 +219,7 @@ def load_experiments_df(
     """
     dfs = []
     for experiment in list_experiments(
-            name_filter=name_filter, experiment_filter=experiment_filter, load_tuner=load_tuner
+            name_filter=name_filter, experiment_filter=experiment_filter
     ):
         assert experiment.results is not None
         assert experiment.metadata is not None
