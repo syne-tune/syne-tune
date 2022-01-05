@@ -33,8 +33,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
 from syne_tune.optimizer.schedulers.random_seeds import \
     RandomSeedGenerator
 
-__all__ = ['SynchronousHyperbandScheduler',
-           'SynchronousScheduler']
+__all__ = ['SynchronousHyperbandScheduler']
 
 logger = logging.getLogger(__name__)
 
@@ -73,25 +72,13 @@ class JobQueueEntry:
     write_back: JobResultWriteBack
 
 
-class SynchronousScheduler(object):
-    """
-    Superclass of schedulers which require a synchronous protocol. In
-    particular, we need `asynchronous_scheduling=False` in
-    :class:`Tuner`, and `n_workers` to be equal to `batch_size` here.
-
-    A synchronous protocol is what is described as suggest and collect
-    phase in :class:`SynchronousHyperbandScheduler`. Note that many
-    schedulers can be used with both synchronous and asynchronous
-    protocol. Only such schedulers which require a synchronous
-    protocol to work correctly, should inherit from this class.
-
-    """
-    @property
-    def batch_size(self) -> int:
-        raise NotImplementedError()
+ERROR_MESSAGE = \
+    "In order to use SynchronousHyperbandScheduler, you need to create Tuner " +\
+    "with asynchronous_scheduling=False, and make sure that n_workers is the " +\
+    "same as batch_size passed to SynchronousHyperbandScheduler."
 
 
-class SynchronousHyperbandScheduler(ResourceLevelsScheduler, SynchronousScheduler):
+class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     """
     Synchronous Hyperband. If W is the number of workers, jobs are scheduled in
     batches of size W. A new batch is scheduled only once all workers are free
@@ -216,14 +203,13 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler, SynchronousSchedule
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
 
-    @property
     def batch_size(self) -> int:
         return self._batch_size
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         assert self._phase == 'suggest', \
-            "Cannot process _suggest in collect phase. bracket_to_results " +\
-            f"= {self._bracket_to_results}"
+            "Cannot process _suggest in collect phase.\n" + ERROR_MESSAGE +\
+            f"\nbracket_to_results = {self._bracket_to_results}"
         if not self._job_queue:
             # Queue empty: Fetch new batch of jobs
             self._bracket_to_results = dict()
@@ -340,8 +326,8 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler, SynchronousSchedule
 
         """
         assert self._phase == 'collect', \
-            "Cannot process on_trial_error in suggest phase. _job_queue " +\
-            f"= {self._job_queue}"
+            "Cannot process on_trial_error in suggest phase.\n" + ERROR_MESSAGE +\
+            f"\n_job_queue = {self._job_queue}"
         trial_id = str(trial.trial_id)
         self.searcher.evaluation_failed(trial_id)
         write_back = self._trial_to_write_back.get(trial_id)
