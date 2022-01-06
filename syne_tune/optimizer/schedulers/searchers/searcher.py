@@ -267,7 +267,7 @@ class BaseSearcher(ABC):
         """
         return dict()
 
-    def get_state(self):
+    def get_state(self) -> dict:
         """
         Together with clone_from_state, this is needed in order to store and
         re-create the mutable state of the searcher.
@@ -279,7 +279,7 @@ class BaseSearcher(ABC):
         return {'points_to_evaluate': self._points_to_evaluate}
 
     @abstractmethod
-    def clone_from_state(self, state):
+    def clone_from_state(self, state: dict):
         """
         Together with get_state, this is needed in order to store and
         re-create the mutable state of the searcher.
@@ -294,7 +294,7 @@ class BaseSearcher(ABC):
         """
         pass
 
-    def _restore_from_state(self, state):
+    def _restore_from_state(self, state: dict):
         self._points_to_evaluate = state['points_to_evaluate'].copy()
 
     @property
@@ -310,11 +310,11 @@ class BaseSearcher(ABC):
 
 def extract_random_seed(kwargs: dict) -> (int, dict):
     key = 'random_seed_generator'
-    if key in kwargs:
+    if kwargs.get(key) is not None:
         random_seed = kwargs[key]()
     else:
         key = 'random_seed'
-        if key in kwargs:
+        if kwargs.get(key) is not None:
             random_seed = kwargs[key]
         else:
             random_seed = 31415927
@@ -347,6 +347,17 @@ class SearcherWithRandomSeed(BaseSearcher):
             points_to_evaluate=kwargs.get('points_to_evaluate'))
         random_seed, _ = extract_random_seed(kwargs)
         self.random_state = np.random.RandomState(random_seed)
+
+    def get_state(self) -> dict:
+        random_state = self.random_state.get_state()
+        state = dict(
+            super().get_state(),
+            random_state=random_state)
+        return state
+
+    def _restore_from_state(self, state: dict):
+        super()._restore_from_state(state)
+        self.random_state.set_state(state['random_state'])
 
 
 class RandomSearcher(SearcherWithRandomSeed):
@@ -447,15 +458,7 @@ class RandomSearcher(SearcherWithRandomSeed):
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
-    def get_state(self):
-        state = dict(super().get_state(), random_state=self.random_state)
-        return state
-
-    def _restore_from_state(self, state):
-        super()._restore_from_state(state)
-        self.random_state = state['random_state']
-
-    def clone_from_state(self, state):
+    def clone_from_state(self, state: dict):
         new_searcher = RandomSearcher(
             self.configspace, metric=self._metric, debug_log=self._debug_log)
         new_searcher._resource_attr = self._resource_attr

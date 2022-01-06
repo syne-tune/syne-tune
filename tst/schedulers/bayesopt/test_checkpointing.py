@@ -63,6 +63,7 @@ def test_pickle_gp_fifo_searcher():
     # Clone searcher2 from mutable state
     searcher2 = GPFIFOSearcher(**searcher_options)
     searcher2 = searcher2.clone_from_state(pickle.loads(pkl_state))
+
     # At this point, searcher1 and searcher2 should be essentially the same
     # Compare model parameters
     params1 = searcher1.model_parameters()

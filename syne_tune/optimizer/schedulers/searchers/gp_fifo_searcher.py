@@ -309,24 +309,26 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         We assume that skip_optimization can be pickled.
 
         """
-        state = {
-            'model_params': self.model_parameters(),
-            'state': encode_state(self.state_transformer.state),
-            'skip_optimization': self.state_transformer.skip_optimization,
-            'random_state': self.random_state}
+        state = dict(
+            super().get_state(),
+            model_params=self.model_parameters(),
+            state=encode_state(self.state_transformer.state),
+            skip_optimization=self.state_transformer.skip_optimization)
         if self._random_searcher is not None:
             state['random_searcher_state'] = self._random_searcher.get_state()
         return state
 
-    def _clone_from_state_common(
-            self, new_searcher: 'ModelBasedSearcher', state: Dict):
-        new_searcher.state_transformer.set_params(state['model_params'])
-        new_searcher.random_state = state['random_state']
-        new_searcher.random_generator.random_state = \
-            state['random_state']
+    def _restore_from_state(self, state: dict):
+        super()._restore_from_state(state)
+        self.state_transformer.set_params(state['model_params'])
+        self.random_generator.random_state = self.random_state
         if 'random_searcher_state' in state:
             # Restore self._random_searcher as well
-            self._assign_random_searcher()
+            # Note: It is important to call `_assign_random_searcher` with a
+            # random seed. Otherwise, one is drawn from `random_state`, which
+            # modifies that state. The seed passed does not matter, since
+            # `_random_searcher.random_state` will be restored anyway
+            self._assign_random_searcher(random_seed=0)
             self._random_searcher._restore_from_state(
                 state['random_searcher_state'])
 
@@ -338,11 +340,12 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def debug_log(self):
         return self._debug_log
 
-    def _assign_random_searcher(self):
+    def _assign_random_searcher(self, random_seed=None):
         if self._random_searcher is None:
             # Used for initial random configs (if any)
             # We do not have to deal with points_to_evaluate
-            random_seed = self.random_state.randint(0, 2 ** 32)
+            if random_seed is None:
+                random_seed = self.random_state.randint(0, 2 ** 32)
             self._random_searcher = RandomSearcher(
                 self.hp_ranges.config_space,
                 metric=self._metric,
@@ -490,11 +493,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
             that data from all tasks can be merged together
 
     """
-    def __init__(self, configspace, **kwargs):
-        if configspace is not None:
+    def __init__(self, configspace, metric, clone_from_state=False, **kwargs):
+        if not clone_from_state:
             super().__init__(
                 configspace,
-                metric=kwargs.get('metric'),
+                metric=metric,
                 points_to_evaluate=kwargs.get('points_to_evaluate'),
                 random_seed_generator=kwargs.get('random_seed_generator'),
                 random_seed=kwargs.get('random_seed'))
@@ -502,6 +505,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
             # Internal constructor, bypassing the factory
+            # Note: Members which are part of the mutable state, will be
+            # overwritten in `_restore_from_state`
+            super().__init__(configspace, metric=metric)
             kwargs_int = kwargs.copy()
         self._call_create_internal(kwargs_int)
 
@@ -613,7 +619,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
         model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPFIFOSearcher(
-            configspace=None,
+            configspace=self.configspace,
+            metric=self._metric,
+            clone_from_state=True,
             hp_ranges=self.hp_ranges,
             model_factory=model_factory,
             acquisition_class=self.acquisition_class,
@@ -627,7 +635,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
             cost_attr=self._cost_attr,
             resource_attr=self._resource_attr,
             filter_observed_data=self._filter_observed_data)
-        self._clone_from_state_common(new_searcher, state)
+        new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None
         return new_searcher
