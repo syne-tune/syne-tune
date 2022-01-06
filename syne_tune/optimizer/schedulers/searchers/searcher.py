@@ -341,18 +341,17 @@ class SearcherWithRandomSeed(BaseSearcher):
         This is used if `random_seed_generator` is not given.
 
     """
-    def __init__(self, configspace, **kwargs):
+    def __init__(
+            self, configspace, metric, points_to_evaluate=None, **kwargs):
         super().__init__(
-            configspace, metric=kwargs.get('metric'),
-            points_to_evaluate=kwargs.get('points_to_evaluate'))
+            configspace, metric=metric, points_to_evaluate=points_to_evaluate)
         random_seed, _ = extract_random_seed(kwargs)
         self.random_state = np.random.RandomState(random_seed)
 
     def get_state(self) -> dict:
-        random_state = self.random_state.get_state()
         state = dict(
             super().get_state(),
-            random_state=random_state)
+            random_state=self.random_state.get_state())
         return state
 
     def _restore_from_state(self, state: dict):
@@ -372,8 +371,9 @@ class RandomSearcher(SearcherWithRandomSeed):
     """
     MAX_RETRIES = 100
 
-    def __init__(self, configspace, **kwargs):
-        super().__init__(configspace, **kwargs)
+    def __init__(self, configspace, metric, points_to_evaluate=None, **kwargs):
+        super().__init__(
+            configspace, metric, points_to_evaluate, **kwargs)
         self._hp_ranges = make_hyperparameter_ranges(configspace)
         self._resource_attr = kwargs.get('resource_attr')
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)

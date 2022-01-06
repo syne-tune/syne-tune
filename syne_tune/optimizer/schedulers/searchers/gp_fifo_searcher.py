@@ -91,9 +91,6 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     """Common code for surrogate model based searchers
 
     """
-    def __init__(self, configspace, **kwargs):
-        super().__init__(configspace, **kwargs)
-
     def _create_internal(
             self, hp_ranges: HyperparameterRanges,
             model_factory: TransformerModelFactory,

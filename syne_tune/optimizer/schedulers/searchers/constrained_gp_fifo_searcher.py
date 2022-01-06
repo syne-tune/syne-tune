@@ -37,11 +37,11 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     """
 
-    def __init__(self, configspace, **kwargs):
+    def __init__(self, configspace, metric, **kwargs):
         assert kwargs.get('constraint_attr') is not None, \
             "This searcher needs a constraint attribute. Please specify its " +\
             "name in search_options['constraint_attr']"
-        super().__init__(configspace, **kwargs)
+        super().__init__(configspace, metric, **kwargs)
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(

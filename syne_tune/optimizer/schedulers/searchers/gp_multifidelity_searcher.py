@@ -151,9 +151,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     --------
     GPFIFOSearcher
     """
-    def __init__(self, configspace, **kwargs):
-        super().__init__(configspace, **kwargs)
-
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
             kwargs, *gp_multifidelity_searcher_defaults(),
