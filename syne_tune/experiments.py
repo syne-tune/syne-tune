@@ -104,6 +104,7 @@ def download_single_experiment(
 def load_experiment(
         tuner_name: str,
         download_if_not_found: bool = True,
+        load_tuner: bool = False,
 ) -> ExperimentResult:
     """
     :param tuner_name: name of a tuning experiment previously run
@@ -128,11 +129,14 @@ def load_experiment(
             results = pd.read_csv(path / "results.csv")
     except Exception:
         results = None
-    try:
-        tuner = Tuner.load(path)
-    except FileNotFoundError:
-        tuner = None
-    except Exception:
+    if load_tuner:
+        try:
+            tuner = Tuner.load(path)
+        except FileNotFoundError:
+            tuner = None
+        except Exception:
+            tuner = None
+    else:
         tuner = None
     return ExperimentResult(
         name=tuner.name if tuner is not None else path.stem,
@@ -166,12 +170,12 @@ def get_metadata(name_filter: Callable[[str], bool] = None) -> Dict[str, Dict]:
 def list_experiments(
         name_filter: Callable[[str], bool] = None,
         experiment_filter: Callable[[ExperimentResult], bool] = None,
+        load_tuner: bool = False,
 ) -> List[ExperimentResult]:
     res = []
     for path in experiment_path().rglob("*/results.csv*"):
         if name_filter is None or name_filter(str(path)):
-            print(path)
-            exp = load_experiment(path.parent.name)
+            exp = load_experiment(path.parent.name, load_tuner)
             if experiment_filter is None or experiment_filter(exp):
                 if exp.results is not None and exp.metadata is not None:
                     res.append(exp)
@@ -202,6 +206,7 @@ def scheduler_name(scheduler):
 def load_experiments_df(
         name_filter: Callable[[str], bool] = None,
         experiment_filter: Callable[[ExperimentResult], bool] = None,
+        load_tuner: bool = False,
 ) -> pd.DataFrame:
     """
     :param: name_filter: if specified, only experiment whose name matches the filter will be kept.
@@ -219,7 +224,7 @@ def load_experiments_df(
     """
     dfs = []
     for experiment in list_experiments(
-            name_filter=name_filter, experiment_filter=experiment_filter
+            name_filter=name_filter, experiment_filter=experiment_filter, load_tuner=load_tuner
     ):
         assert experiment.results is not None
         assert experiment.metadata is not None
