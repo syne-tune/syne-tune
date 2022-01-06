@@ -85,7 +85,6 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         new_searcher = ConstrainedGPFIFOSearcher(
             configspace=None,
             hp_ranges=self.hp_ranges,
-            random_seed=self.random_seed,
             output_model_factory=output_model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,

@@ -108,7 +108,6 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
             configspace=None,
             hp_ranges=self.hp_ranges,
             configspace_ext=self.configspace_ext,
-            random_seed=self.random_seed,
             output_model_factory=output_model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,

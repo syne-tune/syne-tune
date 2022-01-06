@@ -75,6 +75,11 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         If None (default), this is mapped to [dict()], a single default config
         determined by the midpoint heuristic. If [] (empty list), no initial
         configurations are specified.
+    random_seed_generator : RandomSeedGenerator (optional)
+        If given, the random_seed for `random_state` is obtained from there,
+        otherwise `random_seed` is used
+    random_seed : int (optional)
+        This is used if `random_seed_generator` is not given.
     resource_attr : str
         Name of resource attribute in reports, equal to `resource_attr` of
         scheduler
@@ -87,8 +92,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     model : str
         Selects surrogate model (learning curve model) to be used. Choices
         are 'gp_multitask' (default), 'gp_issm', 'gp_expdecay'
-    random_seed : int
-        Seed for pseudo-random number generator used.
     num_init_random : int
         See :class:`GPFIFOSearcher`
     num_init_candidates : int
@@ -295,7 +298,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             configspace=None,
             hp_ranges=self.hp_ranges,
             configspace_ext=self.configspace_ext,
-            random_seed=self.random_seed,
             model_factory=model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,

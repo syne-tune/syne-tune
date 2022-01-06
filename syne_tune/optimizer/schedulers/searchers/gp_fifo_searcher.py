@@ -15,7 +15,7 @@ from typing import Type, Optional, Dict
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.searcher import \
-    BaseSearcher, RandomSearcher
+    SearcherWithRandomSeed, RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
     gp_fifo_searcher_factory, gp_fifo_searcher_defaults
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
@@ -87,17 +87,15 @@ def check_initial_candidates_scorer(initial_scoring: str) -> str:
         return initial_scoring
 
 
-class ModelBasedSearcher(BaseSearcher):
+class ModelBasedSearcher(SearcherWithRandomSeed):
     """Common code for surrogate model based searchers
 
     """
-    def __init__(
-            self, configspace, metric=None,
-            points_to_evaluate=None):
-        super().__init__(configspace, metric, points_to_evaluate)
+    def __init__(self, configspace, **kwargs):
+        super().__init__(configspace, **kwargs)
 
     def _create_internal(
-            self, hp_ranges: HyperparameterRanges, random_seed: int,
+            self, hp_ranges: HyperparameterRanges,
             model_factory: TransformerModelFactory,
             acquisition_class: AcquisitionClassAndArgs,
             map_reward: Optional[MapReward] = None,
@@ -111,7 +109,6 @@ class ModelBasedSearcher(BaseSearcher):
             resource_attr: Optional[str] = None,
             filter_observed_data: Optional[ConfigurationFilter] = None):
         self.hp_ranges = hp_ranges
-        self.random_seed = random_seed
         self.num_initial_candidates = num_initial_candidates
         self.num_initial_random_choices = num_initial_random_choices
         self.map_reward = map_reward
@@ -130,7 +127,6 @@ class ModelBasedSearcher(BaseSearcher):
             model_factory=model_factory,
             init_state=init_state,
             skip_optimization=skip_optimization)
-        self.random_state = np.random.RandomState(random_seed)
         self.random_generator = RandomStatefulCandidateGenerator(
             self._hp_ranges_for_prediction(), random_state=self.random_state)
         self.set_profiler(model_factory.profiler)
@@ -346,11 +342,12 @@ class ModelBasedSearcher(BaseSearcher):
         if self._random_searcher is None:
             # Used for initial random configs (if any)
             # We do not have to deal with points_to_evaluate
+            random_seed = self.random_state.randint(0, 2 ** 32)
             self._random_searcher = RandomSearcher(
                 self.hp_ranges.config_space,
                 metric=self._metric,
                 points_to_evaluate=[],
-                random_seed=self.random_seed,
+                random_seed=random_seed,
                 debug_log=False)
 
 
@@ -395,6 +392,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
         If None (default), this is mapped to [dict()], a single default config
         determined by the midpoint heuristic. If [] (empty list), no initial
         configurations are specified.
+    random_seed_generator : RandomSeedGenerator (optional)
+        If given, the random_seed for `random_state` is obtained from there,
+        otherwise `random_seed` is used
+    random_seed : int (optional)
+        This is used if `random_seed_generator` is not given.
     debug_log : bool (default: False)
         If True, both searcher and scheduler output an informative log, from
         which the configs chosen and decisions being made can be traced.
@@ -409,8 +411,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
         training time). Needed only by cost-aware searchers. Depending on
         whether `resource_attr` is given, cost values are read from each
         report or only at the end.
-    random_seed : int
-        Seed for pseudo-random number generator used.
     num_init_random : int
         Number of initial `get_config` calls for which randomly sampled configs
         are returned. Afterwards, Bayesian optimization is used
@@ -493,8 +493,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def __init__(self, configspace, **kwargs):
         if configspace is not None:
             super().__init__(
-                configspace, metric=kwargs.get('metric'),
-                points_to_evaluate=kwargs.get('points_to_evaluate'))
+                configspace,
+                metric=kwargs.get('metric'),
+                points_to_evaluate=kwargs.get('points_to_evaluate'),
+                random_seed_generator=kwargs.get('random_seed_generator'),
+                random_seed=kwargs.get('random_seed'))
             kwargs['configspace'] = configspace
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
@@ -612,7 +615,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
         new_searcher = GPFIFOSearcher(
             configspace=None,
             hp_ranges=self.hp_ranges,
-            random_seed=self.random_seed,
             model_factory=model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,

@@ -24,8 +24,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
     import ExclusionList
 
 __all__ = ['BaseSearcher',
+           'SearcherWithRandomSeed',
            'RandomSearcher',
-           'impute_points_to_evaluate']
+           'impute_points_to_evaluate',
+           'extract_random_seed']
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +119,7 @@ class BaseSearcher(ABC):
         specification of the Hyperparameters with their priors
     metric : str
         Name of metric passed to update.
-    points_to_evaluate: List[Dict] or None
+    points_to_evaluate : List[Dict] or None
         List of configurations to be evaluated initially (in that order).
         Each config in the list can be partially specified, or even be an
         empty dict. For each hyperparameter not specified, the default value
@@ -306,28 +308,62 @@ class BaseSearcher(ABC):
         return None
 
 
-class RandomSearcher(BaseSearcher):
-    """Searcher which randomly samples configurations to try next.
+def extract_random_seed(kwargs: dict) -> (int, dict):
+    key = 'random_seed_generator'
+    if key in kwargs:
+        random_seed = kwargs[key]()
+    else:
+        key = 'random_seed'
+        if key in kwargs:
+            random_seed = kwargs[key]
+        else:
+            random_seed = 31415927
+            key = None
+    _kwargs = {k: v for k, v in kwargs.items() if k != key}
+    return random_seed, _kwargs
 
-    Parameters
-    ----------
-    configspace: Dict
-        The configuration space to sample from. It contains the full
-        specification of the set of hyperparameter values (with optional prior
-        distributions over these values).
+
+class SearcherWithRandomSeed(BaseSearcher):
     """
-    MAX_RETRIES = 100
+    Base class of searchers which use random decisions. Creates the
+    `random_state` member, which must be used for all random draws.
 
+    Making proper use of this interface allows us to run experiments
+    with control of random seeds, e.g. for paired comparisons or
+    integration testing.
+
+    Extra parameters
+    ----------------
+    random_seed_generator : RandomSeedGenerator (optional)
+        If given, the random_seed for `random_state` is obtained from there,
+        otherwise `random_seed` is used
+    random_seed : int (optional)
+        This is used if `random_seed_generator` is not given.
+
+    """
     def __init__(self, configspace, **kwargs):
         super().__init__(
             configspace, metric=kwargs.get('metric'),
             points_to_evaluate=kwargs.get('points_to_evaluate'))
-        self._hp_ranges = make_hyperparameter_ranges(configspace)
-        if 'random_seed_generator' in kwargs:
-            random_seed = kwargs['random_seed_generator']()
-        else:
-            random_seed = kwargs.get('random_seed', 31415927)
+        random_seed, _ = extract_random_seed(kwargs)
         self.random_state = np.random.RandomState(random_seed)
+
+
+class RandomSearcher(SearcherWithRandomSeed):
+    """Searcher which randomly samples configurations to try next.
+
+    Extra parameters
+    ----------------
+    debug_log : bool
+        If True (default), debug log printing is activated. Logs which
+        configs are chosen when, and which metric values are obtained.
+
+    """
+    MAX_RETRIES = 100
+
+    def __init__(self, configspace, **kwargs):
+        super().__init__(configspace, **kwargs)
+        self._hp_ranges = make_hyperparameter_ranges(configspace)
         self._resource_attr = kwargs.get('resource_attr')
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)
         # Debug log printing (switched on by default)
