@@ -21,7 +21,8 @@ from sklearn.calibration import CalibratedClassifierCV
 
 from typing import Dict
 
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.searcher import \
+    SearcherWithRandomSeed
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bore.de import DifferentialevolutionOptimizer
@@ -30,12 +31,16 @@ from syne_tune.optimizer.schedulers.searchers.bore.classififer import GPModel, M
 logger = logging.getLogger(__name__)
 
 
-class Bore(BaseSearcher):
+class Bore(SearcherWithRandomSeed):
 
-    def __init__(self, config_space: Dict, metric: str, points_to_evaluate: int = None, mode: str = 'max',
-                 gamma: float = 0.25, calibrate: bool = False, classifier: str = 'xgboost',
-                 random_seed: int = None, acq_optimizer: str = 'rs', feval_acq: int = 500,
-                 random_prob: float = 0.0, init_random: int = 6, classifier_kwargs: Dict = {}):
+    def __init__(
+            self, config_space: dict, metric: str,
+            points_to_evaluate=None, random_seed_generator=None,
+            random_seed=None, mode: str = 'max', gamma: float = 0.25,
+            calibrate: bool = False, classifier: str = 'xgboost',
+            acq_optimizer: str = 'rs', feval_acq: int = 500,
+            random_prob: float = 0.0, init_random: int = 6,
+            classifier_kwargs: dict = None):
 
         """
         Implements "Bayesian optimization by Density Ratio Estimation" as described in the following paper:
@@ -63,12 +68,15 @@ class Bore(BaseSearcher):
         :param classifier_kwargs: Dict that contains all hyperparameters for the classifier
         """
 
-        super(Bore, self).__init__(config_space, metric, points_to_evaluate)
+        super().__init__(
+            config_space, metric=metric, points_to_evaluate=points_to_evaluate,
+            random_seed_generator=random_seed_generator,
+            random_seed=random_seed)
 
-        self.random_state = np.random.RandomState(random_seed)
         self.calibrate = calibrate
         self.gamma = gamma
         self.classifier = classifier
+        assert acq_optimizer in {'rs', 'de'}
         self.acq_optimizer = acq_optimizer
         self.feval_acq = feval_acq
         self.init_random = init_random
@@ -77,6 +85,8 @@ class Bore(BaseSearcher):
 
         self._hp_ranges = make_hyperparameter_ranges(config_space)
 
+        if classifier_kwargs is None:
+            classifier_kwargs = dict()
         if self.classifier == 'xgboost':
             self.model = xgboost.XGBClassifier(use_label_encoder=False)
         elif self.classifier == "logreg":
@@ -127,7 +137,7 @@ class Bore(BaseSearcher):
         start_time = time.time()
 
         if len(self.inputs) < self.init_random or np.random.rand() < self.random_prob:
-            config = self._hp_ranges.random_config(None)
+            config = self._hp_ranges.random_config(self.random_state)
 
         else:
             if self.acq_optimizer == 'de':
@@ -144,14 +154,14 @@ class Bore(BaseSearcher):
                 best, traj = de.run()
                 config = self._hp_ranges.from_ndarray(best)
 
-            elif self.acq_optimizer == 'rs':
+            else:
 
                 # sample random configurations without replacement
                 values = []
                 X = []
                 counter = 0
                 while len(values) < self.feval_acq and counter < 10:
-                    xi = self._hp_ranges.random_config(None)
+                    xi = self._hp_ranges.random_config(self.random_state)
                     if xi not in X:
                         X.append(xi)
                         values.append(self.loss(self._hp_ranges.to_ndarray(xi))[0])
@@ -188,14 +198,15 @@ class Bore(BaseSearcher):
 
             if self.mode == 'min':
                 y = np.array(self.targets)
-            elif self.mode == 'max':
+            else:
                 y = - np.array(self.targets)
 
             tau = np.quantile(y, q=self.gamma)
             z = np.less(y, tau)
 
             if self.calibrate:
-                self.model = CalibratedClassifierCV(self.model, cv=2, method=self.calibration)
+                self.model = CalibratedClassifierCV(
+                    self.model, cv=2, method=self.calibration)
                 self.model.fit(X, np.array(z, dtype=np.int))
             else:
                 self.model.fit(X, np.array(z, dtype=np.int))

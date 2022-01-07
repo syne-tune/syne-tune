@@ -62,6 +62,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.warmstarting import \
     create_hp_ranges_for_warmstarting, \
     create_filter_observed_data_for_warmstarting, \
     create_base_gp_kernel_for_warmstarting
+from syne_tune.optimizer.schedulers.searchers.searcher import \
+    extract_random_seed
 
 __all__ = ['gp_fifo_searcher_factory',
            'gp_multifidelity_searcher_factory',
@@ -192,21 +194,7 @@ def _create_common_objects(model=None, **kwargs):
     assert model is None or is_hyperband, \
         f"model = {model} only together with hyperband_* scheduler"
     hp_ranges = create_hp_ranges_for_warmstarting(**kwargs)
-    key = 'random_seed_generator'
-    if key in kwargs:
-        rs_generator = kwargs[key]
-        random_seed1 = rs_generator()
-        random_seed2 = rs_generator()
-        _kwargs = {k: v for k, v in kwargs.items() if k != key}
-    else:
-        key = 'random_seed'
-        if key in kwargs:
-            random_seed1 = kwargs[key]
-            _kwargs = {k: v for k, v in kwargs.items() if k != key}
-        else:
-            random_seed1 = 31415927
-            _kwargs = kwargs
-        random_seed2 = random_seed1
+    random_seed, _kwargs = extract_random_seed(kwargs)
     # Skip optimization predicate for GP surrogate model
     if kwargs.get('opt_skip_num_max_resource', False) and is_hyperband:
         skip_optimization = SkipNoMaxResourcePredicate(
@@ -250,7 +238,6 @@ def _create_common_objects(model=None, **kwargs):
             _map_reward = None
     result = {
         'hp_ranges': hp_ranges,
-        'random_seed': random_seed2,
         'map_reward': _map_reward,
         'skip_optimization': skip_optimization,
     }
@@ -266,7 +253,7 @@ def _create_common_objects(model=None, **kwargs):
         model_factory, filter_observed_data = _create_gp_standard_model(
             hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
-            random_seed=random_seed1,
+            random_seed=random_seed,
             is_hyperband=is_hyperband,
             **_kwargs)
     else:
@@ -274,7 +261,7 @@ def _create_common_objects(model=None, **kwargs):
             model=model,
             hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
-            random_seed=random_seed1,
+            random_seed=random_seed,
             configspace_ext=result['configspace_ext'],
             **_kwargs)
     result['model_factory'] = model_factory
@@ -381,15 +368,11 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict:
     skip_optimization = result.pop('skip_optimization')
     # We need two model factories: one for active metric (model_factory),
     # the other for constraint metric (model_factory_constraint)
-    key = 'random_seed'
-    if key in kwargs:
-        _kwargs = {k: v for k, v in kwargs.items() if k != key}
-    else:
-        _kwargs = kwargs
+    random_seed, _kwargs = extract_random_seed(kwargs)
     model_factory_constraint, _ = _create_gp_standard_model(
         hp_ranges=result['hp_ranges'],
         active_metric=INTERNAL_CONSTRAINT_NAME,
-        random_seed=result['random_seed'],
+        random_seed=random_seed,
         is_hyperband=False,
         **_kwargs)
     # Sharing debug_log attribute across models
@@ -433,15 +416,11 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
     skip_optimization = result.pop('skip_optimization')
     # We need two model factories: one for active metric (model_factory),
     # the other for cost metric (model_factory_cost)
-    key = 'random_seed'
-    if key in kwargs:
-        _kwargs = {k: v for k, v in kwargs.items() if k != key}
-    else:
-        _kwargs = kwargs
+    random_seed, _kwargs = extract_random_seed(kwargs)
     model_factory_cost, _ = _create_gp_standard_model(
         hp_ranges=result['hp_ranges'],
         active_metric=INTERNAL_COST_NAME,
-        random_seed=result['random_seed'],
+        random_seed=random_seed,
         is_hyperband=False,
         **_kwargs)
     # Sharing debug_log attribute across models

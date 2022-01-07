@@ -15,7 +15,7 @@ from typing import Type, Optional, Dict
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.searcher import \
-    BaseSearcher, RandomSearcher
+    SearcherWithRandomSeed, RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
     gp_fifo_searcher_factory, gp_fifo_searcher_defaults
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
@@ -87,17 +87,12 @@ def check_initial_candidates_scorer(initial_scoring: str) -> str:
         return initial_scoring
 
 
-class ModelBasedSearcher(BaseSearcher):
+class ModelBasedSearcher(SearcherWithRandomSeed):
     """Common code for surrogate model based searchers
 
     """
-    def __init__(
-            self, configspace, metric=None,
-            points_to_evaluate=None):
-        super().__init__(configspace, metric, points_to_evaluate)
-
     def _create_internal(
-            self, hp_ranges: HyperparameterRanges, random_seed: int,
+            self, hp_ranges: HyperparameterRanges,
             model_factory: TransformerModelFactory,
             acquisition_class: AcquisitionClassAndArgs,
             map_reward: Optional[MapReward] = None,
@@ -111,7 +106,6 @@ class ModelBasedSearcher(BaseSearcher):
             resource_attr: Optional[str] = None,
             filter_observed_data: Optional[ConfigurationFilter] = None):
         self.hp_ranges = hp_ranges
-        self.random_seed = random_seed
         self.num_initial_candidates = num_initial_candidates
         self.num_initial_random_choices = num_initial_random_choices
         self.map_reward = map_reward
@@ -130,7 +124,6 @@ class ModelBasedSearcher(BaseSearcher):
             model_factory=model_factory,
             init_state=init_state,
             skip_optimization=skip_optimization)
-        self.random_state = np.random.RandomState(random_seed)
         self.random_generator = RandomStatefulCandidateGenerator(
             self._hp_ranges_for_prediction(), random_state=self.random_state)
         self.set_profiler(model_factory.profiler)
@@ -313,24 +306,26 @@ class ModelBasedSearcher(BaseSearcher):
         We assume that skip_optimization can be pickled.
 
         """
-        state = {
-            'model_params': self.model_parameters(),
-            'state': encode_state(self.state_transformer.state),
-            'skip_optimization': self.state_transformer.skip_optimization,
-            'random_state': self.random_state}
+        state = dict(
+            super().get_state(),
+            model_params=self.model_parameters(),
+            state=encode_state(self.state_transformer.state),
+            skip_optimization=self.state_transformer.skip_optimization)
         if self._random_searcher is not None:
             state['random_searcher_state'] = self._random_searcher.get_state()
         return state
 
-    def _clone_from_state_common(
-            self, new_searcher: 'ModelBasedSearcher', state: Dict):
-        new_searcher.state_transformer.set_params(state['model_params'])
-        new_searcher.random_state = state['random_state']
-        new_searcher.random_generator.random_state = \
-            state['random_state']
+    def _restore_from_state(self, state: dict):
+        super()._restore_from_state(state)
+        self.state_transformer.set_params(state['model_params'])
+        self.random_generator.random_state = self.random_state
         if 'random_searcher_state' in state:
             # Restore self._random_searcher as well
-            self._assign_random_searcher()
+            # Note: It is important to call `_assign_random_searcher` with a
+            # random seed. Otherwise, one is drawn from `random_state`, which
+            # modifies that state. The seed passed does not matter, since
+            # `_random_searcher.random_state` will be restored anyway
+            self._assign_random_searcher(random_seed=0)
             self._random_searcher._restore_from_state(
                 state['random_searcher_state'])
 
@@ -342,15 +337,17 @@ class ModelBasedSearcher(BaseSearcher):
     def debug_log(self):
         return self._debug_log
 
-    def _assign_random_searcher(self):
+    def _assign_random_searcher(self, random_seed=None):
         if self._random_searcher is None:
             # Used for initial random configs (if any)
             # We do not have to deal with points_to_evaluate
+            if random_seed is None:
+                random_seed = self.random_state.randint(0, 2 ** 32)
             self._random_searcher = RandomSearcher(
                 self.hp_ranges.config_space,
                 metric=self._metric,
                 points_to_evaluate=[],
-                random_seed=self.random_seed,
+                random_seed=random_seed,
                 debug_log=False)
 
 
@@ -395,6 +392,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
         If None (default), this is mapped to [dict()], a single default config
         determined by the midpoint heuristic. If [] (empty list), no initial
         configurations are specified.
+    random_seed_generator : RandomSeedGenerator (optional)
+        If given, the random_seed for `random_state` is obtained from there,
+        otherwise `random_seed` is used
+    random_seed : int (optional)
+        This is used if `random_seed_generator` is not given.
     debug_log : bool (default: False)
         If True, both searcher and scheduler output an informative log, from
         which the configs chosen and decisions being made can be traced.
@@ -409,8 +411,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
         training time). Needed only by cost-aware searchers. Depending on
         whether `resource_attr` is given, cost values are read from each
         report or only at the end.
-    random_seed : int
-        Seed for pseudo-random number generator used.
     num_init_random : int
         Number of initial `get_config` calls for which randomly sampled configs
         are returned. Afterwards, Bayesian optimization is used
@@ -490,15 +490,21 @@ class GPFIFOSearcher(ModelBasedSearcher):
             that data from all tasks can be merged together
 
     """
-    def __init__(self, configspace, **kwargs):
-        if configspace is not None:
+    def __init__(self, configspace, metric, clone_from_state=False, **kwargs):
+        if not clone_from_state:
             super().__init__(
-                configspace, metric=kwargs.get('metric'),
-                points_to_evaluate=kwargs.get('points_to_evaluate'))
+                configspace,
+                metric=metric,
+                points_to_evaluate=kwargs.get('points_to_evaluate'),
+                random_seed_generator=kwargs.get('random_seed_generator'),
+                random_seed=kwargs.get('random_seed'))
             kwargs['configspace'] = configspace
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
             # Internal constructor, bypassing the factory
+            # Note: Members which are part of the mutable state, will be
+            # overwritten in `_restore_from_state`
+            super().__init__(configspace, metric=metric)
             kwargs_int = kwargs.copy()
         self._call_create_internal(kwargs_int)
 
@@ -610,9 +616,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPFIFOSearcher(
-            configspace=None,
+            configspace=self.configspace,
+            metric=self._metric,
+            clone_from_state=True,
             hp_ranges=self.hp_ranges,
-            random_seed=self.random_seed,
             model_factory=model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,
@@ -625,7 +632,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
             cost_attr=self._cost_attr,
             resource_attr=self._resource_attr,
             filter_observed_data=self._filter_observed_data)
-        self._clone_from_state_common(new_searcher, state)
+        new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None
         return new_searcher
