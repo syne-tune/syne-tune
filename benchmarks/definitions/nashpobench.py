@@ -10,12 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from pathlib import Path
 
 from sklearn.ensemble import RandomForestRegressor
 
 from syne_tune.search_space import choice, randint, uniform, loguniform
 
-from blackbox_repository.conversion_scripts.scripts.fcnet_import import \
+from benchmarking.blackbox_repository.conversion_scripts.scripts.fcnet_import import \
     METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
 
 
@@ -61,7 +62,8 @@ def nashpobench_benchmark(params):
         dont_sleep=params['dont_sleep'],
         blackbox_repo_s3_root=params.get('blackbox_repo_s3_root'))
     return {
-        'script': None,
+        'script': Path(__file__).parent.parent.parent / "examples" /
+                  "training_scripts" / "nashpobench" / "nashpobench.py",
         'metric': METRIC_VALID_LOSS,
         'mode': 'min',
         'resource_attr': RESOURCE_ATTR,

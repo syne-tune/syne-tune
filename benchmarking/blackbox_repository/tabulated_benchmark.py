@@ -15,9 +15,11 @@ from typing import List, Optional
 import logging
 import numpy as np
 
-from blackbox_repository import load, Blackbox, add_surrogate
-from blackbox_repository.blackbox_tabular import BlackboxTabular
-from blackbox_repository.utils import metrics_for_configuration
+from benchmarking.blackbox_repository import load, add_surrogate
+from benchmarking.blackbox_repository.blackbox import Blackbox
+from benchmarking.blackbox_repository.blackbox_tabular import BlackboxTabular
+from benchmarking.blackbox_repository.utils import metrics_for_configuration
+
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
 

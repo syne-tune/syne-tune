@@ -13,7 +13,7 @@
 from pathlib import Path
 
 from benchmarks.utils import get_cost_model_for_batch_size
-from examples.training_scripts.resnet_cifar10.resnet_cifar10 import \
+from benchmarking.resnet_cifar10.resnet_cifar10 import \
     BATCH_SIZE_LOWER, BATCH_SIZE_UPPER, BATCH_SIZE_KEY, METRIC_NAME, \
     RESOURCE_ATTR, ELAPSED_TIME_ATTR, _config_space
 

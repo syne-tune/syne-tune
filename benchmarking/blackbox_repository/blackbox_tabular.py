@@ -3,8 +3,8 @@ from typing import List, Dict, Optional
 import pandas as pd
 import numpy as np
 
-from blackbox_repository import Blackbox
-from blackbox_repository.serialize import serialize_configspace, deserialize_configspace, deserialize_metadata, \
+from benchmarking.blackbox_repository.blackbox import Blackbox
+from benchmarking.blackbox_repository.serialize import serialize_configspace, deserialize_configspace, deserialize_metadata, \
     serialize_metadata
 
 

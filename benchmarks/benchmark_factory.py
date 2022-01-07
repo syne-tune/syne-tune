@@ -16,7 +16,7 @@ from benchmarks.definitions.nasbench201 import nasbench201_benchmark, \
     nasbench201_default_params
 from benchmarks.definitions.mlp_on_fashion_mnist \
     import mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
-from benchmarks.definitions.resnet_cifar10 import \
+from benchmarking.definitions.definition_resnet_cifar10 import \
     resnet_cifar10_benchmark, resnet_cifar10_default_params
 from benchmarks.definitions.lstm_wikitext2 import \
     lstm_wikitext2_benchmark, lstm_wikitext2_default_params
