@@ -9,6 +9,7 @@ from ray.tune.suggest.skopt import SkOptSearch
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
+from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
@@ -61,6 +62,7 @@ def make_ray_skopt():
         ray_searcher=make_ray_skopt(),
     ),
     SimpleScheduler(config_space=config_space, metric=metric1),
+    BotorchGP(config_space=config_space, metric=metric1),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)

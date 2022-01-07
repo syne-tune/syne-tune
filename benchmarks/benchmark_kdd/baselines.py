@@ -1,3 +1,4 @@
+from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -46,6 +47,12 @@ methods = {
             mode=mode,
             random_seed=random_seed,
         ),
+        grace_time=max_t//20,
         resource_attr=resource_attr,
     ),
+    'Botorch': lambda config_space, metric, mode, random_seed, max_t, resource_attr: BotorchGP(
+        config_space=config_space,
+        metric=metric,
+        mode=mode,
+    )
 }
