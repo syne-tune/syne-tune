@@ -1,5 +1,6 @@
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 
 methods = {
     'RS': lambda config_space, metric, mode, random_seed, max_t, resource_attr: FIFOScheduler(
@@ -37,11 +38,14 @@ methods = {
         resource_attr=resource_attr,
         random_seed=random_seed,
     ),
-    'RS+MSR': lambda config_space, metric, mode, random_seed, max_t, resource_attr: FIFOScheduler(
-        config_space=config_space,
-        searcher="random",
-        metric=metric,
-        mode=mode,
-        random_seed=random_seed,
+    'RS-MSR': lambda config_space, metric, mode, random_seed, max_t, resource_attr: MedianStoppingRule(
+        scheduler=FIFOScheduler(
+            config_space=config_space,
+            searcher="random",
+            metric=metric,
+            mode=mode,
+            random_seed=random_seed,
+        ),
+        resource_attr=resource_attr,
     ),
 }

@@ -1,0 +1,88 @@
+"""
+Example showing how to implement a new Scheduler.
+"""
+import logging
+from collections import defaultdict
+from typing import Optional, Dict, List
+
+import numpy as np
+
+from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.scheduler import TrialScheduler, SchedulerDecision, TrialSuggestion
+
+
+class MedianStoppingRule(TrialScheduler):
+    def __init__(
+            self,
+            scheduler: TrialScheduler,
+            resource_attr: str,
+            metric: Optional[str] = None,
+            grace_time: Optional[int] = 1,
+            grace_population: int = 5,
+            cutoff: float = 0.5,
+    ):
+        """
+        Applies median stopping rule in top of an existing scheduler.
+        * If result at time-step ranks less than the cutoff of other results observed at this time-step, the trial is
+        interrupted and otherwise, the wrapped scheduler is called to make the stopping decision.
+        * Suggest decisions are left to the wrapped scheduler.
+        * The mode of the wrapped scheduler is used.
+        TODO we should implement running average option.
+        Reference: Google Vizier: A Service for Black-Box Optimization. Golovin et al. 2017.
+        :param scheduler: scheduler to be called for trial suggestion or when median-stopping-rule decision is to
+        continue.
+        :param resource_attr: key in the reported dictionary that accounts for the ressource (e.g. epoch or
+        wallclocktime).
+        :param metric: metric to be considered.
+        :param grace_time: median stopping rule is only applied for results whose `time_attr` exceeds this amount.
+        :param grace_population: median stopping rule when at least `grace_population` have been observed at a ressource
+        level.
+        :param cutoff: results whose quantiles are bellow this level are discarded (discard by default results bellow
+        the median).
+        """
+        super(MedianStoppingRule, self).__init__(config_space=scheduler.config_space)
+        self.metric = scheduler.metric if metric is None else metric
+        self.sorted_results = defaultdict(list)
+        self.scheduler = scheduler
+        self.resource_attr = resource_attr
+        self.cutoff = cutoff
+        self.grace_time = grace_time
+        self.min_samples_required = grace_population
+        self.mode = scheduler.metric_mode()
+
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+        return self.scheduler._suggest(trial_id=trial_id)
+
+    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+        new_metric = result[self.metric]
+        if self.mode == 'max':
+            new_metric *= -1
+        time_step = result[self.resource_attr]
+
+        # insert new metric in sorted results
+        index = np.searchsorted(self.sorted_results[time_step], new_metric)
+        self.sorted_results[time_step] = np.insert(self.sorted_results[time_step], index, new_metric)
+        normalized_rank = index / float(len(self.sorted_results[time_step]))
+
+        if self.grace_condition(time_step=time_step):
+            return self.scheduler.on_trial_result(trial=trial, result=result)
+
+        if normalized_rank <= self.cutoff:
+            return self.scheduler.on_trial_result(trial=trial, result=result)
+        else:
+            logging.info(
+                f"see new results {new_metric} at time-step {time_step} for trial {trial.trial_id}"
+                f" with rank {int(normalized_rank * 100)}%, "
+                f"stopping it as it does not rank on the top {int(self.cutoff * 100)}%"
+            )
+            return SchedulerDecision.STOP
+
+    def grace_condition(self, time_step: float) -> bool:
+        if self.min_samples_required is not None and len(self.sorted_results[time_step]) < self.min_samples_required:
+            return True
+        if self.grace_time is not None and time_step < self.grace_time:
+            return True
+        return False
+
+    def metric_names(self) -> List[str]:
+        return self.scheduler.metric_names()

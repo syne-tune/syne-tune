@@ -5,8 +5,8 @@ from argparse import ArgumentParser
 from tqdm import tqdm
 
 from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
-from benchmarks.benchmark_loop.baselines import methods
-from benchmarks.benchmark_loop.benchmark_definitions import benchmark_definitions
+from benchmarks.benchmark_kdd.baselines import methods
+from benchmarks.benchmark_kdd.benchmark_definitions import benchmark_definitions
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.stopping_criterion import StoppingCriterion
