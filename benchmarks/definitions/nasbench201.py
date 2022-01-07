@@ -13,7 +13,7 @@
 from pathlib import Path
 
 from syne_tune.search_space import choice
-from blackbox_repository.conversion_scripts.scripts.nasbench201_import import \
+from benchmarking.blackbox_repository.conversion_scripts.scripts.nasbench201_import import \
     CONFIG_KEYS, METRIC_VALID_ERROR, METRIC_TIME_THIS_RESOURCE, \
     RESOURCE_ATTR, BLACKBOX_NAME
 from examples.training_scripts.nasbench201.nasbench201 import \

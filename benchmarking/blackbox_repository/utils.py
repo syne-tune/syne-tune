@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from typing import List, Optional, Tuple
 
-from blackbox_repository.blackbox import Blackbox
+from benchmarking.blackbox_repository.blackbox import Blackbox
 
 
 def metrics_for_configuration(
