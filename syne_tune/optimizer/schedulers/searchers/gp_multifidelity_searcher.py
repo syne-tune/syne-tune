@@ -23,6 +23,8 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
     ResourceForAcquisitionMap
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import PendingEvaluation, MetricValues
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model \
+    import GaussProcAdditiveModelFactory
 
 logger = logging.getLogger(__name__)
 
@@ -178,10 +180,17 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         from syne_tune.optimizer.schedulers.hyperband import \
             HyperbandScheduler
 
+        super().configure_scheduler(scheduler)
         assert isinstance(scheduler, HyperbandScheduler), \
             "This searcher requires HyperbandScheduler scheduler"
-        super().configure_scheduler(scheduler)
         self._resource_attr = scheduler._resource_attr
+        model_factory = self.state_transformer.model_factory
+        if isinstance(model_factory, GaussProcAdditiveModelFactory):
+            assert scheduler.searcher_data == 'all', \
+                "For an additive Gaussian learning curve model (model=" +\
+                "'gp_issm' or model='gp_expdecay' in search_options), you " +\
+                "need to set searcher_data='all' when creating the " +\
+                "HyperbandScheduler"
 
     def _hp_ranges_in_state(self):
         return self.configspace_ext.hp_ranges_ext

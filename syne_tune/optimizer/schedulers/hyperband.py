@@ -229,6 +229,8 @@ class HyperbandScheduler(FIFOScheduler):
         - 'rungs_and_last': Results at rung levels, plus the most recent
             result. This means that in between rung levels, only the most
             recent result is used by the searcher. This is in between
+        Note: For a Gaussian additive learning curve surrogate model, this
+        has to be set to 'all'.
     rung_system_per_bracket : bool
         This concerns Hyperband with brackets > 1. When starting a job for a
         new config, it is assigned a randomly sampled bracket. The larger the
@@ -306,18 +308,8 @@ class HyperbandScheduler(FIFOScheduler):
         # members (see also `_extend_search_options`).
         # To do this properly, we first check values and impute defaults for
         # `kwargs`.
-        # Special case:
-        _kwargs = kwargs
-        searcher = kwargs.get('searcher')
-        issm_searchers = {'bayesopt_issm'}
-        if isinstance(searcher, str) and searcher in issm_searchers:
-            searcher_data = kwargs.get('searcher_data')
-            if searcher_data is not None and searcher_data != 'all':
-                logger.warning(f"searcher = '{searcher}' requires "
-                               "searcher_data = 'all'")
-            _kwargs = dict(kwargs, searcher_data='all')
         kwargs = check_and_merge_defaults(
-            _kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS,
+            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS,
             dict_name='scheduler_options')
         scheduler_type = kwargs['type']
         self.scheduler_type = scheduler_type
