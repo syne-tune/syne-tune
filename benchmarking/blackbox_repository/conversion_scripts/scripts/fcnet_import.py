@@ -15,10 +15,11 @@ import ast
 import h5py
 from tqdm import tqdm as tqdm
 
-from blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-import syne_tune.search_space as sp
-from blackbox_repository.conversion_scripts.utils import repository_path
+from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
+
 from syne_tune.util import catchtime
+import syne_tune.search_space as sp
 
 
 BLACKBOX_NAME = 'fcnet'
@@ -149,7 +150,7 @@ def generate_fcnet(s3_root: Optional[str] = None):
         serialize(bb_dict=bb_dict, path=repository_path / blackbox_name)
 
     with catchtime("uploading to s3"):
-        from blackbox_repository.conversion_scripts.utils import upload
+        from benchmarking.blackbox_repository.conversion_scripts import upload
         upload(blackbox_name, s3_root=s3_root)
 
 

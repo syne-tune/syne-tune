@@ -5,11 +5,15 @@ from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
 
-from blackbox_repository import BlackboxOffline
-from blackbox_repository.blackbox_surrogate import add_surrogate
-from blackbox_repository.blackbox_tabular import BlackboxTabular
+from benchmarking.blackbox_repository import BlackboxOffline
+from benchmarking.blackbox_repository.blackbox_surrogate import add_surrogate
+from benchmarking.blackbox_repository.blackbox_tabular import BlackboxTabular
+
 import syne_tune.search_space as sp
+
+
 np.random.seed(0)
+
 
 def test_surrogate_continuous():
     surrogate = KNeighborsRegressor(n_neighbors=1)

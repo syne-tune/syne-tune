@@ -4,12 +4,14 @@ import numpy as np
 import pandas as pd
 
 import syne_tune.search_space as sp
-from blackbox_repository import BlackboxOffline, from_function
-from blackbox_repository.blackbox_tabular import BlackboxTabular
-from blackbox_repository.blackbox_offline import deserialize as deserialize_offline
-from blackbox_repository.blackbox_tabular import deserialize as deserialize_tabular
-from blackbox_repository.blackbox_offline import serialize as serialize_offline
-from blackbox_repository.blackbox_tabular import serialize as serialize_tabular
+
+from benchmarking.blackbox_repository import BlackboxOffline
+from benchmarking.blackbox_repository.blackbox import from_function
+from benchmarking.blackbox_repository.blackbox_tabular import BlackboxTabular
+from benchmarking.blackbox_repository.blackbox_offline import deserialize as deserialize_offline
+from benchmarking.blackbox_repository.blackbox_tabular import deserialize as deserialize_tabular
+from benchmarking.blackbox_repository.blackbox_offline import serialize as serialize_offline
+from benchmarking.blackbox_repository.blackbox_tabular import serialize as serialize_tabular
 
 
 n = 10
