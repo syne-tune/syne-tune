@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
-from typing import Type, Optional, Dict
+from typing import Type, Optional, Dict, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.searcher import \
@@ -34,7 +34,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
     import TransformerModelFactory, ModelStateTransformer
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt \
-    import SkipOptimizationPredicate
+    import SkipOptimizationPredicate, AlwaysSkipPredicate
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import LocalOptimizer, ScoringFunction, SurrogateOutputModel, \
     AcquisitionClassAndArgs, unwrap_acquisition_class_and_kwargs
@@ -220,13 +220,44 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             self.state_transformer.state,
             filter_observed_data=self._filter_observed_data)
 
+    def _get_config_not_modelbased(
+            self, exclusion_candidates) -> (Optional[Configuration], bool):
+        """
+        Does job of `get_config`, as long as the decision does not involve
+        model-based search. If False is returned, model-based search must be
+        called.
+
+        """
+        self._assign_random_searcher()
+        state = self.state_transformer.state
+        config = self._next_initial_config()  # Ask for initial config
+        if config is None:
+            pick_random = (len(exclusion_candidates) < self.num_initial_random_choices) or \
+                (not state.trials_evaluations)
+        else:
+            pick_random = True  # Initial configs count as random here
+        if pick_random and config is None:
+            if self.do_profile:
+                self.profiler.start('random')
+            for _ in range(GET_CONFIG_RANDOM_RETRIES):
+                _config = self._random_searcher.get_config()
+                if _config is None:
+                    # If `RandomSearcher` returns no config at all, the
+                    # search space is exhausted
+                    break
+                if not exclusion_candidates.contains(_config):
+                    config = _config
+                    break
+            if self.do_profile:
+                self.profiler.stop('random')
+        return config, pick_random
+
     def get_config(self, **kwargs) -> Configuration:
         """
         Runs Bayesian optimization in order to suggest the next config to evaluate.
 
         :return: Next config to evaluate at
         """
-        self._assign_random_searcher()
         state = self.state_transformer.state
         if self.do_profile:
             # Start new profiler block
@@ -240,34 +271,17 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             }
             self.profiler.begin_block(meta)
             self.profiler.start('all')
-        config = self._next_initial_config()  # Ask for initial config
-        exclusion_candidates = None
-        if config is None:
-            exclusion_candidates = self._get_exclusion_candidates(**kwargs)
-            pick_random = (len(exclusion_candidates) < self.num_initial_random_choices) or \
-                (not state.trials_evaluations)
-        else:
-            pick_random = True  # Initial configs count as random here
+            # Initial configs come from `points_to_evaluate` or are drawn at random
+        exclusion_candidates = self._get_exclusion_candidates(**kwargs)
+        config, pick_random = self._get_config_not_modelbased(
+            exclusion_candidates)
         if self.debug_log is not None:
             trial_id = kwargs.get('trial_id')
             self.debug_log.start_get_config(
                 'random' if pick_random else 'BO', trial_id=trial_id)
-        if config is None:
-            if pick_random:
-                if self.do_profile:
-                    self.profiler.start('random')
-                for _ in range(GET_CONFIG_RANDOM_RETRIES):
-                    _config = self._random_searcher.get_config()
-                    if _config is None:
-                        # If `RandomSearcher` returns no config at all, the
-                        # search space is exhausted
-                        break
-                    if not exclusion_candidates.contains(_config):
-                        config = _config
-                        break
-                if self.do_profile:
-                    self.profiler.stop('random')
-            elif not exclusion_candidates.config_space_exhausted():
+        if not pick_random:
+            # Model-based decision
+            if not exclusion_candidates.config_space_exhausted():
                 config = self._get_config_modelbased(
                     exclusion_candidates, **kwargs)
 
@@ -601,6 +615,91 @@ class GPFIFOSearcher(ModelBasedSearcher):
             self.profiler.stop('all')
             self.profiler.pop_prefix()  # getconfig
         return config
+
+    def get_batch_configs(
+            self, batch_size: int,
+            num_init_candidates_for_batch: Optional[int] = None,
+            **kwargs) -> List[Configuration]:
+        """
+        Asks for a batch of `batch_size` configurations to be suggested. This
+        is roughly equivalent to calling `get_config` `batch_size` times,
+        marking the suggested configs as pending in the state (but the state
+        is not modified here).
+        If `num_init_candidates_for_batch` is given, it is used instead
+        of `num_init_candidates` for the selection of all but the first
+        config in the batch. In order to speed up batch selection, choose
+        `num_init_candidates_for_batch` smaller than
+        `num_init_candidates`.
+
+        If less than `batch_size` configs are returned, the search space
+        has been exhausted.
+        """
+        assert round(batch_size) == batch_size and batch_size >= 1
+        configs = []
+        if batch_size == 1:
+            config = self.get_config(**kwargs)
+            if config is not None:
+                configs.append(config)
+        else:
+            exclusion_candidates = self._get_exclusion_candidates(**kwargs)
+            pick_random = True
+            while pick_random and len(configs) < batch_size:
+                config, pick_random = self._get_config_not_modelbased(
+                    exclusion_candidates)
+                if pick_random:
+                    if config is not None:
+                        configs.append(config)
+                        exclusion_candidates.add(config)
+                    else:
+                        break  # Space exhausted
+            if not pick_random:
+                # Model-based decision for remaining ones
+                num_requested_candidates = batch_size - len(configs)
+                model = self.state_transformer.model()
+                # Select and fix target resource attribute (relevant in subclasses)
+                self._fix_resource_attribute(**kwargs)
+                # Create BO algorithm
+                initial_candidates_scorer = create_initial_candidates_scorer(
+                    initial_scoring=self.initial_scoring,
+                    model=model,
+                    acquisition_class=self.acquisition_class,
+                    random_state=self.random_state)
+                local_optimizer = self.local_minimizer_class(
+                    hp_ranges=self._hp_ranges_for_prediction(),
+                    model=model,
+                    acquisition_class=self.acquisition_class,
+                    active_metric=INTERNAL_METRIC_NAME)
+                pending_candidate_state_transformer = None
+                if num_requested_candidates > 1:
+                    # Internally, if num_requested_candidates > 1, the candidates are
+                    # selected greedily. This needs model updates after each greedy
+                    # selection, because of one more pending evaluation.
+                    model_factory = self.state_transformer._model_factory
+                    if isinstance(model_factory, dict):
+                        model_factory = model_factory[INTERNAL_METRIC_NAME]
+                    pending_candidate_state_transformer = \
+                        ModelStateTransformer(
+                            model_factory=model_factory,
+                            init_state=self.state_transformer.state,
+                            skip_optimization=AlwaysSkipPredicate())
+                bo_algorithm = BayesianOptimizationAlgorithm(
+                    initial_candidates_generator=self.random_generator,
+                    initial_candidates_scorer=initial_candidates_scorer,
+                    num_initial_candidates=self.num_initial_candidates,
+                    num_initial_candidates_for_batch=num_init_candidates_for_batch,
+                    local_optimizer=local_optimizer,
+                    pending_candidate_state_transformer=pending_candidate_state_transformer,
+                    exclusion_candidates=exclusion_candidates,
+                    num_requested_candidates=num_requested_candidates,
+                    greedy_batch_selection=True,
+                    duplicate_detector=DuplicateDetectorIdentical(),
+                    sample_unique_candidates=False,
+                    debug_log=self.debug_log)
+                # Next candidate decision
+                _configs = bo_algorithm.next_candidates()
+                configs.extend(
+                    self._postprocess_config(config) for config in _configs)
+        return configs
 
     def evaluation_failed(self, trial_id: str):
         # Remove pending evaluation
