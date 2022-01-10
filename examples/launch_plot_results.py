@@ -12,10 +12,8 @@
 # permissions and limitations under the License.
 import logging
 from pathlib import Path
-import matplotlib.pyplot as plt
 
 from syne_tune.backend.local_backend import LocalBackend
-from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.tuner import Tuner
