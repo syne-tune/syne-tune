@@ -13,7 +13,6 @@ import pandas as pd
 import numpy as np
 import ast
 import h5py
-from tqdm import tqdm as tqdm
 
 from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
@@ -67,21 +66,21 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
         objective_evaluations[..., name_index[name]] = values
 
     # (n_hps, n_seeds,)
-    final_test_error = np.stack([data[key]['final_test_error'][:].astype('float32') for key in tqdm(keys)])
+    final_test_error = np.stack([data[key]['final_test_error'][:].astype('float32') for key in keys])
 
     # (n_hps, n_seeds, n_fidelities)
     final_test_error = np.repeat(np.expand_dims(final_test_error, axis=-1), n_fidelities, axis=-1)
     save_objective_values_helper('final_test_error', final_test_error)
 
     # (n_hps, n_seeds,)
-    n_params = np.stack([data[key]['n_params'][:].astype('float32') for key in tqdm(keys)])
+    n_params = np.stack([data[key]['n_params'][:].astype('float32') for key in keys])
 
     # (n_hps, n_seeds, n_fidelities)
     n_params = np.repeat(np.expand_dims(n_params, axis=-1), n_fidelities, axis=-1)
     save_objective_values_helper('n_params', n_params)
 
     # (n_hps, n_seeds,)
-    runtime = np.stack([data[key]['runtime'][:].astype('float32') for key in tqdm(keys)])
+    runtime = np.stack([data[key]['runtime'][:].astype('float32') for key in keys])
 
     # linear interpolation to go from total training time to training time per epoch as in fcnet code
     # (n_hps, n_seeds, n_epochs)
@@ -96,7 +95,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     for m in ['train_loss', 'valid_loss']:
         save_objective_values_helper(
             m,
-            np.stack([data[key][m][:].astype('float32') for key in tqdm(keys)])
+            np.stack([data[key][m][:].astype('float32') for key in keys])
         )
 
     configuration_space = {
@@ -150,13 +149,13 @@ def generate_fcnet(s3_root: Optional[str] = None):
         serialize(bb_dict=bb_dict, path=repository_path / blackbox_name)
 
     with catchtime("uploading to s3"):
-        from benchmarking.blackbox_repository.conversion_scripts import upload
+        from benchmarking.blackbox_repository.conversion_scripts.utils import upload
         upload(blackbox_name, s3_root=s3_root)
 
 
 def plot_learning_curves():
     import matplotlib.pyplot as plt
-    from blackbox_repository import load
+    from benchmarking.blackbox_repository.repository import load
     # plot one learning-curve for sanity-check
     bb_dict = load(BLACKBOX_NAME)
 
