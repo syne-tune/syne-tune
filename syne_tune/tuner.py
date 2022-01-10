@@ -113,14 +113,11 @@ class Tuner:
             logger.info(f"results of trials will be saved on {self.tuner_path}")
 
             if self.tuning_status is None:
-                self.tuning_status = TuningStatus(
-                    metric_names=self.scheduler.metric_names(),
-                    metric_mode=self.scheduler.metric_mode()
-                )
+                self.tuning_status = TuningStatus(metric_names=self.scheduler.metric_names())
             # prints the status every print_update_interval seconds
             self.status_printer = RegularCallback(
                 call_seconds_frequency=self.print_update_interval,
-                callback=lambda tuning_status: logger.info("tuning status\n" + str(tuning_status)),
+                callback=lambda tuning_status: logger.info("tuning status (last metric is reported)\n" + str(tuning_status)),
             )
             # saves the tuner every results_update_interval seconds
             self.tuner_saver = RegularCallback(
