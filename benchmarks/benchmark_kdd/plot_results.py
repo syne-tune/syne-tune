@@ -103,11 +103,17 @@ if __name__ == '__main__':
           f"aws s3 sync s3://{sagemaker.Session().default_bucket()}/{SYNE_TUNE_FOLDER}/{experiment_tag}/ ~/syne-tune/")
     def metadata_filter(metadata):
         date_exp = datetime.fromtimestamp(metadata['st_tuner_creation_timestamp'])
+        # if experiment_tag is not None and 'tag' in metadata and metadata['tag'] != experiment_tag:
+        #     return False
         return date_min <= date_exp <= date_max
 
-
+    def name_filter(name):
+        if experiment_tag is None:
+            return True
+        else:
+            return experiment_tag in name
     with catchtime("load metadatas"):
-        metadatas = get_metadata()
+        metadatas = get_metadata(name_filter)
 
     metadata_df = pd.DataFrame(metadatas.values()).dropna()
     metadata_df['creation_date'] = metadata_df['st_tuner_creation_timestamp'].apply(lambda x: datetime.fromtimestamp(x))
