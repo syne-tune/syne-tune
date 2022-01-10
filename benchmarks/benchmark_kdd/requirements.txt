@@ -7,3 +7,4 @@ fastparquet
 s3fs
 sklearn
 h5py # note: only needed for fcnet
+botorch

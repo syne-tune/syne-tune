@@ -25,6 +25,7 @@ if __name__ == '__main__':
         instance_count=1,
         py_version="py3",
         framework_version='1.6',
+        max_run=3600*72,
         role=get_execution_role(),
         dependencies=blackbox_repository.__path__ + syne_tune.__path__ + benchmarks.__path__,
         disable_profiler=True,

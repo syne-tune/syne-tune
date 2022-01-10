@@ -21,6 +21,22 @@ methods = {
         resource_attr=resource_attr,
         random_seed=random_seed,
     ),
+    'RS-MSR': lambda config_space, metric, mode, random_seed, max_t, resource_attr: MedianStoppingRule(
+        scheduler=FIFOScheduler(
+            config_space=config_space,
+            searcher="random",
+            metric=metric,
+            mode=mode,
+            random_seed=random_seed,
+        ),
+        grace_time=max_t//20,
+        resource_attr=resource_attr,
+    ),
+    'Botorch': lambda config_space, metric, mode, random_seed, max_t, resource_attr: BotorchGP(
+        config_space=config_space,
+        metric=metric,
+        mode=mode,
+    ),
     'GP': lambda config_space, metric, mode, random_seed, max_t, resource_attr: FIFOScheduler(
         config_space,
         searcher="bayesopt",
@@ -39,20 +55,4 @@ methods = {
         resource_attr=resource_attr,
         random_seed=random_seed,
     ),
-    'RS-MSR': lambda config_space, metric, mode, random_seed, max_t, resource_attr: MedianStoppingRule(
-        scheduler=FIFOScheduler(
-            config_space=config_space,
-            searcher="random",
-            metric=metric,
-            mode=mode,
-            random_seed=random_seed,
-        ),
-        grace_time=max_t//20,
-        resource_attr=resource_attr,
-    ),
-    'Botorch': lambda config_space, metric, mode, random_seed, max_t, resource_attr: BotorchGP(
-        config_space=config_space,
-        metric=metric,
-        mode=mode,
-    )
 }
