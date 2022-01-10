@@ -82,8 +82,8 @@ class Tuner:
         self.results_update_interval = results_update_interval
         self.stop_criterion = stop_criterion
         self.asynchronous_scheduling = asynchronous_scheduling
-        self.metadata = metadata if metadata is not None else {}
-        self.metadata[ST_TUNER_CREATION_TIMESTAMP] = time.time()
+        self.metadata = self._enrich_metadata(metadata)
+
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
 
@@ -197,6 +197,19 @@ class Tuner:
             # in case too many errors were triggered, show log of last failed job and terminates with an error
             if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
+
+    def _enrich_metadata(self, metadata: Dict):
+        """
+        :return: adds creation time stamp, metric names and mode, entrypoint and backend to the metadata.
+        """
+        res = metadata if metadata is not None else {}
+        res[ST_TUNER_CREATION_TIMESTAMP] = time.time()
+        res['metric_names'] = self.scheduler.metric_names()
+        res['metric_mode'] = self.scheduler.metric_mode()
+        res['entrypoint'] = self.backend.entrypoint_path().stem
+        res['backend'] = str(type(self.backend).__name__)
+        res['scheduler_name'] = str(self.scheduler.__class__.__name__)
+        return res
 
     def _save_metadata(self):
         with open(self.tuner_path / "metadata.json", "w") as f:

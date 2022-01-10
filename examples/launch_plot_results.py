@@ -51,7 +51,7 @@ if __name__ == '__main__':
         metric=metric,
         random_seed=random_seed)
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=60)
+    stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
         backend=backend,
         scheduler=scheduler,
@@ -66,9 +66,7 @@ if __name__ == '__main__':
 
     tuning_experiment = load_experiment(tuner.name)
     print(tuning_experiment)
-    df = tuning_experiment.results.sort_values(ST_TUNER_TIME)
-    df.loc[:, 'best'] = df.loc[:, metric].cummin()
-    df.plot(x=ST_TUNER_TIME, y="best")
-    plt.xlabel("wallclock time")
-    plt.ylabel(metric)
-    plt.show()
+
+    print(f"best result found: {tuning_experiment.best_config()}")
+
+    tuning_experiment.plot()
