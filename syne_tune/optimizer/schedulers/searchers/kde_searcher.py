@@ -92,13 +92,11 @@ class KernelDensityEstimator(BaseSearcher):
     ):
         super().__init__(configspace=configspace, metric=metric, points_to_evaluate=points_to_evaluate)
         self.mode = mode
-        self.metric_name = metric
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
         self.random_fraction = random_fraction
         self.num_candidates = num_candidates
         self.bandwidth_factor = bandwidth_factor
-        self.points_to_evaluate = points_to_evaluate
         self.top_n_percent = top_n_percent
         self.X = []
         self.y = []
@@ -115,8 +113,8 @@ class KernelDensityEstimator(BaseSearcher):
         self.bad_kde = None
 
         self.vartypes = []
-        for hname in self.configspace:
-            hp = self.configspace[hname]
+
+        for name, hp in self.configspace.items():
             if isinstance(hp, sp.Categorical):
                 self.vartypes.append(('u', len(hp.categories)))
             if isinstance(hp, sp.Integer):
@@ -127,23 +125,25 @@ class KernelDensityEstimator(BaseSearcher):
         self.num_min_data_points = len(self.vartypes) if num_min_data_points is None else num_min_data_points
         assert self.num_min_data_points >= len(self.vartypes)
 
-    @staticmethod
-    def to_feature(configspace, config, categorical_maps):
+    def to_feature(self, config):
         def numerize(value, domain, categorical_map):
             if isinstance(domain, sp.Categorical):
                 res = categorical_map[value] / len(domain)
                 return res
-            else:
+            elif isinstance(domain, sp.Float):
                 return [(value - domain.lower) / (domain.upper - domain.lower)]
+            elif isinstance(domain, sp.Integer):
+                a = 1 / (2 * (domain.upper - domain.lower + 1))
+                b = domain.upper
+                return [(value - a) / (b - a)]
 
         return np.hstack([
-            numerize(value=config[k], domain=v, categorical_map=categorical_maps.get(k, {}))
-            for k, v in configspace.items()
+            numerize(value=config[k], domain=v, categorical_map=self.categorical_maps.get(k, {}))
+            for k, v in self.configspace.items()
             if isinstance(v, sp.Domain)
         ])
 
-    @staticmethod
-    def from_feature(configspace, feature_vector, inv_categorical_maps):
+    def from_feature(self, feature_vector):
         def inv_numerize(values, domain, categorical_map):
             if not isinstance(domain, sp.Domain):
                 # constant value
@@ -152,21 +152,22 @@ class KernelDensityEstimator(BaseSearcher):
                 if isinstance(domain, sp.Categorical):
                     index = int(values * len(domain))
                     return categorical_map[index]
-                else:
-                    if isinstance(domain, sp.Float):
+                elif isinstance(domain, sp.Float):
                         return values * (domain.upper - domain.lower) + domain.lower
-                    else:
-                        return int(values * (domain.upper - domain.lower) + domain.lower)
+                elif isinstance(domain, sp.Integer):
+                    a = 1 / (2 * (domain.upper - domain.lower + 1))
+                    b = domain.upper
+                    return np.ceil(values * (b - a) + a)
 
         res = {}
         curr_pos = 0
-        for k, domain in configspace.items():
-            if hasattr(domain, "sample"):
+        for k, domain in self.configspace.items():
+            if isinstance(domain, sp.Domain):
                 res[k] = domain.cast(
                     inv_numerize(
                         values=feature_vector[curr_pos],
                         domain=domain,
-                        categorical_map=inv_categorical_maps.get(k, {})
+                        categorical_map=self.inv_categorical_maps.get(k, {})
                     )
                 )
                 curr_pos += 1
@@ -174,34 +175,44 @@ class KernelDensityEstimator(BaseSearcher):
                 res[k] = domain
         return res
 
+    def configure_scheduler(self, scheduler):
+        """
+        Check that scheduler is a FIFOScheduler
+
+        Args:
+            scheduler: TaskScheduler
+                Scheduler the searcher is used with.
+
+        """
+        from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+
+        if not isinstance(scheduler, FIFOScheduler):
+            raise AssertionError("This searcher only works with FIFOScheduler. For multi-fidelity scheduler, such as "
+                                 "Hyperband use MultiFidelityKernelDensityEstimator")
+
     def to_objective(self, result: Dict):
         if self.mode == 'min':
-            return result[self.metric_name]
+            return result[self._metric]
         elif self.mode == 'max':
-            return -result[self.metric_name]
+            return -result[self._metric]
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
-        self.X.append(self.to_feature(
-            config=config,
-            configspace=self.configspace,
-            categorical_maps=self.categorical_maps,
-        ))
+        self.X.append(self.to_feature(config=config))
         self.y.append(self.to_objective(result))
-        self.train_kde(np.array(self.X), np.array(self.y))
 
     def get_config(self, **kwargs):
-        # if not done with points_to_evaluate, pick the next one
-        if self.points_to_evaluate is not None and self.num_evaluations < len(self.points_to_evaluate):
-            suggestion = self.points_to_evaluate[self.num_evaluations]
-        else:
-            if self.good_kde is None and self.bad_kde is None:
-                # if not enough suggestion made, sample randomly
-                suggestion = {k: v.sample()
-                if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
-            elif np.random.rand() < self.random_fraction:
-                suggestion = {k: v.sample()
-                if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
+        suggestion = self._next_initial_config()
+
+        if suggestion is None:
+            models = self.train_kde(np.array(self.X), np.array(self.y))
+
+            if models is None or np.random.rand() < self.random_fraction:
+                # return random candidate because a) we don't have enough data points or
+                # b) we sample some fraction of all samples randomly
+                suggestion = {k: v.sample() if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
             else:
+                self.bad_kde = models[0]
+                self.good_kde = models[1]
                 l = self.good_kde.pdf
                 g = self.bad_kde.pdf
 
@@ -228,10 +239,12 @@ class KernelDensityEstimator(BaseSearcher):
                                 candidate.append(m)
                             else:
                                 if vartype == 'o':
+                                    # integer
                                     sample = np.random.randint(domain[0], domain[1])
                                     sample = (sample - domain[0]) / (domain[1] - domain[0])
                                     candidate.append(sample)
                                 elif vartype == 'u':
+                                    # categorical
                                     candidate.append(np.random.randint(domain) / domain)
                     val = acquisition_function(candidate)
 
@@ -242,14 +255,15 @@ class KernelDensityEstimator(BaseSearcher):
                         current_best = candidate
                         val_current_best = val
 
-                suggestion = self.from_feature(
-                    configspace=self.configspace,
-                    feature_vector=current_best,
-                    inv_categorical_maps=self.inv_categorical_maps)
+                suggestion = self.from_feature(feature_vector=current_best)
 
         return suggestion
 
     def train_kde(self, train_data, train_targets):
+
+        if train_data.shape[0] < self.num_min_data_points:
+            return None
+
         n_good = max(self.num_min_data_points, (self.top_n_percent * train_data.shape[0]) // 100)
         n_bad = max(self.num_min_data_points, ((100 - self.top_n_percent) * train_data.shape[0]) // 100)
 
@@ -259,17 +273,19 @@ class KernelDensityEstimator(BaseSearcher):
         train_data_bad = train_data[idx[n_good:n_good + n_bad]]
 
         if train_data_good.shape[0] <= train_data_good.shape[1]:
-            return
+            return None
         if train_data_bad.shape[0] <= train_data_bad.shape[1]:
-            return
+            return None
 
         types = [t[0] for t in self.vartypes]
 
-        self.bad_kde = sm.nonparametric.KDEMultivariate(data=train_data_bad, var_type=types, bw='normal_reference')
-        self.good_kde = sm.nonparametric.KDEMultivariate(data=train_data_good, var_type=types, bw='normal_reference')
+        bad_kde = sm.nonparametric.KDEMultivariate(data=train_data_bad, var_type=types, bw='normal_reference')
+        good_kde = sm.nonparametric.KDEMultivariate(data=train_data_good, var_type=types, bw='normal_reference')
 
-        self.bad_kde.bw = np.clip(self.bad_kde.bw, self.min_bandwidth, None)
-        self.good_kde.bw = np.clip(self.good_kde.bw, self.min_bandwidth, None)
+        bad_kde.bw = np.clip(bad_kde.bw, self.min_bandwidth, None)
+        good_kde.bw = np.clip(good_kde.bw, self.min_bandwidth, None)
+
+        return bad_kde, good_kde
 
     def clone_from_state(self, state):
         raise NotImplementedError

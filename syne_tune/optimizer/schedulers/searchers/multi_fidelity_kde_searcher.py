@@ -84,35 +84,39 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     ):
         super().__init__(configspace, metric, mode, num_min_data_points,
                          top_n_percent, min_bandwidth, num_candidates, bandwidth_factor, random_fraction,
-                         points_to_evaluate, **kwargs)
+                         points_to_evaluate)
 
         self.resource_attr = resource_attr
 
         self.resource_levels = []
 
-    def _fit_kde_on_highest_resource_level(self, config, result):
-        resource_level = result[self.resource_attr]
-        self.resource_levels.append(resource_level)
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.hyperband import \
+            HyperbandScheduler
 
-        self.X.append(self.to_feature(
-            config=config,
-            configspace=self.configspace,
-            categorical_maps=self.categorical_maps,
-        ))
-        self.y.append(self.to_objective(result))
+        assert isinstance(scheduler, HyperbandScheduler), \
+            "This searcher requires HyperbandScheduler scheduler"
 
+    def train_kde(self, train_data, train_targets):
+
+        # find the highest resource level we have at least num_min_data_points data points
         unique_resource_levels, counts = np.unique(self.resource_levels, return_counts=True)
         idx = np.where(counts >= self.num_min_data_points)[0]
         if len(idx) == 0:
             return
 
+        # collect data on the highest resource level
         highest_resource_level = unique_resource_levels[idx[-1]]
         indices = np.where(self.resource_levels == highest_resource_level)[0]
 
         train_data = np.array([self.X[i] for i in indices])
         train_targets = np.array([self.y[i] for i in indices])
 
-        self.train_kde(train_data, train_targets)
+        super(MultiFidelityKernelDensityEstimator, self).train_kde(train_data, train_targets)
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
-        self._fit_kde_on_highest_resource_level(config, result)
+        super(MultiFidelityKernelDensityEstimator, self)._update(trial_id=trial_id,
+                                                                 config=config,
+                                                                 result=result)
+        resource_level = int(result[self.resource_attr])
+        self.resource_levels.append(resource_level)
