@@ -33,6 +33,7 @@ class MetricsStatistics:
         self.min_metrics = {}
         self.max_metrics = {}
         self.sum_metrics = {}
+        self.last_metrics = {}
 
     def add(self, metrics: Dict):
         for name in metrics.keys():
@@ -45,6 +46,7 @@ class MetricsStatistics:
         self.min_metrics = {m: min(metrics[m], current) for m, current in self.min_metrics.items()}
         self.max_metrics = {m: max(metrics[m], current) for m, current in self.max_metrics.items()}
         self.sum_metrics = {m: metrics[m] + current for m, current in self.sum_metrics.items()}
+        self.last_metrics = metrics
         self.count += 1
 
 
@@ -52,11 +54,8 @@ class TuningStatus:
     """
     Information of a tuning job to display as progress or to use to decide whether to stop the tuning job.
     """
-    def __init__(self, metric_names: List[str], metric_mode: str):
+    def __init__(self, metric_names: List[str]):
         self.metric_names = metric_names
-        # todo since there can be several metrics, we should also support several modes, this requires adding multiple
-        #  modes in TrialScheduler
-        self.metric_mode = metric_mode
         self.start_time = time.perf_counter()
 
         self.overall_metric_statistics = MetricsStatistics()
@@ -85,11 +84,7 @@ class TuningStatus:
                 "iter": num_metrics,
             }
             row.update(trial.config)
-
-            if self.metric_mode == "min":
-                row.update(self.trial_metric_statistics[trial_id].min_metrics)
-            else:
-                row.update(self.trial_metric_statistics[trial_id].max_metrics)
+            row.update(self.trial_metric_statistics[trial_id].last_metrics)
 
             if ST_WORKER_TIME in self.trial_metric_statistics[trial_id].max_metrics:
                 row["worker-time"] = self.trial_metric_statistics[trial_id].max_metrics[ST_WORKER_TIME]
@@ -217,7 +212,7 @@ def print_best_metric_found(
     # objectives would require to display the Pareto set.
     metric_name = metric_names[0]
     print("-" * 20)
-    print(f"Resource summary:\n{str(tuning_status)}")
+    print(f"Resource summary (last result is reported):\n{str(tuning_status)}")
     if mode == 'min':
         metric_per_trial = [
             (trial_id, stats.min_metrics.get(metric_name, np.inf))

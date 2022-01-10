@@ -16,7 +16,7 @@ from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 
 def test_status():
     metric_names = ['NLL', 'time']
-    status = TuningStatus(metric_names=metric_names, metric_mode='min')
+    status = TuningStatus(metric_names=metric_names)
 
     trial0 = Trial(trial_id=0, config={"x": 1.0}, creation_time=None)
     trial1 = Trial(trial_id=1, config={"x": 5.0}, creation_time=None)
@@ -52,6 +52,7 @@ def test_status():
     assert status.trial_metric_statistics[0].max_metrics == {'NLL': 2.0, 'time': 20.0}
     assert status.trial_metric_statistics[0].min_metrics == {'NLL': 0.0, 'time': 10.0}
     assert status.trial_metric_statistics[0].sum_metrics == {'NLL': 3.0, 'time': 42.0}
+    assert status.trial_metric_statistics[0].last_metrics == {'NLL': 0.0, 'time': 20.0}
 
     print(str(status))
 
