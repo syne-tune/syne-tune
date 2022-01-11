@@ -13,7 +13,6 @@
 import json
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import List, Dict, Callable, Optional
 
 import boto3
@@ -39,9 +38,6 @@ class ExperimentResult:
         res = f"Experiment {self.name}"
         if self.results is not None:
             res += f" contains {len(self.results)} evaluations from {len(self.results.trial_id.unique())} trials"
-        if self.tuner is not None:
-            metrics = ", ".join(self.tuner.scheduler.metric_names())
-            res += f" when tuning {metrics} on {self.entrypoint_name()} with {self.scheduler_name()}."
         return res
 
     def creation_date(self):
@@ -50,8 +46,7 @@ class ExperimentResult:
     def plot(self, **plt_kwargs):
         import matplotlib.pyplot as plt
 
-        scheduler = self.tuner.scheduler
-        metric = self.metric_name()
+        metric = self.metric_names()[0]
         df = self.results
         df = df.sort_values(ST_TUNER_TIME)
         x = df.loc[:, ST_TUNER_TIME]
@@ -59,20 +54,42 @@ class ExperimentResult:
         plt.plot(x, y, **plt_kwargs)
         plt.xlabel("wallclock time")
         plt.ylabel(metric)
-        plt.title(self.entrypoint_name() + "-" + scheduler.__class__.__name__)
+        plt.title(self.entrypoint_name() + " " + self.name)
+        plt.legend()
+        plt.show()
 
-    def metric_mode(self):
-        return self.tuner.scheduler.metric_mode()
+    def metric_mode(self) -> str:
+        return self.metadata['metric_mode']
 
-    def metric_name(self) -> str:
-        return self.tuner.scheduler.metric_names()[0]
+    def metric_names(self) -> List[str]:
+        return self.metadata['metric_names']
 
     def entrypoint_name(self) -> str:
-        return Path(self.tuner.backend.entrypoint_path()).stem
+        return self.metadata['entrypoint']
 
-    def scheduler_name(self) -> str:
-        return self.tuner.scheduler.__class__.__name__
+    def best_config(self) -> Dict:
+        """
+        Return the best config found for the first metric defined in the scheduler.
+        :param self:
+        :return:
+        """
+        metric_names = self.metric_names()
+        metric_mode = self.metric_mode()
 
+        if len(metric_names) > 1:
+            logging.warning("Several metrics exists so the best is not defined, this will return the best other the"
+                            f"first metric {metric_names}.")
+        metric_name = metric_names[0]
+
+        # locate best result
+        if metric_mode == 'min':
+            best_index = self.results.loc[:, metric_name].argmin()
+        else:
+            best_index = self.results.loc[:, metric_name].argmax()
+        res = dict(self.results.loc[best_index])
+
+        # dont include internal fields
+        return {k: v for k, v in res.items() if not k.startswith("st_")}
 
 def download_single_experiment(
         tuner_name: str,
