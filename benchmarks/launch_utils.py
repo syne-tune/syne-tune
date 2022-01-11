@@ -250,6 +250,12 @@ def parse_args(allow_lists_as_values=True):
                         help='Normalize resource values to [0, 1] in '
                              'GP-expdecay surrogate model (only if '
                              'searcher_model = gp_expdecay)')
+    parser.add_argument('--searcher_num_init_candidates_for_batch', type=int,
+                        help='Relevant for synchronous Hyperband with bayesopt '
+                             'searcher. If batch of size B is suggested, the '
+                             'first suggest uses searcher_num_init_candidates, '
+                             'the B-1 subsequent suggests use this value',
+                        **allow_list)
     parser.add_argument('--searcher_use_old_code',
                         action='store_true',
                         help='DEBUG: Use old code for gp_issm, gp_expdecay')
@@ -345,6 +351,7 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
         ('exponent_cost', float, False),
         ('expdecay_normalize_inputs', bool, False),
         ('use_new_code', bool, False),
+        ('num_init_candidates_for_batch', int, False),
     )
     gp_add_models = {'gp_issm', 'gp_expdecay'}
     for name, tp, warn in searcher_args:

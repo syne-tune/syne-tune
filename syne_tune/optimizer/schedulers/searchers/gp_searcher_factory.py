@@ -327,7 +327,9 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict:
     :return: kwargs for GPMultiFidelitySearcher._create_internal
 
     """
-    supp_schedulers = {'hyperband_stopping', 'hyperband_promotion'}
+    supp_schedulers = {
+        'hyperband_stopping', 'hyperband_promotion',
+        'hyperband_synchronous'}
     assert kwargs['scheduler'] in supp_schedulers, \
         "This factory needs scheduler in {} (instead of '{}')".format(
             supp_schedulers, kwargs['scheduler'])
@@ -514,7 +516,9 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict:
     :return: kwargs for CostAwareGPMultiFidelitySearcher._create_internal
 
     """
-    supp_schedulers = {'hyperband_stopping', 'hyperband_promotion'}
+    supp_schedulers = {
+        'hyperband_stopping', 'hyperband_promotion',
+        'hyperband_synchronous'}
     assert kwargs['scheduler'] in supp_schedulers, \
         "This factory needs scheduler in {} (instead of '{}')".format(
             supp_schedulers, kwargs['scheduler'])

@@ -441,7 +441,7 @@ class HyperbandScheduler(FIFOScheduler):
         # Extra fields in `config`
         if debug_log is not None:
             # For log outputs:
-            config['trial_id']=trial_id
+            config['trial_id'] = trial_id
         if self._does_pause_resume() and self.max_resource_attr is not None:
             # The new trial should only run until the next milestone.
             # This needs its config to be modified accordingly.
@@ -621,7 +621,7 @@ class HyperbandScheduler(FIFOScheduler):
         if self.scheduler_type == 'cost_promotion':
             self._check_key_of_result(result, self._cost_attr)
         resource = result[self._resource_attr]
-        assert resource >= 1 and round(resource) == resource, \
+        assert 1 <= resource == round(resource), \
             "Your training evaluation function needs to report positive " +\
             f"integer values for key {self._resource_attr}. Obtained " +\
             f"value {resource}, which is not permitted"
@@ -690,8 +690,8 @@ class HyperbandScheduler(FIFOScheduler):
                         # have any offset.
                         if self._cost_offset[trial_id] > 0:
                             logger.info(
-                                f"trial_id {trial_id}: Resumed trial seems to have been " + \
-                                "started from scratch (no checkpointing?), so we erase " + \
+                                f"trial_id {trial_id}: Resumed trial seems to have been " +
+                                "started from scratch (no checkpointing?), so we erase " +
                                 "the cost offset.")
                         self._cost_offset[trial_id] = 0
 
@@ -849,11 +849,12 @@ def _get_rung_levels(rung_levels, grace_period, reduction_factor, max_t):
         rf = reduction_factor
         min_t = grace_period
         max_rungs = int(np.log(max_t / min_t) / np.log(rf) + 1)
-        rung_levels = [int(round(min_t *  np.power(rf, k)))
+        rung_levels = [int(round(min_t * np.power(rf, k)))
                        for k in range(max_rungs)]
         assert rung_levels[-1] <= max_t  # Sanity check
         assert len(rung_levels) >= 2, \
-            f"grace_period = {grace_period}, reduction_factor = {reduction_factor}, max_t = {max_t} leads to single rung level only"
+            f"grace_period = {grace_period}, reduction_factor = " +\
+            f"{reduction_factor}, max_t = {max_t} leads to single rung level only"
     return rung_levels
 
 
