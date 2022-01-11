@@ -254,7 +254,7 @@ def parse_args(allow_lists_as_values=True):
                         help='Relevant for synchronous Hyperband with bayesopt '
                              'searcher. If batch of size B is suggested, the '
                              'first suggest uses searcher_num_init_candidates, '
-                             'the K-1 subsequent suggests use this value',
+                             'the B-1 subsequent suggests use this value',
                         **allow_list)
     parser.add_argument('--searcher_use_old_code',
                         action='store_true',
