@@ -259,6 +259,8 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--searcher_use_old_code',
                         action='store_true',
                         help='DEBUG: Use old code for gp_issm, gp_expdecay')
+    parser.add_argument('--searcher_no_fantasizing', action='store_true',
+                        help='Ignore pending evaluations, do not use fantasizing')
 
     # First pass: All global arguments
     # Why do we parse all global args here, and not just benchmark_name?
