@@ -24,7 +24,8 @@ from syne_tune.optimizer.schedulers.searchers.cost_aware_gp_multifidelity_search
     import CostAwareGPMultiFidelitySearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import \
     RandomSearcher
-
+from syne_tune.optimizer.schedulers.searchers.kde_searcher import \
+    KernelDensityEstimator
 __all__ = ['searcher_factory']
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,8 @@ def searcher_factory(searcher_name, **kwargs):
     model = kwargs.get('model', 'gp_multitask')
     if searcher_name == 'random':
         searcher_cls = RandomSearcher
+    elif searcher_name == 'kde':
+        searcher_cls = KernelDensityEstimator
     elif searcher_name == 'bayesopt':
         if scheduler == 'fifo':
             searcher_cls = GPFIFOSearcher

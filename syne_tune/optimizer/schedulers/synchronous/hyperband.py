@@ -25,6 +25,8 @@ from syne_tune.optimizer.scheduler import TrialSuggestion, \
 from syne_tune.optimizer.schedulers.fifo import ResourceLevelsScheduler
 from syne_tune.optimizer.schedulers.searchers.searcher import \
     RandomSearcher
+from syne_tune.optimizer.schedulers.searchers.multi_fidelity_kde_searcher import \
+    MultiFidelityKernelDensityEstimator
 from syne_tune.backend.trial_status import Trial
 from syne_tune.search_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
@@ -49,7 +51,7 @@ _DEFAULT_OPTIONS = {
 }
 
 _CONSTRAINTS = {
-    'searcher': Categorical(choices=('random',)),
+    'searcher': Categorical(choices=('random', 'kde')),
     'metric': String(),
     'mode': Categorical(choices=('min', 'max')),
     'random_seed': Integer(0, 2 ** 32 - 1),
@@ -187,7 +189,12 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             'points_to_evaluate': kwargs.get('points_to_evaluate'),
             'random_seed_generator': self.random_seed_generator,
             'resource_attr': self._resource_attr})
-        self.searcher = RandomSearcher(**search_options)
+
+        searcher = kwargs.get('searcher')
+        if searcher is None or searcher == 'random':
+            self.searcher = RandomSearcher(**search_options)
+        elif searcher == 'kde':
+            self.searcher = MultiFidelityKernelDensityEstimator(**search_options)
         # Bracket manager
         self.bracket_manager = SynchronousHyperbandBracketManager(
             bracket_rungs, mode=self.mode)
