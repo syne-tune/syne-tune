@@ -153,7 +153,8 @@ def _create_gp_standard_model(
         normalize_targets=kwargs.get('normalize_targets', True),
         profiler=result['profiler'],
         debug_log=result['debug_log'],
-        filter_observed_data=filter_observed_data)
+        filter_observed_data=filter_observed_data,
+        no_fantasizing=kwargs.get('no_fantasizing', False))
     return model_factory, filter_observed_data
 
 
@@ -587,7 +588,8 @@ def _common_defaults(is_hyperband: bool, is_multi_output: bool) -> (Set[str], di
         'initial_scoring': DEFAULT_INITIAL_SCORING,
         'debug_log': True,
         'cost_attr': 'elapsed_time',
-        'normalize_targets': True}
+        'normalize_targets': True,
+        'no_fantasizing': False}
     if is_hyperband:
         default_options['model'] = 'gp_multitask'
         default_options['opt_skip_num_max_resource'] = False

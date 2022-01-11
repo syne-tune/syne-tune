@@ -184,7 +184,8 @@ class GaussProcModelFactory(TransformerModelFactory):
             normalize_targets: bool = True,
             profiler: Optional[SimpleProfiler] = None,
             debug_log: Optional[DebugLogPrinter] = None,
-            filter_observed_data: Optional[ConfigurationFilter] = None):
+            filter_observed_data: Optional[ConfigurationFilter] = None,
+            no_fantasizing: bool = False):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -194,6 +195,11 @@ class GaussProcModelFactory(TransformerModelFactory):
         :param active_metric: Name of the metric to optimize.
         :param normalize_targets: Normalize target values in
             state.candidate_evaluations?
+        :param debug_log: DebugLogPrinter (optional)
+        :param filter_observed_data: Filter for observed data before
+            computing incumbent
+        :param no_fantasizing: If True, pending evaluations in the state are
+            simply ignored, fantasizing is not done (not recommended)
 
         """
         self._gpmodel = gpmodel
@@ -202,6 +208,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         self._debug_log = debug_log
         self._profiler = profiler
         self._filter_observed_data = filter_observed_data
+        self._no_fantasizing = no_fantasizing
         self._mean = None
         self._std = None
 
@@ -236,7 +243,7 @@ class GaussProcModelFactory(TransformerModelFactory):
                 failed_trials=state.failed_trials)
         self._posterior_for_state(
             no_pending_state, fit_params=fit_params, profiler=self._profiler)
-        if state.pending_evaluations:
+        if state.pending_evaluations and not self._no_fantasizing:
             # Sample fantasy values for pending evaluations
             new_pending = self._draw_fantasy_values(state)
             # Compute posterior for state with pending evals
@@ -353,7 +360,8 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
             normalize_targets: bool = True,
             profiler: Optional[SimpleProfiler] = None,
             debug_log: Optional[DebugLogPrinter] = None,
-            filter_observed_data: Optional[ConfigurationFilter] = None):
+            filter_observed_data: Optional[ConfigurationFilter] = None,
+            no_fantasizing: bool = False):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -370,7 +378,8 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         super().__init__(
             gpmodel=gpmodel, active_metric=active_metric,
             normalize_targets=normalize_targets, profiler=profiler,
-            debug_log=debug_log, filter_observed_data=filter_observed_data)
+            debug_log=debug_log, filter_observed_data=filter_observed_data,
+            no_fantasizing=no_fantasizing)
         self.num_fantasy_samples = num_fantasy_samples
 
     def get_params(self):
