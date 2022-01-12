@@ -88,7 +88,7 @@ checkpoints must be written into a specific local path given by the command line
 `st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load
  the state when the job is stopped/resumed (setting the folder correctly and uniquely per
   trial is the responsibility of the backend), see 
-  [checkpoint_example.py](`examples/training_scripts/checkpoint_example/checkpoint_example.py`) to see a fully
+  [checkpoint_example.py](examples/training_scripts/checkpoint_example/checkpoint_example.py) to see a fully
    working example of a tuning script with checkpoint enabled.
 
 Under the hood, we use [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) 
@@ -97,11 +97,11 @@ backend. Checkpoints are saved in `s3://{s3_bucket}/syne-tune/{tuner-name}/{tria
 where `s3_bucket` can be configured (defaults to `default_bucket` of the
 session).
 
-We refer to [checkpoint_example.py](`examples/training_scripts/checkpoint_example/checkpoint_example.py`) for a complete
+We refer to [checkpoint_example.py](examples/training_scripts/checkpoint_example/checkpoint_example.py) for a complete
  example of a script with checkpoint enabled.
 
 Many other examples of scripts that can be tuned are are available in 
-[examples/training_scripts](`examples/training_scripts`).
+[examples/training_scripts](examples/training_scripts).
 
 ## Launching a tuning job
 
