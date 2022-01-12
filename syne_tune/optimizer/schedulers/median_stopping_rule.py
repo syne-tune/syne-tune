@@ -16,6 +16,7 @@ class MedianStoppingRule(TrialScheduler):
             self,
             scheduler: TrialScheduler,
             resource_attr: str,
+            running_average: bool = True,
             metric: Optional[str] = None,
             grace_time: Optional[int] = 1,
             grace_population: int = 5,
@@ -33,6 +34,7 @@ class MedianStoppingRule(TrialScheduler):
         continue.
         :param resource_attr: key in the reported dictionary that accounts for the ressource (e.g. epoch or
         wallclocktime).
+        :param running_average: if True, then uses the running average of observation instead of raw observations.
         :param metric: metric to be considered.
         :param grace_time: median stopping rule is only applied for results whose `time_attr` exceeds this amount.
         :param grace_population: median stopping rule when at least `grace_population` have been observed at a ressource
@@ -48,6 +50,9 @@ class MedianStoppingRule(TrialScheduler):
         self.cutoff = cutoff
         self.grace_time = grace_time
         self.min_samples_required = grace_population
+        self.running_average = running_average
+        if running_average:
+            self.trial_to_results = defaultdict(list)
         self.mode = scheduler.metric_mode()
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
@@ -58,6 +63,10 @@ class MedianStoppingRule(TrialScheduler):
         if self.mode == 'max':
             new_metric *= -1
         time_step = result[self.resource_attr]
+
+        if self.running_average:
+            self.trial_to_results[trial.trial_id].append(new_metric)
+            new_metric = np.mean(self.trial_to_results[trial.trial_id])
 
         # insert new metric in sorted results
         index = np.searchsorted(self.sorted_results[time_step], new_metric)

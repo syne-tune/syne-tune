@@ -31,6 +31,19 @@ methods = {
         ),
         grace_time=max_t//20,
         resource_attr=resource_attr,
+        running_average=False,
+    ),
+    'RS-MSR-RA': lambda config_space, metric, mode, random_seed, max_t, resource_attr: MedianStoppingRule(
+        scheduler=FIFOScheduler(
+            config_space=config_space,
+            searcher="random",
+            metric=metric,
+            mode=mode,
+            random_seed=random_seed,
+        ),
+        grace_time=max_t // 20,
+        resource_attr=resource_attr,
+        running_average=True,
     ),
     'Botorch': lambda config_space, metric, mode, random_seed, max_t, resource_attr: BotorchGP(
         config_space=config_space,
