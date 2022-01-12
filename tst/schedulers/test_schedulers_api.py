@@ -12,6 +12,7 @@ from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
@@ -45,6 +46,7 @@ def make_ray_skopt():
 @pytest.mark.parametrize("scheduler", [
     FIFOScheduler(config_space, searcher='random', metric=metric1),
     FIFOScheduler(config_space, searcher='bayesopt', metric=metric1),
+    MedianStoppingRule(scheduler=FIFOScheduler(config_space, searcher='random', metric=metric1), resource_attr=resource_attr, metric=metric1),
     HyperbandScheduler(config_space, searcher='random', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(config_space, searcher='bayesopt', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(
