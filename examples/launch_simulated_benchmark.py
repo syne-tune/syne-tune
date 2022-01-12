@@ -8,7 +8,7 @@ from blackbox_repository.blackbox_tabular import BlackboxTabular
 from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend, UserBlackboxBackend
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.baselines import ASHA
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
@@ -49,9 +49,8 @@ def example_blackbox():
 
 def simulate_benchmark(blackbox, backend, metric):
     # Random search without stopping
-    scheduler = HyperbandScheduler(
+    scheduler = ASHA(
         blackbox.configuration_space,
-        searcher="random",
         max_t=max(blackbox.fidelity_values),
         resource_attr=next(iter(blackbox.fidelity_space.keys())),
         mode='min',

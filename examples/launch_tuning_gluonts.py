@@ -24,7 +24,7 @@ from sagemaker.mxnet import MXNet
 from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.baselines import ASHA
 from syne_tune.tuner import Tuner
 from syne_tune.search_space import loguniform, lograndint
 
@@ -73,9 +73,8 @@ if __name__ == '__main__':
         backend = LocalBackend(entry_point=str(entry_point))
 
     # see examples to see other schedulers, mobster, Raytune, multiobjective, etc...
-    scheduler = HyperbandScheduler(
+    scheduler = ASHA(
         config_space,
-        searcher='random',
         max_t=epochs,
         resource_attr='epoch_no',
         mode='min',
