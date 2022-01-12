@@ -65,7 +65,7 @@ class PASHA(HyperbandScheduler):
             searcher="random",
             resource_attr=resource_attr,
             max_t=max_t,
-            hyperband_type='pasha',
+            type='pasha',
             ranking_criterion='soft_ranking',
             **kwargs,
         )

@@ -70,7 +70,6 @@ if __name__ == '__main__':
         # Random search without stopping
         scheduler = RandomSearch(
             config_space,
-            searcher='random',
             mode=mode,
             metric=metric,
             random_seed=seed

@@ -16,11 +16,11 @@ from pathlib import Path
 from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER
 from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import SynchronousGeometricHyperbandScheduler  # noqa: F401
+from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+    SynchronousGeometricHyperbandScheduler  # noqa: F401
 from syne_tune.tuner import Tuner
 from syne_tune.search_space import randint
 from syne_tune.stopping_criterion import StoppingCriterion
-
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
@@ -38,13 +38,14 @@ if __name__ == '__main__':
     mode = "min"
     metric = "mean_loss"
 
-
     schedulers = [
         RandomSearch(config_space, metric=metric, mode=mode),
-        BayesianOptimization(config_space, metric=metric, mode=mode),
+        # example of setting additional kwargs arguments
+        BayesianOptimization(config_space, metric=metric, mode=mode, search_options={'num_init_random': n_workers + 2}),
         ASHA(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode),
         MOBSTER(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode),
-        # commented as needs extra libraries or to save CI testing time
+        # Commented as needs extra libraries or to save CI testing time. Since we are testing those baselines
+        # in our baseline, we keep the uncommented list of schedulers to a small number.
         # PASHA(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode),
         # BORE(config_space, metric=metric, mode=mode),
         # SynchronousGeometricHyperbandScheduler(
