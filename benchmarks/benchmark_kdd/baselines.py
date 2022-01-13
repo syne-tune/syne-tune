@@ -2,6 +2,7 @@ from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
+from syne_tune.optimizer.transfer_learning.bounding_box import BoundingBox
 
 methods = {
     'RS': lambda config_space, metric, mode, random_seed, max_t, resource_attr: FIFOScheduler(
@@ -55,4 +56,16 @@ methods = {
         resource_attr=resource_attr,
         random_seed=random_seed,
     ),
+    'HB+BB': lambda config_space, metric, mode, random_seed, max_t, resource_attr: BoundingBox(
+        scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
+            new_config_space,
+            searcher='random',
+            metric=metric,
+            mode=mode,
+        ),
+        mode="min",
+        metric=metric,
+        config_space=config_space,
+        transfer_learning_evaluations=transfer_learning_evaluations,
+    )
 }

@@ -237,7 +237,7 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = No
 
     methods_df = sorted(df_task.algorithm.unique())
     df_avg_ranks = pd.DataFrame(
-        np.stack(avg_ranks.values()).mean(axis=-1),
+        np.stack(list(avg_ranks.values())).mean(axis=-1),
         index=benchmarks_to_df.keys(),
         columns=methods_df,
     )
