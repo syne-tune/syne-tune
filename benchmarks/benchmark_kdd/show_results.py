@@ -3,6 +3,7 @@ import logging
 import os
 from argparse import ArgumentParser
 
+import dill
 from sklearn.preprocessing import QuantileTransformer
 from tqdm import tqdm
 
@@ -20,10 +21,12 @@ from syne_tune.experiments import get_metadata, load_experiments_df
 
 # %%
 
-def generate_df(tag: None, date_min=None, date_max=None):
+def generate_df_dict(tag: None, date_min=None, date_max=None) -> Dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
-    def metadata_filter(metadata, tag=None):
+    def metadata_filter(metadata, benchmark=None, tag=None):
         date_exp = datetime.fromtimestamp(metadata['st_tuner_creation_timestamp'])
+        if benchmark is not None and metadata.get('benchmark') != benchmark:
+            return False
         if tag is not None and metadata.get('tag') != tag:
             return False
         return date_min <= date_exp <= date_max
@@ -40,14 +43,20 @@ def generate_df(tag: None, date_min=None, date_max=None):
     num_seed_per_method = metadata_df.groupby(['algorithm', 'benchmark']).count()['tag'].unstack()
     print("seeds present: \n" + num_seed_per_method.to_string())
 
-    valid_exps = set([name for name, metadata in metadatas.items() if metadata_filter(metadata, tag)])
+    benchmarks = list(sorted(metadata_df.benchmark.dropna().unique()))
 
-    def name_filter(path):
-        tuner_name = Path(path).parent.stem
-        return tuner_name in valid_exps
+    benchmark_to_df = {}
 
-    df = load_experiments_df(name_filter)
-    return df
+    for benchmark in tqdm(benchmarks):
+        valid_exps = set([name for name, metadata in metadatas.items() if metadata_filter(metadata, benchmark, tag)])
+        if len(valid_exps) > 0:
+            def name_filter(path):
+                tuner_name = Path(path).parent.stem
+                return tuner_name in valid_exps
+            df = load_experiments_df(name_filter)
+            benchmark_to_df[benchmark] = df
+
+    return benchmark_to_df
 
 
 def plot_result_benchmark(
@@ -70,6 +79,8 @@ def plot_result_benchmark(
             ys = []
 
             df_scheduler = df_task[df_task.algorithm == algorithm]
+            if len(df_scheduler) == 0:
+                continue
             for i, tuner_name in enumerate(df_scheduler.tuner_name.unique()):
                 sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
                 sub_df = sub_df.sort_values(ST_TUNER_TIME)
@@ -121,7 +132,7 @@ class PlotArgs:
     ymax: float = None
 
 
-def plot_results(df, methods_to_show: Optional[List[str]] = None):
+def plot_results(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
     plot_range = {
         "fcnet-naval": PlotArgs(50, None, 0.0, 4e-3),
         "fcnet-parkinsons": PlotArgs(0, None, 0.0, 0.1),
@@ -132,12 +143,10 @@ def plot_results(df, methods_to_show: Optional[List[str]] = None):
         "nas201-cifar100": PlotArgs(3000, None, 0.26, 0.35),
     }
     agg_results = {}
-    benchmarks = sorted([x for x in df.benchmark.unique() if isinstance(x, str)])
 
-    for benchmark in benchmarks:
-        df_task = df.loc[df.benchmark == benchmark, :]
+    for benchmark, df_task in benchmarks_to_df.items():
         cmap = cm.Set3
-        colors = {algorithm: cmap(i) for i, algorithm in enumerate(df.algorithm.unique())}
+        colors = {algorithm: cmap(i) for i, algorithm in enumerate(sorted(df_task.algorithm.unique()))}
 
         args = dict(df_task=df_task, title=benchmark, colors=colors, methods_to_show=methods_to_show)
 
@@ -153,8 +162,7 @@ def plot_results(df, methods_to_show: Optional[List[str]] = None):
         plt.show()
 
 
-def print_rank_table(df, methods_to_show: Optional[List[str]] = None):
-    benchmarks = sorted([x for x in df.benchmark.unique() if isinstance(x, str)])
+def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
 
     def get_results(df_task):
         seed_results = {}
@@ -198,8 +206,7 @@ def print_rank_table(df, methods_to_show: Optional[List[str]] = None):
         return t_range, seed_results
 
     avg_ranks = {}
-    for benchmark in tqdm(benchmarks):
-        df_task = df.loc[df.benchmark == benchmark, :]
+    for benchmark, df_task in tqdm(list(benchmarks_to_df.items())):
 
         # (num_seeds, num_time_steps)
         _, seed_results_dict = get_results(df_task)
@@ -228,11 +235,13 @@ def print_rank_table(df, methods_to_show: Optional[List[str]] = None):
     methods_df = sorted(df_task.algorithm.unique())
     df_avg_ranks = pd.DataFrame(
         np.stack(avg_ranks.values()).mean(axis=-1),
-        index=benchmarks,
+        index=benchmarks_to_df.keys(),
         columns=methods_df,
     )
     if methods_to_show is None:
         methods_to_show = methods_df
+    else:
+        methods_to_show = [x for x in methods_to_show if x in methods_df]
     print(df_avg_ranks[methods_to_show].mean().to_string())
     #
     # pd.DataFrame(
@@ -274,24 +283,28 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
 
     load_cache = True
-    methods_to_show = ['RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR', 'RS-MSR-patience']
+    methods_to_show = ['RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR']
 
-    result_file = Path("~/Downloads/cached-results.csv.zip").expanduser()
+    result_file = Path("~/Downloads/cached-results.dill").expanduser()
     if load_cache and result_file.exists():
         print(f"loading results from {result_file}")
-        df = pd.read_csv(result_file)
+        with open(result_file, "rb") as f:
+            benchmarks_to_df = dill.load(f)
     else:
         print(f"regenerating results to {result_file}")
-        df = generate_df(tag, date_min, date_max)
-        metrics = df.metric_names
+        benchmarks_to_df = generate_df_dict(tag, date_min, date_max)
+        # metrics = df.metric_names
         cols = ["benchmark", "metric_names", "metric_mode", "tuner_name", "algorithm", ST_TUNER_TIME]
-        df.to_csv(result_file, index=False)
+        with open(result_file, "wb") as f:
+            dill.dump(benchmarks_to_df, f)
 
-    df_methods = df.algorithm.unique()
-    for x in methods_to_show:
-        assert x in df_methods
+    for bench, df_ in benchmarks_to_df.items():
+        df_methods = df_.algorithm.unique()
+        for x in methods_to_show:
+            if x not in df_methods:
+                logging.warning(f"method {x} not found in {bench}")
 
-    plot_results(df, methods_to_show)
+    plot_results(benchmarks_to_df, methods_to_show)
 
-    print_rank_table(df, methods_to_show)
+    print_rank_table(benchmarks_to_df, methods_to_show)
 
