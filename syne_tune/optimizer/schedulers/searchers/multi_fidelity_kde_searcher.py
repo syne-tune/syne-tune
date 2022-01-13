@@ -40,6 +40,11 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     metric : str
         Name of metric to optimize, key in result's obtained via
         `on_trial_result`
+    random_seed_generator : RandomSeedGenerator (optional)
+        If given, the random_seed for `random_state` is obtained from there,
+        otherwise `random_seed` is used
+    random_seed : int (optional)
+        This is used if `random_seed_generator` is not given.
     mode : str
         Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
     num_min_data_points: int
@@ -71,6 +76,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             self,
             configspace: Dict,
             metric: str,
+            points_to_evaluate: Optional[List[Dict]] = None,
             mode: str = "min",
             num_min_data_points: int = None,
             top_n_percent: int = 15,
@@ -78,24 +84,32 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             num_candidates: int = 64,
             bandwidth_factor: int = 3,
             random_fraction: float = .33,
-            resource_attr: str = 'epochs',
-            points_to_evaluate: Optional[List[Dict]] = None,
-            **kwargs
-    ):
-        super().__init__(configspace, metric, mode, num_min_data_points,
-                         top_n_percent, min_bandwidth, num_candidates, bandwidth_factor, random_fraction,
-                         points_to_evaluate)
-
+            resource_attr: str = 'epoch',
+            **kwargs):
+        super().__init__(
+            configspace,
+            metric=metric,
+            points_to_evaluate=points_to_evaluate,
+            mode=mode,
+            num_min_data_points=num_min_data_points,
+            top_n_percent=top_n_percent,
+            min_bandwidth=min_bandwidth,
+            num_candidates=num_candidates,
+            bandwidth_factor=bandwidth_factor,
+            random_fraction=random_fraction, **kwargs)
         self.resource_attr = resource_attr
-
         self.resource_levels = []
 
     def configure_scheduler(self, scheduler):
         from syne_tune.optimizer.schedulers.hyperband import \
             HyperbandScheduler
+        from syne_tune.optimizer.schedulers.synchronous.hyperband import \
+            SynchronousHyperbandScheduler
 
-        assert isinstance(scheduler, HyperbandScheduler), \
-            "This searcher requires HyperbandScheduler scheduler"
+        assert isinstance(scheduler, HyperbandScheduler) or \
+               isinstance(scheduler, SynchronousHyperbandScheduler), \
+            "This searcher requires HyperbandScheduler or " +\
+            "SynchronousHyperbandScheduler scheduler"
 
     def train_kde(self, train_data, train_targets):
 
@@ -112,11 +126,9 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         train_data = np.array([self.X[i] for i in indices])
         train_targets = np.array([self.y[i] for i in indices])
 
-        super(MultiFidelityKernelDensityEstimator, self).train_kde(train_data, train_targets)
+        super().train_kde(train_data, train_targets)
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
-        super(MultiFidelityKernelDensityEstimator, self)._update(trial_id=trial_id,
-                                                                 config=config,
-                                                                 result=result)
+        super()._update(trial_id=trial_id, config=config, result=result)
         resource_level = int(result[self.resource_attr])
         self.resource_levels.append(resource_level)

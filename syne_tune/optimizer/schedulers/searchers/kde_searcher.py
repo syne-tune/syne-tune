@@ -16,7 +16,7 @@ import numpy as np
 import statsmodels.api as sm
 import scipy.stats as sps
 
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 import syne_tune.search_space as sp
 
 __all__ = ['KernelDensityEstimator']
@@ -24,7 +24,7 @@ __all__ = ['KernelDensityEstimator']
 logger = logging.getLogger(__name__)
 
 
-class KernelDensityEstimator(BaseSearcher):
+class KernelDensityEstimator(SearcherWithRandomSeed):
     """
     Fits two kernel density estimators (KDE) to model the density of the top N configurations as well as the density
     of the configurations that are not among the top N, respectively. New configurations are sampled by optimizing
@@ -51,6 +51,11 @@ class KernelDensityEstimator(BaseSearcher):
         `on_trial_result`
     mode : str
         Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
+    random_seed_generator : RandomSeedGenerator (optional)
+        If given, the random_seed for `random_state` is obtained from there,
+        otherwise `random_seed` is used
+    random_seed : int (optional)
+        This is used if `random_seed_generator` is not given.
     num_min_data_points: int
         Minimum number of data points that we use to fit the KDEs. If set to None than we set this to the number of
         hyperparameters.
@@ -80,6 +85,7 @@ class KernelDensityEstimator(BaseSearcher):
             self,
             configspace: Dict,
             metric: str,
+            points_to_evaluate: Optional[List[Dict]] = None,
             mode: str = "min",
             num_min_data_points: int = None,
             top_n_percent: int = 15,
@@ -87,10 +93,11 @@ class KernelDensityEstimator(BaseSearcher):
             num_candidates: int = 64,
             bandwidth_factor: int = 3,
             random_fraction: float = .33,
-            points_to_evaluate: Optional[List[Dict]] = None,
             **kwargs
     ):
-        super().__init__(configspace=configspace, metric=metric, points_to_evaluate=points_to_evaluate)
+        super().__init__(
+            configspace=configspace, metric=metric,
+            points_to_evaluate=points_to_evaluate, **kwargs)
         self.mode = mode
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
@@ -176,19 +183,11 @@ class KernelDensityEstimator(BaseSearcher):
         return res
 
     def configure_scheduler(self, scheduler):
-        """
-        Check that scheduler is a FIFOScheduler
-
-        Args:
-            scheduler: TaskScheduler
-                Scheduler the searcher is used with.
-
-        """
         from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
-        if not isinstance(scheduler, FIFOScheduler):
-            raise AssertionError("This searcher only works with FIFOScheduler. For multi-fidelity scheduler, such as "
-                                 "Hyperband use MultiFidelityKernelDensityEstimator")
+        assert isinstance(scheduler, FIFOScheduler), \
+            "This searcher requires FIFOScheduler scheduler"
+        super().configure_scheduler(scheduler)
 
     def to_objective(self, result: Dict):
         if self.mode == 'min':
@@ -206,7 +205,7 @@ class KernelDensityEstimator(BaseSearcher):
         if suggestion is None:
             models = self.train_kde(np.array(self.X), np.array(self.y))
 
-            if models is None or np.random.rand() < self.random_fraction:
+            if models is None or self.random_state.rand() < self.random_fraction:
                 # return random candidate because a) we don't have enough data points or
                 # b) we sample some fraction of all samples randomly
                 suggestion = {k: v.sample() if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
@@ -221,7 +220,7 @@ class KernelDensityEstimator(BaseSearcher):
                 current_best = None
                 val_current_best = None
                 for i in range(self.num_candidates):
-                    idx = np.random.randint(0, len(self.good_kde.data))
+                    idx = self.random_state.randint(0, len(self.good_kde.data))
                     mean = self.good_kde.data[idx]
                     candidate = []
 
@@ -232,20 +231,24 @@ class KernelDensityEstimator(BaseSearcher):
                         if vartype == 'c':
                             # continuous parameter
                             bw = self.bandwidth_factor * bw
-                            candidate.append(sps.truncnorm.rvs(-m / bw, (1 - m) / bw, loc=m, scale=bw))
+                            candidate.append(sps.truncnorm.rvs(
+                                -m / bw, (1 - m) / bw, loc=m, scale=bw,
+                                random_state=self.random_state))
                         else:
                             # categorical or integer parameter
-                            if np.random.rand() < (1 - bw):
+                            if self.random_state.rand() < (1 - bw):
                                 candidate.append(m)
                             else:
                                 if vartype == 'o':
                                     # integer
-                                    sample = np.random.randint(domain[0], domain[1])
+                                    sample = self.random_state.randint(
+                                        domain[0], domain[1])
                                     sample = (sample - domain[0]) / (domain[1] - domain[0])
                                     candidate.append(sample)
                                 elif vartype == 'u':
                                     # categorical
-                                    candidate.append(np.random.randint(domain) / domain)
+                                    candidate.append(
+                                        self.random_state.randint(domain) / domain)
                     val = acquisition_function(candidate)
 
                     if not np.isfinite(val):
@@ -287,5 +290,5 @@ class KernelDensityEstimator(BaseSearcher):
 
         return bad_kde, good_kde
 
-    def clone_from_state(self, state):
+    def clone_from_state(self, state: dict):
         raise NotImplementedError
