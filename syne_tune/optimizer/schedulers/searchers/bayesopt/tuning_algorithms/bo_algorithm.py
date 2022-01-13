@@ -140,6 +140,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                     next_trial_id = max(next_trial_id, int(trial_id))
                 except ValueError:
                     pass
+            next_trial_id += 1
         candidates = []
         just_added = True
         model = None  # SurrogateModel, if num_outer_iterations > 1
