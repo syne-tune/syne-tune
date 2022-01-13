@@ -15,7 +15,7 @@ from pathlib import Path
 
 from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.tuner import Tuner
 from syne_tune.search_space import randint
 from syne_tune.stopping_criterion import StoppingCriterion
@@ -42,9 +42,8 @@ if __name__ == '__main__':
     backend = LocalBackend(entry_point=entry_point)
 
     # Random search without stopping
-    scheduler = FIFOScheduler(
+    scheduler = RandomSearch(
         config_space,
-        searcher='random',
         mode=mode,
         metric=metric,
         random_seed=random_seed)

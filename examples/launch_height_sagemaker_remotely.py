@@ -21,7 +21,7 @@ from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
 from syne_tune.search_space import randint
@@ -68,9 +68,8 @@ if __name__ == '__main__':
 
     for seed in range(2):
         # Random search without stopping
-        scheduler = FIFOScheduler(
+        scheduler = RandomSearch(
             config_space,
-            searcher='random',
             mode=mode,
             metric=metric,
             random_seed=seed

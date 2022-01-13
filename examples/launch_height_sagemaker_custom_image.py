@@ -19,7 +19,7 @@ from pathlib import Path
 from syne_tune.backend.sagemaker_backend.custom_framework import CustomFramework
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.tuner import Tuner
 from syne_tune.search_space import randint
 from syne_tune.stopping_criterion import StoppingCriterion
@@ -44,9 +44,8 @@ if __name__ == '__main__':
     metric = "mean_loss"
 
     # Random search without stopping
-    scheduler = FIFOScheduler(
+    scheduler = RandomSearch(
         config_space,
-        searcher='random',
         mode=mode,
         metric=metric,
         random_seed=random_seed)

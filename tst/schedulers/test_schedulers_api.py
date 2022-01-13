@@ -8,6 +8,7 @@ from ray.tune.suggest.skopt import SkOptSearch
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
@@ -50,7 +51,6 @@ def make_ray_skopt():
     HyperbandScheduler(
         config_space, searcher='random', type='pasha', max_t=max_t, resource_attr=resource_attr, metric=metric1
     ),
-    MOASHA(config_space=config_space, time_attr=resource_attr, metrics=[metric1, metric2]),
     PopulationBasedTraining(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     RayTuneScheduler(
         config_space=config_space,
@@ -62,6 +62,13 @@ def make_ray_skopt():
         ray_searcher=make_ray_skopt(),
     ),
     SimpleScheduler(config_space=config_space, metric=metric1),
+    RandomSearch(config_space=config_space, metric=metric1),
+    BayesianOptimization(config_space=config_space, metric=metric1),
+    ASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    MOBSTER(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
+    # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    MOASHA(config_space=config_space, time_attr=resource_attr, metrics=[metric1, metric2]),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
