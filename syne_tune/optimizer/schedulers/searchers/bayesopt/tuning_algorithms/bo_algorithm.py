@@ -122,8 +122,24 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             # Select batch in one go
             num_outer_iterations = 1
             num_inner_candidates = self.num_requested_candidates
-        assert num_outer_iterations == 1 or self.pending_candidate_state_transformer, \
-            "Need pending_candidate_state_transformer for greedy batch selection"
+        next_trial_id = None
+        if num_outer_iterations > 1:
+            assert self.pending_candidate_state_transformer, \
+                "Need pending_candidate_state_transformer for greedy batch selection"
+            # For greedy batch selection, we need to assign new trial_id's to
+            # configs included into the batch, in order to update the state
+            # maintained in `pending_candidate_state_transformer`.
+            # This is just to make batch suggestion work: neither the state
+            # nor these trial_id's are used in the future.
+            # Note: This code also works if trial_id's are arbitrary strings.
+            # It guarantees that `str(next_trial_id + i)` is not equal to an
+            # existing trial_id for all i >= 0.
+            next_trial_id = 0
+            for trial_id in self.pending_candidate_state_transformer.state.config_for_trial.keys():
+                try:
+                    next_trial_id = max(next_trial_id, int(trial_id))
+                except ValueError:
+                    pass
         candidates = []
         just_added = True
         model = None  # SurrogateModel, if num_outer_iterations > 1
@@ -131,8 +147,8 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             if just_added:
                 if self.exclusion_candidates.config_space_exhausted():
                     logger.warning(
-                        "All entries of finite config space (size " + \
-                        f"{self.exclusion_candidates.configspace_size}) have been selected. Returning " + \
+                        "All entries of finite config space (size " +
+                        f"{self.exclusion_candidates.configspace_size}) have been selected. Returning " +
                         f"{len(candidates)} configs instead of {self.num_requested_candidates}")
                     break
                 just_added = False
@@ -154,15 +170,16 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                 # Note: We suppress fit_hyperpars for models obtained during
                 # batch selection
                 for candidate in inner_candidates:
-                    self.pending_candidate_state_transformer.append_candidate(
-                        candidate)
+                    self.pending_candidate_state_transformer.append_trial(
+                        trial_id=str(next_trial_id), config=candidate)
+                    next_trial_id += 1
                 model = self.pending_candidate_state_transformer.model(
                     skip_optimization=True)
             if len(inner_candidates) < num_inner_candidates and \
                     len(candidates) < self.num_requested_candidates:
                 logger.warning(
-                    "All entries of finite config space (size " + \
-                    f"{self.exclusion_candidates.configspace_size}) have been selected. Returning " + \
+                    "All entries of finite config space (size " +
+                    f"{self.exclusion_candidates.configspace_size}) have been selected. Returning " +
                     f"{len(candidates)} configs instead of {self.num_requested_candidates}")
                 break
 
