@@ -21,10 +21,13 @@ from syne_tune.experiments import get_metadata, load_experiments_df
 
 # %%
 
-def generate_df_dict(tag: None, date_min=None, date_max=None) -> Dict[str, pd.DataFrame]:
+def generate_df_dict(tag: None, date_min=None, date_max=None, methods_to_show=None) -> Dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
     def metadata_filter(metadata, benchmark=None, tag=None):
         date_exp = datetime.fromtimestamp(metadata['st_tuner_creation_timestamp'])
+        if methods_to_show is not None and not metadata.get('algorithm') in methods_to_show:
+            return False
+
         if benchmark is not None and metadata.get('benchmark') != benchmark:
             return False
         if tag is not None and metadata.get('tag') != tag:
@@ -292,9 +295,8 @@ if __name__ == '__main__':
             benchmarks_to_df = dill.load(f)
     else:
         print(f"regenerating results to {result_file}")
-        benchmarks_to_df = generate_df_dict(tag, date_min, date_max)
+        benchmarks_to_df = generate_df_dict(tag, date_min, date_max, methods_to_show)
         # metrics = df.metric_names
-        cols = ["benchmark", "metric_names", "metric_mode", "tuner_name", "algorithm", ST_TUNER_TIME]
         with open(result_file, "wb") as f:
             dill.dump(benchmarks_to_df, f)
 
@@ -303,6 +305,8 @@ if __name__ == '__main__':
         for x in methods_to_show:
             if x not in df_methods:
                 logging.warning(f"method {x} not found in {bench}")
+
+    # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
 
     plot_results(benchmarks_to_df, methods_to_show)
 
