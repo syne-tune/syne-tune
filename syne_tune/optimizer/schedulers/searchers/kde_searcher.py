@@ -231,9 +231,9 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                         if vartype == 'c':
                             # continuous parameter
                             bw = self.bandwidth_factor * bw
-                            candidate.append(
-                                sps.truncnorm.rvs(-m / bw, (1 - m) / bw, loc=m,
-                                                  scale=bw))
+                            candidate.append(sps.truncnorm.rvs(
+                                -m / bw, (1 - m) / bw, loc=m, scale=bw,
+                                random_state=self.random_state))
                         else:
                             # categorical or integer parameter
                             if self.random_state.rand() < (1 - bw):
