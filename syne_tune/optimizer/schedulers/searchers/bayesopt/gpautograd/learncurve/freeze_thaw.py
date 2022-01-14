@@ -154,7 +154,8 @@ def logdet_cholfact_cov_resource(likelihood: Dict) -> float:
     return _inner_product(log_diag, weights)
 
 
-def resource_kernel_likelihood_precomputations(targets: List[tuple]) -> Dict:
+def resource_kernel_likelihood_precomputations(
+        targets: List[np.ndarray]) -> Dict:
     """
     Precomputations required by `resource_kernel_likelihood_computations`.
 
@@ -162,7 +163,8 @@ def resource_kernel_likelihood_precomputations(targets: List[tuple]) -> Dict:
     targets `ydims[i]`. For `0 <= j < ydim_max`, `ydim_max = ydims[0] =
     max(ydims)`, `num_configs[j]` is the number of datapoints i for which
     `ydims[i] > j`.
-    `yflat` is a flat vector consisting of `ydim_max` parts, where part j is of
+    `yflat` is a flat matrix (rows corresponding to fantasy samples; column
+    vector if no fantasizing) consisting of `ydim_max` parts, where part j is of
     size `num_configs[j]` and contains `y[j]` for targets of those i counted in
     `num_configs[j]`.
 
@@ -170,7 +172,7 @@ def resource_kernel_likelihood_precomputations(targets: List[tuple]) -> Dict:
         `prepare_data`
     :return: See above
     """
-    ydims = [len(y) for y in targets]
+    ydims = [y.shape[0] for y in targets]
     ydim_max = ydims[0]
     num_configs = list(np.sum(
         np.array(ydims).reshape((-1, 1)) > np.arange(ydim_max).reshape((1, -1)),
@@ -179,23 +181,23 @@ def resource_kernel_likelihood_precomputations(targets: List[tuple]) -> Dict:
     assert num_configs[-1] > 0, num_configs
     total_size = sum(num_configs)
     assert total_size == sum(ydims)
-    yflat = np.zeros(total_size)
-    off = 0
     # Attention: When comparing this to `issm.issm_likelihood_precomputations`,
     # `targets` maps to `yflat` in the same ordering (the index is still r),
     # whereas there the index j of `deltay` runs in the opposite direction of
     # the index r of `targets`
+    yflat_rows = []
     for pos, num in enumerate(num_configs):
-        ycurr = np.array([y[pos] for y in targets[:num]])
-        yflat[off:(off + num)] = ycurr
-        off += num
-    assert off == total_size
+        yflat_rows.extend([y[pos].reshape((1, -1)) for y in targets[:num]])
+    yflat = np.vstack(yflat_rows)
+    assert yflat.shape[0] == total_size
     return {
         'ydims': ydims,
         'num_configs': num_configs,
         'yflat': yflat}
 
 
+# TODO: This code is complex. If it does not run faster than
+# `resource_kernel_likelihood_slow_computations`, remove it.
 def resource_kernel_likelihood_computations(
         precomputed: Dict, res_kernel: ExponentialDecayBaseKernelFunction,
         noise_variance, skip_c_d: bool = False) -> Dict:
@@ -210,11 +212,11 @@ def resource_kernel_likelihood_computations(
     :class:`ExponentialDecayBaseKernelFunction`.
 
     Results returned are:
-    - c: n-vector [c_i]
-    - d: n-vector [d_i], positive
-    - vtv: n-vector [|v_i|^2]
-    - wtv: n-vector [(w_i)^T v_i]
-    - wtw: n-vector [|w_i|^2]
+    - c: n vector [c_i]
+    - d: n vector [d_i], positive
+    - vtv: n vector [|v_i|^2]
+    - wtv: (n, F) matrix[(W_i)^T v_i], F number of fantasy samples
+    - wtw: n vector [|w_i|^2] (only if no fantasizing)
     - lfact_all: Cholesky factor for kernel matrix corrresponding to largest
         target vector size
     - ydims: Target vector sizes (copy from `precomputed`)
@@ -232,6 +234,8 @@ def resource_kernel_likelihood_computations(
     num_res = r_max + 1 - r_min
     assert num_all_configs > 0, "targets must not be empty"
     assert num_res > 0, f"r_min = {r_min} must be <= r_max = {r_max}"
+    num_fantasy_samples = precomputed['deltay'].shape[1]
+    compute_wtw = num_fantasy_samples == 1
 
     # Compute Cholesky factor for largest target vector size
     ydims = precomputed['ydims']
@@ -247,7 +251,10 @@ def resource_kernel_likelihood_computations(
     off = num_all_configs
     ilscal = 1.0 / lfact_all[0, 0]
     vvec = anp.array([ilscal]).reshape((1, 1))
-    wmat = _rowvec(yflat[:off] - means_all[0]) * ilscal
+    # `yflat` is a (*, F) matrix, where F == `num_fantasy_samples`. These
+    # matrices are flattened out as rows of `wmat`, and reshaped back before
+    # writing into `wtv_lst`
+    wmat = _rowvec(yflat[:off, :] - means_all[0]) * ilscal
     # Note: We need the detour via `wtv_lst`, etc, because `autograd` does not
     # support overwriting the content of an `ndarray`. Their role is to collect
     # parts of the final vectors, in reverse ordering
@@ -257,13 +264,17 @@ def resource_kernel_likelihood_computations(
     for ydim, num in enumerate(num_configs[1:], start=1):
         if num < num_prev:
             # These parts are done:
-            wdone = wmat[:, num:]
-            wtv_lst.append(_flatvec(anp.matmul(vvec, wdone)))
-            wtw_lst.append(_flatvec(anp.sum(anp.square(wdone), axis=0)))
-            wmat = wmat[:, :num]
+            pos = num * num_fantasy_samples
+            wdone = wmat[:, pos:]
+            wtv_part = anp.reshape(
+                anp.matmul(vvec, wdone), -1, num_fantasy_samples)
+            wtv_lst.append(wtv_part)
+            if compute_wtw:
+                wtw_lst.append(_flatvec(anp.sum(anp.square(wdone), axis=0)))
+            wmat = wmat[:, :pos]
             num_prev = num
         # Update W matrix
-        rhs = _rowvec(yflat[off:(off + num)] - means_all[ydim])
+        rhs = _rowvec(yflat[off:(off + num), :] - means_all[ydim])
         off += num
         lvec = _rowvec(lfact_all[ydim, :ydim])
         ilscal = 1.0 / lfact_all[ydim, ydim]
@@ -273,10 +284,13 @@ def resource_kernel_likelihood_computations(
         v_new = anp.array(
             [(1.0 - _inner_product(lvec, vvec)) * ilscal]).reshape((1, 1))
         vvec = anp.concatenate((vvec, v_new), axis=1)
-    wtv_lst.append(_flatvec(anp.matmul(vvec, wmat)))
-    wtw_lst.append(_flatvec(anp.sum(anp.square(wmat), axis=0)))
+    wtv_part = anp.reshape(
+        anp.matmul(vvec, wmat), -1, num_fantasy_samples)
+    wtv_lst.append(wtv_part)
     wtv_all = anp.concatenate(reversed(wtv_lst), axis=0)
-    wtw_all = anp.concatenate(reversed(wtw_lst), axis=0)
+    if compute_wtw:
+        wtw_lst.append(_flatvec(anp.sum(anp.square(wmat), axis=0)))
+        wtw_all = anp.concatenate(reversed(wtw_lst), axis=0)
     vtv_for_ydim = anp.cumsum(anp.square(vvec))
     vtv_all = anp.array([vtv_for_ydim[ydim - 1] for ydim in ydims])
     # Compile results
@@ -284,18 +298,22 @@ def resource_kernel_likelihood_computations(
         'num_data': sum(ydims),
         'vtv': vtv_all,
         'wtv': wtv_all,
-        'wtw': wtw_all,
         'lfact_all': lfact_all,
         'ydims': ydims}
+    if compute_wtw:
+        result['wtw'] = wtw_all
     if not skip_c_d:
         result['c'] = anp.zeros(num_all_configs)
         result['d'] = anp.zeros(num_all_configs)
     return result
 
 
+# TODO: It is not clear whether this code is slower, and it is certainly
+# simpler.
 def resource_kernel_likelihood_slow_computations(
-        targets: List[list], res_kernel: ExponentialDecayBaseKernelFunction,
-        noise_variance, skip_c_d: bool = False) -> Dict:
+        targets: List[np.ndarray],
+        res_kernel: ExponentialDecayBaseKernelFunction, noise_variance,
+        skip_c_d: bool = False) -> Dict:
     """
     Naive implementation of `resource_kernel_likelihood_computations`, which
     does not require precomputations, but is somewhat slower. Here, results are
@@ -307,8 +325,9 @@ def resource_kernel_likelihood_slow_computations(
     r_min, r_max = res_kernel.r_min, res_kernel.r_max
     num_res = r_max + 1 - r_min
     assert num_configs > 0, "targets must not be empty"
+    compute_wtw = targets[0].shape[1] == 1
     # Compute Cholesky factor for largest target vector size
-    ydims = [len(yvec) for yvec in targets]
+    ydims = [y.shape[0] for y in targets]
     ydim_max = max(ydims)
     rvals = _colvec(anp.arange(r_min, r_min + ydim_max))
     means_all = _flatvec(res_kernel.mean_function(rvals))
@@ -320,7 +339,7 @@ def resource_kernel_likelihood_slow_computations(
     wtv_lst = []
     wtw_lst = []
     num_data = 0
-    for i, (yvec, ydim) in enumerate(zip(targets, ydims)):
+    for i, (ymat, ydim) in enumerate(zip(targets, ydims)):
         assert 0 < ydim <= num_res,\
             f"len(y[{i}]) = {ydim}, num_res = {num_res}"
         num_data += ydim
@@ -328,19 +347,21 @@ def resource_kernel_likelihood_slow_computations(
         rhs = anp.ones((ydim, 1))
         vvec = _flatvec(solve_triangular(lfact, rhs, lower=True))
         means = means_all[:ydim]
-        rhs = _colvec(anp.array(yvec) - means)
-        wvec = _flatvec(solve_triangular(lfact, rhs, lower=True))
+        rhs = ymat - _colvec(means)
+        wmat = solve_triangular(lfact, rhs, lower=True)
         vtv_lst.append(_squared_norm(vvec))
-        wtv_lst.append(_inner_product(wvec, vvec))
-        wtw_lst.append(_squared_norm(wvec))
+        wtv_lst.append(anp.matmul(_rowvec(vvec), wmat))
+        if compute_wtw:
+            wtw_lst.append(_squared_norm(wmat))
     # Compile results
     result = {
         'num_data': num_data,
         'vtv': anp.array(vtv_lst),
-        'wtv': anp.array(wtv_lst),
-        'wtw': anp.array(wtw_lst),
+        'wtv': anp.vstack(wtv_lst),
         'lfact_all': lfact_all,
         'ydims': ydims}
+    if compute_wtw:
+        result['wtw'] = anp.array(wtw_lst)
     if not skip_c_d:
         result['c'] = anp.zeros(num_configs)
         result['d'] = anp.zeros(num_configs)

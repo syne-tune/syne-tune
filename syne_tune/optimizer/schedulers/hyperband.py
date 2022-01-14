@@ -40,8 +40,8 @@ logger = logging.getLogger(__name__)
 
 _ARGUMENT_KEYS = {
     'resource_attr', 'grace_period', 'reduction_factor', 'brackets', 'type',
-    'searcher_data', 'do_snapshots', 'rung_system_per_bracket', 'rung_levels',
-    'rung_system_kwargs'}
+    'searcher_data', 'register_pending_myopic', 'do_snapshots',
+    'rung_system_per_bracket', 'rung_levels', 'rung_system_kwargs'}
 
 _DEFAULT_OPTIONS = {
     'resource_attr': 'epoch',
@@ -51,6 +51,7 @@ _DEFAULT_OPTIONS = {
     'brackets': 1,
     'type': 'stopping',
     'searcher_data': 'rungs',
+    'register_pending_myopic': False,
     'do_snapshots': False,
     'rung_system_per_bracket': True,
     'rung_system_kwargs': {
@@ -68,6 +69,7 @@ _CONSTRAINTS = {
     'brackets': Integer(1, None),
     'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha')),
     'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
+    'register_pending_myopic': Boolean(),
     'do_snapshots': Boolean(),
     'rung_system_per_bracket': Boolean(),
     'rung_system_kwargs': Dictionary(),
@@ -137,6 +139,29 @@ class HyperbandScheduler(FIFOScheduler):
     is resumed, it has to start from scratch. We detect this in
     `on_trial_result` and reset the cost offset to 0 (if the trial runs from
     scratch, the cost reported needs no offset added).
+
+    Pending evaluations:
+
+    The searcher is notified. by `searcher.register_pending` calls, of
+    (trial, resource) pairs for which evaluations are running, and a result
+    is expected in the future. These pending evaluations can be used by the
+    searcher in order to direct sampling elsewhere.
+    The choice of pending evaluations depends on `searcher_data`. If equal
+    to `'rungs'`, pending evaluations sit only at rung levels, because
+    observations are only used there. In the other cases, pending evaluations
+    sit at all resource levels for which observations are obtained. For
+    example, if a trial is at rung level `r` and continues towards the next
+    rung level `r_next`, if `searcher_data == 'rungs'`,
+    `searcher.register_pending` is called for `r_next` only, while for other
+    `searcher_data` values, pending evaluations are registered for
+    `r + 1, r + 2, ..., r_next`.
+    However, if in this case, `register_pending_myopic` is True, we instead
+    call `searcher.register_pending` for `r + 1` when each observation is
+    obtained (not just at a rung level). This leads to less pending
+    evaluations at any one time. On the other hand, when a trial is continued
+    at a rung level, we already know it will emit observations up to the next
+    rung level, so it seems more "correct" to register all these pending
+    evaluations in one go.
 
     Parameters
     ----------
@@ -231,6 +256,8 @@ class HyperbandScheduler(FIFOScheduler):
             recent result is used by the searcher. This is in between
         Note: For a Gaussian additive learning curve surrogate model, this
         has to be set to 'all'.
+    register_pending_myopic : bool
+        See above. Used only if `searcher_data != 'rungs'`.
     rung_system_per_bracket : bool
         This concerns Hyperband with brackets > 1. When starting a job for a
         new config, it is assigned a randomly sampled bracket. The larger the
@@ -351,6 +378,7 @@ class HyperbandScheduler(FIFOScheduler):
             rung_system_kwargs=self._rung_system_kwargs)
         self.do_snapshots = do_snapshots
         self.searcher_data = kwargs['searcher_data']
+        self._register_pending_myopic = kwargs['register_pending_myopic']
         # _active_trials:
         # Maintains a snapshot of currently active tasks (running or paused),
         # needed by several features (for example, searcher_data ==
@@ -436,8 +464,15 @@ class HyperbandScheduler(FIFOScheduler):
                 f"trial_id {trial_id} starts (first milestone = "
                 f"{first_milestone})")
         # Register pending evaluation with searcher
-        self.searcher.register_pending(
-            trial_id=trial_id, config=config, milestone=first_milestone)
+        if self.searcher_data == 'rungs':
+            pending_resources = [first_milestone]
+        elif self._register_pending_myopic:
+            pending_resources = [1]
+        else:
+            pending_resources = list(range(1, first_milestone + 1))
+        for resource in pending_resources:
+            self.searcher.register_pending(
+                trial_id=trial_id, config=config, milestone=resource)
         # Extra fields in `config`
         if debug_log is not None:
             # For log outputs:
@@ -499,11 +534,19 @@ class HyperbandScheduler(FIFOScheduler):
                 'reported_result': None,
                 'keep_case': False,
                 'running': True})
-            # Register pending evaluation with searcher
+            # Register pending evaluation(s) with searcher
             next_milestone = extra_kwargs['milestone']
             resume_from = extra_kwargs['resume_from']
-            self.searcher.register_pending(
-                trial_id=trial_id, milestone=next_milestone)
+            if self.searcher_data == 'rungs':
+                pending_resources = [next_milestone]
+            elif self._register_pending_myopic:
+                pending_resources = [resume_from + 1]
+            else:
+                pending_resources = list(range(resume_from + 1,
+                                               next_milestone + 1))
+            for resource in pending_resources:
+                self.searcher.register_pending(
+                    trial_id=trial_id, milestone=resource)
             if self.searcher.debug_log is not None:
                 logger.info(
                     f"trial_id {trial_id}: Promotion from "
@@ -581,18 +624,15 @@ class HyperbandScheduler(FIFOScheduler):
         """
         task_continues = task_info['task_continues']
         milestone_reached = task_info['milestone_reached']
+        next_milestone = task_info.get('next_milestone')
         do_update = False
+        pending_resources = []
         if self.searcher_data == 'rungs':
             if milestone_reached:
                 # Update searcher with intermediate result
-                self._update_searcher_internal(trial_id, config, result)
                 do_update = True
-                if task_continues:
-                    next_milestone = task_info.get('next_milestone')
-                    if next_milestone is not None:
-                        self.searcher.register_pending(
-                            trial_id=trial_id, config=config,
-                            milestone=next_milestone)
+                if task_continues and next_milestone is not None:
+                    pending_resources = [next_milestone]
         elif not task_info.get('ignore_data', False):
             # All results are reported to the searcher, except if
             # task_info['ignore_data'] is True. The latter happens only for
@@ -601,18 +641,24 @@ class HyperbandScheduler(FIFOScheduler):
             # be passed to the searcher (they'd duplicate earlier
             # datapoints).
             # See also header comment of PromotionRungSystem.
-            self._update_searcher_internal(trial_id, config, result)
             do_update = True
-            # Since all results are reported, the next report for this task
-            # will be for resource + 1.
-            # NOTE: This assumes that results are reported for all successive
-            # resource levels (int). If any resource level is skipped,
-            # there may be left-over pending candidates, which will be
-            # removed once the task finishes.
             if task_continues:
-                self.searcher.register_pending(
-                    trial_id=trial_id, config=config,
-                    milestone=int(result[self._resource_attr]) + 1)
+                resource = int(result[self._resource_attr])
+                if self._register_pending_myopic or next_milestone is None:
+                    pending_resources = [resource + 1]
+                elif milestone_reached:
+                    # Register pending evaluations for all resources up to
+                    # `next_milestone`
+                    pending_resources = list(range(resource + 1,
+                                                   next_milestone + 1))
+        # Update searcher
+        if do_update:
+            self._update_searcher_internal(trial_id, config, result)
+        # Register pending evaluations
+        for resource in pending_resources:
+            self.searcher.register_pending(
+                trial_id=trial_id, config=config,
+                milestone=resource)
         return do_update
 
     def _check_result(self, result: Dict):

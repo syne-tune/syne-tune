@@ -433,7 +433,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         search for `get_config`
     num_fantasy_samples : int
         Number of samples drawn for fantasizing (latent target values for
-        pending candidates)
+        pending evaluations)
+    no_fantasizing : bool
+        If True, fantasizing is not done and pending evaluations are ignored.
+        This may lead to loss of diversity in decisions
     initial_scoring : str
         Scoring function to rank initial candidates (local optimization of EI
         is started from top scorer). Values are 'thompson_indep' (independent

@@ -173,14 +173,20 @@ def _create_gp_additive_model(
             normalize_inputs=kwargs.get('expdecay_normalize_inputs', False))
     use_precomputations = kwargs.get('use_new_code', True)
     gpmodel = GaussianProcessLearningCurveModel(
-        kernel=result['kernel'], res_model=res_model, mean=result['mean'],
+        kernel=result['kernel'],
+        res_model=res_model,
+        mean=result['mean'],
         optimization_config=result['optimization_config'],
-        random_seed=random_seed, fit_reset_params=not result['opt_warmstart'],
+        random_seed=random_seed,
+        fit_reset_params=not result['opt_warmstart'],
         use_precomputations=use_precomputations)
     filter_observed_data = result['filter_observed_data']
+    no_fantasizing = kwargs.get('no_fantasizing', False)
+    num_fantasy_samples = 0 if no_fantasizing else kwargs['num_fantasy_samples']
     model_factory = GaussProcAdditiveModelFactory(
-        active_metric=active_metric,
         gpmodel=gpmodel,
+        num_fantasy_samples=num_fantasy_samples,
+        active_metric=active_metric,
         configspace_ext=configspace_ext,
         profiler=result['profiler'],
         debug_log=result['debug_log'],
