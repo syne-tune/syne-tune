@@ -15,7 +15,7 @@ DistilBERT fine-tuned on IMDB sentiment classification task
 """
 from pathlib import Path
 
-from examples.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
+from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
     METRIC_ACCURACY, RESOURCE_ATTR, _config_space
 
 
