@@ -16,7 +16,11 @@ experimental. Here is an incomplete overview:
   which can be seen as "outer loop random search". Syne Tune offers facilities to
   launch many tuning experiments in parallel, as SageMaker training jobs. See
   [README.md](../../../README.md#launching-a-tuning-job) and
-  [launch_height_sagemaker_remotely.py](../../../examples/launch_height_sagemaker_remotely.py).
+  [launch_height_sagemaker_remotely.py](../../../examples/launch_height_sagemaker_remotely.py)
+  for one variant, and
+  [benchmarks/benchmark_loop/README.md](../../../benchmarks/benchmark_loop/README.md)
+  for another. The latter allows to run several tuning experiments sequentially
+  on the same remote instance.
 * **Command line launcher**: Once you get used to running many experiments in
   parallel, you will appreciate starting them from the command line. To do so,
   you need to

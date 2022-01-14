@@ -71,7 +71,7 @@ Syne Tune.
 Once a training script supports checkpointing, the promotion variant of ASHA
 MOBSTER are obtained by selecting `type='promotion'`, see
 [launch_asha_promotion.py](scripts/launch_asha_promotion.py) and
-[launch_mobster_promotion/py](scripts/launch_mobster_promotion.py).
+[launch_mobster_promotion.py](scripts/launch_mobster_promotion.py).
 * Recall that the argument `max_resource_attr` for `HyperbandScheduler` allows
   the scheduler to infer the maximum resource level `r_max`. For
   promotion-based scheduling, this argument has a second function (and it is

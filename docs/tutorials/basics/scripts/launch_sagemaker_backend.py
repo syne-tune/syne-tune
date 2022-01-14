@@ -71,9 +71,6 @@ if __name__ == '__main__':
     # Scheduler:
     # 'HyperbandScheduler' runs asynchronous successive halving, or Hyperband.
     # It starts a trial whenever a worker is free.
-    # The 'promotion' variant pauses each trial at certain resource levels
-    # (called rungs). Trials which outperform others at the same rung, are
-    # promoted later on, to run to the next higher rung.
     # We configure this scheduler with Bayesian optimization: configurations
     # for new trials are selected by optimizing an acquisition function based
     # on a Gaussian process surrogate model. The latter models learning curves
@@ -86,7 +83,7 @@ if __name__ == '__main__':
     }
     scheduler = HyperbandScheduler(
         config_space,
-        type='promotion',
+        type='stopping',
         searcher=searcher,
         search_options=search_options,
         grace_period=1,

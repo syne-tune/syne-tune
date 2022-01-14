@@ -38,7 +38,7 @@ and install Syne Tune there.
 If you are used to the SageMaker Python API, and in particular to SageMaker
 estimators, the following will come natural.
 [launch_sagemaker_backend.py](scripts/launch_sagemaker_backend.py) is a
-launcher script for MOBSTER (promotion-type), using the SageMaker instead of
+launcher script for MOBSTER (stopping-type), using the SageMaker instead of
 the local back-end.
 * [1] The only difference is that `backend`, feeding into the `Tuner`, is
   different. Instead of the code `entry_point` only, you need to specify a
@@ -82,17 +82,6 @@ However, for early stopping schedulers like `HyperbandScheduler`, most trials
 do not run for long, but are stopped or paused after one or a few epochs. For such
 algorithms start-up overheads can matter a lot more. On the other hand, they 
 also profit from increased parallelization.
-
-SageMaker training jobs are not only slow to start, but also have quite some
-overhead for getting stopped. Therefore, if you use ASHA or MOBSTER with the
-SageMaker back-end, we recommend you use `type='promotion'` and specify
-`max_resource_attr` when creating `HyperbandScheduler`. As explained in the
-[previous section](basics_promotion.md#launcher-script-for-promotion-based-asha-and-mobster),
-this lets training jobs terminate on their own. Since the back-end does not
-have to stop them, the SageMaker stopping delay does not matter.
-
-ATTENTION: Right now, checkpointing is not properly supported with the
-SageMaker back-end!
 
 
 In the [final section](basics_outlook.md), we provide an outlook to further
