@@ -25,9 +25,12 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.iss
     import issm_likelihood_slow_computations, posterior_computations, \
     predict_posterior_marginals, sample_posterior_marginals, \
     _inner_product, issm_likelihood_computations, \
-    issm_likelihood_precomputations
+    issm_likelihood_precomputations, _rowvec, update_posterior_state, \
+    update_posterior_pvec, _flatvec, _colvec
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
     import sample_posterior_joint as sample_posterior_joint_issm
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
+    import sample_posterior_joint as sample_posterior_joint_expdecay
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.model_params \
     import ISSModelParameters
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
@@ -35,12 +38,15 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.fre
     ExponentialDecayBaseKernelFunction, logdet_cholfact_cov_resource, \
     resource_kernel_likelihood_computations, \
     resource_kernel_likelihood_precomputations
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
-    import sample_posterior_joint as sample_posterior_joint_expdecay
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
+    import Configuration
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['GaussProcISSMPosteriorState']
+__all__ = ['GaussProcAdditivePosteriorState',
+           'IncrementalUpdateGPAdditivePosteriorState',
+           'GaussProcISSMPosteriorState',
+           'GaussProcExpDecayPosteriorState']
 
 
 class GaussProcAdditivePosteriorState(object):
@@ -56,8 +62,8 @@ class GaussProcAdditivePosteriorState(object):
     """
 
     def __init__(
-            self, data: Dict, mean: MeanFunction, kernel: KernelFunction,
-            noise_variance, **kwargs):
+            self, data: Optional[Dict], mean: MeanFunction,
+            kernel: KernelFunction, noise_variance, **kwargs):
         """
         `data` contains input points and targets, as obtained from
         `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
@@ -69,16 +75,27 @@ class GaussProcAdditivePosteriorState(object):
         """
         self.mean = mean
         self.kernel = kernel
-        self.r_min = data['r_min']
-        self.r_max = data['r_max']
-        # Compute posterior state
+        self.noise_variance = noise_variance
         self.poster_state = None
-        self._compute_posterior_state(data, noise_variance, **kwargs)
+        if data is not None:
+            self.r_min = data['r_min']
+            self.r_max = data['r_max']
+            # Compute posterior state
+            self._compute_posterior_state(data, noise_variance, **kwargs)
+        else:
+            # Copy constructor, used by `IncrementalUpdateGPISSMPosteriorState`
+            # subclass
+            self.poster_state = kwargs['poster_state']
+            self.r_min = kwargs['r_min']
+            self.r_max = kwargs['r_max']
 
-    def _compute_posterior_state(self, data: Dict, noise_variance, **kwargs):
+    def _compute_posterior_state(
+            self, data: Dict, noise_variance, **kwargs):
         raise NotImplementedError()
 
     def neg_log_likelihood(self):
+        assert 'criterion' in self.poster_state, \
+            "neg_log_likelihood not defined for fantasizing posterior state"
         return self.poster_state['criterion']
 
     def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -103,6 +120,7 @@ class GaussProcAdditivePosteriorState(object):
 
         :param test_features: Input points for test configs
         :param num_samples: Number of samples
+        :param random_state: PRNG
         :return: Marginal samples, (num_test, num_samples)
         """
         if random_state is None:
@@ -170,8 +188,149 @@ class GaussProcAdditivePosteriorState(object):
         """
         raise NotImplementedError()
 
+    def has_precomputations(self, data: Dict) -> bool:
+        raise NotImplementedError()
 
-class GaussProcISSMPosteriorState(GaussProcAdditivePosteriorState):
+
+class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState):
+    """
+    Extension of :class:`GaussProcAdditivePosteriorState` which allows for
+    incremental updating (single config added to the dataset).
+    This is required for simulation-based scoring, and for support of
+    fantasizing.
+
+    """
+    def __init__(
+            self, data: Optional[Dict], mean: MeanFunction,
+            kernel: KernelFunction, noise_variance, **kwargs):
+        super().__init__(
+            data, mean, kernel, noise_variance, **kwargs)
+
+    def _prepare_update(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> Tuple[float, float, float]:
+        """
+        Helper method for `update`. Returns new entries for d, s, r2 vectors.
+
+        :param config: See `update`
+        :param feature: See `update`
+        :param targets: See `update`
+        :return: (d_new, s_new, r2_new)
+        """
+        raise NotImplementedError()
+
+    def _update_internal(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> Dict:
+        """
+        Update posterior state, given a single new datapoint. `config`,
+        `feature`, `targets` are like one entry of `data`.
+        The method returns a new object with the updated state
+
+        :param config: See above
+        :param feature: See above
+        :param targets: See above
+        :return: Arguments to create new posterior state
+        """
+        # Update posterior state
+        feature = _rowvec(feature, _np=np)
+        d_new, s_new, r2_new = self._prepare_update(config, feature, targets)
+        new_poster_state = update_posterior_state(
+            self.poster_state, self.kernel, feature, d_new, s_new, r2_new)
+        # Return args to create new object by way of "copy constructor"
+        return dict(
+            data=None,
+            mean=self.mean,
+            kernel=self.kernel,
+            noise_variance=self.noise_variance,
+            poster_state=new_poster_state,
+            r_min=self.r_min, r_max=self.r_max)
+
+    def update(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> 'IncrementalUpdateGPAdditivePosteriorState':
+        raise NotImplementedError()
+
+    def update_pvec(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> np.ndarray:
+        """
+        Part of `update`: Only update prediction vector p. This cannot be used
+        to update p for several new datapoints.
+
+        :param config:
+        :param feature:
+        :param targets:
+        :return: New p vector
+        """
+        feature = _rowvec(feature, _np=np)
+        d_new, s_new, r2_new = self._prepare_update(config, feature, targets)
+        return update_posterior_pvec(
+            self.poster_state, self.kernel, feature, d_new, s_new, r2_new)
+
+    def _sample_posterior_joint_for_config(
+            self, poster_state, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray, random_state: RandomState) -> np.ndarray:
+        data = {'features': [feature],
+                'targets': [targets],
+                'configs': [config]}
+        results = self.sample_curves(data, num_samples=1)
+        return results[0]['y']
+
+    def sample_and_update_for_pending(
+            self, data_pending: Dict, sample_all_nonobserved: bool = False,
+            random_state: Optional[RandomState] = None) \
+            -> (List[np.ndarray], 'IncrementalUpdateGPAdditivePosteriorState'):
+        """
+        This function is needed for sampling fantasy targets, and also to
+        support simulation-based scoring.
+
+        `issm.prepare_data_with_pending` creates two data dicts `data_nopending`,
+        `data_pending`, the first for configs with observed data, but no
+        pending evals, the second for configs with pending evals.
+        You create the state with `data_nopending`, then call this method with
+        `data_pending`.
+
+        This method is iterating over configs (or trials) in `data_pending`.
+        For each config, it draws a joint sample from some non-observed
+        targets, then updates the state conditioned on observed and sampled
+        targets (by calling `update`). If `sample_all_nonobserved` is False,
+        the number of targets sampled is the entry in
+        `data_pending['num_pending']`. Otherwise, targets are sampled for all
+        non-observed positions.
+
+        The method returns the list of sampled target vectors, and the state
+        at the end (like `update` does as well).
+
+        :param data_pending: See above
+        :param sample_all_nonobserved: See above
+        :param random_state: PRNG
+        :return: pending_targets, final_state
+        """
+        if random_state is None:
+            random_state = np.random
+        curr_poster_state = self.poster_state
+        targets_lst = []
+        final_state = self
+        for config, feature, targets, num_pending in zip(
+                data_pending['configs'], data_pending['features'],
+                data_pending['targets'], data_pending['num_pending']):
+            # Draw joint sample
+            fantasies = _flatvec(self._sample_posterior_joint_for_config(
+                curr_poster_state, config, feature, targets, random_state),
+                _np=np)
+            if not sample_all_nonobserved:
+                fantasies = fantasies[:num_pending]
+            fantasies = _colvec(fantasies, _np=np)
+            targets_lst.append(fantasies)
+            # Update state
+            full_targets = np.vstack((targets, fantasies))
+            final_state = self.update(config, feature, full_targets)
+            curr_poster_state = final_state.poster_state
+        return targets_lst, final_state
+
+
+class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
     """
     Represent posterior state for joint Gaussian model of learning curves over
     a number of configurations. The model is the sum of a Gaussian process
@@ -181,8 +340,9 @@ class GaussProcISSMPosteriorState(GaussProcAdditivePosteriorState):
 
     """
     def __init__(
-            self, data: Dict, mean: MeanFunction, kernel: KernelFunction,
-            iss_model: ISSModelParameters, noise_variance, **kwargs):
+            self, data: Optional[Dict], mean: MeanFunction,
+            kernel: KernelFunction, iss_model: ISSModelParameters,
+            noise_variance, **kwargs):
         """
         `data` contains input points and targets, as obtained from
         `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
@@ -193,33 +353,37 @@ class GaussProcISSMPosteriorState(GaussProcAdditivePosteriorState):
         :param iss_model: ISS model
         :param noise_variance: Innovation and noise variance
         """
-        super().__init__(data, mean, kernel, noise_variance=noise_variance,
-                         iss_model=iss_model, **kwargs)
+        self.iss_model = iss_model
+        super().__init__(
+            data, mean, kernel, noise_variance=noise_variance, **kwargs)
 
-    @staticmethod
-    def _has_precomputations(data: Dict) -> bool:
+    def has_precomputations(self, data: Dict) -> bool:
         return all(k in data for k in ('ydims', 'num_configs', 'deltay', 'logr'))
 
-    # TODO: Once unit tests confirm the equivalence of the two ways, remove
-    # the slow one here and require precomputations to be part of `data`
-    def _compute_posterior_state(self, data: Dict, noise_variance, **kwargs):
+    def _compute_posterior_state(
+            self, data: Dict, noise_variance, **kwargs):
         profiler = kwargs.get('profiler')
         # Compute posterior state
-        self.iss_model = kwargs['iss_model']
         issm_params = self.iss_model.get_issm_params(data['configs'])
-        if self._has_precomputations(data):
+        if self.has_precomputations(data):
             issm_likelihood = issm_likelihood_computations(
-                precomputed=data, issm_params=issm_params, r_min=self.r_min,
-                r_max=self.r_max, profiler=profiler)
+                precomputed=data,
+                issm_params=issm_params,
+                r_min=self.r_min, r_max=self.r_max,
+                profiler=profiler)
         else:
             issm_likelihood = issm_likelihood_slow_computations(
-                targets=data['targets'], issm_params=issm_params,
-                r_min=self.r_min, r_max=self.r_max, profiler=profiler)
+                targets=data['targets'],
+                issm_params=issm_params,
+                r_min=self.r_min, r_max=self.r_max,
+                profiler=profiler)
         if profiler is not None:
             profiler.start('poster_comp')
         self.poster_state = posterior_computations(
-            data['features'], self.mean, self.kernel, issm_likelihood,
-            noise_variance)
+            features=data['features'],
+            mean=self.mean, kernel=self.kernel,
+            issm_likelihood=issm_likelihood,
+            noise_variance=noise_variance)
         if profiler is not None:
             profiler.stop('poster_comp')
 
@@ -234,11 +398,11 @@ class GaussProcISSMPosteriorState(GaussProcAdditivePosteriorState):
             random_state: Optional[RandomState] = None) -> List[Dict]:
         if random_state is None:
             random_state = np.random
-        result = []
+        results = []
         for feature, targets, config in zip(
                 data['features'], data['targets'], data['configs']):
             issm_params = self.iss_model.get_issm_params([config])
-            result.append(sample_posterior_joint_issm(
+            results.append(sample_posterior_joint_issm(
                 poster_state=self.poster_state,
                 mean=self.mean,
                 kernel=self.kernel,
@@ -248,10 +412,34 @@ class GaussProcISSMPosteriorState(GaussProcAdditivePosteriorState):
                 r_min=self.r_min, r_max=self.r_max,
                 random_state=random_state,
                 num_samples=num_samples))
-        return result
+        return results
+
+    def _prepare_update(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> Tuple[float, float, float]:
+        issm_params = self.iss_model.get_issm_params([config])
+        issm_likelihood = issm_likelihood_slow_computations(
+            targets=[_colvec(targets, _np=np)],
+            issm_params=issm_params,
+            r_min=self.r_min, r_max=self.r_max)
+        d_new = issm_likelihood['d'].item()
+        vtv = issm_likelihood['vtv'].item()
+        wtv = issm_likelihood['wtv'].item()
+        s_sq = vtv / self.noise_variance
+        s_new = np.sqrt(s_sq)
+        muhat = _flatvec(self.mean(feature)).item() - issm_likelihood['c'].item()
+        r2_new = wtv / self.noise_variance - s_sq * muhat
+        return d_new, s_new, r2_new
+
+    def update(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> 'IncrementalUpdateGPAdditivePosteriorState':
+        create_kwargs = self._update_internal(config, feature, targets)
+        return GaussProcISSMPosteriorState(
+            **create_kwargs, iss_model=self.iss_model)
 
 
-class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
+class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
     """
     Represent posterior state for joint Gaussian model of learning curves over
     a number of configurations. The model is the sum of a Gaussian process
@@ -264,12 +452,13 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
 
     """
     def __init__(
-            self, data: Dict, mean: MeanFunction, kernel: KernelFunction,
+            self, data: Optional[Dict], mean: MeanFunction,
+            kernel: KernelFunction,
             res_kernel: ExponentialDecayBaseKernelFunction, noise_variance,
             allow_sample_curves: bool = True, **kwargs):
         """
         `data` contains input points and targets, as obtained from
-        `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
+        `issm.prepare_data`.
 
         :param data: Input points and targets
         :param mean: Mean function m(X)
@@ -281,39 +470,41 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
             called, but posterior state may be a bit faster to compute. Use
             this during the fitting of the surrogate model
         """
-        super().__init__(data, mean, kernel, noise_variance=noise_variance,
-                         res_kernel=res_kernel,
-                         allow_sample_curves=allow_sample_curves, **kwargs)
+        self.res_kernel = res_kernel
+        super().__init__(
+            data, mean, kernel, noise_variance=noise_variance,
+            allow_sample_curves=allow_sample_curves, **kwargs)
 
-    @staticmethod
-    def _has_precomputations(data: Dict) -> bool:
+    def has_precomputations(self, data: Dict) -> bool:
         return all(k in data for k in ('ydims', 'num_configs', 'yflat'))
 
-    # TODO: Once unit tests confirm the equivalence of the two ways, remove
-    # the slow one here and require precomputations to be part of `data`
-    def _compute_posterior_state(self, data: Dict, noise_variance, **kwargs):
+    def _compute_posterior_state(
+            self, data: Dict, noise_variance, **kwargs):
         profiler = kwargs.get('profiler')
         allow_sample_curves = kwargs.get('allow_sample_curves', True)
         # Compute posterior state
-        self.res_kernel = kwargs['res_kernel']
         if profiler is not None:
             profiler.start('likelihood')
-        if self._has_precomputations(data):
+        if self.has_precomputations(data):
             issm_likelihood = resource_kernel_likelihood_computations(
-                precomputed=data, res_kernel=self.res_kernel,
+                precomputed=data,
+                res_kernel=self.res_kernel,
                 noise_variance=noise_variance,
                 cholfact_max_size=allow_sample_curves)
         else:
             issm_likelihood = resource_kernel_likelihood_slow_computations(
-                targets=data['targets'], res_kernel=self.res_kernel,
+                targets=data['targets'],
+                res_kernel=self.res_kernel,
                 noise_variance=noise_variance,
                 cholfact_max_size=allow_sample_curves)
         if profiler is not None:
             profiler.stop('likelihood')
             profiler.start('poster_comp')
         self.poster_state = posterior_computations(
-            data['features'], self.mean, self.kernel, issm_likelihood,
-            noise_variance)
+            features=data['features'],
+            mean=self.mean, kernel=self.kernel,
+            issm_likelihood=issm_likelihood,
+            noise_variance=noise_variance)
         if profiler is not None:
             profiler.stop('poster_comp')
         # Add missing term to criterion value
@@ -355,9 +546,9 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
         lfact_all = self.poster_state['lfact_all']
         means_all = self.poster_state['means_all']
         noise_variance = self.poster_state['noise_variance']
-        result = []
+        results = []
         for feature, targets in zip(data['features'], data['targets']):
-            result.append(sample_posterior_joint_expdecay(
+            results.append(sample_posterior_joint_expdecay(
                 poster_state=self.poster_state,
                 mean=self.mean,
                 kernel=self.kernel,
@@ -369,4 +560,26 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
                 means_all=means_all,
                 random_state=random_state,
                 num_samples=num_samples))
-        return result
+        return results
+
+    def _prepare_update(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> Tuple[float, float, float]:
+        issm_likelihood = resource_kernel_likelihood_slow_computations(
+            targets=[_colvec(targets, _np=np)],
+            res_kernel=self.res_kernel,
+            noise_variance=self.noise_variance)
+        vtv = issm_likelihood['vtv'].item()
+        wtv = issm_likelihood['wtv'].item()
+        s_sq = vtv / self.noise_variance
+        s_new = np.sqrt(s_sq)
+        muhat = _flatvec(self.mean(feature)).item()
+        r2_new = wtv / self.noise_variance - s_sq * muhat
+        return 0.0, s_new, r2_new
+
+    def update(
+            self, config: Configuration, feature: np.ndarray,
+            targets: np.ndarray) -> 'IncrementalUpdateGPAdditivePosteriorState':
+        create_kwargs = self._update_internal(config, feature, targets)
+        return GaussProcExpDecayPosteriorState(
+            **create_kwargs, res_kernel=self.res_kernel)

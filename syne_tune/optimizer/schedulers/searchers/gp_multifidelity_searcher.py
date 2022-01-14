@@ -100,6 +100,8 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         See :class:`GPFIFOSearcher`
     num_fantasy_samples : int
         See :class:`GPFIFOSearcher`
+    no_fantasizing : bool
+        See :class:`GPFIFOSearcher`
     initial_scoring : str
         See :class:`GPFIFOSearcher`
     opt_nstarts : int

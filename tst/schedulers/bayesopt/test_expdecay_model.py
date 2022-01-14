@@ -215,28 +215,67 @@ def test_compare_gped_likelihood_oldnew(_model_params, _state):
 
     gped_model_factory = []  # new, old
     model_params = json.loads(_model_params)
-    gped_objs = build_gped_model_factory(config_space, model_params)
+    kwargs = dict(no_fantasizing=True)
+    gped_objs = build_gped_model_factory(
+        config_space, model_params, **kwargs)
     configspace_ext = gped_objs['configspace_ext']
     gped_model_factory.append(gped_objs['model_factory'])
     gped_model_factory.append(build_gped_model_factory(
-        config_space, model_params, use_new_code=False)['model_factory'])
-
+        config_space, model_params, use_new_code=False,
+        **kwargs)['model_factory'])
     state = decode_state_from_old_encoding(
         enc_state=json.loads(_state), hp_ranges=configspace_ext.hp_ranges_ext)
-    if state.pending_evaluations:
-        # Remove pending evaluations
-        state = TuningJobState(
-            hp_ranges=state.hp_ranges,
-            config_for_trial=state.config_for_trial,
-            trials_evaluations=state.trials_evaluations,
-            failed_trials=state.failed_trials,
-            pending_evaluations=[])
 
     # Compare likelihoods
     likelihood = [
-        factory.model(state, fit_params=False).posterior_states[0].poster_state['likelihood']
+        factory.model(
+            state,
+            fit_params=False).posterior_states[0].poster_state['likelihood']
         for factory in gped_model_factory]
-    for name in likelihood[0].keys():
+    for name, value in likelihood[0].items():
         if name != 'num_data':
-            np.testing.assert_almost_equal(
-                likelihood[0][name], likelihood[1][name])
+            np.testing.assert_almost_equal(value, likelihood[1][name])
+
+
+@pytest.mark.skip("Need joint sampling for gp_expdecay model (PR #74)")
+@pytest.mark.parametrize(
+    "_model_params, _state", zip(_model_params, _state))
+def test_compare_gped_likelihood_fantasizing_oldnew(_model_params, _state):
+    config_space = {
+        'n_units_1': randint(4, 1024),
+        'n_units_2': randint(4, 1024),
+        'batch_size': randint(8, 128),
+        'dropout_1': uniform(0, 0.99),
+        'dropout_2': uniform(0, 0.99),
+        'learning_rate': loguniform(1e-6, 1),
+        'wd': loguniform(1e-8, 1),
+        'epochs': 81,
+    }
+    num_fantasy_samples = 10
+
+    gped_model_factory = []  # new, old
+    model_params = json.loads(_model_params)
+    kwargs = dict(
+        num_fantasy_samples=num_fantasy_samples,
+        no_fantasizing=False)
+    gped_objs = build_gped_model_factory(
+        config_space, model_params, **kwargs)
+    configspace_ext = gped_objs['configspace_ext']
+    gped_model_factory.append(gped_objs['model_factory'])
+    gped_model_factory.append(build_gped_model_factory(
+        config_space, model_params, use_new_code=False,
+        **kwargs)['model_factory'])
+    state = decode_state_from_old_encoding(
+        enc_state=json.loads(_state), hp_ranges=configspace_ext.hp_ranges_ext)
+
+    # Compare likelihoods
+    # We need to force them to use the same fantasy samples
+    gped_model1 = gped_model_factory[0].model(state, fit_params=False)
+    likelihood = [gped_model1.posterior_states[0].poster_state['likelihood']]
+    gped_model2 = gped_model_factory[1].model_for_fantasy_samples(
+        state, fantasy_samples=gped_model1.fantasy_samples)
+    likelihood.append(
+        gped_model2.posterior_states[0].poster_state['likelihood'])
+    for name, value in likelihood[0].items():
+        if name != 'num_data':
+            np.testing.assert_almost_equal(value, likelihood[1][name])

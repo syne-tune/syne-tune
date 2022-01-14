@@ -18,7 +18,7 @@ from typing import Optional, List, Dict
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.likelihood \
     import MarginalLikelihood, LCModel
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.posterior_state \
-    import GaussProcAdditivePosteriorState
+    import IncrementalUpdateGPAdditivePosteriorState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import OptimizationConfig, DEFAULT_OPTIMIZATION_CONFIG
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
@@ -98,10 +98,15 @@ class GaussianProcessLearningCurveModel(object):
         self.reset_params()
 
     @property
-    def states(self) -> Optional[List[GaussProcAdditivePosteriorState]]:
+    def states(self) -> Optional[List[IncrementalUpdateGPAdditivePosteriorState]]:
         return self._states
 
-    def _debug_log_histogram(self, data: Dict):
+    @property
+    def random_state(self) -> np.random.RandomState:
+        return self._random_state
+
+    @staticmethod
+    def _debug_log_histogram(data: Dict):
         from collections import Counter
 
         histogram = Counter(len(y) for y in data['targets'])
@@ -121,6 +126,10 @@ class GaussianProcessLearningCurveModel(object):
         :param data: Input points (features, configs), targets. May also have
             to contain precomputed values
         """
+        assert not data['do_fantasizing'], \
+            "data must not be for fantasizing. Call prepare_data with " +\
+            "do_fantasizing=False"
+        self._data_precomputations(data)
         if self.fit_reset_params:
             self.reset_params()
         if profiler is not None:
@@ -174,6 +183,7 @@ class GaussianProcessLearningCurveModel(object):
         self._recompute_states(data)
 
     def _recompute_states(self, data: Dict):
+        self._data_precomputations(data)
         self._states = [self.likelihood.get_posterior_state(data)]
 
     def predict(self, features_test):
@@ -219,7 +229,7 @@ class GaussianProcessLearningCurveModel(object):
         self.likelihood.initialize(
             init=self._random_state.uniform, force_reinit=True)
 
-    def data_precomputations(self, data: Dict):
+    def _data_precomputations(self, data: Dict):
         """
         For some `res_model` types, precomputations on top of `data` are
         needed. This is done here, and the precomputed variables are appended
@@ -227,5 +237,7 @@ class GaussianProcessLearningCurveModel(object):
 
         :param data:
         """
-        if self._use_precomputations:
+        if self._use_precomputations and (
+                self._states is None
+                or not self._states[0].has_precomputations(data)):
             self.likelihood.data_precomputations(data)
