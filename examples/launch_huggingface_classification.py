@@ -25,7 +25,7 @@ from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
 
-from examples.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
+from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
     distilbert_imdb_benchmark, distilbert_imdb_default_params
 
 
