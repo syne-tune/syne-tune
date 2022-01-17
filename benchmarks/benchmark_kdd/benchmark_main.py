@@ -1,18 +1,38 @@
+from typing import Dict
+
 import numpy as np
 import itertools
 import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
+from blackbox_repository import load
 from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
-from benchmarks.benchmark_kdd.baselines import methods
+from benchmarks.benchmark_kdd.baselines import methods, MethodArguments
 from benchmarks.benchmark_kdd.benchmark_definitions import benchmark_definitions
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from coolname import generate_slug
 
+
+def get_transfer_learning_evaluations(blackbox_name: str, test_task: str) -> Dict:
+    task_to_evaluations = load(blackbox_name)
+
+    # todo retrieve right metric
+    metric_index = 0
+    transfer_learning_evaluations = {
+        task: TransferLearningTaskEvaluations(
+            hyperparameters=bb.hyperparameters,
+            # average over seed, take last fidelity and pick only first metric
+            metrics=bb.objectives_evaluations.mean(axis=1)[:, -1, metric_index:metric_index + 1]
+        )
+        for task, bb in task_to_evaluations.items()
+        if task != test_task
+    }
+    return transfer_learning_evaluations
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -48,14 +68,19 @@ if __name__ == '__main__':
 
         max_t = max(backend.blackbox.fidelity_values)
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
-        scheduler = methods[method](
+
+        scheduler = methods[method](MethodArguments(
             config_space=backend.blackbox.configuration_space,
             metric=benchmark.metric,
             mode=benchmark.mode,
             random_seed=seed,
             max_t=max_t,
             resource_attr=resource_attr,
-        )
+            transfer_learning_evaluations=get_transfer_learning_evaluations(
+                blackbox_name=benchmark.blackbox_name,
+                test_task=benchmark.dataset_name,
+            ),
+        ))
 
         stop_criterion = StoppingCriterion(max_wallclock_time=benchmark.max_wallclock_time)
 

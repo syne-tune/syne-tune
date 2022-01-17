@@ -272,7 +272,7 @@ class HyperparameterRangeCategorical(HyperparameterRange):
         self._assert_choices(choices)
         self.choices = list(choices)
         self.num_choices = len(self.choices)
-        assert self.num_choices > 1
+        assert self.num_choices >= 1
         if active_choices is None:
             self._ndarray_bounds = [(0.0, 1.0)] * self.num_choices
         else:

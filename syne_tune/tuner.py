@@ -175,6 +175,9 @@ class Tuner:
                 for callback in self.callbacks:
                     callback.on_loop_end()
 
+        except StopIteration:
+            logger.info("Tuning is finishing as the whole search space got exhausted.")
+            pass
         finally:
             # graceful termination block called when the tuner reached its stop condition, when an error happened or
             # when the job got interrupted (can happen in spot-instances or when sending a SIGINT signal with ctrl+C).

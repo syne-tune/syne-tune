@@ -24,4 +24,7 @@ class TransferLearningScheduler(TrialScheduler):
             for key in config_space.keys():
                 assert key in evals.hyperparameters.columns
             assert len(metric_names) == evals.metrics.shape[1]
-        self.metric_names = metric_names
+        self._metric_names = metric_names
+
+    def metric_names(self) -> List[str]:
+        return self._metric_names
