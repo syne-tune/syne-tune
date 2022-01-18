@@ -1,23 +1,16 @@
 import logging
 from typing import Optional, List, Tuple, Dict
 import numpy as np
+from sklearn.neighbors import KNeighborsRegressor
 
 from blackbox_repository import load
+from blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.transfer_learning.quantile_based.normalization_transforms import from_string
 from syne_tune.optimizer.transfer_learning.quantile_based.prior.xgboost_prior import XGBoostPrior
+import pandas as pd
 
-"""
-class TransferLearningScheduler(TrialScheduler):
-    def __init__(
-            self,
-            config_space: Dict,
-            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            metric_names: List[str],
-    ):
-
-"""
 class TS(BaseSearcher):
 
     def __init__(
@@ -29,23 +22,19 @@ class TS(BaseSearcher):
             normalization: str = "standard",
             prior: str = "xgboost",
     ):
-
-
-
-        X_train = np.concatenate([X for X, y, _ in evaluations_other_tasks], axis=0)
-        normalizer = from_string(normalization)
-        z_train = np.concatenate([normalizer(y).transform(y) for X, y, _ in evaluations_other_tasks], axis=0)
-
-        prior_dict = {
-            "xgboost": XGBoostPrior,
-        }
-
-        logging.info(f"fit prior {prior}")
-        self.prior = prior_dict[prior](
-            X_train=X_train,
-            y_train=z_train,
+        # TODO option to pick only last fidelity
+        self.model_pipeline = BlackboxSurrogate.make_model_pipeline(
+            configuration_space=config_space,
+            fidelity_space={},
+            model=KNeighborsRegressor(n_neighbors=1),
         )
-        logging.info("prior fitted")
+        X_train = pd.concat([evals.hyperparameters for evals in transfer_learning_evaluations.values()])
+        normalizer = from_string(normalization)
+        z_train = np.concatenate([
+            normalizer(evals.metrics).transform(evals.metrics)
+            for evals in transfer_learning_evaluations.values()
+        ], axis=0)
+        self.model_pipeline.fit(X_train, z_train)
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
         pass
@@ -68,16 +57,19 @@ class TS(BaseSearcher):
         # TODO sample N candidates
         # TODO sample TS values
         # TODO return first
+        n = 100
+        candidates = pd.DataFrame([
+            self._sample()
+            _ for _ in range(n)
+        ])
         return {}
 
-    def draw_random_candidates(self, num_random_candidates: int):
-        random_sampler = RS(
-            input_dim=self.input_dim,
-            output_dim=self.output_dim,
-            bounds=self.bounds,
-        )
-        candidates = np.stack([random_sampler.sample() for _ in range(num_random_candidates)])
-        return candidates
+    def _sample(self):
+        return {
+            k: v.sample() if hasattr(v, "sample") else v
+            for k, v in self.config_space.items()
+        }
+
 
 
 if __name__ == '__main__':
@@ -103,3 +95,5 @@ if __name__ == '__main__':
         metric=bb_dict[test_task].objectives_names[metric_index],
         transfer_learning_evaluations=transfer_learning_evaluations,
     )
+
+    print(bb_sch.get_config())

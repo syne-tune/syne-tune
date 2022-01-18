@@ -67,35 +67,24 @@ class BlackboxSurrogate(Blackbox):
     def fidelity_values(self) -> np.array:
         return self._fidelity_values
 
-    def fit_surrogate(self, surrogate=KNeighborsRegressor(n_neighbors=1)) -> Blackbox:
-        """
-        Fits a surrogate model to a blackbox.
-        :param surrogate: fits the model and apply the model transformation when evaluating a
-        blackbox configuration. Possible example: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator
-        obeying Scikit-learn API.
-        """
-        self.surrogate = surrogate
-
+    @staticmethod
+    def make_model_pipeline(configuration_space, fidelity_space, model):
         # gets hyperparameters types, categorical for CategoricalHyperparameter, numeric for everything else
         numeric = []
         categorical = []
 
-        if self.fidelity_space is not None:
+        if fidelity_space is not None:
             surrogate_hps = dict()
-            surrogate_hps.update(self.configuration_space)
-            surrogate_hps.update(self.fidelity_space)
+            surrogate_hps.update(configuration_space)
+            surrogate_hps.update(fidelity_space)
         else:
-            surrogate_hps = self.configuration_space
+            surrogate_hps = configuration_space
 
         for hp_name, hp in surrogate_hps.items():
             if isinstance(hp, sp.Categorical):
                 categorical.append(hp_name)
             else:
                 numeric.append(hp_name)
-
-        # apply transformation to columns according its type
-        print(f"fitting surrogate predicting {self.y.columns} given numerical cols {numeric} and "
-              f"categorical cols {categorical}")
 
         # builds a pipeline that standardize numeric features and one-hot categorical ones before applying
         # the surrogate model
@@ -106,10 +95,25 @@ class BlackboxSurrogate(Blackbox):
         if len(numeric) > 0:
             features_union.append(('numeric', make_pipeline(Columns(names=numeric), StandardScaler())))
 
-        self.surrogate_pipeline = Pipeline([
+        return Pipeline([
             ("features", FeatureUnion(features_union)),
-            ('model', surrogate)
+            ('model', model)
         ])
+
+    def fit_surrogate(self, surrogate=KNeighborsRegressor(n_neighbors=1)) -> Blackbox:
+        """
+        Fits a surrogate model to a blackbox.
+        :param surrogate: fits the model and apply the model transformation when evaluating a
+        blackbox configuration. Possible example: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator
+        obeying Scikit-learn API.
+        """
+        self.surrogate = surrogate
+
+        self.surrogate_pipeline = self.make_model_pipeline(
+            configuration_space=self.configuration_space,
+            fidelity_space=self.fidelity_space,
+            model=surrogate
+        )
 
         self.surrogate_pipeline.fit(
             X=self.X,

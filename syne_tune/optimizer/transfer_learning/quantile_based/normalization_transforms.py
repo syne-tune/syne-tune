@@ -96,7 +96,7 @@ class StandardTransform:
         return z
 
 
-def from_string(name: str, randomize_identical: bool):
+def from_string(name: str, randomize_identical: bool = True):
     assert name in ["standard", "gaussian"]
     mapping = {
         "standard": StandardTransform,
