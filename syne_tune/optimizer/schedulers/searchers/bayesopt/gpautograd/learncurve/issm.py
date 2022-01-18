@@ -163,6 +163,7 @@ def prepare_data(
     targets = []
     for ev in state.trials_evaluations:
         tpl = _create_tuple(ev, active_metric, state.config_for_trial)
+        data_lst.append(tpl)
         observed = tpl[1]
         targets += [x[1] for x in observed]
     mean = 0.0

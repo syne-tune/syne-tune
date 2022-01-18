@@ -234,7 +234,7 @@ def resource_kernel_likelihood_computations(
     num_res = r_max + 1 - r_min
     assert num_all_configs > 0, "targets must not be empty"
     assert num_res > 0, f"r_min = {r_min} must be <= r_max = {r_max}"
-    num_fantasy_samples = precomputed['deltay'].shape[1]
+    num_fantasy_samples = precomputed['yflat'].shape[1]
     compute_wtw = num_fantasy_samples == 1
 
     # Compute Cholesky factor for largest target vector size
@@ -267,7 +267,7 @@ def resource_kernel_likelihood_computations(
             pos = num * num_fantasy_samples
             wdone = wmat[:, pos:]
             wtv_part = anp.reshape(
-                anp.matmul(vvec, wdone), -1, num_fantasy_samples)
+                anp.matmul(vvec, wdone), (-1, num_fantasy_samples))
             wtv_lst.append(wtv_part)
             if compute_wtw:
                 wtw_lst.append(_flatvec(anp.sum(anp.square(wdone), axis=0)))
@@ -285,7 +285,7 @@ def resource_kernel_likelihood_computations(
             [(1.0 - _inner_product(lvec, vvec)) * ilscal]).reshape((1, 1))
         vvec = anp.concatenate((vvec, v_new), axis=1)
     wtv_part = anp.reshape(
-        anp.matmul(vvec, wmat), -1, num_fantasy_samples)
+        anp.matmul(vvec, wmat), (-1, num_fantasy_samples))
     wtv_lst.append(wtv_part)
     wtv_all = anp.concatenate(reversed(wtv_lst), axis=0)
     if compute_wtw:
