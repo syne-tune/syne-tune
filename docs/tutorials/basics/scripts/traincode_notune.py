@@ -10,43 +10,20 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-"""
-Two-layer MLP trained on Fashion MNIST
-"""
+
+# If you like to run the code linked in this tutorial, please make sure to use
+# the current `PyPI` release. If you cloned the source repository, this is
+# obtained as follows:
+#
+# ```bash
+# git checkout -b basic_tutorial v0.11
+# ```
+#
+# This gives you a local branch `basic_tutorial`, in which you can play around
+# with the code.
 import os
 import argparse
 import logging
-import time
-
-from syne_tune.report import Reporter
-from syne_tune.search_space import randint, uniform, loguniform, \
-    add_to_argparse
-from benchmarks.checkpoint import resume_from_checkpointed_model, \
-    checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
-    pytorch_load_save_functions
-from benchmarks.utils import parse_bool
-
-
-NUM_UNITS_1 = 'n_units_1'
-
-NUM_UNITS_2 = 'n_units_2'
-
-METRIC_NAME = 'accuracy'
-
-RESOURCE_ATTR = 'epoch'
-
-ELAPSED_TIME_ATTR = 'elapsed_time'
-
-
-_config_space = {
-    NUM_UNITS_1: randint(4, 1024),
-    NUM_UNITS_2: randint(4, 1024),
-    'batch_size': randint(8, 128),
-    'dropout_1': uniform(0, 0.99),
-    'dropout_2': uniform(0, 0.99),
-    'learning_rate': loguniform(1e-6, 1),
-    'weight_decay': loguniform(1e-8, 1)
-}
 
 
 # Boilerplate for objective
@@ -79,7 +56,7 @@ def split_data(config, data_train):
     train_idx, valid_idx = indices[:50000], indices[50000:]
     train_sampler = SubsetRandomSampler(train_idx)
     valid_sampler = SubsetRandomSampler(valid_idx)
-    batch_size = config["batch_size"]
+    batch_size = config['batch_size']
     train_loader = torch.utils.data.DataLoader(
         data_train, batch_size=batch_size, sampler=train_sampler,
         drop_last=True)
@@ -89,13 +66,14 @@ def split_data(config, data_train):
     return train_loader, valid_loader
 
 
+# [3]
 def model_and_optimizer(config):
-    n_units_1 = config["n_units_1"]
-    n_units_2 = config["n_units_2"]
-    dropout_1 = config["dropout_1"]
-    dropout_2 = config["dropout_2"]
-    learning_rate = config["learning_rate"]
-    weight_decay = config["weight_decay"]
+    n_units_1 = config['n_units_1']
+    n_units_2 = config['n_units_2']
+    dropout_1 = config['dropout_1']
+    dropout_2 = config['dropout_2']
+    learning_rate = config['learning_rate']
+    weight_decay = config['weight_decay']
     # Define the network architecture
     comp_list = [
         nn.Linear(28 * 28, n_units_1),
@@ -143,40 +121,24 @@ def validate_model(config, state, valid_loader):
     return correct / total  # Validation accuracy
 
 
+# [1]
 def objective(config):
-    report_current_best = parse_bool(config['report_current_best'])
-
+    # Download data
     data_train = download_data(config)
 
-    # Do not want to count the time to download the dataset, which can be
-    # substantial the first time
-    ts_start = time.time()
-    report = Reporter()
-
+    # Split into training and validation set
     train_loader, valid_loader = split_data(config, data_train)
 
+    # Create model and optimizer
     state = model_and_optimizer(config)
 
-    # Checkpointing
-    load_model_fn, save_model_fn = pytorch_load_save_functions(
-        {'model': state['model'], 'optimizer': state['optimizer']})
-    # Resume from checkpoint (optional)
-    resume_from = resume_from_checkpointed_model(config, load_model_fn)
-
-    current_best = None
-    for epoch in range(resume_from + 1, config['epochs'] + 1):
+    # Training loop
+    for epoch in range(1, config['epochs'] + 1):
         train_model(config, state, train_loader)
-        accuracy = validate_model(config, state, valid_loader)
-        elapsed_time = time.time() - ts_start
-        if current_best is None or accuracy > current_best:
-            current_best = accuracy
-        # Feed the score back to Tune.
-        objective = current_best if report_current_best else accuracy
-        report(**{RESOURCE_ATTR: epoch,
-                  METRIC_NAME: objective,
-                  ELAPSED_TIME_ATTR: elapsed_time})
-        # Write checkpoint (optional)
-        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
+
+    accuracy = validate_model(config, state, valid_loader)
+    print(f"Model trained for {config['epochs']} epochs:\n"
+          f"Validation accuracy = {accuracy}")
 
 
 if __name__ == '__main__':
@@ -196,9 +158,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, required=True)
     parser.add_argument('--dataset_path', type=str, required=True)
-    parser.add_argument('--report_current_best', type=str, default='False')
-    add_to_argparse(parser, _config_space)
-    add_checkpointing_to_argparse(parser)
+    # [2]
+    # Hyperparameters
+    parser.add_argument('--n_units_1', type=int, required=True)
+    parser.add_argument('--n_units_2', type=int, required=True)
+    parser.add_argument('--batch_size', type=int, required=True)
+    parser.add_argument('--dropout_1', type=float, required=True)
+    parser.add_argument('--dropout_2', type=float, required=True)
+    parser.add_argument('--learning_rate', type=float, required=True)
+    parser.add_argument('--weight_decay', type=float, required=True)
 
     args, _ = parser.parse_known_args()
 
