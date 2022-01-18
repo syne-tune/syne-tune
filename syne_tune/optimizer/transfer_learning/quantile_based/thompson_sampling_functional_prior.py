@@ -2,6 +2,7 @@ import logging
 from typing import Optional, List, Tuple, Dict
 import numpy as np
 
+from blackbox_repository import load
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.transfer_learning.quantile_based.normalization_transforms import from_string
@@ -21,19 +22,13 @@ class TS(BaseSearcher):
 
     def __init__(
             self,
-            input_dim: int,
-            output_dim: int,
-            bounds: Optional[np.array] = None,
+            config_space: Dict,
+            mode: str,
+            metric: str,
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
             normalization: str = "standard",
             prior: str = "xgboost",
     ):
-        super(TS, self).__init__(
-            input_dim=input_dim,
-            output_dim=output_dim,
-            evaluations_other_tasks=evaluations_other_tasks,
-            bounds=bounds,
-        )
 
 
 
@@ -51,6 +46,12 @@ class TS(BaseSearcher):
             y_train=z_train,
         )
         logging.info("prior fitted")
+
+    def _update(self, trial_id: str, config: Dict, result: Dict):
+        pass
+
+    def clone_from_state(self, state):
+        pass
 
     def _sample(self, candidates: Optional[np.array] = None) -> np.array:
         if candidates is None:
@@ -96,14 +97,7 @@ if __name__ == '__main__':
         if task != test_task
     }
 
-    bb_sch = BoundingBox(
-        scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
-            new_config_space,
-            points_to_evaluate=[],
-            searcher='random',
-            metric=metric,
-            mode=mode,
-        ),
+    bb_sch = TS(
         mode="min",
         config_space=config_space,
         metric=bb_dict[test_task].objectives_names[metric_index],
