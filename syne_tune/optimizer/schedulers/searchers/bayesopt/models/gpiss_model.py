@@ -197,8 +197,6 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         self._gpmodel.set_params(param_dict)
 
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
-        assert self._configspace_ext is not None, \
-            "configspace_ext not assigned (use 'set_configspace_ext')"
         assert state.num_observed_cases(self.active_metric) > 0, \
             "Cannot compute posterior: state has no labeled datapoints " +\
             f"for metric {self.active_metric}"
@@ -212,14 +210,14 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             state, self._configspace_ext, self.active_metric,
             normalize_targets=self.normalize_targets,
             do_fantasizing=False)
-        # Precomputations (optional)
-        self._gpmodel.data_precomputations(data)
         if fit_params:
             logger.info(f"Fitting surrogate model for {self.active_metric}")
+            self._gpmodel.data_precomputations(data)
             self._gpmodel.fit(data, profiler=self._profiler)
         elif not do_fantasizing:
             # Fantasizing needs a state depending on fantasy samples, see below
             logger.info("Recomputing posterior state")
+            self._gpmodel.data_precomputations(data)
             self._gpmodel.recompute_states(data)
         if self._debug_log is not None:
             self._debug_log.set_model_params(self.get_params())
@@ -248,6 +246,50 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             self._gpmodel.recompute_states(data)
         else:
             fantasy_samples = []
+
+        return GaussProcAdditiveSurrogateModel(
+            state=state,
+            gpmodel=self._gpmodel,
+            fantasy_samples=fantasy_samples,
+            active_metric=self.active_metric,
+            hp_ranges=self._configspace_ext.hp_ranges,
+            means_observed_candidates=self._predict_mean_current_candidates(
+                data),
+            filter_observed_data=self._filter_observed_data, **extra_kwargs)
+
+    def model_for_fantasy_samples(
+            self, state: TuningJobState,
+            fantasy_samples: List[FantasizedPendingEvaluation]) -> SurrogateModel:
+        """
+        Same as `model` with `fit_params=False`, but `fantasy_samples` are
+        passed in, rather than sampled here.
+
+        :param state: See `model`
+        :param fantasy_samples: See above
+        :return: See `model`
+
+        """
+        assert state.num_observed_cases(self.active_metric) > 0, \
+            "Cannot compute posterior: state has no labeled datapoints " +\
+            f"for metric {self.active_metric}"
+        assert state.pending_evaluations and self.num_fantasy_samples > 0
+
+        # Recompute posterior state with fantasy samples
+        state_with_fantasies = TuningJobState(
+            hp_ranges=state.hp_ranges,
+            config_for_trial=state.config_for_trial,
+            trials_evaluations=state.trials_evaluations,
+            failed_trials=state.failed_trials,
+            pending_evaluations=fantasy_samples)
+        # Recompute posterior state with fantasy samples
+        data = prepare_data(
+            state=state_with_fantasies,
+            configspace_ext=self._configspace_ext,
+            active_metric=self.active_metric,
+            normalize_targets=self.normalize_targets,
+            do_fantasizing=True)
+        self._gpmodel.data_precomputations(data)
+        self._gpmodel.recompute_states(data)
 
         return GaussProcAdditiveSurrogateModel(
             state=state,

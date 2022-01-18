@@ -395,7 +395,9 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
             targets: np.ndarray) -> Tuple[float, float, float]:
         issm_params = self.iss_model.get_issm_params([config])
         issm_likelihood = issm_likelihood_slow_computations(
-            [targets], issm_params, self.r_min, self.r_max)
+            targets=[targets.reshape((-1, 1))],
+            issm_params=issm_params,
+            r_min=self.r_min, r_max=self.r_max)
         d_new = issm_likelihood['d'].item()
         vtv = issm_likelihood['vtv'].item()
         wtv = issm_likelihood['wtv'].item()

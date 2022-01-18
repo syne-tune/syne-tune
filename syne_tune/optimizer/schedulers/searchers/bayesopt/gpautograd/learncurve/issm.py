@@ -228,7 +228,7 @@ def prepare_data_with_pending(
     done_trial_ids = set()
     for ev in state.trials_evaluations:
         tpl = _create_tuple(ev, active_metric, state.config_for_trial)
-        _, observed, trial_id = tpl[2]
+        _, observed, trial_id = tpl
         if trial_id not in num_pending_for_trial:
             data1_lst.append(tpl)
         else:
@@ -642,7 +642,7 @@ def sample_posterior_joint(
     :return: See above
     """
     num_res = r_max + 1 - r_min
-    targets = targets.reshape((-1,))
+    targets = _colvec(targets, _np=np)
     ydim = targets.size
     t_obs = num_res - ydim
     assert t_obs > 0, f"targets.size = {ydim} must be < {num_res}"
@@ -656,66 +656,69 @@ def sample_posterior_joint(
     gamma = issm_params['gamma']
     # Posterior mean and variance of h for additional config
     post_mean, post_variance = predict_posterior_marginals(
-        poster_state, mean, kernel, _rowvec(feature))
+        poster_state, mean, kernel, _rowvec(feature, _np=np))
     post_mean = post_mean[0].item()
     post_variance = post_variance[0].item()
     # Compute [a_t], [gamma^2 a_t^2]
-    lrvec = anp.array(
+    lrvec = np.array(
         [np.log(r_max - t) for t in range(num_res - 1)]) * alpha_m1 + beta
-    avec = alpha * anp.exp(lrvec)
-    a2vec = anp.square(alpha * gamma) * anp.exp(lrvec * 2.0)
+    avec = alpha * np.exp(lrvec)
+    a2vec = np.square(alpha * gamma) * np.exp(lrvec * 2.0)
     # Draw the [eps_t] for all samples
     epsmat = random_state.normal(size=(num_res, num_samples))
     # Compute samples [f_t], [y_t], not conditioned on targets
     hvec = random_state.normal(
-        size=(1, num_samples)) * anp.sqrt(post_variance) + post_mean
+        size=(1, num_samples)) * np.sqrt(post_variance) + post_mean
     f_rows = []
     y_rows = []
     fcurr = hvec
     for t in range(num_res - 1):
-        eps_row = _rowvec(epsmat[t])
+        eps_row = _rowvec(epsmat[t], _np=np)
         f_rows.append(fcurr)
         y_rows.append(fcurr + eps_row)
         fcurr = fcurr - avec[t] * (eps_row * gamma + 1.0)
-    eps_row = _rowvec(epsmat[-1])
+    eps_row = _rowvec(epsmat[-1], _np=np)
     f_rows.append(fcurr)
     y_rows.append(fcurr + eps_row)
     if ydim > 0:
         # Condition on targets
         # Prior samples (reverse order t -> r)
-        fsamples = anp.concatenate(reversed(f_rows[:(t_obs + 1)]), axis=0)
+        fsamples = np.concatenate(reversed(f_rows[:(t_obs + 1)]), axis=0)
         # Compute c1 and d1 vectors (same for all samples)
-        zeroscal = anp.zeros((1,))
-        c1vec = anp.flip(anp.concatenate(
-            (zeroscal, anp.cumsum(avec[:t_obs])), axis=None))
-        d1vec = anp.flip(anp.concatenate(
-            (zeroscal, anp.cumsum(a2vec[:t_obs])), axis=None))
+        zeroscal = np.zeros((1,))
+        c1vec = np.flip(np.concatenate(
+            (zeroscal, np.cumsum(avec[:t_obs])), axis=None))
+        d1vec = np.flip(np.concatenate(
+            (zeroscal, np.cumsum(a2vec[:t_obs])), axis=None))
         # Assemble targets for conditional means
-        ymat = anp.concatenate(reversed(y_rows[t_obs:]), axis=0)
-        ycols = anp.split(ymat, num_samples, axis=1)
+        ymat = np.concatenate(reversed(y_rows[t_obs:]), axis=0)
+        ycols = np.split(ymat, num_samples, axis=1)
         assert ycols[0].size == ydim  # Sanity check
         # v^T v, w^T v for sampled targets
-        onevec = anp.ones((num_samples,))
+        onevec = np.ones((num_samples,))
         _issm_params = {
             'alpha': alpha * onevec,
             'beta': beta * onevec,
             'gamma': gamma}
         issm_likelihood = issm_likelihood_slow_computations(
-            [_flatvec(v) for v in ycols], _issm_params, r_min, r_max,
-            skip_c_d=True)
+            targets=[_colvec(v, _np=np) for v in ycols],
+            issm_params=_issm_params,
+            r_min=r_min, r_max=r_max, skip_c_d=True)
         vtv = issm_likelihood['vtv']
         wtv = issm_likelihood['wtv']
         # v^T v, w^T v for observed (last entry)
         issm_likelihood = issm_likelihood_slow_computations(
-            [targets], issm_params, r_min, r_max)
+            targets=[targets],
+            issm_params=issm_params,
+            r_min=r_min, r_max=r_max)
         vtv = _rowvec(
-            anp.concatenate((vtv, issm_likelihood['vtv']), axis=None))
+            np.concatenate((vtv, issm_likelihood['vtv']), axis=None), _np=np)
         wtv = _rowvec(
-            anp.concatenate((wtv, issm_likelihood['wtv']), axis=None))
+            np.concatenate((wtv, issm_likelihood['wtv']), axis=None), _np=np)
         cscal = issm_likelihood['c'][0]
         dscal = issm_likelihood['d'][0]
-        c1vec = _colvec(c1vec)
-        d1vec = _colvec(d1vec)
+        c1vec = _colvec(c1vec, _np=np)
+        d1vec = _colvec(d1vec, _np=np)
         c2vec = cscal - c1vec
         d2vec = dscal - d1vec
         # Compute num_samples + 1 conditional mean vectors in one go
@@ -723,17 +726,17 @@ def sample_posterior_joint(
         cond_means = ((post_mean - c1vec) * (d2vec * vtv + 1.0) +
                       (d1vec + post_variance) * (c2vec * vtv + wtv)) / denom
         fsamples = fsamples - cond_means[:, :num_samples] + _colvec(
-            cond_means[:, num_samples])
+            cond_means[:, num_samples], _np=np)
         # Samples [y_r] from [f_r]
         frmat = fsamples[1:]
         frm1mat = fsamples[:-1]
-        arvec = _colvec(anp.minimum(
-            anp.flip(avec[:t_obs]), -MIN_POSTERIOR_VARIANCE))
+        arvec = _colvec(np.minimum(
+            np.flip(avec[:t_obs]), -MIN_POSTERIOR_VARIANCE), _np=np)
         ysamples = ((frmat - frm1mat) / arvec - 1.0) * (1.0 / gamma) + frmat
     else:
         # Nothing to condition on
-        fsamples = anp.concatenate(reversed(f_rows), axis=0)
-        ysamples = anp.concatenate(reversed(y_rows), axis=0)
+        fsamples = np.concatenate(reversed(f_rows), axis=0)
+        ysamples = np.concatenate(reversed(y_rows), axis=0)
     return {
         'f': fsamples,
         'y': ysamples}
