@@ -27,7 +27,7 @@ def fcnet_benchmark(dataset_name):
 
 def nas201_benchmark(dataset_name):
     return BenchmarkDefinition(
-        max_wallclock_time=3600 * 6,
+        max_wallclock_time=3600 * 24,
         n_workers=4,
         elapsed_time_attr="metric_elapsed_time",
         time_this_resource_attr='metric_runtime',

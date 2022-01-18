@@ -143,6 +143,8 @@ class Tuner:
             # state
             running_trials_ids = set()
 
+            search_space_exhausted = False
+
             while not self._stop_condition():
                 for callback in self.callbacks:
                     callback.on_loop_start()
@@ -168,16 +170,26 @@ class Tuner:
                 done_trials_statuses.update(new_done_trial_statuses)
                 running_trials_ids.difference_update(new_done_trial_statuses.keys())
 
-                self._schedule_new_tasks(running_trials_ids=running_trials_ids)
+                if search_space_exhausted:
+                    # if the search space is exhausted, we loop until the running trials are done or until the
+                    # stop condition is reached
+                    if len(running_trials_ids) > 0:
+                        self._sleep()
+                    else:
+                        break
+                else:
+                    try:
+                        self._schedule_new_tasks(running_trials_ids=running_trials_ids)
+                    except StopIteration:
+                        logger.info("Tuning is finishing as the whole search space got exhausted.")
+                        search_space_exhausted = True
+                        print("Tuning is finishing as the whole search space got exhausted.")
 
                 self.status_printer(self.tuning_status)
 
                 for callback in self.callbacks:
                     callback.on_loop_end()
 
-        except StopIteration:
-            logger.info("Tuning is finishing as the whole search space got exhausted.")
-            pass
         finally:
             # graceful termination block called when the tuner reached its stop condition, when an error happened or
             # when the job got interrupted (can happen in spot-instances or when sending a SIGINT signal with ctrl+C).
@@ -249,6 +261,12 @@ class Tuner:
 
         return done_trials_statuses, new_results
 
+    def _sleep(self):
+        time.sleep(self.sleep_time)
+
+        for callback in self.callbacks:
+            callback.on_tuning_sleep(self.sleep_time)
+
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
         """
         Schedules new tasks if ressources are available or sleep.
@@ -263,10 +281,7 @@ class Tuner:
             logger.debug(
                 f"{num_running_trials} of {self.n_workers} workers are "
                 f"busy, wait for {self.sleep_time} seconds")
-            time.sleep(self.sleep_time)
-
-            for callback in self.callbacks:
-                callback.on_tuning_sleep(self.sleep_time)
+            self._sleep()
 
         else:
             # Schedule as many trials as we have free workers

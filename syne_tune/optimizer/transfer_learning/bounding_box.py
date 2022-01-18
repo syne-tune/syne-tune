@@ -18,13 +18,15 @@ class BoundingBox(TransferLearningScheduler):
             mode: str,
             metric: str,
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+            num_hyperparameters: int = 30,
     ):
         self.mode = mode
         with catchtime("compute bounding box"):
-            new_config_space = self.compute_box(config_space, transfer_learning_evaluations, mode=self.mode, n=3)
+            new_config_space = self.compute_box(config_space, transfer_learning_evaluations, mode=self.mode, min_choices=num_hyperparameters)
         # ugly
         self.config_space = new_config_space
         print(f"hyperparameter ranges of best previous config {new_config_space}")
+        print(f"({sp.search_space_size(new_config_space)} options)")
         self.scheduler = scheduler_fun(new_config_space, mode, metric)
         super(BoundingBox, self).__init__(
             config_space=new_config_space,
@@ -33,14 +35,25 @@ class BoundingBox(TransferLearningScheduler):
         )
 
     @staticmethod
-    def compute_box(config_space, transfer_learning_evaluations, mode: str, n: int):
-        hps = []
+    def compute_box(config_space, transfer_learning_evaluations, mode: str, min_choices: int):
+        # hps = []
+        best_hp_indices = []
         for task, evaluation in transfer_learning_evaluations.items():
-            best_hp_indices = evaluation.metrics.reshape(-1).argsort()
-            if mode == 'min':
-                hps.append(evaluation.hyperparameters.loc[best_hp_indices[:n]].values)
-            else:
-                hps.append(evaluation.hyperparameters.loc[best_hp_indices[-n:]].values)
+            best_hp_task_indices = evaluation.metrics.reshape(-1).argsort()
+            if mode == 'max':
+                # revert
+                best_hp_task_indices = best_hp_task_indices[::-1]
+            best_hp_indices.append(best_hp_task_indices)
+
+        # (num_task, num_hyperparameters)
+        best_hp_indices = np.stack(best_hp_indices)
+
+        i = 1
+        while i < best_hp_indices.shape[1] and len(set(best_hp_indices[:, :i].reshape(-1))) < min_choices:
+            i += 1
+
+        # at least min_choices
+        hps = evaluation.hyperparameters.loc[set(best_hp_indices[:, :i].reshape(-1))].values
 
         # (num_best_hps, num_hyperparameters)
         hp_df = np.stack(hps).reshape(-1, hps[0].shape[-1])
@@ -56,6 +69,7 @@ class BoundingBox(TransferLearningScheduler):
                 new_domain.lower = hp_df[:, i].min()
                 new_domain.upper = hp_df[:, i].max()
                 new_config_space[name] = new_domain
+        print(new_config_space)
         return new_config_space
 
     def suggest(self, *args, **kwargs):
@@ -79,9 +93,10 @@ class BoundingBox(TransferLearningScheduler):
 
 if __name__ == '__main__':
 
-    bb_dict = load("nas201")
+    bb_dict = load("nasbench201")
 
-    config_space = bb_dict["cifar100"].configuration_space
+    test_task = "cifar100"
+    config_space = bb_dict[test_task].configuration_space
     metric_index = 0
     transfer_learning_evaluations = {
         task: TransferLearningTaskEvaluations(
@@ -90,7 +105,7 @@ if __name__ == '__main__':
             metrics=bb.objectives_evaluations.mean(axis=1)[:, -1, metric_index:metric_index+1]
         )
         for task, bb in bb_dict.items()
-        if task != 'cifar100'
+        if task != test_task
     }
 
     bb_sch = BoundingBox(
@@ -103,6 +118,6 @@ if __name__ == '__main__':
         ),
         mode="min",
         config_space=config_space,
-        metric=bb_dict["cifar100"].objectives_names[metric_index],
+        metric=bb_dict[test_task].objectives_names[metric_index],
         transfer_learning_evaluations=transfer_learning_evaluations,
     )
