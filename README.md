@@ -399,7 +399,8 @@ launch experiments that loops over many schedulers and benchmarks.
 
 ## Tutorials
 
-Do you want to know more? Here are a number of short tutorials.
+Do you want to know more? Here are a number of tutorials.
+* [Basics of Syne Tune](docs/tutorials/basics/README.md)
 * [Using the built-in schedulers](docs/schedulers.md)
 * [Choosing a configuration space](docs/search_space.md)
 * [Using the command line launcher to benchmark schedulers](docs/command_line.md)
