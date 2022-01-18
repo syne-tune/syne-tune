@@ -48,29 +48,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         running_average=False,
     ),
-    'Botorch': lambda method_arguments: BotorchGP(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-    ),
-    'GP': lambda method_arguments: FIFOScheduler(
-        method_arguments.config_space,
-        searcher="bayesopt",
-        search_options={'debug_log': False},
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-    ),
-    'MOBSTER': lambda method_arguments: HyperbandScheduler(
-        method_arguments.config_space,
-        searcher="bayesopt",
-        search_options={'debug_log': False},
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-    ),
     'RS-BB': lambda method_arguments: BoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
             new_config_space,
@@ -98,6 +75,28 @@ methods = {
         metric=method_arguments.metric,
         config_space=method_arguments.config_space,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
-    )
-
+    ),
+    'Botorch': lambda method_arguments: BotorchGP(
+        config_space=method_arguments.config_space,
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+    ),
+    'GP': lambda method_arguments: FIFOScheduler(
+        method_arguments.config_space,
+        searcher="bayesopt",
+        search_options={'debug_log': False},
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
+    ),
+    'MOBSTER': lambda method_arguments: HyperbandScheduler(
+        method_arguments.config_space,
+        searcher="bayesopt",
+        search_options={'debug_log': False},
+        mode=method_arguments.mode,
+        metric=method_arguments.metric,
+        max_t=method_arguments.max_t,
+        resource_attr=method_arguments.resource_attr,
+        random_seed=method_arguments.random_seed,
+    ),
 }

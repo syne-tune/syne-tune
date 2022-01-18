@@ -285,9 +285,9 @@ if __name__ == '__main__':
     tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
 
-    load_cache = True
+    load_cache = False
     methods_to_show = [
-        # 'RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR',
+        'RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR',
         'RS-BB', 'HB-BB']
 
     result_file = Path("~/Downloads/cached-results.dill").expanduser()
