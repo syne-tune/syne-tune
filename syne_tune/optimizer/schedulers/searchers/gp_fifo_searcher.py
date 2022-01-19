@@ -13,6 +13,7 @@
 import numpy as np
 from typing import Type, Optional, Dict, List
 import logging
+import copy
 
 from syne_tune.optimizer.schedulers.searchers.searcher import \
     SearcherWithRandomSeed, RandomSearcher
@@ -680,10 +681,15 @@ class GPFIFOSearcher(ModelBasedSearcher):
                     model_factory = self.state_transformer._model_factory
                     if isinstance(model_factory, dict):
                         model_factory = model_factory[INTERNAL_METRIC_NAME]
+                    # We need a copy of the state here, since
+                    # `pending_candidate_state_transformer` modifies the state (it
+                    # appends pending trials)
+                    temporary_state = copy.deepcopy(
+                        self.state_transformer.state)
                     pending_candidate_state_transformer = \
                         ModelStateTransformer(
                             model_factory=model_factory,
-                            init_state=self.state_transformer.state,
+                            init_state=temporary_state,
                             skip_optimization=AlwaysSkipPredicate())
                 bo_algorithm = BayesianOptimizationAlgorithm(
                     initial_candidates_generator=self.random_generator,
