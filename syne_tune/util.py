@@ -132,13 +132,17 @@ def random_string(length: int) -> str:
     return ''.join(random.choice(pool) for _ in range(length))
 
 
-def script_checkpoint_example_path():
+def repository_root_path() -> Path:
+    return Path(__file__).parent.parent
+
+
+def script_checkpoint_example_path() -> Path:
     """
     Util to get easily the name of an example file
     :return:
     """
-    root = Path(__file__).parent.parent
-    path = root / "examples" / "training_scripts" / "checkpoint_example" / "checkpoint_example.py"
+    path = repository_root_path() / "examples" / "training_scripts" / \
+           "checkpoint_example" / "checkpoint_example.py"
     assert path.exists()
     return path
 
@@ -148,8 +152,8 @@ def script_height_example_path():
     Util to get easily the name of an example file
     :return:
     """
-    root = Path(__file__).parent.parent
-    path = root / "examples" / "training_scripts" / "height_example" / "train_height.py"
+    path = repository_root_path() / "examples" / "training_scripts" / \
+           "height_example" / "train_height.py"
     assert path.exists()
     return path
 
