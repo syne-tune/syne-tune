@@ -140,6 +140,8 @@ class Tuner:
             # state
             running_trials_ids = set()
 
+            search_space_exhausted = False
+
             while not self._stop_condition():
                 for callback in self.callbacks:
                     callback.on_loop_start()
@@ -165,7 +167,22 @@ class Tuner:
                 done_trials_statuses.update(new_done_trial_statuses)
                 running_trials_ids.difference_update(new_done_trial_statuses.keys())
 
-                self._schedule_new_tasks(running_trials_ids=running_trials_ids)
+                if search_space_exhausted:
+                    # if the search space is exhausted, we loop until the running trials are done or until the
+                    # stop condition is reached
+                    if len(running_trials_ids) > 0:
+                        logger.debug(f"Search space exhausted, waiting for completion of running trials "
+                                     f"{running_trials_ids}")
+                        self._sleep()
+                    else:
+                        break
+                else:
+                    try:
+                        self._schedule_new_tasks(running_trials_ids=running_trials_ids)
+                    except StopIteration:
+                        logger.info("Tuning is finishing as the whole search space got exhausted.")
+                        search_space_exhausted = True
+                        print("Tuning is finishing as the whole search space got exhausted.")
 
                 self.status_printer(self.tuning_status)
 
@@ -197,6 +214,11 @@ class Tuner:
             # in case too many errors were triggered, show log of last failed job and terminates with an error
             if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
+
+    def _sleep(self):
+        time.sleep(self.sleep_time)
+        for callback in self.callbacks:
+            callback.on_tuning_sleep(self.sleep_time)
 
     def _enrich_metadata(self, metadata: Dict):
         """
@@ -261,20 +283,12 @@ class Tuner:
             logger.debug(
                 f"{num_running_trials} of {self.n_workers} workers are "
                 f"busy, wait for {self.sleep_time} seconds")
-            time.sleep(self.sleep_time)
-
-            for callback in self.callbacks:
-                callback.on_tuning_sleep(self.sleep_time)
+            self._sleep()
 
         else:
             # Schedule as many trials as we have free workers
             for i in range(self.n_workers - num_running_trials):
                 trial_id = self._schedule_new_task()
-                if trial_id is None:
-                    logger.info("Searcher ran out of candidates, tuning job is stopping.")
-                    # todo should also stop parent loop
-                    break
-
                 running_trials_ids.add(trial_id)
 
     def _schedule_new_task(self) -> Optional[int]:
