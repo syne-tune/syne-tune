@@ -32,6 +32,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_ro
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.util import repository_root_path
 
 
 if __name__ == '__main__':
@@ -84,9 +85,11 @@ if __name__ == '__main__':
             instance_type="ml.m4.xlarge",
             instance_count=1,
             role=get_execution_role(),
+            dependencies=[str(repository_root_path() / "benchmarks")],
             max_run=int(1.05 * max_wallclock_time),
             framework_version='1.7.1',
             py_version='py3',
+            disable_profiler=True,
         ),
         metrics_names=[metric],
     )

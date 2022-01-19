@@ -54,10 +54,12 @@ the local back-end.
   Apart from `sm_estimator`, you can also specify the names of metrics reported
   to Syne Tune in `metrics_names`, these will be displayed in the dashboard of
   the training job.
-* If your training script needs extra dependencies not contained in the
-  SageMaker framework, you need to list them in a file `requirements.txt` stored
-  in the same directory as your script. Our running example needs `filelock`,
-  for example.
+* It is important to specify dependencies of the training script not contained
+  in the SageMaker framework. For source dependencies, you use the
+  `dependencies` parameter. While `syne_tune` is automatically added, you need
+  to add `benchmarks` in order to use support code from there. Extra PyPI
+  dependencies can be listed in a file `requirements.txt` stored in the same
+  directory as your script. Our running example needs `filelock`, for example.
 
 This launcher script shows how to run training code whose dependencies are
 captured by a SageMaker framework (`PyTorch` in this case), and extra ones
