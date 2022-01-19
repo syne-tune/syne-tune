@@ -279,9 +279,6 @@ class LocalBackend(Backend):
 
     def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
         self.local_path = Path(results_root)
-        if tuner_name is not None:
-            self.local_path = self.local_path / tuner_name
-        return self
 
     def entrypoint_path(self) -> Path:
         return Path(self.entry_point)

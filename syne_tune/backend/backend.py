@@ -196,7 +196,7 @@ class Backend(object):
 
     def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
         """
-        :param results_root: the parent that should contains the results of all experiments
+        :param results_root: the parent that should contains the results of the tuning experiment.
         Used by Tuner to indicate a desired path where the results should be written to. This is used
          to unify the location of backend files and Tuner results when possible (in the local backend).
          By default, the backend does not do anything since not all backends may be able to unify their files
