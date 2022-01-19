@@ -246,31 +246,7 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = No
     else:
         methods_to_show = [x for x in methods_to_show if x in methods_df]
     print(df_avg_ranks[methods_to_show].mean().to_string())
-    #
-    # pd.DataFrame(
-    #     np.stack(avg_ranks.values()).mean(axis=0).T,
-    #     columns=methods
-    # )[['RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR', 'RS-MSR-RA']]
-    # np.stack(avg_ranks.values()).mean(axis=0).shape
-    # df_avg_ranks.mean()
 
-"""
-    if load_cache and os.path.exists(result_file):
-        print(f"loading results from {result_file}")
-        results_df = pd.read_csv(result_file)
-    else:
-        print(f"regenerating results to {result_file}")
-        results_df = generate_evaluations(
-            df=df,
-            estimators=estimators,
-            num_sample=num_sample,
-            max_num_tasks=max_num_tasks,
-        )
-
-        # save csv
-        results_df.to_csv(result_file, index=False)
-
-"""
 
 if __name__ == '__main__':
     date_min = datetime.fromisoformat("2022-01-04")
@@ -285,7 +261,7 @@ if __name__ == '__main__':
     tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
 
-    load_cache = False
+    load_cache = True
     methods_to_show = [
         'RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR',
         'RS-BB', 'HB-BB']
