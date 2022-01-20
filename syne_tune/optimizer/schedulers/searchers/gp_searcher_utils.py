@@ -140,11 +140,25 @@ def decode_state_from_old_encoding(
 
 
 class ResourceForAcquisitionMap(object):
+    """
+    In order to use a standard acquisition function (like expected improvement)
+    for multi-fidelity HPO, we need to decide at which `r_acq` we would like
+    to evaluate the AF, w.r.t. the posterior distribution over `f(x, r=r_acq)`.
+    This decision can depend on the current state.
+
+    """
     def __call__(self, state: TuningJobState, **kwargs) -> int:
         raise NotImplementedError()
 
 
 class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
+    """
+    Implements a heuristic proposed in the BOHB paper: `r_acq` is the
+    largest `r` such that we have at least `threshold` observations at
+    `r`. If there are less than `threshold` observations at all levels,
+    the smallest level is returned.
+
+    """
     def __init__(
             self, threshold: int, active_metric: str = INTERNAL_METRIC_NAME):
         self.threshold = threshold
@@ -173,9 +187,51 @@ class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
 
 
 class ResourceForAcquisitionFirstMilestone(ResourceForAcquisitionMap):
+    """
+    Here, `r_acq` is the smallest rung level to be attained by a config
+    started from scratch.
+
+    """
     def __call__(self, state: TuningJobState, **kwargs) -> int:
         assert 'milestone' in kwargs, \
             "Need the first milestone to be attained by the new config " +\
             "passed as kwargs['milestone']. Use a scheduler which does " +\
             "that (e.g., HyperbandScheduler)"
         return kwargs['milestone']
+
+
+class ResourceForAcquisitionFinal(ResourceForAcquisitionMap):
+    """
+    Here, `r_acq = r_max` is the largest resource level.
+
+    """
+    def __init__(self, r_max: int):
+        self._r_max = r_max
+
+    def __call__(self, state: TuningJobState, **kwargs) -> int:
+        return self._r_max
+
+
+SUPPORTED_RESOURCE_FOR_ACQUISITION = {'bohb', 'first', 'final'}
+
+
+def resource_for_acquisition_factory(
+        kwargs: dict,
+        hp_ranges: HyperparameterRanges) -> ResourceForAcquisitionMap:
+    resource_acq = kwargs.get('resource_acq', 'bohb')
+    assert resource_acq in SUPPORTED_RESOURCE_FOR_ACQUISITION, \
+        f"resource_acq = {resource_acq} not supported, must be in " +\
+        str(SUPPORTED_RESOURCE_FOR_ACQUISITION)
+    if resource_acq == 'bohb':
+        threshold = kwargs.get(
+            'resource_acq_bohb_threshold', hp_ranges.ndarray_size())
+        resource_for_acquisition = ResourceForAcquisitionBOHB(
+            threshold=threshold)
+    elif resource_acq == 'first':
+        assert resource_acq == 'first', \
+            "resource_acq must be 'bohb' or 'first'"
+        resource_for_acquisition = ResourceForAcquisitionFirstMilestone()
+    else:
+        r_max = kwargs['max_epochs']
+        resource_for_acquisition = ResourceForAcquisitionFinal(r_max=r_max)
+    return resource_for_acquisition

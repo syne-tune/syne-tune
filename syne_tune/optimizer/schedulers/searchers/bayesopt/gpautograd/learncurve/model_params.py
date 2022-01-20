@@ -10,9 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict
-from abc import abstractmethod
+from typing import Dict
 import autograd.numpy as anp
+from autograd.tracer import getval
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import COVARIANCE_SCALE_LOWER_BOUND, DEFAULT_ENCODING
@@ -22,8 +22,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_h
     import encode_unwrap_parameter, IdentityScalarEncoding, register_parameter, create_encoding
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
     import MeanFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
 
 
 class ISSModelParameters(MeanFunction):
@@ -31,8 +29,8 @@ class ISSModelParameters(MeanFunction):
     Maintains parameters of an ISSM of a particular power low decay form.
 
     For each configuration, we have alpha < 0 and beta. These may depend
-    on the configuration:
-        (alpha, beta) = F(config; params),
+    on the input feature x (encoded configuration):
+        (alpha, beta) = F(x; params),
     where params are the internal parameters to be learned.
 
     There is also gamma > 0, which can be fixed to 1.
@@ -77,17 +75,16 @@ class ISSModelParameters(MeanFunction):
         if not self.gamma_is_one:
             self.set_gamma(param_dict['gamma'])
 
-    @abstractmethod
-    def get_issm_params(self, configs: List[Configuration]) -> Dict:
+    def get_issm_params(self, features) -> Dict:
         """
-        Given list of configurations (size n), returns ISSM parameters which
-        configure the likelihood: alpha, beta vectors (size n), gamma scalar.
+        Given feature matrix X, returns ISSM parameters which configure the
+        likelihood: alpha, beta vectors (size n), gamma scalar.
 
-        :param configs: List of configurations
+        :param features: Feature matrix X, (n, d)
         :return: Dict with alpha, beta, gamma
 
         """
-        pass
+        raise NotImplementedError()
 
 
 class IndependentISSModelParameters(ISSModelParameters):
@@ -139,8 +136,9 @@ class IndependentISSModelParameters(ISSModelParameters):
         self.set_alpha(param_dict['alpha'])
         self.set_beta(param_dict['beta'])
 
-    def get_issm_params(self, configs: List[Configuration]) -> Dict:
-        one_vec = anp.ones((len(configs),))
+    def get_issm_params(self, features) -> Dict:
+        n = getval(features.shape[0])
+        one_vec = anp.ones((n,))
         return {
             'alpha': one_vec * self.get_alpha(),
             'beta': one_vec * self.get_beta(),

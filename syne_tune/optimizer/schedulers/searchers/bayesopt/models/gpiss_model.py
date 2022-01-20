@@ -20,8 +20,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base \
     import BaseSurrogateModel
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
     import ExtendedConfiguration
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.gpiss_model \
@@ -48,16 +46,16 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
             gpmodel: GaussianProcessLearningCurveModel,
             fantasy_samples: List[FantasizedPendingEvaluation],
             active_metric: str,
-            hp_ranges: HyperparameterRanges,
-            means_observed_candidates: np.ndarray,
             filter_observed_data: Optional[ConfigurationFilter] = None,
             normalize_mean: float = 0.0, normalize_std: float = 1.0):
         """
         Gaussian Process additive surrogate model, where model parameters are
         fit by marginal likelihood maximization.
 
-        `means_observed_candidates` are what is returned by
-        `predict_mean_current_candidates`, after denormalization.
+        Note: `predict_mean_current_candidates` calls `predict` for all
+        observed and pending extended configs. This may not be exactly
+        correct, because `predict` is not meant to be used for configs
+        which have observations (it IS correct at r = r_max).
 
         `fantasy_samples` contains the sampled (normalized) target values for
         pending configs. Only `active_metric` target values are considered.
@@ -66,27 +64,21 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
         :param state: TuningJobSubState
         :param gpmodel: GaussianProcessLearningCurveModel
         :param fantasy_samples: See above
-        :param active_metric: Name of the metric to optimize.
-        :param hp_ranges: HyperparameterRanges for predictions
-        :param means_observed_candidates: What is returned by
-            `predict_mean_current_candidates`
+        :param active_metric: See parent class
+        :param filter_observed_data: See parent class
         :param normalize_mean: Mean used to normalize targets
         :param normalize_std: Stddev used to normalize targets
 
         """
         super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
-        self._hp_ranges = hp_ranges
-        self._means_observed_candidates = \
-            means_observed_candidates * normalize_std + normalize_mean
         self.mean = normalize_mean
         self.std = normalize_std
         self.fantasy_samples = fantasy_samples
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         """
-        Input features `inputs` are w.r.t. configs x, not extended configs.
-        Predictions are for f(x, r_max), at the maximum resource level.
+        Input features `inputs` are w.r.t. extended configs (x, r).
 
         :param inputs: Input features
         :return: Predictive means, stddevs
@@ -104,13 +96,6 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
             predictions_list.append(
                 {'mean': mean_denorm, 'std': std_denorm})
         return predictions_list
-
-    def hp_ranges_for_prediction(self) -> HyperparameterRanges:
-        """
-        For this model, predictions are done on normal configs, not on extended
-        ones (as self.state.hp_ranges would do).
-        """
-        return self._hp_ranges
 
     def backward_gradient(
             self, input: np.ndarray,
@@ -134,9 +119,6 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
     def posterior_states(self) -> Optional[List[GaussProcAdditivePosteriorState]]:
         return self._gpmodel.states
 
-    def predict_mean_current_candidates(self) -> List[np.ndarray]:
-        return [self._means_observed_candidates]
-
 
 class GaussProcAdditiveModelFactory(TransformerModelFactory):
     def __init__(
@@ -153,10 +135,6 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         independently, while each sample is dependent over all pending
         evaluations. If `num_fantasy_samples == 0`, pending evaluations
         in `state` are ignored.
-
-        Note that `state` contains extended configs (x, r), while the GP
-        part of the GP-ISSM is over configs x (it models the function
-        at r_max).
 
         :param gpmodel: GaussianProcessLearningCurveModel
         :param num_fantasy_samples: See above
@@ -249,9 +227,6 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             gpmodel=self._gpmodel,
             fantasy_samples=fantasy_samples,
             active_metric=self.active_metric,
-            hp_ranges=self._configspace_ext.hp_ranges,
-            means_observed_candidates=self._predict_mean_current_candidates(
-                data),
             filter_observed_data=self._filter_observed_data, **extra_kwargs)
 
     def model_for_fantasy_samples(
@@ -298,29 +273,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             gpmodel=self._gpmodel,
             fantasy_samples=fantasy_samples,
             active_metric=self.active_metric,
-            hp_ranges=self._configspace_ext.hp_ranges,
-            means_observed_candidates=self._predict_mean_current_candidates(
-                data),
             filter_observed_data=self._filter_observed_data, **extra_kwargs)
-
-    def _predict_mean_current_candidates(self, data: Dict) -> np.ndarray:
-        """
-        Returns the predictive mean (signal with key 'mean') at all current
-        candidate configurations (observed and pending). Different to
-        multi-task GP models, these means are over f(x, r_max) only. They
-        are normalized, so have to be denormalized first.
-
-        :return: List of predictive means
-        """
-        means, _ = self._gpmodel.predict(data['features'])[0]
-        return means.reshape((-1, 1))
-
-    def predictions_use_extended_configs(self) -> bool:
-        """
-        Even though `TuningJobState` uses extended configs, predictions do
-        not.
-        """
-        return False
 
     def _draw_fantasy_values(
             self, state: TuningJobState) -> TuningJobState:
@@ -352,7 +305,8 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             # a posterior state without any data, so handling this case
             # correctly would be very tedious).
             assert data_pending['configs'], \
-                f"State {state} is empty, cannot do posterior inference"
+                "State is empty, cannot do posterior inference:\n" +\
+                str(state)
             names = ('configs', 'features', 'targets', 'trial_ids')
             elem = {k: data_pending[k].pop(0) for k in names}
             for k, v in elem:

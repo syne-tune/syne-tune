@@ -35,6 +35,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
     import ExtendedConfiguration
 from syne_tune.optimizer.schedulers.utils.simple_profiler \
     import SimpleProfiler
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
+    import EPS
 
 
 def _prepare_data_internal(
@@ -578,6 +580,18 @@ def posterior_computations(
 
 def predict_posterior_marginals(
         poster_state: Dict, mean, kernel, test_features):
+    """
+    These are posterior marginals on the h variable, whereas the full model is
+    for f_r = h + g_r (additive).
+    `posterior_means` is a (n, F) matrix, where F is the number of fantasy
+    samples, or F == 1 without fantasizing.
+
+    :param poster_state: Posterior state
+    :param mean: Mean function
+    :param kernel: Kernel function
+    :param test_features: Feature matrix for test points (not extended)
+    :return: posterior_means, posterior_variances
+    """
     k_tr_te = kernel(poster_state['features'], test_features)
     posterior_means = anp.matmul(
         k_tr_te.T, poster_state['pmat']) + _colvec(mean(test_features))
@@ -593,6 +607,10 @@ def predict_posterior_marginals(
 def sample_posterior_marginals(
         poster_state: Dict, mean, kernel, test_features,
         random_state: RandomState, num_samples: int = 1):
+    """
+    We sample from posterior marginals on the h variance, see also
+    `predict_posterior_marginals`.
+    """
     post_means, post_vars = predict_posterior_marginals(
         poster_state, mean, kernel, test_features)
     assert getval(post_means.shape[1]) == 1, \
@@ -602,6 +620,71 @@ def sample_posterior_marginals(
         size=(getval(post_means.shape[0]), num_samples))
     post_stds = _colvec(anp.sqrt(post_vars))
     return anp.multiply(post_stds, n01_mat) + _colvec(post_means)
+
+
+def predict_posterior_marginals_extended(
+        poster_state: Dict, mean, kernel, test_features,
+        resources: List[int], issm_params: Dict, r_min: int, r_max: int):
+    """
+    These are posterior marginals on f_r = h + g_r variables, where
+    (x, r) are zipped from `test_features`, `resources`. `issm_params`
+    are likelihood parameters for the test configs.
+    `posterior_means` is a (n, F) matrix, where F is the number of fantasy
+    samples, or F == 1 without fantasizing.
+
+    :param poster_state: Posterior state
+    :param mean: Mean function
+    :param kernel: Kernel function
+    :param test_features: Feature matrix for test points (not extended)
+    :param resources: Resource values corresponding to rows of
+        `test_features`
+    :param issm_params: See above
+    :param r_min:
+    :param r_max:
+    :return: posterior_means, posterior_variances
+
+    """
+    num_test = test_features.shape[0]
+    assert len(resources) == num_test, \
+        f"test_features.shape[0] = {num_test} != {len(resources)} " +\
+        "= len(resources)"
+    alphas = anp.reshape(issm_params['alpha'], (-1,))
+    betas = anp.reshape(issm_params['beta'], (-1,))
+    gamma = issm_params['gamma']
+    n = getval(alphas.size)
+    assert n == num_test, \
+        f"Entries in issm_params must have size {num_test}, but " +\
+        f"have size {n}"
+    # Predictive marginals over h
+    h_means, h_variances = predict_posterior_marginals(
+        poster_state, mean, kernel, test_features)
+    if all(r == r_max for r in resources):
+        # Frequent special case
+        posterior_means = h_means
+        posterior_variances = h_variances
+    else:
+        # Convert into predictive marginals over f_r
+        posterior_means = []
+        posterior_variances = []
+        for h_mean, h_variance, resource, alpha, beta in zip(
+                h_means, h_variances, resources, alphas, betas):
+            sz = r_max - resource
+            h_mean = _rowvec(h_mean)
+            if sz == 0:
+                posterior_means.append(h_mean)
+                posterior_variances.append(h_variance)
+            else:
+                lrvec = anp.array(
+                    [np.log(r_max - t) for t in range(sz)]) * (alpha - 1.0) + beta
+                avec = alpha * anp.exp(lrvec)
+                a2vec = anp.square(alpha * gamma) * anp.exp(lrvec * 2.0)
+                c = anp.sum(avec)
+                d = anp.sum(a2vec)
+                posterior_means.append(h_mean - c)
+                posterior_variances.append(h_variance + d)
+        posterior_means = anp.vstack(posterior_means)
+        posterior_variances = anp.array(posterior_variances)
+    return posterior_means, posterior_variances
 
 
 def sample_posterior_joint(
@@ -736,6 +819,26 @@ def sample_posterior_joint(
     return {
         'f': fsamples,
         'y': ysamples}
+
+
+def decode_features(features_ext, resource_attr_range: Tuple[int, int]):
+    """
+    Given matrix of features from extended configs, corresponding to
+    `ExtendedConfiguration`, split into feature matrix from normal
+    configs and resource values.
+
+    :param features_ext: Matrix of features from extended configs
+    :param resource_attr_range: (r_min, r_max)
+    :return: (features, resources)
+    """
+    r_min, r_max = resource_attr_range
+    features = features_ext[:, :-1]
+    resources_encoded = _flatvec(features_ext[:, -1])
+    lower = r_min - 0.5 + EPS
+    width = r_max - r_min + 1 - 2 * EPS
+    resources = anp.clip(
+        anp.round(resources_encoded * width + lower), r_min, r_max)
+    return features, [int(r) for r in resources]
 
 
 def issm_likelihood_slow_computations(
