@@ -24,8 +24,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
     import issm_likelihood_slow_computations, posterior_computations, \
     predict_posterior_marginals, sample_posterior_marginals, \
-    sample_posterior_joint, _inner_product, \
-    issm_likelihood_computations, issm_likelihood_precomputations
+    _inner_product, issm_likelihood_computations, \
+    issm_likelihood_precomputations
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
+    import sample_posterior_joint as sample_posterior_joint_issm
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.model_params \
     import ISSModelParameters
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
@@ -33,6 +35,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.fre
     ExponentialDecayBaseKernelFunction, logdet_cholfact_cov_resource, \
     resource_kernel_likelihood_computations, \
     resource_kernel_likelihood_precomputations
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
+    import sample_posterior_joint as sample_posterior_joint_expdecay
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +143,33 @@ class GaussProcAdditivePosteriorState(object):
         test_feature_gradient = grad(diff_test_feature)
         return np.reshape(test_feature_gradient(test_feature), input.shape)
 
+    def sample_curves(
+            self, data: Dict, num_samples: int = 1,
+            random_state: Optional[RandomState] = None) -> List[Dict]:
+        """
+        Given data from one or more configurations (as returned by
+        `issm.prepare_data`), for each config, sample a curve from the
+        joint posterior (predictive) distribution over latent targets.
+        The curve for each config in `data` may be partly observed, but
+        must not be fully observed. Samples for the different configs are
+        independent. None of the configs in `data` must appear in the dataset
+        used to compute the posterior state.
+
+        The result is a list of Dict, one for each config. If for a config,
+        targets in `data` are given for resource values range(r_min, r_obs),
+        the dict entry `y` is a joint sample [y_r], r in range(r_obs, r_max+1).
+        For some subclasses (e.g., ISSM), there is also an entry `f` with a
+        joint sample [f_r], r in range(r_obs-1, r_max+1), the latent function
+        values before noise. These entries are matrices with `num_samples`
+        columns, which are independent (the joint dependence is along the rows).
+
+        :param data: Data for configs to predict at
+        :param num_samples: Number of samples to draw from each curve
+        :param random_state: PRNG state to be used for sampling
+        :return: See above
+        """
+        raise NotImplementedError()
+
 
 class GaussProcISSMPosteriorState(GaussProcAdditivePosteriorState):
     """
@@ -198,40 +229,25 @@ class GaussProcISSMPosteriorState(GaussProcAdditivePosteriorState):
         data.update(issm_likelihood_precomputations(
             targets=data['targets'], r_min=data['r_min']))
 
-    # NOTE: This works for ISSM only, not generic!
     def sample_curves(
             self, data: Dict, num_samples: int = 1,
             random_state: Optional[RandomState] = None) -> List[Dict]:
-        """
-        Given data from one or more configurations (as returned by
-        `issm.prepare_data`), for each config, sample a curve from the
-        joint posterior (predictive) distribution over latent variables.
-        The curve for each config in `data` may be partly observed, but
-        must not be fully observed. Samples for the different configs are
-        independent. None of the configs in `data` must appear in the dataset
-        used to compute the posterior state.
-
-        The result is a list of Dict, one for each config. If for a config,
-        targets in `data` are given for resource values range(r_min, r_obs),
-        the joint samples returned are [f_r], r in range(r_obs-1, r_max+1),
-        and [y_r], r in range(r_obs, r_max+1). If targets in `data` is
-        empty, both [f_r] and [y_r] have r in range(r_min, r_max+1).
-
-        :param data: Data for configs to predict at
-        :param num_samples: Number of samples to draw from each curve
-        :param random_state: PRNG state to be used for sampling
-        :return: See above
-        """
         if random_state is None:
             random_state = np.random
         result = []
         for feature, targets, config in zip(
                 data['features'], data['targets'], data['configs']):
             issm_params = self.iss_model.get_issm_params([config])
-            result.append(sample_posterior_joint(
-                self.poster_state, self.mean, self.kernel, feature,
-                targets, issm_params, self.r_min, self.r_max,
-                random_state=random_state, num_samples=num_samples))
+            result.append(sample_posterior_joint_issm(
+                poster_state=self.poster_state,
+                mean=self.mean,
+                kernel=self.kernel,
+                feature=feature,
+                targets=targets,
+                issm_params=issm_params,
+                r_min=self.r_min, r_max=self.r_max,
+                random_state=random_state,
+                num_samples=num_samples))
         return result
 
 
@@ -240,7 +256,8 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
     Represent posterior state for joint Gaussian model of learning curves over
     a number of configurations. The model is the sum of a Gaussian process
     model for function values at r_max and independent Gaussian processes over
-    r, using an exponential decay covariance function.
+    r, using an exponential decay covariance function. The latter is shared
+    between all configs.
 
     This is essentially the model from the Freeze Thaw paper (see also
     :class:`ExponentialDecayResourcesKernelFunction`).
@@ -249,7 +266,7 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
     def __init__(
             self, data: Dict, mean: MeanFunction, kernel: KernelFunction,
             res_kernel: ExponentialDecayBaseKernelFunction, noise_variance,
-            **kwargs):
+            allow_sample_curves: bool = True, **kwargs):
         """
         `data` contains input points and targets, as obtained from
         `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
@@ -260,9 +277,13 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
         :param res_kernel: Kernel function k_r(r, r'), of exponential decay
             type
         :param noise_variance: Innovation and noise variance
+        :param allow_sample_curves: If False, `sample_curves` cannot be
+            called, but posterior state may be a bit faster to compute. Use
+            this during the fitting of the surrogate model
         """
         super().__init__(data, mean, kernel, noise_variance=noise_variance,
-                         res_kernel=res_kernel, **kwargs)
+                         res_kernel=res_kernel,
+                         allow_sample_curves=allow_sample_curves, **kwargs)
 
     @staticmethod
     def _has_precomputations(data: Dict) -> bool:
@@ -272,6 +293,7 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
     # the slow one here and require precomputations to be part of `data`
     def _compute_posterior_state(self, data: Dict, noise_variance, **kwargs):
         profiler = kwargs.get('profiler')
+        allow_sample_curves = kwargs.get('allow_sample_curves', True)
         # Compute posterior state
         self.res_kernel = kwargs['res_kernel']
         if profiler is not None:
@@ -279,11 +301,13 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
         if self._has_precomputations(data):
             issm_likelihood = resource_kernel_likelihood_computations(
                 precomputed=data, res_kernel=self.res_kernel,
-                noise_variance=noise_variance)
+                noise_variance=noise_variance,
+                cholfact_max_size=allow_sample_curves)
         else:
             issm_likelihood = resource_kernel_likelihood_slow_computations(
                 targets=data['targets'], res_kernel=self.res_kernel,
-                noise_variance=noise_variance)
+                noise_variance=noise_variance,
+                cholfact_max_size=allow_sample_curves)
         if profiler is not None:
             profiler.stop('likelihood')
             profiler.start('poster_comp')
@@ -295,6 +319,11 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
         # Add missing term to criterion value
         part3 = logdet_cholfact_cov_resource(issm_likelihood)
         self.poster_state['criterion'] += part3
+        # Extra terms required in `sample_curves`
+        if allow_sample_curves:
+            self.poster_state['lfact_all'] = issm_likelihood['lfact_all']
+            self.poster_state['means_all'] = issm_likelihood['means_all']
+            self.poster_state['noise_variance'] = noise_variance
 
     def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -315,3 +344,29 @@ class GaussProcExpDecayPosteriorState(GaussProcAdditivePosteriorState):
         logger.info("Enhancing data dictionary by precomputed variables")
         data.update(resource_kernel_likelihood_precomputations(
             targets=data['targets']))
+
+    def sample_curves(
+            self, data: Dict, num_samples: int = 1,
+            random_state: Optional[RandomState] = None) -> List[Dict]:
+        assert 'lfact_all' in self.poster_state, \
+            f"sample_curves cannot be used if allow_sample_curves=False"
+        if random_state is None:
+            random_state = np.random
+        lfact_all = self.poster_state['lfact_all']
+        means_all = self.poster_state['means_all']
+        noise_variance = self.poster_state['noise_variance']
+        result = []
+        for feature, targets in zip(data['features'], data['targets']):
+            result.append(sample_posterior_joint_expdecay(
+                poster_state=self.poster_state,
+                mean=self.mean,
+                kernel=self.kernel,
+                feature=feature,
+                targets=targets,
+                res_kernel=self.res_kernel,
+                noise_variance=noise_variance,
+                lfact_all=lfact_all,
+                means_all=means_all,
+                random_state=random_state,
+                num_samples=num_samples))
+        return result

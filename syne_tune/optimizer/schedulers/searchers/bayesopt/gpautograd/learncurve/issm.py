@@ -384,7 +384,6 @@ def sample_posterior_marginals(
     return anp.multiply(post_stds, n01_mat) + _colvec(post_means)
 
 
-# TODO!! Use precomputation and `issm_likelihood_computations` !!
 def sample_posterior_joint(
         poster_state: Dict, mean, kernel, feature, targets: List,
         issm_params: Dict, r_min: int, r_max: int, random_state: RandomState,
