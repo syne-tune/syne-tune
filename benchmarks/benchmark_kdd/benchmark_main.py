@@ -66,6 +66,7 @@ if __name__ == '__main__':
             dataset=benchmark.dataset_name,
         )
 
+        # todo move into benchmark definition
         max_t = max(backend.blackbox.fidelity_values)
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
 

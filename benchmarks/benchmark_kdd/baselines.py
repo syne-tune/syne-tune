@@ -6,6 +6,8 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.transfer_learning.quantile_based.thompson_sampling_functional_prior import TS
+
 
 @dataclass
 class MethodArguments:
@@ -75,6 +77,19 @@ methods = {
         metric=method_arguments.metric,
         config_space=method_arguments.config_space,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
+    ),
+    'HB-TS': lambda method_arguments: HyperbandScheduler(
+        config_space=method_arguments.config_space,
+        searcher=TS(
+            mode="min",
+            config_space=method_arguments.config_space,
+            metric=method_arguments.metric,
+            transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
+        ),
+        mode="min",
+        metric=method_arguments.metric,
+        max_t=200,
+        resource_attr='hp_epoch',
     ),
     'Botorch': lambda method_arguments: BotorchGP(
         config_space=method_arguments.config_space,
