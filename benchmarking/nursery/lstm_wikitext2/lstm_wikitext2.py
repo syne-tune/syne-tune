@@ -25,7 +25,7 @@ from syne_tune.search_space import randint, uniform, loguniform, \
 from benchmarking.utils.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
     pytorch_load_save_functions
-from benchmarks.utils import parse_bool
+from benchmarking.cli.utils import parse_bool
 
 
 BATCH_SIZE_LOWER = 8

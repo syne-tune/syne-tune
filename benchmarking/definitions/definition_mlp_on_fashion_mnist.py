@@ -15,7 +15,7 @@ Two-layer MLP trained on Fashion MNIST
 """
 from pathlib import Path
 
-from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import \
+from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import \
     NUM_UNITS_1, NUM_UNITS_2, _config_space, METRIC_NAME, RESOURCE_ATTR, \
     ELAPSED_TIME_ATTR
 
