@@ -16,7 +16,8 @@ import autograd.numpy as anp
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.model_params \
     import ISSModelParameters
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.posterior_state \
-    import GaussProcISSMPosteriorState, GaussProcExpDecayPosteriorState
+    import GaussProcISSMPosteriorState, GaussProcExpDecayPosteriorState, \
+    IncrementalUpdateGPAdditivePosteriorState
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
     import ExponentialDecayBaseKernelFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
@@ -98,7 +99,8 @@ class MarginalLikelihood(Block):
     def set_profiler(self, profiler: Optional[SimpleProfiler]):
         self._profiler = profiler
 
-    def get_posterior_state(self, data: Dict, crit_only: bool = False):
+    def get_posterior_state(self, data: Dict, crit_only: bool = False) \
+            -> IncrementalUpdateGPAdditivePosteriorState:
         _kwargs = dict(self._posterstate_kwargs,
                        allow_sample_curves=not crit_only)
         return self._type(
@@ -114,6 +116,9 @@ class MarginalLikelihood(Block):
 
         :param data: Input points (features, configs), targets
         """
+        assert not data['do_fantasizing'], \
+            "data must not be for fantasizing. Call prepare_data with " +\
+            "do_fantasizing=False"
         return self.get_posterior_state(
             data, crit_only=True).neg_log_likelihood()
 
@@ -146,7 +151,7 @@ class MarginalLikelihood(Block):
 
     def set_noise_variance(self, val):
         self.encoding.set(self.noise_variance_internal, val)
-        
+
     def get_params(self):
         result = {'noise_variance': self.get_noise_variance()}
         for pref, func in self._components:
