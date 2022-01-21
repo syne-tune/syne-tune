@@ -12,8 +12,8 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarks.estimator_factory import sagemaker_estimator_factory
-from benchmarks.benchmark_factory import benchmark_factory, \
+from benchmarking.cli.estimator_factory import sagemaker_estimator_factory
+from benchmarking.cli.benchmark_factory import benchmark_factory, \
     supported_benchmarks
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     get_execution_role
