@@ -1,25 +1,13 @@
 """
 Adapts the introductionary example of rllib that trains a Cartpole with PPO.
+https://docs.ray.io/en/master/rllib/index.html
 The input arguments learning-rate and gamma discount factor can be tuned for maximizing the episode mean reward.
 """
 from argparse import ArgumentParser
-from ray.rllib.agents import DefaultCallbacks
 from syne_tune.report import Reporter
-
-
-class ReportResultsCallback(DefaultCallbacks):
-    def __init__(self):
-        super(ReportResultsCallback, self).__init__()
-        self.reporter = Reporter()
-
-    def on_train_result(self, *, trainer: "Trainer", result: dict, **kwargs) -> None:
-        self.reporter(**result)
-
+from ray.rllib.agents.ppo import PPOTrainer
 
 if __name__ == '__main__':
-
-    from ray.rllib.agents.ppo import PPOTrainer
-
     parser = ArgumentParser()
     parser.add_argument('--max_training_steps', type=int, default=100)
     parser.add_argument('--lr', type=float, default=5e-5)
