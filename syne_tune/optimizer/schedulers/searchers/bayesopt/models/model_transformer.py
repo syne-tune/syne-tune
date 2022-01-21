@@ -79,16 +79,6 @@ class TransformerModelFactory(object):
     def profiler(self) -> Optional[SimpleProfiler]:
         return None
 
-    def predictions_use_extended_configs(self) -> bool:
-        """
-        Relevant only for surrogate models supporting multi-fidelity
-        scheduling (e.g., learning curve models).
-
-        :return: Predictions are based on extended configs (where resource
-            level is appended)? If not, they are based on normal configs
-        """
-        return True
-
 
 # Convenience types allowing for multi-output HPO. These are used for methods that work both in the standard case
 # of a single output model and in the multi-output case

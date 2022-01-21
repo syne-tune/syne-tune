@@ -14,6 +14,8 @@ import argparse
 import logging
 
 from benchmarks.benchmark_factory import supported_benchmarks, benchmark_factory
+from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
+    SUPPORTED_RESOURCE_FOR_ACQUISITION
 
 logger = logging.getLogger(__name__)
 
@@ -209,9 +211,10 @@ def parse_args(allow_lists_as_values=True):
     parser.add_argument('--searcher_num_fantasy_samples', type=int,
                         help='Number of fantasy samples',
                         **allow_list)
+    help_str = "Rule for resource level at which acquisition function is used " +\
+        f"[{SUPPORTED_RESOURCE_FOR_ACQUISITION}]"
     parser.add_argument('--searcher_resource_acq', type=str,
-                        help='Determines how EI acquisition function is used '
-                             '[bohb, first]',
+                        help=help_str,
                         **allow_list)
     parser.add_argument('--searcher_resource_acq_bohb_threshold', type=int,
                         help='Parameter for resource_acq == bohb',

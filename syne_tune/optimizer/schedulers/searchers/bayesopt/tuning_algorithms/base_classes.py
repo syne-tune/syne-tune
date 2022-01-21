@@ -107,10 +107,6 @@ class SurrogateModel(ABC):
         pass
 
     def hp_ranges_for_prediction(self) -> HyperparameterRanges:
-        """
-        :return: HyperparameterRanges to be used for predictions. By default,
-            this is self.state.hp_ranges
-        """
         return self.state.hp_ranges
 
     def predict_candidates(self, candidates: Iterable[Configuration]) -> \
@@ -198,7 +194,9 @@ class AcquisitionFunction(ScoringFunction):
         self.active_metric = active_metric
 
     @abstractmethod
-    def compute_acq(self, inputs: np.ndarray, model: Optional[SurrogateOutputModel] = None) -> np.ndarray:
+    def compute_acq(
+            self, inputs: np.ndarray,
+            model: Optional[SurrogateOutputModel] = None) -> np.ndarray:
         """
         Note: If inputs has shape (d,), it is taken to be (1, d)
 
@@ -210,7 +208,9 @@ class AcquisitionFunction(ScoringFunction):
 
     @abstractmethod
     def compute_acq_with_gradient(
-            self, input: np.ndarray, model: Optional[SurrogateOutputModel] = None) -> Tuple[float, np.ndarray]:
+            self, input: np.ndarray,
+            model: Optional[SurrogateOutputModel] = None) \
+            -> Tuple[float, np.ndarray]:
         """
         For a single input point x, compute acquisition function value f(x)
         and gradient nabla_x f.
@@ -221,7 +221,8 @@ class AcquisitionFunction(ScoringFunction):
         """
         pass
 
-    def score(self, candidates: Iterable[Configuration], model: Optional[SurrogateOutputModel] = None) -> List[float]:
+    def score(self, candidates: Iterable[Configuration],
+              model: Optional[SurrogateOutputModel] = None) -> List[float]:
         if model is None:
             model = self.model
         if isinstance(model, dict):

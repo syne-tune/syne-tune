@@ -386,6 +386,41 @@ def resource_kernel_likelihood_slow_computations(
     return result
 
 
+def predict_posterior_marginals_extended(
+        poster_state: Dict, mean, kernel, test_features,
+        resources: List[int], res_kernel: ExponentialDecayBaseKernelFunction):
+    """
+    These are posterior marginals on f_r = h + g_r variables, where
+    (x, r) are zipped from `test_features`, `resources`.
+    `posterior_means` is a (n, F) matrix, where F is the number of fantasy
+    samples, or F == 1 without fantasizing.
+
+    :param poster_state: Posterior state
+    :param mean: Mean function
+    :param kernel: Kernel function
+    :param test_features: Feature matrix for test points (not extended)
+    :param resources: Resource values corresponding to rows of
+        `test_features`
+    :param res_kernel: Kernel k(r, r') over resources
+    :return: posterior_means, posterior_variances
+
+    """
+    num_test = test_features.shape[0]
+    assert len(resources) == num_test, \
+        f"test_features.shape[0] = {num_test} != {len(resources)} " +\
+        "= len(resources)"
+    # Predictive marginals over h
+    h_means, h_variances = predict_posterior_marginals(
+        poster_state, mean, kernel, test_features)
+    # Convert into predictive marginals over f_r
+    rvals = _colvec(anp.array(resources))
+    g_means = _colvec(res_kernel.mean_function(rvals))
+    g_variances = _flatvec(res_kernel.diagonal(rvals))
+    posterior_means = h_means + g_means
+    posterior_variances = h_variances + g_variances
+    return posterior_means, posterior_variances
+
+
 def sample_posterior_joint(
         poster_state: Dict, mean, kernel, feature, targets: List,
         res_kernel: ExponentialDecayBaseKernelFunction, noise_variance,

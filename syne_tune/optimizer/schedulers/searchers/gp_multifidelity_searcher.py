@@ -174,8 +174,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             assert isinstance(self.resource_for_acquisition,
                               ResourceForAcquisitionMap)
         self.configspace_ext = kwargs_int.pop('configspace_ext')
-        self._predictions_use_extended_configs = \
-            kwargs_int['model_factory'].predictions_use_extended_configs()
         self._create_internal(**kwargs_int)
 
     def configure_scheduler(self, scheduler):
@@ -196,12 +194,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     def _hp_ranges_in_state(self):
         return self.configspace_ext.hp_ranges_ext
-
-    def _hp_ranges_for_prediction(self):
-        if self._predictions_use_extended_configs:
-            return self.configspace_ext.hp_ranges_ext
-        else:
-            return self.configspace_ext.hp_ranges
 
     def _config_ext_update(self, config, result):
         resource = int(result[self._resource_attr])

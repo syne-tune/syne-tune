@@ -16,8 +16,7 @@ import logging
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils \
     import map_reward_const_minus_x, MapReward, \
     DEFAULT_INITIAL_SCORING, SUPPORTED_INITIAL_SCORING, \
-    ResourceForAcquisitionBOHB, ResourceForAcquisitionFirstMilestone, \
-    ResourceForAcquisitionMap
+    resource_for_acquisition_factory
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory \
     import resource_kernel_factory, SUPPORTED_RESOURCE_MODELS
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
@@ -80,8 +79,8 @@ __all__ = ['gp_fifo_searcher_factory',
 logger = logging.getLogger(__name__)
 
 
-def _create_base_gp_kernel(hp_ranges: HyperparameterRanges,
-                           **kwargs) -> KernelFunction:
+def _create_base_gp_kernel(
+        hp_ranges: HyperparameterRanges, **kwargs) -> KernelFunction:
     """
     The default base kernel is :class:`Matern52` with ARD parameters.
     But in the transfer learning case, the base kernel is a product of
@@ -155,7 +154,9 @@ def _create_gp_standard_model(
         debug_log=result['debug_log'],
         filter_observed_data=filter_observed_data,
         no_fantasizing=kwargs.get('no_fantasizing', False))
-    return model_factory, filter_observed_data
+    return {
+        'model_factory': model_factory,
+        'filter_observed_data': filter_observed_data}
 
 
 def _create_gp_additive_model(
@@ -192,13 +193,17 @@ def _create_gp_additive_model(
         debug_log=result['debug_log'],
         filter_observed_data=filter_observed_data,
         normalize_targets=kwargs.get('normalize_targets', True))
-    return model_factory, filter_observed_data
+    return {
+        'model_factory': model_factory,
+        'filter_observed_data': filter_observed_data}
 
 
 def _create_common_objects(model=None, **kwargs):
     scheduler = kwargs['scheduler']
     is_hyperband = scheduler.startswith('hyperband')
-    assert model is None or is_hyperband, \
+    if model is None:
+        model = 'gp_multitask'
+    assert model == 'gp_multitask' or is_hyperband, \
         f"model = {model} only together with hyperband_* scheduler"
     hp_ranges = create_hp_ranges_for_warmstarting(**kwargs)
     random_seed, _kwargs = extract_random_seed(kwargs)
@@ -256,26 +261,31 @@ def _create_common_objects(model=None, **kwargs):
             resource_attr_range=epoch_range)
 
     # Create model factory
-    if model is None or model == 'gp_multitask':
-        model_factory, filter_observed_data = _create_gp_standard_model(
+    if model == 'gp_multitask':
+        result.update(_create_gp_standard_model(
             hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
             random_seed=random_seed,
             is_hyperband=is_hyperband,
-            **_kwargs)
+            **_kwargs))
     else:
-        model_factory, filter_observed_data = _create_gp_additive_model(
+        result.update(_create_gp_additive_model(
             model=model,
             hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
             random_seed=random_seed,
             configspace_ext=result['configspace_ext'],
-            **_kwargs)
-    result['model_factory'] = model_factory
-    result['filter_observed_data'] = filter_observed_data
+            **_kwargs))
 
     return result
 
+
+def _kwargs_int_common(kwargs) -> Dict:
+    return dict(
+        num_initial_candidates=kwargs['num_init_candidates'],
+        num_initial_random_choices=kwargs['num_init_random'],
+        initial_scoring=kwargs['initial_scoring'],
+        cost_attr=kwargs['cost_attr'])
 
 def gp_fifo_searcher_factory(**kwargs) -> Dict:
     """
@@ -300,28 +310,9 @@ def gp_fifo_searcher_factory(**kwargs) -> Dict:
     # Common objects
     result = _create_common_objects(**kwargs)
 
-    return dict(**result,
-                acquisition_class=EIAcquisitionFunction,
-                num_initial_candidates=kwargs['num_init_candidates'],
-                num_initial_random_choices=kwargs['num_init_random'],
-                initial_scoring=kwargs['initial_scoring'],
-                cost_attr=kwargs['cost_attr'])
-
-
-def _resource_for_acquisition(
-        kwargs: Dict,
-        hp_ranges: HyperparameterRanges) -> ResourceForAcquisitionMap:
-    _resource_acq = kwargs.get('resource_acq', 'bohb')
-    if _resource_acq == 'bohb':
-        threshold = kwargs.get(
-            'resource_acq_bohb_threshold', hp_ranges.ndarray_size())
-        resource_for_acquisition = ResourceForAcquisitionBOHB(
-            threshold=threshold)
-    else:
-        assert _resource_acq == 'first', \
-            "resource_acq must be 'bohb' or 'first'"
-        resource_for_acquisition = ResourceForAcquisitionFirstMilestone()
-    return resource_for_acquisition
+    return dict(result,
+                **_kwargs_int_common(kwargs),
+                acquisition_class=EIAcquisitionFunction)
 
 
 def gp_multifidelity_searcher_factory(**kwargs) -> Dict:
@@ -345,15 +336,12 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict:
     # Common objects
     result = _create_common_objects(**kwargs)
 
-    kwargs_int = dict(**result,
+    kwargs_int = dict(result,
+                      **_kwargs_int_common(kwargs),
                       resource_attr=kwargs['resource_attr'],
-                      acquisition_class=EIAcquisitionFunction,
-                      num_initial_candidates=kwargs['num_init_candidates'],
-                      num_initial_random_choices=kwargs['num_init_random'],
-                      initial_scoring=kwargs['initial_scoring'],
-                      cost_attr=kwargs['cost_attr'])
+                      acquisition_class=EIAcquisitionFunction)
     if kwargs['model'] == 'gp_multitask':
-        kwargs_int['resource_for_acquisition'] = _resource_for_acquisition(
+        kwargs_int['resource_for_acquisition'] = resource_for_acquisition_factory(
             kwargs, result['hp_ranges'])
     return kwargs_int
 
@@ -378,12 +366,12 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict:
     # We need two model factories: one for active metric (model_factory),
     # the other for constraint metric (model_factory_constraint)
     random_seed, _kwargs = extract_random_seed(kwargs)
-    model_factory_constraint, _ = _create_gp_standard_model(
+    model_factory_constraint = _create_gp_standard_model(
         hp_ranges=result['hp_ranges'],
         active_metric=INTERNAL_CONSTRAINT_NAME,
         random_seed=random_seed,
         is_hyperband=False,
-        **_kwargs)
+        **_kwargs)['model_factory']
     # Sharing debug_log attribute across models
     model_factory_constraint._debug_log = model_factory._debug_log
     # The same skip_optimization strategy applies to both models
@@ -394,14 +382,11 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict:
     output_skip_optimization = {INTERNAL_METRIC_NAME: skip_optimization,
                                 INTERNAL_CONSTRAINT_NAME: skip_optimization_constraint}
 
-    return dict(**result,
+    return dict(result,
+                **_kwargs_int_common(kwargs),
                 output_model_factory=output_model_factory,
                 output_skip_optimization=output_skip_optimization,
-                acquisition_class=CEIAcquisitionFunction,
-                num_initial_candidates=kwargs['num_init_candidates'],
-                num_initial_random_choices=kwargs['num_init_random'],
-                initial_scoring=kwargs['initial_scoring'],
-                cost_attr=kwargs['cost_attr'])
+                acquisition_class=CEIAcquisitionFunction)
 
 
 def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
@@ -426,12 +411,12 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
     # We need two model factories: one for active metric (model_factory),
     # the other for cost metric (model_factory_cost)
     random_seed, _kwargs = extract_random_seed(kwargs)
-    model_factory_cost, _ = _create_gp_standard_model(
+    model_factory_cost = _create_gp_standard_model(
         hp_ranges=result['hp_ranges'],
         active_metric=INTERNAL_COST_NAME,
         random_seed=random_seed,
         is_hyperband=False,
-        **_kwargs)
+        **_kwargs)['model_factory']
     # Sharing debug_log attribute across models
     model_factory_cost._debug_log = model_factory._debug_log
     exponent_cost = kwargs.get('exponent_cost', 1.0)
@@ -445,14 +430,11 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
     output_skip_optimization = {INTERNAL_METRIC_NAME: skip_optimization,
                                 INTERNAL_COST_NAME: skip_optimization_cost}
 
-    return dict(**result,
+    return dict(result,
+                **_kwargs_int_common(kwargs),
                 output_model_factory=output_model_factory,
                 output_skip_optimization=output_skip_optimization,
-                acquisition_class=acquisition_class,
-                num_initial_candidates=kwargs['num_init_candidates'],
-                num_initial_random_choices=kwargs['num_init_random'],
-                initial_scoring=kwargs['initial_scoring'],
-                cost_attr=kwargs['cost_attr'])
+                acquisition_class=acquisition_class)
 
 
 def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict:
@@ -502,14 +484,11 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict:
     output_skip_optimization = {INTERNAL_METRIC_NAME: skip_optimization,
                                 INTERNAL_COST_NAME: skip_optimization_cost}
 
-    return dict(**result,
+    return dict(result,
+                **_kwargs_int_common(kwargs),
                 output_model_factory=output_model_factory,
                 output_skip_optimization=output_skip_optimization,
                 acquisition_class=acquisition_class,
-                num_initial_candidates=kwargs['num_init_candidates'],
-                num_initial_random_choices=kwargs['num_init_random'],
-                initial_scoring=kwargs['initial_scoring'],
-                cost_attr=kwargs['cost_attr'],
                 resource_attr=kwargs['resource_attr'])
 
 
@@ -539,17 +518,10 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict:
     skip_optimization = result.pop('skip_optimization')
     # We need two model factories: one for active metric (model_factory),
     # the other for cost metric (model_factory_cost)
-    # TODO: Having to choose `hp_ranges_for_prediction` this way is pretty bad!
-    model = kwargs.get('model')
-    if model in {'gp_issm', 'gp_expdecay'}:
-        hp_ranges_for_prediction = result['hp_ranges']
-    else:
-        hp_ranges_for_prediction = None
     model_factory_cost = CostSurrogateModelFactory(
         model=kwargs['cost_model'],
         fixed_resource=kwargs['max_epochs'],
-        num_samples=1,
-        hp_ranges_for_prediction=hp_ranges_for_prediction)
+        num_samples=1)
     exponent_cost = kwargs.get('exponent_cost', 1.0)
     acquisition_class = (
         EIpuAcquisitionFunction, dict(exponent_cost=exponent_cost))
@@ -561,18 +533,15 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict:
     output_skip_optimization = {INTERNAL_METRIC_NAME: skip_optimization,
                                 INTERNAL_COST_NAME: skip_optimization_cost}
 
-    resource_for_acquisition = _resource_for_acquisition(
+    resource_for_acquisition = resource_for_acquisition_factory(
         kwargs, result['hp_ranges'])
-    return dict(**result,
+    return dict(result,
+                **_kwargs_int_common(kwargs),
                 resource_attr=kwargs['resource_attr'],
                 output_model_factory=output_model_factory,
                 output_skip_optimization=output_skip_optimization,
                 resource_for_acquisition=resource_for_acquisition,
-                acquisition_class=acquisition_class,
-                num_initial_candidates=kwargs['num_init_candidates'],
-                num_initial_random_choices=kwargs['num_init_random'],
-                initial_scoring=kwargs['initial_scoring'],
-                cost_attr=kwargs['cost_attr'])
+                acquisition_class=acquisition_class)
 
 
 def _common_defaults(is_hyperband: bool, is_multi_output: bool) -> (Set[str], dict, dict):
