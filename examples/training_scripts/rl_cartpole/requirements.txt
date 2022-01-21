@@ -1,0 +1,6 @@
+tensorboardX
+opencv-python
+ray[rllib]
+dm-tree
+gym
+tensorflow
