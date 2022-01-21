@@ -56,10 +56,9 @@ class BlackboxSurrogate(Blackbox):
         )
         assert len(X) == len(y)
         # todo other types of assert with configuration_space, objective_names, ...
-        self.X = X
-        self.y = y
         self.surrogate = surrogate
-        self.fit_surrogate(surrogate)
+        self.max_fit_samples = 10000
+        self.fit_surrogate(surrogate, X, y, max_samples=self.max_fit_samples)
         self.name = name
         self._fidelity_values = fidelity_values
 
@@ -100,7 +99,7 @@ class BlackboxSurrogate(Blackbox):
             ('model', model)
         ])
 
-    def fit_surrogate(self, surrogate=KNeighborsRegressor(n_neighbors=1)) -> Blackbox:
+    def fit_surrogate(self, X, y, surrogate=KNeighborsRegressor(n_neighbors=1), max_samples: int = None) -> Blackbox:
         """
         Fits a surrogate model to a blackbox.
         :param surrogate: fits the model and apply the model transformation when evaluating a
@@ -114,11 +113,18 @@ class BlackboxSurrogate(Blackbox):
             fidelity_space=self.fidelity_space,
             model=surrogate
         )
-
-        self.surrogate_pipeline.fit(
-            X=self.X,
-            y=self.y
-        )
+        # todo would be nicer to have this in the feature pipeline
+        if max_samples is not None and max_samples < len(X):
+            random_indices = np.random.permutation(len(X))[:max_samples]
+            self.surrogate_pipeline.fit(
+                X=X[random_indices],
+                y=y[random_indices]
+            )
+        else:
+            self.surrogate_pipeline.fit(
+                X=X,
+                y=y
+            )
         return self
 
     def _objective_function(
