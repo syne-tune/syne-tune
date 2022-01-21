@@ -54,12 +54,12 @@ class SagemakerBackend(Backend):
         """
         super(SagemakerBackend, self).__init__()
         self.sm_estimator = sm_estimator
-        self.metrics_names = metrics_names
 
         # edit the sagemaker estimator so that metrics of the user can be plotted over time by sagemaker and so that
         # the report.py code is available
         if metrics_names is None:
             metrics_names = []
+        self.metrics_names = metrics_names
         self.add_metric_definitions_to_sagemaker_estimator(metrics_names)
 
         st_prefix = "st-"
