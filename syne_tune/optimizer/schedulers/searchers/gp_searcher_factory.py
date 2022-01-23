@@ -16,7 +16,7 @@ import logging
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils \
     import map_reward_const_minus_x, MapReward, \
     DEFAULT_INITIAL_SCORING, SUPPORTED_INITIAL_SCORING, \
-    resource_for_acquisition_factory
+    resource_for_acquisition_factory, SUPPORTED_RESOURCE_FOR_ACQUISITION
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory \
     import resource_kernel_factory, SUPPORTED_RESOURCE_MODELS
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
@@ -604,7 +604,7 @@ def _common_defaults(is_hyperband: bool, is_multi_output: bool) -> (Set[str], di
         constraints['gp_resource_kernel'] = Categorical(
             choices=SUPPORTED_RESOURCE_MODELS)
         constraints['resource_acq'] = Categorical(
-            choices=('bohb', 'first'))
+            choices=tuple(SUPPORTED_RESOURCE_FOR_ACQUISITION))
         constraints['issm_gamma_one'] = Boolean()
         constraints['expdecay_normalize_inputs'] = Boolean()
         constraints['use_new_code'] = Boolean()  # DEBUG
