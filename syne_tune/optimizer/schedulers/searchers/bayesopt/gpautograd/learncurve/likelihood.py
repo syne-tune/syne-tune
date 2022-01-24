@@ -101,10 +101,9 @@ class MarginalLikelihood(Block):
 
     def get_posterior_state(self, data: Dict, crit_only: bool = False) \
             -> IncrementalUpdateGPAdditivePosteriorState:
-        _kwargs = dict(self._posterstate_kwargs,
-                       allow_sample_curves=not crit_only)
         return self._type(
-            data, **_kwargs, noise_variance=self.get_noise_variance(),
+            data, **self._posterstate_kwargs,
+            noise_variance=self.get_noise_variance(),
             profiler=self._profiler)
 
     def forward(self, data: Dict):

@@ -307,10 +307,14 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             assert data_pending['configs'], \
                 "State is empty, cannot do posterior inference:\n" +\
                 str(state)
-            names = ('configs', 'features', 'targets', 'trial_ids')
+            names = ('configs', 'targets', 'trial_ids')
             elem = {k: data_pending[k].pop(0) for k in names}
-            for k, v in elem:
+            for k, v in elem.items():
                 data_nopending[k] = [v]
+            k = 'features'
+            all_features = data_pending[k]
+            data_nopending[k] = all_features[0].reshape((1, -1))
+            data_pending[k] = all_features[1:, :]
             logger.info(
                 "All trials currently have pending evaluations. In order to "
                 "sample fantasy targets, I'll remove pending evaluations "

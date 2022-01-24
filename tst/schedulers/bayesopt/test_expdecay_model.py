@@ -237,7 +237,6 @@ def test_compare_gped_likelihood_oldnew(_model_params, _state):
             np.testing.assert_almost_equal(value, likelihood[1][name])
 
 
-@pytest.mark.skip("Need joint sampling for gp_expdecay model (PR #74)")
 @pytest.mark.parametrize(
     "_model_params, _state", zip(_model_params, _state))
 def test_compare_gped_likelihood_fantasizing_oldnew(_model_params, _state):

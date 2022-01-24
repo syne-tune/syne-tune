@@ -186,10 +186,10 @@ def prepare_data(
         zip(configs, targets, trial_ids), key=lambda x: -x[1].shape[0]))
     features = hp_ranges.to_ndarray_matrix(configs)
     result = {
-        'configs': configs,
+        'configs': list(configs),
         'features': features,
-        'targets': targets,
-        'trial_ids': trial_ids,
+        'targets': list(targets),
+        'trial_ids': list(trial_ids),
         'r_min': r_min,
         'r_max': r_max,
         'do_fantasizing': do_fantasizing}
@@ -276,10 +276,10 @@ def prepare_data_with_pending(
             # It is possible that `data1_lst` is empty
             features = None
         result = {
-            'configs': configs,
+            'configs': list(configs),
             'features': features,
-            'targets': targets,
-            'trial_ids': trial_ids,
+            'targets': list(targets),
+            'trial_ids': list(trial_ids),
             'r_min': r_min,
             'r_max': r_max,
             'do_fantasizing': False}

@@ -476,8 +476,7 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
             mean: MeanFunction,
             kernel: KernelFunction,
             res_kernel: ExponentialDecayBaseKernelFunction,
-            noise_variance,
-            allow_sample_curves: bool = True, **kwargs):
+            noise_variance, **kwargs):
         """
         `data` contains input points and targets, as obtained from
         `issm.prepare_data`.
@@ -488,14 +487,10 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         :param res_kernel: Kernel function k_r(r, r'), of exponential decay
             type
         :param noise_variance: Innovation and noise variance
-        :param allow_sample_curves: If False, `sample_curves` cannot be
-            called, but posterior state may be a bit faster to compute. Use
-            this during the fitting of the surrogate model
         """
         self.res_kernel = res_kernel
         super().__init__(
-            data, mean, kernel, noise_variance=noise_variance,
-            allow_sample_curves=allow_sample_curves, **kwargs)
+            data, mean, kernel, noise_variance=noise_variance, **kwargs)
         assert self.r_min == res_kernel.r_min and self.r_max == res_kernel.r_max, \
             ((self.r_min, self.r_max), (res_kernel.r_min, res_kernel.r_max))
 
@@ -505,7 +500,6 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
     def _compute_posterior_state(
             self, data: Dict, noise_variance, **kwargs):
         profiler = kwargs.get('profiler')
-        allow_sample_curves = kwargs.get('allow_sample_curves', True)
         # Compute posterior state
         if profiler is not None:
             profiler.start('likelihood')
@@ -513,14 +507,12 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
             issm_likelihood = resource_kernel_likelihood_computations(
                 precomputed=data,
                 res_kernel=self.res_kernel,
-                noise_variance=noise_variance,
-                cholfact_max_size=allow_sample_curves)
+                noise_variance=noise_variance)
         else:
             issm_likelihood = resource_kernel_likelihood_slow_computations(
                 targets=data['targets'],
                 res_kernel=self.res_kernel,
-                noise_variance=noise_variance,
-                cholfact_max_size=allow_sample_curves)
+                noise_variance=noise_variance)
         if profiler is not None:
             profiler.stop('likelihood')
             profiler.start('poster_comp')
@@ -532,13 +524,13 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         if profiler is not None:
             profiler.stop('poster_comp')
         # Add missing term to criterion value
-        part3 = logdet_cholfact_cov_resource(issm_likelihood)
-        self.poster_state['criterion'] += part3
+        if 'criterion' in self.poster_state:
+            part3 = logdet_cholfact_cov_resource(issm_likelihood)
+            self.poster_state['criterion'] += part3
         # Extra terms required in `sample_curves`
-        if allow_sample_curves:
-            self.poster_state['lfact_all'] = issm_likelihood['lfact_all']
-            self.poster_state['means_all'] = issm_likelihood['means_all']
-            self.poster_state['noise_variance'] = noise_variance
+        self.poster_state['lfact_all'] = issm_likelihood['lfact_all']
+        self.poster_state['means_all'] = issm_likelihood['means_all']
+        self.poster_state['noise_variance'] = noise_variance
 
     def predict(
             self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -555,15 +547,13 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
 
     @staticmethod
     def data_precomputations(data: Dict):
-        logger.info("Enhancing data dictionary by precomputed variables")
         data.update(resource_kernel_likelihood_precomputations(
             targets=data['targets']))
 
     def _sample_curves_internal(
             self, data: Dict, poster_state: Dict, num_samples: int = 1,
             random_state: Optional[RandomState] = None) -> List[Dict]:
-        assert 'lfact_all' in poster_state, \
-            f"sample_curves cannot be used if allow_sample_curves=False"
+        assert 'lfact_all' in poster_state
         if random_state is None:
             random_state = np.random
         lfact_all = poster_state['lfact_all']
@@ -604,5 +594,9 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
             self, feature: np.ndarray, targets: np.ndarray) \
             -> 'IncrementalUpdateGPAdditivePosteriorState':
         create_kwargs = self._update_internal(feature, targets)
+        # Extra terms required in `sample_curves`
+        new_poster_state = create_kwargs['poster_state']
+        for k in ('lfact_all', 'means_all', 'noise_variance'):
+            new_poster_state[k] = self.poster_state[k]
         return GaussProcExpDecayPosteriorState(
             **create_kwargs, res_kernel=self.res_kernel)
