@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from pathlib import Path
 
 from sklearn.ensemble import RandomForestRegressor
 
@@ -62,8 +61,7 @@ def nashpobench_benchmark(params):
         dont_sleep=params['dont_sleep'],
         blackbox_repo_s3_root=params.get('blackbox_repo_s3_root'))
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" /
-                  "training_scripts" / "nashpobench" / "nashpobench.py",
+        'script': None,
         'metric': METRIC_VALID_LOSS,
         'mode': 'min',
         'resource_attr': RESOURCE_ATTR,

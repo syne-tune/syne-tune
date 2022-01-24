@@ -18,8 +18,8 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.constants import ST_WORKER_TIME
 
-from benchmarks.launch_utils import make_searcher_and_scheduler
-from benchmarks.utils import dict_get
+from benchmarking.cli.launch_utils import make_searcher_and_scheduler
+from benchmarking.utils import dict_get
 
 __all__ = ['scheduler_factory',
            'supported_schedulers',

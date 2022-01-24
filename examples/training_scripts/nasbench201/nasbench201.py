@@ -21,7 +21,7 @@ import time
 from syne_tune.report import Reporter
 from benchmarking.utils.checkpoint import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse
-from benchmarking.cli.utils import parse_bool
+from benchmarking.utils.utils import parse_bool
 from benchmarking.blackbox_repository.conversion_scripts.scripts.nasbench201_import import \
     CONFIG_KEYS, METRIC_VALID_ERROR, METRIC_TIME_THIS_RESOURCE, \
     RESOURCE_ATTR,  BLACKBOX_NAME

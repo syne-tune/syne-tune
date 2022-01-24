@@ -10,8 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from pathlib import Path
-
 from syne_tune.search_space import choice
 from benchmarking.blackbox_repository.conversion_scripts.scripts.nasbench201_import import \
     CONFIG_KEYS, METRIC_VALID_ERROR, METRIC_TIME_THIS_RESOURCE, \
@@ -48,6 +46,7 @@ def nasbench201_default_params(params=None):
         'cost_model_type': 'linear',
     }
 
+
 def nasbench201_benchmark(params):
     """
     The underlying tabulated blackbox does not have an `elapsed_time_attr`,
@@ -61,8 +60,7 @@ def nasbench201_benchmark(params):
         dont_sleep=params['dont_sleep'],
         blackbox_repo_s3_root=params.get('blackbox_repo_s3_root'))
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" /
-                  "training_scripts" / "nasbench201" / "nasbench201.py",
+        'script': None,
         'metric': METRIC_VALID_ERROR,
         'mode': 'min',
         'resource_attr': RESOURCE_ATTR,

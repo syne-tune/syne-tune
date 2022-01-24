@@ -13,7 +13,7 @@
 import argparse
 import logging
 
-from benchmarks.benchmark_factory import supported_benchmarks, benchmark_factory
+from benchmarking.cli.benchmark_factory import supported_benchmarks, benchmark_factory
 
 logger = logging.getLogger(__name__)
 
