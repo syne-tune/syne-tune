@@ -13,9 +13,9 @@
 import argparse
 import logging
 
-from benchmarks.benchmark_factory import supported_benchmarks, benchmark_factory
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
     SUPPORTED_RESOURCE_FOR_ACQUISITION
+from benchmarking.cli.benchmark_factory import supported_benchmarks, benchmark_factory
 
 logger = logging.getLogger(__name__)
 

@@ -25,7 +25,7 @@ from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
 
-from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
+from benchmarking.definitions.definition_distilbert_on_imdb import \
     distilbert_imdb_benchmark, distilbert_imdb_default_params
 
 if __name__ == '__main__':
