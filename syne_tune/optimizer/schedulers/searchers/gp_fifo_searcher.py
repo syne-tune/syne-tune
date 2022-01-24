@@ -212,7 +212,8 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
                 msg += f", cost_val = {cost_val:.2f}"
             logger.info(msg)
 
-    def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
+    def _get_config_modelbased(
+            self, exclusion_candidates: ExclusionList, **kwargs) -> \
             Optional[Configuration]:
         raise NotImplementedError()
 
@@ -221,8 +222,25 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             self.state_transformer.state,
             filter_observed_data=self._filter_observed_data)
 
+    def _should_pick_random_config(
+            self, exclusion_candidates: ExclusionList) -> bool:
+        if len(exclusion_candidates) < self.num_initial_random_choices:
+            return True
+        # Determine whether there is any observed data after filtering
+        state = self.state_transformer.state
+        if not state.trials_evaluations:
+            return True
+        if self._filter_observed_data is None:
+            return False
+        for ev in state.trials_evaluations:
+            config = state.config_for_trial[ev.trial_id]
+            if self._filter_observed_data(config):
+                return False
+        return True
+
     def _get_config_not_modelbased(
-            self, exclusion_candidates) -> (Optional[Configuration], bool):
+            self, exclusion_candidates: ExclusionList) -> (
+            Optional[Configuration], bool):
         """
         Does job of `get_config`, as long as the decision does not involve
         model-based search. If False is returned, model-based search must be
@@ -233,8 +251,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         state = self.state_transformer.state
         config = self._next_initial_config()  # Ask for initial config
         if config is None:
-            pick_random = (len(exclusion_candidates) < self.num_initial_random_choices) or \
-                (not state.trials_evaluations)
+            pick_random = self._should_pick_random_config(exclusion_candidates)
         else:
             pick_random = True  # Initial configs count as random here
         if pick_random and config is None:
