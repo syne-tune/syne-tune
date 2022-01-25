@@ -31,7 +31,7 @@ from benchmarking.cli.estimator_factory import sagemaker_estimator_factory
 from benchmarking.cli.launch_utils import parse_args
 from benchmarking.cli.benchmark_factory import benchmark_factory
 from benchmarking.cli.scheduler_factory import scheduler_factory
-from benchmarking.utils import dict_get
+from benchmarking.utils.dict_get import dict_get
 
 logger = logging.getLogger(__name__)
 
