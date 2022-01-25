@@ -15,6 +15,7 @@ from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRu
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
+from syne_tune.optimizer.schedulers.regularized_evolution import RegularizedEvolution
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
@@ -65,6 +66,7 @@ def make_ray_skopt():
     SimpleScheduler(config_space=config_space, metric=metric1),
     RandomSearch(config_space=config_space, metric=metric1),
     BayesianOptimization(config_space=config_space, metric=metric1),
+    RegularizedEvolution(config_space=config_space, metric=metric1, mode='min'),
     ASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     MOBSTER(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
