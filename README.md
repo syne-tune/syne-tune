@@ -302,15 +302,12 @@ evaluation code making good use of multiple GPUs.
 
 Once you have a tuning script, you can call Tuner with any scheduler to perform your HPO.
 You will find the following examples in [examples/](examples/) folder:
-* [launch_height_local.py](examples/launch_height_local.py):
-  launches HPO locally, tuning a simple script
-   [train_height_example.py](examples/training_scripts/height_example/train_height.py)  
+* [launch_height_local.py](examples/launch_height_baselines.py):
+  launches HPO locally, tuning a simple script 
+   [train_height_example.py](examples/training_scripts/height_example/train_height.py) for several baselines  
 * [launch_height_ray.py](examples/launch_height_ray.py):
   launches HPO locally with [Ray Tune](https://docs.ray.io/en/master/tune/index.html)
   scheduler
-* [launch_fashionmnist.py](examples/launch_fashionmnist.py):
-  launches HPO locally tuning a multi-layer perceptron on Fashion MNIST. This
-  employs an easy-to-use benchmark convention
 * [launch_height_moasha.py](examples/launch_height_moasha.py):
   shows how to tune a script reporting multiple-objectives with multiobjective Asynchronous Hyperband (MOASHA)
 * [launch_height_standalone_scheduler.py](examples/launch_height_standalone_scheduler.py):
@@ -321,12 +318,19 @@ You will find the following examples in [examples/](examples/) folder:
   the remote machine or distributed again as separate SageMaker training jobs
 * [launch_height_sagemaker.py](examples/launch_height_sagemaker.py):
   launches HPO on SageMaker to tune a SageMaker Pytorch estimator
-* [launch_huggingface_classification.py](examples/launch_huggingface_classification.py):
-  launches HPO on SageMaker to tune a SageMaker Hugging Face estimator for sentiment classification
 * [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py):
   launches HPO on SageMaker to tune a entry point with a custom docker image
 * [launch_plot_results.py](examples/launch_plot_results.py): shows how to plot
   results of a HPO experiment
+* [launch_fashionmnist.py](examples/launch_fashionmnist.py):
+launches HPO locally tuning a multi-layer perceptron on Fashion MNIST. This
+employs an easy-to-use benchmark convention
+* [launch_huggingface_classification.py](examples/launch_huggingface_classification.py):
+  launches HPO on SageMaker to tune a SageMaker Hugging Face estimator for sentiment classification
+* [launch_tuning_gluonts.py](examples/launch_tuning_gluonts.py):
+  launches HPO locally to tune a gluon-ts time series forecasting algorithm
+* [launch_rl_tuning.py](examples/launch_rl_tuning.py):
+  launches HPO locally to tune a RL algorithm on the cartpole environment
 
 
 ## Running on SageMaker
