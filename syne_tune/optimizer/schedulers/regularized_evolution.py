@@ -95,7 +95,8 @@ class RegularizedEvolution(TrialScheduler):
         return child_config
 
     def sample_random_config(self):
-        return {k: v.sample(random_state=self._random_state) if isinstance(v, Domain) else v for k, v in self.config_space.items()}
+        return {k: v.sample(random_state=self._random_state) if isinstance(v, Domain) else v for k, v in
+                self.config_space.items()}
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
 
@@ -129,39 +130,3 @@ class RegularizedEvolution(TrialScheduler):
 
     def metric_mode(self) -> str:
         return self.mode
-
-
-if __name__ == '__main__':
-    from syne_tune.tuner import Tuner
-    from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
-    from benchmarking.definitions.definition_nasbench201 import nasbench201_benchmark
-    from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-
-    benchmark = nasbench201_benchmark({'max_resource_level': 200, 'dataset_name': 'cifar10',
-                                       'dont_sleep': True})
-
-    backend = BlackboxRepositoryBackend(
-        blackbox_name=benchmark['blackbox_name'],
-        dataset='cifar10',
-        elapsed_time_attr=benchmark['elapsed_time_attr'],
-        time_this_resource_attr=benchmark['time_this_resource_attr'],
-    )
-
-    scheduler = RegularizedEvolution(
-        population_size=20,
-        config_space=benchmark['config_space'],
-        metric=benchmark['metric'],
-        mode=benchmark['mode'],
-    )
-
-    tuner = Tuner(
-        backend=backend,
-        scheduler=scheduler,
-        callbacks=[SimulatorCallback()],
-        sleep_time=0,
-        # tune for 3 minutes
-        stop_criterion=lambda status: status.wallclock_time > 60,
-        n_workers=2,
-    )
-
-    tuner.run()
