@@ -102,6 +102,12 @@ class Domain:
         """
         raise NotImplementedError
 
+    def __eq__(self, other) -> bool:
+        if self.sampler is None:
+            return other.sampler is None
+        else:
+            return self.sampler == other.sampler
+
 
 class Sampler:
     def sample(self,
@@ -111,6 +117,10 @@ class Sampler:
                random_state: Optional[np.random.RandomState] = None):
         raise NotImplementedError
 
+    def __eq__(self, other) -> bool:
+        raise NotImplementedError
+
+
 class BaseSampler(Sampler):
     def __str__(self):
         return "Base"
@@ -119,6 +129,9 @@ class BaseSampler(Sampler):
 class Uniform(Sampler):
     def __str__(self):
         return "Uniform"
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Uniform)
 
 
 EXP_ONE = np.exp(1.0)
@@ -138,6 +151,9 @@ class LogUniform(Sampler):
     def __str__(self):
         return "LogUniform"
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, LogUniform) and self.base == other.base
+
 
 class Normal(Sampler):
     def __init__(self, mean: float = 0., sd: float = 0.):
@@ -149,6 +165,10 @@ class Normal(Sampler):
     def __str__(self):
         return "Normal"
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Normal) and np.isclose(self.mean, other.mean) \
+               and np.isclose(self.sd, other.sd)
+
 
 class Grid(Sampler):
     """Dummy sampler used for grid search"""
@@ -159,6 +179,9 @@ class Grid(Sampler):
                size: int = 1,
                random_state: Optional[np.random.RandomState] = None):
         return RuntimeError("Do not call `sample()` on grid.")
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Grid)
 
 
 class Float(Domain):
@@ -290,6 +313,11 @@ class Float(Domain):
     def match_string(self, value) -> str:
         return f"{value:.7e}"
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Float) and super(Float, self).__eq__(other) \
+               and np.isclose(self.lower, other.lower) \
+               and np.isclose(self.upper, other.upper)
+
 
 class Integer(Domain):
     class _Uniform(Uniform):
@@ -380,6 +408,11 @@ class Integer(Domain):
     def match_string(self, value) -> str:
         return str(value)
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Integer) \
+               and super(Integer, self).__eq__(other) \
+               and self.lower == other.lower and self.upper == other.upper
+
 
 class Categorical(Domain):
     class _Uniform(Uniform):
@@ -455,6 +488,11 @@ class Categorical(Domain):
 
     def match_string(self, value) -> str:
         return str(self.categories.index(value))
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Categorical) \
+               and super(Categorical, self).__eq__(other) \
+               and self.categories == other.categories
 
 
 class Function(Domain):
@@ -533,6 +571,10 @@ class Quantized(Sampler):
             return domain.cast(quantized)
         return list(quantized)
 
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Quantized) and self.q == other.q \
+               and self.sampler == other.sampler
+
 
 class FiniteRange(Domain):
     """
@@ -600,6 +642,12 @@ class FiniteRange(Domain):
 
     def match_string(self, value) -> str:
         return str(self._map_to_int(value))
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, FiniteRange) \
+               and np.isclose(self.lower, other.lower) \
+               and np.isclose(self.upper, other.upper) \
+               and self.log_scale == other.log_scale
 
 
 def sample_from(func: Callable[[Dict], Any]):
