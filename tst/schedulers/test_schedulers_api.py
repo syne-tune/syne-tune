@@ -11,6 +11,7 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
@@ -69,6 +70,11 @@ def make_ray_skopt():
     # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
     # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     MOASHA(config_space=config_space, time_attr=resource_attr, metrics=[metric1, metric2]),
+    MedianStoppingRule(
+        scheduler=FIFOScheduler(config_space, searcher='random', metric=metric1),
+        resource_attr=resource_attr, metric=metric1
+    ),
+
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
