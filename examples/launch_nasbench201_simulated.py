@@ -21,7 +21,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
 
-from benchmarks.definitions.nasbench201 import \
+from benchmarking.definitions.nasbench201 import \
     nasbench201_benchmark, nasbench201_default_params
 
 
