@@ -396,10 +396,10 @@ if __name__ == '__main__':
                 estimator_kwargs['max_run'] = int(1.01 * scheduler_timeout)
             log_level = logging.DEBUG if params['debug_log_level'] \
                 else logging.INFO
-            root_path = Path(__file__).parent.parent
+            root_path = Path(__file__).parent.parent.parent
             dependencies = [
                 str(root_path / module)
-                for module in ("benchmarks", "blackbox_repository")]
+                for module in ("benchmarking", "blackbox_repository")]
             tuner = RemoteLauncher(
                 tuner=local_tuner,
                 dependencies=dependencies,
