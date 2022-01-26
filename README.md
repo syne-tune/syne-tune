@@ -226,12 +226,12 @@ evaluated. The options and use-case in this table:
 
 |Tuning loop | Trial execution | Use-case | example |
 |------------|-----------------|----------|---------|
-|Local	     | Local           | Quick tuning for cheap models, debugging.|	launch_height_local.py |
+|Local	     | Local           | Quick tuning for cheap models, debugging.|	launch_height_baselines.py |
 |Local	     | SageMaker	   | Avoid saturating machine with trial computation with expensive trial, possibly use distributed training, enable debugging the tuning loop on a local machine.	|launch_height_sagemaker.py |
 |SageMaker   | Local	       | Run remotely to benchmark many HPO algo/seeds options, possibly with a big machine with multiple CPUs or GPUs.	|launch_height_sagemaker_remotely.py|
 |SageMaker   | SageMaker	   | Run remotely to benchmark many HPO algo/seeds options, enable distributed training or heavy computation.	|launch_height_sagemaker_remotely.py with distribute_trials_on_SageMaker=True |
 
-To summarize, to evaluate trial execution locally, users should use LocalBackend, to evaluate trials on SageMaker users should use the SageMakerBackend which allows to tune any SageMaker Estimator, see launch_height_local.py or launch_height_sagemaker.py for examples. To run a tuning loop remotely, RemoteLauncher can be used, see launch_height_sagemaker_remotely.py for an example.
+To summarize, to evaluate trial execution locally, users should use LocalBackend, to evaluate trials on SageMaker users should use the SageMakerBackend which allows to tune any SageMaker Estimator, see launch_height_baselines.py or launch_height_sagemaker.py for examples. To run a tuning loop remotely, RemoteLauncher can be used, see launch_height_sagemaker_remotely.py for an example.
 
 **Output of a tuning job.** 
 
@@ -302,7 +302,7 @@ evaluation code making good use of multiple GPUs.
 
 Once you have a tuning script, you can call Tuner with any scheduler to perform your HPO.
 You will find the following examples in [examples/](examples/) folder:
-* [launch_height_local.py](examples/launch_height_baselines.py):
+* [launch_height_baselines.py](examples/launch_height_baselines.py):
   launches HPO locally, tuning a simple script 
    [train_height_example.py](examples/training_scripts/height_example/train_height.py) for several baselines  
 * [launch_height_ray.py](examples/launch_height_ray.py):
