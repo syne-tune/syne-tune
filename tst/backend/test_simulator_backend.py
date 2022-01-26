@@ -261,7 +261,7 @@ def test_simulator_state():
 
 @pytest.mark.skip("TODO: Needs solution for nasbench201 dataset_s3_bucket")
 def test_simulator_backend_with_table_class():
-    from benchmarks.definitions.nasbench201 import \
+    from benchmarking.definitions.definition_nasbench201 import \
         nasbench201_default_params, nasbench201_benchmark
 
     default_params = nasbench201_default_params({'backend': 'simulated'})

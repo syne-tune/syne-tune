@@ -85,7 +85,7 @@ if __name__ == '__main__':
             instance_type="ml.m4.xlarge",
             instance_count=1,
             role=get_execution_role(),
-            dependencies=[str(repository_root_path() / "benchmarks")],
+            dependencies=[str(repository_root_path() / "benchmarking")],
             max_run=int(1.05 * max_wallclock_time),
             framework_version='1.7.1',
             py_version='py3',

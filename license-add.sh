@@ -16,6 +16,6 @@ add_license_folder() {
 
 add_license_folder "syne_tune/"
 add_license_folder "examples/"
-add_license_folder "benchmarks/"
+add_license_folder "benchmarking/"
 add_license_folder "tst/"
 

@@ -18,7 +18,7 @@ experimental. Here is an incomplete overview:
   [README.md](../../../README.md#launching-a-tuning-job) and
   [launch_height_sagemaker_remotely.py](../../../examples/launch_height_sagemaker_remotely.py)
   for one variant, and
-  [benchmarks/benchmark_loop/README.md](../../../benchmarks/benchmark_loop/README.md)
+  [benchmarking/benchmark_loop/README.md](../../../benchmarking/benchmark_loop/README.md)
   for another. The latter allows to run several tuning experiments sequentially
   on the same remote instance.
 * **Command line launcher**: Once you get used to running many experiments in

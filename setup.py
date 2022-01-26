@@ -11,13 +11,14 @@ def load_requirements(filename):
 def load_benchmark_requirements():
     # the requirements of benchmarks are placed into the same directory as the examples script
     res = set()
-    for fname in Path(__file__).parent.glob("examples/training_scripts/*/requirements.txt"):
+    for fname in Path(__file__).parent.glob("benchmarking/training_scripts/*/requirements.txt"):
         res.update(load_requirements(fname))
     # gluon-ts is not added as the git dependency does not work with setup.py
     k = 'git+https://github.com/awslabs/gluon-ts.git'
     if k in res:
         res.remove(k)
     return list(res)
+
 
 required_core = load_requirements('requirements.txt')
 required_ray = load_requirements('requirements-ray.txt')

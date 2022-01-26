@@ -283,7 +283,7 @@ Much of this launcher script is the same as for `FIFOScheduler`, but
 the sequel (`type`, `max_t`, `grace_period`, `reduction_factor`,
 `resource_attr`). The `mlp_fashionmnist` benchmark trains a two-layer MLP on
 `FashionMNIST` (see
-[benchmarks/scripts/mlp_on_fashion_mnist.py](../examples/training_scripts/mlp_on_fashion_mnist/endpoint_script.py)).
+[mlp_on_fashion_mnist.py](../benchmarking/training_scripts/mlp_on_fashion_mnist/mlp_on_fashion_mnist.py)).
 The accuracy is computed and reported at the end of each epoch:
 
 ```python

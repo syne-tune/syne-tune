@@ -20,7 +20,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
 
-from benchmarking.definitions.mlp_on_fashion_mnist import \
+from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
     mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
 
 

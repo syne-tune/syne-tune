@@ -57,7 +57,7 @@ the local back-end.
 * It is important to specify dependencies of the training script not contained
   in the SageMaker framework. For source dependencies, you use the
   `dependencies` parameter. While `syne_tune` is automatically added, you need
-  to add `benchmarks` in order to use support code from there. Extra PyPI
+  to add `benchmarking` in order to use support code from there. Extra PyPI
   dependencies can be listed in a file `requirements.txt` stored in the same
   directory as your script. Our running example needs `filelock`, for example.
 

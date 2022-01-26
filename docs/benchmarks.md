@@ -17,19 +17,19 @@ options, it pays off to use benchmarks:
 * Turning your annotated training code into a benchmark requires only minimal
   extra effort.
 
-A number of benchmarks are included in `benchmarks/scripts`, they are indexed
-in [benchmarks/benchmark_factory.py](../benchmarks/benchmark_factory.py)
+A number of benchmarks are included, they are indexed in
+[benchmark_factory.py](../benchmarking/cli/benchmark_factory.py)
 
 
 ## Including your own benchmark
 
 Please have a look at
-[examples/training_scripts/mlp_on_fashion_mnist/mlp_on_fashion_mnist.py](../examples/training_scripts/mlp_on_fashion_mnist/mlp_on_fashion_mnist.py)
-and [benchmarks/definitions/mlp_on_fashion_mnist.py](../benchmarks/definitions/mlp_on_fashion_mnist.py).
+[mlp_on_fashion_mnist.py](../benchmarking/training_scripts/mlp_on_fashion_mnist/mlp_on_fashion_mnist.py)
+and [definition_mlp_on_fashion_mnist.py](../benchmarking/definitions/definition_mlp_on_fashion_mnist.py).
 The first is a pure training script, of the type you already know. The second
 is a benchmark definition, containing meta-data to complete the definition of a
 benchmark. Before moving on, we note that a benchmark can have different
-variants, selected by paramters. Also, the same training script can be used by
+variants, selected by parameters. Also, the same training script can be used by
 several benchmarks or benchmark variants.
 
 Here is what a benchmark definition needs to contain:
@@ -79,7 +79,8 @@ Let us have a closer look at the dict returned by `mlp_fashionmnist_benchmark`:
   recommended to specify this parameter.
 
 Once you coded up your own benchmark, make sure to link into
-[benchmarks/benchmark_factory.py](../benchmarks/benchmark_factory.py), providing a new name.
+[benchmark_factory.py](../benchmarking/cli/benchmark_factory.py), providing a
+new name.
 
 ### Specifying Default Parameters
 
@@ -159,7 +160,7 @@ settings in `default_params['framework']` and `default_params['framework_version
 are ignored. As explained in detail in the [command line launcher](command_line.md)
 tutorial, you can still run your experiments as SageMaker training jobs (a feature
 called *remote tuning*), but these training jobs use the PyTorch framework. If
-you need additional depedencies, you need to specify them in `dependencies.txt`.
+you need additional dependencies, you need to specify them in `dependencies.txt`.
 
 
 ## Checkpointing
@@ -176,13 +177,12 @@ checkpointing support, training for a resumed trial has to start from scratch,
 which is wasteful.
 
 Let us look at code snippets from
-[examples/training_scripts/lstm_wikitext2/lstm_wikitext2.py](../examples/training_scripts/lstm_wikitext2/lstm_wikitext2.py):
+[lstm_wikitext2.py](../benchmarking/nursery/lstm_wikitext2/lstm_wikitext2.py):
 
 ```python
-import os
 # ...
 
-from benchmarks.checkpoint import resume_from_checkpointed_model, \
+from benchmarking.utils import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
     pytorch_load_save_functions
 # ...

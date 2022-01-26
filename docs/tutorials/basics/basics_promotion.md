@@ -44,7 +44,7 @@ Checkpointing needs to do two things:
   passed to the script, checkpointing is deactivated.
 
 Syne Tune provides some helper functions for checkpointing in
-[checkpoint.py](../../../benchmarks/checkpoint.py).
+[checkpoint.py](../../../benchmarking/utils/checkpoint.py).
 * `checkpoint_model_at_rung_level(config, save_model_fn, epoch)` stores
   a checkpoint at the end of epoch `epoch`. The main work is done by
   `save_model_fn`.

@@ -19,7 +19,7 @@ from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.constants import ST_WORKER_TIME
 
 from benchmarking.cli.launch_utils import make_searcher_and_scheduler
-from benchmarking.utils.dict_get import dict_get
+from benchmarking.utils import dict_get
 
 __all__ = ['scheduler_factory',
            'supported_schedulers',

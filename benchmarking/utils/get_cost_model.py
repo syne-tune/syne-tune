@@ -12,6 +12,8 @@
 # permissions and limitations under the License.
 from typing import Tuple
 
+__all__ = ['get_cost_model_for_batch_size']
+
 
 def get_cost_model_for_batch_size(
         params: dict, batch_size_key: str, batch_size_range: Tuple[int, int]):
