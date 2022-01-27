@@ -214,11 +214,15 @@ if __name__ == '__main__':
 
     # Loop over all combinations
     experiment_name = dict_get(orig_params, 'experiment_name', 'stune')
-    s3_path = s3_experiment_path(
-        s3_bucket=orig_params.get('s3_bucket'),
-        experiment_name=None if orig_params['no_experiment_subdirectory'] \
-            else experiment_name
-    )
+    backend_name = orig_params['backend']
+    if backend_name == 'sagemaker' or not orig_params['local_tuner']:
+        s3_path = s3_experiment_path(
+            s3_bucket=orig_params.get('s3_bucket'),
+            experiment_name=None if orig_params['no_experiment_subdirectory'] \
+                else experiment_name
+        )
+    else:
+        s3_path = None  # Not needed (avoid boto call)
 
     if not list_values:
         list_values = [None]
@@ -251,7 +255,6 @@ if __name__ == '__main__':
             params, benchmark, default_params)
 
         # Create backend
-        backend_name = params['backend']
         if backend_name == 'local':
             logger.info(f"Using 'local' back-end with entry_point = {benchmark['script']}")
             backend = LocalBackend(

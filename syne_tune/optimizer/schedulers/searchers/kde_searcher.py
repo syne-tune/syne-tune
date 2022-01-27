@@ -18,6 +18,8 @@ import scipy.stats as sps
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 import syne_tune.search_space as sp
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
+    import DebugLogPrinter
 
 __all__ = ['KernelDensityEstimator']
 
@@ -60,7 +62,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         Minimum number of data points that we use to fit the KDEs. If set to None than we set this to the number of
         hyperparameters.
     top_n_percent: int
-        Determines how many datapoints we use use to fit the first KDE model for modeling the well
+        Determines how many datapoints we use to fit the first KDE model for modeling the well
         performing configurations.
     min_bandwidth: float
         The minimum bandwidth for the KDE models
@@ -131,6 +133,17 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
         self.num_min_data_points = len(self.vartypes) if num_min_data_points is None else num_min_data_points
         assert self.num_min_data_points >= len(self.vartypes)
+        self._resource_attr = kwargs.get('resource_attr')
+        # Debug log printing (switched on by default)
+        debug_log = kwargs.get('debug_log', True)
+        if isinstance(debug_log, bool):
+            if debug_log:
+                self._debug_log = DebugLogPrinter()
+            else:
+                self._debug_log = None
+        else:
+            assert isinstance(debug_log, DebugLogPrinter)
+            self._debug_log = debug_log
 
     def to_feature(self, config):
         def numerize(value, domain, categorical_map):
@@ -198,6 +211,14 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
     def _update(self, trial_id: str, config: Dict, result: Dict):
         self.X.append(self.to_feature(config=config))
         self.y.append(self.to_objective(result))
+        if self._debug_log is not None:
+            metric_val = result[self._metric]
+            if self._resource_attr is not None:
+                # For HyperbandScheduler, also add the resource attribute
+                resource = int(result[self._resource_attr])
+                trial_id = trial_id + ':{}'.format(resource)
+            msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
+            logger.info(msg)
 
     def get_config(self, **kwargs):
         suggestion = self._next_initial_config()

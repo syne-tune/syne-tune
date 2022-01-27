@@ -266,6 +266,25 @@ def parse_args(allow_lists_as_values=True):
                         help='DEBUG: Use old code for gp_issm, gp_expdecay')
     parser.add_argument('--searcher_no_fantasizing', action='store_true',
                         help='Ignore pending evaluations, do not use fantasizing')
+    # Arguments for kde searcher
+    parser.add_argument('--searcher_num_min_data_points', type=int,
+                        help='KDE: Minimum number of datapoints needed to fit models',
+                        **allow_list)
+    parser.add_argument('--searcher_top_n_percent', type=int,
+                        help='KDE: Top (bottom) model fit on this top (bottom) fraction of data',
+                        **allow_list)
+    parser.add_argument('--searcher_min_bandwidth', type=float,
+                        help='KDE: Minimum bandwidth',
+                        **allow_list)
+    parser.add_argument('--searcher_num_candidates', type=int,
+                        help='KDE: Number of candidates that are sampled to optimize the acquisition function',
+                        **allow_list)
+    parser.add_argument('--searcher_bandwidth_factor', type=int,
+                        help='KDE: Parameter to scale bandwidth',
+                        **allow_list)
+    parser.add_argument('--searcher_random_fraction', type=float,
+                        help='KDE: Fraction of configs suggested at random',
+                        **allow_list)
 
     # First pass: All global arguments
     # Why do we parse all global args here, and not just benchmark_name?
@@ -330,6 +349,8 @@ def _enter_not_none(dct, key, val, tp=None):
 
 
 def make_searcher_and_scheduler(params) -> (dict, dict):
+    scheduler = params['scheduler']
+    searcher = params['searcher']
     # Options for searcher
     search_options = dict()
     _enter_not_none(
@@ -340,43 +361,56 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
     model = params.get('searcher_model')
     _enter_not_none(search_options, 'model', model)
 
-    # Options for bayesopt searcher
-    searcher_args = (
-        ('num_init_random', int, False),
-        ('num_init_candidates', int, False),
-        ('num_fantasy_samples', int, False),
-        ('resource_acq', str, True),
-        ('resource_acq_bohb_threshold', int, True),
-        ('gp_resource_kernel', str, True),
-        ('opt_skip_period', int, False),
-        ('opt_skip_init_length', int, False),
-        ('opt_skip_num_max_resource', bool, False),
-        ('opt_nstarts', int, False),
-        ('opt_maxiter', int, False),
-        ('initial_scoring', str, False),
-        ('issm_gamma_one', bool, False),
-        ('exponent_cost', float, False),
-        ('expdecay_normalize_inputs', bool, False),
-        ('use_new_code', bool, False),
-        ('num_init_candidates_for_batch', int, False),
-        ('no_fantasizing', bool, False),
-    )
-    gp_add_models = {'gp_issm', 'gp_expdecay'}
-    for name, tp, warn in searcher_args:
-        _enter_not_none(
-            search_options, name, params.get('searcher_' + name), tp=tp)
-        if warn and name in search_options and model in gp_add_models:
-            logger.warning(f"{name} not used with searcher_model = {model}")
-    if 'issm_gamma_one' in search_options and model != 'gp_issm':
-        logger.warning(
-            f"searcher_issm_gamma_one not used with searcher_model = {model}")
-    if 'expdecay_normalize_inputs' in search_options and model != 'gp_expdecay':
-        logger.warning(
-            "searcher_expdecay_normalize_inputs not used with searcher_model "
-            f"= {model}")
+    if searcher.startswith('bayesopt'):
+        # Options for bayesopt searcher
+        searcher_args = (
+            ('num_init_random', int, False),
+            ('num_init_candidates', int, False),
+            ('num_fantasy_samples', int, False),
+            ('resource_acq', str, True),
+            ('resource_acq_bohb_threshold', int, True),
+            ('gp_resource_kernel', str, True),
+            ('opt_skip_period', int, False),
+            ('opt_skip_init_length', int, False),
+            ('opt_skip_num_max_resource', bool, False),
+            ('opt_nstarts', int, False),
+            ('opt_maxiter', int, False),
+            ('initial_scoring', str, False),
+            ('issm_gamma_one', bool, False),
+            ('exponent_cost', float, False),
+            ('expdecay_normalize_inputs', bool, False),
+            ('use_new_code', bool, False),
+            ('num_init_candidates_for_batch', int, False),
+            ('no_fantasizing', bool, False),
+        )
+        gp_add_models = {'gp_issm', 'gp_expdecay'}
+        for name, tp, warn in searcher_args:
+            _enter_not_none(
+                search_options, name, params.get('searcher_' + name), tp=tp)
+            if warn and name in search_options and model in gp_add_models:
+                logger.warning(f"{name} not used with searcher_model = {model}")
+        if 'issm_gamma_one' in search_options and model != 'gp_issm':
+            logger.warning(
+                f"searcher_issm_gamma_one not used with searcher_model = {model}")
+        if 'expdecay_normalize_inputs' in search_options and model != 'gp_expdecay':
+            logger.warning(
+                "searcher_expdecay_normalize_inputs not used with searcher_model "
+                f"= {model}")
+    elif searcher == 'kde':
+        # Options for kde searcher
+        searcher_args = (
+            ('num_min_data_points', int),
+            ('top_n_percent', int),
+            ('min_bandwidth', float),
+            ('num_candidates', int),
+            ('bandwidth_factor', int),
+            ('random_fraction', float),
+        )
+        for name, tp in searcher_args:
+            _enter_not_none(
+                search_options, name, params.get('searcher_' + name), tp=tp)
 
     # Options for scheduler
-    scheduler = params['scheduler']
     random_seed_offset = params.get('random_seed_offset')
     if random_seed_offset is None:
         random_seed_offset = 0
@@ -411,7 +445,6 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
             scheduler_options, name, params.get(name), tp=tp)
 
     # Special constraints
-    searcher = params['searcher']
     if scheduler != 'fifo' and searcher.startswith('bayesopt') \
             and model in gp_add_models:
         searcher_data = scheduler_options.get('searcher_data')
