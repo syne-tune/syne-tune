@@ -173,6 +173,10 @@ class ModelStateTransformer(object):
             return x
 
     @property
+    def use_single_model(self) -> bool:
+        return self._use_single_model
+
+    @property
     def model_factory(self) -> TransformerOutputModelFactory:
         return self._unwrap_from_dict(self._model_factory)
 
