@@ -26,6 +26,7 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune.util import s3_experiment_path
+from syne_tune.util import repository_root_path
 
 from benchmarking.cli.estimator_factory import sagemaker_estimator_factory
 from benchmarking.cli.launch_utils import parse_args
@@ -271,7 +272,7 @@ if __name__ == '__main__':
                 backend_kwargs['entry_point'] = benchmark['script']
                 backend = SimulatorBackend(**backend_kwargs)
             else:
-                from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
+                from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
 
                 # Tabulated benchmark from the blackbox repository (simulation
                 # runs faster)
@@ -396,10 +397,9 @@ if __name__ == '__main__':
                 estimator_kwargs['max_run'] = int(1.01 * scheduler_timeout)
             log_level = logging.DEBUG if params['debug_log_level'] \
                 else logging.INFO
-            root_path = Path(__file__).parent.parent
+            root_path = repository_root_path()
             dependencies = [
-                str(root_path / module)
-                for module in ("benchmarks", "blackbox_repository")]
+                str(root_path / "benchmarking")]
             tuner = RemoteLauncher(
                 tuner=local_tuner,
                 dependencies=dependencies,
