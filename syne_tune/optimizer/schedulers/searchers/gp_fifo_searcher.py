@@ -14,6 +14,7 @@ import numpy as np
 from typing import Type, Optional, Dict, List
 import logging
 import copy
+import time
 
 from syne_tune.optimizer.schedulers.searchers.searcher import \
     SearcherWithRandomSeed, RandomSearcher
@@ -132,6 +133,8 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self._resource_attr = resource_attr
         self._filter_observed_data = filter_observed_data
         self._random_searcher = None
+        # Tracks the cumulative time spent in `get_config` calls
+        self.cumulative_get_config_time = 0
         if model_factory.debug_log is not None:
             deb_msg = "[ModelBasedSearcher.__init__]\n"
             deb_msg += ("- acquisition_class = {}\n".format(acquisition_class))
@@ -276,6 +279,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
 
         :return: Next config to evaluate at
         """
+        start_time = time.time()
         state = self.state_transformer.state
         if self.do_profile:
             # Start new profiler block
@@ -318,6 +322,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         if self.do_profile:
             self.profiler.stop('all')
             self.profiler.clear()
+        self.cumulative_get_config_time += (time.time() - start_time)
 
         return config
 

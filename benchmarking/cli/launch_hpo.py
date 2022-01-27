@@ -21,7 +21,8 @@ from syne_tune.backend.sagemaker_backend.sagemaker_backend import \
     SagemakerBackend
 from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.optimizer.schedulers.searchers.searcher_callback import \
+    StoreResultsAndModelParamsCallback, SimulatorAndModelParamsCallback
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from syne_tune.remote.remote_launcher import RemoteLauncher
@@ -139,15 +140,15 @@ if __name__ == '__main__':
         else:
             assert len(set(run_id)) == len(run_id), \
                 f"run_id = {run_id} contains duplicate entries"
-        for id in run_id:
-            assert id >= 0, f"run_id contains negative entry {id}"
+        for rid in run_id:
+            assert rid >= 0, f"run_id contains negative entry {rid}"
     else:
         # Alternative to specify `run_id`
         num_runs = orig_params.get('num_runs')
         if num_runs is None:
             run_id = [0]
         else:
-            assert num_runs >=1, f"num_runs = {num_runs} must be positive"
+            assert num_runs >= 1, f"num_runs = {num_runs} must be positive"
             run_id = list(range(num_runs))
             del orig_params['num_runs']
         orig_params['run_id'] = run_id
@@ -352,6 +353,11 @@ if __name__ == '__main__':
 
         tuner_sleep_time = 0 if backend_name == 'simulated' \
             else params['tuner_sleep_time']
+        # These callbacks also store surrogate model parameters (only for
+        # schedulers which support this)
+        callbacks = [SimulatorAndModelParamsCallback()] \
+            if backend_name == 'simulated' \
+            else [StoreResultsAndModelParamsCallback()]
 
         local_tuner = Tuner(
             backend=backend,
@@ -365,7 +371,7 @@ if __name__ == '__main__':
             max_failures=params['max_failures'],
             asynchronous_scheduling=not params['synchronous'],
             print_update_interval=params['print_update_interval'],
-            callbacks=[SimulatorCallback()] if backend_name == 'simulated' else None
+            callbacks=callbacks,
         )
         last_tuner_name = local_tuner.name
         if is_first_iteration:
