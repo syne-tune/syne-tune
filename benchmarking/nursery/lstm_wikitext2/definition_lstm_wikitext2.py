@@ -51,8 +51,7 @@ def lstm_wikitext2_benchmark(params):
         epochs=params['max_resource_level'],
         report_current_best=params['report_current_best'])
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" /
-                  "training_scripts" / "lstm_wikitext2" / "lstm_wikitext2.py",
+        'script': "lstm_wikitext2.py",
         'metric': METRIC_NAME,
         'mode': 'max',
         'resource_attr': RESOURCE_ATTR,

@@ -37,8 +37,7 @@ def distilbert_imdb_benchmark(params):
         dataset_path=params['dataset_path'],
         max_steps=params['max_resource_level'])
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" /
-                  "training_scripts" / "distilbert_on_imdb" / "distilbert_on_imdb.py",
+        'script':  Path(__file__).parent.parent / "training_scripts" / "distilbert_on_imdb" / "distilbert_on_imdb.py",
         'metric': METRIC_ACCURACY,
         'mode': 'max',
         'resource_attr': RESOURCE_ATTR,

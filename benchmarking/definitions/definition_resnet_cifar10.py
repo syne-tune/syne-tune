@@ -45,8 +45,7 @@ def resnet_cifar10_benchmark(params):
         dataset_path=params['dataset_path'],
         num_gpus=params['num_gpus'])
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" /
-                  "training_scripts" / "resnet_cifar10" / "resnet_cifar10.py",
+        'script': Path(__file__).parent.parent / "training_scripts" / "resnet_cifar10" / "resnet_cifar10.py",
         'metric': METRIC_NAME,
         'mode': 'max',
         'resource_attr': RESOURCE_ATTR,

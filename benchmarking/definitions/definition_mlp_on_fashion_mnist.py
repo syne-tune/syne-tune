@@ -41,8 +41,8 @@ def mlp_fashionmnist_benchmark(params):
         epochs=params['max_resource_level'],
         report_current_best=params['report_current_best'])
     return {
-        'script': Path(__file__).parent.parent.parent / "examples" /
-                  "training_scripts" / "mlp_on_fashion_mnist" / "mlp_on_fashion_mnist.py",
+        'script': Path(__file__).parent.parent / "training_scripts" /
+                  "mlp_on_fashion_mnist" / "mlp_on_fashion_mnist.py",
         'metric': METRIC_NAME,
         'mode': 'max',
         'resource_attr': RESOURCE_ATTR,
