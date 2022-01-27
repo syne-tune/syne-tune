@@ -12,7 +12,7 @@ a single experiment.
 
 In order to use the CL launcher, your tuning problem has to be defined as a
 benchmark and linked into
-[benchmarks/benchmark_factory.py](../_benchmarks/benchmark_factory.py). Here is
+[benchmark_factory.py](../benchmarking/cli/benchmark_factory.py). Here is
 a [tutorial](benchmarks.md) how to do this. In the sequel, we will use one of
 the pre-specified benchmarks. First, make sure you have installed the
 `gpsearchers` and `benchmarks` dependencies:
@@ -28,7 +28,7 @@ evaluations are supposed to run remotely, you do not need to install them.
 Here is an example for running the CL launcher:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120 --local_tuner
 ```
 
@@ -40,7 +40,7 @@ after 120 seconds (and terminates running ones).
 
 The most important arguments for running HPO locally are:
 * `benchmark_name`: Name of benchmark to run, as defined in
-  [benchmarks/benchmark_factory.py](../_benchmarks/benchmark_factory.py)
+  [benchmark_factory.py](../benchmarking/cli/benchmark_factory.py)
 * `scheduler`: Selects the optimization algorithm. The simplest one is `fifo`.
   For neural network models, multi-fidelity HPO is often a better choice:
   `hyperband_stopping`, `hyperband_promotion` are two variants of asynchronous
@@ -71,7 +71,7 @@ The most important arguments for running HPO locally are:
 A complete list of CL arguments is obtained with:
 
 ```bash
-python benchmarks/launch_hpo.py --help
+python benchmarking/cli/launch_hpo.py --help
 ```
 
 Some arguments configure the back-end, others the scheduler or its searcher.
@@ -129,7 +129,7 @@ Our command line launcher currently supports the following optimization methods:
 Recall the launch command from above:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120 --local_tuner
 ```
 
@@ -148,7 +148,7 @@ Syne Tune allows you to launch experiments on a remote instance (this requires
 [some setup](../README.md#running-on-sagemaker)). For example:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120
 ```
 
@@ -163,7 +163,7 @@ saves typing but also allows you to go for a coffee while your experiments are
 getting launched. For example:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120 --run_id 0 1 2 3 4
 ```
 
@@ -174,7 +174,7 @@ results over a number of run_id's allows us to robustly compare different
 choices. In fact, the same is obtained by running:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120 --num_runs 5
 ```
 
@@ -186,7 +186,7 @@ If you do this, the combinatorial product of all combinations is iterated over.
 For example:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler fifo hyperband_stopping \
+python benchmarking/cli/launch_hpo.py --scheduler fifo hyperband_stopping \
     --searcher bayesopt random \
     --benchmark_name mlp_fashionmnist \
     --scheduler_timeout 120 --local_tuner
@@ -204,7 +204,7 @@ same group are iterated over jointly (think `zip` instead of `product`). For
 example:
 
 ```bash
-python benchmarks/launch_hpo.py \
+python benchmarking/cli/launch_hpo.py \
     --scheduler hyperband_stopping fifo \
     --searcher bayesopt random \
     --max_resource_level 9 27 81 \
@@ -224,7 +224,7 @@ have to be listed in `argument_groups`.
 Several groups can be formed. For example:
 
 ```bash
-python benchmarks/launch_hpo.py \
+python benchmarking/cli/launch_hpo.py \
     --scheduler hyperband_stopping fifo \
     --searcher bayesopt random \
     --benchmark_name mlp_fashionmnist \
@@ -332,7 +332,7 @@ tuning, it is a SageMaker training job on a different instance.
 Syne Tune also supports the `sagemaker` back-end. For example:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120 --local_tuner \
     --backend sagemaker
 ```
@@ -400,7 +400,7 @@ More details are given in the [benchmarks tutorial](benchmarks.md).
 You can also combine remote tuning with the `sagemaker` back-end, for example:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120 \
     --backend sagemaker
 ```
@@ -413,7 +413,7 @@ instance type can be specified by `tuner_instance_type` (whose default is a
 reasonably cheap CPU instance). For example:
 
 ```bash
-python benchmarks/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
+python benchmarking/cli/launch_hpo.py --scheduler hyperband_stopping --searcher bayesopt \
     --benchmark_name mlp_fashionmnist --scheduler_timeout 120 \
     --backend sagemaker --tuner_instance_type ml.c5.xlarge
 ```

@@ -135,7 +135,7 @@ def random_string(length: int) -> str:
 def repository_root_path() -> Path:
     """
     :return: Returns path including `syne_tune`, `examples`,
-        `benchmarks`
+        `benchmarking`
     """
     return Path(__file__).parent.parent
 

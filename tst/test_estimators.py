@@ -10,13 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from pathlib import Path
-
 from benchmarking.cli.estimator_factory import sagemaker_estimator_factory
 from benchmarking.cli.benchmark_factory import benchmark_factory, \
     supported_benchmarks
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     get_execution_role
+from syne_tune.util import repository_root_path
 
 
 def test_create_estimators():
@@ -32,7 +31,7 @@ def test_create_estimators():
                     instance_type=def_params['instance_type'],
                     framework=framework,
                     role=role,
-                    dependencies=[str(Path(__file__).parent.parent / "benchmarks/")],
+                    dependencies=[str(repository_root_path() / "benchmarking")],
                     framework_version=def_params.get('framework_version'),
                     pytorch_version=def_params.get('pytorch_version'))
     except Exception:

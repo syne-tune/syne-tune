@@ -74,7 +74,7 @@ if __name__ == '__main__':
             py_version='py36',
             max_run=3600,
             role=get_execution_role(),
-            dependencies=[str(Path(__file__).parent.parent / "benchmarks/")],
+            dependencies=[str(Path(__file__).parent.parent / "benchmarking")],
         ),
     )
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
             n_workers=n_workers,
             sleep_time=5.0,
         ),
-        dependencies=[str(Path(__file__).parent.parent / "benchmarks/")],
+        dependencies=[str(Path(__file__).parent.parent / "benchmarking")],
     )
 
     remote_launcher.run(wait=False)

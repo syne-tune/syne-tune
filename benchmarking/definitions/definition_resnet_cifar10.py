@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.utils.get_cost_model import get_cost_model_for_batch_size
+from benchmarking.utils import get_cost_model_for_batch_size
 from benchmarking.training_scripts.resnet_cifar10.resnet_cifar10 import \
     BATCH_SIZE_LOWER, BATCH_SIZE_UPPER, BATCH_SIZE_KEY, METRIC_NAME, \
     RESOURCE_ATTR, ELAPSED_TIME_ATTR, _config_space

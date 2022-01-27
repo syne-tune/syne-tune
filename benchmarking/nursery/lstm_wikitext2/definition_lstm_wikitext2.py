@@ -15,7 +15,7 @@ Example that reproduces the LSTM on WikiText2 benchmark from AutoGluonExperiment
 """
 from pathlib import Path
 
-from benchmarking.utils.get_cost_model import get_cost_model_for_batch_size
+from benchmarking.utils import get_cost_model_for_batch_size
 from benchmarking.nursery.lstm_wikitext2.lstm_wikitext2 import \
     BATCH_SIZE_LOWER, BATCH_SIZE_UPPER, BATCH_SIZE_KEY, _config_space, \
     METRIC_NAME, RESOURCE_ATTR, ELAPSED_TIME_ATTR

@@ -18,7 +18,7 @@ import time
 from syne_tune.report import Reporter
 from syne_tune.search_space import randint, uniform, loguniform, \
     add_to_argparse
-from benchmarking.utils.checkpoint import resume_from_checkpointed_model, \
+from benchmarking.utils import resume_from_checkpointed_model, \
     checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
     pytorch_load_save_functions
 

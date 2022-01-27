@@ -54,7 +54,7 @@ if __name__ == '__main__':
         pytorch_version='1.6',
         py_version='py36',
         role=get_execution_role(),
-        dependencies=[root / "benchmarks"],
+        dependencies=[root / "benchmarking"],
     )
 
     # SageMaker backend
