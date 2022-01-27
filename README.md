@@ -1,7 +1,7 @@
 # Syne Tune
 
 [![Release](https://img.shields.io/badge/release-0.11-brightgreen.svg)](https://pypi.org/project/syne-tune/)
-[![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![Python Version](https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) where trials 
