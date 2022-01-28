@@ -1,12 +1,10 @@
-import numpy as np
 import copy
 
 from collections import deque
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 
-from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
+from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 from syne_tune.search_space import Domain, Categorical, Float, Integer
 
 
@@ -16,20 +14,21 @@ class PopulationElement:
     config: dict = None
 
 
-class RegularizedEvolution(TrialScheduler):
+class RegularizedEvolution(SearcherWithRandomSeed):
     def __init__(
             self,
-            config_space,
+            configspace,
             metric: str,
-            mode: str,
+            mode: str = 'min',
             population_size: int = 100,
             sample_size: int = 10,
+            points_to_evaluate: Optional[List[Dict]] = None,
             random_seed: int = None
     ):
         """
         Implements the regularized evolution algorithm proposed by Real et al. The original implementation only
         considers categorical hyperparameters. For integer and float parameters we sample a new value uniformly
-        at random for the entire search space.
+        at random.
 
         Real, E., Aggarwal, A., Huang, Y., and Le, Q. V.
         Regularized Evolution for Image Classifier Architecture Search.
@@ -41,7 +40,7 @@ class RegularizedEvolution(TrialScheduler):
 
         Parameters
         ----------
-        config_space: dict
+        configspace: dict
             Configuration space for trial evaluation function
         metric : str
             Name of metric to optimize, key in result's obtained via
@@ -55,78 +54,80 @@ class RegularizedEvolution(TrialScheduler):
         random_seed : int
             Seed for the random number generation. If set to None, use random seed.
         """
-        super(RegularizedEvolution, self).__init__(config_space=config_space)
-        self.metric = metric
+
+        super(RegularizedEvolution, self).__init__(configspace, metric, points_to_evaluate=points_to_evaluate,
+                                                   random_seed=random_seed)
         self.mode = mode
         self.population_size = population_size
         self.sample_size = sample_size
         self.population = deque()
-        if random_seed is None:
-            random_seed = np.random.randint(0, 2 ** 32)
-        self._random_state = np.random.RandomState(random_seed)
 
-    def mutate_arch(self, config):
+    def mutate_config(self, config: Dict) -> Dict:
 
         child_config = copy.deepcopy(config)
 
         # pick random hyperparameter and mutate it
         hypers = []
-        for k, v in self.config_space.items():
+        for k, v in self.configspace.items():
             if isinstance(v, Domain):
                 hypers.append(k)
-        name = self._random_state.choice(hypers)
-        hyperparameter = self.config_space[name]
+        name = self.random_state.choice(hypers)
+        hyperparameter = self.configspace[name]
 
         if isinstance(hyperparameter, Categorical):
             # drop current values from potential choices to not sample the same value again
-            choices = copy.deepcopy(hyperparameter.categories)
-            choices.remove(config[name])
+            choices = [cat for cat in hyperparameter.categories if cat != config[name]]
+            new_value = self.random_state.choice(choices)
 
-            new_value = self._random_state.choice(choices)
+        elif isinstance(hyperparameter, Float) or isinstance(hyperparameter, Integer):
+            new_value = hyperparameter.sample(random_state=self.random_state)
 
-        elif isinstance(hyperparameter, Float):
-            new_value = Float.sample(random_state=self._random_state)
-
-        elif isinstance(hyperparameter, Integer):
-            new_value = Integer.sample(random_state=self._random_state)
+        else:
+            raise AssertionError(f"Hyperparameter {name} must be of type Float, Categorical or Integer")
 
         child_config[name] = new_value
 
         return child_config
 
-    def sample_random_config(self):
-        return {k: v.sample(random_state=self._random_state) if isinstance(v, Domain) else v for k, v in
-                self.config_space.items()}
+    def sample_random_config(self) -> Dict:
+        return {
+          k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
+          for k, v in self.configspace.items()
+        }
 
-    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+    def get_config(self, **kwargs):
 
         if len(self.population) < self.population_size:
             config = self.sample_random_config()
         else:
-            candidates = self._random_state.choice(list(self.population), size=self.sample_size)
-            parent = max(candidates, key=lambda i: i.score)
+            candidates = self.random_state.choice(list(self.population), size=self.sample_size)
+            parent = min(candidates, key=lambda i: i.score)
 
             config = self.mutate_arch(parent.config)
 
-        return TrialSuggestion.start_suggestion(config=config)
+        return config
 
-    def on_trial_complete(self, trial: Trial, result: Dict):
+    def _update(self, trial_id: str, config: Dict, result: Dict):
 
-        score = result[self.metric]
+        score = result[self._metric]
 
-        if self.mode == 'min':
+        if self.mode == 'max':
             score *= -1
 
         # Add element to the population
-        element = PopulationElement(score=score, config=trial.config)
+        element = PopulationElement(score=score, config=config)
         self.population.append(element)
 
         # Remove the oldest element of the population.
         if len(self.population) > self.population_size:
             self.population.popleft()
 
-    def metric_names(self) -> List[str]:
-        return [self.metric]
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
-    def metric_mode(self) -> str:
-        return self.mode
+        assert isinstance(scheduler, FIFOScheduler), \
+            "This searcher requires FIFOScheduler scheduler"
+        super().configure_scheduler(scheduler)
+
+    def clone_from_state(self, state: dict):
+        raise NotImplementedError

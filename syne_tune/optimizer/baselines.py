@@ -83,6 +83,17 @@ class BORE(FIFOScheduler):
         )
 
 
+class REA(FIFOScheduler):
+    def __init__(self, config_space: Dict, metric: str, **kwargs):
+        from syne_tune.optimizer.schedulers.searchers.regularized_evolution import RegularizedEvolution
+        super(REA, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher=RegularizedEvolution(configspace=config_space, metric=metric, **kwargs),
+            **kwargs,
+        )
+
+
 # dictionary that allows to also list baselines who don't need a wrapper class such as PBT.
 baselines = {
     'Random Search': RandomSearch,
