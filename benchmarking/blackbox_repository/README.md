@@ -9,14 +9,14 @@ recorded, in addition blackbox can be used to simulate asynchronous HPO experime
 A blackbox dataset can be loaded by specifying its name and the dataset that needs to be obtained:
 ````python
 from blackbox_repository import load
-blackbox = load("nas201")["cifar100"]
+blackbox = load("nasbench201")["cifar100"]
 ````
 
 
 The blackbox can then be called to obtain recorded evaluations:
 ````python
 from blackbox_repository import load
-blackbox = load("nas201")["cifar100"]
+blackbox = load("nasbench201")["cifar100"]
 config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
 print(blackbox(config, fidelity={'epochs': 10}))
 # {'metric_error': 0.7501,
