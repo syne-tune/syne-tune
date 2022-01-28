@@ -26,7 +26,7 @@ print(blackbox(config, fidelity={'epochs': 10}))
 
 If the dataset is not found locally, it is regenerated and saved to S3 into Sagemaker bucket.
 
-See [../../examples/launch_simulated_benchmark.py](../../examples/launch_simulated_benchmark.py) for examples.
+See [examples/launch_simulated_benchmark.py](../../examples/launch_simulated_benchmark.py) for examples.
 
 ## Adding a new dataset
 
@@ -36,7 +36,7 @@ To add a new dataset of tabular evaluations, you need to
 
 ## Simulating an HPO
 
-See [../../examples/launch_simulated_benchmark.py](../../examples/launch_simulated_benchmark.py) for an example on how
+See [examples/launch_simulated_benchmark.py](../../examples/launch_simulated_benchmark.py) for an example on how
 to simulate any blackbox. You will need to specify what is the name of the objective accounting for time in order
 to perform time simulation. 
 
