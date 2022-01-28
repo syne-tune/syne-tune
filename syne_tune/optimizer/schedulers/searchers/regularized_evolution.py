@@ -23,7 +23,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             population_size: int = 100,
             sample_size: int = 10,
             points_to_evaluate: Optional[List[Dict]] = None,
-            random_seed: int = None
+            **kwargs
     ):
         """
         Implements the regularized evolution algorithm proposed by Real et al. The original implementation only
@@ -55,8 +55,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             Seed for the random number generation. If set to None, use random seed.
         """
 
-        super(RegularizedEvolution, self).__init__(configspace, metric, points_to_evaluate=points_to_evaluate,
-                                                   random_seed=random_seed)
+        super(RegularizedEvolution, self).__init__(configspace, metric, points_to_evaluate=points_to_evaluate, **kwargs)
         self.mode = mode
         self.population_size = population_size
         self.sample_size = sample_size
@@ -78,12 +77,8 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             # drop current values from potential choices to not sample the same value again
             choices = [cat for cat in hyperparameter.categories if cat != config[name]]
             new_value = self.random_state.choice(choices)
-
-        elif isinstance(hyperparameter, Float) or isinstance(hyperparameter, Integer):
-            new_value = hyperparameter.sample(random_state=self.random_state)
-
         else:
-            raise AssertionError(f"Hyperparameter {name} must be of type Float, Categorical or Integer")
+            new_value = hyperparameter.sample(random_state=self.random_state)
 
         child_config[name] = new_value
 
@@ -108,7 +103,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             candidates = self.random_state.choice(list(self.population), size=self.sample_size)
             parent = min(candidates, key=lambda i: i.score)
 
-            config = self.mutate_arch(parent.config)
+            config = self.mutate_config(parent.config)
 
         return config
 
