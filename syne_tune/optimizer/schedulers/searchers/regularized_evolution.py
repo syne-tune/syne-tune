@@ -97,6 +97,11 @@ class RegularizedEvolution(SearcherWithRandomSeed):
 
     def get_config(self, **kwargs):
 
+        initial_config = self._next_initial_config()
+
+        if initial_config is not None:
+            return initial_config
+
         if len(self.population) < self.population_size:
             config = self.sample_random_config()
         else:
