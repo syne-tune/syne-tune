@@ -8,7 +8,7 @@ from ray.tune.suggest.skopt import SkOptSearch
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER, REA
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -65,6 +65,7 @@ def make_ray_skopt():
     SimpleScheduler(config_space=config_space, metric=metric1),
     RandomSearch(config_space=config_space, metric=metric1),
     BayesianOptimization(config_space=config_space, metric=metric1),
+    REA(config_space=config_space, metric=metric1, population_size=1, sample_size=2),
     ASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     MOBSTER(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
