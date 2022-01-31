@@ -85,11 +85,13 @@ class BORE(FIFOScheduler):
 
 
 class REA(FIFOScheduler):
-    def __init__(self, config_space: Dict, metric: str, **kwargs):
+    def __init__(self, config_space: Dict, metric: str, population_size: int = 100, sample_size: int = 10, **kwargs):
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=RegularizedEvolution(configspace=config_space, metric=metric, **kwargs),
+            searcher=RegularizedEvolution(configspace=config_space, metric=metric,
+                                          population_size=population_size, sample_size=sample_size,
+                                          **kwargs),
             **kwargs,
         )
 
