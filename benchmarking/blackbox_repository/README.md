@@ -9,14 +9,14 @@ recorded, in addition blackbox can be used to simulate asynchronous HPO experime
 A blackbox dataset can be loaded by specifying its name and the dataset that needs to be obtained:
 ````python
 from blackbox_repository import load
-blackbox = load("nas201")["cifar100"]
+blackbox = load("nasbench201")["cifar100"]
 ````
 
 
 The blackbox can then be called to obtain recorded evaluations:
 ````python
 from blackbox_repository import load
-blackbox = load("nas201")["cifar100"]
+blackbox = load("nasbench201")["cifar100"]
 config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
 print(blackbox(config, fidelity={'epochs': 10}))
 # {'metric_error': 0.7501,
@@ -26,7 +26,7 @@ print(blackbox(config, fidelity={'epochs': 10}))
 
 If the dataset is not found locally, it is regenerated and saved to S3 into Sagemaker bucket.
 
-See [../examples/launch_simulated_benchmark.py](../examples/launch_simulated_benchmark.py) for examples.
+See [examples/launch_simulated_benchmark.py](../../examples/launch_simulated_benchmark.py) for examples.
 
 ## Adding a new dataset
 
@@ -36,7 +36,7 @@ To add a new dataset of tabular evaluations, you need to
 
 ## Simulating an HPO
 
-See [../examples/launch_simulated_benchmark.py](../examples/launch_simulated_benchmark.py) for an example on how
+See [examples/launch_simulated_benchmark.py](../../examples/launch_simulated_benchmark.py) for an example on how
 to simulate any blackbox. You will need to specify what is the name of the objective accounting for time in order
 to perform time simulation. 
 
