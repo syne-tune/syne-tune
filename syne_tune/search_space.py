@@ -604,14 +604,21 @@ class FiniteRange(Domain):
         self.lower = lower
         self.upper = upper
         self.log_scale = log_scale
-        if not log_scale:
-            self._lower_internal = lower
-            self._step_internal = (upper - lower) / (size - 1)
+        self.size = size
+
+    def _compute_internal(self):
+        """
+        By computing internal members on demand, we allow `self.upper`,
+        `self.lower` to be changed.
+        """
+        if not self.log_scale:
+            self._lower_internal = self.lower
+            self._step_internal = (self.upper - self.lower) / (self.size - 1)
         else:
-            self._lower_internal = np.log(lower)
-            upper_internal = np.log(upper)
+            self._lower_internal = np.log(self.lower)
+            upper_internal = np.log(self.upper)
             self._step_internal = \
-                (upper_internal - self._lower_internal) / (size - 1)
+                (upper_internal - self._lower_internal) / (self.size - 1)
 
     def _map_from_int(self, x: int) -> float:
         y = x * self._step_internal + self._lower_internal
@@ -633,6 +640,7 @@ class FiniteRange(Domain):
             0, sz - 1))
 
     def cast(self, value):
+        self._compute_internal()
         return self._map_from_int(self._map_to_int(value))
 
     def set_sampler(self, sampler, allow_override=False):
@@ -642,6 +650,7 @@ class FiniteRange(Domain):
         return None
 
     def sample(self, spec=None, size=1, random_state=None):
+        self._compute_internal()
         int_sample = self._uniform_int.sample(spec, size, random_state)
         if size > 1:
             return [self._map_from_int(x) for x in int_sample]
@@ -656,6 +665,7 @@ class FiniteRange(Domain):
         return len(self._uniform_int)
 
     def match_string(self, value) -> str:
+        self._compute_internal()
         return str(self._map_to_int(value))
 
     def __eq__(self, other) -> bool:
