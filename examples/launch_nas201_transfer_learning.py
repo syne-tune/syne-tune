@@ -5,8 +5,8 @@ from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxReposit
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
-from syne_tune.optimizer.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 

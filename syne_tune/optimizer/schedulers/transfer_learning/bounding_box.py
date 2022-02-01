@@ -4,7 +4,7 @@ import pandas as pd
 
 import syne_tune.search_space as sp
 from syne_tune.optimizer.scheduler import TrialScheduler
-from syne_tune.optimizer.transfer_learning import TransferLearningScheduler, TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningScheduler, TransferLearningTaskEvaluations
 from syne_tune.search_space import Categorical
 
 
@@ -20,7 +20,8 @@ class BoundingBox(TransferLearningScheduler):
     ):
         """
         Simple baseline that computes a bounding-box of the best candidate found in previous tasks to restrict the
-         search space to only good candidates.
+         search space to only good candidates. The bounding-box is obtained by restricting to the min-max of best
+         numerical hyperparameters and restricting to the set of best candidates on categorical parameters.
 
         Reference: Learning search spaces for Bayesian optimization: Another view of hyperparameter transfer learning.
         Valerio Perrone, Huibin Shen, Matthias Seeger, Cédric Archambeau, Rodolphe Jenatton. Neurips 2019.
@@ -83,10 +84,11 @@ class BoundingBox(TransferLearningScheduler):
                     hp_values = list(sorted(hp_df.loc[:, name].unique()))
                     new_config_space[name] = sp.choice(hp_values)
                 elif hasattr(domain, "lower") and hasattr(domain, "upper"):
-                    # assume its numerical
-                    new_domain = domain
-                    new_domain.lower = hp_df.loc[:, name].min()
-                    new_domain.upper = hp_df.loc[:, name].max()
+                    # domain is numerical, set new lower and upper ranges with bounding-box values
+                    new_domain_dict = sp.to_dict(domain)
+                    new_domain_dict['domain_kwargs']['lower'] = hp_df.loc[:, name].min()
+                    new_domain_dict['domain_kwargs']['upper'] = hp_df.loc[:, name].max()
+                    new_domain = sp.from_dict(new_domain_dict)
                     new_config_space[name] = new_domain
                 else:
                     # no known way to compute bounding over non numerical domains such as functional
