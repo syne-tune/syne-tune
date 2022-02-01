@@ -189,7 +189,7 @@ class TuningStatus:
                # f"{self.user_time:.2f}s approximated user-time"
         cost = self.cost
         if cost is not None and cost > 0.0:
-            res_str += f", {cost}$ estimated cost"
+            res_str += f", ${cost:.2f} estimated cost"
         res_str += "\n"
         return res_str
 
