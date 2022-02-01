@@ -65,6 +65,11 @@ class Domain:
         return sampler
 
     def sample(self, spec=None, size=1, random_state=None):
+        """
+        :param size: Number of values to sample
+        :param random_state: PRN generator
+        :return: Single value (`size == 1`) or list (`size > 1`)
+        """
         sampler = self.get_sampler()
         return sampler.sample(
             self, spec=spec, size=size, random_state=random_state)
@@ -630,8 +635,11 @@ class FiniteRange(Domain):
         return None
 
     def sample(self, spec=None, size=1, random_state=None):
-        return [self._map_from_int(x)
-                for x in self._uniform_int.sample(spec, size, random_state)]
+        int_sample = self._uniform_int.sample(spec, size, random_state)
+        if size > 1:
+            return [self._map_from_int(x) for x in int_sample]
+        else:
+            return self._map_to_int(int_sample)
 
     @property
     def domain_str(self):
