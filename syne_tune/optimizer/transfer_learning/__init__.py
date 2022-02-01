@@ -11,7 +11,8 @@ class TransferLearningTaskEvaluations:
     """Class that contains offline evaluations for a task that can be used for transfer learning.
     Args:
         configuration_space: Dict the configuration space that was used when sampling evaluations.
-        hyperparameters: pd.DataFrame the hyperparameters values that were acquired
+        hyperparameters: pd.DataFrame the hyperparameters values that were acquired, all keys of configuration-space
+         should appear as columns.
         objectives_names: Optional[List[str]] the name of the objectives that were acquired
         objectives_evaluations: np.array values of recorded objectives, must have shape
             (num_evals, num_seeds, num_fidelities, num_objectives)
