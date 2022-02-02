@@ -4,6 +4,7 @@ from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
+from syne_tune.optimizer.schedulers.searchers.regularized_evolution import RegularizedEvolution
 
 
 class RandomSearch(FIFOScheduler):
@@ -79,6 +80,18 @@ class BORE(FIFOScheduler):
             metric=metric,
             searcher=Bore(config_space=config_space, metric=metric, mode=mode),
             mode=mode,
+            **kwargs,
+        )
+
+
+class REA(FIFOScheduler):
+    def __init__(self, config_space: Dict, metric: str, population_size: int = 100, sample_size: int = 10, **kwargs):
+        super(REA, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher=RegularizedEvolution(configspace=config_space, metric=metric,
+                                          population_size=population_size, sample_size=sample_size,
+                                          **kwargs),
             **kwargs,
         )
 
