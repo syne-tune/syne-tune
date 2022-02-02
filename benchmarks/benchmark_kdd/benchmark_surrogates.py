@@ -76,7 +76,7 @@ def benchmark_surrogates():
 
 
 if __name__ == '__main__':
-    benchmark_surrogates()
+    # benchmark_surrogates()
     df = pd.read_csv("surrogates_results.csv")
     print(df.to_string())
     df_pivot = df.pivot_table(index='task', columns=['surrogate', 'num_samples'], values='RMSE-test')

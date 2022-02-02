@@ -78,7 +78,7 @@ class TS(BaseSearcher):
             mode: str,
             metric: str,
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            max_fit_samples: int = 20000,
+            max_fit_samples: int = 100000,
             normalization: str = "gaussian",
     ):
         super(TS, self).__init__(configspace=config_space, metric=metric)
