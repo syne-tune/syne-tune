@@ -13,13 +13,13 @@ class TransferLearningTaskEvaluations:
         configuration_space: Dict the configuration space that was used when sampling evaluations.
         hyperparameters: pd.DataFrame the hyperparameters values that were acquired, all keys of configuration-space
          should appear as columns.
-        objectives_names: Optional[List[str]] the name of the objectives that were acquired
+        objectives_names: List[str] the name of the objectives that were acquired
         objectives_evaluations: np.array values of recorded objectives, must have shape
             (num_evals, num_seeds, num_fidelities, num_objectives)
     """
     configuration_space: Dict
     hyperparameters: pd.DataFrame
-    objectives_names: Optional[List[str]]
+    objectives_names: List[str]
     objectives_evaluations: np.array
 
     def __post_init__(self):
