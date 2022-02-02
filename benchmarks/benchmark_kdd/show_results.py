@@ -20,8 +20,10 @@ from syne_tune.experiments import get_metadata, load_experiments_df
 
 
 # %%
+from syne_tune.util import catchtime
 
-def generate_df_dict(tag: None, date_min=None, date_max=None, methods_to_show=None) -> Dict[str, pd.DataFrame]:
+
+def generate_df_dict(tag= None, date_min=None, date_max=None, methods_to_show=None) -> Dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
     def metadata_filter(metadata, benchmark=None, tag=None):
         date_exp = datetime.fromtimestamp(metadata['st_tuner_creation_timestamp'])
@@ -35,6 +37,8 @@ def generate_df_dict(tag: None, date_min=None, date_max=None, methods_to_show=No
         return date_min <= date_exp <= date_max
 
     metadatas = get_metadata()
+    if tag is not None:
+        metadatas = {k: v for k, v in metadatas.items() if v.get("tag") == tag}
     metadata_df = pd.DataFrame(metadatas.values())
     metadata_df['creation_date'] = metadata_df['st_tuner_creation_timestamp'].apply(lambda x: datetime.fromtimestamp(x))
     creation_dates_min_max = metadata_df.groupby(['algorithm']).agg(['min', 'max'])['creation_date']
@@ -268,9 +272,9 @@ if __name__ == '__main__':
 
     result_file = Path("~/Downloads/cached-results.dill").expanduser()
     if load_cache and result_file.exists():
-        print(f"loading results from {result_file}")
-        with open(result_file, "rb") as f:
-            benchmarks_to_df = dill.load(f)
+        with catchtime(f"loading results from {result_file}"):
+            with open(result_file, "rb") as f:
+                benchmarks_to_df = dill.load(f)
     else:
         print(f"regenerating results to {result_file}")
         benchmarks_to_df = generate_df_dict(tag, date_min, date_max, methods_to_show)

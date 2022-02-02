@@ -91,11 +91,11 @@ methods = {
         max_t=200,
         resource_attr='hp_epoch',
     ),
-    'Botorch': lambda method_arguments: BotorchGP(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-    ),
+    # 'Botorch': lambda method_arguments: BotorchGP(
+    #     config_space=method_arguments.config_space,
+    #     metric=method_arguments.metric,
+    #     mode=method_arguments.mode,
+    # ),
     'GP': lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",

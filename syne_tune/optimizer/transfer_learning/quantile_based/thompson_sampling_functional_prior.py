@@ -82,9 +82,8 @@ class TS(BaseSearcher):
             normalization: str = "gaussian",
     ):
         super(TS, self).__init__(configspace=config_space, metric=metric)
+        # todo seed management
         self.mode = mode
-        # TODO option to pick only last fidelity
-
         self.model_pipeline, sigma_train, sigma_val = fit_model(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
