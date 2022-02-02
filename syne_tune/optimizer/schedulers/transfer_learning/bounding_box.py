@@ -40,6 +40,11 @@ class BoundingBox(TransferLearningScheduler):
         :param num_hyperparameters_per_task: number of best hyperparameter to take per task when computing the bounding
         box, default to 1.
         """
+        self._check_consistency(
+            config_space=config_space,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+            metric_names=[metric],
+        )
         self.mode = mode if mode is not None else "min"
 
         new_config_space = self.compute_box(
@@ -56,7 +61,7 @@ class BoundingBox(TransferLearningScheduler):
         super(BoundingBox, self).__init__(
             config_space=new_config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            metric_names=self.scheduler.metric_names(),
+            metric_names=[metric],
         )
 
     @staticmethod

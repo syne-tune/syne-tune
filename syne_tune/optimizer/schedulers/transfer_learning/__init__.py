@@ -53,6 +53,19 @@ class TransferLearningScheduler(TrialScheduler):
         :param metric_names: name of the metric to be optimized.
         """
         super(TransferLearningScheduler, self).__init__(config_space=config_space)
+        self._check_consistency(
+            config_space=config_space,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+            metric_names=metric_names,
+        )
+        self._metric_names = metric_names
+
+    def _check_consistency(
+            self,
+            config_space: Dict,
+            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+            metric_names: List[str],
+    ):
         for task, evals in transfer_learning_evaluations.items():
             for key in config_space.keys():
                 assert key in evals.hyperparameters.columns, \
@@ -61,7 +74,6 @@ class TransferLearningScheduler(TrialScheduler):
             assert all([m in evals.objectives_names for m in metric_names]), \
                 f"all objectives used in the scheduler {self.metric_names()} should appear in transfer learning " \
                 f"evaluations objectives {evals.objectives_names}"
-        self._metric_names = metric_names
 
     def metric_names(self) -> List[str]:
         return self._metric_names
