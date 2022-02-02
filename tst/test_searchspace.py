@@ -129,3 +129,21 @@ def test_finrange_domain(domain, value_set):
         sampled_values - value_set.reshape((1, -1))), axis=1)
     assert np.max(min_distances) < 1e-8
 
+
+@pytest.mark.parametrize('domain,tp', [
+    (uniform(0.0, 1.0), float),
+    (loguniform(1.0, 10.0), float),
+    (randint(0, 10), int),
+    (lograndint(1, 10), int),
+    (finrange(0.1, 1.0, 10), float),
+    (logfinrange(np.exp(0.1), np.exp(1.0), 10), float)
+])
+def test_type_of_sample(domain, tp):
+    num_samples = 5
+    seed = 31415927
+    random_state = np.random.RandomState(seed)
+    value = domain.sample(random_state=random_state)
+    assert isinstance(value, tp), domain
+    values = domain.sample(random_state=random_state, size=num_samples)
+    assert isinstance(values, list) and len(values) == num_samples, domain
+    assert all(isinstance(x, tp) for x in values), domain
