@@ -5,6 +5,8 @@ import dill
 import pytest
 from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.suggest.skopt import SkOptSearch
+import pandas as pd
+import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
@@ -19,7 +21,8 @@ from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
 import syne_tune.search_space as sp
-
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 
 config_space = {
     "steps": 100,
@@ -42,6 +45,26 @@ def make_ray_skopt():
     )
     return ray_searcher
 
+
+def make_transfer_learning_evaluations(num_evals: int = 10):
+    return {
+        "dummy-task-1": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [{k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()} for _ in range(10)]
+            ),
+            objectives_evaluations=np.arange(num_evals * 2).reshape(num_evals, 2),
+            objectives_names=[metric1, metric2],
+        ),
+        "dummy-task-2": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [{k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()} for _ in range(10)]
+            ),
+            objectives_evaluations=-np.arange(num_evals * 2).reshape(num_evals, 2),
+            objectives_names=[metric1, metric2],
+        ),
+    }
 
 @pytest.mark.parametrize("scheduler", [
     FIFOScheduler(config_space, searcher='random', metric=metric1),
@@ -75,7 +98,18 @@ def make_ray_skopt():
         scheduler=FIFOScheduler(config_space, searcher='random', metric=metric1),
         resource_attr=resource_attr, metric=metric1
     ),
-
+    BoundingBox(
+        scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(
+            new_config_space,
+            points_to_evaluate=[],
+            metric=metric,
+            mode=mode,
+        ),
+        mode="min",
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+    ),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)

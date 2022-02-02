@@ -501,12 +501,15 @@ class Categorical(Domain):
     def match_string(self, value) -> str:
         return str(self.categories.index(value))
 
+    def __repr__(self):
+        return f"choice({self.categories})"
+
     def __eq__(self, other) -> bool:
         return isinstance(other, Categorical) \
                and super(Categorical, self).__eq__(other) \
                and self.categories == other.categories
 
-
+      
 class Function(Domain):
     class _CallSampler(BaseSampler):
         def sample(self,
