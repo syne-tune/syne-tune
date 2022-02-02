@@ -65,6 +65,11 @@ class Domain:
         return sampler
 
     def sample(self, spec=None, size=1, random_state=None):
+        """
+        :param size: Number of values to sample
+        :param random_state: PRN generator
+        :return: Single value (`size == 1`) or list (`size > 1`)
+        """
         sampler = self.get_sampler()
         return sampler.sample(
             self, spec=spec, size=size, random_state=random_state)
@@ -184,6 +189,13 @@ class Grid(Sampler):
         return isinstance(other, Grid)
 
 
+def _sanitize_sample_result(items, domain: Domain):
+    if len(items) > 1:
+        return [domain.cast(x) for x in items]
+    else:
+        return domain.cast(items[0])
+
+
 class Float(Domain):
     class _Uniform(Uniform):
         def sample(self,
@@ -198,7 +210,7 @@ class Float(Domain):
             if random_state is None:
                 random_state = np.random
             items = random_state.uniform(domain.lower, domain.upper, size=size)
-            return items if len(items) > 1 else domain.cast(items[0])
+            return _sanitize_sample_result(items, domain)
 
     class _LogUniform(LogUniform):
         def sample(self,
@@ -218,7 +230,7 @@ class Float(Domain):
                 random_state = np.random
             log_items = random_state.uniform(logmin, logmax, size=size)
             items = np.exp(log_items)
-            return items if len(items) > 1 else domain.cast(items[0])
+            return _sanitize_sample_result(items, domain)
 
     class _Normal(Normal):
         def sample(self,
@@ -233,7 +245,7 @@ class Float(Domain):
             if random_state is None:
                 random_state = np.random
             items = random_state.normal(self.mean, self.sd, size=size)
-            return items if len(items) > 1 else domain.cast(items[0])
+            return _sanitize_sample_result(items, domain)
 
     default_sampler_cls = _Uniform
 
@@ -332,7 +344,7 @@ class Integer(Domain):
             # `np.random.randint`.
             items = random_state.randint(
                 domain.lower, domain.upper + 1, size=size)
-            return items if len(items) > 1 else domain.cast(items[0])
+            return _sanitize_sample_result(items, domain)
 
     class _LogUniform(LogUniform):
         def sample(self,
@@ -353,7 +365,7 @@ class Integer(Domain):
             log_items = random_state.uniform(logmin, logmax, size=size)
             items = np.exp(log_items)
             items = np.round(items).astype(int)
-            return items if len(items) > 1 else domain.cast(items[0])
+            return _sanitize_sample_result(items, domain)
 
     default_sampler_cls = _Uniform
 
@@ -426,7 +438,7 @@ class Categorical(Domain):
             categories = domain.categories
             items = [categories[i] for i in random_state.choice(
                 len(categories), size=size)]
-            return items if len(items) > 1 else domain.cast(items[0])
+            return _sanitize_sample_result(items, domain)
 
     default_sampler_cls = _Uniform
 
@@ -512,7 +524,7 @@ class Function(Domain):
             else:
                 items = [domain.func() for i in range(size)]
 
-            return items if len(items) > 1 else domain.cast(items[0])
+            return _sanitize_sample_result(items, domain)
 
     default_sampler_cls = _CallSampler
 
@@ -605,7 +617,7 @@ class FiniteRange(Domain):
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
             y = np.exp(y)
-        return np.clip(y, self.lower, self.upper)
+        return float(np.clip(y, self.lower, self.upper))
 
     @property
     def value_type(self):
@@ -630,8 +642,11 @@ class FiniteRange(Domain):
         return None
 
     def sample(self, spec=None, size=1, random_state=None):
-        return [self._map_from_int(x)
-                for x in self._uniform_int.sample(spec, size, random_state)]
+        int_sample = self._uniform_int.sample(spec, size, random_state)
+        if size > 1:
+            return [self._map_from_int(x) for x in int_sample]
+        else:
+            return self._map_from_int(int_sample)
 
     @property
     def domain_str(self):
