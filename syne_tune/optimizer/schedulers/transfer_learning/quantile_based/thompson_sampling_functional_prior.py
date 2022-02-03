@@ -6,10 +6,11 @@ from sklearn.model_selection import train_test_split
 from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
-from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
-from syne_tune.optimizer.transfer_learning.quantile_based.normalization_transforms import from_string
+
 import pandas as pd
 
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import from_string
 from syne_tune.util import catchtime
 
 
@@ -20,7 +21,7 @@ def extract_input_output(transfer_learning_evaluations, normalization: str):
     )
     normalizer = from_string(normalization)
     y = np.concatenate([
-        normalizer(evals.metrics).transform(evals.metrics)
+        normalizer(evals.objectives_evaluations).transform(evals.objectives_evaluations)
         for evals in transfer_learning_evaluations.values()
     ], axis=0)
     return X, y

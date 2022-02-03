@@ -165,6 +165,7 @@ def plot_results(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
             ax.set_xlim([plotargs.xmin, plotargs.xmax])
 
         plt.tight_layout()
+        os.makedirs("figures/", exist_ok=True)
         plt.savefig(f"figures/{benchmark}.png")
         plt.show()
 
@@ -270,7 +271,7 @@ if __name__ == '__main__':
         'RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR',
         'RS-BB', 'HB-BB', 'HB-TS']
 
-    result_file = Path("~/Downloads/cached-results.dill").expanduser()
+    result_file = Path(f"~/Downloads/cached-results-{tag}.dill").expanduser()
     if load_cache and result_file.exists():
         with catchtime(f"loading results from {result_file}"):
             with open(result_file, "rb") as f:

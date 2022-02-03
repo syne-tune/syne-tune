@@ -6,8 +6,7 @@ from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 import syne_tune
-import blackbox_repository
-import benchmarks
+import benchmarking
 from syne_tune.util import s3_experiment_path
 
 if __name__ == '__main__':
@@ -27,7 +26,7 @@ if __name__ == '__main__':
         framework_version='1.6',
         max_run=3600*72,
         role=get_execution_role(),
-        dependencies=blackbox_repository.__path__ + syne_tune.__path__ + benchmarks.__path__,
+        dependencies=syne_tune.__path__ + benchmarking.__path__,
         disable_profiler=True,
         hyperparameters={"experiment_tag": experiment_tag, 'num_seeds': 30},
     )

@@ -6,13 +6,13 @@ import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
-from blackbox_repository import load
-from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
-from benchmarks.benchmark_kdd.baselines import methods, MethodArguments
-from benchmarks.benchmark_kdd.benchmark_definitions import benchmark_definitions
+from benchmarking.blackbox_repository import load
+from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
+from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods
+from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from coolname import generate_slug
@@ -25,9 +25,11 @@ def get_transfer_learning_evaluations(blackbox_name: str, test_task: str) -> Dic
     metric_index = 0
     transfer_learning_evaluations = {
         task: TransferLearningTaskEvaluations(
+            configuration_space=bb.configuration_space,
             hyperparameters=bb.hyperparameters,
             # average over seed, take last fidelity and pick only first metric
-            metrics=bb.objectives_evaluations.mean(axis=1)[:, -1, metric_index:metric_index + 1]
+            objectives_evaluations=bb.objectives_evaluations.mean(axis=1)[:, -1, metric_index:metric_index + 1],
+            objectives_names=[bb.objectives_names[metric_index]],
         )
         for task, bb in task_to_evaluations.items()
         if task != test_task

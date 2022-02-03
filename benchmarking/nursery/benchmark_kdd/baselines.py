@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
+from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
-from syne_tune.optimizer.transfer_learning.bounding_box import BoundingBox
-from syne_tune.optimizer.transfer_learning.quantile_based.thompson_sampling_functional_prior import TS
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.thompson_sampling_functional_prior import TS
 
 
 @dataclass
@@ -60,6 +60,7 @@ methods = {
         mode="min",
         metric=method_arguments.metric,
         config_space=method_arguments.config_space,
+        num_hyperparameters_per_task=10,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
     ),
     'HB-BB': lambda method_arguments: BoundingBox(
@@ -77,6 +78,7 @@ methods = {
         metric=method_arguments.metric,
         config_space=method_arguments.config_space,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
+        num_hyperparameters_per_task=10,
     ),
     'HB-TS': lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
@@ -115,3 +117,32 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
 }
+
+
+if __name__ == '__main__':
+    # Run a loop that initializes all schedulers on all benchmark to see if they all work
+    from benchmarking.nursery.benchmark_kdd.benchmark_main import get_transfer_learning_evaluations
+    from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
+    benchmarks = ["fcnet-protein", "nas201-cifar10"]
+    for benchmark_name in benchmarks:
+        benchmark = benchmark_definitions[benchmark_name]
+        backend = BlackboxRepositoryBackend(
+            elapsed_time_attr=benchmark.elapsed_time_attr,
+            time_this_resource_attr=benchmark.time_this_resource_attr,
+            blackbox_name=benchmark.blackbox_name,
+            dataset=benchmark.dataset_name,
+        )
+        for method_name, method_fun in methods.items():
+            print(f"checking initialization of: {method_name}, {benchmark_name}")
+            scheduler = method_fun(MethodArguments(
+                config_space=backend.blackbox.configuration_space,
+                metric=benchmark.metric,
+                mode=benchmark.mode,
+                random_seed=0,
+                max_t=max(backend.blackbox.fidelity_values),
+                resource_attr=next(iter(backend.blackbox.fidelity_space.keys())),
+                transfer_learning_evaluations=get_transfer_learning_evaluations(
+                    blackbox_name=benchmark.blackbox_name,
+                    test_task=benchmark.dataset_name,
+                ),
+            ))

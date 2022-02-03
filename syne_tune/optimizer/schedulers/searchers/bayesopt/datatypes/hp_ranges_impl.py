@@ -296,9 +296,11 @@ class HyperparameterRangeCategorical(HyperparameterRange):
 
     @staticmethod
     def _assert_value_type(value):
-        assert isinstance(value, str) or isinstance(value, int) or \
-            isinstance(value, float), \
-            f"value = {value} has type {type(value)}, must be str, int, or float"
+        # this fails with numpy numeric types
+        pass
+        # assert isinstance(value, str) or isinstance(value, int) or \
+        #     isinstance(value, float), \
+        #     f"value = {value} has type {type(value)}, must be str, int, or float"
 
     @staticmethod
     def _assert_choices(choices: Tuple[Any, ...]):

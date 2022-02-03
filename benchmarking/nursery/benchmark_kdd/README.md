@@ -7,25 +7,25 @@ To run all experiments, you can run the following:
 
 
 ```bash
-pip install -r benchmarks/benchmark_kdd/requirements.txt
-python benchmarks/benchmark_kdd/benchmark_main.py --experiment_tag "my-new-experiment" --num_seeds 2
+pip install -r benchmarking/nursery/benchmark_kdd/requirements.txt
+python benchmarking/nursery/benchmark_kdd/benchmark_main.py --experiment_tag "my-new-experiment" --num_seeds 2
 ```
 
-Which will run all combinations of methods/benchmark/seeds on your local computer.
+Which will run all combinations of methods/benchmark/seeds on your local computer for 2 seeds.
 
 Once all evaluations are done, you can pull results by running:
 
-```python benchmarks/benchmark_kdd/show_results.py --experiment_tag "my-new-experiment"``` 
+```python benchmarking/nursery/benchmark_kdd/show_results.py --experiment_tag "my-new-experiment"``` 
 
 you will obtain a plot like this one showing the confidence intervals of performance over time:
 
 ![alt text](nas201-cifar100.png "Results")
 
-You can also only run only one scheduler by doing `python benchmarks/benchmark_kdd/benchmark_main.py --method RS`, see
+You can also only run only one scheduler by doing `python benchmarking/nursery/benchmark_kdd/benchmark_main.py --method RS`, see
 `benchmark_main.py` to see all options supported.
 
 To launch the evaluation benchmark_kdd, you can also run 
-```python benchmarks/benchmark_loop/launch_remote.py --experiment_tag "my-new-experiment"``` which 
+```python benchmarking/nursery/benchmark_kdd/launch_remote.py --experiment_tag "my-new-experiment"``` which 
 evaluate everything in a remote machine. 
 
 You will need to sync remote results if you want to analyse them locally which can be done with:
