@@ -1,9 +1,7 @@
-import logging
-from typing import Optional, List, Tuple, Dict
+from typing import Dict
 import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsRegressor
 
 from blackbox_repository import load
 from blackbox_repository.blackbox_surrogate import BlackboxSurrogate
@@ -11,7 +9,6 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.transfer_learning.quantile_based.normalization_transforms import from_string
-from syne_tune.optimizer.transfer_learning.quantile_based.prior.xgboost_prior import XGBoostPrior
 import pandas as pd
 
 from syne_tune.util import catchtime
@@ -39,7 +36,7 @@ def fit_model(config_space, transfer_learning_evaluations, normalization: str, m
     X, y = extract_input_output(transfer_learning_evaluations, normalization)
     with catchtime("time to fit the model"):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
-        X_train, y_train = _subsample(X_train, y_train, max_samples=max_fit_samples)
+        X_train, y_train = subsample(X_train, y_train, max_samples=max_fit_samples)
         model_pipeline.fit(X_train, y_train)
 
         # compute residuals (num_metrics,)
@@ -60,7 +57,7 @@ def eval_model(model_pipeline, X, y):
     return res.mean()
 
 
-def _subsample(X_train, z_train, max_samples: int = 10000):
+def subsample(X_train, z_train, max_samples: int = 10000):
     assert len(X_train) == len(z_train)
     X_train.reset_index(inplace=True)
     if max_samples is not None and max_samples < len(X_train):
