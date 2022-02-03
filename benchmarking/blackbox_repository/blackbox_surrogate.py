@@ -58,7 +58,7 @@ class BlackboxSurrogate(Blackbox):
         # todo other types of assert with configuration_space, objective_names, ...
         self.surrogate = surrogate
         self.max_fit_samples = 10000
-        self.fit_surrogate(surrogate, X, y, max_samples=self.max_fit_samples)
+        self.fit_surrogate(X=X, y=y, surrogate=surrogate, max_samples=self.max_fit_samples)
         self.name = name
         self._fidelity_values = fidelity_values
 

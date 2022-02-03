@@ -113,14 +113,11 @@ class Tuner:
             logger.info(f"results of trials will be saved on {self.tuner_path}")
 
             if self.tuning_status is None:
-                self.tuning_status = TuningStatus(
-                    metric_names=self.scheduler.metric_names(),
-                    metric_mode=self.scheduler.metric_mode()
-                )
+                self.tuning_status = TuningStatus(metric_names=self.scheduler.metric_names())
             # prints the status every print_update_interval seconds
             self.status_printer = RegularCallback(
                 call_seconds_frequency=self.print_update_interval,
-                callback=lambda tuning_status: logger.info("tuning status\n" + str(tuning_status)),
+                callback=lambda tuning_status: logger.info("tuning status (last metric is reported)\n" + str(tuning_status)),
             )
             # saves the tuner every results_update_interval seconds
             self.tuner_saver = RegularCallback(
@@ -174,6 +171,8 @@ class Tuner:
                     # if the search space is exhausted, we loop until the running trials are done or until the
                     # stop condition is reached
                     if len(running_trials_ids) > 0:
+                        logger.debug(f"Search space exhausted, waiting for completion of running trials "
+                                     f"{running_trials_ids}")
                         self._sleep()
                     else:
                         break
@@ -216,13 +215,22 @@ class Tuner:
             if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
 
-    def _enrich_metadata(self, metadata):
+    def _sleep(self):
+        time.sleep(self.sleep_time)
+        for callback in self.callbacks:
+            callback.on_tuning_sleep(self.sleep_time)
+
+    def _enrich_metadata(self, metadata: Dict):
+        """
+        :return: adds creation time stamp, metric names and mode, entrypoint and backend to the metadata.
+        """
         res = metadata if metadata is not None else {}
         res[ST_TUNER_CREATION_TIMESTAMP] = time.time()
         res['metric_names'] = self.scheduler.metric_names()
         res['metric_mode'] = self.scheduler.metric_mode()
         res['entrypoint'] = self.backend.entrypoint_path().stem
         res['backend'] = str(type(self.backend).__name__)
+        res['scheduler_name'] = str(self.scheduler.__class__.__name__)
         return res
 
     def _save_metadata(self):
@@ -261,12 +269,6 @@ class Tuner:
 
         return done_trials_statuses, new_results
 
-    def _sleep(self):
-        time.sleep(self.sleep_time)
-
-        for callback in self.callbacks:
-            callback.on_tuning_sleep(self.sleep_time)
-
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
         """
         Schedules new tasks if ressources are available or sleep.
@@ -287,11 +289,6 @@ class Tuner:
             # Schedule as many trials as we have free workers
             for i in range(self.n_workers - num_running_trials):
                 trial_id = self._schedule_new_task()
-                if trial_id is None:
-                    logger.info("Searcher ran out of candidates, tuning job is stopping.")
-                    # todo should also stop parent loop
-                    break
-
                 running_trials_ids.add(trial_id)
 
     def _schedule_new_task(self) -> Optional[int]:

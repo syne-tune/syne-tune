@@ -3,8 +3,7 @@ import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
 
-from blackbox_repository import load
-from blackbox_repository.blackbox_surrogate import BlackboxSurrogate
+from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.optimizer.transfer_learning import TransferLearningTaskEvaluations
@@ -155,4 +154,5 @@ def run_ts():
 
 
 if __name__ == '__main__':
+    from benchmarking.blackbox_repository import load
     run_ts()
