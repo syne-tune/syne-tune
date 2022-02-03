@@ -12,12 +12,10 @@
 # permissions and limitations under the License.
 import logging
 from pathlib import Path
-import matplotlib.pyplot as plt
 
 from syne_tune.backend.local_backend import LocalBackend
-from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.tuner import Tuner
 from syne_tune.search_space import randint
 from syne_tune.stopping_criterion import StoppingCriterion
@@ -44,14 +42,13 @@ if __name__ == '__main__':
     backend = LocalBackend(entry_point=entry_point)
 
     # Random search without stopping
-    scheduler = FIFOScheduler(
+    scheduler = RandomSearch(
         config_space,
-        searcher='random',
         mode=mode,
         metric=metric,
         random_seed=random_seed)
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=60)
+    stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
         backend=backend,
         scheduler=scheduler,
@@ -66,9 +63,7 @@ if __name__ == '__main__':
 
     tuning_experiment = load_experiment(tuner.name)
     print(tuning_experiment)
-    df = tuning_experiment.results.sort_values(ST_TUNER_TIME)
-    df.loc[:, 'best'] = df.loc[:, metric].cummin()
-    df.plot(x=ST_TUNER_TIME, y="best")
-    plt.xlabel("wallclock time")
-    plt.ylabel(metric)
-    plt.show()
+
+    print(f"best result found: {tuning_experiment.best_config()}")
+
+    tuning_experiment.plot()

@@ -175,7 +175,6 @@ def metric_definitions_from_names(metrics_names):
     :return: a list of metric dictionaries that can be passed to sagemaker so that metrics are parsed from logs, the
     list can be passed to `metric_definitions` in sagemaker.
     """
-
     def metric_dict(metric_name):
         """
         :param metric_name:

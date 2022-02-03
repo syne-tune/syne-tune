@@ -23,8 +23,6 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system \
 from syne_tune.optimizer.scheduler import TrialSuggestion, \
     SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import ResourceLevelsScheduler
-from syne_tune.optimizer.schedulers.searchers.searcher import \
-    RandomSearcher
 from syne_tune.backend.trial_status import Trial
 from syne_tune.search_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
@@ -32,6 +30,9 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     assert_no_invalid_options, Integer
 from syne_tune.optimizer.schedulers.random_seeds import \
     RandomSeedGenerator
+from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import \
+    searcher_factory
 
 __all__ = ['SynchronousHyperbandScheduler']
 
@@ -40,22 +41,24 @@ logger = logging.getLogger(__name__)
 
 _ARGUMENT_KEYS = {
     'searcher', 'search_options', 'metric', 'mode', 'points_to_evaluate',
-    'random_seed', 'max_resource_attr', 'resource_attr', 'batch_size'}
+    'random_seed', 'max_resource_attr', 'resource_attr', 'batch_size',
+    'searcher_data'}
 
 _DEFAULT_OPTIONS = {
     'searcher': 'random',
     'mode': 'min',
     'resource_attr': 'epoch',
+    'searcher_data': 'rungs',
 }
 
 _CONSTRAINTS = {
-    'searcher': Categorical(choices=('random',)),
     'metric': String(),
     'mode': Categorical(choices=('min', 'max')),
     'random_seed': Integer(0, 2 ** 32 - 1),
     'max_resource_attr': String(),
     'resource_attr': String(),
     'batch_size': Integer(1, None),
+    'searcher_data': Categorical(('rungs', 'all')),
 }
 
 
@@ -70,6 +73,12 @@ class JobResultWriteBack:
 class JobQueueEntry:
     trial_id: Optional[int]
     write_back: JobResultWriteBack
+
+
+ERROR_MESSAGE = \
+    "In order to use SynchronousHyperbandScheduler, you need to create Tuner " +\
+    "with asynchronous_scheduling=False, and make sure that n_workers is the " +\
+    "same as batch_size passed to SynchronousHyperbandScheduler."
 
 
 class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
@@ -99,13 +108,15 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
 
     Parameters
     ----------
-    config_space: dict
+    config_space : dict
         Configuration space for trial evaluation function
     bracket_rungs : RungSystemsPerBracket
         Determines rung level systems for each bracket, see
         :class:`SynchronousHyperbandBracketManager`
+    searcher : str
+        Selects searcher. Passed to `searcher_factory`
     search_options : dict
-        Passed to :class:`RandomSearcher` constructor
+        Passed to `searcher_factory`
     metric : str
         Name of metric to optimize, key in result's obtained via
         `on_trial_result`
@@ -135,6 +146,17 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         Jobs are scheduled in batches of this size. All jobs in a batch need
         to have finished before the next scheduling decision is taken. Must be
         equal to `n_workers` in :class:`Tuner`.
+    searcher_data : str
+        Relevant only if a model-based searcher is used.
+        Example: For NN tuning and `resource_attr == epoch', we receive a
+        result for each epoch, but not all epoch values are also rung levels.
+        searcher_data determines which of these results are passed to the
+        searcher. As a rule, the more data the searcher receives, the better
+        its fit, but also the more expensive get_config may become. Choices:
+        - 'rungs' (default): Only results at rung levels. Cheapest
+        - 'all': All results. Most expensive
+        Note: For a Gaussian additive learning curve surrogate model, this
+        has to be set to 'all'.
 
     """
     def __init__(
@@ -160,8 +182,8 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         self.mode = kwargs['mode']
         self.max_resource_attr = kwargs.get('max_resource_attr')
         self._resource_attr = kwargs['resource_attr']
-        self.batch_size = kwargs.get('batch_size')
-        assert self.batch_size is not None, \
+        self._batch_size = kwargs.get('batch_size')
+        assert self._batch_size is not None, \
             "Argument 'batch_size' mandatory, must be equal to n_workers of Tuner"
         # Generator for random seeds
         random_seed = kwargs.get('random_seed')
@@ -169,7 +191,10 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             random_seed = np.random.randint(0, 2 ** 32)
         logger.info(f"Master random_seed = {random_seed}")
         self.random_seed_generator = RandomSeedGenerator(random_seed)
-        # Generate `RandomSearcher`
+        # Generate searcher
+        searcher = kwargs['searcher']
+        assert isinstance(searcher, str), \
+            f"searcher must be of type string, but has type {type(searcher)}"
         search_options = kwargs.get('search_options')
         if search_options is None:
             search_options = dict()
@@ -179,12 +204,25 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             'configspace': self.config_space.copy(),
             'metric': self.metric,
             'points_to_evaluate': kwargs.get('points_to_evaluate'),
+            'scheduler_mode': kwargs['mode'],
             'random_seed_generator': self.random_seed_generator,
-            'resource_attr': self._resource_attr})
-        self.searcher = RandomSearcher(**search_options)
+            'resource_attr': self._resource_attr,
+            'batch_size': self._batch_size,
+            'scheduler': 'hyperband_synchronous'})
+        if searcher == 'bayesopt':
+            # We need `max_epochs` in this case
+            max_epochs = self._infer_max_resource_level(
+                max_resource_level=None, max_resource_attr=self.max_resource_attr)
+            assert max_epochs is not None, \
+                "If searcher='bayesopt', need to know the maximum resource " +\
+                "level. Please provide max_resource_attr argument."
+            search_options['max_epochs'] = max_epochs
+        self.searcher: BaseSearcher = searcher_factory(
+            searcher, **search_options)
         # Bracket manager
         self.bracket_manager = SynchronousHyperbandBracketManager(
             bracket_rungs, mode=self.mode)
+        self.searcher_data = kwargs['searcher_data']
         # Queue of jobs to be processed by `_suggest` calls
         self._job_queue = []
         # Current phase ('suggest', 'collect')
@@ -197,15 +235,18 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
 
+    def batch_size(self) -> int:
+        return self._batch_size
+
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         assert self._phase == 'suggest', \
-            "Cannot process _suggest in collect phase. bracket_to_results " +\
-            f"= {self._bracket_to_results}"
+            "Cannot process _suggest in collect phase.\n" + ERROR_MESSAGE +\
+            f"\nbracket_to_results = {self._bracket_to_results}"
         if not self._job_queue:
             # Queue empty: Fetch new batch of jobs
             self._bracket_to_results = dict()
             for bracket_id, (trials, milestone) \
-                    in self.bracket_manager.next_jobs(self.batch_size):
+                    in self.bracket_manager.next_jobs(self._batch_size):
                 for pos, promote_trial_id in enumerate(trials):
                     write_back = JobResultWriteBack(
                         bracket_id=bracket_id, pos=pos, milestone=milestone)
@@ -213,7 +254,8 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                         trial_id=promote_trial_id, write_back=write_back))
                 # Will be written in `_suggest_next_job_in_queue`:
                 self._bracket_to_results[bracket_id] = [None] * len(trials)
-            logger.info(f"_suggest: New batch of {self.batch_size} jobs:\n" +\
+            logger.info(
+                f"_suggest: New batch of {self._batch_size} jobs:\n" +
                 '\n'.join([str(x) for x in self._job_queue]))
         if len(self._job_queue) == 1:
             # Final job in queue: Switch to collect phase
@@ -282,7 +324,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                     job_result[pos] = (trial.trial_id, metric_val)
                     trial_decision = SchedulerDecision.PAUSE
                     self._num_collected += 1
-                    if self._num_collected == self.batch_size:
+                    if self._num_collected == self._batch_size:
                         # All results have been collected
                         self.bracket_manager.on_results(self._bracket_to_results)
                         self._phase = 'suggest'
@@ -293,14 +335,15 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                         f"resource = {resource}, but not for {milestone}. " +\
                         "Training script must not skip rung levels!"
             if call_searcher:
+                update = self.searcher_data == 'all' or resource == milestone
                 self.searcher.on_trial_result(
                     trial_id=trial_id, config=self._trial_to_config[trial_id],
-                    result=result, update=(resource == milestone))
+                    result=result, update=update)
         else:
             # We may receive results in 'suggest' phase, because trials
             # were not properly paused. These results are simply ignored
             logger.warning(
-                f"Received result for trial_id {trial.trial_id} in suggest " +\
+                f"Received result for trial_id {trial.trial_id} in suggest " +
                 f"phase. This result will be ignored:\n{result}")
             trial_decision = SchedulerDecision.STOP
         return trial_decision
@@ -316,8 +359,8 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
 
         """
         assert self._phase == 'collect', \
-            "Cannot process on_trial_error in suggest phase. _job_queue " +\
-            f"= {self._job_queue}"
+            "Cannot process on_trial_error in suggest phase.\n" + ERROR_MESSAGE +\
+            f"\n_job_queue = {self._job_queue}"
         trial_id = str(trial.trial_id)
         self.searcher.evaluation_failed(trial_id)
         write_back = self._trial_to_write_back.get(trial_id)

@@ -64,8 +64,6 @@ class TunerCallback(ABC):
         `trial_status.Status.completed`.
         :param result:
         :param decision: decision that was returned by the scheduler
-        :param scheduler: scheduler object that is passed in case the analysis needs to associate special
-        Scheduler information (for instance GP posterior).
         :return:
         """
         pass
@@ -89,22 +87,21 @@ class StoreResultsCallback(TunerCallback):
         additional callback functionalities will be added as well as example to plot results over time.
 
         :param add_wallclock_time: whether to add wallclock time to results.
-        :param csv_file: if passed results are updated into the csv file, support local and S3 paths. In case an S3 path
-        is used `fsspec` and `s3fs` should be installed.
         """
         self.results = []
-        self.start = perf_counter() if add_wallclock_time else None
 
         self.csv_file = None
         self.save_results_at_frequency = None
+        self.add_wallclock_time = add_wallclock_time
+        self._start_time_stamp = None
 
     def _set_time_fields(self, result: Dict):
         """
         Note that we only add wallclock time to the result if this has not
         already been done (by the back-end)
         """
-        if self.start is not None and ST_TUNER_TIME not in result:
-            result[ST_TUNER_TIME] = perf_counter() - self.start
+        if self._start_time_stamp is not None and ST_TUNER_TIME not in result:
+            result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp
 
     def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
         assert self.save_results_at_frequency is not None, \
@@ -142,8 +139,10 @@ class StoreResultsCallback(TunerCallback):
              lambda: self.store_results(),
              call_seconds_frequency=tuner.results_update_interval,
         )
+        if self.add_wallclock_time:
+            self._start_time_stamp = perf_counter()
 
     def on_tuning_end(self):
-        # store the results in case some results were not commited yet (since they are saved every
+        # store the results in case some results were not committed yet (since they are saved every
         # `results_update_interval` seconds)
         self.store_results()

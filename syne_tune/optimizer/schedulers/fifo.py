@@ -30,7 +30,8 @@ from syne_tune.backend.time_keeper import TimeKeeper, RealTimeKeeper
 from syne_tune.backend.trial_status import Trial
 from syne_tune.search_space import cast_config_values
 
-__all__ = ['FIFOScheduler']
+__all__ = ['FIFOScheduler',
+           'ResourceLevelsScheduler']
 
 logger = logging.getLogger(__name__)
 
@@ -200,12 +201,12 @@ class FIFOScheduler(ResourceLevelsScheduler):
                 search_options = dict()
             else:
                 search_options = search_options.copy()
-            search_options['configspace'] = config_space.copy()
-            search_options['metric'] = self.metric
-            search_options['points_to_evaluate'] = kwargs.get(
-                'points_to_evaluate')
-            search_options['scheduler_mode'] = kwargs['mode']
-            search_options['random_seed_generator'] = self.random_seed_generator
+            search_options.update({
+                'configspace': self.config_space.copy(),
+                'metric': self.metric,
+                'points_to_evaluate': kwargs.get('points_to_evaluate'),
+                'scheduler_mode': kwargs['mode'],
+                'random_seed_generator': self.random_seed_generator})
             if self.max_t is not None:
                 search_options['max_epochs'] = self.max_t
             # Subclasses may extend `search_options`

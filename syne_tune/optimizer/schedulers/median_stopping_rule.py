@@ -20,7 +20,7 @@ class MedianStoppingRule(TrialScheduler):
             metric: Optional[str] = None,
             grace_time: Optional[int] = 1,
             grace_population: int = 5,
-            cutoff: float = 0.5,
+            rank_cutoff: float = 0.5,
     ):
         """
         Applies median stopping rule in top of an existing scheduler.
@@ -28,26 +28,25 @@ class MedianStoppingRule(TrialScheduler):
         interrupted and otherwise, the wrapped scheduler is called to make the stopping decision.
         * Suggest decisions are left to the wrapped scheduler.
         * The mode of the wrapped scheduler is used.
-        TODO we should implement running average option.
         Reference: Google Vizier: A Service for Black-Box Optimization. Golovin et al. 2017.
         :param scheduler: scheduler to be called for trial suggestion or when median-stopping-rule decision is to
         continue.
-        :param resource_attr: key in the reported dictionary that accounts for the ressource (e.g. epoch or
-        wallclocktime).
+        :param resource_attr: key in the reported dictionary that accounts for the resource (e.g. epoch or
+        wall-clocktime).
         :param running_average: if True, then uses the running average of observation instead of raw observations.
         :param metric: metric to be considered.
         :param grace_time: median stopping rule is only applied for results whose `time_attr` exceeds this amount.
-        :param grace_population: median stopping rule when at least `grace_population` have been observed at a ressource
+        :param grace_population: median stopping rule when at least `grace_population` have been observed at a resource
         level.
-        :param cutoff: results whose quantiles are bellow this level are discarded (discard by default results bellow
-        the median).
+        :param rank_cutoff: results whose quantiles are bellow this level are discarded (discard by default trials
+         whose results are bellow the median).
         """
         super(MedianStoppingRule, self).__init__(config_space=scheduler.config_space)
         self.metric = scheduler.metric if metric is None else metric
         self.sorted_results = defaultdict(list)
         self.scheduler = scheduler
         self.resource_attr = resource_attr
-        self.cutoff = cutoff
+        self.rank_cutoff = rank_cutoff
         self.grace_time = grace_time
         self.min_samples_required = grace_population
         self.running_average = running_average
@@ -65,28 +64,30 @@ class MedianStoppingRule(TrialScheduler):
         time_step = result[self.resource_attr]
 
         if self.running_average:
+            # gets the running average of current observations
             self.trial_to_results[trial.trial_id].append(new_metric)
             new_metric = np.mean(self.trial_to_results[trial.trial_id])
 
-        # insert new metric in sorted results
+        # insert new metric in sorted results acquired at this resource
         index = np.searchsorted(self.sorted_results[time_step], new_metric)
         self.sorted_results[time_step] = np.insert(self.sorted_results[time_step], index, new_metric)
         normalized_rank = index / float(len(self.sorted_results[time_step]))
 
         if self.grace_condition(time_step=time_step):
             return self.scheduler.on_trial_result(trial=trial, result=result)
-
-        if normalized_rank <= self.cutoff:
+        elif normalized_rank <= self.rank_cutoff:
             return self.scheduler.on_trial_result(trial=trial, result=result)
         else:
             logging.info(
                 f"see new results {new_metric} at time-step {time_step} for trial {trial.trial_id}"
                 f" with rank {int(normalized_rank * 100)}%, "
-                f"stopping it as it does not rank on the top {int(self.cutoff * 100)}%"
+                f"stopping it as it does not rank on the top {int(self.rank_cutoff * 100)}%"
             )
             return SchedulerDecision.STOP
 
     def grace_condition(self, time_step: float) -> bool:
+        # lets the trial continue when the time is bellow the grace time and when not sufficiently many observations
+        # are present for this time budget
         if self.min_samples_required is not None and len(self.sorted_results[time_step]) < self.min_samples_required:
             return True
         if self.grace_time is not None and time_step < self.grace_time:

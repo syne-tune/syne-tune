@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from abc import ABC, abstractmethod
-from typing import Tuple, Dict, List, Any
+from typing import Tuple, Dict, List, Any, Optional
 import numpy as np
 
 from syne_tune.search_space import Domain, is_log_space, FiniteRange, Categorical
@@ -265,26 +265,32 @@ class HyperparameterRangeCategorical(HyperparameterRange):
         """
         Can take on discrete set of values.
         :param name: name of dimension.
-        :param choices: possible values of the hyperparameter.
-        :param active_choices: If given, must be subset of `choices`.
+        :param choices: possible values of the hyperparameter
+        :param active_choices: If given, must be nonempty subset of `choices`.
         """
         super().__init__(name)
         self._assert_choices(choices)
         self.choices = list(choices)
         self.num_choices = len(self.choices)
         assert self.num_choices >= 1
+        assert self.num_choices > 0
         if active_choices is None:
-            self._ndarray_bounds = [(0.0, 1.0)] * self.num_choices
+            if self.num_choices > 1:
+                self._ndarray_bounds = [(0.0, 1.0)] * self.num_choices
+            else:
+                self._ndarray_bounds = [(1.0, 1.0)]
         else:
             self._assert_choices(active_choices)
             _active_choices = set(active_choices)
+            num_active_choices = len(active_choices)
             self._ndarray_bounds = [(0.0, 0.0)] * self.num_choices
             num = 0
+            val_nonzero = (0.0, 1.0) if num_active_choices > 1 else (1.0, 1.0)
             for pos, val in enumerate(self.choices):
                 if val in _active_choices:
-                    self._ndarray_bounds[pos] = (0.0, 1.0)
+                    self._ndarray_bounds[pos] = val_nonzero
                     num += 1
-            assert num == len(active_choices), \
+            assert num == num_active_choices, \
                 f"active_choices = {active_choices} must be a subset of " +\
                 f"choices = {choices}"
 
@@ -337,9 +343,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
     Basic implementation of :class:`HyperparameterRanges`. 
     """
     def __init__(self, config_space: Dict, name_last_pos: str = None,
-                 value_for_last_pos=None, active_config_space: Dict = None):
+                 value_for_last_pos=None, active_config_space: Dict = None,
+                 prefix_keys: Optional[List[str]] = None):
         super().__init__(config_space, name_last_pos, value_for_last_pos,
-                         active_config_space)
+                         active_config_space, prefix_keys)
         hp_ranges = []
         for name in self.internal_keys:
             hp_range = self.config_space[name]

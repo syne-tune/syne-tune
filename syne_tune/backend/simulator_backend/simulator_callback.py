@@ -80,7 +80,7 @@ class SimulatorCallback(StoreResultsCallback):
                 max_num_trials_completed=stop_criterion.max_num_trials_completed,
                 max_cost=stop_criterion.max_cost,
                 max_num_trials_finished=stop_criterion.max_num_trials_finished,
-                max_metric_value = {ST_TUNER_TIME: max_wallclock_time})
+                max_metric_value={ST_TUNER_TIME: max_wallclock_time})
             tuner.stop_criterion = new_stop_criterion
 
     def on_tuning_start(self, tuner: "Tuner"):

@@ -97,6 +97,9 @@ class SimulatorBackend(LocalBackend):
         contains the time since start of the script. These values are used
         to place worker events on the simulated time line (represented by
         `simulator_state`).
+        NOTE: If a trial is resumed, the elapsed_time value contains the time
+        since start of the last recent resume, NOT the cumulative time used by
+        the trial.
 
         Each method call starts by advancing time by what was spent outside,
         since the last recent call to the back-end. Then, all events in

@@ -37,11 +37,11 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     """
 
-    def __init__(self, configspace, **kwargs):
+    def __init__(self, configspace, metric, **kwargs):
         assert kwargs.get('constraint_attr') is not None, \
             "This searcher needs a constraint attribute. Please specify its " +\
             "name in search_options['constraint_attr']"
-        super().__init__(configspace, **kwargs)
+        super().__init__(configspace, metric, **kwargs)
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -83,9 +83,10 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         output_model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = ConstrainedGPFIFOSearcher(
-            configspace=None,
+            configspace=self.configspace,
+            metric=self._metric,
+            clone_from_state=True,
             hp_ranges=self.hp_ranges,
-            random_seed=self.random_seed,
             output_model_factory=output_model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,
@@ -98,7 +99,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
             cost_attr=self._cost_attr,
             constraint_attr=self._constraint_attr,
             resource_attr=self._resource_attr)
-        self._clone_from_state_common(new_searcher, state)
+        new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None
         return new_searcher

@@ -1,8 +1,9 @@
 # Syne Tune
 
-[![Release](https://img.shields.io/badge/release-0.11-brightgreen.svg)](https://pypi.org/project/syne-tune/)
-[![Python Version](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![Release](https://img.shields.io/badge/release-0.12-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![Python Version](https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
 
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) where trials 
  can be evaluated with several backend options (local backend to evaluate them locally; SageMaker to evaluate them as 
@@ -88,7 +89,7 @@ checkpoints must be written into a specific local path given by the command line
 `st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load
  the state when the job is stopped/resumed (setting the folder correctly and uniquely per
   trial is the responsibility of the backend), see 
-  [checkpoint_example.py](`examples/training_scripts/checkpoint_example/checkpoint_example.py`) to see a fully
+  [checkpoint_example.py](examples/training_scripts/checkpoint_example/checkpoint_example.py) to see a fully
    working example of a tuning script with checkpoint enabled.
 
 Under the hood, we use [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) 
@@ -97,11 +98,11 @@ backend. Checkpoints are saved in `s3://{s3_bucket}/syne-tune/{tuner-name}/{tria
 where `s3_bucket` can be configured (defaults to `default_bucket` of the
 session).
 
-We refer to [checkpoint_example.py](`examples/training_scripts/checkpoint_example/checkpoint_example.py`) for a complete
+We refer to [checkpoint_example.py](examples/training_scripts/checkpoint_example/checkpoint_example.py) for a complete
  example of a script with checkpoint enabled.
 
 Many other examples of scripts that can be tuned are are available in 
-[examples/training_scripts](`examples/training_scripts`).
+[examples/training_scripts](examples/training_scripts).
 
 ## Launching a tuning job
 
@@ -226,12 +227,12 @@ evaluated. The options and use-case in this table:
 
 |Tuning loop | Trial execution | Use-case | example |
 |------------|-----------------|----------|---------|
-|Local	     | Local           | Quick tuning for cheap models, debugging.|	launch_height_local.py |
+|Local	     | Local           | Quick tuning for cheap models, debugging.|	launch_height_baselines.py |
 |Local	     | SageMaker	   | Avoid saturating machine with trial computation with expensive trial, possibly use distributed training, enable debugging the tuning loop on a local machine.	|launch_height_sagemaker.py |
 |SageMaker   | Local	       | Run remotely to benchmark many HPO algo/seeds options, possibly with a big machine with multiple CPUs or GPUs.	|launch_height_sagemaker_remotely.py|
 |SageMaker   | SageMaker	   | Run remotely to benchmark many HPO algo/seeds options, enable distributed training or heavy computation.	|launch_height_sagemaker_remotely.py with distribute_trials_on_SageMaker=True |
 
-To summarize, to evaluate trial execution locally, users should use LocalBackend, to evaluate trials on SageMaker users should use the SageMakerBackend which allows to tune any SageMaker Estimator, see launch_height_local.py or launch_height_sagemaker.py for examples. To run a tuning loop remotely, RemoteLauncher can be used, see launch_height_sagemaker_remotely.py for an example.
+To summarize, to evaluate trial execution locally, users should use LocalBackend, to evaluate trials on SageMaker users should use the SageMakerBackend which allows to tune any SageMaker Estimator, see launch_height_baselines.py or launch_height_sagemaker.py for examples. To run a tuning loop remotely, RemoteLauncher can be used, see launch_height_sagemaker_remotely.py for an example.
 
 **Output of a tuning job.** 
 
@@ -302,15 +303,12 @@ evaluation code making good use of multiple GPUs.
 
 Once you have a tuning script, you can call Tuner with any scheduler to perform your HPO.
 You will find the following examples in [examples/](examples/) folder:
-* [launch_height_local.py](examples/launch_height_local.py):
-  launches HPO locally, tuning a simple script
-   [train_height_example.py](examples/training_scripts/height_example/train_height.py)  
+* [launch_height_baselines.py](examples/launch_height_baselines.py):
+  launches HPO locally, tuning a simple script 
+   [train_height_example.py](examples/training_scripts/height_example/train_height.py) for several baselines  
 * [launch_height_ray.py](examples/launch_height_ray.py):
   launches HPO locally with [Ray Tune](https://docs.ray.io/en/master/tune/index.html)
   scheduler
-* [launch_fashionmnist.py](examples/launch_fashionmnist.py):
-  launches HPO locally tuning a multi-layer perceptron on Fashion MNIST. This
-  employs an easy-to-use benchmark convention
 * [launch_height_moasha.py](examples/launch_height_moasha.py):
   shows how to tune a script reporting multiple-objectives with multiobjective Asynchronous Hyperband (MOASHA)
 * [launch_height_standalone_scheduler.py](examples/launch_height_standalone_scheduler.py):
@@ -321,12 +319,19 @@ You will find the following examples in [examples/](examples/) folder:
   the remote machine or distributed again as separate SageMaker training jobs
 * [launch_height_sagemaker.py](examples/launch_height_sagemaker.py):
   launches HPO on SageMaker to tune a SageMaker Pytorch estimator
-* [launch_huggingface_classification.py](examples/launch_huggingface_classification.py):
-  launches HPO on SageMaker to tune a SageMaker Hugging Face estimator for sentiment classification
 * [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py):
   launches HPO on SageMaker to tune a entry point with a custom docker image
 * [launch_plot_results.py](examples/launch_plot_results.py): shows how to plot
   results of a HPO experiment
+* [launch_fashionmnist.py](examples/launch_fashionmnist.py):
+launches HPO locally tuning a multi-layer perceptron on Fashion MNIST. This
+employs an easy-to-use benchmark convention
+* [launch_huggingface_classification.py](examples/launch_huggingface_classification.py):
+  launches HPO on SageMaker to tune a SageMaker Hugging Face estimator for sentiment classification
+* [launch_tuning_gluonts.py](examples/launch_tuning_gluonts.py):
+  launches HPO locally to tune a gluon-ts time series forecasting algorithm
+* [launch_rl_tuning.py](examples/launch_rl_tuning.py):
+  launches HPO locally to tune a RL algorithm on the cartpole environment
 
 
 ## Running on SageMaker
@@ -390,16 +395,17 @@ Syne Tune comes with a range of benchmarks for testing and demonstration.
 [Turning your own tuning problem into a benchmark](docs/benchmarks.md) is simple
 and comes with a number of advantages. As detailed in
 [this tutorial](docs/command_line.md), you can use the CL launcher
-[launch_hpo.py](benchmarks/launch_hpo.py) in order to start one or more
+[launch_hpo.py](benchmarking/cli/launch_hpo.py) in order to start one or more
 experiments, adjusting many parameters of benchmark, back-end, tuner, or
 scheduler from the command line. 
 
-The simpler [benchmark_main.py](benchmarks/benchmark_loop/README.md) can also be used to
+The simpler [benchmark_main.py](benchmarking/benchmark_loop/README.md) can also be used to
 launch experiments that loops over many schedulers and benchmarks.
 
 ## Tutorials
 
-Do you want to know more? Here are a number of short tutorials.
+Do you want to know more? Here are a number of tutorials.
+* [Basics of Syne Tune](docs/tutorials/basics/README.md)
 * [Using the built-in schedulers](docs/schedulers.md)
 * [Choosing a configuration space](docs/search_space.md)
 * [Using the command line launcher to benchmark schedulers](docs/command_line.md)

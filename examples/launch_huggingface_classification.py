@@ -21,13 +21,12 @@ from sagemaker.huggingface import HuggingFace
 import syne_tune
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.tuner import Tuner
 from syne_tune.stopping_criterion import StoppingCriterion
 
-from examples.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
+from benchmarking.definitions.definition_distilbert_on_imdb import \
     distilbert_imdb_benchmark, distilbert_imdb_default_params
-
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
@@ -55,7 +54,7 @@ if __name__ == '__main__':
         pytorch_version='1.6',
         py_version='py36',
         role=get_execution_role(),
-        dependencies=[root / "benchmarks"],
+        dependencies=[root / "benchmarking"],
     )
 
     # SageMaker backend
@@ -65,9 +64,8 @@ if __name__ == '__main__':
     )
 
     # Random search without stopping
-    scheduler = FIFOScheduler(
+    scheduler = RandomSearch(
         config_space,
-        searcher='random',
         mode=mode,
         metric=metric,
         random_seed=random_seed

@@ -5,21 +5,25 @@ import dill
 import pytest
 from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.suggest.skopt import SkOptSearch
+import pandas as pd
+import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER, REA
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
 import syne_tune.search_space as sp
-
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 
 config_space = {
     "steps": 100,
@@ -43,16 +47,35 @@ def make_ray_skopt():
     return ray_searcher
 
 
+def make_transfer_learning_evaluations(num_evals: int = 10):
+    return {
+        "dummy-task-1": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [{k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()} for _ in range(10)]
+            ),
+            objectives_evaluations=np.arange(num_evals * 2).reshape(num_evals, 2),
+            objectives_names=[metric1, metric2],
+        ),
+        "dummy-task-2": TransferLearningTaskEvaluations(
+            config_space,
+            hyperparameters=pd.DataFrame(
+                [{k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()} for _ in range(10)]
+            ),
+            objectives_evaluations=-np.arange(num_evals * 2).reshape(num_evals, 2),
+            objectives_names=[metric1, metric2],
+        ),
+    }
+
 @pytest.mark.parametrize("scheduler", [
     FIFOScheduler(config_space, searcher='random', metric=metric1),
     FIFOScheduler(config_space, searcher='bayesopt', metric=metric1),
-    MedianStoppingRule(scheduler=FIFOScheduler(config_space, searcher='random', metric=metric1), resource_attr=resource_attr, metric=metric1),
+    FIFOScheduler(config_space, searcher='kde', metric=metric1),
     HyperbandScheduler(config_space, searcher='random', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(config_space, searcher='bayesopt', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(
         config_space, searcher='random', type='pasha', max_t=max_t, resource_attr=resource_attr, metric=metric1
     ),
-    MOASHA(config_space=config_space, time_attr=resource_attr, metrics=[metric1, metric2]),
     PopulationBasedTraining(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
     RayTuneScheduler(
         config_space=config_space,
@@ -65,6 +88,30 @@ def make_ray_skopt():
     ),
     SimpleScheduler(config_space=config_space, metric=metric1),
     BotorchGP(config_space=config_space, metric=metric1),
+    RandomSearch(config_space=config_space, metric=metric1),
+    BayesianOptimization(config_space=config_space, metric=metric1),
+    REA(config_space=config_space, metric=metric1, population_size=1, sample_size=2),
+    ASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    MOBSTER(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
+    # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    MOASHA(config_space=config_space, time_attr=resource_attr, metrics=[metric1, metric2]),
+    MedianStoppingRule(
+        scheduler=FIFOScheduler(config_space, searcher='random', metric=metric1),
+        resource_attr=resource_attr, metric=metric1
+    ),
+    BoundingBox(
+        scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(
+            new_config_space,
+            points_to_evaluate=[],
+            metric=metric,
+            mode=mode,
+        ),
+        mode="min",
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+    ),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
@@ -80,7 +127,7 @@ def test_async_schedulers_api(scheduler):
     for i in trial_ids:
         suggestion = scheduler.suggest(i)
         assert all(x in suggestion.config.keys() for x in config_space.keys()), \
-            "suggestion configuration should contains all keys of configspace."
+            "suggestion configuration should contain all keys of configspace."
         trials.append(Trial(trial_id=i, config=suggestion.config, creation_time=None))
 
     for trial in trials:
@@ -104,6 +151,7 @@ def test_async_schedulers_api(scheduler):
         with open(Path(local_path) / "scheduler.dill", "rb") as f:
             dill.load(f)
 
+
 @pytest.mark.parametrize("scheduler", [
     SynchronousGeometricHyperbandScheduler(
         config_space=config_space,
@@ -113,6 +161,15 @@ def test_async_schedulers_api(scheduler):
         batch_size=sync_batch_size,
         metric=metric1,
         max_resource_attr='steps'),
+    SynchronousGeometricHyperbandScheduler(
+        config_space=config_space,
+        max_resource_level=max_t,
+        brackets=3,
+        resource_attr=resource_attr,
+        batch_size=sync_batch_size,
+        metric=metric1,
+        max_resource_attr='steps',
+        searcher='kde'),
 ])
 def test_sync_schedulers_api(scheduler):
     assert scheduler.metric_names() == [metric1]
@@ -131,7 +188,7 @@ def test_sync_schedulers_api(scheduler):
         for trial_id in range(next_trial_id, next_trial_id + sync_batch_size):
             suggestion = scheduler.suggest(trial_id)
             assert all(x in suggestion.config.keys() for x in config_space.keys()), \
-                "suggestion configuration should contains all keys of configspace."
+                "suggestion configuration should contain all keys of configspace."
             if suggestion.spawn_new_trial_id:
                 trial = Trial(
                     trial_id=trial_id, config=suggestion.config,

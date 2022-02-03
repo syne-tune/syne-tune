@@ -173,7 +173,7 @@ class TuningJobState(object):
             if metric_entry is not None:
                 if isinstance(metric_entry, dict):
                     assert resource_attr_name is not None, \
-                        f"Need {resource_attr_name} for dict-valued metric " +\
+                        "Need resource_attr_name for dict-valued metric " +\
                         metric_name
                     for resource, metric_val in metric_entry.items():
                         config_ext = dict(
@@ -250,3 +250,10 @@ class TuningJobState(object):
                     config, **{resource_attr_name: int(resource)})
             configs.append(config)
         return configs
+
+    def __eq__(self, other) -> bool:
+        return self.hp_ranges == other.hp_ranges \
+               and self.config_for_trial == other.config_for_trial \
+               and self.trials_evaluations == other.trials_evaluations \
+               and self.failed_trials == other.failed_trials \
+               and self.pending_evaluations == other.pending_evaluations

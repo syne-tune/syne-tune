@@ -11,11 +11,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
-from typing import Type, Optional, Dict
+from typing import Type, Optional, Dict, List
 import logging
+import copy
+import time
 
 from syne_tune.optimizer.schedulers.searchers.searcher import \
-    BaseSearcher, RandomSearcher
+    SearcherWithRandomSeed, RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
     gp_fifo_searcher_factory, gp_fifo_searcher_defaults
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
@@ -25,7 +27,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import TrialEvaluations, Configuration, MetricValues, \
-    dictionarize_objective, INTERNAL_METRIC_NAME, INTERNAL_COST_NAME
+    dictionarize_objective, INTERNAL_METRIC_NAME, INTERNAL_COST_NAME, \
+    ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
@@ -33,7 +36,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
     import TransformerModelFactory, ModelStateTransformer
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt \
-    import SkipOptimizationPredicate
+    import SkipOptimizationPredicate, AlwaysSkipPredicate
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import LocalOptimizer, ScoringFunction, SurrogateOutputModel, \
     AcquisitionClassAndArgs, unwrap_acquisition_class_and_kwargs
@@ -86,17 +89,12 @@ def check_initial_candidates_scorer(initial_scoring: str) -> str:
         return initial_scoring
 
 
-class ModelBasedSearcher(BaseSearcher):
+class ModelBasedSearcher(SearcherWithRandomSeed):
     """Common code for surrogate model based searchers
 
     """
-    def __init__(
-            self, configspace, metric=None,
-            points_to_evaluate=None):
-        super().__init__(configspace, metric, points_to_evaluate)
-
     def _create_internal(
-            self, hp_ranges: HyperparameterRanges, random_seed: int,
+            self, hp_ranges: HyperparameterRanges,
             model_factory: TransformerModelFactory,
             acquisition_class: AcquisitionClassAndArgs,
             map_reward: Optional[MapReward] = None,
@@ -107,9 +105,9 @@ class ModelBasedSearcher(BaseSearcher):
             num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
             initial_scoring: Optional[str] = None,
             cost_attr: Optional[str] = None,
-            resource_attr: Optional[str] = None):
+            resource_attr: Optional[str] = None,
+            filter_observed_data: Optional[ConfigurationFilter] = None):
         self.hp_ranges = hp_ranges
-        self.random_seed = random_seed
         self.num_initial_candidates = num_initial_candidates
         self.num_initial_random_choices = num_initial_random_choices
         self.map_reward = map_reward
@@ -128,13 +126,15 @@ class ModelBasedSearcher(BaseSearcher):
             model_factory=model_factory,
             init_state=init_state,
             skip_optimization=skip_optimization)
-        self.random_state = np.random.RandomState(random_seed)
         self.random_generator = RandomStatefulCandidateGenerator(
             self._hp_ranges_for_prediction(), random_state=self.random_state)
         self.set_profiler(model_factory.profiler)
         self._cost_attr = cost_attr
         self._resource_attr = resource_attr
+        self._filter_observed_data = filter_observed_data
         self._random_searcher = None
+        # Tracks the cumulative time spent in `get_config` calls
+        self.cumulative_get_config_time = 0
         if model_factory.debug_log is not None:
             deb_msg = "[ModelBasedSearcher.__init__]\n"
             deb_msg += ("- acquisition_class = {}\n".format(acquisition_class))
@@ -215,12 +215,63 @@ class ModelBasedSearcher(BaseSearcher):
                 msg += f", cost_val = {cost_val:.2f}"
             logger.info(msg)
 
-    def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
+    def _get_config_modelbased(
+            self, exclusion_candidates: ExclusionList, **kwargs) -> \
             Optional[Configuration]:
         raise NotImplementedError()
 
     def _get_exclusion_candidates(self, **kwargs) -> ExclusionList:
-        return ExclusionList(self.state_transformer.state)
+        return ExclusionList(
+            self.state_transformer.state,
+            filter_observed_data=self._filter_observed_data)
+
+    def _should_pick_random_config(
+            self, exclusion_candidates: ExclusionList) -> bool:
+        if len(exclusion_candidates) < self.num_initial_random_choices:
+            return True
+        # Determine whether there is any observed data after filtering
+        state = self.state_transformer.state
+        if not state.trials_evaluations:
+            return True
+        if self._filter_observed_data is None:
+            return False
+        for ev in state.trials_evaluations:
+            config = state.config_for_trial[ev.trial_id]
+            if self._filter_observed_data(config):
+                return False
+        return True
+
+    def _get_config_not_modelbased(
+            self, exclusion_candidates: ExclusionList) -> (
+            Optional[Configuration], bool):
+        """
+        Does job of `get_config`, as long as the decision does not involve
+        model-based search. If False is returned, model-based search must be
+        called.
+
+        """
+        self._assign_random_searcher()
+        state = self.state_transformer.state
+        config = self._next_initial_config()  # Ask for initial config
+        if config is None:
+            pick_random = self._should_pick_random_config(exclusion_candidates)
+        else:
+            pick_random = True  # Initial configs count as random here
+        if pick_random and config is None:
+            if self.do_profile:
+                self.profiler.start('random')
+            for _ in range(GET_CONFIG_RANDOM_RETRIES):
+                _config = self._random_searcher.get_config()
+                if _config is None:
+                    # If `RandomSearcher` returns no config at all, the
+                    # search space is exhausted
+                    break
+                if not exclusion_candidates.contains(_config):
+                    config = _config
+                    break
+            if self.do_profile:
+                self.profiler.stop('random')
+        return config, pick_random
 
     def get_config(self, **kwargs) -> Configuration:
         """
@@ -228,7 +279,7 @@ class ModelBasedSearcher(BaseSearcher):
 
         :return: Next config to evaluate at
         """
-        self._assign_random_searcher()
+        start_time = time.time()
         state = self.state_transformer.state
         if self.do_profile:
             # Start new profiler block
@@ -242,34 +293,17 @@ class ModelBasedSearcher(BaseSearcher):
             }
             self.profiler.begin_block(meta)
             self.profiler.start('all')
-        config = self._next_initial_config()  # Ask for initial config
-        exclusion_candidates = None
-        if config is None:
-            exclusion_candidates = self._get_exclusion_candidates(**kwargs)
-            pick_random = (len(exclusion_candidates) < self.num_initial_random_choices) or \
-                (not state.trials_evaluations)
-        else:
-            pick_random = True  # Initial configs count as random here
+            # Initial configs come from `points_to_evaluate` or are drawn at random
+        exclusion_candidates = self._get_exclusion_candidates(**kwargs)
+        config, pick_random = self._get_config_not_modelbased(
+            exclusion_candidates)
         if self.debug_log is not None:
             trial_id = kwargs.get('trial_id')
             self.debug_log.start_get_config(
                 'random' if pick_random else 'BO', trial_id=trial_id)
-        if config is None:
-            if pick_random:
-                if self.do_profile:
-                    self.profiler.start('random')
-                for _ in range(GET_CONFIG_RANDOM_RETRIES):
-                    _config = self._random_searcher.get_config()
-                    if _config is None:
-                        # If `RandomSearcher` returns no config at all, the
-                        # search space is exhausted
-                        break
-                    if not exclusion_candidates.contains(_config):
-                        config = _config
-                        break
-                if self.do_profile:
-                    self.profiler.stop('random')
-            elif not exclusion_candidates.config_space_exhausted():
+        if not pick_random:
+            # Model-based decision
+            if not exclusion_candidates.config_space_exhausted():
                 config = self._get_config_modelbased(
                     exclusion_candidates, **kwargs)
 
@@ -288,6 +322,7 @@ class ModelBasedSearcher(BaseSearcher):
         if self.do_profile:
             self.profiler.stop('all')
             self.profiler.clear()
+        self.cumulative_get_config_time += (time.time() - start_time)
 
         return config
 
@@ -308,24 +343,26 @@ class ModelBasedSearcher(BaseSearcher):
         We assume that skip_optimization can be pickled.
 
         """
-        state = {
-            'model_params': self.model_parameters(),
-            'state': encode_state(self.state_transformer.state),
-            'skip_optimization': self.state_transformer.skip_optimization,
-            'random_state': self.random_state}
+        state = dict(
+            super().get_state(),
+            model_params=self.model_parameters(),
+            state=encode_state(self.state_transformer.state),
+            skip_optimization=self.state_transformer.skip_optimization)
         if self._random_searcher is not None:
             state['random_searcher_state'] = self._random_searcher.get_state()
         return state
 
-    def _clone_from_state_common(
-            self, new_searcher: 'ModelBasedSearcher', state: Dict):
-        new_searcher.state_transformer.set_params(state['model_params'])
-        new_searcher.random_state = state['random_state']
-        new_searcher.random_generator.random_state = \
-            state['random_state']
+    def _restore_from_state(self, state: dict):
+        super()._restore_from_state(state)
+        self.state_transformer.set_params(state['model_params'])
+        self.random_generator.random_state = self.random_state
         if 'random_searcher_state' in state:
             # Restore self._random_searcher as well
-            self._assign_random_searcher()
+            # Note: It is important to call `_assign_random_searcher` with a
+            # random seed. Otherwise, one is drawn from `random_state`, which
+            # modifies that state. The seed passed does not matter, since
+            # `_random_searcher.random_state` will be restored anyway
+            self._assign_random_searcher(random_seed=0)
             self._random_searcher._restore_from_state(
                 state['random_searcher_state'])
 
@@ -337,15 +374,17 @@ class ModelBasedSearcher(BaseSearcher):
     def debug_log(self):
         return self._debug_log
 
-    def _assign_random_searcher(self):
+    def _assign_random_searcher(self, random_seed=None):
         if self._random_searcher is None:
             # Used for initial random configs (if any)
             # We do not have to deal with points_to_evaluate
+            if random_seed is None:
+                random_seed = self.random_state.randint(0, 2 ** 32)
             self._random_searcher = RandomSearcher(
                 self.hp_ranges.config_space,
                 metric=self._metric,
                 points_to_evaluate=[],
-                random_seed=self.random_seed,
+                random_seed=random_seed,
                 debug_log=False)
 
 
@@ -390,6 +429,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
         If None (default), this is mapped to [dict()], a single default config
         determined by the midpoint heuristic. If [] (empty list), no initial
         configurations are specified.
+    random_seed_generator : RandomSeedGenerator (optional)
+        If given, the random_seed for `random_state` is obtained from there,
+        otherwise `random_seed` is used
+    random_seed : int (optional)
+        This is used if `random_seed_generator` is not given.
     debug_log : bool (default: False)
         If True, both searcher and scheduler output an informative log, from
         which the configs chosen and decisions being made can be traced.
@@ -404,8 +448,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
         training time). Needed only by cost-aware searchers. Depending on
         whether `resource_attr` is given, cost values are read from each
         report or only at the end.
-    random_seed : int
-        Seed for pseudo-random number generator used.
     num_init_random : int
         Number of initial `get_config` calls for which randomly sampled configs
         are returned. Afterwards, Bayesian optimization is used
@@ -414,7 +456,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         search for `get_config`
     num_fantasy_samples : int
         Number of samples drawn for fantasizing (latent target values for
-        pending candidates)
+        pending evaluations)
+    no_fantasizing : bool
+        If True, fantasizing is not done and pending evaluations are ignored.
+        This may lead to loss of diversity in decisions
     initial_scoring : str
         Scoring function to rank initial candidates (local optimization of EI
         is started from top scorer). Values are 'thompson_indep' (independent
@@ -449,16 +494,57 @@ class GPFIFOSearcher(ModelBasedSearcher):
         because criterion is only used internally. Also note that criterion
         data is always normalized to mean 0, variance 1 before fitted with a
         GP.
+    transfer_learning_task_attr : str (optional)
+        Used to support transfer HPO, where the state contains observed data
+        from several tasks, one of which is the active one. To this end,
+        `configspace` must contain a categorical parameter of name
+        `transfer_learning_task_attr`, whose range are all task IDs. Also,
+        `transfer_learning_active_task` must denote the active task, and
+        `transfer_learning_active_config_space` is used as
+        `active_config_space` argument in :class:`HyperparameterRanges`. This
+        allows us to use a narrower search space for the active task than for
+        the union of all tasks (`configspace` must be that), which is needed
+        if some configurations of non-active tasks lie outside of the ranges
+        in `active_config_space`.
+        One of the implications is that `filter_observed_data` is selecting
+        configs of the active task, so that incumbents or exclusion lists are
+        restricted to data from the active task.
+    transfer_learning_active_task : str (optional)
+        See `transfer_learning_task_attr`.
+    transfer_learning_active_config_space : Dict (optional)
+        See `transfer_learning_task_attr`. If not given, `configspace` is the
+        search space for the active task as well. This active config space need
+        not contain the `transfer_learning_task_attr` parameter. In fact, this
+        parameter is set to a categorical with `transfer_learning_active_task`
+        as single value, so that new configs are chosen for the active task
+        only.
+    transfer_learning_model : str (optional)
+        See `transfer_learning_task_attr`. Specifies the surrogate model to be
+        used for transfer lerning:
+        - 'matern52_product': Kernel is product of Matern 5/2 (not ARD) on
+            `transfer_learning_task_attr` and Matern 5/2 (ARD) on the rest.
+            Assumes that data from same task are more closely related than
+            data from different tasks
+        - 'matern52_same': Kernel is Matern 5/2 (ARD) on the rest of the
+            variables, `transfer_learning_task_attr` is ignored. Assumes
+            that data from all tasks can be merged together
+
     """
-    def __init__(self, configspace, **kwargs):
-        if configspace is not None:
+    def __init__(self, configspace, metric, clone_from_state=False, **kwargs):
+        if not clone_from_state:
             super().__init__(
-                configspace, metric=kwargs.get('metric'),
-                points_to_evaluate=kwargs.get('points_to_evaluate'))
+                configspace,
+                metric=metric,
+                points_to_evaluate=kwargs.get('points_to_evaluate'),
+                random_seed_generator=kwargs.get('random_seed_generator'),
+                random_seed=kwargs.get('random_seed'))
             kwargs['configspace'] = configspace
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
             # Internal constructor, bypassing the factory
+            # Note: Members which are part of the mutable state, will be
+            # overwritten in `_restore_from_state`
+            super().__init__(configspace, metric=metric)
             kwargs_int = kwargs.copy()
         self._call_create_internal(kwargs_int)
 
@@ -507,6 +593,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def _postprocess_config(self, config: dict) -> dict:
         return config
 
+    def _num_initial_candidates(self) -> int:
+        return self.num_initial_candidates
+
     def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
             Optional[Configuration]:
         # Obtain current SurrogateModel from state transformer. Based on
@@ -535,7 +624,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         bo_algorithm = BayesianOptimizationAlgorithm(
             initial_candidates_generator=self.random_generator,
             initial_candidates_scorer=initial_candidates_scorer,
-            num_initial_candidates=self.num_initial_candidates,
+            num_initial_candidates=self._num_initial_candidates(),
             local_optimizer=local_optimizer,
             pending_candidate_state_transformer=None,
             exclusion_candidates=exclusion_candidates,
@@ -556,6 +645,96 @@ class GPFIFOSearcher(ModelBasedSearcher):
             self.profiler.pop_prefix()  # getconfig
         return config
 
+    def get_batch_configs(
+            self, batch_size: int,
+            num_init_candidates_for_batch: Optional[int] = None,
+            **kwargs) -> List[Configuration]:
+        """
+        Asks for a batch of `batch_size` configurations to be suggested. This
+        is roughly equivalent to calling `get_config` `batch_size` times,
+        marking the suggested configs as pending in the state (but the state
+        is not modified here).
+        If `num_init_candidates_for_batch` is given, it is used instead
+        of `num_init_candidates` for the selection of all but the first
+        config in the batch. In order to speed up batch selection, choose
+        `num_init_candidates_for_batch` smaller than
+        `num_init_candidates`.
+
+        If less than `batch_size` configs are returned, the search space
+        has been exhausted.
+        """
+        assert round(batch_size) == batch_size and batch_size >= 1
+        configs = []
+        if batch_size == 1:
+            config = self.get_config(**kwargs)
+            if config is not None:
+                configs.append(config)
+        else:
+            exclusion_candidates = self._get_exclusion_candidates(**kwargs)
+            pick_random = True
+            while pick_random and len(configs) < batch_size:
+                config, pick_random = self._get_config_not_modelbased(
+                    exclusion_candidates)
+                if pick_random:
+                    if config is not None:
+                        configs.append(config)
+                        exclusion_candidates.add(config)
+                    else:
+                        break  # Space exhausted
+            if not pick_random:
+                # Model-based decision for remaining ones
+                num_requested_candidates = batch_size - len(configs)
+                model = self.state_transformer.model()
+                # Select and fix target resource attribute (relevant in subclasses)
+                self._fix_resource_attribute(**kwargs)
+                # Create BO algorithm
+                initial_candidates_scorer = create_initial_candidates_scorer(
+                    initial_scoring=self.initial_scoring,
+                    model=model,
+                    acquisition_class=self.acquisition_class,
+                    random_state=self.random_state)
+                local_optimizer = self.local_minimizer_class(
+                    hp_ranges=self._hp_ranges_for_prediction(),
+                    model=model,
+                    acquisition_class=self.acquisition_class,
+                    active_metric=INTERNAL_METRIC_NAME)
+                pending_candidate_state_transformer = None
+                if num_requested_candidates > 1:
+                    # Internally, if num_requested_candidates > 1, the candidates are
+                    # selected greedily. This needs model updates after each greedy
+                    # selection, because of one more pending evaluation.
+                    model_factory = self.state_transformer._model_factory
+                    if isinstance(model_factory, dict):
+                        model_factory = model_factory[INTERNAL_METRIC_NAME]
+                    # We need a copy of the state here, since
+                    # `pending_candidate_state_transformer` modifies the state (it
+                    # appends pending trials)
+                    temporary_state = copy.deepcopy(
+                        self.state_transformer.state)
+                    pending_candidate_state_transformer = \
+                        ModelStateTransformer(
+                            model_factory=model_factory,
+                            init_state=temporary_state,
+                            skip_optimization=AlwaysSkipPredicate())
+                bo_algorithm = BayesianOptimizationAlgorithm(
+                    initial_candidates_generator=self.random_generator,
+                    initial_candidates_scorer=initial_candidates_scorer,
+                    num_initial_candidates=self.num_initial_candidates,
+                    num_initial_candidates_for_batch=num_init_candidates_for_batch,
+                    local_optimizer=local_optimizer,
+                    pending_candidate_state_transformer=pending_candidate_state_transformer,
+                    exclusion_candidates=exclusion_candidates,
+                    num_requested_candidates=num_requested_candidates,
+                    greedy_batch_selection=True,
+                    duplicate_detector=DuplicateDetectorIdentical(),
+                    sample_unique_candidates=False,
+                    debug_log=self.debug_log)
+                # Next candidate decision
+                _configs = bo_algorithm.next_candidates()
+                configs.extend(
+                    self._postprocess_config(config) for config in _configs)
+        return configs
+
     def evaluation_failed(self, trial_id: str):
         # Remove pending evaluation
         self.state_transformer.drop_pending_evaluation(trial_id)
@@ -570,9 +749,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPFIFOSearcher(
-            configspace=None,
+            configspace=self.configspace,
+            metric=self._metric,
+            clone_from_state=True,
             hp_ranges=self.hp_ranges,
-            random_seed=self.random_seed,
             model_factory=model_factory,
             acquisition_class=self.acquisition_class,
             map_reward=self.map_reward,
@@ -583,8 +763,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
             num_initial_random_choices=self.num_initial_random_choices,
             initial_scoring=self.initial_scoring,
             cost_attr=self._cost_attr,
-            resource_attr=self._resource_attr)
-        self._clone_from_state_common(new_searcher, state)
+            resource_attr=self._resource_attr,
+            filter_observed_data=self._filter_observed_data)
+        new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None
         return new_searcher
