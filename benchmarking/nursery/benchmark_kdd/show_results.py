@@ -26,14 +26,16 @@ from syne_tune.util import catchtime
 def generate_df_dict(tag= None, date_min=None, date_max=None, methods_to_show=None) -> Dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
     def metadata_filter(metadata, benchmark=None, tag=None):
+        for key in ['algorithm', 'benchmark', 'tag', 'st_tuner_creation_timestamp']:
+            if key not in metadata:
+                return False
+        if methods_to_show is not None and not metadata['algorithm'] in methods_to_show:
+            return False
+        if benchmark is not None and metadata['benchmark'] != benchmark:
+            return False
+        if tag is not None and metadata['tag'] != tag:
+            return False
         date_exp = datetime.fromtimestamp(metadata['st_tuner_creation_timestamp'])
-        if methods_to_show is not None and not metadata.get('algorithm') in methods_to_show:
-            return False
-
-        if benchmark is not None and metadata.get('benchmark') != benchmark:
-            return False
-        if tag is not None and metadata.get('tag') != tag:
-            return False
         return date_min <= date_exp <= date_max
 
     metadatas = get_metadata()
