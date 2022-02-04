@@ -372,7 +372,7 @@ if __name__ == '__main__':
             metadata=metadata,
             tuner_name=tuner_name,
             max_failures=params['max_failures'],
-            asynchronous_scheduling=not params['synchronous'],
+            asynchronous_scheduling=True,
             print_update_interval=params['print_update_interval'],
             callbacks=callbacks,
         )

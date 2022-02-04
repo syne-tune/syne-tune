@@ -38,7 +38,7 @@ class SynchronousHyperbandRungSystem(object):
         log(reduction_factor))`, there can be at most `s_max + 1` brackets.
         Here, bracket s has `r_num = s_max - s + 1` rungs, and the size of
         rung r in bracket s is
-            `n(r,s) = ceil( ((s_max + 1) / r_num) *
+            `n(r,s) = ceil( (s_max + 1) / r_num) *
             power(reduction_factor, r_num - r - 1)`
 
         :param min_resource: Smallest resource level (positive int)
@@ -63,13 +63,13 @@ class SynchronousHyperbandRungSystem(object):
                      f"{max_resource}, reduction_factor = {reduction_factor}"
         if s_max <= 0:
             logger.warning(
-                msg_prefix +\
+                msg_prefix +
                 ": supports only one bracket with a single rung level of "
                 "size 1. Is that really what you want?")
             return [[(1, max_resource)]]
         if num_brackets > s_max + 1:
             logger.warning(
-                msg_prefix +\
+                msg_prefix +
                 f": does not support num_brackets = {num_brackets}, but at "
                 f"most {s_max + 1}. I am switching to the latter one.")
             num_brackets = s_max + 1

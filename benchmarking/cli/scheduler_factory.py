@@ -35,7 +35,6 @@ def _check_searcher(searcher, supported_searchers):
 
 supported_schedulers = {
     'fifo',
-    'fifo_synchronous',
     'hyperband_stopping',
     'hyperband_promotion',
     'hyperband_cost_promotion',
@@ -43,7 +42,6 @@ supported_schedulers = {
     'hyperband_synchronous',
     'mo_asha',
     'raytune_fifo',
-    'raytune_fifo_synchronous',
     'raytune_hyperband',
 }
 
@@ -57,13 +55,6 @@ schedulers_with_search_options = {
     'hyperband_cost_promotion': HyperbandScheduler,
     'hyperband_pasha': HyperbandScheduler,
     'hyperband_synchronous': SynchronousGeometricHyperbandScheduler,
-}
-
-
-synchronous_schedulers = {
-    'fifo_synchronous',
-    'raytune_fifo_synchronous',
-    'hyperband_synchronous',
 }
 
 
@@ -87,11 +78,6 @@ def scheduler_factory(
     scheduler = params['scheduler']
     assert scheduler in supported_schedulers, \
         f"scheduler = '{scheduler}' not supported ({supported_schedulers})"
-    params['synchronous'] = scheduler in synchronous_schedulers
-    # FIFO schedulers are the same for sync or async
-    if params['synchronous'] and scheduler != 'hyperband_synchronous':
-        # Strip off postfix
-        scheduler = scheduler[:-len('_synchronous')]
     _default_params = dict(instance_type='ml.m4.xlarge', num_workers=4)
     _default_params.update(default_params)
     for k, v in _default_params.items():
@@ -177,8 +163,6 @@ def scheduler_factory(
                     rung_system_kwargs[name] = tp(v)
             if rung_system_kwargs:
                 scheduler_options['rung_system_kwargs'] = rung_system_kwargs
-        if scheduler == 'hyperband_synchronous':
-            scheduler_options['batch_size'] = params['num_workers']
         # Build scheduler and searcher
         scheduler_cls = schedulers_with_search_options[scheduler]
         myscheduler = scheduler_cls(

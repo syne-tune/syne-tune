@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 from datetime import datetime
 from typing import Optional, Dict, Tuple
+import pytest
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.search_space import randint, uniform
@@ -126,3 +127,80 @@ def test_register_pending():
                 trial_id = i // num_per_trial
                 milestone = (i % num_per_trial) + grace_period + 1
                 _should_be(record, trial_id, milestone, False)
+
+
+def test_hyperband_max_t_inference():
+    config_space1 = {
+        'epochs': 15,
+        'max_t': 14,
+        'max_epochs': 13,
+        'blurb': randint(0, 20)
+    }
+    config_space2 = {
+        'max_t': 14,
+        'max_epochs': 13,
+        'blurb': randint(0, 20)
+    }
+    config_space3 = {
+        'max_epochs': 13,
+        'blurb': randint(0, 20)
+    }
+    config_space4 = {
+        'epochs': randint(15, 20),
+        'max_t': 14,
+        'max_epochs': 13,
+        'blurb': randint(0, 20)
+    }
+    config_space5 = {
+        'epochs': randint(15, 20),
+        'max_t': randint(14, 21),
+        'max_epochs': 13,
+        'blurb': randint(0, 20)
+    }
+    config_space6 = {
+        'blurb': randint(0, 20)
+    }
+    config_space7 = {
+        'epochs': randint(15, 20),
+        'max_t': randint(14, 21),
+        'max_epochs': randint(13, 22),
+        'blurb': randint(0, 20)
+    }
+    # Fields: (max_t, search_space, final_max_t)
+    # If final_max_t is None, an assertion should be raised
+    cases = [
+        (None, config_space1, 15),
+        (None, config_space2, 14),
+        (None, config_space3, 13),
+        (None, config_space4, 14),
+        (None, config_space5, 13),
+        (None, config_space6, None),
+        (None, config_space7, None),
+        (10, config_space1, 10),
+        (10, config_space2, 10),
+        (10, config_space3, 10),
+        (10, config_space4, 10),
+        (10, config_space5, 10),
+        (10, config_space6, 10),
+        (10, config_space7, 10),
+    ]
+
+    for max_t, configspace, final_max_t in cases:
+        if final_max_t is not None:
+            myscheduler = HyperbandScheduler(
+                configspace,
+                searcher='random',
+                max_t=max_t,
+                resource_attr='epoch',
+                mode='max',
+                metric='accuracy')
+            assert final_max_t == myscheduler.max_t
+        else:
+            with pytest.raises(AssertionError):
+                myscheduler = HyperbandScheduler(
+                    configspace,
+                    searcher='random',
+                    max_t=max_t,
+                    resource_attr='epoch',
+                    mode='max',
+                    metric='accuracy')
