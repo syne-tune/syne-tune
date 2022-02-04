@@ -25,6 +25,8 @@ class TransferLearningTaskEvaluations:
     def __post_init__(self):
         assert len(self.objectives_names) == self.objectives_evaluations.shape[-1]
         assert len(self.hyperparameters) == self.objectives_evaluations.shape[0]
+        assert self.objectives_evaluations.ndim == 4, "objective evaluations should be of shape " \
+                                                     "(num_evals, num_seeds, num_fidelities, num_objectives)"
         for col in self.hyperparameters.keys():
             assert col in self.configuration_space
 

@@ -18,8 +18,7 @@ def load_transfer_learning_evaluations(blackbox_name: str, test_task: str, metri
         task: TransferLearningTaskEvaluations(
             hyperparameters=bb.hyperparameters,
             configuration_space=bb.configuration_space,
-            # average over seed, take last fidelity and pick only first metric
-            objectives_evaluations=bb.objectives_evaluations.mean(axis=1)[:, -1, metric_index:metric_index + 1],
+            objectives_evaluations=bb.objectives_evaluations[..., metric_index:metric_index + 1],
             objectives_names=[metric],
 
         )

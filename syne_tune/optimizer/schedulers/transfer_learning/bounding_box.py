@@ -75,7 +75,9 @@ class BoundingBox(TransferLearningScheduler):
         # find the best hyperparameters on all tasks
         best_hps = []
         for task, evaluation in transfer_learning_evaluations.items():
-            best_hp_task_indices = evaluation.objective_values(objective_name=metric).reshape(-1).argsort()
+            # average over seed and take last fidelity
+            avg_objective_last_fidelity = evaluation.objective_values(objective_name=metric).mean(axis=1)[:, -1]
+            best_hp_task_indices = avg_objective_last_fidelity.argsort()
             if mode == 'max':
                 best_hp_task_indices = best_hp_task_indices[::-1]
             best_hps.append(evaluation.hyperparameters.loc[best_hp_task_indices[:num_hyperparameters_per_task]])
