@@ -26,9 +26,6 @@ from syne_tune.util import catchtime
 def generate_df_dict(tag= None, date_min=None, date_max=None, methods_to_show=None) -> Dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
     def metadata_filter(metadata, benchmark=None, tag=None):
-        for key in ['algorithm', 'benchmark', 'tag', 'st_tuner_creation_timestamp']:
-            if key not in metadata:
-                return False
         if methods_to_show is not None and not metadata['algorithm'] in methods_to_show:
             return False
         if benchmark is not None and metadata['benchmark'] != benchmark:
@@ -41,6 +38,11 @@ def generate_df_dict(tag= None, date_min=None, date_max=None, methods_to_show=No
     metadatas = get_metadata()
     if tag is not None:
         metadatas = {k: v for k, v in metadatas.items() if v.get("tag") == tag}
+    # only select metadatas that contain the fields we are interested in
+    metadatas = {
+        k: v for k, v in metadatas.items()
+        if all(key in v for key in ['algorithm', 'benchmark', 'tag', 'st_tuner_creation_timestamp'])
+    }
     metadata_df = pd.DataFrame(metadatas.values())
     metadata_df['creation_date'] = metadata_df['st_tuner_creation_timestamp'].apply(lambda x: datetime.fromtimestamp(x))
     creation_dates_min_max = metadata_df.groupby(['algorithm']).agg(['min', 'max'])['creation_date']
