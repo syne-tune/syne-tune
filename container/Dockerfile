@@ -54,4 +54,4 @@ WORKDIR /opt/app
 ADD \
   source/requirements.txt \
   /tmp/packages/
-RUN python -m pip install --no-cache-dir -r /tmp/packages/requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade -r /tmp/packages/requirements.txt

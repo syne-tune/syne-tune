@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import logging
 import pickle
 from typing import Dict, List, Optional
 
@@ -30,6 +29,22 @@ class RUSHScheduler(TransferLearningScheduler):
             metric: str,
             **kwargs
     ) -> None:
+        """
+        A transfer learning variation of Hyperband which uses previously well-performing hyperparameter configurations
+        as an initialization. Additionally, the performance of these initial configuration at the different rung levels
+        serve as a hurdle for other sampled configurations. No candidate configuration which is performing worse
+        than the best initial candidate, will be promoted.
+        Simple baseline that computes a bounding-box of the best candidate found in previous tasks to restrict the
+         search space to only good candidates. The bounding-box is obtained by restricting to the min-max of best
+         numerical hyperparameters and restricting to the set of best candidates on categorical parameters.
+
+        Reference: A resource-efficient method for repeated HPO and NAS.
+        Giovanni Zappella, David Salinas, Cédric Archambeau. AutoML workshop @ ICML 2021.
+
+        :param config_space: Configuration space for trial evaluation function.
+        :param metric: objective name to optimize, must be present in transfer learning evaluations.
+        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
+        """
         super().__init__(config_space=config_space,
                          transfer_learning_evaluations=transfer_learning_evaluations,
                          metric_names=[metric])
@@ -44,7 +59,7 @@ class RUSHScheduler(TransferLearningScheduler):
             points_to_evaluate = [dict(s) for s in set(frozenset(p.items()) for p in points_to_evaluate)]
         kwargs['points_to_evaluate'] = points_to_evaluate
 
-        self._hyperband_scheduler = HyperbandScheduler(config_space, **kwargs)
+        self._hyperband_scheduler = HyperbandScheduler(config_space, metric=metric, **kwargs)
         self._num_init_configs = len(points_to_evaluate)
         self._thresholds = dict()  # thresholds at different resource levels that must be met
 
@@ -56,7 +71,7 @@ class RUSHScheduler(TransferLearningScheduler):
         argbest, best = (np.argmin, np.min) if mode == 'min' else (np.argmax, np.max)
         baseline_configurations = list()
         for evals in transfer_learning_evaluations.values():
-            best_hpc_idx = argbest(best(evals.objective_values(objective_name=metric), axis=1))
+            best_hpc_idx = argbest(best(evals.objective_values(objective_name=metric)[..., -1], axis=1))
             hpc = evals.hyperparameters.iloc[best_hpc_idx]
             baseline_configurations.append({
                 key: hpc[key] for key in config_space

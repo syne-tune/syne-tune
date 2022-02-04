@@ -10,16 +10,15 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import numpy as np
+import pandas as pd
 import pytest
 
-import pandas as pd
-import numpy as np
-
+from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
 from syne_tune.search_space import randint
-from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
 @pytest.fixture()
@@ -33,12 +32,10 @@ def config_space():
 
 @pytest.fixture()
 def scheduler(metadata, config_space):
-    evals, metric_names = metadata
     return RUSHScheduler(config_space=config_space,
                          metric='loss',
                          max_t=10,
-                         transfer_learning_evaluations=evals,
-                         metric_names=metric_names)
+                         transfer_learning_evaluations=metadata)
 
 
 @pytest.fixture()
@@ -119,8 +116,8 @@ def test_given_metadata_and_points_to_evaluate_with_overlap_keep_only_unique_con
 
 
 def test_given_metadata_return_best_configurations_per_task(metadata, config_space):
-    min_loss = RUSHScheduler._determine_baseline_configurations(config_space, metadata, 0, 'min')
-    max_gain = RUSHScheduler._determine_baseline_configurations(config_space, metadata, 1, 'max')
+    min_loss = RUSHScheduler._determine_baseline_configurations(config_space, metadata, 'loss', 'min')
+    max_gain = RUSHScheduler._determine_baseline_configurations(config_space, metadata, 'gain', 'max')
     assert len(min_loss) == 1
     assert min_loss == max_gain
     assert min_loss[0] == metadata['task'].hyperparameters.to_dict('records')[0]

@@ -55,7 +55,9 @@ fi
 docker build -t ${image} . \
              --build-arg REGION=${region} \
              --build-arg DLAMI_REGISTRY_ID=${DLAMI_REGISTRY_ID} \
-             --build-arg CONTEXT=${CONTEXT}
+             --build-arg CONTEXT=${CONTEXT} \
+             --pull \
+             --no-cache
 
 # tag and push to ECR
 docker tag ${image} ${ECR_URL}/${image}
