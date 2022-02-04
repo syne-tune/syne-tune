@@ -87,6 +87,7 @@ methods = {
             config_space=method_arguments.config_space,
             metric=method_arguments.metric,
             transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
+            random_seed=method_arguments.random_seed,
         ),
         mode="min",
         metric=method_arguments.metric,

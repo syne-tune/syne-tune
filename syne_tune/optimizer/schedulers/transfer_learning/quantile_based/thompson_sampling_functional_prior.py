@@ -11,6 +11,7 @@ import pandas as pd
 
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import from_string
+from syne_tune.search_space import Domain
 from syne_tune.util import catchtime
 
 
@@ -44,8 +45,8 @@ def fit_model(
     )
     X, y = extract_input_output(transfer_learning_evaluations, normalization, random_state=random_state)
     with catchtime("time to fit the model"):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
-        X_train, y_train = subsample(X_train, y_train, max_samples=max_fit_samples)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=random_state)
+        X_train, y_train = subsample(X_train, y_train, max_samples=max_fit_samples, random_state=random_state)
         model_pipeline.fit(X_train, y_train)
 
         # compute residuals (num_metrics,)
@@ -66,11 +67,14 @@ def eval_model(model_pipeline, X, y):
     return res.mean()
 
 
-def subsample(X_train, z_train, max_samples: int = 10000):
+def subsample(X_train, z_train, max_samples: int = 10000, random_state: np.random.RandomState = None):
     assert len(X_train) == len(z_train)
     X_train.reset_index(inplace=True)
     if max_samples is not None and max_samples < len(X_train):
-        random_indices = np.random.permutation(len(X_train))[:max_samples]
+        if random_state is None:
+            random_indices = np.random.permutation(len(X_train))[:max_samples]
+        else:
+            random_indices = random_state.permutation(len(X_train))[:max_samples]
         X_train = X_train.loc[random_indices]
         z_train = z_train[random_indices]
     return X_train, z_train
@@ -133,6 +137,49 @@ class TS(SearcherWithRandomSeed):
 
     def _sample(self):
         return {
-            k: v.sample() if hasattr(v, "sample") else v
+            k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in self.configspace.items()
         }
+
+def run_ts():
+    bb, test_task = "nasbench201", "cifar100"
+    bb, test_task = "fcnet", "protein_structure"
+    bb_dict = load(bb)
+
+    config_space = bb_dict[test_task].configuration_space
+    metric_index = 0
+    transfer_learning_evaluations = {
+        task: TransferLearningTaskEvaluations(
+            configuration_space=bb.configuration_space,
+            hyperparameters=bb.hyperparameters,
+            objectives_evaluations=bb.objectives_evaluations[..., metric_index:metric_index + 1],
+            objectives_names=[bb.objectives_names[metric_index]],
+        )
+        for task, bb in bb_dict.items()
+        if task != test_task
+    }
+
+    for _ in range(3):
+
+        sch = HyperbandScheduler(
+            config_space=config_space,
+            searcher=TS(
+                mode="min",
+                config_space=config_space,
+                metric=bb_dict[test_task].objectives_names[metric_index],
+                transfer_learning_evaluations=transfer_learning_evaluations,
+                max_fit_samples=5000,
+                seed=1,
+            ),
+            mode="min",
+            metric=bb_dict[test_task].objectives_names[metric_index],
+            max_t=200,
+            resource_attr='hp_epoch',
+        )
+        for i in range(10):
+            print(sch.suggest(i))
+
+
+if __name__ == '__main__':
+    from benchmarking.blackbox_repository import load
+    run_ts()
