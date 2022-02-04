@@ -1,74 +1,59 @@
 from functools import partial
 from typing import Optional
 
-import numpy as np
 from scipy import stats
 
 import numpy as np
 
 
-class temporary_seed:
-    def __init__(self, seed):
-        self.seed = seed
-        self.backup = None
-
-    def __enter__(self):
-        self.backup = np.random.randint(2 ** 32 - 1, dtype=np.uint32)
-        np.random.seed(self.seed)
-
-    def __exit__(self, *_):
-        np.random.seed(self.backup)
-
-
 class GaussianTransform:
     """
-    Transform data into Gaussian by applying psi = Phi^{-1} o F where F is the truncated ECDF.
+    Transform data into Gaussian by applying psi = Phi^{-1} o F where F is the truncated empirical CDF.
     :param y: shape (n, dim)
-    :param randomize_identical: whether to randomize the rank when consecutive values exists
-    if True, draw uniformly inbetween extreme values, if False, use lowest value
+    :param random_state: If specified, randomize the rank when consecutive values exists between extreme values.
+     If none use lowest rank of duplicated values.
     """
 
-    def __init__(self, y: np.array, randomize_identical: bool):
+    def __init__(self, y: np.array, random_state: Optional[np.random.RandomState] = None):
         assert y.ndim == 2
         self.dim = y.shape[1]
         self.sorted = y.copy()
         self.sorted.sort(axis=0)
-        self.randomize_identical = randomize_identical
+        self.random_state = random_state
 
     @staticmethod
-    def z_transform(series, values_sorted=None, randomize_identical: bool = True):
-        # in case of multiple occurences we sample in the interval to get uniform distribution with PIT
-        # to obtain deterministic results, we fix the seed locally (and restore the global seed after)
-        with temporary_seed(40):
-            # applies truncated ECDF then inverse Gaussian CDF.
-            if values_sorted is None:
-                values_sorted = sorted(series)
+    def z_transform(series, values_sorted, random_state: Optional[np.random.RandomState] = None):
+        """
+        :param series: shape (n, dim)
+        :param values_sorted: series sorted on the first axis
+        :param random_state: if not None, ranks are drawn uniformly for values with consecutive ranges
+        :return: data with same shape as input series where distribution is normalized on all dimensions
+        """
+        # Cutoff ranks since `Phi^{-1}` is infinite at `0` and `1` with winsorized constants.
+        def winsorized_delta(n):
+            return 1.0 / (4.0 * n ** 0.25 * np.sqrt(np.pi * np.log(n)))
+        delta = winsorized_delta(len(series))
 
-            def winsorized_delta(n):
-                return 1.0 / (4.0 * n ** 0.25 * np.sqrt(np.pi * np.log(n)))
-
-            delta = winsorized_delta(len(series))
-
-            def quantile(values_sorted, values_to_insert, delta):
+        def quantile(values_sorted, values_to_insert, delta):
+            low = np.searchsorted(values_sorted, values_to_insert, side='left')
+            if random_state is not None:
                 # in case where multiple occurences of the same value exists in sorted array
                 # we return a random index in the valid range
-                low = np.searchsorted(values_sorted, values_to_insert, side='left')
-                if randomize_identical:
-                    high = np.searchsorted(values_sorted, values_to_insert, side='right')
-                    res = np.random.randint(low, np.maximum(high, low + 1))
-                else:
-                    res = low
-                return np.clip(res / len(values_sorted), a_min=delta, a_max=1 - delta)
+                high = np.searchsorted(values_sorted, values_to_insert, side='right')
+                res = random_state.randint(low, np.maximum(high, low + 1))
+            else:
+                res = low
+            return np.clip(res / len(values_sorted), a_min=delta, a_max=1 - delta)
 
-            quantiles = quantile(
-                values_sorted,
-                series,
-                delta
-            )
+        quantiles = quantile(
+            values_sorted,
+            series,
+            delta
+        )
 
-            quantiles = np.clip(quantiles, a_min=delta, a_max=1 - delta)
+        quantiles = np.clip(quantiles, a_min=delta, a_max=1 - delta)
 
-            return stats.norm.ppf(quantiles)
+        return stats.norm.ppf(quantiles)
 
     def transform(self, y: np.array):
         """
@@ -78,7 +63,7 @@ class GaussianTransform:
         assert y.shape[1] == self.dim
         # compute truncated quantile, apply gaussian inv cdf
         return np.stack([
-            self.z_transform(y[:, i], self.sorted[:, i], self.randomize_identical)
+            self.z_transform(y[:, i], self.sorted[:, i], self.random_state)
             for i in range(self.dim)
         ]).T
 
@@ -86,6 +71,10 @@ class GaussianTransform:
 class StandardTransform:
 
     def __init__(self, y: np.array):
+        """
+        Transformation that removes mean and divide by standard error.
+        :param y:
+        """
         assert y.ndim == 2
         self.dim = y.shape[1]
         self.mean = y.mean(axis=0, keepdims=True)
@@ -96,10 +85,10 @@ class StandardTransform:
         return z
 
 
-def from_string(name: str, randomize_identical: bool = True):
+def from_string(name: str, random_state: Optional[np.random.RandomState] = None):
     assert name in ["standard", "gaussian"]
     mapping = {
         "standard": StandardTransform,
-        "gaussian": partial(GaussianTransform, randomize_identical=randomize_identical),
+        "gaussian": partial(GaussianTransform, random_state=random_state),
     }
     return mapping[name]

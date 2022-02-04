@@ -1,11 +1,11 @@
-from typing import Dict
+from typing import Dict, Optional
 import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
 
 from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers import BaseSearcher, SearcherWithRandomSeed
 
 import pandas as pd
 
@@ -14,7 +14,7 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalizati
 from syne_tune.util import catchtime
 
 
-def extract_input_output(transfer_learning_evaluations, normalization: str):
+def extract_input_output(transfer_learning_evaluations, normalization: str, random_state):
     X = pd.concat(
         [evals.hyperparameters for evals in transfer_learning_evaluations.values()],
         ignore_index=True
@@ -24,18 +24,25 @@ def extract_input_output(transfer_learning_evaluations, normalization: str):
     for evals in transfer_learning_evaluations.values():
         # take average over seed and last fidelity and first objective
         y = evals.objectives_evaluations.mean(axis=1)[:, -1, 0:1]
-        ys.append(normalizer(y).transform(y))
+        ys.append(normalizer(y, random_state=random_state).transform(y))
     y = np.concatenate(ys, axis=0)
     return X, y
 
 
-def fit_model(config_space, transfer_learning_evaluations, normalization: str, max_fit_samples: int, model=xgboost.XGBRegressor()):
+def fit_model(
+        config_space,
+        transfer_learning_evaluations,
+        normalization: str,
+        max_fit_samples: int,
+        random_state,
+        model=xgboost.XGBRegressor()
+):
     model_pipeline = BlackboxSurrogate.make_model_pipeline(
         configuration_space=config_space,
         fidelity_space={},
         model=model,
     )
-    X, y = extract_input_output(transfer_learning_evaluations, normalization)
+    X, y = extract_input_output(transfer_learning_evaluations, normalization, random_state=random_state)
     with catchtime("time to fit the model"):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
         X_train, y_train = subsample(X_train, y_train, max_samples=max_fit_samples)
@@ -69,7 +76,7 @@ def subsample(X_train, z_train, max_samples: int = 10000):
     return X_train, z_train
 
 
-class TS(BaseSearcher):
+class TS(SearcherWithRandomSeed):
 
     def __init__(
             self,
@@ -79,9 +86,17 @@ class TS(BaseSearcher):
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
             max_fit_samples: int = 100000,
             normalization: str = "gaussian",
+            random_seed: Optional[int] = None,
+            **kwargs
     ):
-        super(TS, self).__init__(configspace=config_space, metric=metric)
-        # todo seed management
+        # todo check points_to_evaluate does not do anything unwanted
+        super(TS, self).__init__(
+            configspace=config_space,
+            metric=metric,
+            random_seed=random_seed,
+            points_to_evaluate=[],
+            **kwargs,
+        )
         self.mode = mode
         self.model_pipeline, sigma_train, sigma_val = fit_model(
             config_space=config_space,
@@ -89,6 +104,7 @@ class TS(BaseSearcher):
             normalization=normalization,
             max_fit_samples=max_fit_samples,
             model=xgboost.XGBRegressor(),
+            random_state=self.random_state,
         )
         print(f"residual train: {sigma_train}")
         print(f"residual val: {sigma_val}")
@@ -97,7 +113,7 @@ class TS(BaseSearcher):
             num_candidates = 10000
             self.X_candidates = pd.DataFrame([self._sample() for _ in range(num_candidates)])
             self.mu_pred = self.model_pipeline.predict(self.X_candidates)
-            # simple for now
+            # simple variance estimate for now
             if self.mu_pred.ndim == 1:
                 self.mu_pred = self.mu_pred.reshape(-1, 1)
             self.sigma_pred = np.ones_like(self.mu_pred) * sigma_val
@@ -109,7 +125,7 @@ class TS(BaseSearcher):
         pass
 
     def get_config(self, **kwargs):
-        samples = np.random.normal(loc=self.mu_pred, scale=self.sigma_pred)
+        samples = self.random_state.normal(loc=self.mu_pred, scale=self.sigma_pred)
         if self.mode == 'max':
             samples *= -1
         candidate = self.X_candidates.loc[np.argmin(samples)]
