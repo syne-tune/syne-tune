@@ -27,16 +27,16 @@ class RUSHScheduler(TransferLearningScheduler):
             config_space: Dict,
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
             metric: str,
-            **kwargs
+            points_to_evaluate: Optional[List[Dict]] = None,
+            **hyperband_kwargs
     ) -> None:
         """
         A transfer learning variation of Hyperband which uses previously well-performing hyperparameter configurations
-        as an initialization. Additionally, the performance of these initial configuration at the different rung levels
-        serve as a hurdle for other sampled configurations. No candidate configuration which is performing worse
-        than the best initial candidate, will be promoted.
-        Simple baseline that computes a bounding-box of the best candidate found in previous tasks to restrict the
-         search space to only good candidates. The bounding-box is obtained by restricting to the min-max of best
-         numerical hyperparameters and restricting to the set of best candidates on categorical parameters.
+        as an initialization. The best hyperparameter configuration of each individual task provided is evaluated.
+        The one among them which performs best on the current task will serve as a hurdle and is used to prune
+        other candidates. This changes the standard successive halving promotion as follows. As usual, only the top-
+        performing fraction is promoted to the next rung level. However, these candidates need to be at least as good
+        as the hurdle configuration to be promoted. In practice this means that much fewer candidates can be promoted.
 
         Reference: A resource-efficient method for repeated HPO and NAS.
         Giovanni Zappella, David Salinas, Cédric Archambeau. AutoML workshop @ ICML 2021.
@@ -44,30 +44,33 @@ class RUSHScheduler(TransferLearningScheduler):
         :param config_space: Configuration space for trial evaluation function.
         :param metric: objective name to optimize, must be present in transfer learning evaluations.
         :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
+        :param points_to_evaluate: when points_to_evaluate is not None, the provided configurations are evaluated first
+        in addition to top performing configurations from other tasks and also serve to preemptively prune
+        underperforming configurations
         """
         super().__init__(config_space=config_space,
                          transfer_learning_evaluations=transfer_learning_evaluations,
                          metric_names=[metric])
-        points_to_evaluate = RUSHScheduler._determine_baseline_configurations(
+        threshold_candidates = RUSHScheduler._compute_best_hyperparameter_per_task(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
             metric=metric,
-            mode=kwargs.get('mode', 'min')
+            mode=hyperband_kwargs.get('mode', 'min')
         )
-        if 'points_to_evaluate' in kwargs:
-            points_to_evaluate += kwargs['points_to_evaluate']
-            points_to_evaluate = [dict(s) for s in set(frozenset(p.items()) for p in points_to_evaluate)]
-        kwargs['points_to_evaluate'] = points_to_evaluate
+        if points_to_evaluate is not None:
+            threshold_candidates += points_to_evaluate
+            threshold_candidates = [dict(s) for s in set(frozenset(p.items()) for p in threshold_candidates)]
 
-        self._hyperband_scheduler = HyperbandScheduler(config_space, metric=metric, **kwargs)
-        self._num_init_configs = len(points_to_evaluate)
+        self._hyperband_scheduler = HyperbandScheduler(config_space, metric=metric,
+                                                       points_to_evaluate=threshold_candidates, **hyperband_kwargs)
+        self._num_init_configs = len(threshold_candidates)
         self._thresholds = dict()  # thresholds at different resource levels that must be met
 
     @staticmethod
-    def _determine_baseline_configurations(config_space: Dict,
-                                           transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-                                           metric: str,
-                                           mode: str) -> List[Dict]:
+    def _compute_best_hyperparameter_per_task(config_space: Dict,
+                                              transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+                                              metric: str,
+                                              mode: str) -> List[Dict]:
         argbest, best = (np.argmin, np.min) if mode == 'min' else (np.argmax, np.max)
         baseline_configurations = list()
         for evals in transfer_learning_evaluations.values():
@@ -94,18 +97,17 @@ class RUSHScheduler(TransferLearningScheduler):
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         return self._hyperband_scheduler.suggest(trial_id)
 
-    def state_dict(self) -> Dict:
-        record = self._hyperband_scheduler.state_dict()
-        record['num_init_configs'] = pickle.dumps(self._num_init_configs)
-        record['thresholds'] = pickle.dumps(self._thresholds)
-        return record
+    def __getstate__(self) -> Dict:
+        return {
+            'hyperband_scheduler': pickle.dumps(self._hyperband_scheduler),
+            'num_init_configs': pickle.dumps(self._num_init_configs),
+            'thresholds': pickle.dumps(self._thresholds)
+        }
 
-    def load_state_dict(self, state_dict):
-        self._num_init_configs = pickle.loads(state_dict['num_init_configs'])
-        del state_dict['num_init_configs']
-        self._thresholds = pickle.loads(state_dict['thresholds'])
-        del state_dict['thresholds']
-        self._hyperband_scheduler(state_dict)
+    def __setstate__(self, state):
+        self._hyperband_scheduler = pickle.loads(state['hyperband_scheduler'])
+        self._num_init_configs = pickle.loads(state['num_init_configs'])
+        self._thresholds = pickle.loads(state['thresholds'])
 
     def _on_trial_result(self, trial_decision: str, trial: Trial, result: Dict) -> str:
         if trial_decision != SchedulerDecision.CONTINUE:
@@ -141,7 +143,7 @@ class RUSHScheduler(TransferLearningScheduler):
         else:
             return metric_val >= threshold
 
-    def _return_better(self, val1: float, val2: float) -> bool:
+    def _return_better(self, val1: Optional[float], val2: Optional[float]) -> float:
         if self.metric_mode() == 'min':
             better_val = min(float('inf') if val1 is None else val1,
                              float('inf') if val2 is None else val2)

@@ -116,8 +116,8 @@ def test_given_metadata_and_points_to_evaluate_with_overlap_keep_only_unique_con
 
 
 def test_given_metadata_return_best_configurations_per_task(metadata, config_space):
-    min_loss = RUSHScheduler._determine_baseline_configurations(config_space, metadata, 'loss', 'min')
-    max_gain = RUSHScheduler._determine_baseline_configurations(config_space, metadata, 'gain', 'max')
+    min_loss = RUSHScheduler._compute_best_hyperparameter_per_task(config_space, metadata, 'loss', 'min')
+    max_gain = RUSHScheduler._compute_best_hyperparameter_per_task(config_space, metadata, 'gain', 'max')
     assert len(min_loss) == 1
     assert min_loss == max_gain
     assert min_loss[0] == metadata['task'].hyperparameters.to_dict('records')[0]
