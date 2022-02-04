@@ -24,6 +24,7 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
 import syne_tune.search_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.thompson_sampling_functional_prior import TS
 
 config_space = {
     "steps": 100,
@@ -66,6 +67,10 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
             objectives_names=[metric1, metric2],
         ),
     }
+
+
+transfer_learning_evaluations = make_transfer_learning_evaluations()
+
 
 @pytest.mark.parametrize("scheduler", [
     FIFOScheduler(config_space, searcher='random', metric=metric1),
@@ -110,8 +115,19 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
         mode="min",
         config_space=config_space,
         metric=metric1,
-        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+        transfer_learning_evaluations=transfer_learning_evaluations,
     ),
+    FIFOScheduler(
+        searcher=TS(
+            mode="min",
+            config_space=config_space,
+            metric=metric1,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+        ),
+        mode='min',
+        config_space=config_space,
+        metric=metric1
+    )
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)

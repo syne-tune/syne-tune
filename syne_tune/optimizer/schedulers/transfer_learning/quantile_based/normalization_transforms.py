@@ -54,10 +54,10 @@ class GaussianTransform:
                 # we return a random index in the valid range
                 low = np.searchsorted(values_sorted, values_to_insert, side='left')
                 if randomize_identical:
-                    res = low
-                else:
                     high = np.searchsorted(values_sorted, values_to_insert, side='right')
                     res = np.random.randint(low, np.maximum(high, low + 1))
+                else:
+                    res = low
                 return np.clip(res / len(values_sorted), a_min=delta, a_max=1 - delta)
 
             quantiles = quantile(
