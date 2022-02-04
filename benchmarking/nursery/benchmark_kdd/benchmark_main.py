@@ -27,8 +27,7 @@ def get_transfer_learning_evaluations(blackbox_name: str, test_task: str) -> Dic
         task: TransferLearningTaskEvaluations(
             configuration_space=bb.configuration_space,
             hyperparameters=bb.hyperparameters,
-            # average over seed, take last fidelity and pick only first metric
-            objectives_evaluations=bb.objectives_evaluations.mean(axis=1)[:, -1, metric_index:metric_index + 1],
+            objectives_evaluations=bb.objectives_evaluations[..., metric_index:metric_index + 1],
             objectives_names=[bb.objectives_names[metric_index]],
         )
         for task, bb in task_to_evaluations.items()

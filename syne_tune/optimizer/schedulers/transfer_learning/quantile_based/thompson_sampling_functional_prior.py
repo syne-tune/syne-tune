@@ -20,10 +20,12 @@ def extract_input_output(transfer_learning_evaluations, normalization: str):
         ignore_index=True
     )
     normalizer = from_string(normalization)
-    y = np.concatenate([
-        normalizer(evals.objectives_evaluations).transform(evals.objectives_evaluations)
-        for evals in transfer_learning_evaluations.values()
-    ], axis=0)
+    ys = []
+    for evals in transfer_learning_evaluations.values():
+        # take average over seed and last fidelity and first objective
+        y = evals.objectives_evaluations.mean(axis=1)[:, -1, 0:1]
+        ys.append(normalizer(y).transform(y))
+    y = np.concatenate(ys, axis=0)
     return X, y
 
 
@@ -118,42 +120,3 @@ class TS(BaseSearcher):
             k: v.sample() if hasattr(v, "sample") else v
             for k, v in self.configspace.items()
         }
-
-
-def run_ts():
-    bb, test_task = "nasbench201", "cifar100"
-    bb, test_task = "fcnet", "protein_structure"
-    bb_dict = load(bb)
-
-    config_space = bb_dict[test_task].configuration_space
-    metric_index = 0
-    transfer_learning_evaluations = {
-        task: TransferLearningTaskEvaluations(
-            hyperparameters=bb.hyperparameters,
-            # average over seed, take last fidelity and pick only first metric
-            metrics=bb.objectives_evaluations.mean(axis=1)[:, -1, metric_index:metric_index + 1]
-        )
-        for task, bb in bb_dict.items()
-        if task != test_task
-    }
-
-    blackbox = bb_dict[test_task]
-    HyperbandScheduler(
-        config_space=config_space,
-        searcher=TS(
-            mode="min",
-            config_space=config_space,
-            metric=bb_dict[test_task].objectives_names[metric_index],
-            transfer_learning_evaluations=transfer_learning_evaluations,
-            max_fit_samples=5000,
-        ),
-        mode="min",
-        metric=bb_dict[test_task].objectives_names[metric_index],
-        max_t=200,
-        resource_attr='hp_epoch',
-    )
-
-
-if __name__ == '__main__':
-    from benchmarking.blackbox_repository import load
-    run_ts()
