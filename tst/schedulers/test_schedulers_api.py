@@ -47,13 +47,15 @@ def make_ray_skopt():
 
 
 def make_transfer_learning_evaluations(num_evals: int = 10):
+    num_seeds = 3
+    num_fidelity = 5
     return {
         "dummy-task-1": TransferLearningTaskEvaluations(
             config_space,
             hyperparameters=pd.DataFrame(
                 [{k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()} for _ in range(10)]
             ),
-            objectives_evaluations=np.arange(num_evals * 2).reshape(num_evals, 2),
+            objectives_evaluations=np.arange(num_evals * num_seeds * num_fidelity * 2).reshape(num_evals, num_seeds, num_fidelity, 2),
             objectives_names=[metric1, metric2],
         ),
         "dummy-task-2": TransferLearningTaskEvaluations(
@@ -61,7 +63,7 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
             hyperparameters=pd.DataFrame(
                 [{k: v.sample() if hasattr(v, "sample") else v for k, v in config_space.items()} for _ in range(10)]
             ),
-            objectives_evaluations=-np.arange(num_evals * 2).reshape(num_evals, 2),
+            objectives_evaluations=-np.arange(num_evals * num_seeds * num_fidelity * 2).reshape(num_evals, num_seeds, num_fidelity, 2),
             objectives_names=[metric1, metric2],
         ),
     }
