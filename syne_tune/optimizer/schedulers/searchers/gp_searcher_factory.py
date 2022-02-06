@@ -58,6 +58,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.gpi
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.independent.gpind_model import (
     IndependentGPPerResourceModel,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model import (
+    HyperTuneIndependentGPModel,
+    HyperTuneJointGPModel,
+    HyperTuneDistributionArguments,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
     SkipNoMaxResourcePredicate,
     SkipPeriodicallyPredicate,
@@ -109,11 +114,13 @@ __all__ = [
     "cost_aware_coarse_gp_fifo_searcher_factory",
     "cost_aware_fine_gp_fifo_searcher_factory",
     "cost_aware_gp_multifidelity_searcher_factory",
+    "hypertune_searcher_factory",
     "gp_fifo_searcher_defaults",
     "gp_multifidelity_searcher_defaults",
     "constrained_gp_fifo_searcher_defaults",
     "cost_aware_gp_fifo_searcher_defaults",
     "cost_aware_gp_multifidelity_searcher_defaults",
+    "hypertune_searcher_defaults",
 ]
 
 logger = logging.getLogger(__name__)
@@ -171,29 +178,13 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
     }
 
 
-def _create_gp_standard_model(
-    hp_ranges: HyperparameterRanges,
+def _create_gp_model_factory(
+    gpmodel,
+    result: dict,
+    hp_ranges_for_prediction: Optional[HyperparameterRanges],
     active_metric: Optional[str],
-    random_seed: int,
-    is_hyperband: bool,
     **kwargs,
 ):
-    result = _create_gp_common(hp_ranges, **kwargs)
-    kernel = result["kernel"]
-    mean = result["mean"]
-    if is_hyperband:
-        # The `cross-validation` kernel needs an additional argument
-        kernel_kwargs = {"num_folds": kwargs["max_epochs"]}
-        kernel, mean = resource_kernel_factory(
-            kwargs["gp_resource_kernel"], kernel_x=kernel, mean_x=mean, **kernel_kwargs
-        )
-    gpmodel = GaussianProcessRegression(
-        kernel=kernel,
-        mean=mean,
-        optimization_config=result["optimization_config"],
-        random_seed=random_seed,
-        fit_reset_params=not result["opt_warmstart"],
-    )
     filter_observed_data = result["filter_observed_data"]
     model_factory = GaussProcEmpiricalBayesModelFactory(
         active_metric=active_metric,
@@ -204,6 +195,7 @@ def _create_gp_standard_model(
         debug_log=result["debug_log"],
         filter_observed_data=filter_observed_data,
         no_fantasizing=kwargs.get("no_fantasizing", False),
+        hp_ranges_for_prediction=hp_ranges_for_prediction,
     )
     return {
         "model_factory": model_factory,
@@ -211,10 +203,60 @@ def _create_gp_standard_model(
     }
 
 
+def _create_gp_standard_model(
+    hp_ranges: HyperparameterRanges,
+    active_metric: Optional[str],
+    random_seed: int,
+    is_hyperband: bool,
+    is_hypertune: bool = False,
+    **kwargs,
+):
+    assert not is_hypertune or is_hyperband
+    result = _create_gp_common(hp_ranges, **kwargs)
+    kernel = result["kernel"]
+    mean = result["mean"]
+    if is_hyperband:
+        # The `cross-validation` kernel needs an additional argument
+        kernel_kwargs = {"num_folds": kwargs["max_epochs"]}
+        kernel, mean = resource_kernel_factory(
+            kwargs["gp_resource_kernel"], kernel_x=kernel, mean_x=mean, **kernel_kwargs
+        )
+    common_kwargs = dict(
+        kernel=kernel,
+        mean=mean,
+        optimization_config=result["optimization_config"],
+        random_seed=random_seed,
+        fit_reset_params=not result["opt_warmstart"],
+    )
+    if is_hypertune:
+        resource_attr_range = (1, kwargs["max_epochs"])
+        hypertune_distribution_args = HyperTuneDistributionArguments(
+            num_samples=kwargs["hypertune_distribution_num_samples"],
+            num_brackets=kwargs["hypertune_distribution_num_brackets"],
+        )
+        gpmodel = HyperTuneJointGPModel(
+            resource_attr_range=resource_attr_range,
+            hypertune_distribution_args=hypertune_distribution_args,
+            **common_kwargs,
+        )
+        hp_ranges_for_prediction = hp_ranges
+    else:
+        gpmodel = GaussianProcessRegression(**common_kwargs)
+        hp_ranges_for_prediction = None
+    return _create_gp_model_factory(
+        gpmodel=gpmodel,
+        result=result,
+        hp_ranges_for_prediction=hp_ranges_for_prediction,
+        active_metric=active_metric,
+        **kwargs,
+    )
+
+
 def _create_gp_independent_model(
     hp_ranges: HyperparameterRanges,
     active_metric: Optional[str],
     random_seed: int,
+    is_hypertune: bool,
     **kwargs,
 ):
     def mean_factory(resource: int) -> MeanFunction:
@@ -232,22 +274,26 @@ def _create_gp_independent_model(
         fit_reset_params=not result["opt_warmstart"],
         separate_noise_variances=kwargs["separate_noise_variances"],
     )
-    gpmodel = IndependentGPPerResourceModel(**common_kwargs)
-    filter_observed_data = result["filter_observed_data"]
-    model_factory = GaussProcEmpiricalBayesModelFactory(
-        active_metric=active_metric,
+    if is_hypertune:
+        hypertune_distribution_args = HyperTuneDistributionArguments(
+            num_samples=kwargs["hypertune_distribution_num_samples"],
+            num_brackets=kwargs["hypertune_distribution_num_brackets"],
+        )
+        gpmodel = HyperTuneIndependentGPModel(
+            hypertune_distribution_args=hypertune_distribution_args,
+            **common_kwargs,
+        )
+        hp_ranges_for_prediction = hp_ranges
+    else:
+        gpmodel = IndependentGPPerResourceModel(**common_kwargs)
+        hp_ranges_for_prediction = None
+    return _create_gp_model_factory(
         gpmodel=gpmodel,
-        num_fantasy_samples=kwargs["num_fantasy_samples"],
-        normalize_targets=kwargs.get("normalize_targets", True),
-        profiler=result["profiler"],
-        debug_log=result["debug_log"],
-        filter_observed_data=filter_observed_data,
-        no_fantasizing=kwargs.get("no_fantasizing", False),
+        result=result,
+        hp_ranges_for_prediction=hp_ranges_for_prediction,
+        active_metric=active_metric,
+        **kwargs,
     )
-    return {
-        "model_factory": model_factory,
-        "filter_observed_data": filter_observed_data,
-    }
 
 
 def _create_gp_additive_model(
@@ -297,7 +343,7 @@ def _create_gp_additive_model(
     }
 
 
-def _create_common_objects(model=None, **kwargs):
+def _create_common_objects(model=None, is_hypertune=False, **kwargs):
     scheduler = kwargs["scheduler"]
     is_hyperband = scheduler.startswith("hyperband")
     if model is None:
@@ -373,6 +419,17 @@ def _create_common_objects(model=None, **kwargs):
                 active_metric=INTERNAL_METRIC_NAME,
                 random_seed=random_seed,
                 is_hyperband=is_hyperband,
+                is_hypertune=is_hypertune,
+                **_kwargs,
+            )
+        )
+    elif model == "gp_independent":
+        result.update(
+            _create_gp_independent_model(
+                hp_ranges=hp_ranges,
+                active_metric=INTERNAL_METRIC_NAME,
+                random_seed=random_seed,
+                is_hypertune=is_hypertune,
                 **_kwargs,
             )
         )
@@ -457,7 +514,6 @@ def gp_multifidelity_searcher_factory(**kwargs) -> dict:
         kwargs["model"] = "gp_multitask"
     # Common objects
     result = _create_common_objects(**kwargs)
-
     kwargs_int = dict(
         result,
         resource_attr=kwargs["resource_attr"],
@@ -468,6 +524,18 @@ def gp_multifidelity_searcher_factory(**kwargs) -> dict:
             kwargs, result["hp_ranges"]
         )
     return kwargs_int
+
+
+def hypertune_searcher_factory(**kwargs) -> dict:
+    if kwargs.get("model") is None:
+        kwargs["model"] = "gp_independent"
+    else:
+        supported_models = {"gp_multitask", "gp_independent"}
+        assert kwargs["model"] in supported_models, (
+            "Hyper-Tune only supports search_options['model'] in "
+            f"{supported_models} along with searcher = 'hypertune'"
+        )
+    return gp_multifidelity_searcher_factory(**kwargs, is_hypertune=True)
 
 
 def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
@@ -701,7 +769,7 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> dict:
 
 
 def _common_defaults(
-    is_hyperband: bool, is_multi_output: bool
+    is_hyperband: bool, is_multi_output: bool, is_hypertune: bool = False
 ) -> (Set[str], dict, dict):
     mandatory = set()
 
@@ -726,7 +794,10 @@ def _common_defaults(
         "no_fantasizing": False,
     }
     if is_hyperband:
-        default_options["model"] = "gp_multitask"
+        if is_hypertune:
+            default_options["model"] = "gp_independent"
+        else:
+            default_options["model"] = "gp_multitask"
         default_options["opt_skip_num_max_resource"] = False
         default_options["gp_resource_kernel"] = "exp-decay-sum"
         default_options["resource_acq"] = "bohb"
@@ -735,6 +806,8 @@ def _common_defaults(
         default_options["issm_gamma_one"] = False
         default_options["expdecay_normalize_inputs"] = False
         default_options["separate_noise_variances"] = False
+        default_options["hypertune_distribution_num_samples"] = 50
+        default_options["hypertune_distribution_num_brackets"] = 1
     if is_multi_output:
         default_options["initial_scoring"] = "acq_func"
         default_options["exponent_cost"] = 1.0
@@ -759,7 +832,9 @@ def _common_defaults(
     }
 
     if is_hyperband:
-        model_choices = ("gp_multitask", "gp_independent", "gp_issm", "gp_expdecay")
+        model_choices = ("gp_multitask", "gp_independent")
+        if not is_hypertune:
+            model_choices = model_choices + ("gp_issm", "gp_expdecay")
         constraints["model"] = Categorical(choices=model_choices)
         constraints["opt_skip_num_max_resource"] = Boolean()
         constraints["gp_resource_kernel"] = Categorical(
@@ -771,6 +846,8 @@ def _common_defaults(
         constraints["issm_gamma_one"] = Boolean()
         constraints["expdecay_normalize_inputs"] = Boolean()
         constraints["separate_noise_variances"] = Boolean()
+        constraints["hypertune_distribution_num_samples"] = Integer(1, None)
+        constraints["hypertune_distribution_num_brackets"] = Integer(1, None)
     if is_multi_output:
         constraints["initial_scoring"] = Categorical(choices=tuple({"acq_func"}))
         constraints["exponent_cost"] = Float(0.0, 1.0)
@@ -824,6 +901,18 @@ def gp_multifidelity_searcher_defaults() -> (Set[str], dict, dict):
 
     """
     return _common_defaults(is_hyperband=True, is_multi_output=False)
+
+
+def hypertune_searcher_defaults() -> (Set[str], dict, dict):
+    """
+    Returns mandatory, default_options, config_space for
+    check_and_merge_defaults to be applied to search_options for
+    :class:`HyperTuneSearcher`.
+
+    :return: (mandatory, default_options, config_space)
+
+    """
+    return _common_defaults(is_hyperband=True, is_multi_output=False, is_hypertune=True)
 
 
 def cost_aware_gp_multifidelity_searcher_defaults() -> (Set[str], dict, dict):

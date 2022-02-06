@@ -13,7 +13,7 @@
 from typing import Dict
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.cost_aware_gp_fifo_searcher import (
+from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
     MultiModelGPFIFOSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (

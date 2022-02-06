@@ -112,6 +112,13 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         help="if 1 run all the seeds [0, `num_seeds`-1], otherwise run seed `num_seeds` only",
     )
     parser.add_argument(
+        "--start_seed",
+        type=int,
+        required=False,
+        default=0,
+        help="first seed to run (if `run_all_seed` == 1)",
+    )
+    parser.add_argument(
         "--method", type=str, required=False, help="a method to run from baselines.py"
     )
     parser.add_argument(
@@ -133,10 +140,10 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         help="number of brackets",
     )
     parser.add_argument(
-        "--start_seed",
+        "--num_samples",
         type=int,
-        default=0,
-        help="first seed to run (if run_all_seed)",
+        default=50,
+        help="Number of samples for Hyper-Tune distribution",
     )
     args, _ = parser.parse_known_args()
     args.verbose = bool(args.verbose)
@@ -215,6 +222,7 @@ def main(methods: dict, benchmark_definitions: dict):
                 ),
                 num_brackets=args.num_brackets,
                 use_surrogates="lcbench" in benchmark_name,
+                num_samples=args.num_samples,
                 **method_kwargs,
             )
         )
@@ -228,6 +236,7 @@ def main(methods: dict, benchmark_definitions: dict):
             "algorithm": method,
             "tag": experiment_tag,
             "benchmark": benchmark_name,
+            "num_samples": args.num_samples,
         }
         if args.num_brackets is not None:
             metadata["num_brackets"] = args.num_brackets

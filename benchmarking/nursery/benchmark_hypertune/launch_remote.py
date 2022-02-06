@@ -25,12 +25,12 @@ from syne_tune.util import s3_experiment_path, random_string
 
 
 def _is_expensive_method(method: str) -> bool:
-    return method == "SYNCMOBSTER"
+    return method.startswith("MOBSTER") or method.startswith("HYPERTUNE")
 
 
 if __name__ == "__main__":
-    from benchmarking.nursery.benchmark_dehb.baselines import methods
-    from benchmarking.nursery.benchmark_dehb.benchmark_definitions import (
+    from benchmarking.nursery.benchmark_hypertune.baselines import methods
+    from benchmarking.nursery.benchmark_hypertune.benchmark_definitions import (
         benchmark_definitions,
     )
 
@@ -68,11 +68,11 @@ if __name__ == "__main__":
             dependencies=syne_tune.__path__ + benchmarking.__path__,
             disable_profiler=True,
         )
-
         hyperparameters = {
             "experiment_tag": experiment_tag,
             "method": method,
             "num_brackets": args.num_brackets,
+            "num_samples": args.num_samples,
         }
         if seed is not None:
             hyperparameters["num_seeds"] = seed

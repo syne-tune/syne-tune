@@ -97,9 +97,10 @@ def build_gped_model_factory(config_space: Dict, model_params: Dict, **kwargs):
     return kwargs_int
 
 
-# We ran launch_sample_searcher_states.py to sample the searcher states
-# used here, which runs MOBSTER (hyperband_stopping, bayesopt) with the
-# mlp_fashionmnist_benchmark
+# We ran
+#    benchmarking/cli/launch_sample_searcher_states.py
+# to sample the searcher states used here, which runs MOBSTER
+# (hyperband_stopping, bayesopt) with the mlp_fashionmnist benchmark
 
 _model_params = []
 _state = []
@@ -207,6 +208,13 @@ _state.append(
 
 @pytest.mark.parametrize("_model_params, _state", zip(_model_params, _state))
 def test_compare_gp_model_gped_model(_model_params, _state):
+    """
+    This test is based on the fact that a "gp_expdecay" model is formally
+    equivalent to a "gp_multitask" model with the "freeze-thaw" surrogate
+    model, except inference computations for the latter do not make use of
+    conditional independencies.
+
+    """
     config_space = {
         "n_units_1": randint(4, 1024),
         "n_units_2": randint(4, 1024),

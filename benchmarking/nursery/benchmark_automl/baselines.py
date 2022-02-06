@@ -43,6 +43,7 @@ class MethodArguments:
     use_surrogates: bool = False
     num_brackets: Optional[int] = None
     verbose: Optional[bool] = False
+    num_samples: int = 50
 
 
 class Methods:
