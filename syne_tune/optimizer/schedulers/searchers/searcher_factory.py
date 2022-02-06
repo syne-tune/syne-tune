@@ -89,6 +89,7 @@ def searcher_factory(searcher_name, **kwargs):
             "bayesopt",
             "bayesopt_constrained",
             "bayesopt_cost",
+            "hypertune",
         }
         assert (
             searcher_name in gp_searchers
@@ -108,6 +109,9 @@ def searcher_factory(searcher_name, **kwargs):
             )
             from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_multifidelity_searcher import (
                 CostAwareGPMultiFidelitySearcher,
+            )
+            from syne_tune.optimizer.schedulers.searchers.hypertune.hypertune_searcher import (
+                HyperTuneSearcher,
             )
         except ImportError:
             logger.info(try_import_gpsearchers_message())
@@ -130,6 +134,9 @@ def searcher_factory(searcher_name, **kwargs):
                         "are faster then."
                     )
                 searcher_cls = GPMultiFidelitySearcher
+        elif searcher_name == "hypertune":
+            supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
+            searcher_cls = HyperTuneSearcher
         elif searcher_name == "bayesopt_constrained":
             supported_schedulers = {"fifo"}
             searcher_cls = ConstrainedGPFIFOSearcher

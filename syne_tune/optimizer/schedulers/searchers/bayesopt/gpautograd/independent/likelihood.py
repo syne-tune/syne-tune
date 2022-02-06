@@ -140,7 +140,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         }
 
     def get_posterior_state(self, data: dict) -> PosteriorState:
-        GaussianProcessMarginalLikelihood._assert_data_entries(data)
+        GaussianProcessMarginalLikelihood.assert_data_entries(data)
         return IndependentGPPerResourcePosteriorState(
             features=data["features"],
             targets=data["targets"],
@@ -233,7 +233,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             self._set_noise_variance(1, param_dict["noise_variance"])
 
     def on_fit_start(self, data: dict, profiler: Optional[SimpleProfiler] = None):
-        GaussianProcessMarginalLikelihood._assert_data_entries(data)
+        GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = data["targets"]
         assert (
             targets.shape[1] == 1

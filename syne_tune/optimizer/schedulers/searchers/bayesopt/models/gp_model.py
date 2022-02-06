@@ -41,6 +41,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc impor
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.independent.gpind_model import (
     IndependentGPPerResourceModel,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model import (
+    HyperTuneIndependentGPModel,
+    HyperTuneJointGPModel,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
     PosteriorState,
 )
@@ -59,6 +63,8 @@ GPModel = Union[
     GaussianProcessRegression,
     GPRegressionMCMC,
     IndependentGPPerResourceModel,
+    HyperTuneIndependentGPModel,
+    HyperTuneJointGPModel,
 ]
 
 
@@ -427,7 +433,9 @@ class GaussProcModelFactory(TransformerModelFactory):
     def configure_scheduler(self, scheduler):
         from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
-        if isinstance(self._gpmodel, IndependentGPPerResourceModel):
+        if isinstance(
+            self._gpmodel, (IndependentGPPerResourceModel, HyperTuneJointGPModel)
+        ):
             assert isinstance(scheduler, HyperbandScheduler), (
                 "gpmodel of type IndependentGPPerResourceModel requires "
                 + "HyperbandScheduler scheduler"
