@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Optional, List
-import pickle
 import logging
 import numpy as np
 import os
@@ -831,28 +830,6 @@ class HyperbandScheduler(FIFOScheduler):
         return {
             k: {k2: v[k2] for k2 in rem_keys}
             for k, v in self._active_trials.items() if not v['running']}
-
-    def state_dict(self) -> Dict:
-        record = super().state_dict()
-        # We need to checkpoint the part of _active_trials corresponding to
-        # paused trials. The part for running trials is dropped.
-        # The assumption is that if an experiment is resumed from a
-        # checkpoint, currently running trials are not restarted
-        record['paused_trials'] = pickle.dumps(self._get_paused_trials())
-        record['terminator'] = pickle.dumps(self.terminator)
-        if self._cost_offset:
-            record['cost_offset'] = pickle.dumps(self._cost_offset)
-        return record
-
-    def load_state_dict(self, state_dict):
-        assert len(self._active_trials) == 0, \
-            "load_state_dict must only be called as part of scheduler construction"
-        super().load_state_dict(state_dict)
-        # Recreate paused trials part of _active_trials
-        self._active_trials = pickle.loads(state_dict['paused_trials'])
-        self.terminator = pickle.loads(state_dict['terminator'])
-        if 'cost_offset' in state_dict:
-            self._cost_offset = pickle.loads(state_dict['cost_offset'])
 
 
 def _sample_bracket(num_brackets, rung_levels, random_state):

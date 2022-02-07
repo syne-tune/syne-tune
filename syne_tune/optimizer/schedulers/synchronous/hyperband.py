@@ -13,7 +13,6 @@
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 import logging
-import pickle
 import numpy as np
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager \
@@ -371,32 +370,6 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                 self._resource_attr: write_back.milestone,
                 self.metric: np.NAN}
             self._on_trial_result(trial, result, call_searcher=False)
-
-    _STANDARD_MEMBERS = (
-        '_job_queue', '_phase', '_num_collected', '_trial_to_write_back',
-        '_bracket_to_results', '_trial_to_config')
-
-    def state_dict(self) -> Dict:
-        record = super().state_dict()
-        # The result of searcher.get_state can always be pickled
-        record.update({
-            'searcher': pickle.dumps(self.searcher.get_state()),
-            'bracket_rungs': pickle.dumps(self.bracket_manager.bracket_rungs)
-        })
-        obj_dict = vars()
-        for name in self._STANDARD_MEMBERS:
-            record[name] = pickle.dumps(obj_dict[name])
-        return record
-
-    def load_state_dict(self, state_dict):
-        super().load_state_dict(state_dict)
-        self.searcher = self.searcher.clone_from_state(pickle.loads(
-            state_dict['searcher']))
-        self.bracket_manager = SynchronousHyperbandBracketManager(
-            pickle.loads(state_dict['bracket_rungs']), mode=self.mode)
-        obj_dict = vars()
-        for name in self._STANDARD_MEMBERS:
-            obj_dict[name] = pickle.loads(state_dict[name])
 
     def metric_names(self) -> List[str]:
         return [self.metric]
