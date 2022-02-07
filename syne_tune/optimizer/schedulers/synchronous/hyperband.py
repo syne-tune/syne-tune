@@ -13,7 +13,6 @@
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 import logging
-import pickle
 import numpy as np
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager \
