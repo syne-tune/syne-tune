@@ -7,6 +7,7 @@ from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.thompson_sampling_functional_prior import TS
+from syne_tune.optimizer.schedulers.searchers.regularized_evolution import RegularizedEvolution
 
 
 @dataclass
@@ -111,6 +112,26 @@ methods = {
         method_arguments.config_space,
         searcher="bayesopt",
         search_options={'debug_log': False},
+        mode=method_arguments.mode,
+        metric=method_arguments.metric,
+        max_t=method_arguments.max_t,
+        resource_attr=method_arguments.resource_attr,
+        random_seed=method_arguments.random_seed,
+    ),
+    'REA': lambda method_arguments: FIFOScheduler(
+        config_space=method_arguments.config_space,
+        searcher=RegularizedEvolution(configspace=method_arguments.config_space,
+                                      metric=method_arguments.metric,
+                                      mode=method_arguments.mode,
+                                      population_size=10, sample_size=5),
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
+    ),
+    'BOHB': lambda method_arguments: HyperbandScheduler(
+        config_space=method_arguments.config_space,
+        searcher="kde",
+        search_options={'debug_log': False, 'min_bandwidth': 0.1},
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
