@@ -52,7 +52,7 @@ _DEFAULT_OPTIONS = {
     'searcher_data': 'rungs',
     'register_pending_myopic': False,
     'do_snapshots': False,
-    'rung_system_per_bracket': True,
+    'rung_system_per_bracket': False,
     'rung_system_kwargs': {
         'cost_attr': 'elapsed_time',
         'ranking_criterion': 'soft_ranking',
@@ -258,16 +258,17 @@ class HyperbandScheduler(FIFOScheduler):
     register_pending_myopic : bool
         See above. Used only if `searcher_data != 'rungs'`.
     rung_system_per_bracket : bool
-        This concerns Hyperband with brackets > 1. When starting a job for a
+        This concerns Hyperband with `brackets > 1`. When starting a job for a
         new config, it is assigned a randomly sampled bracket. The larger the
         bracket, the larger the grace period for the config. If
-        `rung_system_per_bracket` is True, we maintain separate rung level
+        `rung_system_per_bracket = True`, we maintain separate rung level
         systems for each bracket, so that configs only compete with others
-        started in the same bracket. This is the default behaviour of Hyperband.
-        If False, we use a single rung level system, so that all configs
-        compete with each other. In this case, the bracket of a config only
-        determines the initial grace period, i.e. the first milestone at which
-        it starts competing with others.
+        started in the same bracket.
+        If `rung_system_per_bracket = False`, we use a single rung level system,
+        so that all configs compete with each other. In this case, the bracket
+        of a config only determines the initial grace period, i.e. the first
+        milestone at which it starts competing with others. This is the
+        default.
         The concept of brackets in Hyperband is meant to hedge against overly
         aggressive filtering in successive halving, based on low fidelity
         criteria. In practice, successive halving (i.e., `brackets = 1`) often
@@ -731,7 +732,7 @@ class HyperbandScheduler(FIFOScheduler):
                         # resumed trial has to start from scratch, publishing
                         # results all the way up to resume_from. In this case,
                         # we can erase the `_cost_offset` entry, since the
-                        # instanteneous cost reported by the trial does not
+                        # instantaneous cost reported by the trial does not
                         # have any offset.
                         if self._cost_offset[trial_id] > 0:
                             logger.info(

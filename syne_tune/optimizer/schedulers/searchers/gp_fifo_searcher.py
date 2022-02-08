@@ -593,9 +593,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def _postprocess_config(self, config: dict) -> dict:
         return config
 
-    def _num_initial_candidates(self) -> int:
-        return self.num_initial_candidates
-
     def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
             Optional[Configuration]:
         # Obtain current SurrogateModel from state transformer. Based on
@@ -624,7 +621,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         bo_algorithm = BayesianOptimizationAlgorithm(
             initial_candidates_generator=self.random_generator,
             initial_candidates_scorer=initial_candidates_scorer,
-            num_initial_candidates=self._num_initial_candidates(),
+            num_initial_candidates=self.num_initial_candidates,
             local_optimizer=local_optimizer,
             pending_candidate_state_transformer=None,
             exclusion_candidates=exclusion_candidates,
