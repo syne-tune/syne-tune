@@ -251,7 +251,6 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
 
         """
         self._assign_random_searcher()
-        state = self.state_transformer.state
         config = self._next_initial_config()  # Ask for initial config
         if config is None:
             pick_random = self._should_pick_random_config(exclusion_candidates)
@@ -670,6 +669,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
             if config is not None:
                 configs.append(config)
         else:
+            # `DebugLogWriter` does not support batch selection right now,
+            # must be switched off
+            assert self.debug_log is None, \
+                "get_batch_configs does not support debug_log right now"
             exclusion_candidates = self._get_exclusion_candidates(**kwargs)
             pick_random = True
             while pick_random and len(configs) < batch_size:
