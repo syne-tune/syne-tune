@@ -81,7 +81,7 @@ methods = {
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
         num_hyperparameters_per_task=10,
     ),
-    'HB-TS': lambda method_arguments: HyperbandScheduler(
+    'HB-CTS': lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher=QuantileBasedSurrogateSearcher(
             mode="min",

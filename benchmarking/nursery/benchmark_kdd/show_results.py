@@ -252,7 +252,7 @@ method_styles = {
     'RS-MSR': (rs_color, multifidelity_style2),
     # 'RS-BB',
     'HB-BB': (hb_bb_color, multifidelity_style),
-    'HB-TS': (hb_ts_color, multifidelity_style)
+    'HB-CTS': (hb_ts_color, multifidelity_style)
 }
 
 def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
@@ -354,7 +354,7 @@ if __name__ == '__main__':
     load_cache = True
     methods_to_show = [
         'RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR',
-        'RS-BB', 'HB-BB', 'HB-TS']
+        'RS-BB', 'HB-BB', 'HB-CTS']
 
     result_file = Path(f"~/Downloads/cached-results-{tag}.dill").expanduser()
     if load_cache and result_file.exists():
