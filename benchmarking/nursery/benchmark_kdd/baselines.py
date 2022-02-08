@@ -6,7 +6,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.thompson_sampling_functional_prior import TS
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.thompson_sampling_functional_prior import QuantileBasedSurrogateSearcher
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import RegularizedEvolution
 
 
@@ -83,7 +83,7 @@ methods = {
     ),
     'HB-TS': lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
-        searcher=TS(
+        searcher=QuantileBasedSurrogateSearcher(
             mode="min",
             config_space=method_arguments.config_space,
             metric=method_arguments.metric,

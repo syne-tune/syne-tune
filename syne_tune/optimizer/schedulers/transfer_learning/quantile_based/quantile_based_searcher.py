@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional
 import numpy as np
 import xgboost
@@ -80,25 +81,40 @@ def subsample(X_train, z_train, max_samples: int = 10000, random_state: np.rando
     return X_train, z_train
 
 
-class TS(SearcherWithRandomSeed):
+class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
 
     def __init__(
             self,
             config_space: Dict,
-            mode: str,
             metric: str,
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+            mode: Optional[str] = None,
             max_fit_samples: int = 100000,
             normalization: str = "gaussian",
             random_seed: Optional[int] = None,
-            **kwargs
     ):
-        super(TS, self).__init__(
+        """
+        Implement the transfer-learning method:
+        A Quantile-based Approach for Hyperparameter Transfer Learning.
+        David Salinas, Huibin Shen, Valerio Perrone. ICML 2020.
+        This is the Copula Thompson Sampling approach described in the paper where a surrogate is fitted on the
+        transfer learning data to predict mean/variance of configuration performance given a hyperparameter.
+        The surrogate is then sampled from and the best configurations are returned as next candidate to evaluate.
+        :param config_space:
+        :param mode: whether to minimize or maximize, default to 'min'.
+        :param metric: metric to optimize
+        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
+        :param max_fit_samples: maximum number to use when fitting the method.
+        :param normalization: default to "gaussian" which first computes the rank and then applies Gaussian inverse CDF.
+        "standard" applies just standard normalization (remove mean and divide by variance) but performs significanly
+        worse.
+        :param random_seed:
+        """
+        super(QuantileBasedSurrogateSearcher, self).__init__(
             configspace=config_space,
             metric=metric,
             random_seed=random_seed,
             points_to_evaluate=[],
-            **kwargs,
         )
         self.mode = mode
         self.model_pipeline, sigma_train, sigma_val = fit_model(
@@ -109,13 +125,13 @@ class TS(SearcherWithRandomSeed):
             model=xgboost.XGBRegressor(),
             random_state=self.random_state,
         )
-        print(f"residual train: {sigma_train}")
-        print(f"residual val: {sigma_val}")
+        logging.info(f"residual train: {sigma_train}")
+        logging.info(f"residual val: {sigma_val}")
 
         with catchtime("time to predict"):
             # note the candidates could also be sampled every time, we cache them rather to save compute time.
             num_candidates = 100000
-            self.X_candidates = pd.DataFrame([self._sample() for _ in range(num_candidates)])
+            self.X_candidates = pd.DataFrame([self._sample_random_config() for _ in range(num_candidates)])
             self.mu_pred = self.model_pipeline.predict(self.X_candidates)
             # simple homoskedastic variance estimate for now
             if self.mu_pred.ndim == 1:
@@ -135,7 +151,7 @@ class TS(SearcherWithRandomSeed):
         candidate = self.X_candidates.loc[np.argmin(samples)]
         return dict(candidate)
 
-    def _sample(self):
+    def _sample_random_config(self):
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in self.configspace.items()
@@ -163,13 +179,13 @@ def run_ts():
 
         sch = HyperbandScheduler(
             config_space=config_space,
-            searcher=TS(
+            searcher=QuantileBasedSurrogateSearcher(
                 mode="min",
                 config_space=config_space,
                 metric=bb_dict[test_task].objectives_names[metric_index],
                 transfer_learning_evaluations=transfer_learning_evaluations,
                 max_fit_samples=5000,
-                seed=1,
+                random_seed=1,
             ),
             mode="min",
             metric=bb_dict[test_task].objectives_names[metric_index],
