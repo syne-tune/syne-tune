@@ -93,7 +93,6 @@ class TS(SearcherWithRandomSeed):
             random_seed: Optional[int] = None,
             **kwargs
     ):
-        # todo check points_to_evaluate does not do anything unwanted
         super(TS, self).__init__(
             configspace=config_space,
             metric=metric,
@@ -114,10 +113,11 @@ class TS(SearcherWithRandomSeed):
         print(f"residual val: {sigma_val}")
 
         with catchtime("time to predict"):
-            num_candidates = 10000
+            # note the candidates could also be sampled every time, we cache them rather to save compute time.
+            num_candidates = 100000
             self.X_candidates = pd.DataFrame([self._sample() for _ in range(num_candidates)])
             self.mu_pred = self.model_pipeline.predict(self.X_candidates)
-            # simple variance estimate for now
+            # simple homoskedastic variance estimate for now
             if self.mu_pred.ndim == 1:
                 self.mu_pred = self.mu_pred.reshape(-1, 1)
             self.sigma_pred = np.ones_like(self.mu_pred) * sigma_val

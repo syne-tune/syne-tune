@@ -143,7 +143,69 @@ class PlotArgs:
     ymax: float = None
 
 
-def plot_results(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
+def plot_result_benchmark(
+        df_task,
+        title: str,
+        show_seeds: bool = False,
+        method_styles: Optional[Dict] = None,
+):
+    agg_results = {}
+    if len(df_task) > 0:
+        metric = df_task.loc[:, 'metric_names'].values[0]
+        mode = df_task.loc[:, 'metric_mode'].values[0]
+
+        fig, ax = plt.subplots()
+        for algorithm, (color, linestyle) in method_styles.items():
+            ts = []
+            ys = []
+
+            df_scheduler = df_task[df_task.algorithm == algorithm]
+            if len(df_scheduler) == 0:
+                continue
+            for i, tuner_name in enumerate(df_scheduler.tuner_name.unique()):
+                sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
+                sub_df = sub_df.sort_values(ST_TUNER_TIME)
+                t = sub_df.loc[:, ST_TUNER_TIME].values
+                y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:,
+                                                                                     metric].cummin().values
+                if show_seeds:
+                    ax.plot(t, y_best, color=color, linestyle=linestyle, alpha=0.2)
+                ts.append(t)
+                ys.append(y_best)
+
+            # compute the mean/std over time-series of different seeds at regular time-steps
+            # start/stop at respectively first/last point available for all seeds
+            t_min = max(tt[0] for tt in ts)
+            t_max = min(tt[-1] for tt in ts)
+            if t_min > t_max:
+                continue
+            t_range = np.linspace(t_min, t_max)
+
+            # find the best value at each regularly spaced time-step from t_range
+            y_ranges = []
+            for t, y in zip(ts, ys):
+                indices = np.searchsorted(t, t_range, side="left")
+                y_range = y[indices]
+                y_ranges.append(y_range)
+            y_ranges = np.stack(y_ranges)
+
+            mean = y_ranges.mean(axis=0)
+            std = y_ranges.std(axis=0)
+            ax.fill_between(
+                t_range, mean - std, mean + std,
+                color=color, alpha=0.1,
+            )
+            ax.plot(t_range, mean, color=color, linestyle=linestyle, label=algorithm)
+            agg_results[algorithm] = mean
+
+        ax.set_xlabel("wallclock time")
+        ax.set_ylabel(metric)
+        ax.legend()
+        ax.set_title(title)
+    return ax, t_range, agg_results
+
+
+def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None):
     plot_range = {
         "fcnet-naval": PlotArgs(50, None, 0.0, 4e-3),
         "fcnet-parkinsons": PlotArgs(0, None, 0.0, 0.1),
@@ -159,7 +221,7 @@ def plot_results(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
         cmap = cm.Set3
         colors = {algorithm: cmap(i) for i, algorithm in enumerate(sorted(df_task.algorithm.unique()))}
 
-        args = dict(df_task=df_task, title=benchmark, colors=colors, methods_to_show=methods_to_show)
+        args = dict(df_task=df_task, title=benchmark, method_styles=method_styles)
 
         ax, t_range, agg_result = plot_result_benchmark(**args)
         agg_results[benchmark] = agg_result
@@ -169,10 +231,29 @@ def plot_results(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
             ax.set_xlim([plotargs.xmin, plotargs.xmax])
 
         plt.tight_layout()
-        os.makedirs("figures/", exist_ok=True)
         plt.savefig(f"figures/{benchmark}.png")
         plt.show()
 
+
+rs_color = "blue"
+gp_color = "orange"
+hb_bb_color = "green"
+hb_ts_color = "yellow"
+fifo_style = 'solid'
+multifidelity_style = 'dashed'
+multifidelity_style2 = 'dashdot'
+transfer_style = 'dotted'
+
+method_styles = {
+    'RS': (rs_color, fifo_style),
+    'GP': (gp_color, fifo_style),
+    'HB': (rs_color, multifidelity_style),
+    'MOBSTER': (gp_color, multifidelity_style),
+    'RS-MSR': (rs_color, multifidelity_style2),
+    # 'RS-BB',
+    'HB-BB': (hb_bb_color, multifidelity_style),
+    'HB-TS': (hb_ts_color, multifidelity_style)
+}
 
 def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
 
@@ -263,14 +344,14 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument(
-        "--experiment_tag", type=str, required=False, default="loud-grouse",
+        "--experiment_tag", type=str, required=False, default="mahogany-snake",
         help="the experiment tag that was displayed when running the experiment"
     )
     args, _ = parser.parse_known_args()
     tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
 
-    load_cache = False
+    load_cache = True
     methods_to_show = [
         'RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR',
         'RS-BB', 'HB-BB', 'HB-TS']
@@ -295,7 +376,7 @@ if __name__ == '__main__':
 
     # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
 
-    plot_results(benchmarks_to_df, methods_to_show)
+    plot_results(benchmarks_to_df, method_styles)
 
     print_rank_table(benchmarks_to_df, methods_to_show)
 
