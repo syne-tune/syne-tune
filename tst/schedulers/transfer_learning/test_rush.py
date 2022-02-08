@@ -31,10 +31,11 @@ def config_space():
 
 
 @pytest.fixture()
-def scheduler(metadata, config_space):
+def scheduler(metadata, config_space, request):
     return RUSHScheduler(config_space=config_space,
                          metric='loss',
                          max_t=10,
+                         type=request.param,
                          transfer_learning_evaluations=metadata)
 
 
@@ -86,30 +87,39 @@ def get_result(loss=0, epoch=1):
     }
 
 
-def test_given_only_metadata_num_init_config_equals_number_of_tasks(metadata, config_space):
+@pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
+def test_given_only_metadata_num_init_config_equals_number_of_tasks(metadata, config_space, scheduler_type):
     scheduler = RUSHScheduler(config_space=config_space,
                               metric='loss',
                               max_t=10,
+                              type=scheduler_type,
                               transfer_learning_evaluations=metadata)
     assert scheduler._num_init_configs == len(metadata)
 
 
+@pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
 def test_given_metadata_and_points_to_evaluate_num_init_config_equals_sum_of_unique_configurations(metadata,
                                                                                                    config_space,
-                                                                                                   points_to_evaluate):
+                                                                                                   points_to_evaluate,
+                                                                                                   scheduler_type):
     scheduler = RUSHScheduler(config_space=config_space,
                               metric='loss',
                               max_t=10,
+                              type=scheduler_type,
                               transfer_learning_evaluations=metadata,
                               points_to_evaluate=points_to_evaluate)
     assert scheduler._num_init_configs == len(metadata) + len(points_to_evaluate)
 
 
-def test_given_metadata_and_points_to_evaluate_with_overlap_keep_only_unique_configurations(metadata, config_space):
+@pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
+def test_given_metadata_and_points_to_evaluate_with_overlap_keep_only_unique_configurations(metadata,
+                                                                                            config_space,
+                                                                                            scheduler_type):
     points_to_eval = metadata['task'].hyperparameters.to_dict('records')
     scheduler = RUSHScheduler(config_space=config_space,
                               metric='loss',
                               max_t=10,
+                              type=scheduler_type,
                               transfer_learning_evaluations=metadata,
                               points_to_evaluate=points_to_eval)
     assert scheduler._num_init_configs == len(points_to_eval)
@@ -123,10 +133,12 @@ def test_given_metadata_return_best_configurations_per_task(metadata, config_spa
     assert min_loss[0] == metadata['task'].hyperparameters.to_dict('records')[0]
 
 
+@pytest.mark.parametrize('scheduler', ['stopping', 'promotion'], indirect=True)
 def test_given_trial_should_be_stopped_return_stop(scheduler, trial):
     assert scheduler._on_trial_result(SchedulerDecision.STOP, trial, dict()) == SchedulerDecision.STOP
 
 
+@pytest.mark.parametrize('scheduler', ['stopping', 'promotion'], indirect=True)
 def test_given_trial_should_be_continued_and_no_milestone_reached_return_continue(scheduler):
     for trial_id in range(10):
         suggestion = scheduler.suggest(trial_id)
@@ -138,6 +150,7 @@ def test_given_trial_should_be_continued_and_no_milestone_reached_return_continu
         assert decision == SchedulerDecision.CONTINUE
 
 
+@pytest.mark.parametrize('scheduler', ['stopping', 'promotion'], indirect=True)
 def test_on_reaching_milestone_update_threshold(scheduler):
     loss = 0.1
     trial_id = 0
@@ -148,10 +161,11 @@ def test_on_reaching_milestone_update_threshold(scheduler):
     assert scheduler._thresholds == {1: loss}
 
 
+@pytest.mark.parametrize('scheduler', ['stopping', 'promotion'], indirect=True)
 def test_given_trial_not_meeting_threshold_return_stop(scheduler):
     loss = 0.1
     worse_loss = 0.2
-    for trial_id in range(10):
+    for trial_id in range(2):
         suggestion = scheduler.suggest(trial_id)
         trial = Trial(trial_id=trial_id, config=suggestion.config, creation_time=None)
         scheduler.on_trial_add(trial=trial)

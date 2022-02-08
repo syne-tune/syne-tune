@@ -63,6 +63,8 @@ class RUSHScheduler(TransferLearningScheduler):
 
         self._hyperband_scheduler = HyperbandScheduler(config_space, metric=metric,
                                                        points_to_evaluate=threshold_candidates, **hyperband_kwargs)
+        assert self._hyperband_scheduler.scheduler_type in ['promotion', 'stopping'],\
+            "RUSH supports only type 'stopping' or 'promotion'"
         self._num_init_configs = len(threshold_candidates)
         self._thresholds = dict()  # thresholds at different resource levels that must be met
 
@@ -110,14 +112,14 @@ class RUSHScheduler(TransferLearningScheduler):
         self._thresholds = pickle.loads(state['thresholds'])
 
     def _on_trial_result(self, trial_decision: str, trial: Trial, result: Dict) -> str:
-        if trial_decision != SchedulerDecision.CONTINUE:
+        if trial_decision == SchedulerDecision.STOP:
             return trial_decision
 
         metric_val = float(result[self._hyperband_scheduler.metric])
         resource = int(result[self._hyperband_scheduler._resource_attr])
         trial_id = str(trial.trial_id)
 
-        if self._is_milestone_reached(trial_id, resource):
+        if self._is_milestone_reached(trial_decision, trial_id, resource):
             if self._is_in_points_to_evaluate(trial):
                 self._thresholds[resource] = self._return_better(self._thresholds.get(resource),
                                                                  metric_val)
@@ -126,10 +128,13 @@ class RUSHScheduler(TransferLearningScheduler):
 
         return trial_decision
 
-    def _is_milestone_reached(self, trial_id: str, resource: int) -> bool:
-        rung_sys, bracket_id, skip_rungs = self._hyperband_scheduler.terminator._get_rung_system(trial_id)
-        rungs = rung_sys._rungs[:(-skip_rungs if skip_rungs > 0 else None)]
-        return resource in [rung.level for rung in rungs]
+    def _is_milestone_reached(self, trial_decision: str, trial_id: str, resource: int) -> bool:
+        if self._hyperband_scheduler.scheduler_type == 'promotion':
+            return trial_decision == SchedulerDecision.PAUSE
+        else:
+            rung_sys, bracket_id, skip_rungs = self._hyperband_scheduler.terminator._get_rung_system(trial_id)
+            rungs = rung_sys._rungs[:(-skip_rungs if skip_rungs > 0 else None)]
+            return resource in [rung.level for rung in rungs]
 
     def _is_in_points_to_evaluate(self, trial: Trial) -> bool:
         return int(trial.trial_id) < self._num_init_configs
