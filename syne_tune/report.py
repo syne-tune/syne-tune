@@ -54,9 +54,11 @@ class Reporter:
                 self.instance_type = os.getenv(f"SM_HP_{ST_INSTANCE_TYPE.upper()}", None)
                 self.instance_count = literal_eval(os.getenv(f"SM_HP_{ST_INSTANCE_COUNT.upper()}", "1"))
                 logger.info(f"detected instance-type/instance-count to {self.instance_type}/{self.instance_count}")
-                if self.instance_type is not None and self.instance_type != "local":
-                    cost_per_hour = InstanceInfos()(instance_type=self.instance_type).cost_per_hour
-                    self.dollar_cost = cost_per_hour * self.instance_count / 3600
+                if self.instance_type is not None:
+                    instance_infos = InstanceInfos()
+                    if self.instance_type in instance_infos.instances:
+                        cost_per_hour = instance_infos(instance_type=self.instance_type).cost_per_hour
+                        self.dollar_cost = cost_per_hour * self.instance_count / 3600
 
     def __call__(self, **kw) -> None:
         """
