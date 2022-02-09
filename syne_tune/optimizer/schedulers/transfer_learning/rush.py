@@ -112,7 +112,8 @@ class RUSHScheduler(TransferLearningScheduler):
         self._thresholds = pickle.loads(state['thresholds'])
 
     def _on_trial_result(self, trial_decision: str, trial: Trial, result: Dict) -> str:
-        if trial_decision == SchedulerDecision.STOP:
+        if trial_decision == SchedulerDecision.STOP or \
+                trial_decision == SchedulerDecision.PAUSE and self._hyperband_scheduler.scheduler_type == 'stopping':
             return trial_decision
 
         metric_val = float(result[self._hyperband_scheduler.metric])

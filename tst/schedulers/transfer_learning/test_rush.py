@@ -171,3 +171,12 @@ def test_given_trial_not_meeting_threshold_return_stop(scheduler):
         scheduler.on_trial_add(trial=trial)
         decision = scheduler.on_trial_result(trial, {'epoch': 1, 'loss': loss if trial_id == 0 else worse_loss})
         assert trial_id == 0 or decision == SchedulerDecision.STOP
+
+
+def test_given_unsupported_type_raise_exception(metadata, config_space):
+    with pytest.raises(AssertionError, match="RUSH supports only type 'stopping' or 'promotion'"):
+        RUSHScheduler(config_space=config_space,
+                      metric='loss',
+                      max_t=10,
+                      type='pasha',
+                      transfer_learning_evaluations=metadata)
