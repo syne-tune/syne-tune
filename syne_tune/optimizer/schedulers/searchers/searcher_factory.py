@@ -20,8 +20,6 @@ from syne_tune.optimizer.schedulers.searchers.cost_aware_gp_fifo_searcher \
     import CostAwareGPFIFOSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher \
     import GPMultiFidelitySearcher
-from syne_tune.optimizer.schedulers.searchers.gp_sync_multifidelity_searcher \
-    import GPSyncMultiFidelitySearcher
 from syne_tune.optimizer.schedulers.searchers.cost_aware_gp_multifidelity_searcher \
     import CostAwareGPMultiFidelitySearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import \
@@ -32,13 +30,9 @@ __all__ = ['searcher_factory']
 logger = logging.getLogger(__name__)
 
 
-_OUR_ASYNC_MULTIFIDELITY_SCHEDULERS = {
+_OUR_MULTIFIDELITY_SCHEDULERS = {
     'hyperband_stopping', 'hyperband_promotion', 'hyperband_cost_promotion',
-    'hyperband_pasha'}
-
-
-_OUR_MULTIFIDELITY_SCHEDULERS = _OUR_ASYNC_MULTIFIDELITY_SCHEDULERS.union(
-    {'hyperband_synchronous'})
+    'hyperband_pasha', 'hyperband_synchronous'}
 
 
 def searcher_factory(searcher_name, **kwargs):
@@ -69,10 +63,8 @@ def searcher_factory(searcher_name, **kwargs):
     elif searcher_name == 'bayesopt':
         if scheduler == 'fifo':
             searcher_cls = GPFIFOSearcher
-        elif scheduler == 'hyperband_synchronous':
-            searcher_cls = GPSyncMultiFidelitySearcher
         else:
-            supported_schedulers = _OUR_ASYNC_MULTIFIDELITY_SCHEDULERS
+            supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             if model == 'gp_multitask' and \
                     kwargs.get('gp_resource_kernel') == 'freeze-thaw':
                 logger.warning(
@@ -89,7 +81,7 @@ def searcher_factory(searcher_name, **kwargs):
         if scheduler == 'fifo':
             searcher_cls = CostAwareGPFIFOSearcher
         else:
-            supported_schedulers = _OUR_ASYNC_MULTIFIDELITY_SCHEDULERS
+            supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = CostAwareGPMultiFidelitySearcher
     else:
         raise AssertionError(f"searcher '{searcher_name}' is not supported")

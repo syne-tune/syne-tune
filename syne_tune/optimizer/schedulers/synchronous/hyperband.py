@@ -11,13 +11,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Optional, Dict, List
-from dataclasses import dataclass
 import logging
-import pickle
 import numpy as np
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager \
     import SynchronousHyperbandBracketManager
+from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import \
+    SlotInRung
 from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system \
     import RungSystemsPerBracket
 from syne_tune.optimizer.scheduler import TrialSuggestion, \
@@ -41,8 +41,7 @@ logger = logging.getLogger(__name__)
 
 _ARGUMENT_KEYS = {
     'searcher', 'search_options', 'metric', 'mode', 'points_to_evaluate',
-    'random_seed', 'max_resource_attr', 'resource_attr', 'batch_size',
-    'searcher_data'}
+    'random_seed', 'max_resource_attr', 'resource_attr', 'searcher_data'}
 
 _DEFAULT_OPTIONS = {
     'searcher': 'random',
@@ -57,54 +56,22 @@ _CONSTRAINTS = {
     'random_seed': Integer(0, 2 ** 32 - 1),
     'max_resource_attr': String(),
     'resource_attr': String(),
-    'batch_size': Integer(1, None),
     'searcher_data': Categorical(('rungs', 'all')),
 }
 
 
-@dataclass
-class JobResultWriteBack:
-    bracket_id: int
-    pos: int
-    milestone: int
-
-
-@dataclass
-class JobQueueEntry:
-    trial_id: Optional[int]
-    write_back: JobResultWriteBack
-
-
-ERROR_MESSAGE = \
-    "In order to use SynchronousHyperbandScheduler, you need to create Tuner " +\
-    "with asynchronous_scheduling=False, and make sure that n_workers is the " +\
-    "same as batch_size passed to SynchronousHyperbandScheduler."
-
-
 class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     """
-    Synchronous Hyperband. If W is the number of workers, jobs are scheduled in
-    batches of size W. A new batch is scheduled only once all workers are free
-    and have returned their final results.
+    Synchronous Hyperband. This is still scheduling jobs asynchronously, but
+    decision-making is synchronized, in that trials are only promoted to the
+    next milestone once the rung they are currently paused at, is completely
+    occupied.
 
-    We use a FIFO queue of maximum size W to react to `suggest` calls, and
-    cycle through two phases: suggest and collect (results). The suggest phase
-    is started by a `suggest` call when the queue is empty. We query
-    `bracket_manager.next_jobs` for W jobs ands fill the queue with these,
-    then process and remove the first entry (which leads to a trial being
-    started or resumed). Subsequent W - 1 `suggest` calls process and remove
-    further entries. Once the queue is empty, we switch into the collect phase.
-
-    In the collect phase, results are processed in `on_trial_result` calls.
-    They can come in in any order, but must correspond to jobs for the current
-    batch. Only results for the relevant (milestone) levels are used. During
-    this phase, the `bracket_to_results` argument for
-    `bracket_manager.on_results` is assembled. Once this is complete, this
-    method is called, and we switch back to the suggest phase. Any `suggest`
-    call during the collect phase leads to an exception.
-
-    The current implementation uses a :class:`RandomSearcher`.
-    TODO: Support model-based searchers.
+    Our implementation never delays scheduling of a job. If the currently
+    active bracket does not accept jobs, we assign the job to a later bracket.
+    This means that at any point in time, several brackets can be active, but
+    jobs are preferentially assigned to the first one (the "primary" active
+    bracket).
 
     Parameters
     ----------
@@ -114,7 +81,9 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         Determines rung level systems for each bracket, see
         :class:`SynchronousHyperbandBracketManager`
     searcher : str
-        Selects searcher. Passed to `searcher_factory`
+        Selects searcher. Passed to `searcher_factory`.
+        NOTE: Different to :class:`FIFOScheduler`, we do not accept a
+        `BaseSearcher` object here.
     search_options : dict
         Passed to `searcher_factory`
     metric : str
@@ -142,10 +111,6 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     resource_attr : str
         Name of resource attribute in result's obtained via `on_trial_result`.
         Note: The type of resource must be int.
-    batch_size : int
-        Jobs are scheduled in batches of this size. All jobs in a batch need
-        to have finished before the next scheduling decision is taken. Must be
-        equal to `n_workers` in :class:`Tuner`.
     searcher_data : str
         Relevant only if a model-based searcher is used.
         Example: For NN tuning and `resource_attr == epoch', we receive a
@@ -182,9 +147,6 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         self.mode = kwargs['mode']
         self.max_resource_attr = kwargs.get('max_resource_attr')
         self._resource_attr = kwargs['resource_attr']
-        self._batch_size = kwargs.get('batch_size')
-        assert self._batch_size is not None, \
-            "Argument 'batch_size' mandatory, must be equal to n_workers of Tuner"
         # Generator for random seeds
         random_seed = kwargs.get('random_seed')
         if random_seed is None:
@@ -207,7 +169,6 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             'scheduler_mode': kwargs['mode'],
             'random_seed_generator': self.random_seed_generator,
             'resource_attr': self._resource_attr,
-            'batch_size': self._batch_size,
             'scheduler': 'hyperband_synchronous'})
         if searcher == 'bayesopt':
             # We need `max_epochs` in this case
@@ -223,88 +184,89 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         self.bracket_manager = SynchronousHyperbandBracketManager(
             bracket_rungs, mode=self.mode)
         self.searcher_data = kwargs['searcher_data']
-        # Queue of jobs to be processed by `_suggest` calls
-        self._job_queue = []
-        # Current phase ('suggest', 'collect')
-        self._phase = 'suggest'  # Not yet started
-        self._num_collected = None
-        # Maps trial_id to write_back info, to be used in 'collect' phase
-        self._trial_to_write_back = dict()
-        # Builds argument for `bracket_manager.on_results` call
-        self._bracket_to_results = None
+        # Maps trial_id to tuples (bracket_id, slot_in_rung), as returned
+        # by `bracket_manager.next_job`, and required by
+        # `bracket_manager.on_result`. Entries are removed once passed to
+        # `on_result`. Note that a trial_id can be associated with different
+        # job descriptions in its lifetime
+        self._trial_to_pending_slot = dict()
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
 
-    def batch_size(self) -> int:
-        return self._batch_size
-
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        assert self._phase == 'suggest', \
-            "Cannot process _suggest in collect phase.\n" + ERROR_MESSAGE +\
-            f"\nbracket_to_results = {self._bracket_to_results}"
-        if not self._job_queue:
-            # Queue empty: Fetch new batch of jobs
-            self._bracket_to_results = dict()
-            for bracket_id, (trials, milestone) \
-                    in self.bracket_manager.next_jobs(self._batch_size):
-                for pos, promote_trial_id in enumerate(trials):
-                    write_back = JobResultWriteBack(
-                        bracket_id=bracket_id, pos=pos, milestone=milestone)
-                    self._job_queue.append(JobQueueEntry(
-                        trial_id=promote_trial_id, write_back=write_back))
-                # Will be written in `_suggest_next_job_in_queue`:
-                self._bracket_to_results[bracket_id] = [None] * len(trials)
-            logger.info(
-                f"_suggest: New batch of {self._batch_size} jobs:\n" +
-                '\n'.join([str(x) for x in self._job_queue]))
-        if len(self._job_queue) == 1:
-            # Final job in queue: Switch to collect phase
-            self._phase = 'collect'
-            self._num_collected = 0
-        return self._suggest_next_job_in_queue(trial_id=trial_id)
-
-    def _suggest_next_job_in_queue(
-            self, trial_id: int) -> Optional[TrialSuggestion]:
-        job = self._job_queue.pop(0)
-        write_back = job.write_back
+        do_debug_log = self.searcher.debug_log is not None
+        if do_debug_log and trial_id == 0:
+            # This is printed at the start of the experiment. Cannot do this
+            # at construction, because with `RemoteLauncher` this does not end
+            # up in the right log
+            parts = ["Rung systems for each bracket:"] + [
+                f"Bracket {bracket}: {rungs}" for bracket, rungs in enumerate(
+                    self.bracket_manager.bracket_rungs)]
+            logger.info('\n'.join(parts))
+        # Ask bracket manager for job
+        bracket_id, slot_in_rung = self.bracket_manager.next_job()
         suggestion = None
-        if job.trial_id is not None:
+        if slot_in_rung.trial_id is not None:
             # Paused trial to be resumed (`trial_id` passed in is ignored)
-            trial_id = job.trial_id
-            _config = self._trial_to_config[str(trial_id)]
+            trial_id = slot_in_rung.trial_id
+            _config = self._trial_to_config[trial_id]
             if self.max_resource_attr is not None:
                 config = dict(
-                    _config, **{self.max_resource_attr: write_back.milestone})
+                    _config, **{self.max_resource_attr: slot_in_rung.level})
             else:
                 config = _config
             suggestion = TrialSuggestion.resume_suggestion(
                 trial_id=trial_id, config=config)
+            if do_debug_log:
+                logger.info(
+                    f"trial_id {trial_id} promoted to {slot_in_rung.level}")
         else:
             # New trial to be started (id is `trial_id` passed in)
             config = self.searcher.get_config(trial_id=str(trial_id))
             if config is not None:
                 config = cast_config_values(config, self.config_space)
                 if self.max_resource_attr is not None:
-                    config[self.max_resource_attr] = write_back.milestone
-                self._trial_to_config[str(trial_id)] = config
-                suggestion = TrialSuggestion.start_suggestion(config)
+                    config[self.max_resource_attr] = slot_in_rung.level
+                self._trial_to_config[trial_id] = config
+                suggestion = TrialSuggestion.start_suggestion(config=config)
+                # Assign trial id to job descriptor
+                slot_in_rung.trial_id = trial_id
+                if do_debug_log:
+                    logger.info(
+                        f"trial_id {trial_id} starts (milestone = "
+                        f"{slot_in_rung.level})")
         if suggestion is not None:
-            results = self._bracket_to_results[write_back.bracket_id]
-            assert results[write_back.pos] is None, \
-                (trial_id, write_back, results[write_back.pos])
-            results[write_back.pos] = (trial_id, None)
-            self._trial_to_write_back[str(trial_id)] = write_back
+            assert trial_id not in self._trial_to_pending_slot, \
+                f"Trial for trial_id = {trial_id} is already registered as " +\
+                "pending, cannot resume or start it"
+            self._trial_to_pending_slot[trial_id] = (bracket_id, slot_in_rung)
+        else:
+            # Searcher failed to return a config for a new trial_id. We report
+            # the corresponding job as failed, so that in case the experiment
+            # is continued, the bracket is not blocked with a slot which remains
+            # pending forever
+            logger.warning(
+                "Searcher failed to suggest a configuration for new trial "
+                f"{trial_id}. The corresponding rung slot is marked as failed.")
+            self._report_as_failed(bracket_id, slot_in_rung)
         return suggestion
+
+    def _report_as_failed(self, bracket_id: int, slot_in_rung: SlotInRung):
+        result_failed = SlotInRung(
+            rung_index=slot_in_rung.rung_index,
+            level=slot_in_rung.level,
+            slot_index=slot_in_rung.slot_index,
+            trial_id=slot_in_rung.trial_id,
+            metric_val=np.NAN)
+        self.bracket_manager.on_result((bracket_id, result_failed))
 
     def _on_trial_result(
             self, trial: Trial, result: Dict,
             call_searcher: bool = True) -> str:
-        if self._phase == 'collect':
-            trial_id = str(trial.trial_id)
-            write_back = self._trial_to_write_back.get(trial_id)
-            assert write_back is not None, \
-                f"Trial trial_id = {trial_id} is not pending. " +\
-                f"_trial_to_writeback = {self._trial_to_write_back}"
+        trial_id = trial.trial_id
+        if trial_id in self._trial_to_pending_slot:
+            bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]
+            assert slot_in_rung.trial_id == trial_id  # Sanity check
             assert self.metric in result, \
                 f"Result for trial_id {trial_id} does not contain " +\
                 f"'{self.metric}' field"
@@ -313,39 +275,31 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                 f"Result for trial_id {trial_id} does not contain " +\
                 f"'{self._resource_attr}' field"
             resource = int(result[self._resource_attr])
-            milestone = write_back.milestone
+            milestone = slot_in_rung.level
             trial_decision = SchedulerDecision.CONTINUE
             if resource >= milestone:
-                job_result = self._bracket_to_results[write_back.bracket_id]
-                pos = write_back.pos
-                assert job_result[pos][0] == trial.trial_id, \
-                    (write_back, job_result[pos], trial.trial_id)
-                if resource == milestone:
-                    job_result[pos] = (trial.trial_id, metric_val)
-                    trial_decision = SchedulerDecision.PAUSE
-                    self._num_collected += 1
-                    if self._num_collected == self._batch_size:
-                        # All results have been collected
-                        self.bracket_manager.on_results(self._bracket_to_results)
-                        self._phase = 'suggest'
-                        self._trial_to_write_back = dict()
-                else:
-                    assert job_result[pos][1] is not None, \
-                        f"Trial trial_id {trial_id}: Obtained result for " +\
-                        f"resource = {resource}, but not for {milestone}. " +\
-                        "Training script must not skip rung levels!"
+                assert resource == milestone, \
+                    f"Trial trial_id {trial_id}: Obtained result for " + \
+                    f"resource = {resource}, but not for {milestone}. " + \
+                    "Training script must not skip rung levels!"
+                # Reached rung level: Pass result to bracket manager
+                slot_in_rung.metric_val = metric_val
+                self.bracket_manager.on_result((bracket_id, slot_in_rung))
+                # Remove it from pending slots
+                del self._trial_to_pending_slot[trial_id]
+                # Trial should be paused
+                trial_decision = SchedulerDecision.PAUSE
             if call_searcher:
                 update = self.searcher_data == 'all' or resource == milestone
                 self.searcher.on_trial_result(
-                    trial_id=trial_id, config=self._trial_to_config[trial_id],
+                    trial_id=str(trial_id), config=self._trial_to_config[trial_id],
                     result=result, update=update)
         else:
-            # We may receive results in 'suggest' phase, because trials
-            # were not properly paused. These results are simply ignored
-            logger.warning(
-                f"Received result for trial_id {trial.trial_id} in suggest " +
-                f"phase. This result will be ignored:\n{result}")
             trial_decision = SchedulerDecision.STOP
+            logger.warning(
+                f"Received result for trial_id {trial_id}, which is not "
+                f"pending. This result is not used:\n{result}")
+
         return trial_decision
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
@@ -358,45 +312,15 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         and will most likely not be promoted.
 
         """
-        assert self._phase == 'collect', \
-            "Cannot process on_trial_error in suggest phase.\n" + ERROR_MESSAGE +\
-            f"\n_job_queue = {self._job_queue}"
-        trial_id = str(trial.trial_id)
-        self.searcher.evaluation_failed(trial_id)
-        write_back = self._trial_to_write_back.get(trial_id)
-        if write_back is not None:
-            # Reaction to a failed trial is to pass a NaN metric value for
-            # its milestone
-            result = {
-                self._resource_attr: write_back.milestone,
-                self.metric: np.NAN}
-            self._on_trial_result(trial, result, call_searcher=False)
-
-    _STANDARD_MEMBERS = (
-        '_job_queue', '_phase', '_num_collected', '_trial_to_write_back',
-        '_bracket_to_results', '_trial_to_config')
-
-    def state_dict(self) -> Dict:
-        record = super().state_dict()
-        # The result of searcher.get_state can always be pickled
-        record.update({
-            'searcher': pickle.dumps(self.searcher.get_state()),
-            'bracket_rungs': pickle.dumps(self.bracket_manager.bracket_rungs)
-        })
-        obj_dict = vars()
-        for name in self._STANDARD_MEMBERS:
-            record[name] = pickle.dumps(obj_dict[name])
-        return record
-
-    def load_state_dict(self, state_dict):
-        super().load_state_dict(state_dict)
-        self.searcher = self.searcher.clone_from_state(pickle.loads(
-            state_dict['searcher']))
-        self.bracket_manager = SynchronousHyperbandBracketManager(
-            pickle.loads(state_dict['bracket_rungs']), mode=self.mode)
-        obj_dict = vars()
-        for name in self._STANDARD_MEMBERS:
-            obj_dict[name] = pickle.loads(state_dict[name])
+        trial_id = trial.trial_id
+        self.searcher.evaluation_failed(str(trial_id))
+        if trial_id in self._trial_to_pending_slot:
+            bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]
+            self._report_as_failed(bracket_id, slot_in_rung)
+        else:
+            logger.warning(
+                f"Trial trial_id {trial_id} not registered at pending: "
+                "on_trial_error call is ignored")
 
     def metric_names(self) -> List[str]:
         return [self.metric]

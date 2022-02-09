@@ -212,26 +212,6 @@ class TrialScheduler(object):
         call `on_trial_complete`."""
         pass
 
-    def state_dict(self) -> Dict:
-        """
-        Returns a dictionary containing the inner state of the scheduler. This
-        dictionary can be pickled.
-
-        :return: Scheduler state
-        """
-        return dict()
-
-    def load_state_dict(self, state_dict):
-        """
-        Load from the saved state dict. This can be used to resume an
-        experiment from a checkpoint.
-
-        This method must only be called as part of scheduler construction.
-        Calling it in the middle of an experiment can lead to an undefined
-        inner state of scheduler or searcher.
-        """
-        pass
-
     def metric_names(self) -> List[str]:
         """
         :return: List of metric names. The first one is the target

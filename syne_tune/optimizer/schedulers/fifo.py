@@ -13,7 +13,6 @@
 from typing import Dict, Optional, List
 import logging
 import os
-import pickle
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
@@ -386,17 +385,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
             config = self._preprocess_config(trial.config)
             self.searcher.on_trial_result(
                 str(trial.trial_id), config, result=result, update=True)
-
-    def state_dict(self) -> Dict:
-        record = super().state_dict()
-        # The result of searcher.get_state can always be pickled
-        record['searcher'] = pickle.dumps(self.searcher.get_state())
-        return record
-
-    def load_state_dict(self, state_dict):
-        super().load_state_dict(state_dict)
-        self.searcher = self.searcher.clone_from_state(pickle.loads(
-            state_dict['searcher']))
 
     def metric_names(self) -> List[str]:
         return [self.metric]

@@ -405,7 +405,9 @@ class Tuner:
             if status == Status.completed:
                 # since the code above updates `trial_status_dict[trial_id]` after a pause/stop scheduling decision
                 # this callback is never called after a pause/stop scheduler decision.
-                logger.info(f"Trial trial_id {trial_id} completed.")
+                if trial_id not in done_trials \
+                        or done_trials[trial_id][1] != Status.paused:
+                    logger.info(f"Trial trial_id {trial_id} completed.")
                 assert trial_id in self.last_seen_result_per_trial, \
                     f"trial {trial_id} completed and no metrics got observed"
                 last_result = self.last_seen_result_per_trial[trial_id]
