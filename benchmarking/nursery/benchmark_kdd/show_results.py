@@ -23,6 +23,57 @@ from syne_tune.experiments import get_metadata, load_experiments_df
 from syne_tune.util import catchtime
 
 
+
+rs_color = "blue"
+gp_color = "orange"
+tpe_color = "red"
+rea_color = "brown"
+hb_bb_color = "green"
+hb_ts_color = "yellow"
+fifo_style = 'solid'
+multifidelity_style = 'dashed'
+multifidelity_style2 = 'dashdot'
+transfer_style = 'dotted'
+
+
+@dataclass
+class MethodSyle:
+    color: str
+    linestyle: str
+    marker: str = None
+
+show_seeds = False
+method_styles = {
+    'RS': MethodSyle(rs_color, fifo_style),
+    'GP': MethodSyle(gp_color, fifo_style),
+    'REA': MethodSyle(rea_color, fifo_style),
+    'HB': MethodSyle(rs_color, multifidelity_style),
+    'RS-MSR': MethodSyle(rs_color, multifidelity_style2),
+    'BOHB': MethodSyle(tpe_color, multifidelity_style),
+    'MOBSTER': MethodSyle(gp_color, multifidelity_style),
+    # transfer learning
+    'HB-BB': MethodSyle(hb_bb_color, multifidelity_style, "."),
+    'HB-CTS': MethodSyle(hb_ts_color, multifidelity_style, ".")
+}
+
+@dataclass
+class PlotArgs:
+    xmin: float = None
+    xmax: float = None
+    ymin: float = None
+    ymax: float = None
+
+plot_range = {
+    "fcnet-naval": PlotArgs(50, None, 0.0, 4e-3),
+    "fcnet-parkinsons": PlotArgs(0, None, 0.0, 0.1),
+    "fcnet-protein": PlotArgs(xmin=0, ymin=None, ymax=0.35),
+    "fcnet-slice": PlotArgs(50, None, 0.0, 0.004),
+    "nas201-ImageNet16-120": PlotArgs(1000, None, None, 0.8),
+    "nas201-cifar10": PlotArgs(2000, None, 0.05, 0.15),
+    "nas201-cifar100": PlotArgs(3000, None, 0.26, 0.35),
+}
+
+
 def generate_df_dict(tag= None, date_min=None, date_max=None, methods_to_show=None) -> Dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
     def metadata_filter(metadata, benchmark=None, tag=None):
@@ -135,14 +186,6 @@ def plot_result_benchmark(
     return ax, t_range, agg_results
 
 
-@dataclass
-class PlotArgs:
-    xmin: float = None
-    xmax: float = None
-    ymin: float = None
-    ymax: float = None
-
-
 def plot_result_benchmark(
         df_task,
         title: str,
@@ -155,7 +198,7 @@ def plot_result_benchmark(
         mode = df_task.loc[:, 'metric_mode'].values[0]
 
         fig, ax = plt.subplots()
-        for algorithm, (color, linestyle) in method_styles.items():
+        for algorithm, method_style in method_styles.items():
             ts = []
             ys = []
 
@@ -169,7 +212,13 @@ def plot_result_benchmark(
                 y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:,
                                                                                      metric].cummin().values
                 if show_seeds:
-                    ax.plot(t, y_best, color=color, linestyle=linestyle, alpha=0.2)
+                    ax.plot(
+                        t, y_best,
+                        color=method_style.color,
+                        linestyle=method_style.linestyle,
+                        marker=method_style.marker,
+                        alpha=0.2
+                    )
                 ts.append(t)
                 ys.append(y_best)
 
@@ -193,9 +242,15 @@ def plot_result_benchmark(
             std = y_ranges.std(axis=0)
             ax.fill_between(
                 t_range, mean - std, mean + std,
-                color=color, alpha=0.1,
+                color=method_style.color, alpha=0.1,
             )
-            ax.plot(t_range, mean, color=color, linestyle=linestyle, label=algorithm)
+            ax.plot(
+                t_range, mean,
+                color=method_style.color,
+                linestyle=method_style.linestyle,
+                marker=method_style.marker,
+                label=algorithm,
+            )
             agg_results[algorithm] = mean
 
         ax.set_xlabel("wallclock time")
@@ -206,24 +261,12 @@ def plot_result_benchmark(
 
 
 def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None):
-    plot_range = {
-        "fcnet-naval": PlotArgs(50, None, 0.0, 4e-3),
-        "fcnet-parkinsons": PlotArgs(0, None, 0.0, 0.1),
-        "fcnet-protein": PlotArgs(xmin=0, ymin=None, ymax=0.35),
-        "fcnet-slice": PlotArgs(50, None, 0.0, 0.004),
-        "nas201-ImageNet16-120": PlotArgs(1000, None, None, 0.8),
-        "nas201-cifar10": PlotArgs(2000, None, 0.05, 0.15),
-        "nas201-cifar100": PlotArgs(3000, None, 0.26, 0.35),
-    }
     agg_results = {}
 
     for benchmark, df_task in benchmarks_to_df.items():
-        cmap = cm.Set3
-        colors = {algorithm: cmap(i) for i, algorithm in enumerate(sorted(df_task.algorithm.unique()))}
-
-        args = dict(df_task=df_task, title=benchmark, method_styles=method_styles)
-
-        ax, t_range, agg_result = plot_result_benchmark(**args)
+        ax, t_range, agg_result = plot_result_benchmark(
+            df_task=df_task, title=benchmark, method_styles=method_styles, show_seeds=show_seeds
+        )
         agg_results[benchmark] = agg_result
         if benchmark in plot_range:
             plotargs = plot_range[benchmark]
@@ -234,26 +277,6 @@ def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None):
         plt.savefig(f"figures/{benchmark}.png")
         plt.show()
 
-
-rs_color = "blue"
-gp_color = "orange"
-hb_bb_color = "green"
-hb_ts_color = "yellow"
-fifo_style = 'solid'
-multifidelity_style = 'dashed'
-multifidelity_style2 = 'dashdot'
-transfer_style = 'dotted'
-
-method_styles = {
-    'RS': (rs_color, fifo_style),
-    'GP': (gp_color, fifo_style),
-    'HB': (rs_color, multifidelity_style),
-    'MOBSTER': (gp_color, multifidelity_style),
-    'RS-MSR': (rs_color, multifidelity_style2),
-    # 'RS-BB',
-    'HB-BB': (hb_bb_color, multifidelity_style),
-    'HB-CTS': (hb_ts_color, multifidelity_style)
-}
 
 def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
 
@@ -352,9 +375,7 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
 
     load_cache = True
-    methods_to_show = [
-        'RS', 'GP', 'HB', 'MOBSTER', 'RS-MSR',
-        'RS-BB', 'HB-BB', 'HB-CTS']
+    methods_to_show = list(method_styles.keys())
 
     result_file = Path(f"~/Downloads/cached-results-{tag}.dill").expanduser()
     if load_cache and result_file.exists():
