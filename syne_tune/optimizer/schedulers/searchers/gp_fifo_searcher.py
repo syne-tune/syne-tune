@@ -393,6 +393,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
     This searcher must be used with `FIFOScheduler`. It provides Bayesian
     optimization, based on a Gaussian process surrogate model.
 
+    NOTE: The searcher uses `map_reward` to map metric values to internal
+    criterion values, and *minimizes* the latter. If your metric is to be
+    maximized, you need to pass a strictly decreasing `map_reward`.
+
     Pending configurations (for which evaluation tasks are currently running)
     are dealt with by fantasizing (i.e., target values are drawn from the
     current posterior, and acquisition functions are averaged over this
