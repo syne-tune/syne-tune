@@ -17,6 +17,7 @@ import os
 import copy
 
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.hyperband_rush import RUSHStoppingRungSystem
 from syne_tune.optimizer.schedulers.hyperband_stopping import \
     StoppingRungSystem
 from syne_tune.optimizer.schedulers.hyperband_promotion import \
@@ -946,6 +947,9 @@ class HyperbandBracketManager(object):
             kwargs['epsilon'] = rung_system_kwargs['epsilon']
             kwargs['epsilon_scaling'] = rung_system_kwargs['epsilon_scaling']
             rs_type = PASHARungSystem
+        elif scheduler_type == 'rush_stopping':
+            rs_type = RUSHStoppingRungSystem
+            kwargs.update(rung_system_kwargs)
         else:
             kwargs['max_t'] = max_t
             if scheduler_type == 'promotion':
