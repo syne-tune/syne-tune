@@ -231,7 +231,6 @@ def load_experiments_df(
                     df[k] = v[0]
             else:
                 df[k] = v
-            df[k] = v
         metrics = experiment.tuner.scheduler.metric_names()
         if len(metrics) == 1:
             df["metric"] = experiment.tuner.scheduler.metric_names()[0]
