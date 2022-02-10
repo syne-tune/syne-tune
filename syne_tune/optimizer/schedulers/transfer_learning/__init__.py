@@ -1,9 +1,8 @@
-import pandas as pd
-import numpy as np
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List
 
-from syne_tune.optimizer.scheduler import TrialScheduler
+import numpy as np
+import pandas as pd
 
 
 @dataclass
@@ -40,7 +39,7 @@ class TransferLearningTaskEvaluations:
         return matches[0]
 
 
-class TransferLearningScheduler(TrialScheduler):
+class TransferLearningMixin:
 
     def __init__(
             self,
@@ -49,12 +48,11 @@ class TransferLearningScheduler(TrialScheduler):
             metric_names: List[str],
     ):
         """
-        A scheduler that can levarages offline evaluations of related tasks.
+        A mixin that adds basic functionality for using offline evaluations.
         :param config_space: configuration space to be sampled from
         :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
         :param metric_names: name of the metric to be optimized.
         """
-        super(TransferLearningScheduler, self).__init__(config_space=config_space)
         self._check_consistency(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
@@ -79,3 +77,32 @@ class TransferLearningScheduler(TrialScheduler):
 
     def metric_names(self) -> List[str]:
         return self._metric_names
+
+    def top_k_hyperparameter_configurations_per_task(self,
+                                                     transfer_learning_evaluations: Dict[
+                                                         str, TransferLearningTaskEvaluations],
+                                                     num_hyperparameters_per_task: int,
+                                                     mode: str,
+                                                     metric: str) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Returns the best hyperparameter configurations for each task.
+        :param transfer_learning_evaluations: Set of candidates to choose from.
+        :param num_hyperparameters_per_task: The number of top hyperparameters per task to return.
+        :param mode: 'min' or 'max', indicating the type of optimization problem.
+        :param metric: The metric to consider for ranking hyperparameters.
+        :returns: Dict which maps from task name to list of hyperparameters in order.
+        """
+        assert num_hyperparameters_per_task > 0 and isinstance(num_hyperparameters_per_task, int), \
+            f"{num_hyperparameters_per_task} is no positive integer."
+        assert mode in ['min', 'max'], f"Unknown mode {mode}, must be 'min' or 'max'."
+        assert metric in self.metric_names(), f"Unknown metric {metric}."
+        best_hps = dict()
+        for task, evaluation in transfer_learning_evaluations.items():
+            # average over seed and take last fidelity
+            avg_objective_last_fidelity = evaluation.objective_values(objective_name=metric).mean(axis=1)[:, -1]
+            best_hp_task_indices = avg_objective_last_fidelity.argsort()
+            if mode == 'max':
+                best_hp_task_indices = best_hp_task_indices[::-1]
+            best_hps[task] = evaluation.hyperparameters.loc[best_hp_task_indices[:num_hyperparameters_per_task]]\
+                .to_dict('records')
+        return best_hps
