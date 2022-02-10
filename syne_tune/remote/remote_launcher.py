@@ -200,7 +200,7 @@ class RemoteLauncher:
 
         # avoids error "Must setup local AWS configuration with a region supported by SageMaker."
         # in case no region is explicitely configured by providing a default region
-        environment = self.estimator_kwargs.get("environment", {})
+        environment = self.estimator_kwargs.pop("environment", {})
         if "AWS_DEFAULT_REGION" not in environment:
           environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
 
