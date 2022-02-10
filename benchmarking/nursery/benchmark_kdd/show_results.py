@@ -414,6 +414,6 @@ if __name__ == '__main__':
             if x not in df_methods:
                 logging.warning(f"method {x} not found in {bench}")
 
-    # plot_results(benchmarks_to_df, method_styles)
+    plot_results(benchmarks_to_df, method_styles)
 
     print_rank_table(benchmarks_to_df, methods_to_show)
