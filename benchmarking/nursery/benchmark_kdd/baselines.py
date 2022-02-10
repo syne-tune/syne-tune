@@ -114,6 +114,7 @@ methods = {
         searcher=RegularizedEvolution(configspace=method_arguments.config_space,
                                       metric=method_arguments.metric,
                                       mode=method_arguments.mode,
+                                      random_seed=method_arguments.random_seed,
                                       population_size=10, sample_size=5),
         metric=method_arguments.metric,
         mode=method_arguments.mode,
