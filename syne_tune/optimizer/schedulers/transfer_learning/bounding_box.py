@@ -1,6 +1,8 @@
 import logging
 from typing import Dict, Callable, Optional
 
+import pandas as pd
+
 import syne_tune.search_space as sp
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningMixin, TransferLearningTaskEvaluations
@@ -62,7 +64,12 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
                     num_hyperparameters_per_task: int,
                     metric: str
                     ) -> Dict:
-        hp_df = self.get_top_k_hyperparameter_configurations_per_task(num_hyperparameters_per_task, mode, metric)
+        top_k_per_task = self.get_top_k_hyperparameter_configurations_per_task(
+            transfer_learning_evaluations=transfer_learning_evaluations,
+            num_hyperparameters_per_task=num_hyperparameters_per_task,
+            mode=mode,
+            metric=metric)
+        hp_df = pd.DataFrame([hp for _, top_k_hp in top_k_per_task.items() for hp in top_k_hp])
 
         # compute bounding-box on all hyperparameters that are numerical or categorical
         new_config_space = {}

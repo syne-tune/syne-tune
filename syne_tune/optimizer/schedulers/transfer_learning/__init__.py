@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -58,7 +58,6 @@ class TransferLearningMixin:
             transfer_learning_evaluations=transfer_learning_evaluations,
             metric_names=metric_names,
         )
-        self._transfer_learning_evaluations = transfer_learning_evaluations
         self._metric_names = metric_names
 
     def _check_consistency(
@@ -79,13 +78,31 @@ class TransferLearningMixin:
     def metric_names(self) -> List[str]:
         return self._metric_names
 
-    def get_top_k_hyperparameter_configurations_per_task(self, num_hyperparameters_per_task, mode, metric):
-        best_hps = []
-        for task, evaluation in self._transfer_learning_evaluations.items():
+    def top_k_hyperparameter_configurations_per_task(self,
+                                                     transfer_learning_evaluations: Dict[
+                                                         str, TransferLearningTaskEvaluations],
+                                                     num_hyperparameters_per_task: int,
+                                                     mode: str,
+                                                     metric: str) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Returns the best hyperparameter configurations for each task.
+        :param transfer_learning_evaluations: Set of candidates to choose from.
+        :param num_hyperparameters_per_task: The number of top hyperparameters per task to return.
+        :param mode: 'min' or 'max', indicating the type of optimization problem.
+        :param metric: The metric to consider for ranking hyperparameters.
+        :returns: Dict which maps from task name to list of hyperparameters in order.
+        """
+        assert num_hyperparameters_per_task > 0 and isinstance(num_hyperparameters_per_task, int), \
+            f"{num_hyperparameters_per_task} is no positive integer."
+        assert mode in ['min', 'max'], f"Unknown mode {mode}, must be 'min' or 'max'."
+        assert metric in self.metric_names(), f"Unknown metric {metric}."
+        best_hps = dict()
+        for task, evaluation in transfer_learning_evaluations.items():
             # average over seed and take last fidelity
             avg_objective_last_fidelity = evaluation.objective_values(objective_name=metric).mean(axis=1)[:, -1]
             best_hp_task_indices = avg_objective_last_fidelity.argsort()
             if mode == 'max':
                 best_hp_task_indices = best_hp_task_indices[::-1]
-            best_hps.append(evaluation.hyperparameters.loc[best_hp_task_indices[:num_hyperparameters_per_task]])
-        return pd.concat(best_hps)
+            best_hps[task] = evaluation.hyperparameters.loc[best_hp_task_indices[:num_hyperparameters_per_task]]\
+                .to_dict('records')
+        return best_hps
