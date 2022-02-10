@@ -229,8 +229,8 @@ def load_experiments_df(
                         df[f"{k}-{i}"] = x
                 else:
                     df[k] = v[0]
-
-                v = v[0]
+            else:
+                df[k] = v
             df[k] = v
         metrics = experiment.tuner.scheduler.metric_names()
         if len(metrics) == 1:
