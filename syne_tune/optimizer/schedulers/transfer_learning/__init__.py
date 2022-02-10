@@ -1,9 +1,8 @@
-import pandas as pd
-import numpy as np
 from dataclasses import dataclass
 from typing import Dict, List
 
-from syne_tune.optimizer.scheduler import TrialScheduler
+import numpy as np
+import pandas as pd
 
 
 @dataclass
@@ -40,7 +39,7 @@ class TransferLearningTaskEvaluations:
         return matches[0]
 
 
-class TransferLearningScheduler(TrialScheduler):
+class TransferLearningMixin:
 
     def __init__(
             self,
@@ -49,17 +48,17 @@ class TransferLearningScheduler(TrialScheduler):
             metric_names: List[str],
     ):
         """
-        A scheduler that can levarages offline evaluations of related tasks.
+        A mixin that adds basic functionality for using offline evaluations.
         :param config_space: configuration space to be sampled from
         :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
         :param metric_names: name of the metric to be optimized.
         """
-        super(TransferLearningScheduler, self).__init__(config_space=config_space)
         self._check_consistency(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
             metric_names=metric_names,
         )
+        self._transfer_learning_evaluations = transfer_learning_evaluations
         self._metric_names = metric_names
 
     def _check_consistency(
@@ -79,3 +78,14 @@ class TransferLearningScheduler(TrialScheduler):
 
     def metric_names(self) -> List[str]:
         return self._metric_names
+
+    def get_top_k_hyperparameter_configurations_per_task(self, num_hyperparameters_per_task, mode, metric):
+        best_hps = []
+        for task, evaluation in self._transfer_learning_evaluations.items():
+            # average over seed and take last fidelity
+            avg_objective_last_fidelity = evaluation.objective_values(objective_name=metric).mean(axis=1)[:, -1]
+            best_hp_task_indices = avg_objective_last_fidelity.argsort()
+            if mode == 'max':
+                best_hp_task_indices = best_hp_task_indices[::-1]
+            best_hps.append(evaluation.hyperparameters.loc[best_hp_task_indices[:num_hyperparameters_per_task]])
+        return pd.concat(best_hps)

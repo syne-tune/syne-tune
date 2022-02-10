@@ -1,21 +1,20 @@
 import logging
 from typing import Dict, Callable, Optional
-import pandas as pd
 
 import syne_tune.search_space as sp
 from syne_tune.optimizer.scheduler import TrialScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningScheduler, TransferLearningTaskEvaluations
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningMixin, TransferLearningTaskEvaluations
 from syne_tune.search_space import Categorical
 
 
-class BoundingBox(TransferLearningScheduler):
+class BoundingBox(TransferLearningMixin, TrialScheduler):
     def __init__(
             self,
             scheduler_fun: Callable[[Dict, str, str], TrialScheduler],
             config_space: Dict,
             metric: str,
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            mode: Optional[str] = None,
+            mode: Optional[str] = 'min',
             num_hyperparameters_per_task: int = 1,
     ):
         """
@@ -40,48 +39,30 @@ class BoundingBox(TransferLearningScheduler):
         :param num_hyperparameters_per_task: number of best hyperparameter to take per task when computing the bounding
         box, default to 1.
         """
-        self._check_consistency(
-            config_space=config_space,
-            transfer_learning_evaluations=transfer_learning_evaluations,
-            metric_names=[metric],
-        )
-        self.mode = mode if mode is not None else "min"
+        super().__init__(config_space=config_space,
+                         transfer_learning_evaluations=transfer_learning_evaluations,
+                         metric_names=[metric])
+        assert mode in ['min', 'max'], "mode must be either 'min' or 'max'."
 
-        new_config_space = self.compute_box(
+        config_space = self.compute_box(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
-            mode=self.mode,
+            mode=mode,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
             metric=metric
         )
-        self.config_space = new_config_space
-        print(f"hyperparameter ranges of best previous configurations {new_config_space}")
-        print(f"({sp.search_space_size(new_config_space)} options)")
-        self.scheduler = scheduler_fun(new_config_space, mode, metric)
-        super(BoundingBox, self).__init__(
-            config_space=new_config_space,
-            transfer_learning_evaluations=transfer_learning_evaluations,
-            metric_names=[metric],
-        )
+        print(f"hyperparameter ranges of best previous configurations {config_space}")
+        print(f"({sp.search_space_size(config_space)} options)")
+        self.scheduler = scheduler_fun(config_space, mode, metric)
 
-    @staticmethod
-    def compute_box(
-            config_space: Dict,
-            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            mode: str,
-            num_hyperparameters_per_task: int,
-            metric: str
-    ) -> Dict:
-        # find the best hyperparameters on all tasks
-        best_hps = []
-        for task, evaluation in transfer_learning_evaluations.items():
-            # average over seed and take last fidelity
-            avg_objective_last_fidelity = evaluation.objective_values(objective_name=metric).mean(axis=1)[:, -1]
-            best_hp_task_indices = avg_objective_last_fidelity.argsort()
-            if mode == 'max':
-                best_hp_task_indices = best_hp_task_indices[::-1]
-            best_hps.append(evaluation.hyperparameters.loc[best_hp_task_indices[:num_hyperparameters_per_task]])
-        hp_df = pd.concat(best_hps)
+    def compute_box(self,
+                    config_space: Dict,
+                    transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+                    mode: str,
+                    num_hyperparameters_per_task: int,
+                    metric: str
+                    ) -> Dict:
+        hp_df = self.get_top_k_hyperparameter_configurations_per_task(num_hyperparameters_per_task, mode, metric)
 
         # compute bounding-box on all hyperparameters that are numerical or categorical
         new_config_space = {}
