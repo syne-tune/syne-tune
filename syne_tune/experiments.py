@@ -223,7 +223,13 @@ def load_experiments_df(
         df["scheduler"] = scheduler_name(experiment.tuner.scheduler)
         df["backend"] = experiment.tuner.backend.__class__.__name__
         for k, v in experiment.metadata.items():
-            if isinstance(v, list) and len(v) == 1:
+            if isinstance(v, List):
+                if len(v) > 1:
+                    for i, x in enumerate(v):
+                        df[f"{k}-{i}"] = x
+                else:
+                    df[k] = v[0]
+
                 v = v[0]
             df[k] = v
         metrics = experiment.tuner.scheduler.metric_names()
