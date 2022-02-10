@@ -64,7 +64,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
                     num_hyperparameters_per_task: int,
                     metric: str
                     ) -> Dict:
-        top_k_per_task = self.get_top_k_hyperparameter_configurations_per_task(
+        top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
             mode=mode,
