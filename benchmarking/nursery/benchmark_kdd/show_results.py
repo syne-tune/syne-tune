@@ -64,13 +64,13 @@ class PlotArgs:
 
 
 plot_range = {
-    "fcnet-naval": PlotArgs(50, None, 0.0, 4e-3),
-    "fcnet-parkinsons": PlotArgs(0, None, 0.0, 0.1),
-    "fcnet-protein": PlotArgs(xmin=0, ymin=0.225, ymax=0.35),
-    "fcnet-slice": PlotArgs(50, None, 0.0, 0.004),
-    "nas201-ImageNet16-120": PlotArgs(1000, None, None, 0.8),
-    "nas201-cifar10": PlotArgs(2000, None, 0.05, 0.15),
-    "nas201-cifar100": PlotArgs(3000, None, 0.26, 0.35),
+    "fcnet-naval": PlotArgs(50, 1200, 0.0, 4e-3),
+    "fcnet-parkinsons": PlotArgs(0, 1200, 0.0, 0.1),
+    "fcnet-protein": PlotArgs(xmin=0, xmax=1200, ymin=0.225, ymax=0.35),
+    "fcnet-slice": PlotArgs(50, 1200, 0.0, 0.004),
+    "nas201-ImageNet16-120": PlotArgs(1000, 21000, None, 0.8),
+    "nas201-cifar10": PlotArgs(2000, 21000, 0.05, 0.15),
+    "nas201-cifar100": PlotArgs(3000, 21000, 0.26, 0.35),
 }
 
 
