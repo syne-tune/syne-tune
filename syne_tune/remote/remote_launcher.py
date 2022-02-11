@@ -28,6 +28,8 @@ from syne_tune.constants import ST_REMOTE_UPLOAD_DIR_NAME
 
 import syne_tune
 
+logger = logging.getLogger(__name__)
+
 
 class RemoteLauncher:
     def __init__(
@@ -127,7 +129,7 @@ class RemoteLauncher:
         # Save entrypoint script and content in a folder to be send by sagemaker.
         # This is required so that the entrypoint is found on Sagemaker.
         source_dir = str(self.get_source_dir())
-        logging.info(f"copy endpoint files from {source_dir} to {upload_dir}")
+        logger.info(f"copy endpoint files from {source_dir} to {upload_dir}")
         shutil.copytree(source_dir, upload_dir)
 
         backup = str(self.tuner.backend.entrypoint_path())
@@ -149,7 +151,7 @@ class RemoteLauncher:
             pass
         endpoint_requirements = self.tuner.backend.entrypoint_path().parent / "requirements.txt"
         if endpoint_requirements.exists():
-            logging.info(f"copy endpoint script requirements to {self.remote_script_dir()}")
+            logger.info(f"copy endpoint script requirements to {self.remote_script_dir()}")
             shutil.copy(endpoint_requirements, tgt_requirement)
             pass
 
@@ -184,7 +186,7 @@ class RemoteLauncher:
         # todo add Sagemaker cloudwatch metrics to visualize live results of tuning best results found over time.
         if self.instance_type != "local":
             checkpoint_s3_root = f"{self.s3_path}/"
-            logging.info(f"Tuner will checkpoint results to {checkpoint_s3_root}{self.tuner.name}")
+            logger.info(f"Tuner will checkpoint results to {checkpoint_s3_root}{self.tuner.name}")
         else:
             # checkpointing is not supported in local mode. When using local mode with remote tuner (for instance for
             # debugging), results are not stored.
@@ -241,18 +243,18 @@ class RemoteLauncher:
         region_name = boto3.Session().region_name
         image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
         try:
-            logging.info(f"Fetching Syne Tune image {image_uri}")
+            logger.info(f"Fetching Syne Tune image {image_uri}")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
         except Exception:
             # todo RepositoryNotFoundException should be caught but I did not manage to import it
-            logging.warning(
+            logger.warning(
                 f"Docker-image of syne-tune {docker_image_name} could not be found, run \n"
                 f"`cd {Path(__file__).parent}/container; bash build_syne_tune_container.sh`\n"
                 f"in a terminal to build it. Trying to do it now."
             )
             subprocess.run("./build_syne_tune_container.sh",
                            cwd=Path(syne_tune.__path__[0]).parent / "container")
-            logging.info(f"attempting to fetch {docker_image_name} again.")
+            logger.info(f"attempting to fetch {docker_image_name} again.")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
 
         return image_uri
