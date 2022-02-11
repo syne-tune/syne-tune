@@ -122,13 +122,8 @@ def scheduler_factory(
                     cost_attr = benchmark[k]
                     break
             if cost_attr is not None:
-                if scheduler == 'hyperband_cost_promotion':
-                    if 'rung_system_kwargs' in scheduler_options:
-                        scheduler_options['rung_system_kwargs'][
-                            'cost_attr'] = cost_attr
-                    else:
-                        scheduler_options['rung_system_kwargs'] = {
-                            'cost_attr': cost_attr}
+                if scheduler.startswith('hyperband'):
+                    scheduler_options['cost_attr'] = cost_attr
                 if searcher.startswith('bayesopt_cost'):
                     search_options['cost_attr'] = cost_attr
         k = 'points_to_evaluate'

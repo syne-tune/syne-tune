@@ -12,7 +12,8 @@
 # permissions and limitations under the License.
 from benchmarking.blackbox_repository.conversion_scripts.scripts.fcnet_import \
     import METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, \
-    BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE
+    BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE, NUM_UNITS_1, \
+    NUM_UNITS_2
 
 
 DATASET_NAMES = [
@@ -54,7 +55,39 @@ def nashpobench_benchmark(params):
         'elapsed_time_attr': METRIC_ELAPSED_TIME,
         'max_resource_attr': 'epochs',
         'config_space': config_space,
-        'cost_model': None,
+        'cost_model': get_cost_model(params),
         'supports_simulated': True,
         'blackbox_name': BLACKBOX_NAME,
     }
+
+
+# See Table 1 in https://arxiv.org/abs/1905.04970
+_NUM_FEATURES = {
+    'protein_structure': 9,
+    'naval_propulsion': 15,
+    'parkinsons_telemonitoring': 20,
+    'slice_localization': 385,
+}
+
+
+def get_cost_model(params):
+    """
+    This cost model ignores the batch size, but depends on the number of units
+    in the two layers only.
+    """
+    try:
+        from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
+            import FixedLayersMLPCostModel
+
+        num_inputs = _NUM_FEATURES[params['dataset_name']]
+        num_outputs = 1  # All benchmarks are regression problems
+        num_units_keys = [NUM_UNITS_1, NUM_UNITS_2]
+        expected_hidden_layer_width, exp_vals = \
+            FixedLayersMLPCostModel.get_expected_hidden_layer_width(
+                CONFIGURATION_SPACE, num_units_keys)
+        return FixedLayersMLPCostModel(
+            num_inputs=num_inputs, num_outputs=num_outputs,
+            num_units_keys=num_units_keys,
+            expected_hidden_layer_width=expected_hidden_layer_width)
+    except Exception:
+        return None
