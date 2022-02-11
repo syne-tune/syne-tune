@@ -82,18 +82,26 @@ class BlackboxOffline(Blackbox):
         # todo: we should check range configuration with configspaces
         # query the configuration in the list of available ones
         key_dict = configuration
-        if self.fidelity_space is not None:
-            key_dict.update(fidelity)
         if self.seed_col is not None:
             key_dict[self.seed_col] = seed
-        key = tuple(key_dict[col] for col in self.index_cols)
-        try:
-            return dict(self.df.loc[key, self.metric_cols])
-        except KeyError:
+        if self.fidelity_space is not None and fidelity is not None:
+            key_dict.update(fidelity)
+        if self.fidelity_space is not None and fidelity is None:
+            keys = tuple(set(self.index_cols) - set(self.fidelity_space.keys()))
+        else:
+            keys = self.index_cols
+        output = self.df.xs(tuple(key_dict[col] for col in keys), level=keys).loc[:, self.metric_cols]
+        if len(output) == 0:
             raise ValueError(
                 f"the hyperparameter {configuration} is not present in available evaluations. Use `add_surrogate(blackbox)` if"
                 f" you want to add interpolation or a surrogate model that support querying any configuration."
             )
+        if fidelity is not None or self.fidelity_space is None:
+            return output.iloc[0].to_dict()
+        else:
+            # TODO select only the fidelity values in the self.fidelity_space, since it might be the case there are more
+            #  values in the dataframe. Then the output tensor has larger number of elements than expected num_fidelities.
+            return output.to_numpy()
 
     def __str__(self):
         stats = {
