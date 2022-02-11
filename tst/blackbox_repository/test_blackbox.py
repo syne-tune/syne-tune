@@ -142,10 +142,10 @@ def test_blackbox_offline_fidelities():
         for u, v in zip(x1, x2):
             res = blackbox.objective_function({"hp_x1": u, "hp_x2": v}, fidelity=1)
             assert res['metric_rmse'] == u * v
-        for u, v in zip(x1, x2):
+            
             res = blackbox.objective_function({"hp_x1": u, "hp_x2": v}, fidelity=2)
             assert res['metric_rmse'] == 0.5 * u * v
-        for u, v in zip(x1, x2):
+            
             res = blackbox.objective_function({"hp_x1": u, "hp_x2": v}, fidelity=None)
             # Returns a tensor with shape (num_fidelities, num_objectives)
             assert res.shape == (2, 1)
