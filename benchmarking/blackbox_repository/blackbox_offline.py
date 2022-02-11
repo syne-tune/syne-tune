@@ -84,12 +84,9 @@ class BlackboxOffline(Blackbox):
         key_dict = configuration
         if self.seed_col is not None:
             key_dict[self.seed_col] = seed
-        if fidelity is not None:
-            if self.fidelity_space is not None:
-                key_dict.update(fidelity)
-            else:
-                raise ValueError("fidelity is not None and self.fidelity_space is None.")
-        if fidelity is None and self.fidelity_space is not None:
+        if self.fidelity_space is not None and fidelity is not None:
+            key_dict.update(fidelity)
+        if self.fidelity_space is not None and fidelity is None:
             keys = tuple(set(self.index_cols) - set(self.fidelity_space.keys()))
         else:
             keys = self.index_cols
@@ -99,12 +96,12 @@ class BlackboxOffline(Blackbox):
                 f"the hyperparameter {configuration} is not present in available evaluations. Use `add_surrogate(blackbox)` if"
                 f" you want to add interpolation or a surrogate model that support querying any configuration."
             )
-        if fidelity is not None:
+        if fidelity is not None or self.fidelity_space is None:
             return output.iloc[0].to_dict()
         else:
             # TODO select only the fidelity values in the self.fidelity_space, since it might be the case there are more
             #  values in the dataframe. Then the output tensor has larger number of elements than expected num_fidelities.
-            return output
+            return output.to_numpy()
 
     def __str__(self):
         stats = {
