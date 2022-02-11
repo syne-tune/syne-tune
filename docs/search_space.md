@@ -51,8 +51,9 @@ means, a basic component of many HPO algorithms. The following domains are curre
 * `lograndint(lower, upper)`: Integer log-uniform in
   `lower, ..., upper`. More precisely, the value is `int(round(exp(x)))`, where
   `x` is drawn uniformly in `[log(lower - 0.5), log(upper + 0.5)]`
-* `choice(categories)`: Uniform from the finite list `categories` of `str`
-  values
+* `choice(categories)`: Uniform from the finite list `categories` of values.
+  Entries in `categories` should ideally be of type `str`, but types `int` and
+  `float` are also allowed (the latter can lead to errors due to round-off)
 * `finrange(lower, upper, size)`: Can be used as finite analogue of `uniform`.
   Uniform from the finite range `lower, ..., upper` of size `size`, where
   entries are equally spaced. For example, `finrange(0.5, 1.5, 3)` means
