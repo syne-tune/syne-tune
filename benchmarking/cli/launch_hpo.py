@@ -283,10 +283,20 @@ if __name__ == '__main__':
                 seed = params.get('blackbox_seed')
                 if seed is not None:
                     logger.info(f"Using blackbox with blackbox_seed = {seed}")
+                surrogate = benchmark.get('surrogate')
+                if surrogate is not None:
+                    # If a surrogate is given, it interpolates the tabulated
+                    # blackbox to the configuration space of the benchmark,
+                    # which often has numerical domains where the tabulated
+                    # benchmark has categorical ones
+                    config_space_surrogate = benchmark['config_space']
+                else:
+                    config_space_surrogate = None
                 backend_kwargs.update({
                     'blackbox_name': blackbox_name,
                     'dataset': params.get('dataset_name'),
-                    'surrogate': benchmark.get('surrogate'),
+                    'surrogate': surrogate,
+                    'config_space_surrogate': config_space_surrogate,
                     'time_this_resource_attr': benchmark.get(
                         'time_this_resource_attr'),
                     'max_resource_attr': benchmark.get('max_resource_attr'),

@@ -151,7 +151,7 @@ class RemoteLauncher:
             pass
         endpoint_requirements = self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
         if endpoint_requirements.exists():
-            logger.info(f"copy endpoint script requirements to {self.remote_script_dir()}")
+            logger.info(f"copy endpoint script requirements {endpoint_requirements} to {self.remote_script_dir()}")
             shutil.copy(endpoint_requirements, tgt_requirement)
             pass
 

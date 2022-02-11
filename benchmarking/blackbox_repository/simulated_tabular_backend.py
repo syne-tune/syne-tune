@@ -14,6 +14,9 @@ from pathlib import Path
 from typing import List, Optional
 import logging
 import numpy as np
+from sklearn.base import clone
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 from benchmarking.blackbox_repository import load, add_surrogate
 from benchmarking.blackbox_repository.blackbox import Blackbox
@@ -22,6 +25,7 @@ from benchmarking.blackbox_repository.utils import metrics_for_configuration
 
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
+from syne_tune.search_space import to_dict, from_dict, Domain
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +163,32 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         return status, results
 
 
+def blackbox_surrogate_factory(surrogate):
+    """
+    Factory which creates surrogates from names. This is useful to avoid
+    serialization/deserialization issues with :class:`RemoteLauncher`, because
+    the scikit-learn estimator is created only where it is used.
+
+    Note: If `surrogate` is not a string (i.e., already a scikit-learn
+    estimator), it is just passed through. This allows
+    :class:`BlackboxSurrogate` to be used with scikit-learn estimators
+    directly.
+
+    :param surrogate: Name of supported surrogate, or scikit-learn estimator
+    :return: Scikit-learn estimator
+    """
+    if isinstance(surrogate, str):
+        if surrogate.startswith('nn-'):
+            n_neighbors = int(surrogate[len('nn-'):])
+            return KNeighborsRegressor(n_neighbors=n_neighbors)
+        elif surrogate == 'random_forest':
+            return RandomForestRegressor(max_samples=0.005, bootstrap=True)
+        else:
+            raise ValueError(f"surrogate = {surrogate} not supported")
+    else:
+        return surrogate
+
+
 class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
 
     def __init__(
@@ -170,6 +200,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             seed: Optional[int] = None,
             dataset: Optional[str] = None,
             surrogate=None,
+            config_space_surrogate=None,
             **simulatorbackend_kwargs,
     ):
         """
@@ -183,12 +214,25 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         :param time_this_resource_attr:
         :param max_resource_attr:
         :param dataset: Selects different versions of the blackbox
-        :param surrogate: optionally, a model that is fitted to predict objectives given any configuration.
-        Possible examples: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator obeying Scikit-learn API.
-        The model is fit on top of pipeline that applies basic feature-processing to convert hyperparameters
-        rows in X to vectors. The configuration_space hyperparameters types are used to deduce the types of columns in
-         X (for instance CategoricalHyperparameter are one-hot encoded).
+        :param surrogate: optionally, a model that is fitted to predict objectives
+            given any configuration. Can be any scikit-learn estimator for a
+            regressor. The model is fit on top of pipeline that applies basic
+            feature-processing to convert hyperparameters rows in X to vectors.
+            The configuration_space hyperparameters types are used to deduce the
+            types of columns in X (for instance CategoricalHyperparameter are
+            one-hot encoded).
+            `surrogate` can also be a string, in which case
+            `blackbox_surrogate_factory` is used. This should be preferred when
+            using :class:`RemoteLauncher`, in order to avoid problems due to
+            serialization and deserialization of scikit-learn estimators.
+        :param config_space_surrogate: if `surrogate` is given, this is the
+            configuration space for the surrogate blackbox. If not given, the
+            space of the original blackbox is used. However, if this is a tabular
+            blackbox, its numerical parameters have categorical domains, which is
+            usually not what we want for a surrogate.
         """
+        assert config_space_surrogate is None or surrogate is not None, \
+            "config_space_surrogate only together with surrogate"
         super().__init__(
             elapsed_time_attr=elapsed_time_attr,
             time_this_resource_attr=time_this_resource_attr,
@@ -199,6 +243,21 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self.dataset = dataset
         self._blackbox = None
         self._surrogate = surrogate
+        if config_space_surrogate is not None:
+            self._config_space_surrogate = {
+                k: v for k, v in config_space_surrogate.items()
+                if isinstance(v, Domain)}
+        else:
+            self._config_space_surrogate = None
+        # This is needed for serialization. The fitted surrogate can be very
+        # large
+        self._set_surrogate_not_fitted()
+
+    def _set_surrogate_not_fitted(self):
+        if self._surrogate is None or isinstance(self._surrogate, str):
+            self._surrogate_not_fitted = self._surrogate
+        else:
+            self._surrogate_not_fitted = clone(self._surrogate)
 
     @property
     def blackbox(self) -> Blackbox:
@@ -212,14 +271,21 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             else:
                 self._blackbox = load(self.blackbox_name)[self.dataset]
             if self._surrogate is not None:
-                self._blackbox = add_surrogate(self._blackbox, surrogate=self._surrogate)
+                self._surrogate = blackbox_surrogate_factory(self._surrogate)
+                self._blackbox = add_surrogate(
+                    blackbox=self._blackbox,
+                    surrogate=self._surrogate,
+                    config_space=self._config_space_surrogate)
 
         return self._blackbox
 
     def __getstate__(self):
-        # we serialize only required metadata information since the blackbox data is contained in the repository and
-        # its raw data does not need to be saved.
-        return {
+        # we serialize only required metadata information since the blackbox data
+        # is contained in the repository and its raw data does not need to be
+        # saved.
+        # Note that we serialize `_surrogate_not_fitted`, because `_surrogate`
+        # can be as large as the data.
+        state = {
             'elapsed_time_attr': self.elapsed_time_attr,
             'time_this_resource_attr': self._time_this_resource_attr,
             'max_resource_attr': self._max_resource_attr,
@@ -228,8 +294,13 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             'simulatorbackend_kwargs': self.simulatorbackend_kwargs,
             'blackbox_name': self.blackbox_name,
             'dataset': self.dataset,
-            'surrogate': self._surrogate,
+            'surrogate': self._surrogate_not_fitted,
         }
+        if self._config_space_surrogate is not None:
+            state['config_space_surrogate'] = {
+                k: to_dict(v)
+                for k, v in self._config_space_surrogate.items()}
+        return state
 
     def __setstate__(self, state):
         super().__init__(
@@ -243,7 +314,12 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self.blackbox_name = state['blackbox_name']
         self.dataset = state['dataset']
         self._surrogate = state['surrogate']
+        self._set_surrogate_not_fitted()
         self._blackbox = None
+        if 'config_space_surrogate' in state:
+            self._config_space_surrogate = {
+                k: from_dict(v)
+                for k, v in state['config_space_surrogate'].items()}
 
 
 class UserBlackboxBackend(_BlackboxSimulatorBackend):

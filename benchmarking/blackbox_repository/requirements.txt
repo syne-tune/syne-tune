@@ -4,3 +4,4 @@ fastparquet
 s3fs
 sklearn
 h5py # note: only needed for fcnet
+scikit-learn>0.21.3
