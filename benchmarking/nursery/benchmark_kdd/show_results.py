@@ -370,7 +370,7 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = No
     ]]
 
     print(df_ranks.to_string())
-    print(df_ranks.to_latex(float_format="%.2f"))
+    print(pd.DataFrame(df_ranks).T.to_latex(float_format="%.2f"))
 
 
 def load_and_cache(experiment_tag: str, load_cache_if_exists: bool = True, methods_to_show=None):
