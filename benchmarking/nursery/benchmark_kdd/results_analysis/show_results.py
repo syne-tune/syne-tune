@@ -37,11 +37,12 @@ if __name__ == '__main__':
     experiment_tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
 
-    load_cache_if_exists = False
+    load_cache_if_exists = True
 
     # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
     methods_to_show = list(method_styles.keys())
     benchmarks_to_df = load_and_cache(load_cache_if_exists=load_cache_if_exists, experiment_tag=experiment_tag, methods_to_show=methods_to_show)
+
     for bench, df_ in benchmarks_to_df.items():
         df_methods = df_.algorithm.unique()
         for x in methods_to_show:
@@ -50,4 +51,15 @@ if __name__ == '__main__':
 
     plot_results(benchmarks_to_df, method_styles)
 
+    methods_to_show = [
+        'RS',
+        'REA',
+        'GP',
+        'RS-MSR',
+        'BOHB',
+        'HB',
+        'MOBSTER',
+        'HB-BB',
+        'HB-CTS',
+    ]
     print_rank_table(benchmarks_to_df, methods_to_show)

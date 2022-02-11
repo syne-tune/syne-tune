@@ -126,71 +126,6 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
 def plot_result_benchmark(
         df_task,
         title: str,
-        colors: Dict,
-        show_seeds: bool = False,
-        methods_to_show: Optional[List[str]] = None,
-):
-    agg_results = {}
-    if len(df_task) > 0:
-        metric = df_task.loc[:, 'metric_names'].values[0]
-        mode = df_task.loc[:, 'metric_mode'].values[0]
-
-        fig, ax = plt.subplots()
-        if methods_to_show is None:
-            methods_to_show = sorted(df_task.algorithm.unique())
-        for algorithm in methods_to_show:
-            ts = []
-            ys = []
-
-            df_scheduler = df_task[df_task.algorithm == algorithm]
-            if len(df_scheduler) == 0:
-                continue
-            for i, tuner_name in enumerate(df_scheduler.tuner_name.unique()):
-                sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
-                sub_df = sub_df.sort_values(ST_TUNER_TIME)
-                t = sub_df.loc[:, ST_TUNER_TIME].values
-                y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:,
-                                                                                     metric].cummin().values
-                if show_seeds:
-                    ax.plot(t, y_best, color=colors[algorithm], alpha=0.2)
-                ts.append(t)
-                ys.append(y_best)
-
-            # compute the mean/std over time-series of different seeds at regular time-steps
-            # start/stop at respectively first/last point available for all seeds
-            t_min = max(tt[0] for tt in ts)
-            t_max = min(tt[-1] for tt in ts)
-            if t_min > t_max:
-                continue
-            t_range = np.linspace(t_min, t_max)
-
-            # find the best value at each regularly spaced time-step from t_range
-            y_ranges = []
-            for t, y in zip(ts, ys):
-                indices = np.searchsorted(t, t_range, side="left")
-                y_range = y[indices]
-                y_ranges.append(y_range)
-            y_ranges = np.stack(y_ranges)
-
-            mean = y_ranges.mean(axis=0)
-            std = y_ranges.std(axis=0)
-            ax.fill_between(
-                t_range, mean - std, mean + std,
-                color=colors[algorithm], alpha=0.1,
-            )
-            ax.plot(t_range, mean, color=colors[algorithm], label=algorithm)
-            agg_results[algorithm] = mean
-
-        ax.set_xlabel("wallclock time")
-        ax.set_ylabel(metric)
-        ax.legend()
-        ax.set_title(title)
-    return ax, t_range, agg_results
-
-
-def plot_result_benchmark(
-        df_task,
-        title: str,
         show_seeds: bool = False,
         method_styles: Optional[Dict] = None,
 ):
@@ -280,14 +215,17 @@ def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix:
         plt.show()
 
 
-def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = None):
+def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
     def get_results(df_task):
         seed_results = {}
         if len(df_task) > 0:
             metric = df_task.loc[:, 'metric_names'].values[0]
             mode = df_task.loc[:, 'metric_mode'].values[0]
 
-            for algorithm in sorted(df_task.algorithm.unique()):
+            t_max = df_task.loc[:, ST_TUNER_TIME].max()
+            t_range = np.linspace(0, t_max, 10)
+
+            for algorithm in methods_to_show:
                 ts = []
                 ys = []
 
@@ -301,20 +239,14 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = No
                     ts.append(t)
                     ys.append(y_best)
 
-                # compute the mean/std over time-series of different seeds at regular time-steps
-                # start/stop at respectively first/last point available for all seeds
-                t_min = max(tt[0] for tt in ts)
-                t_max = min(tt[-1] for tt in ts)
-                if t_min > t_max:
-                    continue
-                t_range = np.linspace(t_min, t_max, 10)
-
-                # find the best value at each regularly spaced time-step from t_range
+                # for each seed, find the best value at each regularly spaced time-step
                 y_ranges = []
                 for t, y in zip(ts, ys):
                     indices = np.searchsorted(t, t_range, side="left")
-                    y_range = y[indices]
+                    y_range = y[np.clip(indices, 0, len(y) - 1)]
                     y_ranges.append(y_range)
+
+                # (num_seeds, num_time_steps)
                 y_ranges = np.stack(y_ranges)
 
                 seed_results[algorithm] = y_ranges
@@ -322,7 +254,7 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = No
         # seed_results shape (num_seeds, num_time_steps)
         return t_range, seed_results
 
-    benchmark_results = {}
+    benchmark_results = []
     for benchmark, df_task in tqdm(list(benchmarks_to_df.items())):
         # (num_seeds, num_time_steps)
         _, seed_results_dict = get_results(df_task)
@@ -335,37 +267,29 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = No
         # (num_methods, num_min_seeds, num_time_steps)
         seed_results = np.stack([x[:min_num_seeds] for x in seed_results_dict.values()])
 
-        num_methods = len(seed_results)
-        seed_results = seed_results.reshape(num_methods, -1)
-
-        # (num_methods, num_min_seeds, num_time_steps)
-        ranks = QuantileTransformer().fit_transform(seed_results)
-        ranks = ranks.reshape(num_methods, min_num_seeds, -1)
-
-        # (num_methods, num_min_seeds)
-        benchmark_results[benchmark] = ranks.mean(axis=-1)
+        benchmark_results.append(seed_results)
 
     # take the minimum number of seeds in case some are missing
-    min_num_seeds = min(x.shape[1] for x in benchmark_results.values())
+    min_num_seeds = min([x.shape[1] for x in benchmark_results])
+    benchmark_results = np.stack([b[:, :min_num_seeds, :] for b in benchmark_results])
 
-    # (num_bench, num_methods, num_min_seeds)
-    ranks = np.stack([x[:, :min_num_seeds] for x in benchmark_results.values()])
+    # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
+    return np.stack(benchmark_results)
 
-    methods = sorted(df_task.algorithm.unique())
 
-    df_ranks = pd.Series(ranks.mean(axis=-1).mean(axis=0), index=methods)
+def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
+    # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
+    benchmark_results = compute_best_value_over_time(benchmarks_to_df, methods_to_show)
+
+    # (num_methods, num_benchmarks, num_min_seeds, num_time_steps)
+    benchmark_results = benchmark_results.swapaxes(0, 1)
+
+    # (num_methods, num_benchmarks * num_min_seeds * num_time_steps)
+    ranks = QuantileTransformer().fit_transform(benchmark_results.reshape(len(benchmark_results), -1))
+
+    df_ranks = pd.Series(ranks.mean(axis=-1), index=methods_to_show)
     df_ranks_std = ranks.std(axis=-1).mean(axis=0)
-    df_ranks = df_ranks[[
-        'RS',
-        'REA',
-        'GP',
-        'RS-MSR',
-        'BOHB',
-        'HB',
-        'MOBSTER',
-        'HB-BB',
-        'HB-CTS',
-    ]]
+    df_ranks = df_ranks[methods_to_show]
 
     print(df_ranks.to_string())
     print(pd.DataFrame(df_ranks).T.to_latex(float_format="%.2f"))
