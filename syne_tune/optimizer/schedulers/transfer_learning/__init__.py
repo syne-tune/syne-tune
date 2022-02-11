@@ -77,8 +77,7 @@ class TransferLearningMixin:
         :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
         :param metric_names: name of the metric to be optimized.
         """
-        super().__init__(config_space=config_space,
-                         **kwargs)
+        super().__init__(config_space=config_space, **kwargs)
         self._check_consistency(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
