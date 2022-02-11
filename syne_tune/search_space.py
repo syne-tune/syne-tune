@@ -609,6 +609,7 @@ class FiniteRange(Domain):
         self.upper = upper
         self.log_scale = log_scale
         self.cast_int = cast_int
+        self.size = size
         if not log_scale:
             self._lower_internal = lower
             self._step_internal = (upper - lower) / (size - 1)
@@ -935,22 +936,34 @@ def config_to_match_string(config: Dict, config_space: Dict, keys: List[str]) ->
 
 
 def to_dict(x: "Domain") -> Dict:
-    domain_kwargs = {k: v for k, v in x.__dict__.items() if k != 'sampler'}
-    return {
+    """
+    We assume that for each `Domain` subclass, the `__init__` kwargs are
+    also members, and all other members start with `_`.
+
+    """
+    domain_kwargs = {
+        k: v for k, v in x.__dict__.items()
+        if k != 'sampler' and not k.startswith('_')}
+    result = {
         "domain_cls": x.__class__.__name__,
         "domain_kwargs": domain_kwargs,
-        "sampler_cls": str(x.sampler),
-        "sampler_kwargs": x.get_sampler().__dict__
     }
+    sampler = x.get_sampler()
+    if sampler is not None:
+        result.update({
+            "sampler_cls": str(sampler),
+            "sampler_kwargs": sampler.__dict__
+        })
+    return result
 
 
 def from_dict(d: Dict) -> Domain:
     domain_cls = getattr(sys.modules[__name__], d["domain_cls"])
     domain_kwargs = d["domain_kwargs"]
-    sampler_cls = getattr(domain_cls, "_" + d["sampler_cls"])
-    sampler_kwargs = d["sampler_kwargs"]
-
     domain = domain_cls(**domain_kwargs)
-    sampler = sampler_cls(**sampler_kwargs)
-    domain.set_sampler(sampler)
+    if "sampler_cls" in d:
+        sampler_cls = getattr(domain_cls, "_" + d["sampler_cls"])
+        sampler_kwargs = d["sampler_kwargs"]
+        sampler = sampler_cls(**sampler_kwargs)
+        domain.set_sampler(sampler)
     return domain
