@@ -1,24 +1,17 @@
-# %%
-import logging
-import os
-from argparse import ArgumentParser
-
 import dill
 from sklearn.preprocessing import QuantileTransformer
 from tqdm import tqdm
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import pandas as pd
 from datetime import datetime
-from matplotlib import cm
 import matplotlib.pyplot as plt
 import numpy as np
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import get_metadata, load_experiments_df
 
-# %%
 from syne_tune.util import catchtime
 
 rs_color = "blue"
@@ -81,8 +74,11 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
             return False
         if benchmark is not None and metadata['benchmark'] != benchmark:
             return False
-        if tag is not None and metadata['tag'] != tag:
-            return False
+        if tag is not None:
+            if not isinstance(tag, list):
+                tag = [tag]
+            if not metadata['tag'] in tag:
+                return False
         if date_min is None or date_max is None:
             return True
         else:
@@ -91,7 +87,9 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
 
     metadatas = get_metadata()
     if tag is not None:
-        metadatas = {k: v for k, v in metadatas.items() if v.get("tag") == tag}
+        if not isinstance(tag, list):
+            tag = [tag]
+        metadatas = {k: v for k, v in metadatas.items() if v.get("tag") in tag}
     # only select metadatas that contain the fields we are interested in
     metadatas = {
         k: v for k, v in metadatas.items()
@@ -373,9 +371,9 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]] = No
     print(pd.DataFrame(df_ranks).T.to_latex(float_format="%.2f"))
 
 
-def load_and_cache(experiment_tag: str, load_cache_if_exists: bool = True, methods_to_show=None):
+def load_and_cache(experiment_tag: Union[str, List[str]], load_cache_if_exists: bool = True, methods_to_show=None):
 
-    result_file = Path(f"~/Downloads/cached-results-{experiment_tag}.dill").expanduser()
+    result_file = Path(f"~/Downloads/cached-results-{str(experiment_tag)}.dill").expanduser()
     if load_cache_if_exists and result_file.exists():
         with catchtime(f"loading results from {result_file}"):
             with open(result_file, "rb") as f:
@@ -388,32 +386,3 @@ def load_and_cache(experiment_tag: str, load_cache_if_exists: bool = True, metho
             dill.dump(benchmarks_to_df, f)
 
     return benchmarks_to_df
-
-
-if __name__ == '__main__':
-    date_min = datetime.fromisoformat("2022-01-04")
-    date_max = datetime.fromisoformat("2023-01-04")
-
-    parser = ArgumentParser()
-    parser.add_argument(
-        "--experiment_tag", type=str, required=False, default="mahogany-snake",
-        help="the experiment tag that was displayed when running the experiment"
-    )
-    args, _ = parser.parse_known_args()
-    experiment_tag = args.experiment_tag
-    logging.getLogger().setLevel(logging.INFO)
-
-    load_cache_if_exists = True
-
-    # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
-    methods_to_show = list(method_styles.keys())
-    benchmarks_to_df = load_and_cache(load_cache_if_exists=load_cache_if_exists, experiment_tag=experiment_tag, methods_to_show=methods_to_show)
-    for bench, df_ in benchmarks_to_df.items():
-        df_methods = df_.algorithm.unique()
-        for x in methods_to_show:
-            if x not in df_methods:
-                logging.warning(f"method {x} not found in {bench}")
-
-    plot_results(benchmarks_to_df, method_styles)
-
-    print_rank_table(benchmarks_to_df, methods_to_show)

@@ -1,62 +1,20 @@
-from typing import Dict, Optional
-
 import numpy as np
 import itertools
 import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
-from benchmarking.blackbox_repository import load
 from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
 from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods
 from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
+from benchmarking.nursery.benchmark_kdd.benchmark_main import get_transfer_learning_evaluations
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from coolname import generate_slug
 
 
-def get_transfer_learning_evaluations(blackbox_name: str, test_task: str, n_evals: Optional[int] = None) -> Dict:
-    """
-    :param blackbox_name:
-    :param test_task:
-    :param n_evals: maximum number of evaluations to be returned
-    :return:
-    """
-    task_to_evaluations = load(blackbox_name)
-
-    # todo retrieve right metric
-    metric_index = 0
-    transfer_learning_evaluations = {
-        task: TransferLearningTaskEvaluations(
-            configuration_space=bb.configuration_space,
-            hyperparameters=bb.hyperparameters,
-            objectives_evaluations=bb.objectives_evaluations[..., metric_index:metric_index + 1],
-            objectives_names=[bb.objectives_names[metric_index]],
-        )
-        for task, bb in task_to_evaluations.items()
-        if task != test_task
-    }
-
-    if n_evals is not None:
-        # subsample n_evals / n_tasks of observations on each tasks
-        def subsample(transfer_evaluations: TransferLearningTaskEvaluations, n: int) -> TransferLearningTaskEvaluations:
-            random_indices = np.random.permutation(len(transfer_evaluations.hyperparameters))[:n]
-            return TransferLearningTaskEvaluations(
-                configuration_space=transfer_evaluations.configuration_space,
-                hyperparameters=transfer_evaluations.hyperparameters.loc[random_indices].reset_index(drop=True),
-                objectives_evaluations=transfer_evaluations.objectives_evaluations[random_indices],
-                objectives_names=transfer_evaluations.objectives_names,
-            )
-        n = n_evals // len(transfer_learning_evaluations)
-        transfer_learning_evaluations = {
-            task: subsample(transfer_evaluations, n)
-            for task, transfer_evaluations in transfer_learning_evaluations.items()
-        }
-
-    return transfer_learning_evaluations
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -67,21 +25,22 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
     num_seeds = args.num_seeds
-    method_names = [args.method] if args.method is not None else list(methods.keys())
+    method_names = ["HB-BB", "HB-CTS"]
     benchmark_names = [args.benchmark] if args.benchmark is not None else list(benchmark_definitions.keys())
 
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(logging.WARNING)
 
-    combinations = list(itertools.product(method_names, range(num_seeds), benchmark_names))
+    n_evals = [10, 100, 1000, 10000, 100000]
+    combinations = list(itertools.product(method_names, range(num_seeds), benchmark_names, n_evals))
 
     print(combinations)
-    for method, seed, benchmark_name in tqdm(combinations):
+    for method, seed, benchmark_name, n_evals in tqdm(combinations):
         np.random.seed(np.random.randint(0, 2 ** 32))
         benchmark = benchmark_definitions[benchmark_name]
 
-        print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
+        print(f"Starting experiment ({method}/{benchmark_name}/{seed}/{n_evals}) of {experiment_tag}")
 
         backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
@@ -90,7 +49,6 @@ if __name__ == '__main__':
             dataset=benchmark.dataset_name,
         )
 
-        # todo move into benchmark definition
         max_t = max(backend.blackbox.fidelity_values)
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
 
@@ -104,6 +62,7 @@ if __name__ == '__main__':
             transfer_learning_evaluations=get_transfer_learning_evaluations(
                 blackbox_name=benchmark.blackbox_name,
                 test_task=benchmark.dataset_name,
+                n_evals=n_evals,
             ),
         ))
 
@@ -118,12 +77,13 @@ if __name__ == '__main__':
             callbacks=[SimulatorCallback()],
             results_update_interval=600,
             print_update_interval=600,
-            tuner_name=f"{experiment_tag}-{method}-{seed}-{benchmark_name}".replace("_", "-"),
+            tuner_name=f"{experiment_tag}-{method}-{seed}-{benchmark_name}-{n_evals}".replace("_", "-"),
             metadata={
                 "seed": seed,
-                "algorithm": method,
+                "algorithm": f"{method} ({n_evals} evaluations)",
                 "tag": experiment_tag,
-                "benchmark": benchmark_name
+                "benchmark": benchmark_name,
+                "n_evals": n_evals,
             }
         )
         tuner.run()

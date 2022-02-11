@@ -1,29 +1,10 @@
-# %%
 import logging
-import os
 from argparse import ArgumentParser
-
-import dill
-from sklearn.preprocessing import QuantileTransformer
-from tqdm import tqdm
-
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
-import pandas as pd
 from datetime import datetime
 from matplotlib import cm
-import matplotlib.pyplot as plt
-import numpy as np
 
-from benchmarking.nursery.benchmark_kdd.show_results import generate_df_dict, plot_results, MethodSyle, \
-    multifidelity_style, rs_color, load_and_cache
-from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.experiments import get_metadata, load_experiments_df
-
-# %%
-from syne_tune.util import catchtime
-
+from benchmarking.nursery.benchmark_kdd.results_analysis.utils import MethodSyle, load_and_cache, plot_results
 
 show_seeds = False
 

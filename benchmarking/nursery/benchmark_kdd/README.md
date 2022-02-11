@@ -15,11 +15,10 @@ Which will run all combinations of methods/benchmark/seeds on your local compute
 
 Once all evaluations are done, you can pull results by running:
 
-```python benchmarking/nursery/benchmark_kdd/show_results.py --experiment_tag "my-new-experiment"``` 
+```python benchmarking/nursery/benchmark_kdd/results_analysis/show_results.py --experiment_tag "my-new-experiment"``` 
 
-you will obtain a plot like this one showing the confidence intervals of performance over time:
-
-![alt text](nas201-cifar100.png "Results")
+you will obtain a plot like showing the confidence intervals of performance over time of all methods on all benchmarks
+and also a table showing the average ranks of methods.
 
 You can also only run only one scheduler by doing `python benchmarking/nursery/benchmark_kdd/benchmark_main.py --method RS`, see
 `benchmark_main.py` to see all options supported.
