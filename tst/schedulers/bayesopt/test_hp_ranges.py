@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 
 from collections import Counter
+from distutils.command.config import config
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_almost_equal
@@ -317,3 +318,19 @@ def test_config_to_match_string(config1, config2, match):
     match_str2 = hp_ranges.config_to_match_string(_config2)
     assert (match_str1 == match_str2) == match, \
         f"match = {match}\nmatch_str1 = {match_str1}\nmatch_str2 = {match_str2}"
+
+
+def test_config_space_for_sampling():
+    config_space = {'0': uniform(0.0, 2.0)}
+    active_space = {'0': uniform(0.5, 1.5)}
+    hp_ranges = make_hyperparameter_ranges(
+        config_space=config_space, active_config_space=active_space
+    )
+    assert hp_ranges.config_space_for_sampling == active_space, \
+        "Active space should be used for sampling when specified."
+
+    hp_ranges = make_hyperparameter_ranges(
+        config_space=config_space
+    )
+    assert hp_ranges.config_space_for_sampling == config_space, \
+        "Incorrect config space is used for sampling."

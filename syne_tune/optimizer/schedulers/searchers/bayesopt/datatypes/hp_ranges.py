@@ -103,11 +103,11 @@ class HyperparameterRanges(ABC):
     def _set_active_config_space(self, active_config_space: Dict):
         if active_config_space is None:
             self.active_config_space = dict()
-            self._config_space_for_sampling = self.config_space
+            self.config_space_for_sampling = self.config_space
         else:
             self._assert_sub_config_space(active_config_space)
             self.active_config_space = active_config_space
-            self._config_space_for_sampling = dict(
+            self.config_space_for_sampling = dict(
                 self.config_space, **active_config_space)
 
     def _assert_sub_config_space(self, active_config_space: Dict):
@@ -168,7 +168,7 @@ class HyperparameterRanges(ABC):
 
     def _random_config(self, random_state: RandomState) -> Configuration:
         return {k: v.sample(random_state=random_state)
-                for k, v in self._config_space_for_sampling.items()}
+                for k, v in self.config_space_for_sampling.items()}
 
     def random_config(self, random_state: RandomState) -> Configuration:
         return self._transform_config(self._random_config(random_state))

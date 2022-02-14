@@ -40,7 +40,21 @@ For local development, we recommend to use the following setup which will enable
 pip install --upgrade pip
 git clone git@github.com:awslabs/syne-tune.git
 cd syne-tune
-pip install -e .[extra]
+pip install -e '.[extra]'
+```
+
+You may want to use environment management system such as Conda:
+```bash
+conda create -n syne-tune python=3.8
+conda activate syne-tune
+# run install comands here
+```
+
+To run unit tests, simply run `pytest` in the root of this repository.
+
+To run all tests whose name begins with `test_config_space_for_sampling`, you can use the following
+```bash
+pytest -k test_use_active_space_for_sampling
 ```
 
 ## How to enable tuning and tuning script conventions
