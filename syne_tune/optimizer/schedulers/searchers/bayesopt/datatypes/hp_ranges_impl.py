@@ -206,7 +206,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
 
         """
         super().__init__(name)
-        assert lower_bound < upper_bound
+        assert lower_bound <= upper_bound
         assert size >= 2
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
@@ -229,9 +229,12 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
                        self.upper_bound)
 
     def _map_to_int(self, y: float) -> int:
-        y_int = np.clip(self._scaling.to_internal(y), self._lower_internal,
-                        self._upper_internal)
-        return int(round((y_int - self._lower_internal) / self._step_internal))
+        if self._step_internal == 0:
+            return self.lower_bound
+        else:
+            y_int = np.clip(self._scaling.to_internal(y), self._lower_internal,
+                            self._upper_internal)
+            return int(round((y_int - self._lower_internal) / self._step_internal))
 
     def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
         return self._range_int.to_ndarray(self._map_to_int(hp))

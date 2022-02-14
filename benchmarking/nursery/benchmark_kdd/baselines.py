@@ -170,3 +170,5 @@ if __name__ == '__main__':
                     test_task=benchmark.dataset_name,
                 ),
             ))
+            scheduler.suggest(0)
+            scheduler.suggest(1)

@@ -597,9 +597,8 @@ class FiniteRange(Domain):
     equally spaced in linear or log domain.
 
     """
-    def __init__(self, lower: float, upper: float, size: int,
-                 log_scale: bool = False):
-        assert lower < upper
+    def __init__(self, lower: float, upper: float, size: int, log_scale: bool = False, cast_int: bool = False):
+        assert lower <= upper
         assert size >= 2
         if log_scale:
             assert lower > 0.0
@@ -607,6 +606,8 @@ class FiniteRange(Domain):
         self.lower = lower
         self.upper = upper
         self.log_scale = log_scale
+        self.size = size
+        self.cast_int = cast_int
         if not log_scale:
             self._lower_internal = lower
             self._step_internal = (upper - lower) / (size - 1)
@@ -620,20 +621,26 @@ class FiniteRange(Domain):
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
             y = np.exp(y)
-        return float(np.clip(y, self.lower, self.upper))
+        res = float(np.clip(y, self.lower, self.upper))
+        if self.cast_int:
+            res = int(np.rint(res))
+        return res
 
     @property
     def value_type(self):
-        return float
+        return float if not self.cast_int else int
 
     def _map_to_int(self, value) -> int:
-        int_value = np.clip(value, self.lower, self.upper)
-        if self.log_scale:
-            int_value = np.log(int_value)
-        sz = len(self._uniform_int)
-        return int(np.clip(round(
-            (int_value - self._lower_internal) / self._step_internal),
-            0, sz - 1))
+        if self._step_internal == 0:
+            return self.lower
+        else:
+            int_value = np.clip(value, self.lower, self.upper)
+            if self.log_scale:
+                int_value = np.log(int_value)
+            sz = len(self._uniform_int)
+            return int(np.clip(round(
+                (int_value - self._lower_internal) / self._step_internal),
+                0, sz - 1))
 
     def cast(self, value):
         return self._map_from_int(self._map_to_int(value))
@@ -828,7 +835,7 @@ def finrange(lower: float, upper: float, size: int):
     return FiniteRange(lower, upper, size)
 
 
-def logfinrange(lower: float, upper: float, size: int):
+def logfinrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
     Finite range `[lower, ..., upper]` with `size` entries, which are
     equi-spaced in the log domain. Finite alternative to `loguniform`.
@@ -837,7 +844,7 @@ def logfinrange(lower: float, upper: float, size: int):
     :param upper: Largest feasible value (positive)
     :param size: Size of (finite) domain, must be >= 2
     """
-    return FiniteRange(lower, upper, size, log_scale=True)
+    return FiniteRange(lower, upper, size, log_scale=True, cast_int=cast_int)
 
 
 def is_log_space(domain: Domain) -> bool:
@@ -926,22 +933,29 @@ def config_to_match_string(config: Dict, config_space: Dict, keys: List[str]) ->
 
 
 def to_dict(x: "Domain") -> Dict:
-    domain_kwargs = {k: v for k, v in x.__dict__.items() if k != 'sampler'}
-    return {
+    domain_kwargs = {
+        k: v for k, v in x.__dict__.items()
+        if k != 'sampler' and not k.startswith('_')}
+    result = {
         "domain_cls": x.__class__.__name__,
         "domain_kwargs": domain_kwargs,
-        "sampler_cls": str(x.sampler),
-        "sampler_kwargs": x.get_sampler().__dict__
     }
+    sampler = x.get_sampler()
+    if sampler is not None:
+        result.update({
+            "sampler_cls": str(sampler),
+            "sampler_kwargs": sampler.__dict__
+        })
+    return result
 
 
 def from_dict(d: Dict) -> Domain:
     domain_cls = getattr(sys.modules[__name__], d["domain_cls"])
     domain_kwargs = d["domain_kwargs"]
-    sampler_cls = getattr(domain_cls, "_" + d["sampler_cls"])
-    sampler_kwargs = d["sampler_kwargs"]
-
     domain = domain_cls(**domain_kwargs)
-    sampler = sampler_cls(**sampler_kwargs)
-    domain.set_sampler(sampler)
+    if "sampler_cls" in d:
+        sampler_cls = getattr(domain_cls, "_" + d["sampler_cls"])
+        sampler_kwargs = d["sampler_kwargs"]
+        sampler = sampler_cls(**sampler_kwargs)
+        domain.set_sampler(sampler)
     return domain
