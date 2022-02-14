@@ -27,7 +27,7 @@ from syne_tune.optimizer.schedulers.hyperband_pasha import \
 from syne_tune.optimizer.schedulers.hyperband_promotion import \
     PromotionRungSystem
 from syne_tune.optimizer.schedulers.hyperband_rush import \
-    RUSHStoppingRungSystem
+    RUSHPromotionRungSystem, RUSHStoppingRungSystem
 from syne_tune.optimizer.schedulers.hyperband_stopping import \
     StoppingRungSystem
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
@@ -69,7 +69,7 @@ _CONSTRAINTS = {
     'grace_period': Integer(1, None),
     'reduction_factor': Float(2, None),
     'brackets': Integer(1, None),
-    'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha', 'rush_stopping')),
+    'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha', 'rush_promotion', 'rush_stopping')),
     'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
     'register_pending_myopic': Boolean(),
     'do_snapshots': Boolean(),
@@ -244,6 +244,13 @@ class HyperbandScheduler(FIFOScheduler):
                 Similar to promotion type Hyperband, but it progressively
                 expands the available resources until the ranking
                 of configurations stabilizes.
+            rush_stopping:
+                A variation of the stopping scheduler which requires passing rung_system_kwargs
+                (see num_threshold_candidates) and points_to_evaluate. The first num_threshold_candidates of
+                points_to_evaluate will enforce stricter rules on which task is continued.
+                See :class:`RUSHScheduler`.
+            rush_promotion:
+                Same as rush_stopping but for promotion.
     searcher_data : str
         Relevant only if a model-based searcher is used.
         Example: For NN tuning and `resource_attr == epoch', we receive a
@@ -327,6 +334,10 @@ class HyperbandScheduler(FIFOScheduler):
                 Used if `type == 'pasha'`. When epsilon for soft ranking in
                 PASHA is calculated automatically, it is possible to rescale it
                 using epsilon_scaling.
+            num_threshold_candidates : int
+                Used if `type in ['rush_promotion', 'rush_stopping']`. The first num_threshold_candidates in
+                points_to_evaluate enforce stricter requirements to the continuation of training tasks.
+                See :class:`RUSHScheduler`.
 
     See Also
     --------
@@ -950,9 +961,13 @@ class HyperbandBracketManager(object):
             kwargs['epsilon'] = rung_system_kwargs['epsilon']
             kwargs['epsilon_scaling'] = rung_system_kwargs['epsilon_scaling']
             rs_type = PASHARungSystem
-        elif scheduler_type == 'rush_stopping':
-            rs_type = RUSHStoppingRungSystem
+        elif scheduler_type in ['rush_promotion', 'rush_stopping']:
             kwargs['num_threshold_candidates'] = rung_system_kwargs.get('num_threshold_candidates', 0)
+            if scheduler_type == 'rush_stopping':
+                rs_type = RUSHStoppingRungSystem
+            else:
+                kwargs['max_t'] = max_t
+                rs_type = RUSHPromotionRungSystem
         else:
             kwargs['max_t'] = max_t
             if scheduler_type == 'promotion':

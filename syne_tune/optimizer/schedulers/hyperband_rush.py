@@ -13,14 +13,16 @@
 import logging
 from typing import Optional
 
+from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
 
 logger = logging.getLogger(__name__)
 
 
-class RUSHStoppingRungSystem(StoppingRungSystem):
+class RUSHDecider:
     """
-    Implements the extension of the StoppingRungSystem according to the RUSH algorithm.
+    Implements the additional decision logic according to the RUSH algorithm.
+    It is used as part of RUSHStoppingRungSystem and RUSHPromotionRungSystem.
 
     Reference: A resource-efficient method for repeated HPO and NAS.
     Giovanni Zappella, David Salinas, Cédric Archambeau. AutoML workshop @ ICML 2021.
@@ -29,19 +31,14 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
     :class:`RUSHScheduler`.
     """
 
-    def __init__(self, num_threshold_candidates: int, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, num_threshold_candidates: int, mode: str):
         if num_threshold_candidates <= 0:
             logger.warning("No threshold candidates provided. 'rush_stopping' will behave exactly like 'stopping'.")
         self._num_threshold_candidates = num_threshold_candidates
+        self._mode = mode
         self._thresholds = dict()  # thresholds at different resource levels that must be met
 
-    def _task_continues(self, trial_id: str, mode: str, cutoff: float, metric_value: float, resource: int) -> bool:
-        task_continues = super()._task_continues(trial_id=trial_id, mode=mode, cutoff=cutoff, metric_value=metric_value,
-                                                 resource=resource)
-        return self._task_continues_rush(task_continues, trial_id, metric_value, resource)
-
-    def _task_continues_rush(self, task_continues: bool, trial_id: str, metric_value: float, resource: int) -> bool:
+    def task_continues(self, task_continues: bool, trial_id: str, metric_value: float, resource: int) -> bool:
         if not task_continues:
             return False
         if self._is_in_points_to_evaluate(trial_id):
@@ -63,3 +60,26 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
 
     def _meets_threshold(self, metric_value: float, resource: int) -> bool:
         return self._return_better(self._thresholds.get(resource), metric_value) == metric_value
+
+
+class RUSHStoppingRungSystem(StoppingRungSystem):
+
+    def __init__(self, num_threshold_candidates: int, **kwargs):
+        super().__init__(**kwargs)
+        self._decider = RUSHDecider(num_threshold_candidates, self._mode)
+
+    def _task_continues(self, trial_id: str, mode: str, cutoff: float, metric_value: float, resource: int) -> bool:
+        task_continues = super()._task_continues(trial_id=trial_id, mode=mode, cutoff=cutoff, metric_value=metric_value,
+                                                 resource=resource)
+        return self._decider.task_continues(task_continues, trial_id, metric_value, resource)
+
+
+class RUSHPromotionRungSystem(PromotionRungSystem):
+
+    def __init__(self, num_threshold_candidates: int, **kwargs):
+        super().__init__(**kwargs)
+        self._decider = RUSHDecider(num_threshold_candidates, self._mode)
+
+    def _is_feasible_config(self, trial_id: str, metric_value: float, is_paused: bool, resource: int) -> bool:
+        task_continues = super()._is_feasible_config(trial_id, metric_value, is_paused, resource)
+        return self._decider.task_continues(task_continues, trial_id, metric_value, resource)

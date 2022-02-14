@@ -58,7 +58,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
         # (metric_value, cost_value, was_promoted), where metric_value is
         # m(x, r), cost value is c(x, r).
 
-    def _find_promotable_config(self, recorded, prom_quant, trial_id=None):
+    def _find_promotable_config(self, recorded, prom_quant, resource):
         """
         Check whether any not yet promoted entry in `recorded` is
         promotable (see header comment). If there are several such, the one
@@ -67,11 +67,9 @@ class CostPromotionRungSystem(PromotionRungSystem):
 
         :param recorded: Dict to scan
         :param prom_quant: Quantile for promotion
-        :param trial_id: See above
+        :param resource: Amount of resources spent on the rung.
         :return: trial_id if found, otherwise None
         """
-        assert trial_id is None, \
-            "Version with trial_id not None is not implemented"
         ret_id = None
         if len(recorded) > 1:
             sign = 2 * (self._mode == 'min') - 1

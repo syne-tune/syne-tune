@@ -22,6 +22,7 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
             config_space: Dict,
             transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
             metric: str,
+            type: str = 'stopping',
             points_to_evaluate: Optional[List[Dict]] = None,
             custom_rush_points: Optional[List[Dict]] = None,
             num_hyperparameters_per_task: Optional[int] = 1,
@@ -39,8 +40,9 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
         Giovanni Zappella, David Salinas, Cédric Archambeau. AutoML workshop @ ICML 2021.
 
         :param config_space: configuration space for trial evaluation function.
-        :param metric: objective name to optimize, must be present in transfer learning evaluations.
         :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
+        :param metric: objective name to optimize, must be present in transfer learning evaluations.
+        :param type: scheduler type ('stopping' or 'promotion'). See :class:`HyperbandScheduler`.
         :param points_to_evaluate: when points_to_evaluate is not None, these configurations are evaluated after
         custom_rush_points and hyperparameter configurations inferred from transfer_learning_evaluations. These points
         are not used to prune any configurations.
@@ -50,7 +52,7 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
         :param num_hyperparameters_per_task: the number of top hyperparameter configurations to consider per task.
         """
         self._metric_names = [metric]
-        kwargs['type'] = 'rush_stopping'
+        assert type in ['stopping', 'promotion'], f'Unknown scheduler type {type}'
         top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
@@ -70,6 +72,7 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
         super().__init__(config_space=config_space,
                          transfer_learning_evaluations=transfer_learning_evaluations,
                          metric=metric,
+                         type=f'rush_{type}',
                          points_to_evaluate=points_to_evaluate,
                          metric_names=[metric],
                          rung_system_kwargs={'num_threshold_candidates': num_threshold_candidates},

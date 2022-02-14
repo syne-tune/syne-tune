@@ -15,7 +15,7 @@ import pandas as pd
 import pytest
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.schedulers.hyperband_rush import RUSHStoppingRungSystem
+from syne_tune.optimizer.schedulers.hyperband_rush import RUSHStoppingRungSystem, RUSHDecider
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
 from syne_tune.search_space import randint
@@ -62,8 +62,14 @@ def rung_system(num_threshold_candidates, rung_levels, promote_quantiles):
                                          metric='loss',
                                          mode='min',
                                          resource_attr='steps')
-    rung_system._thresholds = {level: 0 for level in rung_levels if level < 10}
     return rung_system
+
+
+@pytest.fixture()
+def decider(num_threshold_candidates, rung_levels):
+    decider = RUSHDecider(num_threshold_candidates=num_threshold_candidates, mode='min')
+    decider._thresholds = {level: 0 for level in rung_levels if level < 10}
+    return decider
 
 
 @pytest.fixture()
@@ -115,7 +121,7 @@ def get_result(loss=0, epoch=1):
 
 
 def num_estimated_threshold_candidates(scheduler):
-    return scheduler.terminator._rung_systems[0]._num_threshold_candidates
+    return scheduler.terminator._rung_systems[0]._decider._num_threshold_candidates
 
 
 @pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
@@ -168,46 +174,42 @@ def test_given_metadata_and_custom_rush_points_with_overlap_keep_only_unique_con
     assert num_estimated_threshold_candidates(scheduler) == len(custom_rush_points)
 
 
-@pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
-def test_given_hyperband_indicates_to_discontinue_return_discontinue(rung_system, num_threshold_candidates):
-    assert not rung_system._task_continues_rush(task_continues=False, trial_id=num_threshold_candidates - 1,
-                                                metric_value=-1,
-                                                resource=1)
+def test_given_hyperband_indicates_to_discontinue_return_discontinue(decider, num_threshold_candidates):
+    assert not decider.task_continues(task_continues=False, trial_id=num_threshold_candidates - 1,
+                                      metric_value=-1,
+                                      resource=1)
 
 
-@pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
-def test_given_metric_better_than_threshold_update_threshold_if_threshold_configuration(rung_system,
+def test_given_metric_better_than_threshold_update_threshold_if_threshold_configuration(decider,
                                                                                         num_threshold_candidates,
                                                                                         rung_levels):
     loss = -1
     for rung_level in rung_levels:
         for trial_id in [num_threshold_candidates, num_threshold_candidates - 1]:
-            old_val = rung_system._thresholds.get(rung_level)
-            rung_system._task_continues_rush(task_continues=True, trial_id=trial_id, metric_value=loss,
-                                             resource=rung_level)
+            old_val = decider._thresholds.get(rung_level)
+            decider.task_continues(task_continues=True, trial_id=trial_id, metric_value=loss,
+                                   resource=rung_level)
             if trial_id == num_threshold_candidates:
                 if old_val is None:
-                    assert rung_level not in rung_system._thresholds
+                    assert rung_level not in decider._thresholds
                 else:
-                    assert rung_system._thresholds[rung_level] == old_val
+                    assert decider._thresholds[rung_level] == old_val
             else:
-                assert rung_system._thresholds[rung_level] == loss
+                assert decider._thresholds[rung_level] == loss
 
 
-@pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
-def test_given_metric_worse_than_threshold_return_discontinue_if_standard_trial(rung_system, num_threshold_candidates,
+def test_given_metric_worse_than_threshold_return_discontinue_if_standard_trial(decider, num_threshold_candidates,
                                                                                 rung_levels):
     for rung_level in rung_levels[:3]:
-        assert not rung_system._task_continues_rush(task_continues=True, trial_id=num_threshold_candidates,
-                                                    metric_value=0.1,
-                                                    resource=rung_level)
+        assert not decider.task_continues(task_continues=True, trial_id=num_threshold_candidates,
+                                          metric_value=0.1,
+                                          resource=rung_level)
 
 
-@pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
 @pytest.mark.parametrize('hyperband_decision', [True, False])
-def test_given_metric_worse_than_threshold_return_hyperband_decision_if_init_trial(rung_system,
+def test_given_metric_worse_than_threshold_return_hyperband_decision_if_init_trial(decider,
                                                                                    num_threshold_candidates,
                                                                                    hyperband_decision):
-    assert rung_system._task_continues_rush(task_continues=hyperband_decision,
-                                            trial_id=num_threshold_candidates - 1,
-                                            metric_value=1, resource=1) is hyperband_decision
+    assert decider.task_continues(task_continues=hyperband_decision,
+                                  trial_id=num_threshold_candidates - 1,
+                                  metric_value=1, resource=1) is hyperband_decision
