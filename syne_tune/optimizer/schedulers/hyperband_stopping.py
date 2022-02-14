@@ -106,7 +106,7 @@ class StoppingRungSystem(object):
                     # Enter new metric value before checking condition
                     recorded[trial_id] = metric_value
                     cutoff = self._cutoff(recorded, prom_quant)
-                    task_continues = self.task_continues(trial_id, self._mode, cutoff, metric_value, resource)
+                    task_continues = self._task_continues(trial_id, self._mode, cutoff, metric_value, resource)
                 break
             next_milestone = milestone
         return {
@@ -114,7 +114,7 @@ class StoppingRungSystem(object):
             'milestone_reached': milestone_reached,
             'next_milestone': next_milestone}
 
-    def task_continues(self, trial_id, mode, cutoff, metric_value, resource):
+    def _task_continues(self, trial_id, mode, cutoff, metric_value, resource):
         if cutoff is None:
             return True
         return metric_value <= cutoff if mode == 'min' else metric_value >= cutoff

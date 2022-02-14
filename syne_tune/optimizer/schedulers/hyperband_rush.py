@@ -36,12 +36,12 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
         self._num_points_to_evaluate = num_points_to_evaluate
         self._thresholds = dict()  # thresholds at different resource levels that must be met
 
-    def task_continues(self, trial_id: str, mode: str, cutoff: float, metric_value: float, resource: int) -> bool:
-        task_continues = super().task_continues(trial_id=trial_id, mode=mode, cutoff=cutoff, metric_value=metric_value,
-                                                resource=resource)
-        return self._task_continues(task_continues, trial_id, metric_value, resource)
+    def _task_continues(self, trial_id: str, mode: str, cutoff: float, metric_value: float, resource: int) -> bool:
+        task_continues = super()._task_continues(trial_id=trial_id, mode=mode, cutoff=cutoff, metric_value=metric_value,
+                                                 resource=resource)
+        return self._task_continues_rush(task_continues, trial_id, metric_value, resource)
 
-    def _task_continues(self, task_continues: bool, trial_id: str, metric_value: float, resource: int) -> bool:
+    def _task_continues_rush(self, task_continues: bool, trial_id: str, metric_value: float, resource: int) -> bool:
         if not task_continues:
             return False
         if self._is_in_points_to_evaluate(trial_id):

@@ -376,7 +376,7 @@ class HyperbandScheduler(FIFOScheduler):
         self.terminator = HyperbandBracketManager(
             scheduler_type, self._resource_attr, self.metric, self.mode,
             self.max_t, rung_levels, brackets, rung_system_per_bracket,
-            num_points_to_evaluate=len(kwargs.get('points_to_evaluate', list())),
+            num_points_to_evaluate=len(self.searcher._points_to_evaluate),
             cost_attr=self._total_cost_attr(),
             random_seed=self.random_seed_generator(),
             rung_system_kwargs=self._rung_system_kwargs)
