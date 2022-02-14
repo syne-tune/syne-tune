@@ -18,14 +18,14 @@ pip install syne-tune
 ```
 
 This will install a bare-bone version. If you want in addition to install our own Gaussian process based optimizers, Ray Tune or Bore optimizer, 
-you can run `pip install syne-tune[X]` where `X` can be 
+you can run `pip install 'syne-tune[X]'` where `X` can be 
 * `gpsearchers`: For built-in Gaussian process based optimizers
 * `raytune`: For Ray Tune optimizers
 * `benchmarks`: For installing all dependencies required to run all benchmarks
 * `extra`: For installing all the above
 * `bore`: For Bore optimizer
 
-For instance, `pip install syne-tune[gpsearchers]` will install Syne Tune along with many built-in Gaussian process 
+For instance, `pip install 'syne-tune[gpsearchers]'` will install Syne Tune along with many built-in Gaussian process 
 optimizers.
 
 To install the latest version from git, run the following:
@@ -43,18 +43,11 @@ cd syne-tune
 pip install -e '.[extra]'
 ```
 
-You may want to use environment management system such as Conda:
-```bash
-conda create -n syne-tune python=3.8
-conda activate syne-tune
-# run install comands here
-```
-
 To run unit tests, simply run `pytest` in the root of this repository.
 
-To run all tests whose name begins with `test_config_space_for_sampling`, you can use the following
+To run all tests whose name begins with `test_async_scheduler`, you can use the following
 ```bash
-pytest -k test_use_active_space_for_sampling
+pytest -k test_async_scheduler
 ```
 
 ## How to enable tuning and tuning script conventions

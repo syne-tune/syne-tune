@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 
 from collections import Counter
-from distutils.command.config import config
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_almost_equal
