@@ -380,7 +380,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             if random_seed is None:
                 random_seed = self.random_state.randint(0, 2 ** 32)
             self._random_searcher = RandomSearcher(
-                self.hp_ranges.config_space,
+                self.hp_ranges.config_space_for_sampling,
                 metric=self._metric,
                 points_to_evaluate=[],
                 random_seed=random_seed,

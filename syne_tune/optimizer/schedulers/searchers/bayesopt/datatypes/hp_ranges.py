@@ -123,6 +123,17 @@ class HyperparameterRanges(ABC):
     def internal_keys(self) -> List[str]:
         return self._internal_keys
 
+    @property
+    def config_space_for_sampling(self) -> Dict:
+        """
+        :return: Configuration space used by `random_config`, `random_configs`.
+            This is equal to `config_space` if `active_config_space` was not
+            provided. Otherwise, entries in `active_config_space` override
+            those in `config_space`. Also, if `config_space` contains non-HP
+            entries, these are filtered out.
+        """
+        return self._config_space_for_sampling
+
     @abstractmethod
     def to_ndarray(self, config: Configuration) -> np.ndarray:
         """
