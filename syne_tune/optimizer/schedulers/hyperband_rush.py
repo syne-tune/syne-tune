@@ -29,11 +29,11 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
     :class:`RUSHScheduler`.
     """
 
-    def __init__(self, num_points_to_evaluate: int, **kwargs):
+    def __init__(self, num_threshold_candidates: int, **kwargs):
         super().__init__(**kwargs)
-        if num_points_to_evaluate == 0:
-            logger.info("No points_to_evaluate provided. 'rush_stopping' will behave exactly like 'stopping'.")
-        self._num_points_to_evaluate = num_points_to_evaluate
+        if num_threshold_candidates <= 0:
+            logger.warning("No threshold candidates provided. 'rush_stopping' will behave exactly like 'stopping'.")
+        self._num_threshold_candidates = num_threshold_candidates
         self._thresholds = dict()  # thresholds at different resource levels that must be met
 
     def _task_continues(self, trial_id: str, mode: str, cutoff: float, metric_value: float, resource: int) -> bool:
@@ -50,7 +50,7 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
         return self._meets_threshold(metric_value, resource)
 
     def _is_in_points_to_evaluate(self, trial_id: str) -> bool:
-        return int(trial_id) < self._num_points_to_evaluate
+        return int(trial_id) < self._num_threshold_candidates
 
     def _return_better(self, val1: Optional[float], val2: Optional[float]) -> float:
         if self._mode == 'min':

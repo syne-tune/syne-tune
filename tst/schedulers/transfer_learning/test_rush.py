@@ -40,7 +40,7 @@ def scheduler(metadata, config_space, request):
 
 
 @pytest.fixture()
-def num_points_to_evaluate():
+def num_threshold_candidates():
     return 2
 
 
@@ -55,8 +55,8 @@ def promote_quantiles(rung_levels):
 
 
 @pytest.fixture()
-def rung_system(num_points_to_evaluate, rung_levels, promote_quantiles):
-    rung_system = RUSHStoppingRungSystem(num_points_to_evaluate=num_points_to_evaluate,
+def rung_system(num_threshold_candidates, rung_levels, promote_quantiles):
+    rung_system = RUSHStoppingRungSystem(num_threshold_candidates=num_threshold_candidates,
                                          rung_levels=rung_levels,
                                          promote_quantiles=promote_quantiles,
                                          metric='loss',
@@ -67,7 +67,7 @@ def rung_system(num_points_to_evaluate, rung_levels, promote_quantiles):
 
 
 @pytest.fixture()
-def points_to_evaluate():
+def custom_rush_points():
     return [{'m': 1, 'b': -2}]
 
 
@@ -114,66 +114,78 @@ def get_result(loss=0, epoch=1):
     }
 
 
-def num_threshold_candidates(scheduler):
-    return scheduler.terminator._rung_systems[0]._num_points_to_evaluate
+def num_estimated_threshold_candidates(scheduler):
+    return scheduler.terminator._rung_systems[0]._num_threshold_candidates
 
 
 @pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
-def test_given_only_metadata_num_init_config_equals_number_of_tasks(metadata, config_space, scheduler_type):
+def test_given_only_metadata_num_threshold_candidates_equals_number_of_tasks(metadata, config_space, scheduler_type):
     scheduler = RUSHScheduler(config_space=config_space,
                               metric='loss',
                               max_t=10,
                               type=scheduler_type,
                               transfer_learning_evaluations=metadata)
-    assert num_threshold_candidates(scheduler) == len(metadata)
+    assert num_estimated_threshold_candidates(scheduler) == len(metadata)
 
 
 @pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
-def test_given_metadata_and_points_to_evaluate_num_init_config_equals_sum_of_unique_configurations(metadata,
-                                                                                                   config_space,
-                                                                                                   points_to_evaluate,
-                                                                                                   scheduler_type):
+def test_points_of_evaluations_has_no_impact_on__num_threshold_candidates(metadata, config_space, custom_rush_points,
+                                                                          scheduler_type):
     scheduler = RUSHScheduler(config_space=config_space,
                               metric='loss',
                               max_t=10,
                               type=scheduler_type,
                               transfer_learning_evaluations=metadata,
-                              points_to_evaluate=points_to_evaluate)
-    assert num_threshold_candidates(scheduler) == len(metadata) + len(points_to_evaluate)
+                              points_to_evaluate=custom_rush_points)
+    assert num_estimated_threshold_candidates(scheduler) == len(metadata)
 
 
 @pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
-def test_given_metadata_and_points_to_evaluate_with_overlap_keep_only_unique_configurations(metadata,
+def test_given_metadata_and_custom_rush_points_num_threshold_candidates_equals_sum_of_unique_configs(metadata,
+                                                                                                     config_space,
+                                                                                                     custom_rush_points,
+                                                                                                     scheduler_type):
+    scheduler = RUSHScheduler(config_space=config_space,
+                              metric='loss',
+                              max_t=10,
+                              type=scheduler_type,
+                              transfer_learning_evaluations=metadata,
+                              custom_rush_points=custom_rush_points)
+    assert num_estimated_threshold_candidates(scheduler) == len(metadata) + len(custom_rush_points)
+
+
+@pytest.mark.parametrize('scheduler_type', ['stopping', 'promotion'])
+def test_given_metadata_and_custom_rush_points_with_overlap_keep_only_unique_configurations(metadata,
                                                                                             config_space,
                                                                                             scheduler_type):
-    points_to_eval = metadata['task'].hyperparameters.to_dict('records')
+    custom_rush_points = metadata['task'].hyperparameters.to_dict('records')
     scheduler = RUSHScheduler(config_space=config_space,
                               metric='loss',
                               max_t=10,
                               type=scheduler_type,
                               transfer_learning_evaluations=metadata,
-                              points_to_evaluate=points_to_eval)
-    assert num_threshold_candidates(scheduler) == len(points_to_eval)
+                              custom_rush_points=custom_rush_points)
+    assert num_estimated_threshold_candidates(scheduler) == len(custom_rush_points)
 
 
 @pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
-def test_given_hyperband_indicates_to_discontinue_return_discontinue(rung_system, num_points_to_evaluate):
-    assert not rung_system._task_continues_rush(task_continues=False, trial_id=num_points_to_evaluate - 1,
+def test_given_hyperband_indicates_to_discontinue_return_discontinue(rung_system, num_threshold_candidates):
+    assert not rung_system._task_continues_rush(task_continues=False, trial_id=num_threshold_candidates - 1,
                                                 metric_value=-1,
                                                 resource=1)
 
 
 @pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
 def test_given_metric_better_than_threshold_update_threshold_if_threshold_configuration(rung_system,
-                                                                                        num_points_to_evaluate,
+                                                                                        num_threshold_candidates,
                                                                                         rung_levels):
     loss = -1
     for rung_level in rung_levels:
-        for trial_id in [num_points_to_evaluate, num_points_to_evaluate - 1]:
+        for trial_id in [num_threshold_candidates, num_threshold_candidates - 1]:
             old_val = rung_system._thresholds.get(rung_level)
             rung_system._task_continues_rush(task_continues=True, trial_id=trial_id, metric_value=loss,
                                              resource=rung_level)
-            if trial_id == num_points_to_evaluate:
+            if trial_id == num_threshold_candidates:
                 if old_val is None:
                     assert rung_level not in rung_system._thresholds
                 else:
@@ -183,18 +195,19 @@ def test_given_metric_better_than_threshold_update_threshold_if_threshold_config
 
 
 @pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
-def test_given_metric_worse_than_threshold_return_discontinue_if_standard_trial(rung_system, num_points_to_evaluate,
+def test_given_metric_worse_than_threshold_return_discontinue_if_standard_trial(rung_system, num_threshold_candidates,
                                                                                 rung_levels):
     for rung_level in rung_levels[:3]:
-        assert not rung_system._task_continues_rush(task_continues=True, trial_id=num_points_to_evaluate,
+        assert not rung_system._task_continues_rush(task_continues=True, trial_id=num_threshold_candidates,
                                                     metric_value=0.1,
                                                     resource=rung_level)
 
 
 @pytest.mark.parametrize('rung_system', ['stopping', 'promotion'], indirect=True)
 @pytest.mark.parametrize('hyperband_decision', [True, False])
-def test_given_metric_worse_than_threshold_return_hyperband_decision_if_init_trial(rung_system, num_points_to_evaluate,
+def test_given_metric_worse_than_threshold_return_hyperband_decision_if_init_trial(rung_system,
+                                                                                   num_threshold_candidates,
                                                                                    hyperband_decision):
     assert rung_system._task_continues_rush(task_continues=hyperband_decision,
-                                            trial_id=num_points_to_evaluate - 1,
+                                            trial_id=num_threshold_candidates - 1,
                                             metric_value=1, resource=1) is hyperband_decision

@@ -376,7 +376,6 @@ class HyperbandScheduler(FIFOScheduler):
         self.terminator = HyperbandBracketManager(
             scheduler_type, self._resource_attr, self.metric, self.mode,
             self.max_t, rung_levels, brackets, rung_system_per_bracket,
-            num_points_to_evaluate=len(self.searcher._points_to_evaluate),
             cost_attr=self._total_cost_attr(),
             random_seed=self.random_seed_generator(),
             rung_system_kwargs=self._rung_system_kwargs)
@@ -927,7 +926,7 @@ class HyperbandBracketManager(object):
     def __init__(
             self, scheduler_type, resource_attr, metric, mode, max_t,
             rung_levels, brackets, rung_system_per_bracket, cost_attr,
-            num_points_to_evaluate, random_seed, rung_system_kwargs):
+            random_seed, rung_system_kwargs):
         self._scheduler_type = scheduler_type
         self._resource_attr = resource_attr
         self._max_t = max_t
@@ -953,7 +952,7 @@ class HyperbandBracketManager(object):
             rs_type = PASHARungSystem
         elif scheduler_type == 'rush_stopping':
             rs_type = RUSHStoppingRungSystem
-            kwargs['num_points_to_evaluate'] = num_points_to_evaluate
+            kwargs['num_threshold_candidates'] = rung_system_kwargs.get('num_threshold_candidates', 0)
         else:
             kwargs['max_t'] = max_t
             if scheduler_type == 'promotion':
