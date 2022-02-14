@@ -122,6 +122,10 @@ class HyperparameterRanges(ABC):
     @property
     def internal_keys(self) -> List[str]:
         return self._internal_keys
+    
+    @property
+    def config_space_for_sampling(self) -> Dict:
+        return self._config_space_for_sampling
 
     @abstractmethod
     def to_ndarray(self, config: Configuration) -> np.ndarray:
