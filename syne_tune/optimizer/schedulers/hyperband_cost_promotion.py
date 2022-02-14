@@ -63,7 +63,6 @@ class CostPromotionRungSystem(PromotionRungSystem):
         Check whether any not yet promoted entry in `recorded` is
         promotable (see header comment). If there are several such, the one
         with the best value is chosen.
-        If `trial_id` is given, only this single entry is tested.
 
         :param recorded: Dict to scan
         :param prom_quant: Quantile for promotion
