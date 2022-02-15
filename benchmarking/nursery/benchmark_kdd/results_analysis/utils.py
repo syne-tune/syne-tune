@@ -1,3 +1,5 @@
+import os
+
 import dill
 from sklearn.preprocessing import QuantileTransformer
 from tqdm import tqdm
@@ -211,6 +213,7 @@ def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix:
             ax.set_xlim([plotargs.xmin, plotargs.xmax])
 
         plt.tight_layout()
+        os.makedirs("figures/", exist_ok=True)
         plt.savefig(f"figures/{prefix}{benchmark}.pdf")
         plt.show()
 
