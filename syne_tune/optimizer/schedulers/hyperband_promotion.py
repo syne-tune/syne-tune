@@ -87,14 +87,14 @@ class PromotionRungSystem(object):
         if cutoff is not None:
             # Best id among trials paused at this rung (i.e., not yet promoted)
             id, val = max(
-                ((k, v[0]) for k, v in recorded.items() if self._is_feasible_config(k, v[0], not v[1], resource)),
+                ((k, v[0]) for k, v in recorded.items() if self._is_promotable_config(k, v[0], not v[1], resource)),
                 key=lambda x: sign * x[1],
                 default=(None, 0.0))
             if id is not None and sign * (val - cutoff) >= 0:
                 ret_id = id
         return ret_id
 
-    def _is_feasible_config(self, trial_id, metric_val, is_paused, resource):
+    def _is_promotable_config(self, trial_id, metric_value, is_paused, resource):
         return is_paused
 
     def _mark_as_promoted(self, recorded, trial_id):

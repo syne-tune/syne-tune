@@ -25,7 +25,7 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
             type: str = 'stopping',
             points_to_evaluate: Optional[List[Dict]] = None,
             custom_rush_points: Optional[List[Dict]] = None,
-            num_hyperparameters_per_task: Optional[int] = 1,
+            num_hyperparameters_per_task: int = 1,
             **kwargs
     ) -> None:
         """

@@ -80,6 +80,6 @@ class RUSHPromotionRungSystem(PromotionRungSystem):
         super().__init__(**kwargs)
         self._decider = RUSHDecider(num_threshold_candidates, self._mode)
 
-    def _is_feasible_config(self, trial_id: str, metric_value: float, is_paused: bool, resource: int) -> bool:
-        task_continues = super()._is_feasible_config(trial_id, metric_value, is_paused, resource)
+    def _is_promotable_config(self, trial_id: str, metric_value: float, is_paused: bool, resource: int) -> bool:
+        task_continues = super()._is_promotable_config(trial_id, metric_value, is_paused, resource)
         return self._decider.task_continues(task_continues, trial_id, metric_value, resource)
