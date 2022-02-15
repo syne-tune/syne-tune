@@ -65,6 +65,12 @@ means, a basic component of many HPO algorithms. The following domains are curre
   finite range `log(lower), ..., log(upper)` of size `size`.  Note that both
   `lower` and `upper` are part of the value range.
 
+By default, the value type for `finrange` and `logfinrange` is `float`. It can
+be changed to `int` by the argument `is_int=True`. For example,
+`logfinrange(8, 256, 6, is_int=True)` results in `8, 16, 32, 64, 128, 256` and
+value type `int`, while `logfinrange(8, 256, 6)` results in
+`8.0, 16.0, 32.0, 64.0, 128.0, 256.0` and  value type `float`.
+
 
 ### Recommendations
 

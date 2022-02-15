@@ -116,7 +116,11 @@ def test_search_space_size():
     (logfinrange(np.exp(0.1), np.exp(1.0), 10),
      np.exp(np.arange(0.1, 1.1, 0.1))),
     (logfinrange(0.0001, 1.0, 5),
-     np.array([0.0001, 0.001, 0.01, 0.1, 1.0]))
+     np.array([0.0001, 0.001, 0.01, 0.1, 1.0])),
+    (finrange(0, 8, 5, is_int=True),
+     np.array([0, 2, 4, 6, 8])),
+    (logfinrange(8, 512, 7, is_int=True),
+     np.array([8, 16, 32, 64, 128, 256, 512])),
 ])
 def test_finrange_domain(domain, value_set):
     seed = 31415927
@@ -136,7 +140,9 @@ def test_finrange_domain(domain, value_set):
     (randint(0, 10), int),
     (lograndint(1, 10), int),
     (finrange(0.1, 1.0, 10), float),
-    (logfinrange(np.exp(0.1), np.exp(1.0), 10), float)
+    (logfinrange(np.exp(0.1), np.exp(1.0), 10), float),
+    (finrange(0, 8, 5, is_int=True), int),
+    (logfinrange(8, 512, 7, is_int=True), int),
 ])
 def test_type_of_sample(domain, tp):
     num_samples = 5

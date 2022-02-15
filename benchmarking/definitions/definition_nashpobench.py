@@ -23,13 +23,13 @@ from benchmarking.blackbox_repository.conversion_scripts.scripts.fcnet_import \
 _config_space = {
     "hp_activation_fn_1": choice(["tanh", "relu"]),
     "hp_activation_fn_2": choice(["tanh", "relu"]),
-    "hp_batch_size": logfinrange(8, 64, 4),
+    "hp_batch_size": logfinrange(8, 64, 4, is_int=True),
     "hp_dropout_1": finrange(0.0, 0.6, 3),
     "hp_dropout_2": finrange(0.0, 0.6, 3),
     "hp_init_lr": choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
     'hp_lr_schedule': choice(["cosine", "const"]),
-    "hp_n_units_1": logfinrange(16, 512, 6),
-    "hp_n_units_2": logfinrange(16, 512, 6),
+    "hp_n_units_1": logfinrange(16, 512, 6, is_int=True),
+    "hp_n_units_2": logfinrange(16, 512, 6, is_int=True),
 }
 
 
