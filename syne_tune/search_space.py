@@ -595,11 +595,11 @@ class FiniteRange(Domain):
     """
     Represents a finite range `[lower, ..., upper]` with `size` values
     equally spaced in linear or log domain.
-    If `is_int`, the value type is int (rounding after the transform).
+    If `cast_int`, the value type is int (rounding after the transform).
 
     """
     def __init__(self, lower: float, upper: float, size: int,
-                 log_scale: bool = False, is_int: bool = False):
+                 log_scale: bool = False, cast_int: bool = False):
         assert lower < upper
         assert size >= 2
         if log_scale:
@@ -608,7 +608,7 @@ class FiniteRange(Domain):
         self.lower = lower
         self.upper = upper
         self.log_scale = log_scale
-        self.is_int = is_int
+        self.cast_int = cast_int
         if not log_scale:
             self._lower_internal = lower
             self._step_internal = (upper - lower) / (size - 1)
@@ -623,14 +623,14 @@ class FiniteRange(Domain):
         if self.log_scale:
             y = np.exp(y)
         y = np.clip(y, self.lower, self.upper)
-        if not self.is_int:
+        if not self.cast_int:
             return float(y)
         else:
             return int(np.round(y))
 
     @property
     def value_type(self):
-        return float if not self.is_int else int
+        return float if not self.cast_int else int
 
     def _map_to_int(self, value) -> int:
         int_value = np.clip(value, self.lower, self.upper)
@@ -672,7 +672,7 @@ class FiniteRange(Domain):
                and np.isclose(self.lower, other.lower) \
                and np.isclose(self.upper, other.upper) \
                and self.log_scale == other.log_scale \
-               and self.is_int == other.is_int
+               and self.cast_int == other.cast_int
 
 
 def sample_from(func: Callable[[Dict], Any]):
@@ -823,7 +823,7 @@ def qrandn(mean: float, sd: float, q: float):
     return Float(None, None).normal(mean, sd).quantized(q)
 
 
-def finrange(lower: float, upper: float, size: int, is_int: bool = False):
+def finrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
     Finite range `[lower, ..., upper]` with `size` entries, which are
     equi-spaced. Finite alternative to `uniform`.
@@ -831,12 +831,12 @@ def finrange(lower: float, upper: float, size: int, is_int: bool = False):
     :param lower: Smallest feasible value
     :param upper: Largest feasible value
     :param size: Size of (finite) domain, must be >= 2
-    :param is_int: Values rounded to int?
+    :param cast_int: Values rounded to int?
     """
-    return FiniteRange(lower, upper, size, log_scale=False, is_int=is_int)
+    return FiniteRange(lower, upper, size, log_scale=False, cast_int=cast_int)
 
 
-def logfinrange(lower: float, upper: float, size: int, is_int: bool = False):
+def logfinrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
     Finite range `[lower, ..., upper]` with `size` entries, which are
     equi-spaced in the log domain. Finite alternative to `loguniform`.
@@ -844,9 +844,9 @@ def logfinrange(lower: float, upper: float, size: int, is_int: bool = False):
     :param lower: Smallest feasible value (positive)
     :param upper: Largest feasible value (positive)
     :param size: Size of (finite) domain, must be >= 2
-    :param is_int: Values rounded to int?
+    :param cast_int: Values rounded to int?
     """
-    return FiniteRange(lower, upper, size, log_scale=True, is_int=is_int)
+    return FiniteRange(lower, upper, size, log_scale=True, cast_int=cast_int)
 
 
 def is_log_space(domain: Domain) -> bool:

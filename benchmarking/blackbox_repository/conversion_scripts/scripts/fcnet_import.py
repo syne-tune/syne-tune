@@ -101,13 +101,13 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     configuration_space = {
         "hp_activation_fn_1": sp.choice(["tanh", "relu"]),
         "hp_activation_fn_2": sp.choice(["tanh", "relu"]),
-        "hp_batch_size": sp.choice([8, 16, 32, 64]),
-        "hp_dropout_1": sp.choice([0.0, 0.3, 0.6]),
-        "hp_dropout_2": sp.choice([0.0, 0.3, 0.6]),
+        "hp_batch_size": sp.logfinrange(8, 64, 4, cast_int=True),
+        "hp_dropout_1": sp.finrange(0.0, 0.6, 3),
+        "hp_dropout_2": sp.finrange(0.0, 0.6, 3),
         "hp_init_lr": sp.choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
         'hp_lr_schedule': sp.choice(["cosine", "const"]),
-        'hp_n_units_1': sp.choice([16, 32, 64, 128, 256, 512]),
-        'hp_n_units_2': sp.choice([16, 32, 64, 128, 256, 512]),
+        'hp_n_units_1': sp.logfinrange(16, 512, 6, cast_int=True),
+        'hp_n_units_2': sp.logfinrange(16, 512, 6, cast_int=True),
     }
     fidelity_space = {
         RESOURCE_ATTR: sp.randint(lower=1, upper=100)

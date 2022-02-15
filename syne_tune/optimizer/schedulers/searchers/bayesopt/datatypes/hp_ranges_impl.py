@@ -197,7 +197,7 @@ class HyperparameterRangeInteger(HyperparameterRange):
 class HyperparameterRangeFiniteRange(HyperparameterRange):
     def __init__(
             self, name: str, lower_bound: float, upper_bound: float,
-            size: int, scaling: Scaling, is_int: bool = False):
+            size: int, scaling: Scaling, cast_int: bool = False):
         """
         See :class:`FiniteRange` in `search_space`. Internally, we use an int
         with linear scaling.
@@ -210,7 +210,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
         assert size >= 2
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
-        self.is_int = is_int
+        self.cast_int = cast_int
         self._scaling = scaling
         self._lower_internal = scaling.to_internal(lower_bound)
         self._upper_internal = scaling.to_internal(upper_bound)
@@ -228,7 +228,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
         y = x * self._step_internal + self._lower_internal
         y = np.clip(self._scaling.from_internal(y), self.lower_bound,
                     self.upper_bound)
-        if not self.is_int:
+        if not self.cast_int:
             return float(y)
         else:
             return int(np.round(y))
@@ -249,7 +249,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
         return "{}({}, {}, {}, {}, {})".format(
             self.__class__.__name__, repr(self.name),
             repr(self.scaling), repr(self.lower_bound), repr(self.upper_bound),
-            repr(self.is_int))
+            repr(self.cast_int))
 
     def __eq__(self, other):
         if isinstance(other, HyperparameterRangeFiniteRange):
@@ -257,7 +257,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
                    and self.lower_bound == other.lower_bound \
                    and self.upper_bound == other.upper_bound \
                    and self._scaling == other._scaling \
-                   and self.is_int == other.is_int \
+                   and self.cast_int == other.cast_int \
                    and self._range_int.upper_bound == other._range_int.upper_bound
         return False
 
@@ -379,7 +379,7 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                     assert name not in self.active_config_space, \
                         f"Parameter '{name}' of type FiniteRange cannot be used in active_config_space"
                     hp_ranges.append(HyperparameterRangeFiniteRange(
-                        **kwargs, size=len(hp_range), is_int=hp_range.is_int))
+                        **kwargs, size=len(hp_range), cast_int=hp_range.cast_int))
                 else:
                     # Note: If `hp_range` is logarithmic, it has a base.
                     # Since both the loguniform distribution and the internal
