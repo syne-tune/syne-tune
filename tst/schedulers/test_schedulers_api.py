@@ -23,6 +23,7 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
 import syne_tune.search_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
 
 config_space = {
     "steps": 100,
@@ -106,6 +107,14 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
             metric=metric,
             mode=mode,
         ),
+        mode="min",
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+    ),
+    RUSHScheduler(
+        resource_attr=resource_attr,
+        max_t=max_t,
         mode="min",
         config_space=config_space,
         metric=metric1,

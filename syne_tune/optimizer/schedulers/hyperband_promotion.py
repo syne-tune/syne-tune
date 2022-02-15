@@ -67,17 +67,16 @@ class PromotionRungSystem(object):
         values = [x[0] for x in recorded.values()]
         return quantile_cutoff(values, prom_quant, self._mode)
 
-    def _find_promotable_config(self, recorded, prom_quant, trial_id=None):
+    def _find_promotable_config(self, recorded, prom_quant, resource):
         """
         Check whether any not yet promoted entry in `recorded` is
         promotable, i.e. its value is better or equal to the cutoff
         based on `prom_quant`. If there are several such, the one with the
         best value is chosen.
-        If `trial_id` is given, only this single entry is tested.
 
         :param recorded: Dict to scan
         :param prom_quant: Quantile for promotion
-        :param trial_id: See above
+        :param resource: Amount of resources spent on the rung.
         :return: trial_id if found, otherwise None
         """
         ret_id = None
@@ -86,19 +85,17 @@ class PromotionRungSystem(object):
         sign = 1 - 2 * (self._mode == 'min')
         cutoff = self._cutoff(recorded, prom_quant)
         if cutoff is not None:
-            if trial_id is None:
-                # Best id among trials paused at this rung (i.e., not yet
-                # promoted)
-                id, val = max(
-                    ((k, v[0]) for k, v in recorded.items() if not v[1]),
-                    key=lambda x: sign * x[1],
-                    default=(None, 0.0))
-            else:
-                id = trial_id
-                val = recorded[trial_id][0]
+            # Best id among trials paused at this rung (i.e., not yet promoted)
+            id, val = max(
+                ((k, v[0]) for k, v in recorded.items() if self._is_promotable_config(k, v[0], not v[1], resource)),
+                key=lambda x: sign * x[1],
+                default=(None, 0.0))
             if id is not None and sign * (val - cutoff) >= 0:
                 ret_id = id
         return ret_id
+
+    def _is_promotable_config(self, trial_id, metric_value, is_paused, resource):
+        return is_paused
 
     def _mark_as_promoted(self, recorded, trial_id):
         curr_val = recorded[trial_id]
@@ -127,8 +124,7 @@ class PromotionRungSystem(object):
             prom_quant = rung.prom_quant
             _recorded = rung.data
             if _milestone < self._effective_max_t():
-                trial_id = self._find_promotable_config(
-                    _recorded, prom_quant)
+                trial_id = self._find_promotable_config(_recorded, prom_quant, rung.level)
             if trial_id is not None:
                 recorded = _recorded
                 milestone = _milestone
