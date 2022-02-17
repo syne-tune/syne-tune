@@ -34,7 +34,7 @@ _DEFAULT_OPTIONS = {
 _CONSTRAINTS = {
     'grace_period': Integer(1, None),
     'max_resource_level': Integer(1, None),
-    'reduction_factor' : Float(2, None),
+    'reduction_factor': Float(2, None),
     'brackets': Integer(1, None),
 }
 
