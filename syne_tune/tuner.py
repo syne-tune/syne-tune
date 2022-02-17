@@ -221,17 +221,26 @@ class Tuner:
         for callback in self.callbacks:
             callback.on_tuning_sleep(self.sleep_time)
 
+    @staticmethod
+    def _set_metadata(metadata: Dict, name: str, value):
+        if name in metadata:
+            logger.warning(
+                f"Entry {name} in metadata is used, but will be overwritten:\n"
+                f"Old value: {metadata[name]}\n"
+                f"Overwrite: {value}\n")
+        metadata[name] = value
+
     def _enrich_metadata(self, metadata: Dict):
         """
         :return: adds creation time stamp, metric names and mode, entrypoint and backend to the metadata.
         """
-        res = metadata if metadata is not None else {}
-        res[ST_TUNER_CREATION_TIMESTAMP] = time.time()
-        res['metric_names'] = self.scheduler.metric_names()
-        res['metric_mode'] = self.scheduler.metric_mode()
-        res['entrypoint'] = self.trial_backend.entrypoint_path().stem
-        res['backend'] = str(type(self.trial_backend).__name__)
-        res['scheduler_name'] = str(self.scheduler.__class__.__name__)
+        res = metadata if metadata is not None else dict()
+        self._set_metadata(res, ST_TUNER_CREATION_TIMESTAMP, time.time())
+        self._set_metadata(res, 'metric_names', self.scheduler.metric_names())
+        self._set_metadata(res, 'metric_mode', self.scheduler.metric_mode())
+        self._set_metadata(res, 'entrypoint', self.trial_backend.entrypoint_path().stem)
+        self._set_metadata(res, 'backend', str(type(self.trial_backend).__name__))
+        self._set_metadata(res, 'scheduler_name', str(self.scheduler.__class__.__name__))
         return res
 
     def _save_metadata(self):
