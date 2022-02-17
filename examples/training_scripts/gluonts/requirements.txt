@@ -1,1 +1,1 @@
-git+https://github.com/awslabs/gluon-ts.git
+gluonts==0.8.1
