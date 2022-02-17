@@ -19,14 +19,14 @@ from pathlib import Path
 
 from sagemaker.pytorch import PyTorch
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.remote.remote_launcher import RemoteLauncher
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend import SageMakerBackend
 from syne_tune.search_space import randint
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune import StoppingCriterion
+from syne_tune import Tuner
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # Using the sagemaker backend means the remote instance will launch one sagemaker job per trial.
     distribute_trials_on_sagemaker = False
     if distribute_trials_on_sagemaker:
-        backend = SagemakerBackend(
+        trial_backend = SageMakerBackend(
             # we tune a PyTorch Framework from Sagemaker
             sm_estimator=PyTorch(
                 entry_point=entry_point,
@@ -64,7 +64,7 @@ if __name__ == '__main__':
             ),
         )
     else:
-        backend = LocalBackend(entry_point=entry_point)
+        trial_backend = LocalBackend(entry_point=entry_point)
 
     for seed in range(2):
         # Random search without stopping
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
         tuner = RemoteLauncher(
             tuner=Tuner(
-                backend=backend,
+                trial_backend=trial_backend,
                 scheduler=scheduler,
                 n_workers=n_workers,
                 tuner_name="height-tuning",

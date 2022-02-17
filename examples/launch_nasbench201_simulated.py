@@ -15,14 +15,13 @@ Example for running the simulator back-end on a tabulated benchmark
 """
 import logging
 
-from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
+from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
+
+from benchmarking.definitions.definition_nasbench201 import nasbench201_default_params, nasbench201_benchmark
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.tuner import Tuner
-from syne_tune.stopping_criterion import StoppingCriterion
-
-from benchmarking.definitions.nasbench201 import \
-    nasbench201_benchmark, nasbench201_default_params
+from syne_tune import Tuner
+from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
@@ -46,7 +45,7 @@ if __name__ == '__main__':
     config_space = benchmark['config_space']
 
     # Simulator back-end specialized to tabulated blackboxes
-    backend = BlackboxRepositoryBackend(
+    trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         elapsed_time_attr=benchmark['elapsed_time_attr'],
         time_this_resource_attr=benchmark.get('time_this_resource_attr'),
@@ -65,7 +64,7 @@ if __name__ == '__main__':
         metric=metric,
         random_seed=random_seed)
     # Make scheduler aware of time_keeper
-    scheduler.set_time_keeper(backend.time_keeper)
+    scheduler.set_time_keeper(trial_backend.time_keeper)
 
     max_wallclock_time = 600
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
@@ -76,7 +75,7 @@ if __name__ == '__main__':
     # It is important to set `sleep_time` to 0 here (mandatory for simulator
     # backend)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,

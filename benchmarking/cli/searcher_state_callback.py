@@ -3,7 +3,7 @@ import json
 import time
 
 from syne_tune.tuner_callback import TunerCallback
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import \

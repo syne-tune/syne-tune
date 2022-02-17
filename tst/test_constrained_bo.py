@@ -13,11 +13,11 @@
 from pathlib import Path
 import pytest
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import uniform
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 
 
 @pytest.mark.skip("this unit test takes about two minutes and is skipped for now")
@@ -36,7 +36,7 @@ def test_constrained_bayesopt(scheduler, searcher, constraint_offset):
         "constraint_offset": constraint_offset  # the lower, the stricter
     }
 
-    backend = LocalBackend(
+    trial_backend = LocalBackend(
         entry_point=Path(__file__).parent.parent / "examples"
                     / "training_scripts" / "constrained_hpo" / "train_constrained_example.py")
 
@@ -55,7 +55,7 @@ def test_constrained_bayesopt(scheduler, searcher, constraint_offset):
         metric='objective')
 
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=myscheduler,
         stop_criterion=stop_criterion,
         n_workers=num_workers,

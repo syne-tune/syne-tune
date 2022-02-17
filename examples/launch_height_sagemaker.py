@@ -18,12 +18,12 @@ from pathlib import Path
 
 from sagemaker.pytorch import PyTorch
 
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import randint
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         metric=metric,
         random_seed=random_seed)
 
-    backend = SagemakerBackend(
+    trial_backend = SageMakerBackend(
         # we tune a PyTorch Framework from Sagemaker
         sm_estimator=PyTorch(
             entry_point=str(entry_point),
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     stop_criterion = StoppingCriterion(max_wallclock_time=600)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,

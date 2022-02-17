@@ -7,18 +7,18 @@ from pathlib import Path
 
 import numpy as np
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import ASHA
 import syne_tune.search_space as sp
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 
 if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
     np.random.seed(0)
     max_steps = 100
-    backend = LocalBackend(entry_point=Path(__file__).parent / "training_scripts" / "rl_cartpole" / "train_cartpole.py")
+    trial_backend = LocalBackend(entry_point=Path(__file__).parent / "training_scripts" / "rl_cartpole" / "train_cartpole.py")
 
     scheduler = ASHA(
         config_space={
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     )
 
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         # tune for 3 minutes
         stop_criterion=lambda status: status.wallclock_time > 60,

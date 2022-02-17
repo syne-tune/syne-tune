@@ -16,15 +16,15 @@ import itertools
 import copy
 import numpy as np
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import \
-    SagemakerBackend
+    SageMakerBackend
 from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
 from syne_tune.optimizer.schedulers.searchers.searcher_callback import \
     StoreResultsAndModelParamsCallback, SimulatorAndModelParamsCallback
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune import StoppingCriterion
+from syne_tune import Tuner
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune.util import s3_experiment_path, repository_root_path
 
@@ -257,7 +257,7 @@ if __name__ == '__main__':
         # Create backend
         if backend_name == 'local':
             logger.info(f"Using 'local' back-end with entry_point = {benchmark['script']}")
-            backend = LocalBackend(
+            trial_backend = LocalBackend(
                 entry_point=benchmark['script'],
                 rotate_gpus=params['rotate_gpus'])
         elif backend_name == 'simulated':
@@ -273,7 +273,7 @@ if __name__ == '__main__':
                 logger.info(f"Using 'simulated' back-end with entry_point = {benchmark['script']}")
                 # Tabulated benchmark given by a script
                 backend_kwargs['entry_point'] = benchmark['script']
-                backend = SimulatorBackend(**backend_kwargs)
+                trial_backend = SimulatorBackend(**backend_kwargs)
             else:
                 from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
 
@@ -292,7 +292,7 @@ if __name__ == '__main__':
                     'max_resource_attr': benchmark.get('max_resource_attr'),
                     'seed': seed,
                 })
-                backend = BlackboxRepositoryBackend(**backend_kwargs)
+                trial_backend = BlackboxRepositoryBackend(**backend_kwargs)
         else:
             assert backend_name == 'sagemaker'
             for k in ('instance_type',):
@@ -312,7 +312,7 @@ if __name__ == '__main__':
                 image_uri=params.get('image_uri'),
                 disable_profiler=not params['enable_sagemaker_profiler'],
             )
-            backend = SagemakerBackend(
+            trial_backend = SageMakerBackend(
                 sm_estimator=sm_estimator,
                 metrics_names=[benchmark['metric']],
                 s3_path=s3_path)
@@ -363,7 +363,7 @@ if __name__ == '__main__':
             else [StoreResultsAndModelParamsCallback()]
 
         local_tuner = Tuner(
-            backend=backend,
+            trial_backend=trial_backend,
             scheduler=myscheduler,
             stop_criterion=stop_criterion,
             n_workers=params['num_workers'],

@@ -18,7 +18,7 @@ import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 
 
 def decode_bool(hp: str):
@@ -47,10 +47,10 @@ if __name__ == '__main__':
     tuner = Tuner.load(tuner_path)
     if args.store_logs:
         # inform the backend of the desired path so that logs are persisted
-        tuner.backend.set_path(results_root=tuner.tuner_path)
+        tuner.trial_backend.set_path(results_root=tuner.tuner_path)
     else:
         # sets a path where logs will not be stored
-        tuner.backend.set_path(results_root=str(Path('~/').expanduser()), tuner_name=tuner.name)
+        tuner.trial_backend.set_path(results_root=str(Path('~/').expanduser()), tuner_name=tuner.name)
 
     # Run the tuner on the sagemaker instance. If the simulation back-end is
     # used, this needs a specific callback

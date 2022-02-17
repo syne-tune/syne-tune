@@ -20,7 +20,7 @@ from syne_tune.backend.trial_status import TrialResult, Trial, Status
 from syne_tune.constants import ST_WORKER_TIMESTAMP
 
 
-class Backend(object):
+class TrialBackend:
     def __init__(self, ):
         self.trial_ids = []
         self._trial_dict = {}

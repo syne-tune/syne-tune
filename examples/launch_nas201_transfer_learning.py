@@ -1,14 +1,14 @@
 from typing import Dict
 
 from benchmarking.blackbox_repository import load
-from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
+from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune import StoppingCriterion
+from syne_tune import Tuner
 
 
 def load_transfer_learning_evaluations(blackbox_name: str, test_task: str, metric: str) -> Dict[str, TransferLearningTaskEvaluations]:
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     stop_criterion = StoppingCriterion(max_wallclock_time=7200)
 
-    backend = BlackboxRepositoryBackend(
+    trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         elapsed_time_attr=elapsed_time_attr,
         time_this_resource_attr=time_this_resource_attr,
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     # It is important to set `sleep_time` to 0 here (mandatory for simulator backend)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=4,

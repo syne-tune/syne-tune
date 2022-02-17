@@ -17,8 +17,8 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
-from syne_tune.tuner import Tuner
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import Tuner
+from syne_tune import StoppingCriterion
 from syne_tune.search_space import randint
 from syne_tune.util import script_checkpoint_example_path
 from tst.util_test import temporary_local_backend
@@ -47,7 +47,7 @@ def test_async_scheduler(scheduler, searcher, mode):
     entry_point = str(script_checkpoint_example_path())
     metric = 'mean_loss'
 
-    backend = temporary_local_backend(entry_point=entry_point)
+    trial_backend = temporary_local_backend(entry_point=entry_point)
 
     search_options = {
         'debug_log': False,
@@ -78,7 +78,7 @@ def test_async_scheduler(scheduler, searcher, mode):
 
     stop_criterion = StoppingCriterion(max_wallclock_time=0.2)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=myscheduler,
         sleep_time=0.1,
         n_workers=num_workers,
@@ -110,7 +110,7 @@ def test_sync_scheduler(searcher, mode):
     entry_point = str(script_checkpoint_example_path())
     metric = 'mean_loss'
 
-    backend = temporary_local_backend(entry_point=entry_point)
+    trial_backend = temporary_local_backend(entry_point=entry_point)
 
     search_options = {
         'debug_log': False,
@@ -128,7 +128,7 @@ def test_sync_scheduler(searcher, mode):
 
     stop_criterion = StoppingCriterion(max_wallclock_time=0.2)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=myscheduler,
         sleep_time=0.1,
         n_workers=num_workers,
