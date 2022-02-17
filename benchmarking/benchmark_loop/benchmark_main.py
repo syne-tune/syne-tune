@@ -12,8 +12,8 @@ from benchmarking.benchmark_loop.benchmark_definitions import \
 
 from syne_tune.backend.simulator_backend.simulator_callback import \
     SimulatorCallback
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune import StoppingCriterion
+from syne_tune import Tuner
 from coolname import generate_slug
 
 
@@ -42,17 +42,17 @@ if __name__ == '__main__':
 
         print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
 
-        backend = BlackboxRepositoryBackend(
+        trial_backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
             time_this_resource_attr=benchmark.time_this_resource_attr,
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
         )
 
-        max_t = max(backend.blackbox.fidelity_values)
-        resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
+        max_t = max(trial_backend.blackbox.fidelity_values)
+        resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
         scheduler = methods[method](
-            config_space=backend.blackbox.configuration_space,
+            config_space=trial_backend.blackbox.configuration_space,
             metric=benchmark.metric,
             mode=benchmark.mode,
             random_seed=seed,
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         stop_criterion = StoppingCriterion(max_wallclock_time=benchmark.max_wallclock_time)
 
         tuner = Tuner(
-            backend=backend,
+            trial_backend=trial_backend,
             scheduler=scheduler,
             stop_criterion=stop_criterion,
             n_workers=benchmark.n_workers,

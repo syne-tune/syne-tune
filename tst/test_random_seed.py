@@ -17,7 +17,7 @@ import logging
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.tuner_callback import TunerCallback
 from syne_tune.backend.trial_status import Trial
 from syne_tune.search_space import randint
@@ -69,7 +69,7 @@ def test_scheduler(scheduler, random_seed):
     metric = 'mean_loss'
     mode = 'min'
 
-    backend = temporary_local_backend(entry_point=entry_point)
+    trial_backend = temporary_local_backend(entry_point=entry_point)
 
     search_options = {'debug_log': False}
     kwargs = dict(
@@ -98,7 +98,7 @@ def test_scheduler(scheduler, random_seed):
     stop_criterion = lambda status: status.wallclock_time > 0.5
     callback1 = StoreConfigCallback()
     tuner1 = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=myscheduler1,
         sleep_time=0.02,
         n_workers=num_workers,
@@ -107,10 +107,10 @@ def test_scheduler(scheduler, random_seed):
     )
     tuner1.run()
 
-    backend = temporary_local_backend(entry_point=entry_point)
+    trial_backend = temporary_local_backend(entry_point=entry_point)
     callback2 = StoreConfigCallback()
     tuner2 = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=myscheduler2,
         sleep_time=0.02,
         n_workers=num_workers,

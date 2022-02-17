@@ -13,11 +13,11 @@
 import logging
 from pathlib import Path
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import loguniform
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     }
 
     entry_point = Path(__file__).parent / "training_scripts" / "pbt_example" / "pbt_example.py"
-    backend = LocalBackend(entry_point=str(entry_point))
+    trial_backend = LocalBackend(entry_point=str(entry_point))
 
     mode = "max"
     metric = "mean_accuracy"
@@ -46,7 +46,7 @@ if __name__ == '__main__':
                                   perturbation_interval=1)
 
     local_tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=pbt,
         stop_criterion=StoppingCriterion(max_wallclock_time=20),
         n_workers=population_size,

@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import tempfile
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 
 
 def temporary_local_backend(entry_point: str):

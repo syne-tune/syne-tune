@@ -21,11 +21,11 @@ import numpy as np
 
 from sagemaker.mxnet import MXNet
 
-from syne_tune.backend.local_backend import LocalBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend import LocalBackend
+from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import ASHA
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import loguniform, lograndint
 
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     if evaluate_trials_on_sagemaker:
         # evaluate trials on Sagemaker
-        backend = SagemakerBackend(
+        trial_backend = SageMakerBackend(
             sm_estimator=MXNet(
                 entry_point=entry_point.name,
                 source_dir=str(entry_point.parent),
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         )
     else:
         # evaluate trials locally, replace with SagemakerBackend to evaluate trials on Sagemaker
-        backend = LocalBackend(entry_point=str(entry_point))
+        trial_backend = LocalBackend(entry_point=str(entry_point))
 
     # see examples to see other schedulers, mobster, Raytune, multiobjective, etc...
     scheduler = ASHA(
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     dollar_cost_budget = 20.0
 
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         # stops if wallclock time or dollar-cost exceeds budget,
         # dollar-cost is only available when running on Sagemaker

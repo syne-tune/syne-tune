@@ -22,7 +22,7 @@ from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     add_syne_tune_dependency, get_execution_role
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.util import s3_experiment_path
 from syne_tune.constants import ST_REMOTE_UPLOAD_DIR_NAME
 
@@ -132,7 +132,7 @@ class RemoteLauncher:
         logger.info(f"copy endpoint files from {source_dir} to {upload_dir}")
         shutil.copytree(source_dir, upload_dir)
 
-        backup = str(self.tuner.backend.entrypoint_path())
+        backup = str(self.tuner.trial_backend.entrypoint_path())
 
         # update the path of the endpoint script so that it can be found when launching remotely
         self.update_backend_with_remote_paths()
@@ -141,7 +141,7 @@ class RemoteLauncher:
         self.tuner.save(upload_dir)
 
         # avoid side effect
-        self.tuner.backend.set_entrypoint(backup)
+        self.tuner.trial_backend.set_entrypoint(backup)
 
         # todo clean copy of remote dir
         tgt_requirement = self.remote_script_dir() / "requirements.txt"
@@ -149,7 +149,7 @@ class RemoteLauncher:
             os.remove(tgt_requirement)
         except OSError:
             pass
-        endpoint_requirements = self.tuner.backend.entrypoint_path().parent / "requirements.txt"
+        endpoint_requirements = self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
         if endpoint_requirements.exists():
             logger.info(f"copy endpoint script requirements to {self.remote_script_dir()}")
             shutil.copy(endpoint_requirements, tgt_requirement)
@@ -158,12 +158,12 @@ class RemoteLauncher:
     def get_source_dir(self) -> Path:
         # note: this logic would be better moved to the backend.
         if self.is_source_dir_specified():
-            return Path(self.tuner.backend.source_dir)
+            return Path(self.tuner.trial_backend.source_dir)
         else:
-            return Path(self.tuner.backend.entrypoint_path()).parent
+            return Path(self.tuner.trial_backend.entrypoint_path()).parent
 
     def is_source_dir_specified(self) -> bool:
-        return hasattr(self.tuner.backend, "source_dir") and self.tuner.backend.sm_estimator.source_dir is not None
+        return hasattr(self.tuner.trial_backend, "source_dir") and self.tuner.trial_backend.sm_estimator.source_dir is not None
 
     def update_backend_with_remote_paths(self):
         """
@@ -171,10 +171,10 @@ class RemoteLauncher:
         """
         if self.is_source_dir_specified():
             # the source_dir is deployed to `upload_dir`
-            self.tuner.backend.sm_estimator.source_dir = str(Path(self.upload_dir().name))
+            self.tuner.trial_backend.sm_estimator.source_dir = str(Path(self.upload_dir().name))
         else:
-            self.tuner.backend.set_entrypoint(
-                f"{self.upload_dir().name}/{self.tuner.backend.entrypoint_path().name}")
+            self.tuner.trial_backend.set_entrypoint(
+                f"{self.upload_dir().name}/{self.tuner.trial_backend.entrypoint_path().name}")
 
     def upload_dir(self) -> Path:
         return Path(syne_tune.__path__[0]).parent / ST_REMOTE_UPLOAD_DIR_NAME

@@ -13,11 +13,11 @@
 from pathlib import Path
 import pytest
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import uniform
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 
 
 @pytest.mark.skip("this unit test takes about a minute and is skipped for now")
@@ -35,7 +35,7 @@ def test_cost_aware_bayesopt(scheduler, searcher, cost):
         "cost": cost  # cost_value = x2 ** cost
     }
 
-    backend = LocalBackend(
+    trial_backend = LocalBackend(
         entry_point=Path(__file__).parent.parent / "examples"
                     / "training_scripts" / "cost_aware_hpo" / "train_cost_aware_example.py")
 
@@ -54,7 +54,7 @@ def test_cost_aware_bayesopt(scheduler, searcher, cost):
     )
 
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=myscheduler,
         stop_criterion=stop_criterion,
         n_workers=num_workers,

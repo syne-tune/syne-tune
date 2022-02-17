@@ -3,14 +3,14 @@ import numpy as np
 import pandas as pd
 import syne_tune.search_space as sp
 
-from blackbox_repository import load, add_surrogate
-from blackbox_repository.blackbox_tabular import BlackboxTabular
-from blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend, UserBlackboxBackend
+from benchmarking.blackbox_repository import load, add_surrogate
+from benchmarking.blackbox_repository.blackbox_tabular import BlackboxTabular
+from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend, UserBlackboxBackend
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.baselines import ASHA
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune import StoppingCriterion
+from syne_tune import Tuner
 
 
 def example_blackbox():
@@ -47,7 +47,7 @@ def example_blackbox():
     ))
 
 
-def simulate_benchmark(blackbox, backend, metric):
+def simulate_benchmark(blackbox, trial_backend, metric):
     # Random search without stopping
     scheduler = ASHA(
         blackbox.configuration_space,
@@ -62,7 +62,7 @@ def simulate_benchmark(blackbox, backend, metric):
 
     # It is important to set `sleep_time` to 0 here (mandatory for simulator backend)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,
@@ -89,19 +89,19 @@ if __name__ == '__main__':
     time_this_resource_attr = 'metric_runtime'
     elapsed_time_attr = 'metric_elapsed_time'
     blackbox = load(blackbox_name)[dataset]
-    backend = BlackboxRepositoryBackend(
+    trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         dataset=dataset,
         elapsed_time_attr=elapsed_time_attr,
         time_this_resource_attr=time_this_resource_attr,
     )
-    simulate_benchmark(blackbox=blackbox, backend=backend, metric=metric)
+    simulate_benchmark(blackbox=blackbox, trial_backend=trial_backend, metric=metric)
 
     ## example of loading a blackbox with custom code and then simulating tuning
     metric = "metric_error"
     blackbox = example_blackbox()
-    backend = UserBlackboxBackend(
+    trial_backend = UserBlackboxBackend(
         blackbox=blackbox,
         elapsed_time_attr="runtime",
     )
-    simulate_benchmark(blackbox=blackbox, backend=backend, metric=metric)
+    simulate_benchmark(blackbox=blackbox, trial_backend=trial_backend, metric=metric)

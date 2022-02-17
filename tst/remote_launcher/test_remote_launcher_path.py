@@ -16,12 +16,12 @@
 # import pytest
 # from sagemaker.pytorch import PyTorch
 #
-# from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+# from syne_tune.backend import SagemakerBackend
 # from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 # from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 # from syne_tune.remote.remote_launcher import RemoteLauncher
-# from syne_tune.stopping_criterion import StoppingCriterion
-# from syne_tune.tuner import Tuner
+# from syne_tune import StoppingCriterion
+# from syne_tune import Tuner
 #
 # root = Path(__file__).parent
 # sm_estimator = PyTorch(

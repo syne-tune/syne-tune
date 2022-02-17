@@ -97,7 +97,7 @@ class REA(FIFOScheduler):
 
 
 # dictionary that allows to also list baselines who don't need a wrapper class such as PBT.
-baselines = {
+baselines_dict = {
     'Random Search': RandomSearch,
     'Bayesian Optimization': BayesianOptimization,
     'ASHA': ASHA,
@@ -106,4 +106,5 @@ baselines = {
     'MOASHA': MOASHA,
     'PBT': PopulationBasedTraining,
     'BORE': BORE,
+    'REA': REA,
 }

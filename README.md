@@ -6,15 +6,16 @@
 [![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
 
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) where trials 
- can be evaluated with several backend options (local backend to evaluate them locally; SageMaker to evaluate them as 
- separate SageMaker training jobs; another backend with fast startup times is also in the making).
+ can be evaluated with several trial backend options (local backend to evaluate trials locally;
+SageMaker to evaluate trials as separate SageMaker training jobs; a simulation backend to quickly benchmark parallel 
+asynchronous schedulers).
 
 ## Installing
 
 To install Syne Tune from pip, you can simply do:
 
 ```bash
-pip install syne-tune
+pip install 'syne-tune'
 ```
 
 This will install a bare-bone version. If you want in addition to install our own Gaussian process based optimizers, Ray Tune or Bore optimizer, 
@@ -95,7 +96,7 @@ the user has the possibility to checkpoint intermediate results. Model outputs a
 checkpoints must be written into a specific local path given by the command line argument 
 `st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load
  the state when the job is stopped/resumed (setting the folder correctly and uniquely per
-  trial is the responsibility of the backend), see 
+  trial is the responsibility of the trial backend), see 
   [checkpoint_example.py](examples/training_scripts/checkpoint_example/checkpoint_example.py) to see a fully
    working example of a tuning script with checkpoint enabled.
 
@@ -115,18 +116,19 @@ Many other examples of scripts that can be tuned are are available in
 
 **Tuning options.** At a high-level a tuning consists in a tuning-loop that evaluates different trial in parallel and only let the top ones continue. This loop continues until a stopping criterion is met (for instance a maximum wallclock-time) and each time a worker is available asks a scheduler (an HPO algorithm) to decide which trial should be evaluated next. The execution of the trial is done on a backend. 
 The pseudo-code of an HPO loop is as follow:
+
 ```python
-def hpo_loop(hpo_algorithm, backend):
+def hpo_loop(hpo_algorithm, trial_backend):
     while not_done():
         if worker_is_free():
             config = hpo_algorithm.suggest()
-            backend.start_trial(config)
-        for result in backend.fetch_new_results():
+            trial_backend.start_trial(config)
+        for result in trial_backend.fetch_new_results():
             decision = hpo_algorithm.on_trial_result(result)
             if decision == "stop":
-                backend.stop_trial(result.trial)
+                trial_backend.stop_trial(result.trial)
 ```
-By changing the backend, users can decide whether the trial should be evaluated in a local machine, 
+By changing the trial backend, users can decide whether the trial should be evaluated in a local machine, 
 whether the trial should be executed on SageMaker with a separate training job or whether the trial should 
 be evaluated on a cluster of multiple machines (available as a separate package for now).
 
@@ -150,7 +152,7 @@ config_space = {
 entry_point = Path(__file__).parent / "training_scripts" / "height_example" / "train_height.py"
 
 # Local back-end
-backend = LocalBackend(entry_point=str(entry_point))
+trial_backend = LocalBackend(entry_point=str(entry_point))
 
 # Random search without stopping
 scheduler = FIFOScheduler(
@@ -161,7 +163,7 @@ scheduler = FIFOScheduler(
 )
 
 tuner = Tuner(
-    backend=backend,
+    trial_backend=trial_backend,
     scheduler=scheduler,
     stop_criterion=StoppingCriterion(max_wallclock_time=30),
     n_workers=4,
@@ -182,10 +184,10 @@ here is one example to run a PyTorch estimator on a GPU
 
 ```python
 from sagemaker.pytorch import PyTorch
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 
-backend = SagemakerBackend(
+trial_backend = SageMakerBackend(
     # we tune a PyTorch Framework from Sagemaker
     sm_estimator=PyTorch(
         entry_point="path_to_your_entrypoint.py",
@@ -209,7 +211,7 @@ a developer machine run and to benchmark many seed/model options.
 ```python
 tuner = RemoteLauncher(
     tuner=Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         n_workers=n_workers,
         tuner_name="height-tuning",
@@ -252,7 +254,7 @@ For instance, the following code:
 
 ```python
 tuner = Tuner(
-   backend=backend,
+   trial_backend=trial_backend,
    scheduler=scheduler,
    n_workers=4,
    tuner_name="height-tuning",

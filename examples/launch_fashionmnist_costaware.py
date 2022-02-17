@@ -15,13 +15,12 @@ Example for cost-aware promotion-based Hyperband
 """
 import logging
 
-from syne_tune.backend.local_backend import LocalBackend
+from benchmarking.definitions.definition_mlp_on_fashion_mnist import mlp_fashionmnist_default_params, \
+    mlp_fashionmnist_benchmark
+from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.tuner import Tuner
-from syne_tune.stopping_criterion import StoppingCriterion
-
-from benchmarking.definitions.mlp_on_fashion_mnist \
-    import mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
+from syne_tune import Tuner
+from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
@@ -44,7 +43,7 @@ if __name__ == '__main__':
     config_space = benchmark['config_space']
 
     # Local back-end
-    backend = LocalBackend(entry_point=benchmark['script'])
+    trial_backend = LocalBackend(entry_point=benchmark['script'])
 
     # Cost-aware variant of ASHA, using a random searcher
     scheduler = HyperbandScheduler(
@@ -62,7 +61,7 @@ if __name__ == '__main__':
 
     stop_criterion = StoppingCriterion(max_wallclock_time=120)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,

@@ -15,9 +15,9 @@ import logging
 from syne_tune.tuner_callback import StoreResultsCallback
 from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class SimulatorCallback(StoreResultsCallback):
     def on_tuning_start(self, tuner: "Tuner"):
         super(SimulatorCallback, self).on_tuning_start(tuner=tuner)
 
-        backend = tuner.backend
+        backend = tuner.trial_backend
         assert isinstance(backend, SimulatorBackend), \
             "Use SimulatorCallback only together with SimulatorBackend"
         assert tuner.sleep_time == 0, \

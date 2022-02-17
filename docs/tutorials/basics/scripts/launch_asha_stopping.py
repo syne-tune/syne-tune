@@ -25,10 +25,10 @@ import logging
 from pathlib import Path
 
 from syne_tune.search_space import randint, uniform, loguniform
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.tuner import Tuner
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import Tuner
+from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # Local back-end: Responsible for scheduling trials
     # The local back-end runs trials as sub-processes on a single instance
-    backend = LocalBackend(entry_point=entry_point)
+    trial_backend = LocalBackend(entry_point=entry_point)
 
     # Scheduler:
     # 'HyperbandScheduler' runs asynchronous successive halving, or Hyperband.
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     # Everything comes together in the tuner
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,
