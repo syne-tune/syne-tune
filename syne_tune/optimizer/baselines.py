@@ -7,6 +7,8 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import \
     RegularizedEvolution
 from syne_tune.optimizer.schedulers.synchronous import \
     SynchronousGeometricHyperbandScheduler
+from syne_tune.optimizer.schedulers.median_stopping_rule import \
+    MedianStoppingRule
 
 
 class RandomSearch(FIFOScheduler):
@@ -97,11 +99,8 @@ class PASHA(HyperbandScheduler):
 
 class SyncHyperband(SynchronousGeometricHyperbandScheduler):
     def __init__(
-            self, config_space: Dict,
-            metric: str,
-            resource_attr: str,
-            **kwargs,
-            ):
+            self, config_space: Dict, metric: str, resource_attr: str,
+            **kwargs):
         """
         One of `max_resource_level`, `max_resource_attr` needs to be in
         `kwargs`. The latter is more useful, see also
@@ -122,11 +121,8 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
 
 class SyncBOHB(SynchronousGeometricHyperbandScheduler):
     def __init__(
-            self, config_space: Dict,
-            metric: str,
-            resource_attr: str,
-            **kwargs,
-            ):
+            self, config_space: Dict, metric: str, resource_attr: str,
+            **kwargs):
         """
         One of `max_resource_level`, `max_resource_attr` needs to be in
         `kwargs`. The latter is more useful, see also
@@ -147,11 +143,8 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
 
 class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
     def __init__(
-            self, config_space: Dict,
-            metric: str,
-            resource_attr: str,
-            **kwargs,
-            ):
+            self, config_space: Dict, metric: str, resource_attr: str,
+            **kwargs):
         """
         One of `max_resource_level`, `max_resource_attr` needs to be in
         `kwargs`. The latter is more useful, see also
@@ -208,6 +201,22 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
             searcher="bayesopt_constrained",
             **kwargs,
         )
+
+
+class MSRRandom(MedianStoppingRule):
+    def __init__(
+            self, config_space: Dict, metric: str, resource_attr: str,
+            **kwargs):
+        msr_kwargs = dict()
+        for k in ('running_average', 'grace_time', 'grace_population',
+                  'rank_cutoff'):
+            if k in kwargs:
+                msr_kwargs[k] = kwargs.pop(k)
+        scheduler = RandomSearch(config_space, metric, **kwargs)
+        super(MSRRandom, self).__init__(
+            scheduler=scheduler,
+            resource_attr=resource_attr,
+            **msr_kwargs)
 
 
 # dictionary that allows to also list baselines who don't need a wrapper class such as PBT.
