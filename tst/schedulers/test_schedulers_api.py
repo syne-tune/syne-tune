@@ -10,7 +10,8 @@ import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER, REA
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
+    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -18,8 +19,6 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
-    SynchronousGeometricHyperbandScheduler
 import syne_tune.search_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
@@ -120,30 +119,27 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
         metric=metric1,
         transfer_learning_evaluations=make_transfer_learning_evaluations(),
     ),
-    SynchronousGeometricHyperbandScheduler(
+    SyncHyperband(
         config_space=config_space,
-        max_resource_level=max_t,
-        brackets=3,
-        resource_attr=resource_attr,
         metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
         max_resource_attr='steps',
-        searcher='random'),
-    SynchronousGeometricHyperbandScheduler(
+        brackets=3),
+    SyncMOBSTER(
         config_space=config_space,
-        max_resource_level=max_t,
-        brackets=3,
-        resource_attr=resource_attr,
         metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
         max_resource_attr='steps',
-        searcher='bayesopt'),
-    SynchronousGeometricHyperbandScheduler(
+        brackets=3),
+    SyncBOHB(
         config_space=config_space,
-        max_resource_level=max_t,
-        brackets=3,
-        resource_attr=resource_attr,
         metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
         max_resource_attr='steps',
-        searcher='kde'),
+        brackets=3),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
