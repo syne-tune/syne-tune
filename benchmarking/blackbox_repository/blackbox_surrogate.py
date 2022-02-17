@@ -31,6 +31,7 @@ class BlackboxSurrogate(Blackbox):
             fidelity_space: Optional[Dict] = None,
             fidelity_values: Optional[np.array] = None,
             surrogate=KNeighborsRegressor(n_neighbors=1),
+            max_fit_samples: Optional[int] = None,
             name: Optional[str] = None,
     ):
         """
@@ -57,7 +58,7 @@ class BlackboxSurrogate(Blackbox):
         assert len(X) == len(y)
         # todo other types of assert with configuration_space, objective_names, ...
         self.surrogate = surrogate
-        self.max_fit_samples = 10000
+        self.max_fit_samples = max_fit_samples
         self.fit_surrogate(X=X, y=y, surrogate=surrogate, max_samples=self.max_fit_samples)
         self.name = name
         self._fidelity_values = fidelity_values
@@ -99,7 +100,7 @@ class BlackboxSurrogate(Blackbox):
             ('model', model)
         ])
 
-    def fit_surrogate(self, X, y, surrogate=KNeighborsRegressor(n_neighbors=1), max_samples: int = None) -> Blackbox:
+    def fit_surrogate(self, X, y, surrogate=KNeighborsRegressor(n_neighbors=1), max_samples: Optional[int] = None) -> Blackbox:
         """
         Fits a surrogate model to a blackbox.
         :param surrogate: fits the model and apply the model transformation when evaluating a
@@ -117,8 +118,8 @@ class BlackboxSurrogate(Blackbox):
         if max_samples is not None and max_samples < len(X):
             random_indices = np.random.permutation(len(X))[:max_samples]
             self.surrogate_pipeline.fit(
-                X=X[random_indices],
-                y=y[random_indices]
+                X=X.loc[random_indices],
+                y=y.loc[random_indices]
             )
         else:
             self.surrogate_pipeline.fit(
@@ -155,7 +156,7 @@ class BlackboxSurrogate(Blackbox):
             return objectives_values
 
 
-def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=1)):
+def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=1), **kwargs):
     """
     Fits a blackbox surrogates that can be evaluated anywhere, which can be useful for supporting
     interpolation/extrapolation.
@@ -176,4 +177,5 @@ def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=
         fidelity_space=blackbox.fidelity_space,
         fidelity_values=blackbox.fidelity_values,
         surrogate=surrogate,
+        **kwargs,
     )
