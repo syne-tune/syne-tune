@@ -83,22 +83,11 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         output_model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = ConstrainedGPFIFOSearcher(
-            configspace=self.configspace,
-            metric=self._metric,
-            clone_from_state=True,
-            hp_ranges=self.hp_ranges,
+            **self._new_searcher_kwargs_for_clone(),
             output_model_factory=output_model_factory,
-            acquisition_class=self.acquisition_class,
-            map_reward=self.map_reward,
             init_state=init_state,
-            local_minimizer_class=self.local_minimizer_class,
             output_skip_optimization=output_skip_optimization,
-            num_initial_candidates=self.num_initial_candidates,
-            num_initial_random_choices=self.num_initial_random_choices,
-            initial_scoring=self.initial_scoring,
-            cost_attr=self._cost_attr,
-            constraint_attr=self._constraint_attr,
-            resource_attr=self._resource_attr)
+            constraint_attr=self._constraint_attr)
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None

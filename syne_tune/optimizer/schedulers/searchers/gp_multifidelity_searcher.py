@@ -104,6 +104,8 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         See :class:`GPFIFOSearcher`
     initial_scoring : str
         See :class:`GPFIFOSearcher`
+    skip_local_optimization : str
+        See :class:`GPFIFOSearcher`
     opt_nstarts : int
         See :class:`GPFIFOSearcher`
     opt_maxiter : int
@@ -295,23 +297,12 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPMultiFidelitySearcher(
-            configspace=self.configspace,
-            metric=self._metric,
-            clone_from_state=True,
-            hp_ranges=self.hp_ranges,
-            configspace_ext=self.configspace_ext,
+            **self._new_searcher_kwargs_for_clone(),
             model_factory=model_factory,
-            acquisition_class=self.acquisition_class,
-            map_reward=self.map_reward,
-            resource_for_acquisition=self.resource_for_acquisition,
             init_state=init_state,
-            local_minimizer_class=self.local_minimizer_class,
             skip_optimization=skip_optimization,
-            num_initial_candidates=self.num_initial_candidates,
-            num_initial_random_choices=self.num_initial_random_choices,
-            initial_scoring=self.initial_scoring,
-            cost_attr=self._cost_attr,
-            resource_attr=self._resource_attr)
+            configspace_ext=self.configspace_ext,
+            resource_for_acquisition=self.resource_for_acquisition)
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None

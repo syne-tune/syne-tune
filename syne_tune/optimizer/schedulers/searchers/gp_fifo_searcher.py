@@ -43,11 +43,12 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm \
     import BayesianOptimizationAlgorithm
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components \
-    import IndependentThompsonSampling
+    import IndependentThompsonSampling, NoOptimization
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
     import RandomStatefulCandidateGenerator, ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults \
-    import DEFAULT_LOCAL_OPTIMIZER_CLASS, DEFAULT_NUM_INITIAL_CANDIDATES, DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS
+    import DEFAULT_LOCAL_OPTIMIZER_CLASS, DEFAULT_NUM_INITIAL_CANDIDATES, \
+    DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
     import DuplicateDetectorIdentical
 from syne_tune.optimizer.schedulers.utils.simple_profiler \
@@ -104,6 +105,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
             num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
             initial_scoring: Optional[str] = None,
+            skip_local_optimization: bool = False,
             cost_attr: Optional[str] = None,
             resource_attr: Optional[str] = None,
             filter_observed_data: Optional[ConfigurationFilter] = None):
@@ -111,13 +113,16 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self.num_initial_candidates = num_initial_candidates
         self.num_initial_random_choices = num_initial_random_choices
         self.map_reward = map_reward
-        if local_minimizer_class is None:
+        if skip_local_optimization:
+            self.local_minimizer_class = NoOptimization
+        elif local_minimizer_class is None:
             self.local_minimizer_class = DEFAULT_LOCAL_OPTIMIZER_CLASS
         else:
             self.local_minimizer_class = local_minimizer_class
         self.acquisition_class = acquisition_class
         self._debug_log = model_factory.debug_log
         self.initial_scoring = check_initial_candidates_scorer(initial_scoring)
+        self.skip_local_optimization = skip_local_optimization
         # Create state transformer
         # Initial state is empty (note that the state is mutable)
         if init_state is None:
@@ -469,6 +474,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
         Thompson sampling; randomized score, which can increase exploration),
         'acq_func' (score is the same (EI) acquisition function which is afterwards
         locally optimized).
+    skip_local_optimization : bool
+        If True, the local gradient-based optimization of the acquisition
+        function is skipped, and the top-tanked initial candidate is returned
+        instead. In this case, `initial_scoring='acq_func'` makes most sense,
+        otherwise the acquisition function will not be used.
     opt_nstarts : int
         Parameter for hyperparameter fitting. Number of random restarts
     opt_maxiter : int
@@ -751,6 +761,31 @@ class GPFIFOSearcher(ModelBasedSearcher):
         # future get_config calls)
         self.state_transformer.mark_trial_failed(trial_id)
 
+    def _new_searcher_kwargs_for_clone(self) -> Dict:
+        """
+        Helper method for `clone_from_state`. Args need to be extended
+        by `model_factory`, `init_state`, `skip_optimization`, and others
+        args becoming relevant in subclasses only.
+
+        :return: kwargs for creating new searcher object in `clone_from_state`
+        """
+        return dict(
+            configspace=self.configspace,
+            metric=self._metric,
+            clone_from_state=True,
+            hp_ranges=self.hp_ranges,
+            acquisition_class=self.acquisition_class,
+            map_reward=self.map_reward,
+            local_minimizer_class=self.local_minimizer_class,
+            num_initial_candidates=self.num_initial_candidates,
+            num_initial_random_choices=self.num_initial_random_choices,
+            initial_scoring=self.initial_scoring,
+            skip_local_optimization=self.skip_local_optimization,
+            cost_attr=self._cost_attr,
+            resource_attr=self._resource_attr,
+            filter_observed_data=self._filter_observed_data,
+        )
+
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state['state'], self._hp_ranges_in_state())
@@ -758,22 +793,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPFIFOSearcher(
-            configspace=self.configspace,
-            metric=self._metric,
-            clone_from_state=True,
-            hp_ranges=self.hp_ranges,
+            **self._new_searcher_kwargs_for_clone(),
             model_factory=model_factory,
-            acquisition_class=self.acquisition_class,
-            map_reward=self.map_reward,
             init_state=init_state,
-            local_minimizer_class=self.local_minimizer_class,
-            skip_optimization=skip_optimization,
-            num_initial_candidates=self.num_initial_candidates,
-            num_initial_random_choices=self.num_initial_random_choices,
-            initial_scoring=self.initial_scoring,
-            cost_attr=self._cost_attr,
-            resource_attr=self._resource_attr,
-            filter_observed_data=self._filter_observed_data)
+            skip_optimization=skip_optimization)
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None
