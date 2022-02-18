@@ -49,6 +49,12 @@ if __name__ == '__main__':
             if x not in df_methods:
                 logging.warning(f"method {x} not found in {bench}")
 
+    for benchmark in ['fcnet', 'nas201']:
+        n = 0
+        for key, df in benchmarks_to_df.items():
+            if benchmark in key:
+                n += len(df[df.algorithm == 'HB'])
+        print(f"number of hyperband evaluations for {benchmark}: {n}")
     plot_results(benchmarks_to_df, method_styles)
 
     methods_to_show = [

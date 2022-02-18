@@ -4,7 +4,7 @@ import pandas as pd
 
 
 n_load = 3
-n_read = 10000
+n_read = 1000
 
 def benchmark_bb_repo(blackbox, task):
     from benchmarking.blackbox_repository import load
@@ -15,10 +15,11 @@ def benchmark_bb_repo(blackbox, task):
     toc_load = time.perf_counter()
 
     tic_read = time.perf_counter()
+    config_space = bb.configuration_space
     for k in range(n_read):
-        config_space = bb.configuration_space
-        hp = {k: v.sample() for k, v in config_space.items()}
-        bb(hp, fidelity=1)
+        hp = {key: v.sample() for key, v in config_space.items()}
+        # get all fidelities by not passing the fidelity argument
+        bb(hp)
     toc_read = time.perf_counter()
     return (toc_load - tic_load) / n_load, (toc_read - tic_read) / n_read
 
@@ -34,9 +35,12 @@ def benchmark_hpobench(blackbox="fcnet", task=None):
     toc_load = time.perf_counter()
 
     tic_read = time.perf_counter()
-    hp = bb.get_configuration_space().sample_configuration()
+    fidelity_size = int(bb.get_fidelity_space().get_hyperparameters()[0].get_size())
+    fidelity_name = bb.get_fidelity_space().get_hyperparameters()[0].name
     for k in range(n_read):
-        bb.objective_function(hp)
+        hp = bb.get_configuration_space().sample_configuration()
+        for fidelity in range(fidelity_size):
+            bb.objective_function(hp, {fidelity_name: fidelity + 1})
     toc_read = time.perf_counter()
     return (toc_load - tic_load) / n_load, (toc_read - tic_read) / n_read
 
