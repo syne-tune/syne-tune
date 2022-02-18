@@ -73,14 +73,20 @@ def test_serialization():
         loguniform(7.5, 8.5),
         choice(['a', 'b', 'c']),
         randn(2.0, 1.0),
+        finrange(0.0, 1.0, 4),
+        finrange(0, 6, 4, cast_int=True),
+        logfinrange(0.001, 1.0, 4),
+        logfinrange(2, 64, 7, cast_int=True),
     ]
 
     for x in config_space:
         x2 = from_dict(to_dict(x))
         assert type(x) == type(x2)
-        assert x.sampler.__dict__ == x2.sampler.__dict__
-        assert type(x.sampler) == type(x2.sampler)
-        assert {k: v for k, v in x.__dict__.items() if k != "sampler"} == {k: v for k, v in x2.__dict__.items() if k != "sampler"}
+        if x.sampler is not None:
+            assert x.sampler.__dict__ == x2.sampler.__dict__
+            assert type(x.sampler) == type(x2.sampler)
+        assert {k: v for k, v in x.__dict__.items() if k != "sampler"} \
+                == {k: v for k, v in x2.__dict__.items() if k != "sampler"}
 
 
 def test_search_space_size():
