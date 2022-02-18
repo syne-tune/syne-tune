@@ -25,7 +25,7 @@ from syne_tune.backend import LocalBackend
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import ASHA
-from syne_tune import Tuner
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.search_space import loguniform, lograndint
 
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         metric=metric
     )
 
-    wallclock_time_budget = 3600 if evaluate_trials_on_sagemaker else 60
+    wallclock_time_budget = 3600 if evaluate_trials_on_sagemaker else 600
     dollar_cost_budget = 20.0
 
     tuner = Tuner(
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         scheduler=scheduler,
         # stops if wallclock time or dollar-cost exceeds budget,
         # dollar-cost is only available when running on Sagemaker
-        stop_criterion=lambda status: status.wallclock_time > wallclock_time_budget or status.cost > dollar_cost_budget,
+        stop_criterion=StoppingCriterion(max_wallclock_time=wallclock_time_budget, max_cost=dollar_cost_budget),
         n_workers=4,
         # some failures may happen when SGD diverges with NaNs
         max_failures=10,
