@@ -509,7 +509,7 @@ class Categorical(Domain):
                and super(Categorical, self).__eq__(other) \
                and self.categories == other.categories
 
-      
+
 class Function(Domain):
     class _CallSampler(BaseSampler):
         def sample(self,
@@ -600,7 +600,7 @@ class FiniteRange(Domain):
     """
     def __init__(self, lower: float, upper: float, size: int,
                  log_scale: bool = False, cast_int: bool = False):
-        assert lower < upper
+        assert lower <= upper
         assert size >= 2
         if log_scale:
             assert lower > 0.0
@@ -619,28 +619,31 @@ class FiniteRange(Domain):
             self._step_internal = \
                 (upper_internal - self._lower_internal) / (size - 1)
 
-    def _map_from_int(self, x: int) -> Union[float, int]:
+    def _map_from_int(self, x: int) -> float:
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
             y = np.exp(y)
-        y = np.clip(y, self.lower, self.upper)
-        if not self.cast_int:
-            return float(y)
-        else:
-            return int(np.round(y))
+        res = float(np.clip(y, self.lower, self.upper))
+        if self.cast_int:
+            res = int(np.rint(res))
+        return res
+
 
     @property
     def value_type(self):
         return float if not self.cast_int else int
 
     def _map_to_int(self, value) -> int:
-        int_value = np.clip(value, self.lower, self.upper)
-        if self.log_scale:
-            int_value = np.log(int_value)
-        sz = len(self._uniform_int)
-        return int(np.clip(round(
-            (int_value - self._lower_internal) / self._step_internal),
-            0, sz - 1))
+        if self._step_internal == 0:
+            return self.lower
+        else:
+            int_value = np.clip(value, self.lower, self.upper)
+            if self.log_scale:
+                int_value = np.log(int_value)
+            sz = len(self._uniform_int)
+            return int(np.clip(round(
+                (int_value - self._lower_internal) / self._step_internal),
+                0, sz - 1))
 
     def cast(self, value):
         return self._map_from_int(self._map_to_int(value))

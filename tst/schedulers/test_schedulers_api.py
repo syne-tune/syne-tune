@@ -22,8 +22,10 @@ from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
 import syne_tune.search_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import \
+    QuantileBasedSurrogateSearcher
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.thompson_sampling_functional_prior import QuantileBasedSurrogateSearcher
+
 
 config_space = {
     "steps": 100,
@@ -126,7 +128,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         mode='min',
         config_space=config_space,
         metric=metric1
-    )
+    ),
     RUSHScheduler(
         resource_attr=resource_attr,
         max_t=max_t,

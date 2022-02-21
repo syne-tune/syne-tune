@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
 
-from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
+from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
