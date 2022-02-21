@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
-        np.random.seed(np.random.randint(0, 2 ** 32))
+        np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
         print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")

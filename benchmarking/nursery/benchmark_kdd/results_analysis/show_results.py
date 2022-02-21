@@ -53,7 +53,7 @@ if __name__ == '__main__':
         n = 0
         for key, df in benchmarks_to_df.items():
             if benchmark in key:
-                n += len(df[df.algorithm == 'HB'])
+                n += len(df[df.algorithm == 'RS'])
         print(f"number of hyperband evaluations for {benchmark}: {n}")
     plot_results(benchmarks_to_df, method_styles)
 
