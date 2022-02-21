@@ -61,12 +61,18 @@ def get_transfer_learning_evaluations(blackbox_name: str, test_task: str, n_eval
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--experiment_tag", type=str, required=False, default=generate_slug(2))
-    parser.add_argument("--num_seeds", type=int, required=False, default=3)
-    parser.add_argument("--method", type=str, required=False)
-    parser.add_argument("--benchmark", type=str, required=False)
+    parser.add_argument("--num_seeds", type=int, required=False, default=3, help='number of seeds to run')
+    parser.add_argument("--run_all_seed", type=int, default=1, help='if 1 run only `seed=num_seeds`, otherwise runs all the seeds [0, `num_seeds`-1]')
+    parser.add_argument("--method", type=str, required=False, help='a method to run from baselines.py')
+    parser.add_argument("--benchmark", type=str, required=False, help='a benchmark to run from benchmark_definitions.py')
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
-    num_seeds = args.num_seeds
+
+    if args.run_all_seed == 1:
+        seeds = list(range(args.num_seeds))
+    else:
+        seeds = [args.num_seeds]
+
     method_names = [args.method] if args.method is not None else list(methods.keys())
     benchmark_names = [args.benchmark] if args.benchmark is not None else list(benchmark_definitions.keys())
 
@@ -74,7 +80,7 @@ if __name__ == '__main__':
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(logging.WARNING)
 
-    combinations = list(itertools.product(method_names, range(num_seeds), benchmark_names))
+    combinations = list(itertools.product(method_names, seeds, benchmark_names))
 
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
@@ -110,7 +116,7 @@ if __name__ == '__main__':
         stop_criterion = StoppingCriterion(max_wallclock_time=benchmark.max_wallclock_time)
 
         tuner = Tuner(
-            backend=backend,
+            trial_backend=backend,
             scheduler=scheduler,
             stop_criterion=stop_criterion,
             n_workers=benchmark.n_workers,

@@ -16,8 +16,7 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
     for method in methods.keys():
-        print(f"{experiment_tag}-{method}")
-        est = PyTorch(
+        sm_args = dict(
             entry_point="benchmark_main.py",
             source_dir=str(Path(__file__).parent),
             # instance_type="local",
@@ -26,10 +25,23 @@ if __name__ == '__main__':
             instance_count=1,
             py_version="py3",
             framework_version='1.6',
-            max_run=3600*72,
+            max_run=3600 * 72,
             role=get_execution_role(),
             dependencies=syne_tune.__path__ + benchmarking.__path__,
             disable_profiler=True,
-            hyperparameters={"experiment_tag": experiment_tag, 'num_seeds': 30, 'method': method},
         )
-        est.fit(job_name=f"{experiment_tag}-{method}", wait=False)
+        if method != 'MOBSTER':
+            print(f"{experiment_tag}-{method}")
+            sm_args["hyperparameters"] = {"experiment_tag": experiment_tag, 'num_seeds': 30, 'method': method}
+            est = PyTorch(**sm_args)
+            est.fit(job_name=f"{experiment_tag}-{method}", wait=False)
+        else:
+            # For mobster, we schedule one job per seed as the method takes much longer
+            for seed in range(30):
+                print(f"{experiment_tag}-{method}-{seed}")
+                sm_args["hyperparameters"] = {
+                    "experiment_tag": experiment_tag, 'num_seeds': seed, 'run_all_seed': 0,
+                    'method': method
+                }
+                est = PyTorch(**sm_args)
+                est.fit(job_name=f"{experiment_tag}-{method}-{seed}", wait=False)
