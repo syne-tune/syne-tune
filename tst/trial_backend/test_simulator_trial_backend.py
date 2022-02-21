@@ -14,7 +14,7 @@ import math
 import pytest
 import numpy as np
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.backend.simulator_backend.simulator_backend import \
     SimulatorBackend, SimulatorConfig
 from syne_tune.backend.simulator_backend.events import SimulatorState, \
@@ -23,8 +23,8 @@ from syne_tune.backend.simulator_backend.simulator_callback import \
     SimulatorCallback
 from syne_tune.backend.trial_status import Status
 from syne_tune.tuner_callback import StoreResultsCallback
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune import StoppingCriterion
+from syne_tune import Tuner
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
@@ -101,7 +101,7 @@ def test_compare_local_simulator_backends(scheduler_name):
             **scheduler_options)
         # Create back-end
         if backend_name == 'local':
-            backend = LocalBackend(entry_point=benchmark['script'])
+            trial_backend = LocalBackend(entry_point=benchmark['script'])
         else:
             simulator_config = SimulatorConfig(
                 delay_on_trial_result=0,
@@ -109,12 +109,12 @@ def test_compare_local_simulator_backends(scheduler_name):
                 delay_complete_after_stop=0,
                 delay_start=0,
                 delay_stop=0)
-            backend = SimulatorBackend(
+            trial_backend = SimulatorBackend(
                 entry_point=benchmark['script'],
                 elapsed_time_attr=benchmark['elapsed_time_attr'],
                 simulator_config=simulator_config,
                 tuner_sleep_time=tuner_sleep_time)
-            scheduler.set_time_keeper(backend.time_keeper)
+            scheduler.set_time_keeper(trial_backend.time_keeper)
 
         _tuner_sleep_time = 0 if backend_name == 'simulated' \
             else tuner_sleep_time
@@ -125,7 +125,7 @@ def test_compare_local_simulator_backends(scheduler_name):
         else:
             result_callback = SimulatorCallback()
         local_tuner = Tuner(
-            backend=backend,
+            trial_backend=trial_backend,
             scheduler=scheduler,
             stop_criterion=stop_criterion,
             n_workers=n_workers,

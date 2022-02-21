@@ -20,9 +20,9 @@ from botocore.exceptions import ClientError
 import numpy as np
 from sagemaker import LocalSession, Session
 
+from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_CHECKPOINT_DIR
 from syne_tune.util import s3_experiment_path
-from syne_tune.backend.backend import Backend
 from syne_tune.backend.trial_status import TrialResult, Status
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     sagemaker_search, get_log, sagemaker_fit, metric_definitions_from_names, \
@@ -33,7 +33,7 @@ from sagemaker.estimator import Framework
 logger = logging.getLogger(__name__)
 
 
-class SagemakerBackend(Backend):
+class SageMakerBackend(TrialBackend):
 
     def __init__(
             self,
@@ -52,7 +52,7 @@ class SagemakerBackend(Backend):
         :param sagemaker_fit_kwargs: extra arguments that are passed to sagemaker.estimator.Framework when fitting the
         job, for instance `{'train': 's3://my-data-bucket/path/to/my/training/data'}`
         """
-        super(SagemakerBackend, self).__init__()
+        super(SageMakerBackend, self).__init__()
         self.sm_estimator = sm_estimator
 
         # edit the sagemaker estimator so that metrics of the user can be plotted over time by sagemaker and so that

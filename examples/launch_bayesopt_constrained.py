@@ -16,11 +16,11 @@ Example for running constrained Bayesian optimization on a toy example
 import logging
 from pathlib import Path
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import uniform
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     constraint_attr = 'my_constraint_metric'
 
     # Local back-end
-    backend = LocalBackend(entry_point=entry_point)
+    trial_backend = LocalBackend(entry_point=entry_point)
 
     # Bayesian constrained optimization:
     #   max_x f(x)   s.t. c(x) <= 0
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     stop_criterion = StoppingCriterion(max_wallclock_time=30)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,

@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from botocore.exceptions import ClientError
 
 from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.util import experiment_path, s3_experiment_path
 
 

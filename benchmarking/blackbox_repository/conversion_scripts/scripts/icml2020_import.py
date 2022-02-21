@@ -35,9 +35,9 @@ def serialize_deepar():
         "hp_num_layers": sp.randint(lower=2, upper=4),
         "hp_num_cells": sp.randint(lower=30, upper=120),
         "hp_dropout_rate": sp.uniform(lower=0.01, upper=0.51),
-        "hp_learning_rate": sp.loguniform(lower=1e-4, upper=1e-2, base=10),
-        "hp_num_cells": sp.lograndint(lower=10, upper=10000, base=10),
-        "hp_context_length_ratio": sp.loguniform(lower=0.05, upper=4, base=10),
+        "hp_learning_rate": sp.loguniform(lower=1e-4, upper=1e-2),
+        "hp_num_cells": sp.lograndint(lower=10, upper=10000),
+        "hp_context_length_ratio": sp.loguniform(lower=0.05, upper=4),
     }
 
     serialize({
@@ -72,10 +72,10 @@ def serialize_xgboost():
         "hp_colsample_bytree": sp.uniform(lower=0.3, upper=1.0, ),
         "hp_eta": sp.uniform(lower=0., upper=1.0),
         "hp_max_depth_index": sp.uniform(lower=0.0, upper=12.0, ),
-        "hp_min_child_weight": sp.loguniform(lower=1e-5, upper=64.0, base=10),
-        "hp_gamma": sp.loguniform(lower=1e-5, upper=64, base=10),
-        "hp_lambda": sp.loguniform(lower=1e-5, upper=256, base=10),
-        "hp_alpha": sp.loguniform(lower=1e-5, upper=256, base=10),
+        "hp_min_child_weight": sp.loguniform(lower=1e-5, upper=64.0),
+        "hp_gamma": sp.loguniform(lower=1e-5, upper=64),
+        "hp_lambda": sp.loguniform(lower=1e-5, upper=256),
+        "hp_alpha": sp.loguniform(lower=1e-5, upper=256),
     }
 
     serialize({

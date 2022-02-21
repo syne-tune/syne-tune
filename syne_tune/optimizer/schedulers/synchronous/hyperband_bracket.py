@@ -13,6 +13,20 @@
 from typing import Optional, List, Tuple
 from operator import itemgetter
 import numpy as np
+from dataclasses import dataclass
+
+
+@dataclass
+class SlotInRung:
+    """
+    Used to communicate slot positions and content for them
+
+    """
+    rung_index: int  # 0 is lowest rung
+    level: int  # Resource level of rung
+    slot_index: int  # index of slot in rung
+    trial_id: Optional[int]  # None as long as no trial_id assigned
+    metric_val: Optional[float]  # Metric value (None if not yet occupied)
 
 
 class SynchronousHyperbandBracket(object):
@@ -23,7 +37,8 @@ class SynchronousHyperbandBracket(object):
     slots and a resource level (called rung level). The larger the rung level,
     the smaller the number of slots.
 
-    A slot is either occupied by a trial_id and metric value, or free. Slots
+    A slot is occupied (by a metric value), free, or pending. A pending slot
+    has already been returned by `next_free_slot`. Slots
     in the lowest rung (smallest rung level, largest size) are filled first.
     When a rung is fully occupied, slots for the next rung are assigned with
     the trial_id's having the best metric values. At any point in time, only
@@ -81,61 +96,66 @@ class SynchronousHyperbandBracket(object):
     def _trial_ids(rung: List[Tuple[int, float]]) -> List[int]:
         return [x[0] for x in rung]
 
-    def next_slots(self) -> Optional[Tuple[List[Optional[int]], int]]:
+    def num_pending_slots(self) -> int:
         """
-        Returns tuple `(trials, milestone)`, where `trials` is a list of trial_id's
-        to be promoted to resource level `milestone`, in order to complete the
-        current rung. If the current rung is the lowest, its trials do not exist
-        yet and have to be started from scratch, in which case `trials` is a list
-        of `None` values of the required size (to complete the rung).
-
-        Finally, if the bracket is complete, `None` is returned instead
-
-        :return: (trials, milestone) or None
+        :return: Number of pending slots (have been returned by
+            `next_free_slot`, but not yet occupied
         """
+        if self.is_bracket_complete():
+            return 0
+        rung, _ = self._rungs[self.current_rung]
+        return sum(x[1] is None for x in rung[:self._first_free_pos])
+
+    def next_free_slot(self) -> Optional[SlotInRung]:
         if self.is_bracket_complete():
             return None
         rung, milestone = self._rungs[self.current_rung]
         pos = self._first_free_pos
-        return self._trial_ids(rung[pos:]), milestone
+        if pos >= len(rung):
+            return None
+        trial_id = rung[pos][0]
+        self._first_free_pos += 1
+        return SlotInRung(
+            rung_index=self.current_rung,
+            level=milestone,
+            slot_index=pos,
+            trial_id=trial_id,
+            metric_val=None)
 
-    def on_results(self, results: List[Tuple[int, float]]) -> bool:
+    def on_result(self, result: SlotInRung) -> bool:
         """
-        Provides result values for the next free slots. `results` contains
-        tuples `(trial_id, metric_val)`, so that the list of trial_id's
-        corresponds to the prefix of `trials` returned by `next_slots` (unless
-        `trials` consists of `None` values, in which case the trial_id's have
-        just been assigned.
+        Provides result for slot previously requested by `next_free_slot`.
+        Here, `result.metric` is written to the slot in order to make it
+        occupied. Also, `result.trial_id` is written there if the current
+        value is None (happens in the lowest rung).
 
-        :param results: See above
-        :return: Have these results led to the current rung being completely
-            filled?
+        :param result: See above
+        :return: Has the rung been completely occupied with this result?
         """
-        self._assert_check_results(results)
-        rung, _ = self._rungs[self.current_rung]
-        num_results = len(results)
-        pos = self._first_free_pos
-        rung[pos:(pos + num_results)] = results
-        self._first_free_pos += num_results
+        assert result.rung_index == self.current_rung, \
+            f"Only accept result for rung index {self.current_rung}:\n" +\
+            str(result)
+        pos = result.slot_index
+        assert 0 <= pos < self._first_free_pos, \
+            f"slot_index must be in [0, {self._first_free_pos}):\n" +\
+            str(result)
+        rung, milestone = self._rungs[self.current_rung]
+        assert result.level == milestone, (result, milestone)
+        trial_id, metric_val = rung[pos]
+        if trial_id is not None:
+            assert result.trial_id == trial_id, (result, trial_id)
+        assert metric_val is None, \
+            f"Slot at {pos} already has metric_val = {metric_val}:\n" +\
+            str(result)
+        assert result.metric_val is not None, \
+            "result.metric_val is missing:\n" + str(result)
+        rung[pos] = (result.trial_id, result.metric_val)
         return self._promote_trials_if_rung_complete()
-
-    def _assert_check_results(self, results: List[Tuple[int, float]]):
-        assert not self.is_bracket_complete(), \
-            "This bracket is complete, no more results are needed"
-        _next_slots, _ = self.next_slots()
-        num_results = len(results)
-        assert num_results <= len(_next_slots), \
-            f"There are only {len(_next_slots)} free slots in the current " +\
-            f"bracket, but len(results) = {num_results}"
-        if self.current_rung > 0:
-            trial_ids_results = self._trial_ids(results)
-            assert trial_ids_results == _next_slots[:num_results], \
-                f"trial_ids of results ({trial_ids_results}) not the same " +\
-                f"as trial_ids of free slots ({_next_slots[:num_results]})"
 
     def _promote_trials_if_rung_complete(self) -> bool:
         rung, _ = self._rungs[self.current_rung]
-        is_complete = self._first_free_pos >= len(rung)
+        is_complete = self._first_free_pos >= len(rung) \
+                      and self.num_pending_slots() == 0
         if is_complete:
             self.current_rung += 1
             self._first_free_pos = 0
@@ -154,8 +174,8 @@ class SynchronousHyperbandBracket(object):
                     # are still promoted to the next rung.
                     rung_invalid = [x for x in rung if np.isnan(x[1])]
                     top_list = rung_valid + rung_invalid[:(new_len - num_valid)]
-                # For the (trial_id, metric_val) entries, only trial_id is
-                # valid (while metric_val is arbitrary) for positions
-                # >= self._first_free_pos
+                # Set metric_val entries to None, since this distinguishes
+                # between a pending and occupied slot
+                top_list = [(x[0], None) for x in top_list]
                 self._rungs[pos] = (top_list, milestone)
         return is_complete

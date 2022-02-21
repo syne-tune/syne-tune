@@ -10,20 +10,19 @@ import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER, REA
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
+    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
-    SynchronousGeometricHyperbandScheduler
 import syne_tune.search_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.thompson_sampling_functional_prior import QuantileBasedSurrogateSearcher
 
 config_space = {
@@ -36,7 +35,6 @@ metric1 = "objective1"
 metric2 = "objective2"
 resource_attr = 'step'
 max_t = 10
-sync_batch_size = 4
 
 
 def make_ray_skopt():
@@ -94,7 +92,6 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         ray_searcher=make_ray_skopt(),
     ),
     SimpleScheduler(config_space=config_space, metric=metric1),
-    BotorchGP(config_space=config_space, metric=metric1),
     RandomSearch(config_space=config_space, metric=metric1),
     BayesianOptimization(config_space=config_space, metric=metric1),
     REA(config_space=config_space, metric=metric1, population_size=1, sample_size=2),
@@ -130,6 +127,35 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         config_space=config_space,
         metric=metric1
     )
+    RUSHScheduler(
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode="min",
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+    ),
+    SyncHyperband(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
+        max_resource_attr='steps',
+        brackets=3),
+    SyncMOBSTER(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
+        max_resource_attr='steps',
+        brackets=3),
+    SyncBOHB(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
+        max_resource_attr='steps',
+        brackets=3),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
@@ -161,85 +187,6 @@ def test_async_schedulers_api(scheduler):
     scheduler.on_trial_error(trials[0])
     for i, trial in enumerate(trials):
         scheduler.on_trial_complete(trial, make_metric(max_t, i))
-
-    # checks serialization
-    with tempfile.TemporaryDirectory() as local_path:
-        with open(Path(local_path) / "scheduler.dill", "wb") as f:
-            dill.dump(scheduler, f)
-        with open(Path(local_path) / "scheduler.dill", "rb") as f:
-            dill.load(f)
-
-
-@pytest.mark.parametrize("scheduler", [
-    SynchronousGeometricHyperbandScheduler(
-        config_space=config_space,
-        max_resource_level=max_t,
-        brackets=3,
-        resource_attr=resource_attr,
-        batch_size=sync_batch_size,
-        metric=metric1,
-        max_resource_attr='steps'),
-    SynchronousGeometricHyperbandScheduler(
-        config_space=config_space,
-        max_resource_level=max_t,
-        brackets=3,
-        resource_attr=resource_attr,
-        batch_size=sync_batch_size,
-        metric=metric1,
-        max_resource_attr='steps',
-        searcher='kde'),
-])
-def test_sync_schedulers_api(scheduler):
-    assert scheduler.metric_names() == [metric1]
-    assert scheduler.metric_mode() == "min"
-
-    # Synchronous schedulers expect switching between suggest and collect
-    # phase. In the suggest phase, `scheduler.suggest` is called `sync_batch_size`
-    # times, in the collect phase, `scheduler.on_trial_result` is expected for these
-    # trials (or `scheduler.on_trial_error`).
-    all_trials = dict()
-    num_iterations = 3
-    next_trial_id = 0
-    for iter in range(num_iterations):
-        # suggest phase
-        trials_this_batch = []
-        for trial_id in range(next_trial_id, next_trial_id + sync_batch_size):
-            suggestion = scheduler.suggest(trial_id)
-            assert all(x in suggestion.config.keys() for x in config_space.keys()), \
-                "suggestion configuration should contain all keys of configspace."
-            if suggestion.spawn_new_trial_id:
-                trial = Trial(
-                    trial_id=trial_id, config=suggestion.config,
-                    creation_time=None)
-                scheduler.on_trial_add(trial=trial)
-                all_trials[str(trial_id)] = trial
-            else:
-                # Trial is resumed
-                resume_trial_id = str(suggestion.checkpoint_trial_id)
-                trial = all_trials[resume_trial_id]
-            trials_this_batch.append(trial)
-        next_trial_id += sync_batch_size
-        # collect phase
-        # checks results can be transmitted with appropriate scheduling decisions
-        make_metric = lambda t, x: {resource_attr: t, metric1: x, metric2: -x}
-        is_running = {
-            str(trial.trial_id): True for trial in trials_this_batch}
-        for t in range(1, max_t + 1):
-            for i, trial in enumerate(trials_this_batch):
-                trial_id = str(trial.trial_id)
-                if is_running[trial_id]:
-                    if t == 1 and i == sync_batch_size - 1:
-                        # This trial fails
-                        scheduler.on_trial_error(trial)
-                        is_running[trial_id] = False
-                    else:
-                        decision = scheduler.on_trial_result(
-                            trial, make_metric(t, i))
-                        assert decision in [SchedulerDecision.CONTINUE,
-                                            SchedulerDecision.PAUSE,
-                                            SchedulerDecision.STOP]
-                        if decision != SchedulerDecision.CONTINUE:
-                            is_running[trial_id] = False
 
     # checks serialization
     with tempfile.TemporaryDirectory() as local_path:

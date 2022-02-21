@@ -51,8 +51,9 @@ means, a basic component of many HPO algorithms. The following domains are curre
 * `lograndint(lower, upper)`: Integer log-uniform in
   `lower, ..., upper`. More precisely, the value is `int(round(exp(x)))`, where
   `x` is drawn uniformly in `[log(lower - 0.5), log(upper + 0.5)]`
-* `choice(categories)`: Uniform from the finite list `categories` of `str`
-  values
+* `choice(categories)`: Uniform from the finite list `categories` of values.
+  Entries in `categories` should ideally be of type `str`, but types `int` and
+  `float` are also allowed (the latter can lead to errors due to round-off)
 * `finrange(lower, upper, size)`: Can be used as finite analogue of `uniform`.
   Uniform from the finite range `lower, ..., upper` of size `size`, where
   entries are equally spaced. For example, `finrange(0.5, 1.5, 3)` means
@@ -63,6 +64,12 @@ means, a basic component of many HPO algorithms. The following domains are curre
   `loguniform`. Values are `exp(x)`, where `x` is drawn uniformly from the
   finite range `log(lower), ..., log(upper)` of size `size`.  Note that both
   `lower` and `upper` are part of the value range.
+
+By default, the value type for `finrange` and `logfinrange` is `float`. It can
+be changed to `int` by the argument `cast_int=True`. For example,
+`logfinrange(8, 256, 6, cast_int=True)` results in `8, 16, 32, 64, 128, 256` and
+value type `int`, while `logfinrange(8, 256, 6)` results in
+`8.0, 16.0, 32.0, 64.0, 128.0, 256.0` and  value type `float`.
 
 
 ### Recommendations

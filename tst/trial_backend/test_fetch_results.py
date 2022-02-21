@@ -12,12 +12,12 @@
 # permissions and limitations under the License.
 from typing import List, Dict, Optional
 
-from syne_tune.backend.backend import Backend
+from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import TrialResult, Status
 from syne_tune.constants import ST_WORKER_TIMESTAMP
 
 
-class DeterministicBackend(Backend):
+class DeterministicBackend(TrialBackend):
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
         pass
 

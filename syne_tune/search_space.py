@@ -509,7 +509,7 @@ class Categorical(Domain):
                and super(Categorical, self).__eq__(other) \
                and self.categories == other.categories
 
-
+      
 class Function(Domain):
     class _CallSampler(BaseSampler):
         def sample(self,
@@ -595,10 +595,12 @@ class FiniteRange(Domain):
     """
     Represents a finite range `[lower, ..., upper]` with `size` values
     equally spaced in linear or log domain.
+    If `cast_int`, the value type is int (rounding after the transform).
 
     """
-    def __init__(self, lower: float, upper: float, size: int, log_scale: bool = False, cast_int: bool = False):
-        assert lower <= upper
+    def __init__(self, lower: float, upper: float, size: int,
+                 log_scale: bool = False, cast_int: bool = False):
+        assert lower < upper
         assert size >= 2
         if log_scale:
             assert lower > 0.0
@@ -606,8 +608,8 @@ class FiniteRange(Domain):
         self.lower = lower
         self.upper = upper
         self.log_scale = log_scale
-        self.size = size
         self.cast_int = cast_int
+        self.size = size
         if not log_scale:
             self._lower_internal = lower
             self._step_internal = (upper - lower) / (size - 1)
@@ -617,30 +619,28 @@ class FiniteRange(Domain):
             self._step_internal = \
                 (upper_internal - self._lower_internal) / (size - 1)
 
-    def _map_from_int(self, x: int) -> float:
+    def _map_from_int(self, x: int) -> Union[float, int]:
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
             y = np.exp(y)
-        res = float(np.clip(y, self.lower, self.upper))
-        if self.cast_int:
-            res = int(np.rint(res))
-        return res
+        y = np.clip(y, self.lower, self.upper)
+        if not self.cast_int:
+            return float(y)
+        else:
+            return int(np.round(y))
 
     @property
     def value_type(self):
         return float if not self.cast_int else int
 
     def _map_to_int(self, value) -> int:
-        if self._step_internal == 0:
-            return self.lower
-        else:
-            int_value = np.clip(value, self.lower, self.upper)
-            if self.log_scale:
-                int_value = np.log(int_value)
-            sz = len(self._uniform_int)
-            return int(np.clip(round(
-                (int_value - self._lower_internal) / self._step_internal),
-                0, sz - 1))
+        int_value = np.clip(value, self.lower, self.upper)
+        if self.log_scale:
+            int_value = np.log(int_value)
+        sz = len(self._uniform_int)
+        return int(np.clip(round(
+            (int_value - self._lower_internal) / self._step_internal),
+            0, sz - 1))
 
     def cast(self, value):
         return self._map_from_int(self._map_to_int(value))
@@ -672,7 +672,8 @@ class FiniteRange(Domain):
         return isinstance(other, FiniteRange) \
                and np.isclose(self.lower, other.lower) \
                and np.isclose(self.upper, other.upper) \
-               and self.log_scale == other.log_scale
+               and self.log_scale == other.log_scale \
+               and self.cast_int == other.cast_int
 
 
 def sample_from(func: Callable[[Dict], Any]):
@@ -823,7 +824,7 @@ def qrandn(mean: float, sd: float, q: float):
     return Float(None, None).normal(mean, sd).quantized(q)
 
 
-def finrange(lower: float, upper: float, size: int):
+def finrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
     Finite range `[lower, ..., upper]` with `size` entries, which are
     equi-spaced. Finite alternative to `uniform`.
@@ -831,8 +832,9 @@ def finrange(lower: float, upper: float, size: int):
     :param lower: Smallest feasible value
     :param upper: Largest feasible value
     :param size: Size of (finite) domain, must be >= 2
+    :param cast_int: Values rounded to int?
     """
-    return FiniteRange(lower, upper, size)
+    return FiniteRange(lower, upper, size, log_scale=False, cast_int=cast_int)
 
 
 def logfinrange(lower: float, upper: float, size: int, cast_int: bool = False):
@@ -843,6 +845,7 @@ def logfinrange(lower: float, upper: float, size: int, cast_int: bool = False):
     :param lower: Smallest feasible value (positive)
     :param upper: Largest feasible value (positive)
     :param size: Size of (finite) domain, must be >= 2
+    :param cast_int: Values rounded to int?
     """
     return FiniteRange(lower, upper, size, log_scale=True, cast_int=cast_int)
 
@@ -933,6 +936,11 @@ def config_to_match_string(config: Dict, config_space: Dict, keys: List[str]) ->
 
 
 def to_dict(x: "Domain") -> Dict:
+    """
+    We assume that for each `Domain` subclass, the `__init__` kwargs are
+    also members, and all other members start with `_`.
+
+    """
     domain_kwargs = {
         k: v for k, v in x.__dict__.items()
         if k != 'sampler' and not k.startswith('_')}

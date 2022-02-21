@@ -178,7 +178,7 @@ def parse_args(allow_lists_as_values=True):
                              'ints. Overrides --grace_period, '
                              '--reduction_factor if given',
                         **allow_list)
-    parser.add_argument('--no_rung_system_per_bracket', action='store_true',
+    parser.add_argument('--rung_system_per_bracket', action='store_true',
                         help='Parameter of HyperbandScheduler')
     parser.add_argument('--searcher_data', type=str,
                         help='Parameter of HyperbandScheduler',
@@ -245,6 +245,9 @@ def parse_args(allow_lists_as_values=True):
                         help='Scoring function to rank initial candidates '
                              'for seeding search [thompson_indep, acq_func]',
                         **allow_list)
+    parser.add_argument('--searcher_skip_local_optimization', action='store_true',
+                        help='Skip local optimization of acquisition function '
+                             'and just pick top-scorer of initial candidates')
     parser.add_argument('--searcher_issm_gamma_one', action='store_true',
                         help='Fix gamma parameter of ISSM to one?')
     parser.add_argument('--searcher_exponent_cost', type=float,
@@ -332,8 +335,6 @@ def parse_args(allow_lists_as_values=True):
                     "--epochs are set. The latter is ignored")
     if 'epochs' in params:
         del params['epochs']
-    params['rung_system_per_bracket'] = not params['no_rung_system_per_bracket']
-    del params['no_rung_system_per_bracket']
     params['normalize_targets'] = not params['not_normalize_targets']
     del params['not_normalize_targets']
     params['searcher_use_new_code'] = not params['searcher_use_old_code']
@@ -376,6 +377,7 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
             ('opt_nstarts', int, False),
             ('opt_maxiter', int, False),
             ('initial_scoring', str, False),
+            ('skip_local_optimization', bool, False),
             ('issm_gamma_one', bool, False),
             ('exponent_cost', float, False),
             ('expdecay_normalize_inputs', bool, False),

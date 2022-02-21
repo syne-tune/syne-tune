@@ -43,11 +43,12 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm \
     import BayesianOptimizationAlgorithm
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components \
-    import IndependentThompsonSampling
+    import IndependentThompsonSampling, NoOptimization
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
     import RandomStatefulCandidateGenerator, ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults \
-    import DEFAULT_LOCAL_OPTIMIZER_CLASS, DEFAULT_NUM_INITIAL_CANDIDATES, DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS
+    import DEFAULT_LOCAL_OPTIMIZER_CLASS, DEFAULT_NUM_INITIAL_CANDIDATES, \
+    DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
     import DuplicateDetectorIdentical
 from syne_tune.optimizer.schedulers.utils.simple_profiler \
@@ -104,6 +105,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
             num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
             initial_scoring: Optional[str] = None,
+            skip_local_optimization: bool = False,
             cost_attr: Optional[str] = None,
             resource_attr: Optional[str] = None,
             filter_observed_data: Optional[ConfigurationFilter] = None):
@@ -111,13 +113,16 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self.num_initial_candidates = num_initial_candidates
         self.num_initial_random_choices = num_initial_random_choices
         self.map_reward = map_reward
-        if local_minimizer_class is None:
+        if skip_local_optimization:
+            self.local_minimizer_class = NoOptimization
+        elif local_minimizer_class is None:
             self.local_minimizer_class = DEFAULT_LOCAL_OPTIMIZER_CLASS
         else:
             self.local_minimizer_class = local_minimizer_class
         self.acquisition_class = acquisition_class
         self._debug_log = model_factory.debug_log
         self.initial_scoring = check_initial_candidates_scorer(initial_scoring)
+        self.skip_local_optimization = skip_local_optimization
         # Create state transformer
         # Initial state is empty (note that the state is mutable)
         if init_state is None:
@@ -251,7 +256,6 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
 
         """
         self._assign_random_searcher()
-        state = self.state_transformer.state
         config = self._next_initial_config()  # Ask for initial config
         if config is None:
             pick_random = self._should_pick_random_config(exclusion_candidates)
@@ -381,7 +385,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             if random_seed is None:
                 random_seed = self.random_state.randint(0, 2 ** 32)
             self._random_searcher = RandomSearcher(
-                self.hp_ranges.config_space,
+                self.hp_ranges.config_space_for_sampling,
                 metric=self._metric,
                 points_to_evaluate=[],
                 random_seed=random_seed,
@@ -393,6 +397,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     This searcher must be used with `FIFOScheduler`. It provides Bayesian
     optimization, based on a Gaussian process surrogate model.
+
+    NOTE: The searcher uses `map_reward` to map metric values to internal
+    criterion values, and *minimizes* the latter. If your metric is to be
+    maximized, you need to pass a strictly decreasing `map_reward`.
 
     Pending configurations (for which evaluation tasks are currently running)
     are dealt with by fantasizing (i.e., target values are drawn from the
@@ -466,6 +474,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
         Thompson sampling; randomized score, which can increase exploration),
         'acq_func' (score is the same (EI) acquisition function which is afterwards
         locally optimized).
+    skip_local_optimization : bool
+        If True, the local gradient-based optimization of the acquisition
+        function is skipped, and the top-tanked initial candidate is returned
+        instead. In this case, `initial_scoring='acq_func'` makes most sense,
+        otherwise the acquisition function will not be used.
     opt_nstarts : int
         Parameter for hyperparameter fitting. Number of random restarts
     opt_maxiter : int
@@ -593,9 +606,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def _postprocess_config(self, config: dict) -> dict:
         return config
 
-    def _num_initial_candidates(self) -> int:
-        return self.num_initial_candidates
-
     def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
             Optional[Configuration]:
         # Obtain current SurrogateModel from state transformer. Based on
@@ -624,7 +634,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         bo_algorithm = BayesianOptimizationAlgorithm(
             initial_candidates_generator=self.random_generator,
             initial_candidates_scorer=initial_candidates_scorer,
-            num_initial_candidates=self._num_initial_candidates(),
+            num_initial_candidates=self.num_initial_candidates,
             local_optimizer=local_optimizer,
             pending_candidate_state_transformer=None,
             exclusion_candidates=exclusion_candidates,
@@ -662,6 +672,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
         If less than `batch_size` configs are returned, the search space
         has been exhausted.
+
+        Note: Batch selection does not support `debug_log` right now: make sure
+        to switch this off when creating scheduler and searcher.
         """
         assert round(batch_size) == batch_size and batch_size >= 1
         configs = []
@@ -670,6 +683,12 @@ class GPFIFOSearcher(ModelBasedSearcher):
             if config is not None:
                 configs.append(config)
         else:
+            # `DebugLogWriter` does not support batch selection right now,
+            # must be switched off
+            assert self.debug_log is None, \
+                "get_batch_configs does not support debug_log right now. " +\
+                "Please set debug_log=False in search_options argument " +\
+                "of scheduler, or create your searcher with debug_log=False"
             exclusion_candidates = self._get_exclusion_candidates(**kwargs)
             pick_random = True
             while pick_random and len(configs) < batch_size:
@@ -742,6 +761,31 @@ class GPFIFOSearcher(ModelBasedSearcher):
         # future get_config calls)
         self.state_transformer.mark_trial_failed(trial_id)
 
+    def _new_searcher_kwargs_for_clone(self) -> Dict:
+        """
+        Helper method for `clone_from_state`. Args need to be extended
+        by `model_factory`, `init_state`, `skip_optimization`, and others
+        args becoming relevant in subclasses only.
+
+        :return: kwargs for creating new searcher object in `clone_from_state`
+        """
+        return dict(
+            configspace=self.configspace,
+            metric=self._metric,
+            clone_from_state=True,
+            hp_ranges=self.hp_ranges,
+            acquisition_class=self.acquisition_class,
+            map_reward=self.map_reward,
+            local_minimizer_class=self.local_minimizer_class,
+            num_initial_candidates=self.num_initial_candidates,
+            num_initial_random_choices=self.num_initial_random_choices,
+            initial_scoring=self.initial_scoring,
+            skip_local_optimization=self.skip_local_optimization,
+            cost_attr=self._cost_attr,
+            resource_attr=self._resource_attr,
+            filter_observed_data=self._filter_observed_data,
+        )
+
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state['state'], self._hp_ranges_in_state())
@@ -749,22 +793,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPFIFOSearcher(
-            configspace=self.configspace,
-            metric=self._metric,
-            clone_from_state=True,
-            hp_ranges=self.hp_ranges,
+            **self._new_searcher_kwargs_for_clone(),
             model_factory=model_factory,
-            acquisition_class=self.acquisition_class,
-            map_reward=self.map_reward,
             init_state=init_state,
-            local_minimizer_class=self.local_minimizer_class,
-            skip_optimization=skip_optimization,
-            num_initial_candidates=self.num_initial_candidates,
-            num_initial_random_choices=self.num_initial_random_choices,
-            initial_scoring=self.initial_scoring,
-            cost_attr=self._cost_attr,
-            resource_attr=self._resource_attr,
-            filter_observed_data=self._filter_observed_data)
+            skip_optimization=skip_optimization)
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None

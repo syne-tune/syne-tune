@@ -22,9 +22,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.num_gpu import get_num_gpus
 from syne_tune.report import retrieve
-from syne_tune.backend.backend import Backend
 from syne_tune.backend.trial_status import TrialResult, Status
 from syne_tune.constants import ST_CHECKPOINT_DIR
 from syne_tune.util import experiment_path, random_string
@@ -38,7 +38,7 @@ if "OMP_NUM_THREADS" not in os.environ:
     os.environ["OMP_NUM_THREADS"] = "1"
 
 
-class LocalBackend(Backend):
+class LocalBackend(TrialBackend):
     def __init__(
             self,
             entry_point: str,

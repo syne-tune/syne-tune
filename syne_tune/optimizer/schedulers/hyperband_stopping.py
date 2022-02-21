@@ -11,9 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-import numpy as np
-from typing import Dict
 from dataclasses import dataclass
+from typing import Dict
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -105,17 +106,18 @@ class StoppingRungSystem(object):
                     # Enter new metric value before checking condition
                     recorded[trial_id] = metric_value
                     cutoff = self._cutoff(recorded, prom_quant)
-                    if cutoff is not None:
-                        if self._mode == 'min':
-                            task_continues = (metric_value <= cutoff)
-                        else:
-                            task_continues = (metric_value >= cutoff)
+                    task_continues = self._task_continues(trial_id, self._mode, cutoff, metric_value, resource)
                 break
             next_milestone = milestone
         return {
             'task_continues': task_continues,
             'milestone_reached': milestone_reached,
             'next_milestone': next_milestone}
+
+    def _task_continues(self, trial_id, mode, cutoff, metric_value, resource):
+        if cutoff is None:
+            return True
+        return metric_value <= cutoff if mode == 'min' else metric_value >= cutoff
 
     def on_task_remove(self, trial_id):
         pass

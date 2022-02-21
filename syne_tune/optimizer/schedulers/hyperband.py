@@ -10,27 +10,29 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, List
-import pickle
-import logging
-import numpy as np
-import os
 import copy
+import logging
+import os
+from typing import Dict, Optional, List
 
+import numpy as np
+
+from syne_tune.backend.trial_status import Trial
+from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband_stopping import \
-    StoppingRungSystem
-from syne_tune.optimizer.schedulers.hyperband_promotion import \
-    PromotionRungSystem
 from syne_tune.optimizer.schedulers.hyperband_cost_promotion import \
     CostPromotionRungSystem
 from syne_tune.optimizer.schedulers.hyperband_pasha import \
     PASHARungSystem
+from syne_tune.optimizer.schedulers.hyperband_promotion import \
+    PromotionRungSystem
+from syne_tune.optimizer.schedulers.hyperband_rush import \
+    RUSHPromotionRungSystem, RUSHStoppingRungSystem
+from syne_tune.optimizer.schedulers.hyperband_stopping import \
+    StoppingRungSystem
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults, Integer, Boolean, Categorical, \
     filter_by_key, String, Dictionary, Float
-from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.backend.trial_status import Trial
 
 __all__ = ['HyperbandScheduler',
            'HyperbandBracketManager']
@@ -53,13 +55,13 @@ _DEFAULT_OPTIONS = {
     'searcher_data': 'rungs',
     'register_pending_myopic': False,
     'do_snapshots': False,
-    'rung_system_per_bracket': True,
+    'rung_system_per_bracket': False,
     'rung_system_kwargs': {
         'cost_attr': 'elapsed_time',
         'ranking_criterion': 'soft_ranking',
         'epsilon': 1.0,
         'epsilon_scaling': 1.0},
-    }
+}
 
 _CONSTRAINTS = {
     'resource_attr': String(),
@@ -67,7 +69,7 @@ _CONSTRAINTS = {
     'grace_period': Integer(1, None),
     'reduction_factor': Float(2, None),
     'brackets': Integer(1, None),
-    'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha')),
+    'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha', 'rush_promotion', 'rush_stopping')),
     'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
     'register_pending_myopic': Boolean(),
     'do_snapshots': Boolean(),
@@ -242,6 +244,13 @@ class HyperbandScheduler(FIFOScheduler):
                 Similar to promotion type Hyperband, but it progressively
                 expands the available resources until the ranking
                 of configurations stabilizes.
+            rush_stopping:
+                A variation of the stopping scheduler which requires passing rung_system_kwargs
+                (see num_threshold_candidates) and points_to_evaluate. The first num_threshold_candidates of
+                points_to_evaluate will enforce stricter rules on which task is continued.
+                See :class:`RUSHScheduler`.
+            rush_promotion:
+                Same as rush_stopping but for promotion.
     searcher_data : str
         Relevant only if a model-based searcher is used.
         Example: For NN tuning and `resource_attr == epoch', we receive a
@@ -259,16 +268,17 @@ class HyperbandScheduler(FIFOScheduler):
     register_pending_myopic : bool
         See above. Used only if `searcher_data != 'rungs'`.
     rung_system_per_bracket : bool
-        This concerns Hyperband with brackets > 1. When starting a job for a
+        This concerns Hyperband with `brackets > 1`. When starting a job for a
         new config, it is assigned a randomly sampled bracket. The larger the
         bracket, the larger the grace period for the config. If
-        `rung_system_per_bracket` is True, we maintain separate rung level
+        `rung_system_per_bracket = True`, we maintain separate rung level
         systems for each bracket, so that configs only compete with others
-        started in the same bracket. This is the default behaviour of Hyperband.
-        If False, we use a single rung level system, so that all configs
-        compete with each other. In this case, the bracket of a config only
-        determines the initial grace period, i.e. the first milestone at which
-        it starts competing with others.
+        started in the same bracket.
+        If `rung_system_per_bracket = False`, we use a single rung level system,
+        so that all configs compete with each other. In this case, the bracket
+        of a config only determines the initial grace period, i.e. the first
+        milestone at which it starts competing with others. This is the
+        default.
         The concept of brackets in Hyperband is meant to hedge against overly
         aggressive filtering in successive halving, based on low fidelity
         criteria. In practice, successive halving (i.e., `brackets = 1`) often
@@ -291,7 +301,7 @@ class HyperbandScheduler(FIFOScheduler):
         stop signal is received.
         If given, `max_resource_attr` is also used in the mechanism to infer
         `max_t` (if not given).
-    rungs_system_kwargs : dict
+    rung_system_kwargs : dict
         Arguments passed to the rung system:
             cost_attr : str
                 Used if `type == 'cost_promotion'`. Name of cost attribute in result's
@@ -324,6 +334,10 @@ class HyperbandScheduler(FIFOScheduler):
                 Used if `type == 'pasha'`. When epsilon for soft ranking in
                 PASHA is calculated automatically, it is possible to rescale it
                 using epsilon_scaling.
+            num_threshold_candidates : int
+                Used if `type in ['rush_promotion', 'rush_stopping']`. The first num_threshold_candidates in
+                points_to_evaluate enforce stricter requirements to the continuation of training tasks.
+                See :class:`RUSHScheduler`.
 
     See Also
     --------
@@ -732,7 +746,7 @@ class HyperbandScheduler(FIFOScheduler):
                         # resumed trial has to start from scratch, publishing
                         # results all the way up to resume_from. In this case,
                         # we can erase the `_cost_offset` entry, since the
-                        # instanteneous cost reported by the trial does not
+                        # instantaneous cost reported by the trial does not
                         # have any offset.
                         if self._cost_offset[trial_id] > 0:
                             logger.info(
@@ -832,28 +846,6 @@ class HyperbandScheduler(FIFOScheduler):
             k: {k2: v[k2] for k2 in rem_keys}
             for k, v in self._active_trials.items() if not v['running']}
 
-    def state_dict(self) -> Dict:
-        record = super().state_dict()
-        # We need to checkpoint the part of _active_trials corresponding to
-        # paused trials. The part for running trials is dropped.
-        # The assumption is that if an experiment is resumed from a
-        # checkpoint, currently running trials are not restarted
-        record['paused_trials'] = pickle.dumps(self._get_paused_trials())
-        record['terminator'] = pickle.dumps(self.terminator)
-        if self._cost_offset:
-            record['cost_offset'] = pickle.dumps(self._cost_offset)
-        return record
-
-    def load_state_dict(self, state_dict):
-        assert len(self._active_trials) == 0, \
-            "load_state_dict must only be called as part of scheduler construction"
-        super().load_state_dict(state_dict)
-        # Recreate paused trials part of _active_trials
-        self._active_trials = pickle.loads(state_dict['paused_trials'])
-        self.terminator = pickle.loads(state_dict['terminator'])
-        if 'cost_offset' in state_dict:
-            self._cost_offset = pickle.loads(state_dict['cost_offset'])
-
 
 def _sample_bracket(num_brackets, rung_levels, random_state):
     # Brackets are sampled in proportion to the number of configs started
@@ -941,6 +933,7 @@ class HyperbandBracketManager(object):
             Dictionary of arguments passed to the rung system,
 
     """
+
     def __init__(
             self, scheduler_type, resource_attr, metric, mode, max_t,
             rung_levels, brackets, rung_system_per_bracket, cost_attr,
@@ -968,6 +961,13 @@ class HyperbandBracketManager(object):
             kwargs['epsilon'] = rung_system_kwargs['epsilon']
             kwargs['epsilon_scaling'] = rung_system_kwargs['epsilon_scaling']
             rs_type = PASHARungSystem
+        elif scheduler_type in ['rush_promotion', 'rush_stopping']:
+            kwargs['num_threshold_candidates'] = rung_system_kwargs.get('num_threshold_candidates', 0)
+            if scheduler_type == 'rush_stopping':
+                rs_type = RUSHStoppingRungSystem
+            else:
+                kwargs['max_t'] = max_t
+                rs_type = RUSHPromotionRungSystem
         else:
             kwargs['max_t'] = max_t
             if scheduler_type == 'promotion':

@@ -10,11 +10,18 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-__all__ = ['search_space']
+try:
+    __all__ = ['search_space', 'StoppingCriterion', 'Tuner']
+    from pathlib import Path
+    from syne_tune.stopping_criterion import StoppingCriterion
+    from syne_tune.tuner import Tuner
+except ImportError:
+    pass
 
-from pathlib import Path
+
 def read_version():
     with open(Path(__file__).parent / "version.py", "r") as f:
         return f.readline().replace("\"", "")
+
 
 __version__ = read_version()

@@ -127,6 +127,31 @@ def test_blackbox_offline_serialization():
             assert res['metric_rmse'] == u * v
 
 
+def test_blackbox_offline_fidelities():
+    data = np.concatenate(
+        [np.stack([x1, x2,       x1 * x2,   np.ones_like(x1, dtype=np.int)], axis=1),
+         np.stack([x1, x2, 0.5 * x1 * x2, 2*np.ones_like(x1, dtype=np.int)], axis=1)],
+        axis=0)
+    df = pd.DataFrame(data=data, columns=["hp_x1", "hp_x2", "metric_rmse", "step"])
+
+    blackbox = BlackboxOffline(df_evaluations=df, configuration_space=cs,
+                               fidelity_space=dict(step=sp.randint(1, 2)))
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        print(f"serializing and deserializing blackbox in folder {tmpdirname}")
+        for u, v in zip(x1, x2):
+            res = blackbox.objective_function({"hp_x1": u, "hp_x2": v}, fidelity=1)
+            assert res['metric_rmse'] == u * v
+            
+            res = blackbox.objective_function({"hp_x1": u, "hp_x2": v}, fidelity=2)
+            assert res['metric_rmse'] == 0.5 * u * v
+            
+            res = blackbox.objective_function({"hp_x1": u, "hp_x2": v}, fidelity=None)
+            # Returns a tensor with shape (num_fidelities, num_objectives)
+            assert res.shape == (2, 1)
+            assert (res == np.array([u * v, 0.5 * u * v]).reshape(2, 1)).all()
+
+
 def test_blackbox_tabular_serialization():
     hyperparameters = pd.DataFrame(data=np.stack([x1, x2]).T, columns=["hp_x1", "hp_x2"])
     num_seeds = 1

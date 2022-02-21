@@ -17,12 +17,12 @@ import logging
 from pathlib import Path
 
 from syne_tune.backend.sagemaker_backend.custom_framework import CustomFramework
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import randint
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # indicate here an image_uri that is available in ecr, something like that "XXXXXXXXXXXX.dkr.ecr.us-west-2.amazonaws.com/my_image:latest"
     image_uri = ...
 
-    backend = SagemakerBackend(
+    trial_backend = SageMakerBackend(
         sm_estimator=CustomFramework(
             entry_point=entry_point,
             instance_type="ml.m5.large",
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     stop_criterion = StoppingCriterion(max_wallclock_time=600)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,

@@ -22,11 +22,13 @@ from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     add_syne_tune_dependency, get_execution_role
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.util import s3_experiment_path
 from syne_tune.constants import ST_REMOTE_UPLOAD_DIR_NAME
 
 import syne_tune
+
+logger = logging.getLogger(__name__)
 
 
 class RemoteLauncher:
@@ -127,10 +129,10 @@ class RemoteLauncher:
         # Save entrypoint script and content in a folder to be send by sagemaker.
         # This is required so that the entrypoint is found on Sagemaker.
         source_dir = str(self.get_source_dir())
-        logging.info(f"copy endpoint files from {source_dir} to {upload_dir}")
+        logger.info(f"copy endpoint files from {source_dir} to {upload_dir}")
         shutil.copytree(source_dir, upload_dir)
 
-        backup = str(self.tuner.backend.entrypoint_path())
+        backup = str(self.tuner.trial_backend.entrypoint_path())
 
         # update the path of the endpoint script so that it can be found when launching remotely
         self.update_backend_with_remote_paths()
@@ -139,7 +141,7 @@ class RemoteLauncher:
         self.tuner.save(upload_dir)
 
         # avoid side effect
-        self.tuner.backend.set_entrypoint(backup)
+        self.tuner.trial_backend.set_entrypoint(backup)
 
         # todo clean copy of remote dir
         tgt_requirement = self.remote_script_dir() / "requirements.txt"
@@ -147,21 +149,21 @@ class RemoteLauncher:
             os.remove(tgt_requirement)
         except OSError:
             pass
-        endpoint_requirements = self.tuner.backend.entrypoint_path().parent / "requirements.txt"
+        endpoint_requirements = self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
         if endpoint_requirements.exists():
-            logging.info(f"copy endpoint script requirements to {self.remote_script_dir()}")
+            logger.info(f"copy endpoint script requirements to {self.remote_script_dir()}")
             shutil.copy(endpoint_requirements, tgt_requirement)
             pass
 
     def get_source_dir(self) -> Path:
         # note: this logic would be better moved to the backend.
         if self.is_source_dir_specified():
-            return Path(self.tuner.backend.source_dir)
+            return Path(self.tuner.trial_backend.source_dir)
         else:
-            return Path(self.tuner.backend.entrypoint_path()).parent
+            return Path(self.tuner.trial_backend.entrypoint_path()).parent
 
     def is_source_dir_specified(self) -> bool:
-        return hasattr(self.tuner.backend, "source_dir") and self.tuner.backend.sm_estimator.source_dir is not None
+        return hasattr(self.tuner.trial_backend, "source_dir") and self.tuner.trial_backend.sm_estimator.source_dir is not None
 
     def update_backend_with_remote_paths(self):
         """
@@ -169,10 +171,10 @@ class RemoteLauncher:
         """
         if self.is_source_dir_specified():
             # the source_dir is deployed to `upload_dir`
-            self.tuner.backend.sm_estimator.source_dir = str(Path(self.upload_dir().name))
+            self.tuner.trial_backend.sm_estimator.source_dir = str(Path(self.upload_dir().name))
         else:
-            self.tuner.backend.set_entrypoint(
-                f"{self.upload_dir().name}/{self.tuner.backend.entrypoint_path().name}")
+            self.tuner.trial_backend.set_entrypoint(
+                f"{self.upload_dir().name}/{self.tuner.trial_backend.entrypoint_path().name}")
 
     def upload_dir(self) -> Path:
         return Path(syne_tune.__path__[0]).parent / ST_REMOTE_UPLOAD_DIR_NAME
@@ -184,7 +186,7 @@ class RemoteLauncher:
         # todo add Sagemaker cloudwatch metrics to visualize live results of tuning best results found over time.
         if self.instance_type != "local":
             checkpoint_s3_root = f"{self.s3_path}/"
-            logging.info(f"Tuner will checkpoint results to {checkpoint_s3_root}/{self.tuner.name}")
+            logger.info(f"Tuner will checkpoint results to {checkpoint_s3_root}{self.tuner.name}")
         else:
             # checkpointing is not supported in local mode. When using local mode with remote tuner (for instance for
             # debugging), results are not stored.
@@ -200,7 +202,7 @@ class RemoteLauncher:
 
         # avoids error "Must setup local AWS configuration with a region supported by SageMaker."
         # in case no region is explicitely configured by providing a default region
-        environment = self.estimator_kwargs.get("environment", {})
+        environment = self.estimator_kwargs.pop("environment", {})
         if "AWS_DEFAULT_REGION" not in environment:
           environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
         # the choice of the estimator is arbitrary here since we use a base image of Syne Tune.
@@ -240,18 +242,18 @@ class RemoteLauncher:
         region_name = boto3.Session().region_name
         image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
         try:
-            logging.info(f"Fetching Syne Tune image {image_uri}")
+            logger.info(f"Fetching Syne Tune image {image_uri}")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
         except Exception:
             # todo RepositoryNotFoundException should be caught but I did not manage to import it
-            logging.warning(
+            logger.warning(
                 f"Docker-image of syne-tune {docker_image_name} could not be found, run \n"
                 f"`cd {Path(__file__).parent}/container; bash build_syne_tune_container.sh`\n"
                 f"in a terminal to build it. Trying to do it now."
             )
             subprocess.run("./build_syne_tune_container.sh",
                            cwd=Path(syne_tune.__path__[0]).parent / "container")
-            logging.info(f"attempting to fetch {docker_image_name} again.")
+            logger.info(f"attempting to fetch {docker_image_name} again.")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
 
         return image_uri

@@ -19,13 +19,13 @@ from typing import Optional, Dict, List
 
 import numpy as np
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import TrialScheduler, \
     SchedulerDecision, TrialSuggestion
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 from syne_tune.search_space import randint
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune import StoppingCriterion
 
 
 class SimpleScheduler(TrialScheduler):
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     metric = "mean_loss"
 
     # Local back-end
-    backend = LocalBackend(entry_point=entry_point)
+    trial_backend = LocalBackend(entry_point=entry_point)
 
     np.random.seed(random_seed)
     scheduler = SimpleScheduler(
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     stop_criterion = StoppingCriterion(max_wallclock_time=30)
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,

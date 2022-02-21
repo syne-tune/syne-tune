@@ -4,9 +4,9 @@ states, which can then be used in unit tests.
 """
 import logging
 
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.tuner import Tuner
+from syne_tune import Tuner
 
 from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
     mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     config_space = benchmark['config_space']
 
     # Local back-end
-    backend = LocalBackend(entry_point=benchmark['script'])
+    trial_backend = LocalBackend(entry_point=benchmark['script'])
 
     # GP-based Bayesian optimization searcher
     searcher = 'bayesopt'
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     callback = StoreSearcherStatesCallback()
     tuner = Tuner(
-        backend=backend,
+        trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=lambda status: status.wallclock_time > 600,
         n_workers=n_workers,

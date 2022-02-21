@@ -19,13 +19,13 @@ from pathlib import Path
 from sagemaker.huggingface import HuggingFace
 
 from syne_tune.backend.sagemaker_backend.instance_info import select_instance_type
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import SagemakerBackend
+from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.remote.remote_launcher import RemoteLauncher
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune import StoppingCriterion
+from syne_tune import Tuner
 from syne_tune.search_space import loguniform, choice
 
 if __name__ == '__main__':
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     # Define the training function to be tuned, use the Sagemaker backend to execute trials as separate training job
     # (since they are quite expensive).
-    backend = SagemakerBackend(
+    trial_backend = SageMakerBackend(
         sm_estimator=HuggingFace(
             entry_point=str(entry_point),
             base_job_name='hpo-transformer',
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     remote_launcher = RemoteLauncher(
         tuner=Tuner(
-            backend=backend,
+            trial_backend=trial_backend,
             scheduler=scheduler,
             stop_criterion=StoppingCriterion(max_wallclock_time=3600, max_cost=10.0),
             n_workers=n_workers,

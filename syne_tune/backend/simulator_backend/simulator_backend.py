@@ -22,7 +22,7 @@ import numpy as np
 import subprocess
 
 from syne_tune.report import retrieve
-from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend import LocalBackend
 from syne_tune.backend.trial_status import TrialResult, Status, Trial
 from syne_tune.backend.simulator_backend.time_keeper import \
     SimulatedTimeKeeper
