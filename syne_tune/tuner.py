@@ -368,8 +368,7 @@ class Tuner:
         Trials can be finished because:
          1) the scheduler decided to stop or pause.
          2) the trial failed.
-         3) the trial was stopped independently of the scheduler, e.g. due to max_run argument, the timeout setting of
-            the SM Estimator, or manually via the AWS console.
+         3) the trial was stopped independently of the scheduler, e.g. due to a timeout argument or a manual interruption.
          4) the trial completed.
         """
         # gets the list of jobs from running_jobs that are done
