@@ -31,7 +31,6 @@ if __name__ == '__main__':
             disable_profiler=True,
         )
         if method != 'MOBSTER':
-            continue
             print(f"{experiment_tag}-{method}")
             sm_args["hyperparameters"] = {"experiment_tag": experiment_tag, 'num_seeds': 30, 'method': method}
             est = PyTorch(**sm_args)
@@ -39,8 +38,6 @@ if __name__ == '__main__':
         else:
             # For mobster, we schedule one job per seed as the method takes much longer
             for seed in range(30):
-                if seed != 10:
-                    continue
                 print(f"{experiment_tag}-{method}-{seed}")
                 sm_args["hyperparameters"] = {
                     "experiment_tag": experiment_tag, 'num_seeds': seed, 'run_all_seed': 0,
