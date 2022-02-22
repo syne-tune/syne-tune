@@ -52,19 +52,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         running_average=False,
     ),
-    # 'RS-BB': lambda method_arguments: BoundingBox(
-    #     scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
-    #         new_config_space,
-    #         searcher='random',
-    #         metric=metric,
-    #         mode=mode,
-    #     ),
-    #     mode="min",
-    #     metric=method_arguments.metric,
-    #     config_space=method_arguments.config_space,
-    #     num_hyperparameters_per_task=10,
-    #     transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
-    # ),
     'HB-BB': lambda method_arguments: BoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: HyperbandScheduler(
             new_config_space,
@@ -96,11 +83,6 @@ methods = {
         max_t=200,
         resource_attr='hp_epoch',
     ),
-    # 'Botorch': lambda method_arguments: BotorchGP(
-    #     config_space=method_arguments.config_space,
-    #     metric=method_arguments.metric,
-    #     mode=method_arguments.mode,
-    # ),
     'GP': lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
