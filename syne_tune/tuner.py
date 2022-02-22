@@ -259,8 +259,7 @@ class Tuner:
         # Gets list of trials that are done with the new results.
         # The trials can be finished for different reasons:
         # - they completed,
-        # - they were stopped independently of the scheduler, e.g. due to max_run argument, the timeout setting of
-        #   the SM Estimator, or manually via the AWS console,
+        # - they were stopped independently of the scheduler, e.g. due to a timeout argument or a manual interruption
         # - scheduler decided to interrupt them.
         # Note: `done_trials` includes trials which are paused.
         done_trials_statuses = self._update_running_trials(trial_status_dict, new_results, callbacks=self.callbacks)
