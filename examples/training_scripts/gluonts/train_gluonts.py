@@ -17,7 +17,7 @@ import logging
 
 from gluonts.evaluation import make_evaluation_predictions, Evaluator
 
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 from argparse import ArgumentParser
 from gluonts.model.simple_feedforward import SimpleFeedForwardEstimator
 from gluonts.mx.trainer import Trainer

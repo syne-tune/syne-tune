@@ -25,7 +25,7 @@ import os
 import argparse
 import logging
 
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 
 
 # Boilerplate for objective

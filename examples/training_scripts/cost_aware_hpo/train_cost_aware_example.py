@@ -13,7 +13,7 @@
 import logging
 import numpy as np
 
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 from argparse import ArgumentParser
 
 
