@@ -17,7 +17,7 @@ import os
 import time
 from pathlib import Path
 
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 
 
 report = Reporter()
