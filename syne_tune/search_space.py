@@ -601,7 +601,7 @@ class FiniteRange(Domain):
     def __init__(self, lower: float, upper: float, size: int,
                  log_scale: bool = False, cast_int: bool = False):
         assert lower <= upper
-        assert size >= 2
+        assert size >= 1
         if log_scale:
             assert lower > 0.0
         self._uniform_int = randint(0, size - 1)
@@ -612,12 +612,12 @@ class FiniteRange(Domain):
         self.size = size
         if not log_scale:
             self._lower_internal = lower
-            self._step_internal = (upper - lower) / (size - 1)
+            self._step_internal = (upper - lower) / (size - 1) if size > 2 else 1
         else:
             self._lower_internal = np.log(lower)
             upper_internal = np.log(upper)
-            self._step_internal = \
-                (upper_internal - self._lower_internal) / (size - 1)
+            self._step_internal = (upper_internal - self._lower_internal) / (size - 1) if size > 2 else 1
+        self._values = [self._map_from_int(x) for x in range(self.size)]
 
     def _map_from_int(self, x: int) -> float:
         y = x * self._step_internal + self._lower_internal
@@ -628,6 +628,9 @@ class FiniteRange(Domain):
             res = int(np.rint(res))
         return res
 
+    def __repr__(self):
+        values_str = ",".join([str(x) for x in self._values])
+        return f"finite-range([{values_str}])"
 
     @property
     def value_type(self):
@@ -646,7 +649,7 @@ class FiniteRange(Domain):
                 0, sz - 1))
 
     def cast(self, value):
-        return self._map_from_int(self._map_to_int(value))
+        return self._values[self._map_to_int(value)]
 
     def set_sampler(self, sampler, allow_override=False):
         raise NotImplementedError()
@@ -657,9 +660,9 @@ class FiniteRange(Domain):
     def sample(self, spec=None, size=1, random_state=None):
         int_sample = self._uniform_int.sample(spec, size, random_state)
         if size > 1:
-            return [self._map_from_int(x) for x in int_sample]
+            return [self._values[x] for x in int_sample]
         else:
-            return self._map_from_int(int_sample)
+            return self._values[int_sample]
 
     @property
     def domain_str(self):
@@ -970,3 +973,25 @@ def from_dict(d: Dict) -> Domain:
         sampler = sampler_cls(**sampler_kwargs)
         domain.set_sampler(sampler)
     return domain
+
+
+def restrict_domain(numerical_domain: FiniteRange, lower, upper) -> Domain:
+    assert hasattr(numerical_domain, "lower") and hasattr(numerical_domain, "upper")
+    if not isinstance(numerical_domain, FiniteRange):
+        # domain is numerical, set new lower and upper ranges with bounding-box values
+        new_domain_dict = to_dict(numerical_domain)
+        new_domain_dict['domain_kwargs']['lower'] = lower
+        new_domain_dict['domain_kwargs']['upper'] = upper
+        return from_dict(new_domain_dict)
+    else:
+        values = numerical_domain._values
+        i = 0
+        while values[i] < lower and i < len(values) - 1:
+            i += 1
+        new_lower = values[i]
+
+        j = len(values) - 1
+        while upper < values[j] and i < j:
+            j -= 1
+        new_upper = values[j]
+        return FiniteRange(lower=new_lower, upper=new_upper, size=len(values) - i - (len(values) - j - 1), cast_int=numerical_domain.cast_int, log_scale=numerical_domain.log_scale)

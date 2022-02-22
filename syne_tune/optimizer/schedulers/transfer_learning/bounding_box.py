@@ -80,11 +80,11 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
                     new_config_space[name] = sp.choice(hp_values)
                 elif hasattr(domain, "lower") and hasattr(domain, "upper"):
                     # domain is numerical, set new lower and upper ranges with bounding-box values
-                    new_domain_dict = sp.to_dict(domain)
-                    new_domain_dict['domain_kwargs']['lower'] = hp_df.loc[:, name].min()
-                    new_domain_dict['domain_kwargs']['upper'] = hp_df.loc[:, name].max()
-                    new_domain = sp.from_dict(new_domain_dict)
-                    new_config_space[name] = new_domain
+                    new_config_space[name] = sp.restrict_domain(
+                        numerical_domain=domain,
+                        lower=hp_df.loc[:, name].min(),
+                        upper=hp_df.loc[:, name].max()
+                    )
                 else:
                     # no known way to compute bounding over non numerical domains such as functional
                     new_config_space[name] = domain

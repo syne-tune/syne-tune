@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument(
-        "--experiment_tag", type=str, required=False, default="efficient-seagull",
+        "--experiment_tag", type=str, required=False, default="purple-akita",
         help="the experiment tag that was displayed when running the experiment"
     )
     args, _ = parser.parse_known_args()

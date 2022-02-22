@@ -207,7 +207,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
         """
         super().__init__(name)
         assert lower_bound <= upper_bound
-        assert size >= 2
+        assert size >= 1
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         self.cast_int = cast_int
@@ -215,7 +215,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
         self._lower_internal = scaling.to_internal(lower_bound)
         self._upper_internal = scaling.to_internal(upper_bound)
         self._step_internal = \
-            (self._upper_internal - self._lower_internal) / (size - 1)
+            (self._upper_internal - self._lower_internal) / (size - 1) if size > 2 else 1
         self._range_int = HyperparameterRangeInteger(
             name=name + '_INTERNAL', lower_bound=0, upper_bound=size - 1,
             scaling=LinearScaling())
@@ -305,9 +305,11 @@ class HyperparameterRangeCategorical(HyperparameterRange):
 
     @staticmethod
     def _assert_value_type(value):
-        assert isinstance(value, str) or isinstance(value, int) or \
-            isinstance(value, float), \
-            f"value = {value} has type {type(value)}, must be str, int, or float"
+        # this fails with numpy numeric types
+        pass
+        # assert isinstance(value, str) or isinstance(value, int) or \
+        #     isinstance(value, float), \
+        #     f"value = {value} has type {type(value)}, must be str, int, or float"
 
     @staticmethod
     def _assert_choices(choices: Tuple[Any, ...]):
