@@ -72,7 +72,7 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         if self._ranks.shape[1] == 0:
             return None
         best_idx = self._ranks.mean(axis=0).idxmin()
-        self._ranks = self._ranks.clip(upper=self._ranks[best_idx], axis=0)
+        self._ranks.clip(upper=self._ranks[best_idx], axis=0, inplace=True)
         self._scores.drop(columns=best_idx, inplace=True)
         best_config = self._hyperparameters.loc[best_idx]
         self._hyperparameters.drop(index=best_idx, inplace=True)
