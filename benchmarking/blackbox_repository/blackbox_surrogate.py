@@ -97,6 +97,7 @@ class BlackboxSurrogate(Blackbox):
 
         return Pipeline([
             ("features", FeatureUnion(features_union)),
+            ('standard scaler', StandardScaler(with_mean=False)),
             ('model', model)
         ])
 
