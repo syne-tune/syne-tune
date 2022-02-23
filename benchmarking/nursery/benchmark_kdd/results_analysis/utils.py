@@ -11,6 +11,8 @@ import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
+
+from benchmarking.nursery.benchmark_kdd.baselines import Methods
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import get_metadata, load_experiments_df
 
@@ -22,6 +24,7 @@ tpe_color = "red"
 rea_color = "brown"
 hb_bb_color = "green"
 hb_ts_color = "yellow"
+zero_shot_color = "purple"
 fifo_style = 'solid'
 multifidelity_style = 'dashed'
 multifidelity_style2 = 'dashdot'
@@ -37,16 +40,17 @@ class MethodSyle:
 
 show_seeds = False
 method_styles = {
-    'RS': MethodSyle(rs_color, fifo_style),
-    'GP': MethodSyle(gp_color, fifo_style),
-    'REA': MethodSyle(rea_color, fifo_style),
-    'HB': MethodSyle(rs_color, multifidelity_style),
-    'RS-MSR': MethodSyle(rs_color, multifidelity_style2),
-    'BOHB': MethodSyle(tpe_color, multifidelity_style),
-    'MOBSTER': MethodSyle(gp_color, multifidelity_style),
+    Methods.RS: MethodSyle(rs_color, fifo_style),
+    Methods.GP: MethodSyle(gp_color, fifo_style),
+    Methods.REA: MethodSyle(rea_color, fifo_style),
+    Methods.ASHA: MethodSyle(rs_color, multifidelity_style),
+    Methods.MSR: MethodSyle(rs_color, multifidelity_style2),
+    Methods.BOHB: MethodSyle(tpe_color, multifidelity_style),
+    Methods.MOBSTER: MethodSyle(gp_color, multifidelity_style),
     # transfer learning
-    'HB-BB': MethodSyle(hb_bb_color, multifidelity_style, "."),
-    'HB-CTS': MethodSyle(hb_ts_color, multifidelity_style, ".")
+    Methods.ASHA_BB: MethodSyle(hb_bb_color, multifidelity_style, "."),
+    Methods.ASHA_CTS: MethodSyle(hb_ts_color, multifidelity_style, "."),
+    Methods.ZEROSHOT: MethodSyle(zero_shot_color, fifo_style, "."),
 }
 
 

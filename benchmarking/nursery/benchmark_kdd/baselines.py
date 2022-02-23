@@ -34,6 +34,7 @@ class Methods:
     BOHB = 'BOHB'
     REA = 'REA'
     MOBSTER = 'MOB'
+    ZEROSHOT = 'ZS'
 
 methods = {
     Methods.RS: lambda method_arguments: FIFOScheduler(
@@ -95,6 +96,12 @@ methods = {
         max_t=200,
         resource_attr='hp_epoch',
     ),
+    Methods.ZEROSHOT: lambda method_arguments: ZeroShotTransfer(
+        config_space=method_arguments.config_space,
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
+    ),
     Methods.GP: lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
@@ -133,12 +140,6 @@ methods = {
         max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
-    ),
-    'ZeroShot': lambda method_arguments: ZeroShotTransfer(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
     ),
 }
 

@@ -4,7 +4,7 @@ from pathlib import Path
 from coolname import generate_slug
 from sagemaker.pytorch import PyTorch
 
-from benchmarking.nursery.benchmark_kdd.baselines import methods
+from benchmarking.nursery.benchmark_kdd.baselines import methods, Methods
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 import syne_tune
 import benchmarking
@@ -30,7 +30,7 @@ if __name__ == '__main__':
             dependencies=syne_tune.__path__ + benchmarking.__path__,
             disable_profiler=True,
         )
-        if method != 'MOBSTER':
+        if method != Methods.MOBSTER:
             print(f"{experiment_tag}-{method}")
             sm_args["hyperparameters"] = {"experiment_tag": experiment_tag, 'num_seeds': 30, 'method': method}
             est = PyTorch(**sm_args)
