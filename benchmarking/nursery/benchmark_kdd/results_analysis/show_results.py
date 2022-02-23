@@ -1,7 +1,7 @@
 # %%
 import logging
 from argparse import ArgumentParser
-
+from benchmarking.nursery.benchmark_kdd.baselines import Methods
 from datetime import datetime
 
 from benchmarking.nursery.benchmark_kdd.results_analysis.utils import method_styles, load_and_cache, plot_results, \
@@ -36,19 +36,19 @@ if __name__ == '__main__':
         n = 0
         for key, df in benchmarks_to_df.items():
             if benchmark in key:
-                n += len(df[df.algorithm == 'RS'])
+                n += len(df[df.algorithm == Methods.RS])
         print(f"number of hyperband evaluations for {benchmark}: {n}")
     plot_results(benchmarks_to_df, method_styles)
 
     methods_to_show = [
-        'RS',
-        'REA',
-        'GP',
-        'RS-MSR',
-        'BOHB',
-        'HB',
-        'MOBSTER',
-        'HB-BB',
-        'HB-CTS',
+        Methods.RS,
+        Methods.REA,
+        Methods.GP,
+        Methods.MSR,
+        Methods.BOHB,
+        Methods.ASHA,
+        Methods.MOBSTER,
+        Methods.ASHA_BB,
+        Methods.ASHA_CTS,
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)

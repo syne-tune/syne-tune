@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from matplotlib import cm
 
+from benchmarking.nursery.benchmark_kdd.baselines import Methods
 from benchmarking.nursery.benchmark_kdd.results_analysis.utils import MethodSyle, load_and_cache, plot_results
 
 show_seeds = False
@@ -15,7 +16,7 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument(
-        "--experiment_tag", type=str, required=False, default="nworkers-snobbish-toucan",
+        "--experiment_tag", type=str, required=False, default="nworkers-rebel-ibex",
         help="the experiment tag that was displayed when running the experiment"
     )
     args, _ = parser.parse_known_args()
@@ -24,10 +25,10 @@ if __name__ == '__main__':
 
     cmap = cm.get_cmap("viridis")
     method_styles = {
-        'HB (1 workers)': MethodSyle(cmap(0), "-"),
-        'HB (2 workers)': MethodSyle(cmap(0.25), "-"),
-        'HB (4 workers)': MethodSyle(cmap(0.5), "-"),
-        'HB (8 workers)': MethodSyle(cmap(1.0), "-"),
+        f'{Methods.ASHA} (1 workers)': MethodSyle(cmap(0), "-"),
+        f'{Methods.ASHA} (2 workers)': MethodSyle(cmap(0.25), "-"),
+        f'{Methods.ASHA} (4 workers)': MethodSyle(cmap(0.5), "-"),
+        f'{Methods.ASHA} (8 workers)': MethodSyle(cmap(1.0), "-"),
     }
 
     load_cache_if_exists = False
@@ -49,4 +50,6 @@ if __name__ == '__main__':
 
     # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
 
-    plot_results(benchmarks_to_df, method_styles, prefix="number-workers-")
+    plot_results(
+        benchmarks_to_df, method_styles, prefix="number-workers-", title="Impact of parallelism on wallclock time"
+    )

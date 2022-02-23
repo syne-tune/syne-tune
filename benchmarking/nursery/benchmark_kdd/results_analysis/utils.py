@@ -199,13 +199,15 @@ def plot_result_benchmark(
     return ax, t_range, agg_results
 
 
-def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix: str = ""):
+def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix: str = "", title: str = None):
     agg_results = {}
 
     for benchmark, df_task in benchmarks_to_df.items():
         ax, t_range, agg_result = plot_result_benchmark(
             df_task=df_task, title=benchmark, method_styles=method_styles, show_seeds=show_seeds
         )
+        if title is not None:
+            ax.set_title(title)
         agg_results[benchmark] = agg_result
         if benchmark in plot_range:
             plotargs = plot_range[benchmark]

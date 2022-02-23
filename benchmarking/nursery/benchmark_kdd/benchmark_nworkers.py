@@ -6,8 +6,8 @@ import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
-from benchmarking.blackbox_repository.tabulated_benchmark import BlackboxRepositoryBackend
-from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods
+from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
+from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods, Methods
 from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     experiment_tag = "nworkers-" + args.experiment_tag
     num_seeds = args.num_seeds
     # method_names = ["RS", "HB"]
-    method_names = ["HB"]
+    method_names = [Methods.ASHA]
     benchmark_names = ["nas201-cifar100"]
 
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     combinations = list(itertools.product(method_names, range(num_seeds), benchmark_names, n_workers))
 
     for method, seed, benchmark_name, n_workers in tqdm(combinations):
-        np.random.seed(np.random.randint(0, 2 ** 32))
+        np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
         print(f"Starting experiment ({method}/{benchmark_name}/{seed}/{n_workers}) of {experiment_tag}")
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         stop_criterion = StoppingCriterion(max_wallclock_time=25000)
 
         tuner = Tuner(
-            backend=backend,
+            trial_backend=backend,
             scheduler=scheduler,
             stop_criterion=stop_criterion,
             n_workers=n_workers,

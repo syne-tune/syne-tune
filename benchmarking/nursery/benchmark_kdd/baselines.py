@@ -24,15 +24,26 @@ class MethodArguments:
     transfer_learning_evaluations: Optional[Dict] = None
 
 
+class Methods:
+    RS = 'RS'
+    ASHA = 'ASHA'
+    MSR = 'RS-MSR'
+    ASHA_BB = 'ASHA-BB'
+    ASHA_CTS = 'ASHA-CTS'
+    GP = 'GP'
+    BOHB = 'BOHB'
+    REA = 'REA'
+    MOBSTER = 'MOB'
+
 methods = {
-    'RS': lambda method_arguments: FIFOScheduler(
+    Methods.RS: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    'HB': lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
         search_options={'debug_log': False},
@@ -42,7 +53,7 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    'RS-MSR': lambda method_arguments: MedianStoppingRule(
+    Methods.MSR: lambda method_arguments: MedianStoppingRule(
         scheduler=FIFOScheduler(
             config_space=method_arguments.config_space,
             searcher="random",
@@ -53,7 +64,7 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         running_average=False,
     ),
-    'HB-BB': lambda method_arguments: BoundingBox(
+    Methods.ASHA_BB: lambda method_arguments: BoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: HyperbandScheduler(
             new_config_space,
             searcher='random',
@@ -70,7 +81,7 @@ methods = {
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
         num_hyperparameters_per_task=10,
     ),
-    'HB-CTS': lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA_CTS: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher=QuantileBasedSurrogateSearcher(
             mode="min",
@@ -84,7 +95,7 @@ methods = {
         max_t=200,
         resource_attr='hp_epoch',
     ),
-    'GP': lambda method_arguments: FIFOScheduler(
+    Methods.GP: lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
         search_options={'debug_log': False},
@@ -92,7 +103,7 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    'REA': lambda method_arguments: FIFOScheduler(
+    Methods.REA: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
         searcher=RegularizedEvolution(configspace=method_arguments.config_space,
                                       metric=method_arguments.metric,
@@ -103,7 +114,7 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    'BOHB': lambda method_arguments: HyperbandScheduler(
+    Methods.BOHB: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="kde",
         search_options={'debug_log': False, 'min_bandwidth': 0.1},
@@ -113,7 +124,7 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    'MOBSTER': lambda method_arguments: HyperbandScheduler(
+    Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
         search_options={'debug_log': False},
