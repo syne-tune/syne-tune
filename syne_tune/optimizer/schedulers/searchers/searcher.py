@@ -129,7 +129,7 @@ class BaseSearcher(ABC):
         configurations are specified.
     """
     def __init__(
-            self, configspace, metric, points_to_evaluate=None):
+            self, configspace, metric, points_to_evaluate=None, **kwargs):
         self.configspace = configspace
         assert metric is not None, "Argument 'metric' is required"
         self._metric = metric
