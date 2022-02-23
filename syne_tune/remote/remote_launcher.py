@@ -102,7 +102,7 @@ class RemoteLauncher:
     def run(
             self,
             wait: bool = True,
-    ):
+    ) -> str:
         """
         :param wait: Whether the call should wait until the job completes (default: True). If False the call returns
         once the tuning job is scheduled on Sagemaker.
@@ -114,7 +114,7 @@ class RemoteLauncher:
             # launching in this is needed to send a default configuration on the tuning loop running on Sagemaker
             # todo restore the env variable if present to avoid a side effect
             os.environ['AWS_DEFAULT_REGION'] = 'us-west-2'
-        self.launch_tuning_job_on_sagemaker(wait=wait)
+        return self.launch_tuning_job_on_sagemaker(wait=wait)
 
     def prepare_upload(self):
         """
@@ -182,7 +182,7 @@ class RemoteLauncher:
     def remote_script_dir(self) -> Path:
         return Path(__file__).parent
 
-    def launch_tuning_job_on_sagemaker(self, wait: bool):
+    def launch_tuning_job_on_sagemaker(self, wait: bool) -> str:
         # todo add Sagemaker cloudwatch metrics to visualize live results of tuning best results found over time.
         if self.instance_type != "local":
             checkpoint_s3_root = f"{self.s3_path}/"
@@ -232,7 +232,10 @@ class RemoteLauncher:
             tuner_estimator.dependencies += self.dependencies
 
         # launches job on Sagemaker
-        return tuner_estimator.fit(wait=wait, job_name=self.tuner.name)
+        tuner_estimator.fit(wait=wait, job_name=self.tuner.name)
+        
+        # returns the SageMaker training job name
+        return tuner_estimator._current_job_name
 
     def syne_tune_image_uri(self) -> str:
         """
