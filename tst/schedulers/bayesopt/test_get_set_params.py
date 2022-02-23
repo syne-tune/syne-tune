@@ -27,7 +27,7 @@ def test_params_gp_multifidelity():
     searcher_options['gp_resource_kernel'] = 'exp-decay-combined'
     # Note: We are lazy here, we just need the config_space
     data = sample_data(Ackley, num_train=5, num_grid=5)
-    searcher_options['configspace'] = data['state'].hp_ranges.config_space
+    searcher_options['config_space'] = data['state'].hp_ranges.config_space
     searcher_options['scheduler'] = 'hyperband_stopping'
     searcher_options['min_epochs'] = 1
     searcher_options['max_epochs'] = 27

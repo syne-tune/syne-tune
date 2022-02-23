@@ -155,7 +155,7 @@ def test_async_schedulers_api(scheduler):
     for i in trial_ids:
         suggestion = scheduler.suggest(i)
         assert all(x in suggestion.config.keys() for x in config_space.keys()), \
-            "suggestion configuration should contain all keys of configspace."
+            "suggestion configuration should contain all keys of config_space."
         trials.append(Trial(trial_id=i, config=suggestion.config, creation_time=None))
 
     for trial in trials:

@@ -65,7 +65,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     Parameters
     ----------
-    configspace : Dict
+    config_space : Dict
         Configuration space. Constant parameters are filtered out
     metric : str
         Name of reward attribute reported by evaluation function
@@ -175,7 +175,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             kwargs_int.pop(k)
             assert isinstance(self.resource_for_acquisition,
                               ResourceForAcquisitionMap)
-        self.configspace_ext = kwargs_int.pop('configspace_ext')
+        self.config_space_ext = kwargs_int.pop('config_space_ext')
         self._create_internal(**kwargs_int)
 
     def configure_scheduler(self, scheduler):
@@ -195,11 +195,11 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
                 "HyperbandScheduler"
 
     def _hp_ranges_in_state(self):
-        return self.configspace_ext.hp_ranges_ext
+        return self.config_space_ext.hp_ranges_ext
 
     def _config_ext_update(self, config, result):
         resource = int(result[self._resource_attr])
-        return self.configspace_ext.get(config, resource)
+        return self.config_space_ext.get(config, resource)
 
     def _metric_val_update(
             self, crit_val: float, result: Dict) -> MetricValues:
@@ -238,7 +238,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         Determines target resource level r at which the current call of
         `get_config` operates. This is done based on
         `resource_for_acquisition`. This resource level is then set in
-        `configspace_ext.hp_ranges_ext.value_for_last_pos`. This does the
+        `config_space_ext.hp_ranges_ext.value_for_last_pos`. This does the
         job for GP surrogate models. But if in subclasses, other surrogate
         models are involved, they need to get informed separately (see
         :class:`CostAwareGPMultiFidelitySearcher` for an example).
@@ -255,15 +255,15 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
                 target_resource = self.resource_for_acquisition(state, **kwargs)
             else:
                 # Any valid value works here:
-                target_resource = self.configspace_ext.resource_attr_range[0]
-            self.configspace_ext.hp_ranges_ext.value_for_last_pos = target_resource
+                target_resource = self.config_space_ext.resource_attr_range[0]
+            self.config_space_ext.hp_ranges_ext.value_for_last_pos = target_resource
             if self.debug_log is not None:
                 self.debug_log.append_extra(
                     f"Score values computed at target_resource = {target_resource}")
 
     def _postprocess_config(self, config: dict) -> dict:
         # If `config` is normal (not extended), nothing is removed
-        return self.configspace_ext.remove_resource(config)
+        return self.config_space_ext.remove_resource(config)
 
     def evaluation_failed(self, trial_id: str):
         # Remove all pending evaluations for trial
@@ -301,7 +301,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             model_factory=model_factory,
             init_state=init_state,
             skip_optimization=skip_optimization,
-            configspace_ext=self.configspace_ext,
+            config_space_ext=self.config_space_ext,
             resource_for_acquisition=self.resource_for_acquisition)
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)

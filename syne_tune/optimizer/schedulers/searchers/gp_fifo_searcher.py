@@ -425,7 +425,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     Parameters
     ----------
-    configspace : Dict
+    config_space : Dict
         Configuration space. Constant parameters are filtered out
     metric : str
         Name of metric reported by evaluation function.
@@ -510,13 +510,13 @@ class GPFIFOSearcher(ModelBasedSearcher):
     transfer_learning_task_attr : str (optional)
         Used to support transfer HPO, where the state contains observed data
         from several tasks, one of which is the active one. To this end,
-        `configspace` must contain a categorical parameter of name
+        `config_space` must contain a categorical parameter of name
         `transfer_learning_task_attr`, whose range are all task IDs. Also,
         `transfer_learning_active_task` must denote the active task, and
         `transfer_learning_active_config_space` is used as
         `active_config_space` argument in :class:`HyperparameterRanges`. This
         allows us to use a narrower search space for the active task than for
-        the union of all tasks (`configspace` must be that), which is needed
+        the union of all tasks (`config_space` must be that), which is needed
         if some configurations of non-active tasks lie outside of the ranges
         in `active_config_space`.
         One of the implications is that `filter_observed_data` is selecting
@@ -525,7 +525,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     transfer_learning_active_task : str (optional)
         See `transfer_learning_task_attr`.
     transfer_learning_active_config_space : Dict (optional)
-        See `transfer_learning_task_attr`. If not given, `configspace` is the
+        See `transfer_learning_task_attr`. If not given, `config_space` is the
         search space for the active task as well. This active config space need
         not contain the `transfer_learning_task_attr` parameter. In fact, this
         parameter is set to a categorical with `transfer_learning_active_task`
@@ -543,21 +543,21 @@ class GPFIFOSearcher(ModelBasedSearcher):
             that data from all tasks can be merged together
 
     """
-    def __init__(self, configspace, metric, clone_from_state=False, **kwargs):
+    def __init__(self, config_space, metric, clone_from_state=False, **kwargs):
         if not clone_from_state:
             super().__init__(
-                configspace,
+                config_space,
                 metric=metric,
                 points_to_evaluate=kwargs.get('points_to_evaluate'),
                 random_seed_generator=kwargs.get('random_seed_generator'),
                 random_seed=kwargs.get('random_seed'))
-            kwargs['configspace'] = configspace
+            kwargs['config_space'] = config_space
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
             # Internal constructor, bypassing the factory
             # Note: Members which are part of the mutable state, will be
             # overwritten in `_restore_from_state`
-            super().__init__(configspace, metric=metric)
+            super().__init__(config_space, metric=metric)
             kwargs_int = kwargs.copy()
         self._call_create_internal(kwargs_int)
 
@@ -770,7 +770,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         :return: kwargs for creating new searcher object in `clone_from_state`
         """
         return dict(
-            configspace=self.configspace,
+            config_space=self.config_space,
             metric=self._metric,
             clone_from_state=True,
             hp_ranges=self.hp_ranges,

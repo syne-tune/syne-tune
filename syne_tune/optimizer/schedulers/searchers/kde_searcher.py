@@ -85,7 +85,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
     def __init__(
             self,
-            configspace: Dict,
+            config_space: Dict,
             metric: str,
             points_to_evaluate: Optional[List[Dict]] = None,
             mode: str = "min",
@@ -98,7 +98,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             **kwargs
     ):
         super().__init__(
-            configspace=configspace, metric=metric,
+            config_space=config_space, metric=metric,
             points_to_evaluate=points_to_evaluate, **kwargs)
         self.mode = mode
         self.num_evaluations = 0
@@ -111,7 +111,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         self.y = []
         self.categorical_maps = {
             k: {cat: i for i, cat in enumerate(v.categories)}
-            for k, v in configspace.items()
+            for k, v in config_space.items()
             if isinstance(v, sp.Categorical)
         }
         self.inv_categorical_maps = {
@@ -123,7 +123,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
         self.vartypes = []
 
-        for name, hp in self.configspace.items():
+        for name, hp in self.config_space.items():
             if isinstance(hp, sp.Categorical):
                 self.vartypes.append(('u', len(hp.categories)))
             if isinstance(hp, sp.Integer):
@@ -159,7 +159,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
         return np.hstack([
             numerize(value=config[k], domain=v, categorical_map=self.categorical_maps.get(k, {}))
-            for k, v in self.configspace.items()
+            for k, v in self.config_space.items()
             if isinstance(v, sp.Domain)
         ])
 
@@ -181,7 +181,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
         res = {}
         curr_pos = 0
-        for k, domain in self.configspace.items():
+        for k, domain in self.config_space.items():
             if isinstance(domain, sp.Domain):
                 res[k] = domain.cast(
                     inv_numerize(
@@ -229,7 +229,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             if models is None or self.random_state.rand() < self.random_fraction:
                 # return random candidate because a) we don't have enough data points or
                 # b) we sample some fraction of all samples randomly
-                suggestion = {k: v.sample() if isinstance(v, sp.Domain) else v for k, v in self.configspace.items()}
+                suggestion = {k: v.sample() if isinstance(v, sp.Domain) else v for k, v in self.config_space.items()}
             else:
                 self.bad_kde = models[0]
                 self.good_kde = models[1]

@@ -322,7 +322,7 @@ above, the rung levels would be 1, 3, 9, 27, 56.
 If `max_t` is not given as argument to `HyperbandScheduler`, the value may be
 inferred from `config_space`. Namely, `config_space['epochs']`,
 `config_space['max-t']`, `config_space['max-epochs']` are checked in this order.
-In the example above, `configspace['epochs']` contains the correct value, so we
+In the example above, `config_space['epochs']` contains the correct value, so we
 could have dropped `max_t`.
 
 Given such a rung level spacing, stop/go decisions are done by comparing

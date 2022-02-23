@@ -201,7 +201,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
             else:
                 search_options = search_options.copy()
             search_options.update({
-                'configspace': self.config_space.copy(),
+                'config_space': self.config_space.copy(),
                 'metric': self.metric,
                 'points_to_evaluate': kwargs.get('points_to_evaluate'),
                 'scheduler_mode': kwargs['mode'],

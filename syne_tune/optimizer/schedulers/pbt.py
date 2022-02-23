@@ -300,7 +300,7 @@ class PopulationBasedTraining(FIFOScheduler):
             config['elapsed_time'] = self._elapsed_time()
             config = cast_config_values(
                 config=config,
-                config_space=self.searcher.configspace)
+                config_space=self.searcher.config_space)
             config['trial_id'] = trial_id
             return TrialSuggestion.start_suggestion(config=config,
                                                     checkpoint_trial_id=trial_id_to_continue)

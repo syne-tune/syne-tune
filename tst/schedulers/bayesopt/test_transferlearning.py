@@ -35,7 +35,7 @@ def test_create_transfer_learning():
     }
     search_options = {
         'scheduler': 'fifo',
-        'configspace': config_space,
+        'config_space': config_space,
         'transfer_learning_task_attr': 'task_id',
         'transfer_learning_active_task': '2',
         'transfer_learning_active_config_space': active_config_space,

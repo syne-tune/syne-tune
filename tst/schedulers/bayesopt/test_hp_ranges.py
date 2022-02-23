@@ -202,10 +202,10 @@ def test_get_ndarray_bounds():
         '5': choice(['a', 'b', 'c'])}
     hp_ranges = make_hyperparameter_ranges(config_space)
     for epochs, val_last_pos in ((3, 1), (9, 3), (81, 81), (27, 1), (27, 9)):
-        configspace_ext = ExtendedConfiguration(
+        config_space_ext = ExtendedConfiguration(
             hp_ranges=hp_ranges, resource_attr_key='epoch',
             resource_attr_range=(1, epochs))
-        hp_ranges_ext = configspace_ext.hp_ranges_ext
+        hp_ranges_ext = config_space_ext.hp_ranges_ext
         hp_ranges_ext.value_for_last_pos = val_last_pos
         bounds = hp_ranges_ext.get_ndarray_bounds()
         val_enc = _int_encode(val_last_pos, lower=1, upper=epochs)
