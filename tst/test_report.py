@@ -12,7 +12,8 @@
 # permissions and limitations under the License.
 import logging
 
-from syne_tune.report import Reporter, retrieve
+from syne_tune import Reporter
+from syne_tune.report import retrieve
 
 
 def test_report_logger():

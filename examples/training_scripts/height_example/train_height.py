@@ -16,7 +16,7 @@ Example similar to Raytune, https://github.com/ray-project/ray/blob/master/pytho
 import logging
 import time
 
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 from argparse import ArgumentParser
 
 

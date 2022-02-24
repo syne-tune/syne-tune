@@ -96,6 +96,7 @@ class Tuner:
 
         # we keep track of the last result seen to send it to schedulers when trials complete.
         self.last_seen_result_per_trial = {}
+        self.trials_scheduler_stopped = set()
         self.tuner_path = Path(experiment_path(tuner_name=self.name))
 
         # inform the backend to the folder of the Tuner. This allows the local backend
@@ -265,9 +266,12 @@ class Tuner:
 
         assert len(running_trials_ids) <= self.n_workers
 
-        # gets list of trials that are done with the new results (could be because they completed or because the
-        # scheduler decided to interrupt them
-        # Note: `done_trials` includes trials which are paused
+        # Gets list of trials that are done with the new results.
+        # The trials can be finished for different reasons:
+        # - they completed,
+        # - they were stopped independently of the scheduler, e.g. due to a timeout argument or a manual interruption
+        # - scheduler decided to interrupt them.
+        # Note: `done_trials` includes trials which are paused.
         done_trials_statuses = self._update_running_trials(trial_status_dict, new_results, callbacks=self.callbacks)
         trial_status_dict.update(done_trials_statuses)
 
@@ -374,7 +378,8 @@ class Tuner:
         Trials can be finished because:
          1) the scheduler decided to stop or pause.
          2) the trial failed.
-         3) the trial completed.
+         3) the trial was stopped independently of the scheduler, e.g. due to a timeout argument or a manual interruption.
+         4) the trial completed.
         """
         # gets the list of jobs from running_jobs that are done
         done_trials = {}
@@ -397,12 +402,13 @@ class Tuner:
 
                 if decision == SchedulerDecision.STOP:
                     if status != Status.completed:
-                        # we override the status immediately, this avoid calling the backend status another time to
+                        # we override the status immediately, this avoids calling the backend status another time to
                         # update after the change which may be expensive
                         status = Status.stopped
                         self.trial_backend.stop_trial(trial_id)
                     self.scheduler.on_trial_remove(trial=trial)
                     done_trials[trial_id] = (trial, status)
+                    self.trials_scheduler_stopped.add(trial_id)
 
                 elif decision == SchedulerDecision.PAUSE:
                     status = Status.paused
@@ -411,7 +417,10 @@ class Tuner:
                     done_trials[trial_id] = (trial, status)
 
         for trial_id, (trial, status) in trial_status_dict.items():
-            # Status "completed" and "failed" are signaled to scheduler.
+            # Status "completed", "stopped" and "failed" are signaled to scheduler.
+            # Status "in_progress" and "stopping" are not signaled, although the first one could be added
+            # to notify the scheduler of pending runtimes (even in the absence of new results).
+
             if status == Status.completed:
                 # since the code above updates `trial_status_dict[trial_id]` after a pause/stop scheduling decision
                 # this callback is never called after a pause/stop scheduler decision.
@@ -427,11 +436,15 @@ class Tuner:
                     callback.on_trial_complete(trial, last_result)
                 done_trials[trial_id] = (trial, status)
 
-            # Status "in_progress", "stopped" and "stopping" are not signaled, although the first one could be added
-            # to notify the scheduler of pending runtimes (even in the absence of new results).
-            # The stopped/stopping are not needed a priori since they come after a stop decision.
             if status == Status.failed:
                 logger.info(f"Trial trial_id {trial_id} failed.")
+                self.scheduler.on_trial_error(trial)
+                done_trials[trial_id] = (trial, status)
+
+            # For the case when the trial is stopped independently of the scheduler, we choose to use
+            # scheduler.on_trial_error(...) since it was not the scheduler's decision to stop the trial.
+            if status == Status.stopped and trial_id not in self.trials_scheduler_stopped:
+                logger.info(f"Trial trial_id {trial_id} was stopped independently of the scheduler.")
                 self.scheduler.on_trial_error(trial)
                 done_trials[trial_id] = (trial, status)
 

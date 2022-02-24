@@ -251,9 +251,21 @@ class TuningJobState(object):
             configs.append(config)
         return configs
 
+    def _map_configs_for_matching(
+            self, config_for_trial: Dict[str, Configuration]) -> Dict[str, str]:
+        return {
+            trial_id: self.hp_ranges.config_to_match_string(config)
+            for trial_id, config in config_for_trial.items()}
+
     def __eq__(self, other) -> bool:
-        return self.hp_ranges == other.hp_ranges \
-               and self.config_for_trial == other.config_for_trial \
-               and self.trials_evaluations == other.trials_evaluations \
-               and self.failed_trials == other.failed_trials \
-               and self.pending_evaluations == other.pending_evaluations
+        if not isinstance(other, TuningJobState):
+            return False
+        if self.failed_trials != other.failed_trials or \
+                self.pending_evaluations != other.pending_evaluations:
+            return False
+        if self.hp_ranges != other.hp_ranges:
+            return False
+        if self.trials_evaluations != other.trials_evaluations:
+            return False
+        return self._map_configs_for_matching(self.config_for_trial) == \
+               self._map_configs_for_matching(other.config_for_trial)
