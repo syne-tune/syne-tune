@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from syne_tune.search_space import uniform, randint, choice
+from syne_tune.config_space import uniform, randint, choice
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
     gp_fifo_searcher_defaults, gp_fifo_searcher_factory
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \

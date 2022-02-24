@@ -26,7 +26,7 @@ from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
-from syne_tune.search_space import loguniform, choice
+from syne_tune.config_space import loguniform, choice
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)

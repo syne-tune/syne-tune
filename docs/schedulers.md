@@ -138,17 +138,17 @@ The simplest HPO baseline is **random search**, which you obtain with
 configuration is chosen by sampling attribute values at random, from
 distributions specified in `config_space`:
 
-* `search_space.uniform(lower, upper)`: Real-valued uniform in `[lower, upper]`
-* `search_space.loguniform(lower, upper)`: Real-valued log-uniform in
+* `config_space.uniform(lower, upper)`: Real-valued uniform in `[lower, upper]`
+* `config_space.loguniform(lower, upper)`: Real-valued log-uniform in
   `[lower, upper]`. More precisely, the value is `exp(x)`, where `x` is drawn
   uniformly in `[log(lower), log(upper)]`
-* `search_space.randint(lower, upper)`: Integer uniform in `lower, ..., upper`.
+* `config_space.randint(lower, upper)`: Integer uniform in `lower, ..., upper`.
   The value range includes both `lower` and `upper` (difference to Python range
   convention)
-* `search_space.lograndint(lower, upper)`: Integer log-uniform in
+* `config_space.lograndint(lower, upper)`: Integer log-uniform in
   `lower, ..., upper`. More precisely, the value is `int(round(exp(x)))`, where
   `x` is drawn uniformly in `[log(lower - 0.5), log(upper + 0.5)]`
-* `search_space.choice(categories)`: Uniform from the finite list `categories`
+* `config_space.choice(categories)`: Uniform from the finite list `categories`
   of `str` values
 
 If `points_to_evaluate` is specified, configurations are first taken from this

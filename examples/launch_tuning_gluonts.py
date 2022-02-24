@@ -26,7 +26,7 @@ from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.search_space import loguniform, lograndint
+from syne_tune.config_space import loguniform, lograndint
 
 
 if __name__ == '__main__':

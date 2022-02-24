@@ -40,7 +40,7 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
     prefix_keys = None
     active_config_space = None
     if task_attr is not None:
-        from syne_tune.search_space import Categorical
+        from syne_tune.config_space import Categorical
 
         active_task = kwargs.get('transfer_learning_active_task')
         assert active_task is not None, \

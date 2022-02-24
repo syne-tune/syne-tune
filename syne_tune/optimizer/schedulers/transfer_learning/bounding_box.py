@@ -3,10 +3,10 @@ from typing import Dict, Callable, Optional
 
 import pandas as pd
 
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningMixin, TransferLearningTaskEvaluations
-from syne_tune.search_space import Categorical
+from syne_tune.config_space import Categorical
 
 
 class BoundingBox(TransferLearningMixin, TrialScheduler):
@@ -54,7 +54,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
             metric=metric
         )
         print(f"hyperparameter ranges of best previous configurations {config_space}")
-        print(f"({sp.search_space_size(config_space)} options)")
+        print(f"({sp.config_space_size(config_space)} options)")
         self.scheduler = scheduler_fun(config_space, mode, metric)
 
     def compute_box(self,

@@ -21,7 +21,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
     decode_state_from_old_encoding
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 

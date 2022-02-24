@@ -24,7 +24,7 @@ from syne_tune.optimizer.scheduler import TrialSuggestion, \
     SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import ResourceLevelsScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.search_space import cast_config_values
+from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults, Categorical, String, \
     assert_no_invalid_options, Integer

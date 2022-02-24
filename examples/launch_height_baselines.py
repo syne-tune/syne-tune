@@ -19,7 +19,7 @@ from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler  # noqa: F401
 from syne_tune import Tuner
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 from syne_tune import StoppingCriterion
 
 if __name__ == '__main__':

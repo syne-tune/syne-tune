@@ -17,7 +17,7 @@ import statsmodels.api as sm
 import scipy.stats as sps
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 

@@ -19,11 +19,11 @@ from dataclasses import dataclass
 from collections import deque
 from typing import Callable, Dict, List, Optional, Tuple
 
-from syne_tune.search_space import Domain, Integer, Float, FiniteRange
+from syne_tune.config_space import Domain, Integer, Float, FiniteRange
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.search_space import cast_config_values
+from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults, Integer as DA_Integer, \
     Boolean as DA_Boolean, filter_by_key, String as DA_String, \

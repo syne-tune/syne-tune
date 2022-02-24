@@ -38,7 +38,7 @@ is chosen by sampling independently from the hyperparameter domain. Recall
 our search space:
 
 ```python
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 
 config_space = {
     'n_units_1': randint(4, 1024),

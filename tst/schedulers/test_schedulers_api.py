@@ -19,7 +19,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler

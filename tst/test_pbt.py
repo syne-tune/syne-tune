@@ -13,7 +13,7 @@
 from datetime import datetime
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.search_space import loguniform
+from syne_tune.config_space import loguniform
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 
 max_steps = 10

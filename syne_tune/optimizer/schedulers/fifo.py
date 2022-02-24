@@ -27,7 +27,7 @@ from syne_tune.optimizer.scheduler import TrialScheduler, \
     SchedulerDecision, TrialSuggestion
 from syne_tune.backend.time_keeper import TimeKeeper, RealTimeKeeper
 from syne_tune.backend.trial_status import Trial
-from syne_tune.search_space import cast_config_values
+from syne_tune.config_space import cast_config_values
 
 __all__ = ['FIFOScheduler',
            'ResourceLevelsScheduler']

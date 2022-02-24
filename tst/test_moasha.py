@@ -21,7 +21,7 @@ from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA, _Bracket
 from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import FixedObjectivePriority, \
     LinearScalarizationPriority, NonDominatedPriority
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 
 
 def test_bucket():

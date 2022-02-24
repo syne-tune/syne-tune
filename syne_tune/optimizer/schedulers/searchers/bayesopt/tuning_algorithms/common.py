@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
-from syne_tune.search_space import search_space_size
+from syne_tune.config_space import config_space_size
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class ExclusionList(object):
             self.hp_ranges = state['hp_ranges']
             self.excl_set = state['excl_set']
             self.keys = state['keys']
-        self.configspace_size = search_space_size(self.hp_ranges.config_space)
+        self.configspace_size = config_space_size(self.hp_ranges.config_space)
 
     def _to_matchstr(self, config) -> str:
         return self.hp_ranges.config_to_match_string(config, keys=self.keys)

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional, Dict
 import json
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 
 def serialize_configspace(
     path: str,

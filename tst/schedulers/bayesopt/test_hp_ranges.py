@@ -17,7 +17,7 @@ import pytest
 from numpy.testing import assert_allclose, assert_almost_equal
 from pytest import approx
 
-from syne_tune.search_space import uniform, randint, choice, loguniform, \
+from syne_tune.config_space import uniform, randint, choice, loguniform, \
     lograndint, finrange, logfinrange
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges

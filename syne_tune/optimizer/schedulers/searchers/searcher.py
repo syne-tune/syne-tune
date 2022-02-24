@@ -15,7 +15,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, List, Tuple
 
-from syne_tune.search_space import Domain, is_log_space, Categorical
+from syne_tune.config_space import Domain, is_log_space, Categorical
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \

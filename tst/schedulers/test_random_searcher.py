@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from syne_tune.optimizer.schedulers.searchers.searcher import \
     RandomSearcher
-from syne_tune.search_space import choice, randint
+from syne_tune.config_space import choice, randint
 
 
 def test_no_duplicates():

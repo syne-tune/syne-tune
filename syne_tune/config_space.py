@@ -450,7 +450,7 @@ class Categorical(Domain):
             f"All entries in categories = {self.categories} must have the same type"
         if isinstance(self.value_type, float):
             logger.warning(
-                "The search space contains a categorical value with float type. "
+                "The configuration space contains a categorical value with float type. "
                 "When performing remote execution, floats are converted to string which can cause rounding "
                 "issues. In case of problem, consider using string to represent the float."
             )
@@ -898,9 +898,9 @@ def non_constant_hyperparameter_keys(config_space: Dict) -> List[str]:
             if isinstance(domain, Domain)]
 
 
-def search_space_size(config_space: Dict, upper_limit: int = 2 ** 20) -> Optional[int]:
+def config_space_size(config_space: Dict, upper_limit: int = 2 ** 20) -> Optional[int]:
     """
-    Counts the number of distinct configurations in the search space
+    Counts the number of distinct configurations in the configuration space
     `config_space`. If this is infinite (due to real-valued parameters) or
     larger than `upper_limit`, None is returned.
     """

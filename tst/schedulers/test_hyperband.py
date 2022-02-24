@@ -15,7 +15,7 @@ from typing import Optional, Dict, Tuple
 import pytest
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.search_space import randint, uniform
+from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.searchers.searcher import RandomSearcher
@@ -166,7 +166,7 @@ def test_hyperband_max_t_inference():
         'max_epochs': randint(13, 22),
         'blurb': randint(0, 20)
     }
-    # Fields: (max_t, search_space, final_max_t)
+    # Fields: (max_t, config_space, final_max_t)
     # If final_max_t is None, an assertion should be raised
     cases = [
         (None, config_space1, 15),
