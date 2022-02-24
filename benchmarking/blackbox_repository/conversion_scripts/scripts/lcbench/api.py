@@ -7,8 +7,6 @@ import json
 import pickle
 import gzip
 
-import matplotlib.pyplot as plt
-
 
 class Benchmark():
     """API for TabularBench."""
@@ -128,6 +126,8 @@ class Benchmark():
         yscale -- str, set yscale, options as in matplotlib: "linear", "log", "symlog", "logit", ...
         criterion -- str, tag used as criterion for query_best()
         """
+        import matplotlib.pyplot as plt
+
         if isinstance(dataset_names, str):
             dataset_names = [dataset_names]
         if not isinstance(dataset_names, (list, np.ndarray)):
