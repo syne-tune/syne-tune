@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
     dictionarize_objective
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import \
     TuningJobState
-from syne_tune.search_space import uniform, choice, randint
+from syne_tune.config_space import uniform, choice, randint
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import create_tuning_job_state
 

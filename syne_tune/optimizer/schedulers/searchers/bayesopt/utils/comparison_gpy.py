@@ -15,7 +15,7 @@ import numpy as np
 import scipy.linalg as spl
 import copy
 
-from syne_tune.search_space import uniform
+from syne_tune.config_space import uniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import TrialEvaluations, Configuration, dictionarize_objective, \
     INTERNAL_METRIC_NAME

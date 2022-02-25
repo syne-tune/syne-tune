@@ -21,7 +21,7 @@ import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration, dictionarize_objective
-from syne_tune.search_space import Categorical, loguniform, randint, \
+from syne_tune.config_space import Categorical, loguniform, randint, \
     choice, uniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges

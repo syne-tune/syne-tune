@@ -9,10 +9,10 @@ this tutorial you will learn about the basics and some gotchas.
 ### Introduction
 
 Here is an example for a configuration space:
-```python
-from syne_tune.search_space import randint, uniform, loguniform, \
-    choice
 
+```python
+from syne_tune.config_space import randint, uniform, loguniform, \
+    choice
 
 config_space = {
     'n_units': randint(4, 1024),

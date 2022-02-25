@@ -71,11 +71,11 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
     cost model being given by `kwargs['cost_model']`.
 
     """
-    def __init__(self, configspace, metric, **kwargs):
+    def __init__(self, config_space, metric, **kwargs):
         assert kwargs.get('cost_attr') is not None, \
             "This searcher needs a cost attribute. Please specify its " +\
             "name in search_options['cost_attr']"
-        super().__init__(configspace, metric, **kwargs)
+        super().__init__(config_space, metric, **kwargs)
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -89,10 +89,10 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
         if self.resource_for_acquisition is not None:
             super()._fix_resource_attribute(**kwargs)
             fixed_resource = \
-                self.configspace_ext.hp_ranges_ext.value_for_last_pos
+                self.config_space_ext.hp_ranges_ext.value_for_last_pos
         else:
             # Cost at r_max
-            fixed_resource = self.configspace_ext.resource_attr_range[1]
+            fixed_resource = self.config_space_ext.resource_attr_range[1]
         cost_model_factory = self.state_transformer.model_factory[
             INTERNAL_COST_NAME]
         assert isinstance(cost_model_factory, CostSurrogateModelFactory)
@@ -109,7 +109,7 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
             output_model_factory=output_model_factory,
             init_state=init_state,
             output_skip_optimization=output_skip_optimization,
-            configspace_ext=self.configspace_ext,
+            config_space_ext=self.config_space_ext,
             resource_for_acquisition=self.resource_for_acquisition)
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)

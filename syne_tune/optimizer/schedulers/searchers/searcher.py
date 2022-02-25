@@ -15,7 +15,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, List, Tuple
 
-from syne_tune.search_space import Domain, is_log_space, Categorical
+from syne_tune.config_space import Domain, is_log_space, Categorical
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
     import DebugLogPrinter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
@@ -32,9 +32,9 @@ __all__ = ['BaseSearcher',
 logger = logging.getLogger(__name__)
 
 
-def _impute_default_config(default_config, configspace):
+def _impute_default_config(default_config, config_space):
     new_config = dict()
-    for name, hp_range in configspace.items():
+    for name, hp_range in config_space.items():
         if isinstance(hp_range, Domain):
             if name not in default_config:
                 if isinstance(hp_range, Categorical):
@@ -74,13 +74,13 @@ def _to_tuple(config: Dict, keys: List) -> Tuple:
     return tuple(config[k] for k in keys)
 
 
-def _sorted_keys(configspace: Dict) -> List[str]:
-    return sorted(k for k, v in configspace.items() if isinstance(v, Domain))
+def _sorted_keys(config_space: Dict) -> List[str]:
+    return sorted(k for k, v in config_space.items() if isinstance(v, Domain))
 
 
 def impute_points_to_evaluate(
         points_to_evaluate: Optional[List[Dict]],
-        configspace: Dict) -> List[Dict]:
+        config_space: Dict) -> List[Dict]:
     """
     Transforms `points_to_evaluate` argument to `BaseSearcher`. Each config in
     the list can be partially specified, or even be an empty dict. For each
@@ -91,7 +91,7 @@ def impute_points_to_evaluate(
     configurations are specified.
 
     :param points_to_evaluate:
-    :param configspace:
+    :param config_space:
     :return: List of fully specified initial configs
     """
     if points_to_evaluate is None:
@@ -99,9 +99,9 @@ def impute_points_to_evaluate(
     # Impute and filter out duplicates
     result = []
     excl_set = set()
-    keys = _sorted_keys(configspace)
+    keys = _sorted_keys(config_space)
     for point in points_to_evaluate:
-        config = _impute_default_config(point, configspace)
+        config = _impute_default_config(point, config_space)
         config_tpl = _to_tuple(config, keys)
         if config_tpl not in excl_set:
             result.append(config)
@@ -114,7 +114,7 @@ class BaseSearcher(ABC):
 
     Parameters
     ----------
-    configspace : Dict
+    config_space : Dict
         The configuration space to sample from. It contains the full
         specification of the Hyperparameters with their priors
     metric : str
@@ -129,12 +129,12 @@ class BaseSearcher(ABC):
         configurations are specified.
     """
     def __init__(
-            self, configspace, metric, points_to_evaluate=None):
-        self.configspace = configspace
+            self, config_space, metric, points_to_evaluate=None):
+        self.config_space = config_space
         assert metric is not None, "Argument 'metric' is required"
         self._metric = metric
         self._points_to_evaluate = impute_points_to_evaluate(
-            points_to_evaluate, configspace)
+            points_to_evaluate, config_space)
 
     def configure_scheduler(self, scheduler):
         """
@@ -342,9 +342,9 @@ class SearcherWithRandomSeed(BaseSearcher):
 
     """
     def __init__(
-            self, configspace, metric, points_to_evaluate=None, **kwargs):
+            self, config_space, metric, points_to_evaluate=None, **kwargs):
         super().__init__(
-            configspace, metric=metric, points_to_evaluate=points_to_evaluate)
+            config_space, metric=metric, points_to_evaluate=points_to_evaluate)
         random_seed, _ = extract_random_seed(kwargs)
         self.random_state = np.random.RandomState(random_seed)
 
@@ -371,10 +371,10 @@ class RandomSearcher(SearcherWithRandomSeed):
     """
     MAX_RETRIES = 100
 
-    def __init__(self, configspace, metric, points_to_evaluate=None, **kwargs):
+    def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
         super().__init__(
-            configspace, metric, points_to_evaluate, **kwargs)
-        self._hp_ranges = make_hyperparameter_ranges(configspace)
+            config_space, metric, points_to_evaluate, **kwargs)
+        self._hp_ranges = make_hyperparameter_ranges(config_space)
         self._resource_attr = kwargs.get('resource_attr')
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)
         # Debug log printing (switched on by default)
@@ -460,7 +460,7 @@ class RandomSearcher(SearcherWithRandomSeed):
 
     def clone_from_state(self, state: dict):
         new_searcher = RandomSearcher(
-            self.configspace, metric=self._metric, debug_log=self._debug_log)
+            self.config_space, metric=self._metric, debug_log=self._debug_log)
         new_searcher._resource_attr = self._resource_attr
         new_searcher._restore_from_state(state)
         return new_searcher

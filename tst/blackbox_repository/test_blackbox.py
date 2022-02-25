@@ -3,7 +3,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 
 from benchmarking.blackbox_repository import BlackboxOffline
 from benchmarking.blackbox_repository.blackbox import from_function

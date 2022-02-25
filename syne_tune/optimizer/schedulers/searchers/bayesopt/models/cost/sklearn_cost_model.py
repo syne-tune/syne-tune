@@ -140,7 +140,6 @@ class NonLinearCostModel(CostModel):
         `state`, at the minimum resource level `res_min`.
 
         :param state: TuningJobState
-        :param configspace_ext:
         :return: dataset, num_data0, res_min, target_min
         """
         data_config = []

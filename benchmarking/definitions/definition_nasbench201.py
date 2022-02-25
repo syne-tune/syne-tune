@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.search_space import choice
+from syne_tune.config_space import choice
 from benchmarking.blackbox_repository.conversion_scripts.scripts.nasbench201_import import \
     CONFIG_KEYS, METRIC_VALID_ERROR, METRIC_TIME_THIS_RESOURCE, \
     RESOURCE_ATTR, BLACKBOX_NAME

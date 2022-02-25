@@ -28,7 +28,7 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
     'transfer_learning_active_task', 'transfer_learning_active_config_space'
     as optional fields in `kwargs`. If given, they determine
     `active_config_space` and `prefix_keys` of `hp_ranges` created here,
-    and they also places constraints on 'configspace'.
+    and they also places constraints on 'config_space'.
 
     This function is not only called in `gp_searcher_factory` to create
     `hp_ranges` for a new :class:`GPFIFOSearcher` object. It is also needed to
@@ -36,11 +36,11 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
 
     """
     task_attr = kwargs.get('transfer_learning_task_attr')
-    config_space = kwargs['configspace']
+    config_space = kwargs['config_space']
     prefix_keys = None
     active_config_space = None
     if task_attr is not None:
-        from syne_tune.search_space import Categorical
+        from syne_tune.config_space import Categorical
 
         active_task = kwargs.get('transfer_learning_active_task')
         assert active_task is not None, \

@@ -24,7 +24,7 @@ from syne_tune.optimizer.scheduler import TrialSuggestion, \
     SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import ResourceLevelsScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.search_space import cast_config_values
+from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults, Categorical, String, \
     assert_no_invalid_options, Integer
@@ -163,7 +163,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         else:
             search_options = search_options.copy()
         search_options.update({
-            'configspace': self.config_space.copy(),
+            'config_space': self.config_space.copy(),
             'metric': self.metric,
             'points_to_evaluate': kwargs.get('points_to_evaluate'),
             'scheduler_mode': kwargs['mode'],

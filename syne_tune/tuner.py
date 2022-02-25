@@ -142,7 +142,7 @@ class Tuner:
             # state
             running_trials_ids = set()
 
-            search_space_exhausted = False
+            config_space_exhausted = False
 
             while not self._stop_condition():
                 for callback in self.callbacks:
@@ -169,11 +169,11 @@ class Tuner:
                 done_trials_statuses.update(new_done_trial_statuses)
                 running_trials_ids.difference_update(new_done_trial_statuses.keys())
 
-                if search_space_exhausted:
+                if config_space_exhausted:
                     # if the search space is exhausted, we loop until the running trials are done or until the
                     # stop condition is reached
                     if len(running_trials_ids) > 0:
-                        logger.debug(f"Search space exhausted, waiting for completion of running trials "
+                        logger.debug(f"Configuration space exhausted, waiting for completion of running trials "
                                      f"{running_trials_ids}")
                         self._sleep()
                     else:
@@ -182,9 +182,9 @@ class Tuner:
                     try:
                         self._schedule_new_tasks(running_trials_ids=running_trials_ids)
                     except StopIteration:
-                        logger.info("Tuning is finishing as the whole search space got exhausted.")
-                        search_space_exhausted = True
-                        print("Tuning is finishing as the whole search space got exhausted.")
+                        logger.info("Tuning is finishing as the whole configuration space got exhausted.")
+                        config_space_exhausted = True
+                        print("Tuning is finishing as the whole configuration space got exhausted.")
 
                 self.status_printer(self.tuning_status)
 
