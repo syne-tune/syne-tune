@@ -35,6 +35,8 @@ class Methods:
     REA = 'REA'
     MOBSTER = 'MOB'
     ZEROSHOT = 'ZS'
+    TPE = 'TPE'
+
 
 methods = {
     Methods.RS: lambda method_arguments: FIFOScheduler(
@@ -139,6 +141,14 @@ methods = {
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.TPE: lambda method_arguments: FIFOScheduler(
+        config_space=method_arguments.config_space,
+        searcher="kde",
+        search_options={'debug_log': False, 'min_bandwidth': 0.1},
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
 }
