@@ -36,7 +36,8 @@ logger = logging.getLogger(__name__)
 def _deprecated_warning(name: str):
     logger.warning(
         f"\n*****\n***** syne_tune.search_space.{name} is deprecated, use "
-        f"syne_tune.config_space.{name} instead!\n*****")
+        f"syne_tune.config_space.{name} instead!\n"
+        "***** syne_tune.search_space will be removed in the next release\n*****")
 
 
 def uniform(lower: float, upper: float):
