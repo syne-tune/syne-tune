@@ -29,7 +29,6 @@ import random
 import pandas as pd
 import numpy as np
 import logging
-import json
 
 
 def run_experiment(dataset_name, random_seed, nb201_random_seed, hpo_approach,
