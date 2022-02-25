@@ -533,7 +533,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         only.
     transfer_learning_model : str (optional)
         See `transfer_learning_task_attr`. Specifies the surrogate model to be
-        used for transfer lerning:
+        used for transfer learning:
         - 'matern52_product': Kernel is product of Matern 5/2 (not ARD) on
             `transfer_learning_task_attr` and Matern 5/2 (ARD) on the rest.
             Assumes that data from same task are more closely related than
@@ -552,6 +552,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 random_seed_generator=kwargs.get('random_seed_generator'),
                 random_seed=kwargs.get('random_seed'))
             kwargs['configspace'] = configspace
+            kwargs['metric'] = metric
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
             # Internal constructor, bypassing the factory

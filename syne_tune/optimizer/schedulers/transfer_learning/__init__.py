@@ -78,12 +78,12 @@ class TransferLearningMixin:
         :param metric_names: name of the metric to be optimized.
         """
         super().__init__(config_space=config_space, **kwargs)
+        self._metric_names = metric_names
         self._check_consistency(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
             metric_names=metric_names,
         )
-        self._metric_names = metric_names
 
     def _check_consistency(
             self,

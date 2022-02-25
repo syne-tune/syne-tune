@@ -39,7 +39,6 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler \
 
 logger = logging.getLogger(__name__)
 
-
 GPModel = Union[GaussianProcessRegression, GPRegressionMCMC]
 
 
@@ -50,6 +49,7 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     integrated out by MCMC sampling (`GPRegressionMCMC`).
 
     """
+
     def __init__(
             self, state: TuningJobState,
             gpmodel: GPModel,
@@ -220,7 +220,7 @@ class GaussProcModelFactory(TransformerModelFactory):
     def profiler(self) -> Optional[SimpleProfiler]:
         return self._profiler
 
-    def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
+    def _model_kwargs(self, state: TuningJobState, fit_params: bool) -> Dict:
         """
         Parameters of `self._gpmodel` are optimized iff `fit_params`. This
         requires `state` to contain labeled examples.
@@ -254,11 +254,13 @@ class GaussProcModelFactory(TransformerModelFactory):
             fantasy_samples = state_with_fantasies.pending_evaluations
         else:
             fantasy_samples = []
-        return GaussProcSurrogateModel(
-            state=state, active_metric=self.active_metric,
-            gpmodel=self._gpmodel, fantasy_samples=fantasy_samples,
-            normalize_mean=self._mean, normalize_std=self._std,
-            filter_observed_data=self._filter_observed_data)
+        return {'state': state, 'active_metric': self.active_metric,
+                'gpmodel': self._gpmodel, 'fantasy_samples': fantasy_samples,
+                'normalize_mean': self._mean, 'normalize_std': self._std,
+                'filter_observed_data': self._filter_observed_data}
+
+    def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
+        return GaussProcSurrogateModel(**self._model_kwargs(state=state, fit_params=fit_params))
 
     def _get_num_fantasy_samples(self) -> int:
         raise NotImplementedError()
@@ -276,7 +278,7 @@ class GaussProcModelFactory(TransformerModelFactory):
 
         """
         assert state.num_observed_cases(self.active_metric) > 0, \
-            "Cannot compute posterior: state has no labeled datapoints " +\
+            "Cannot compute posterior: state has no labeled datapoints " + \
             f"for metric {self.active_metric}"
         internal_candidate_evaluations = get_internal_candidate_evaluations(
             state, self.active_metric, self.normalize_targets,
@@ -361,7 +363,7 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
             profiler: Optional[SimpleProfiler] = None,
             debug_log: Optional[DebugLogPrinter] = None,
             filter_observed_data: Optional[ConfigurationFilter] = None,
-            no_fantasizing: bool = False):
+            no_fantasizing: bool = False, **kwargs):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
