@@ -1,12 +1,11 @@
 from typing import Dict
 
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
+from syne_tune.optimizer.schedulers import FIFOScheduler, HyperbandScheduler, \
+    PopulationBasedTraining
+from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import \
     RegularizedEvolution
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+from syne_tune.optimizer.schedulers.synchronous import \
     SynchronousGeometricHyperbandScheduler
 
 

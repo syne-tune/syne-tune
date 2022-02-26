@@ -22,10 +22,9 @@ from syne_tune.backend.sagemaker_backend.instance_info import select_instance_ty
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.remote.remote_launcher import RemoteLauncher
-from syne_tune import StoppingCriterion
-from syne_tune import Tuner
+from syne_tune import StoppingCriterion, Tuner
 from syne_tune.config_space import loguniform, choice
 
 if __name__ == '__main__':

@@ -14,13 +14,13 @@ import logging
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
+    ASHA, MOBSTER
 # from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
-# from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+# from syne_tune.optimizer.schedulers.synchronous import \
 #    SynchronousGeometricHyperbandScheduler  # noqa: F401
-from syne_tune import Tuner
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
-from syne_tune import StoppingCriterion
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)

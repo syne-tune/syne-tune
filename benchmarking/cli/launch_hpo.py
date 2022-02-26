@@ -16,11 +16,7 @@ import itertools
 import copy
 import numpy as np
 
-from syne_tune.backend import LocalBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import \
-    SageMakerBackend
-from syne_tune.backend.simulator_backend.simulator_backend import \
-    SimulatorBackend
+from syne_tune.backend import LocalBackend, SageMakerBackend
 from syne_tune.optimizer.schedulers.searchers.searcher_callback import \
     StoreResultsAndModelParamsCallback, SimulatorAndModelParamsCallback
 from syne_tune import StoppingCriterion
@@ -270,13 +266,15 @@ if __name__ == '__main__':
                 tuner_sleep_time=params['tuner_sleep_time'],
                 debug_resource_attr=benchmark['resource_attr'])
             if blackbox_name is None:
+                # Tabulated benchmark given by a script (special case)
+                from syne_tune.backend.simulator_backend.simulator_backend import \
+                    SimulatorBackend
+
                 logger.info(f"Using 'simulated' back-end with entry_point = {benchmark['script']}")
-                # Tabulated benchmark given by a script
                 backend_kwargs['entry_point'] = benchmark['script']
                 trial_backend = SimulatorBackend(**backend_kwargs)
             else:
-                from benchmarking.blackbox_repository.simulated_tabular_backend \
-                    import BlackboxRepositoryBackend
+                from benchmarking.blackbox_repository import BlackboxRepositoryBackend
 
                 # Tabulated benchmark from the blackbox repository (simulation
                 # runs faster)
