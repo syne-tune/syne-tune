@@ -5,8 +5,8 @@ import numpy as np
 from benchmarking.blackbox_repository.conversion_scripts.scripts.lcbench.api import Benchmark
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
 
-n_load = 3
-n_read = 1000
+n_load = 1
+n_read = 10000
 task = "Fashion-MNIST"
 
 def benchmark_bb_repo(blackbox, task):
@@ -18,9 +18,8 @@ def benchmark_bb_repo(blackbox, task):
     toc_load = time.perf_counter()
 
     tic_read = time.perf_counter()
-    config_space = bb.configuration_space
-    for k in range(n_read):
-        hp = {key: v.sample() for key, v in config_space.items()}
+    hps = [bb.hyperparameters.loc[i] for i in np.random.randint(0, 2000, size=n_read)]
+    for hp in hps:
         # get all fidelities by not passing the fidelity argument
         bb(hp)
     toc_read = time.perf_counter()
@@ -29,21 +28,23 @@ def benchmark_bb_repo(blackbox, task):
 def benchmark_lcbench(task):
     tic_load = time.perf_counter()
     for k in range(n_load):
-        bench = Benchmark(str(repository_path / "data_2k_lw.json"), cache=False)
-
+        bench = Benchmark(str(repository_path / "data_2k_lw.json"), cache=True, cache_dir="/tmp/")
     toc_load = time.perf_counter()
 
     tic_read = time.perf_counter()
-    for k in range(n_read):
-        hp = np.randint(0, 2000)
-        for tag in enumerate(["Train/val_accuracy", "time"]):
+    hps = np.random.randint(0, 2000, size=n_read)
+    for hp in hps:
+        for tag in ["Train/val_accuracy", "time"]:
             bench.query(dataset_name=task, tag=tag, config_id=hp)
 
     toc_read = time.perf_counter()
     return (toc_load - tic_load) / n_load, (toc_read - tic_read) / n_read
 
 rows = []
-for method in ["HPOBench", "Syne Tune"]:
+for method in [
+    "HPOBench",
+    "Syne Tune",
+]:
     if method == 'HPOBench':
         time_load, time_read = benchmark_lcbench(task)
     else:
@@ -58,7 +59,7 @@ for method in ["HPOBench", "Syne Tune"]:
 df = pd.DataFrame(rows)
 print(df.to_string(index=False))
 df.to_csv("results.csv", index=False)
-print(df.pivot(index=['method'], columns=['blackbox'], values=['load', 'read']).to_latex(float_format="%.4f"))
+print(df.pivot(index=['method'], columns=['blackbox'], values=['load', 'read']).to_latex(float_format="%.5f"))
 
 """
 \begin{tabular}{lrrrr}
