@@ -126,10 +126,15 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         for name, hp in self.config_space.items():
             if isinstance(hp, sp.Categorical):
                 self.vartypes.append(('u', len(hp.categories)))
-            if isinstance(hp, sp.Integer):
+            elif isinstance(hp, sp.Integer):
                 self.vartypes.append(('o', (hp.lower, hp.upper)))
-            if isinstance(hp, sp.Float):
+            elif isinstance(hp, sp.Float):
                 self.vartypes.append(('c', 0))
+            elif isinstance(hp, sp.FiniteRange):
+                if hp.cast_int:
+                    self.vartypes.append(('o', (hp.lower, hp.upper)))
+                else:
+                    self.vartypes.append(('c', 0))
 
         self.num_min_data_points = len(self.vartypes) if num_min_data_points is None else num_min_data_points
         assert self.num_min_data_points >= len(self.vartypes)
@@ -152,6 +157,13 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                 return res
             elif isinstance(domain, sp.Float):
                 return [(value - domain.lower) / (domain.upper - domain.lower)]
+            elif isinstance(domain, sp.FiniteRange):
+                if domain.cast_int:
+                    a = 1 / (2 * (domain.upper - domain.lower + 1))
+                    b = domain.upper
+                    return [(value - a) / (b - a)]
+                else:
+                    return [(value - domain.lower) / (domain.upper - domain.lower)]
             elif isinstance(domain, sp.Integer):
                 a = 1 / (2 * (domain.upper - domain.lower + 1))
                 b = domain.upper
@@ -173,6 +185,13 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                     index = int(values * len(domain))
                     return categorical_map[index]
                 elif isinstance(domain, sp.Float):
+                    return values * (domain.upper - domain.lower) + domain.lower
+                elif isinstance(domain, sp.FiniteRange):
+                    if domain.cast_int:
+                        a = 1 / (2 * (domain.upper - domain.lower + 1))
+                        b = domain.upper
+                        return np.ceil(values * (b - a) + a)
+                    else:
                         return values * (domain.upper - domain.lower) + domain.lower
                 elif isinstance(domain, sp.Integer):
                     a = 1 / (2 * (domain.upper - domain.lower + 1))
