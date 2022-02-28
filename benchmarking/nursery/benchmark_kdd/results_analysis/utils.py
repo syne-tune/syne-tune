@@ -41,6 +41,7 @@ class MethodSyle:
 show_seeds = False
 method_styles = {
     Methods.RS: MethodSyle(rs_color, fifo_style),
+    Methods.TPE: MethodSyle(tpe_color, fifo_style),
     Methods.GP: MethodSyle(gp_color, fifo_style),
     Methods.REA: MethodSyle(rea_color, fifo_style),
     Methods.ASHA: MethodSyle(rs_color, multifidelity_style),

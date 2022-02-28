@@ -42,6 +42,7 @@ if __name__ == '__main__':
 
     methods_to_show = [
         Methods.RS,
+        Methods.TPE,
         Methods.REA,
         Methods.GP,
         Methods.MSR,
