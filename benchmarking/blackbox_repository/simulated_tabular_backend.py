@@ -156,6 +156,15 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
                 result[self.elapsed_time_attr] -= elapsed_time_offset
         else:
             results = all_results
+
+        # Makes sure that time is monotonically increasing which may not be the case due to numerical errors or due to
+        # the use of a surrogate
+        for i in range(1, len(results)):
+            results[i][self.elapsed_time_attr] = max(
+                results[i][self.elapsed_time_attr],
+                results[i - 1][self.elapsed_time_attr] + 0.001
+            )
+
         return status, results
 
 

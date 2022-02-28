@@ -12,6 +12,7 @@ class BenchmarkDefinition:
     blackbox_name: str
     dataset_name: str
     time_this_resource_attr: Optional[str] = None
+    max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
 
 
@@ -50,6 +51,7 @@ def lcbench_benchmark(dataset_name):
         blackbox_name="lcbench",
         dataset_name=dataset_name,
         surrogate="KNeighborsRegressor",
+        max_num_evaluations=4000,
     )
 
 benchmark_definitions = {
@@ -61,12 +63,12 @@ benchmark_definitions = {
     "nas201-cifar100": nas201_benchmark("cifar100"),
     "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
 }
-# lc_bench_datasets = [
-#     "APSFailure", "Amazon_employee_access", "Australian", "Fashion-MNIST", "KDDCup09_appetency", "MiniBooNE", "adult",
-#     "airlines", "albert", "bank-marketing", "blood-transfusion-service-center", "car", "christine", "cnae-9",
-#     "connect-4", "covertype", "credit-g", "dionis", "fabert", "helena", "higgs", "jannis", "jasmine",
-#     "jungle_chess_2pcs_raw_endgame_complete", "kc1", "kr-vs-kp", "mfeat-factors", "nomao", "numerai28.6",
-#     "phoneme", "segment", "shuttle", "sylvine", "vehicle", "volkert"
-# ]
-# for task in lc_bench_datasets:
-#     benchmark_definitions["lcbench-" + task.replace("_", "-").replace(".", "")] = lcbench_benchmark(task)
+lc_bench_datasets = [
+    "APSFailure", "Amazon_employee_access", "Australian", "Fashion-MNIST", "KDDCup09_appetency", "MiniBooNE", "adult",
+    "airlines", "albert", "bank-marketing", "blood-transfusion-service-center", "car", "christine", "cnae-9",
+    "connect-4", "covertype", "credit-g", "dionis", "fabert", "helena", "higgs", "jannis", "jasmine",
+    "jungle_chess_2pcs_raw_endgame_complete", "kc1", "kr-vs-kp", "mfeat-factors", "nomao", "numerai28.6",
+    "phoneme", "segment", "shuttle", "sylvine", "vehicle", "volkert"
+]
+for task in lc_bench_datasets:
+    benchmark_definitions["lcbench-" + task.replace("_", "-").replace(".", "")] = lcbench_benchmark(task)
