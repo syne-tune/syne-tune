@@ -6,7 +6,7 @@ from benchmarking.blackbox_repository.conversion_scripts.scripts.lcbench.api imp
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
 
 n_load = 1
-n_read = 10000
+n_read = 1000
 task = "Fashion-MNIST"
 
 def benchmark_bb_repo(blackbox, task):
@@ -16,12 +16,13 @@ def benchmark_bb_repo(blackbox, task):
     for k in range(n_load):
         bb = load(blackbox)[task]
     toc_load = time.perf_counter()
+    bb = load(blackbox)[task]
 
     tic_read = time.perf_counter()
     hps = [bb.hyperparameters.loc[i] for i in np.random.randint(0, 2000, size=n_read)]
     for hp in hps:
         # get all fidelities by not passing the fidelity argument
-        bb(hp)
+        res = bb(hp)
     toc_read = time.perf_counter()
     return (toc_load - tic_load) / n_load, (toc_read - tic_read) / n_read
 
@@ -32,10 +33,11 @@ def benchmark_lcbench(task):
     toc_load = time.perf_counter()
 
     tic_read = time.perf_counter()
-    hps = np.random.randint(0, 2000, size=n_read)
+    hp_map = {tuple(bench.get_config(dataset_name=task, config_id=str(i))): i for i in range(2000)}
+    hps = [bench.get_config(dataset_name=task, config_id=str(i)) for i in np.random.randint(0, 2000, size=n_read)]
     for hp in hps:
         for tag in ["Train/val_accuracy", "time"]:
-            bench.query(dataset_name=task, tag=tag, config_id=hp)
+            res = bench.query(dataset_name=task, tag=tag, config_id=hp_map[hp])
 
     toc_read = time.perf_counter()
     return (toc_load - tic_load) / n_load, (toc_read - tic_read) / n_read
@@ -59,7 +61,7 @@ for method in [
 df = pd.DataFrame(rows)
 print(df.to_string(index=False))
 df.to_csv("results.csv", index=False)
-print(df.pivot(index=['method'], columns=['blackbox'], values=['load', 'read']).to_latex(float_format="%.5f"))
+print(df.pivot(index=['method'], columns=['blackbox'], values=['load', 'read']).to_latex())
 
 """
 \begin{tabular}{lrrrr}

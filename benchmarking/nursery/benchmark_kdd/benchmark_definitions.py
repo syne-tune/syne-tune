@@ -43,7 +43,7 @@ def nas201_benchmark(dataset_name):
 
 def lcbench_benchmark(dataset_name):
     return BenchmarkDefinition(
-        max_wallclock_time=3600,
+        max_wallclock_time=7200,
         n_workers=4,
         elapsed_time_attr="time",
         metric="val_accuracy",
@@ -54,24 +54,24 @@ def lcbench_benchmark(dataset_name):
         max_num_evaluations=4000,
     )
 
-# benchmark_definitions = {
-#     "fcnet-protein": fcnet_benchmark("protein_structure"),
-#     "fcnet-naval": fcnet_benchmark("naval_propulsion"),
-#     "fcnet-parkinsons": fcnet_benchmark("parkinsons_telemonitoring"),
-#     "fcnet-slice": fcnet_benchmark("slice_localization"),
-#     "nas201-cifar10": nas201_benchmark("cifar10"),
-#     "nas201-cifar100": nas201_benchmark("cifar100"),
-#     "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
-# }
+benchmark_definitions = {
+    "fcnet-protein": fcnet_benchmark("protein_structure"),
+    "fcnet-naval": fcnet_benchmark("naval_propulsion"),
+    "fcnet-parkinsons": fcnet_benchmark("parkinsons_telemonitoring"),
+    "fcnet-slice": fcnet_benchmark("slice_localization"),
+    "nas201-cifar10": nas201_benchmark("cifar10"),
+    "nas201-cifar100": nas201_benchmark("cifar100"),
+    "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
+}
 
-benchmark_definitions = {}
-lc_bench_datasets = [
-    "APSFailure", "Amazon_employee_access", "Australian", "Fashion-MNIST", "KDDCup09_appetency", "MiniBooNE", "adult",
-    "airlines", "albert", "bank-marketing", "blood-transfusion-service-center", "car", "christine", "cnae-9",
-    "connect-4", "covertype", "credit-g", "dionis", "fabert", "helena", "higgs", "jannis", "jasmine",
-    "jungle_chess_2pcs_raw_endgame_complete", "kc1", "kr-vs-kp", "mfeat-factors", "nomao", "numerai28.6",
-    "phoneme", "segment", "shuttle", "sylvine", "vehicle", "volkert"
-]
+# benchmark_definitions = {}
+# lc_bench_datasets = [
+#     "APSFailure", "Amazon_employee_access", "Australian", "Fashion-MNIST", "KDDCup09_appetency", "MiniBooNE", "adult",
+#     "airlines", "albert", "bank-marketing", "blood-transfusion-service-center", "car", "christine", "cnae-9",
+#     "connect-4", "covertype", "credit-g", "dionis", "fabert", "helena", "higgs", "jannis", "jasmine",
+#     "jungle_chess_2pcs_raw_endgame_complete", "kc1", "kr-vs-kp", "mfeat-factors", "nomao", "numerai28.6",
+#     "phoneme", "segment", "shuttle", "sylvine", "vehicle", "volkert"
+# ]
 lc_bench_datasets = [
     "Fashion-MNIST", "KDDCup09_appetency",
     "airlines", "bank-marketing",
