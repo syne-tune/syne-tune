@@ -115,8 +115,8 @@ if __name__ == '__main__':
         ))
 
         stop_criterion = StoppingCriterion(
-            # max_wallclock_time=benchmark.max_wallclock_time,
-            max_num_evaluations=benchmark.max_num_evaluations
+            max_wallclock_time=benchmark.max_wallclock_time,
+            max_num_evaluations=benchmark.max_num_evaluations,
         )
 
         tuner = Tuner(
