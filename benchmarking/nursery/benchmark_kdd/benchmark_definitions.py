@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -10,7 +11,8 @@ class BenchmarkDefinition:
     mode: str
     blackbox_name: str
     dataset_name: str
-    time_this_resource_attr: str = None
+    time_this_resource_attr: Optional[str] = None
+    surrogate: Optional[str] = None
 
 
 def fcnet_benchmark(dataset_name):
@@ -37,6 +39,19 @@ def nas201_benchmark(dataset_name):
         dataset_name=dataset_name,
     )
 
+
+def lcbench_benchmark(dataset_name):
+    return BenchmarkDefinition(
+        max_wallclock_time=3600,
+        n_workers=4,
+        elapsed_time_attr="time",
+        metric="val_accuracy",
+        mode="max",
+        blackbox_name="lcbench",
+        dataset_name=dataset_name,
+        surrogate="KNeighborsRegressor",
+    )
+
 benchmark_definitions = {
     "fcnet-protein": fcnet_benchmark("protein_structure"),
     "fcnet-naval": fcnet_benchmark("naval_propulsion"),
@@ -46,3 +61,12 @@ benchmark_definitions = {
     "nas201-cifar100": nas201_benchmark("cifar100"),
     "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
 }
+lc_bench_datasets = [
+    "APSFailure", "Amazon_employee_access", "Australian", "Fashion-MNIST", "KDDCup09_appetency", "MiniBooNE", "adult",
+    "airlines", "albert", "bank-marketing", "blood-transfusion-service-center", "car", "christine", "cnae-9",
+    "connect-4", "covertype", "credit-g", "dionis", "fabert", "helena", "higgs", "jannis", "jasmine",
+    "jungle_chess_2pcs_raw_endgame_complete", "kc1", "kr-vs-kp", "mfeat-factors", "nomao", "numerai28.6",
+    "phoneme", "segment", "shuttle", "sylvine", "vehicle", "volkert"
+]
+for task in lc_bench_datasets:
+    benchmark_definitions["lcbench-" + task.replace("_", "-").replace(".", "")] = lcbench_benchmark(task)

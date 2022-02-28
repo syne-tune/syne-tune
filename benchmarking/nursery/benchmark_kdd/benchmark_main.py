@@ -94,6 +94,7 @@ if __name__ == '__main__':
             time_this_resource_attr=benchmark.time_this_resource_attr,
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
+            surrogate=benchmark.surrogate,
         )
 
         # todo move into benchmark definition
