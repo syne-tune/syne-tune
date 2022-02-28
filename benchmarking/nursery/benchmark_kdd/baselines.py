@@ -96,7 +96,7 @@ methods = {
         mode="min",
         metric=method_arguments.metric,
         max_t=200,
-        resource_attr='hp_epoch',
+        resource_attr=method_arguments.resource_attr,
     ),
     Methods.ZEROSHOT: lambda method_arguments: ZeroShotTransfer(
         config_space=method_arguments.config_space,
@@ -133,6 +133,14 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
+    Methods.TPE: lambda method_arguments: FIFOScheduler(
+        config_space=method_arguments.config_space,
+        searcher="kde",
+        search_options={'debug_log': False, 'min_bandwidth': 0.1},
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
+    ),
     Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
@@ -141,14 +149,6 @@ methods = {
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-    ),
-    Methods.TPE: lambda method_arguments: FIFOScheduler(
-        config_space=method_arguments.config_space,
-        searcher="kde",
-        search_options={'debug_log': False, 'min_bandwidth': 0.1},
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
 }

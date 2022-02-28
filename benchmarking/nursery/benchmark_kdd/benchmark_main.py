@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from benchmarking.blackbox_repository import load
 from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods
+from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods, Methods
 from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
@@ -85,6 +85,9 @@ if __name__ == '__main__':
 
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
+        if method == Methods.ZEROSHOT and "lcbench" in benchmark_name:
+            print("skipping lcbench for zeroshot since only grid are supported")
+            continue
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
@@ -119,7 +122,6 @@ if __name__ == '__main__':
             max_wallclock_time=benchmark.max_wallclock_time,
             max_num_evaluations=benchmark.max_num_evaluations,
         )
-
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,
