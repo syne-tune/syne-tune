@@ -70,5 +70,9 @@ lc_bench_datasets = [
     "jungle_chess_2pcs_raw_endgame_complete", "kc1", "kr-vs-kp", "mfeat-factors", "nomao", "numerai28.6",
     "phoneme", "segment", "shuttle", "sylvine", "vehicle", "volkert"
 ]
+lc_bench_datasets = [
+    "Fashion-MNIST", "KDDCup09_appetency",
+    "airlines", "bank-marketing", "volkert"
+]
 for task in lc_bench_datasets:
     benchmark_definitions["lcbench-" + task.replace("_", "-").replace(".", "")] = lcbench_benchmark(task)
