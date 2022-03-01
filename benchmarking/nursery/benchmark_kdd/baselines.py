@@ -20,8 +20,8 @@ class MethodArguments:
     random_seed: int
     max_t: int
     resource_attr: str
-
     transfer_learning_evaluations: Optional[Dict] = None
+    use_surrogates: bool = False
 
 
 class Methods:
@@ -104,6 +104,8 @@ methods = {
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
+        use_surrogates=method_arguments.use_surrogates,
+        random_seed=method_arguments.random_seed,
     ),
     Methods.GP: lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
