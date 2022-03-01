@@ -20,7 +20,7 @@ if __name__ == '__main__':
     experiment_tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
 
-    load_cache_if_exists = False
+    load_cache_if_exists = True
 
     # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
     methods_to_show = list(method_styles.keys())
@@ -51,6 +51,6 @@ if __name__ == '__main__':
         Methods.MOBSTER,
         Methods.ASHA_BB,
         Methods.ASHA_CTS,
-        Methods.ZEROSHOT,
+        # Methods.ZEROSHOT,
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)

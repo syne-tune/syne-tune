@@ -71,6 +71,8 @@ plot_range = {
     "nas201-ImageNet16-120": PlotArgs(1000, 21000, None, 0.8),
     "nas201-cifar10": PlotArgs(2000, 21000, 0.05, 0.15),
     "nas201-cifar100": PlotArgs(3000, 21000, 0.26, 0.35),
+    "lcbench-bank-marketing": PlotArgs(0, 2000, 82, 89),
+    "lcbench-KDDCup09-appetency": PlotArgs(0, 2000, 96, 100),
 }
 
 
