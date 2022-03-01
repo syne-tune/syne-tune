@@ -33,7 +33,8 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
             metric: str,
             mode: str = 'min',
             sort_transfer_learning_evaluations: bool = True,
-            use_surrogates: bool = False
+            use_surrogates: bool = False,
+            random_seed: int = None
     ) -> None:
         """
         A zero-shot transfer hyperparameter optimization method which selects configurations that minimize the average
@@ -44,6 +45,94 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         IEEE International Conference on Data Mining (ICDM) 2015.
 
         :param config_space: Configuration space for trial evaluation function.
+        :param transfer_learning_evaluations: Dictionary from task name to offline evaluations.
+        :param metric: Pbjective name to optimize, must be present in transfer learning evaluations.
+        :param mode: Whether to minimize (min) or maximize (max)
+        :param sort_transfer_learning_evaluations: Use False if the hyperparameters for each task in
+        transfer_learning_evaluations Are already in the same order. If set to True, hyperparameters are sorted.
+        :param use_surrogates: If the same configuration is not evaluated on all tasks, set this to true. This will
+        generate a set of configurations and will impute their performance using surrogate models.
+        """
+        super().__init__(config_space=config_space, configspace=config_space,
+                         transfer_learning_evaluations=transfer_learning_evaluations, metric=metric,
+                         metric_names=[metric], mode=mode)
+        self._mode = mode
+        self._random_state = np.random.RandomState(random_seed)
+        if use_surrogates:
+            sort_transfer_learning_evaluations = False
+            transfer_learning_evaluations = self._create_surrogate_transfer_learning_evaluations(
+                config_space, transfer_learning_evaluations, metric
+            )
+        warning_message = 'This searcher assumes that each hyperparameter configuration occurs in all tasks. '
+        scores = list()
+        hyperparameters = None
+        for task_name, task_data in transfer_learning_evaluations.items():
+            assert hyperparameters is None or task_data.hyperparameters.shape == hyperparameters.shape, warning_message
+            hyperparameters = task_data.hyperparameters
+            if sort_transfer_learning_evaluations:
+                hyperparameters = task_data.hyperparameters.sort_values(list(task_data.hyperparameters.columns))
+            idx = hyperparameters.index.values
+            scores.append(task_data.objective_values(metric).mean(axis=1)[idx, -1])
+        if not use_surrogates:
+            logger.warning(warning_message + 'If this is not the case, this searcher fails without a warning.')
+            if not sort_transfer_learning_evaluations:
+                hyperparameters = hyperparameters.copy()
+        hyperparameters.reset_index(drop=True, inplace=True)
+        self._hyperparameters = hyperparameters
+        self._scores = pd.DataFrame(scores)
+        self._ranks = self._update_ranks()
+
+    def _create_surrogate_transfer_learning_evaluations(self, config_space, transfer_learning_evaluations, metric):
+        """
+        Creates transfer_learning_evaluations where each configuration is evaluated on each task using surrogate models.
+        """
+        surrogate_transfer_learning_evaluations = dict()
+        for task_name, task_data in transfer_learning_evaluations.items():
+            estimator = BlackboxSurrogate.make_model_pipeline(
+                configuration_space=config_space,
+                fidelity_space={},
+                model=xgboost.XGBRegressor(),
+            )
+            X_train = task_data.hyperparameters
+            y_train = task_data.objective_values(metric).mean(axis=1)[:, -1]
+            estimator.fit(X_train, y_train)
+
+            num_candidates = 10000 if len(config_space) >= 6 else 5 ** len(config_space)
+            hyperparameters_new = pd.DataFrame([self._sample_random_config(config_space) for _ in range(num_candidates)])
+            objectives_evaluations_new = estimator.predict(hyperparameters_new).reshape(-1, 1, 1, 1)
+            surrogate_transfer_learning_evaluations[task_name] = TransferLearningTaskEvaluations(
+                configuration_space=config_space, hyperparameters=hyperparameters_new, objectives_names=[metric],
+                objectives_evaluations=objectives_evaluations_new
+            )
+        return surrogate_transfer_learning_evaluations
+
+    def get_config(self, **kwargs) -> Dict:
+        if self._ranks.shape[1] == 0:
+            return None
+        best_idx = self._ranks.mean(axis=0).idxmin()
+        self._ranks.clip(upper=self._ranks[best_idx], axis=0, inplace=True)
+        self._scores.drop(columns=best_idx, inplace=True)
+        best_config = self._hyperparameters.loc[best_idx]
+        self._hyperparameters.drop(index=best_idx, inplace=True)
+        if self._ranks.std(axis=1).sum() == 0:
+            self._ranks = self._update_ranks()
+        return best_config.to_dict()
+
+    def _sample_random_config(self, config_space):
+        return {
+            k: v.sample(random_state=self._random_state) if isinstance(v, Domain) else v
+            for k, v in config_space.items()
+        }
+
+    def _update_ranks(self) -> pd.DataFrame:
+        return ((-1 if self._mode == 'max' else 1) * self._scores).rank(axis=1)
+
+    def _update(self, trial_id: str, config: Dict, result: Dict) -> None:
+        pass
+
+    def clone_from_state(self, state: dict):
+        raise NotImplementedError()
+
         :param transfer_learning_evaluations: Dictionary from task name to offline evaluations.
         :param metric: Pbjective name to optimize, must be present in transfer learning evaluations.
         :param mode: Whether to minimize (min) or maximize (max)
