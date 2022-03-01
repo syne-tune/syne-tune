@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-from syne_tune.optimizer.baselines import ZeroShotTransfer, BayesianOptimization
+from syne_tune.optimizer.baselines import ZeroShotTransfer
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -38,6 +38,7 @@ class Methods:
     SGPT = 'SGPT'
     TPE = 'TPE'
 
+    
 methods = {
     Methods.RS: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
