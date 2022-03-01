@@ -35,9 +35,10 @@ class Methods:
     REA = 'REA'
     MOBSTER = 'MOB'
     ZEROSHOT = 'ZS'
+    SGPT = 'SGPT'
     TPE = 'TPE'
 
-
+    
 methods = {
     Methods.RS: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
@@ -150,6 +151,15 @@ methods = {
         max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
+    ),
+    Methods.SGPT: lambda method_arguments: FIFOScheduler(
+        config_space=method_arguments.config_space,
+        searcher="bayesopt",
+        search_options={'sample_size': 1000, 'bandwidth': 0.3, 'model': 'sgpt',
+                        'transfer_learning_evaluations': method_arguments.transfer_learning_evaluations},
+        mode=method_arguments.mode,
+        metric=method_arguments.metric,
+        points_to_evaluate=list()
     ),
 }
 

@@ -13,6 +13,8 @@
 from typing import Set, Dict, Optional
 import logging
 
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sgpt_model import ScalableGaussianProcessTransfer, \
+    ScalableGaussianProcessTransferModelFactory
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils \
     import map_reward_const_minus_x, MapReward, \
     DEFAULT_INITIAL_SCORING, SUPPORTED_INITIAL_SCORING, \
@@ -159,6 +161,46 @@ def _create_gp_standard_model(
         'filter_observed_data': filter_observed_data}
 
 
+def _create_sgpt_model(
+        hp_ranges: HyperparameterRanges, active_metric: Optional[str],
+        random_seed: int, is_hyperband: bool, **kwargs):
+    gp_models = list()
+    for _ in range(len(kwargs['transfer_learning_evaluations']) + 1):
+        result = _create_gp_common(hp_ranges, **kwargs)
+        kernel = result['kernel']
+        mean = result['mean']
+        if is_hyperband:
+            # The `cross-validation` kernel needs an additional argument
+            kernel_kwargs = {'num_folds': kwargs['max_epochs']}
+            kernel, mean = resource_kernel_factory(
+                kwargs['gp_resource_kernel'],
+                kernel_x=kernel, mean_x=mean, **kernel_kwargs)
+        gp_model = GaussianProcessRegression(
+            kernel=kernel, mean=mean,
+            optimization_config=result['optimization_config'],
+            random_seed=random_seed,
+            fit_reset_params=not result['opt_warmstart'])
+        gp_models.append(gp_model)
+    filter_observed_data = result['filter_observed_data']
+    model_factory = ScalableGaussianProcessTransferModelFactory(
+        config_space=kwargs['configspace'],
+        transfer_learning_evaluations=kwargs['transfer_learning_evaluations'],
+        sample_size=kwargs['sample_size'],
+        bandwidth=kwargs['bandwidth'],
+        active_metric=active_metric,
+        metric=kwargs['metric'],
+        gpmodel=gp_models[0],
+        source_gp_models=gp_models[1:],
+        num_fantasy_samples=kwargs['num_fantasy_samples'],
+        normalize_targets=kwargs.get('normalize_targets', True),
+        profiler=result['profiler'],
+        debug_log=result['debug_log'],
+        filter_observed_data=filter_observed_data,
+        no_fantasizing=kwargs.get('no_fantasizing', False))
+    return {
+        'model_factory': model_factory,
+        'filter_observed_data': filter_observed_data}
+
 def _create_gp_additive_model(
         model: str, hp_ranges: HyperparameterRanges,
         active_metric: Optional[str], random_seed: int, configspace_ext,
@@ -203,7 +245,7 @@ def _create_common_objects(model=None, **kwargs):
     is_hyperband = scheduler.startswith('hyperband')
     if model is None:
         model = 'gp_multitask'
-    assert model == 'gp_multitask' or is_hyperband, \
+    assert model == 'gp_multitask' or model == 'sgpt' or is_hyperband, \
         f"model = {model} only together with hyperband_* scheduler"
     hp_ranges = create_hp_ranges_for_warmstarting(**kwargs)
     random_seed, _kwargs = extract_random_seed(kwargs)
@@ -263,6 +305,13 @@ def _create_common_objects(model=None, **kwargs):
     # Create model factory
     if model == 'gp_multitask':
         result.update(_create_gp_standard_model(
+            hp_ranges=hp_ranges,
+            active_metric=INTERNAL_METRIC_NAME,
+            random_seed=random_seed,
+            is_hyperband=is_hyperband,
+            **_kwargs))
+    elif model == 'sgpt':
+        result.update(_create_sgpt_model(
             hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
             random_seed=random_seed,
