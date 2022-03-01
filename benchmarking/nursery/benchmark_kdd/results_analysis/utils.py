@@ -228,7 +228,7 @@ def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix:
 
 
 def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
-    def get_results(df_task):
+    def get_results(df_task, methods_to_show):
         seed_results = {}
         if len(df_task) > 0:
             metric = df_task.loc[:, 'metric_names'].values[0]
@@ -269,7 +269,7 @@ def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
     benchmark_results = []
     for benchmark, df_task in tqdm(list(benchmarks_to_df.items())):
         # (num_seeds, num_time_steps)
-        _, seed_results_dict = get_results(df_task)
+        _, seed_results_dict = get_results(df_task, methods_to_show)
 
         shapes = [x.shape for x in seed_results_dict.values()]
 
@@ -286,25 +286,48 @@ def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
     benchmark_results = np.stack([b[:, :min_num_seeds, :] for b in benchmark_results])
 
     # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
-    return np.stack(benchmark_results)
+    return methods_to_show, np.stack(benchmark_results)
 
 
 def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
-    # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
-    benchmark_results = compute_best_value_over_time(benchmarks_to_df, methods_to_show)
+    from sklearn.preprocessing import QuantileTransformer
+    from benchmarking.nursery.benchmark_kdd.results_analysis.utils import compute_best_value_over_time
+    import pandas as pd
 
-    # (num_methods, num_benchmarks, num_min_seeds, num_time_steps)
-    benchmark_results = benchmark_results.swapaxes(0, 1)
+    benchmarks = ['fcnet', 'nas201', 'lcbench']
+    benchmarks = ['lcbench']
+    rows = []
+    for benchmark in benchmarks:
+        benchmark_to_df = {k: v for k, v in benchmarks_to_df.items() if benchmark in k}
 
-    # (num_methods, num_benchmarks * num_min_seeds * num_time_steps)
-    ranks = QuantileTransformer().fit_transform(benchmark_results.reshape(len(benchmark_results), -1))
+        methods_present = next(iter(benchmark_to_df.values())).algorithm.unique()
+        methods_to_show = [x for x in methods_to_show if x in methods_present]
 
-    df_ranks = pd.Series(ranks.mean(axis=-1), index=methods_to_show)
-    df_ranks_std = ranks.std(axis=-1).mean(axis=0)
-    df_ranks = df_ranks[methods_to_show]
+        # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
+        methods_to_show, benchmark_results = compute_best_value_over_time(benchmark_to_df, methods_to_show)
 
+        benchmarks = list(benchmark_to_df.keys())
+        for i, benchmark in enumerate(benchmarks):
+            if "lcbench" in benchmark:
+                # lcbench do maximization instead of minization, we should pass the mode instead of hardcoding this
+                benchmark_results *= -1
+
+        # (num_methods, num_benchmarks, num_min_seeds, num_time_steps)
+        benchmark_results = benchmark_results.swapaxes(0, 1)
+
+        # (num_methods, num_benchmarks * num_min_seeds * num_time_steps)
+        ranks = QuantileTransformer().fit_transform(benchmark_results.reshape(len(benchmark_results), -1))
+
+        df_ranks = pd.Series(ranks.mean(axis=-1), index=methods_to_show)
+        df_ranks_std = ranks.std(axis=-1).mean(axis=0)
+        df_ranks = df_ranks[methods_to_show]
+        row = {'benchmark': benchmark}
+        row.update(dict(zip(methods_to_show, ranks.mean(axis=-1))))
+        rows.append(row)
+        print(row)
+    df_ranks = pd.DataFrame(rows).set_index("benchmark")
     print(df_ranks.to_string())
-    print(pd.DataFrame(df_ranks).T.to_latex(float_format="%.2f"))
+    print(df_ranks.to_latex(float_format="%.2f"))
 
 
 def load_and_cache(experiment_tag: Union[str, List[str]], load_cache_if_exists: bool = True, methods_to_show=None):

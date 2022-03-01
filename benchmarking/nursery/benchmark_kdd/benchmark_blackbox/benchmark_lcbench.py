@@ -5,7 +5,7 @@ import numpy as np
 from benchmarking.blackbox_repository.conversion_scripts.scripts.lcbench.api import Benchmark
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
 
-n_load = 1
+n_load = 3
 n_read = 1000
 task = "Fashion-MNIST"
 
@@ -19,7 +19,7 @@ def benchmark_bb_repo(blackbox, task):
     bb = load(blackbox)[task]
 
     tic_read = time.perf_counter()
-    hps = [bb.hyperparameters.loc[i] for i in np.random.randint(0, 2000, size=n_read)]
+    hps = np.random.randint(0, 2000, size=n_read)
     for hp in hps:
         # get all fidelities by not passing the fidelity argument
         res = bb(hp)
@@ -33,11 +33,10 @@ def benchmark_lcbench(task):
     toc_load = time.perf_counter()
 
     tic_read = time.perf_counter()
-    hp_map = {tuple(bench.get_config(dataset_name=task, config_id=str(i))): i for i in range(2000)}
-    hps = [bench.get_config(dataset_name=task, config_id=str(i)) for i in np.random.randint(0, 2000, size=n_read)]
+    hps = np.random.randint(0, 2000, size=n_read)
     for hp in hps:
         for tag in ["Train/val_accuracy", "time"]:
-            res = bench.query(dataset_name=task, tag=tag, config_id=hp_map[hp])
+            res = bench.query(dataset_name=task, tag=tag, config_id=hp)
 
     toc_read = time.perf_counter()
     return (toc_load - tic_load) / n_load, (toc_read - tic_read) / n_read
