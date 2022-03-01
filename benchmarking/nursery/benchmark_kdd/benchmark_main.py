@@ -85,9 +85,6 @@ if __name__ == '__main__':
 
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
-        if method == Methods.ZEROSHOT and "lcbench" in benchmark_name:
-            print("skipping lcbench for zeroshot since only grid are supported")
-            continue
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
@@ -116,6 +113,7 @@ if __name__ == '__main__':
                 blackbox_name=benchmark.blackbox_name,
                 test_task=benchmark.dataset_name,
             ),
+            use_surrogates=method == Methods.ZEROSHOT and 'lcbench' in benchmark_name,
         ))
 
         stop_criterion = StoppingCriterion(
