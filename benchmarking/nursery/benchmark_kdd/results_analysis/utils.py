@@ -106,6 +106,7 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
     }
     metadata_df = pd.DataFrame(metadatas.values())
     metadata_df['creation_date'] = metadata_df['st_tuner_creation_timestamp'].apply(lambda x: datetime.fromtimestamp(x))
+    metadata_df = metadata_df.drop_duplicates(['algorithm', 'benchmark', 'seed'])
     creation_dates_min_max = metadata_df.groupby(['algorithm']).agg(['min', 'max'])['creation_date']
     print("creation date per method:\n" + creation_dates_min_max.to_string())
 
@@ -295,21 +296,23 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
     import pandas as pd
 
     benchmarks = ['fcnet', 'nas201', 'lcbench']
-    benchmarks = ['lcbench']
+    
     rows = []
     for benchmark in benchmarks:
         benchmark_to_df = {k: v for k, v in benchmarks_to_df.items() if benchmark in k}
-
+        if len(benchmark_to_df) == 0:
+            print(f"did not find evaluations for {benchmark}")
+            continue
         methods_present = next(iter(benchmark_to_df.values())).algorithm.unique()
         methods_to_show = [x for x in methods_to_show if x in methods_present]
 
         # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
         methods_to_show, benchmark_results = compute_best_value_over_time(benchmark_to_df, methods_to_show)
 
-        benchmarks = list(benchmark_to_df.keys())
-        for i, benchmark in enumerate(benchmarks):
-            if "lcbench" in benchmark:
-                # lcbench do maximization instead of minization, we should pass the mode instead of hardcoding this
+        for i, task in enumerate(benchmark_to_df.keys()):
+            if "lcbench" in task:
+                print(task)
+                # lcbench do maximization instead of minimization, we should pass the mode instead of hardcoding this
                 benchmark_results *= -1
 
         # (num_methods, num_benchmarks, num_min_seeds, num_time_steps)
@@ -317,17 +320,17 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
 
         # (num_methods, num_benchmarks * num_min_seeds * num_time_steps)
         ranks = QuantileTransformer().fit_transform(benchmark_results.reshape(len(benchmark_results), -1))
-
-        df_ranks = pd.Series(ranks.mean(axis=-1), index=methods_to_show)
-        df_ranks_std = ranks.std(axis=-1).mean(axis=0)
-        df_ranks = df_ranks[methods_to_show]
+        # ranks_std = ranks.std(axis=-1).mean(axis=0)
         row = {'benchmark': benchmark}
         row.update(dict(zip(methods_to_show, ranks.mean(axis=-1))))
         rows.append(row)
         print(row)
     df_ranks = pd.DataFrame(rows).set_index("benchmark")
+    avg_row = dict(df_ranks.mean())
+    avg_row["benchmark"] = "average"
+    df_ranks = pd.DataFrame(rows + [avg_row]).set_index("benchmark")
     print(df_ranks.to_string())
-    print(df_ranks.to_latex(float_format="%.2f"))
+    print(df_ranks.to_latex(float_format="%.2f", na_rep="-"))
 
 
 def load_and_cache(experiment_tag: Union[str, List[str]], load_cache_if_exists: bool = True, methods_to_show=None):

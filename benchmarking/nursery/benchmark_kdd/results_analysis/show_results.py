@@ -38,7 +38,6 @@ if __name__ == '__main__':
             if benchmark in key:
                 n += len(df[df.algorithm == Methods.RS])
         print(f"number of hyperband evaluations for {benchmark}: {n}")
-    plot_results(benchmarks_to_df, method_styles)
 
     methods_to_show = [
         Methods.RS,
@@ -51,6 +50,8 @@ if __name__ == '__main__':
         Methods.MOBSTER,
         Methods.ASHA_BB,
         Methods.ASHA_CTS,
-        # Methods.ZEROSHOT,
+        Methods.ZEROSHOT,
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
+
+    plot_results(benchmarks_to_df, method_styles)
