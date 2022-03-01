@@ -106,6 +106,7 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
     }
     metadata_df = pd.DataFrame(metadatas.values())
     metadata_df['creation_date'] = metadata_df['st_tuner_creation_timestamp'].apply(lambda x: datetime.fromtimestamp(x))
+    metadata_df.sort_values(by='creation_date', ascending=False)
     metadata_df = metadata_df.drop_duplicates(['algorithm', 'benchmark', 'seed'])
     creation_dates_min_max = metadata_df.groupby(['algorithm']).agg(['min', 'max'])['creation_date']
     print("creation date per method:\n" + creation_dates_min_max.to_string())
