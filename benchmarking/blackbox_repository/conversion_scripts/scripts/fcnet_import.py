@@ -130,12 +130,12 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
 def generate_fcnet(s3_root: Optional[str] = None):
     blackbox_name = BLACKBOX_NAME
     fcnet_file = repository_path / "fcnet_tabular_benchmarks.tar.gz"
-    if not (repository_path / "fcnet_tabular_benchmarks.tar.gz").exists():
+    if not fcnet_file.exists():
         src = "http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz"
         print(f"did not find {fcnet_file}, downloading {src}")
         urllib.request.urlretrieve(src, fcnet_file)
 
-    with tarfile.open(repository_path / "fcnet_tabular_benchmarks.tar.gz") as f:
+    with tarfile.open(fcnet_file) as f:
         f.extractall(path=repository_path)
 
     with catchtime("converting"):

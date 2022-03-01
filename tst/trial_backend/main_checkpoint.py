@@ -22,7 +22,7 @@ import os
 from pathlib import Path
 
 from syne_tune.constants import ST_CHECKPOINT_DIR
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 
 
 def load_checkpoint(checkpoint_path: Path):

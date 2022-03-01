@@ -20,7 +20,7 @@ if __name__ == '__main__':
     experiment_tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
 
-    load_cache_if_exists = True
+    load_cache_if_exists = False
 
     # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
     methods_to_show = list(method_styles.keys())
@@ -42,6 +42,7 @@ if __name__ == '__main__':
 
     methods_to_show = [
         Methods.RS,
+        Methods.TPE,
         Methods.REA,
         Methods.GP,
         Methods.MSR,

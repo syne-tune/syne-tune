@@ -4,7 +4,7 @@ https://docs.ray.io/en/master/rllib/index.html
 The input arguments learning-rate and gamma discount factor can be tuned for maximizing the episode mean reward.
 """
 from argparse import ArgumentParser
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 from ray.rllib.agents.ppo import PPOTrainer
 
 if __name__ == '__main__':

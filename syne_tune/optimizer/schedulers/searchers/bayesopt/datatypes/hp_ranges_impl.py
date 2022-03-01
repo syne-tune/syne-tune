@@ -131,8 +131,8 @@ class HyperparameterRangeContinuous(HyperparameterRange):
     def __eq__(self, other: object) -> bool:
         if isinstance(other, HyperparameterRangeContinuous):
             return self.name == other.name \
-                   and self.lower_bound == other.lower_bound \
-                   and self.upper_bound == other.upper_bound \
+                   and np.allclose([self.lower_bound], [other.lower_bound]) \
+                   and np.allclose([self.upper_bound], [other.upper_bound]) \
                    and self.scaling == other.scaling
         return False
 
@@ -257,8 +257,8 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
     def __eq__(self, other):
         if isinstance(other, HyperparameterRangeFiniteRange):
             return self.name == other.name \
-                   and self.lower_bound == other.lower_bound \
-                   and self.upper_bound == other.upper_bound \
+                   and np.allclose([self.lower_bound], [other.lower_bound]) \
+                   and np.allclose([self.upper_bound], [other.upper_bound]) \
                    and self._scaling == other._scaling \
                    and self.cast_int == other.cast_int \
                    and self._range_int.upper_bound == other._range_int.upper_bound

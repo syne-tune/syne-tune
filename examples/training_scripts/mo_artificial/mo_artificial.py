@@ -15,7 +15,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 
 def f(t, theta):
     # Function drawing upper-right circles with radius set to `t` and with center set at

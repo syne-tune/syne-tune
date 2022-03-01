@@ -8,13 +8,14 @@ from benchmarking.nursery.benchmark_kdd.baselines import methods, Methods
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 import syne_tune
 import benchmarking
-from syne_tune.util import s3_experiment_path
+from syne_tune.util import s3_experiment_path, random_string
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--experiment_tag", type=str, required=False, default=generate_slug(2))
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
+    hash = random_string(4)
     for method in methods.keys():
         sm_args = dict(
             entry_point="benchmark_main.py",
@@ -34,7 +35,7 @@ if __name__ == '__main__':
             print(f"{experiment_tag}-{method}")
             sm_args["hyperparameters"] = {"experiment_tag": experiment_tag, 'num_seeds': 30, 'method': method}
             est = PyTorch(**sm_args)
-            est.fit(job_name=f"{experiment_tag}-{method}", wait=False)
+            est.fit(job_name=f"{experiment_tag}-{method}-{hash}", wait=False)
         else:
             # For mobster, we schedule one job per seed as the method takes much longer
             for seed in range(30):
@@ -44,4 +45,4 @@ if __name__ == '__main__':
                     'method': method
                 }
                 est = PyTorch(**sm_args)
-                est.fit(job_name=f"{experiment_tag}-{method}-{seed}", wait=False)
+                est.fit(job_name=f"{experiment_tag}-{method}-{seed}-{hash}", wait=False)

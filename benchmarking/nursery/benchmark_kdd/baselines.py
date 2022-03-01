@@ -36,6 +36,7 @@ class Methods:
     MOBSTER = 'MOB'
     ZEROSHOT = 'ZS'
     SGPT = 'SGPT'
+    TPE = 'TPE'
 
 methods = {
     Methods.RS: lambda method_arguments: FIFOScheduler(
@@ -77,7 +78,7 @@ methods = {
             resource_attr=method_arguments.resource_attr,
             random_seed=method_arguments.random_seed,
         ),
-        mode="min",
+        mode=method_arguments.mode,
         metric=method_arguments.metric,
         config_space=method_arguments.config_space,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
@@ -86,16 +87,16 @@ methods = {
     Methods.ASHA_CTS: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher=QuantileBasedSurrogateSearcher(
-            mode="min",
+            mode=method_arguments.mode,
             config_space=method_arguments.config_space,
             metric=method_arguments.metric,
             transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
             random_seed=method_arguments.random_seed,
         ),
-        mode="min",
+        mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_t=200,
-        resource_attr='hp_epoch',
+        resource_attr=method_arguments.resource_attr,
     ),
     Methods.ZEROSHOT: lambda method_arguments: ZeroShotTransfer(
         config_space=method_arguments.config_space,
@@ -132,6 +133,14 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
+    Methods.TPE: lambda method_arguments: FIFOScheduler(
+        config_space=method_arguments.config_space,
+        searcher="kde",
+        search_options={'debug_log': False, 'min_bandwidth': 0.1},
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
+    ),
     Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
@@ -158,7 +167,7 @@ if __name__ == '__main__':
     # Run a loop that initializes all schedulers on all benchmark to see if they all work
     from benchmarking.nursery.benchmark_kdd.benchmark_main import get_transfer_learning_evaluations
     from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
-    benchmarks = ["fcnet-protein", "nas201-cifar10"]
+    benchmarks = ["fcnet-protein", "nas201-cifar10", "lcbench-Fashion-MNIST"]
     for benchmark_name in benchmarks:
         benchmark = benchmark_definitions[benchmark_name]
         backend = BlackboxRepositoryBackend(

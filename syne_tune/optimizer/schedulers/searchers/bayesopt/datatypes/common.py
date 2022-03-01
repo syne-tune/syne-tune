@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Union, Dict, Optional, Callable
+from typing import Union, Dict, Optional, Callable, List
 from dataclasses import dataclass
 import numpy as np
 
@@ -59,6 +59,31 @@ class TrialEvaluations:
             return len(metric_vals)
         else:
             return 1
+
+    def _map_value_for_matching(self, value: MetricValues) -> (
+            Optional[List[str]], np.ndarray):
+        if isinstance(value, dict):
+            keys = list(sorted(value.keys()))
+            vals = np.array(value[k] for k in keys)
+        else:
+            keys = None
+            vals = np.array([value])
+        return keys, vals
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, TrialEvaluations):
+            return False
+        if self.trial_id != other.trial_id:
+            return False
+        if set(self.metrics.keys()) != set(other.metrics.keys()):
+            return False
+        for name, value in self.metrics.items():
+            keys, vals = self._map_value_for_matching(value)
+            keys_other, vals_other = self._map_value_for_matching(
+                other.metrics[name])
+            if keys != keys_other or (not np.allclose(vals, vals_other)):
+                return False
+        return True
 
 
 class PendingEvaluation(object):

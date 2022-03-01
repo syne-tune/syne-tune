@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from benchmarking.blackbox_repository import load
 from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods
+from benchmarking.nursery.benchmark_kdd.baselines import MethodArguments, methods, Methods
 from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
@@ -76,6 +76,7 @@ if __name__ == '__main__':
     method_names = [args.method] if args.method is not None else list(methods.keys())
     benchmark_names = [args.benchmark] if args.benchmark is not None else list(benchmark_definitions.keys())
 
+    # logging.getLogger().setLevel(logging.INFO)
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(logging.WARNING)
@@ -84,6 +85,9 @@ if __name__ == '__main__':
 
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
+        if method == Methods.ZEROSHOT and "lcbench" in benchmark_name:
+            print("skipping lcbench for zeroshot since only grid are supported")
+            continue
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
@@ -94,6 +98,7 @@ if __name__ == '__main__':
             time_this_resource_attr=benchmark.time_this_resource_attr,
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
+            surrogate=benchmark.surrogate,
         )
 
         # todo move into benchmark definition
@@ -113,8 +118,10 @@ if __name__ == '__main__':
             ),
         ))
 
-        stop_criterion = StoppingCriterion(max_wallclock_time=benchmark.max_wallclock_time)
-
+        stop_criterion = StoppingCriterion(
+            max_wallclock_time=benchmark.max_wallclock_time,
+            max_num_evaluations=benchmark.max_num_evaluations,
+        )
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,
