@@ -225,6 +225,7 @@ class ZeroShotTransfer(FIFOScheduler):
                 sort_transfer_learning_evaluations=sort_transfer_learning_evaluations, random_seed=random_seed,
                 transfer_learning_evaluations=transfer_learning_evaluations, use_surrogates=use_surrogates
             ),
+            mode=mode,
             **kwargs,
         )
 
