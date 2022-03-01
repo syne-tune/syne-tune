@@ -126,7 +126,7 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         }
 
     def _update_ranks(self) -> pd.DataFrame:
-        return ((-1 if self._mode == 'max' else 1) * self._scores).rank(axis=1)
+        return self._scores.rank(axis=1)
 
     def _update(self, trial_id: str, config: Dict, result: Dict) -> None:
         pass
