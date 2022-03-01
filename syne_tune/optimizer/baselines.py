@@ -77,7 +77,7 @@ class MOBSTER(HyperbandScheduler):
 class PASHA(HyperbandScheduler):
     def __init__(
             self, config_space: Dict, metric: str, resource_attr: str,
-            rung_system_kwargs: Dict, **kwargs):
+            **kwargs):
         """
         One of `max_t`, `max_resource_attr` needs to be in `kwargs`. The
         latter is more useful, see also :class:`HyperbandScheduler`.
@@ -92,7 +92,6 @@ class PASHA(HyperbandScheduler):
             searcher="random",
             resource_attr=resource_attr,
             type='pasha',
-            rung_system_kwargs=rung_system_kwargs,
             **kwargs,
         )
 
