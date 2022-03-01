@@ -79,7 +79,8 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
                 hyperparameters = hyperparameters.copy()
         hyperparameters.reset_index(drop=True, inplace=True)
         self._hyperparameters = hyperparameters
-        self._scores = pd.DataFrame(scores)
+        sign = 1 if self._mode == 'min' else -1
+        self._scores = sign * pd.DataFrame(scores)
         self._ranks = self._update_ranks()
 
     def _create_surrogate_transfer_learning_evaluations(self, config_space, transfer_learning_evaluations, metric):
