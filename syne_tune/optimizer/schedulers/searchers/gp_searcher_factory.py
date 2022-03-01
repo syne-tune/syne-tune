@@ -132,7 +132,6 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
 def _create_gp_standard_model(
         hp_ranges: HyperparameterRanges, active_metric: Optional[str],
         random_seed: int, is_hyperband: bool, **kwargs):
-    """
     result = _create_gp_common(hp_ranges, **kwargs)
     kernel = result['kernel']
     mean = result['mean']
@@ -157,7 +156,14 @@ def _create_gp_standard_model(
         debug_log=result['debug_log'],
         filter_observed_data=filter_observed_data,
         no_fantasizing=kwargs.get('no_fantasizing', False))
-    """
+    return {
+        'model_factory': model_factory,
+        'filter_observed_data': filter_observed_data}
+
+
+def _create_sgpt_model(
+        hp_ranges: HyperparameterRanges, active_metric: Optional[str],
+        random_seed: int, is_hyperband: bool, **kwargs):
     gp_models = list()
     for _ in range(len(kwargs['transfer_learning_evaluations']) + 1):
         result = _create_gp_common(hp_ranges, **kwargs)
@@ -179,6 +185,8 @@ def _create_gp_standard_model(
     model_factory = ScalableGaussianProcessTransferModelFactory(
         config_space=kwargs['configspace'],
         transfer_learning_evaluations=kwargs['transfer_learning_evaluations'],
+        sample_size=kwargs['sample_size'],
+        bandwidth=kwargs['bandwidth'],
         active_metric=active_metric,
         metric=kwargs['metric'],
         gpmodel=gp_models[0],
@@ -192,7 +200,6 @@ def _create_gp_standard_model(
     return {
         'model_factory': model_factory,
         'filter_observed_data': filter_observed_data}
-
 
 def _create_gp_additive_model(
         model: str, hp_ranges: HyperparameterRanges,
@@ -238,7 +245,7 @@ def _create_common_objects(model=None, **kwargs):
     is_hyperband = scheduler.startswith('hyperband')
     if model is None:
         model = 'gp_multitask'
-    assert model == 'gp_multitask' or is_hyperband, \
+    assert model == 'gp_multitask' or model == 'sgpt' or is_hyperband, \
         f"model = {model} only together with hyperband_* scheduler"
     hp_ranges = create_hp_ranges_for_warmstarting(**kwargs)
     random_seed, _kwargs = extract_random_seed(kwargs)
@@ -298,6 +305,13 @@ def _create_common_objects(model=None, **kwargs):
     # Create model factory
     if model == 'gp_multitask':
         result.update(_create_gp_standard_model(
+            hp_ranges=hp_ranges,
+            active_metric=INTERNAL_METRIC_NAME,
+            random_seed=random_seed,
+            is_hyperband=is_hyperband,
+            **_kwargs))
+    elif model == 'sgpt':
+        result.update(_create_sgpt_model(
             hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
             random_seed=random_seed,

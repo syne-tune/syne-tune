@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 _ARGUMENT_KEYS = {
     'searcher', 'search_options', 'checkpoint', 'resume', 'metric', 'mode',
     'points_to_evaluate', 'random_seed', 'max_t', 'max_resource_attr',
-    'time_keeper', 'transfer_learning_evaluations'}
+    'time_keeper'}
 
 _DEFAULT_OPTIONS = {
     'searcher': 'random',
@@ -205,7 +205,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
                 'metric': self.metric,
                 'points_to_evaluate': kwargs.get('points_to_evaluate'),
                 'scheduler_mode': kwargs['mode'],
-                'transfer_learning_evaluations': kwargs.get('transfer_learning_evaluations'),
                 'random_seed_generator': self.random_seed_generator})
             if self.max_t is not None:
                 search_options['max_epochs'] = self.max_t
