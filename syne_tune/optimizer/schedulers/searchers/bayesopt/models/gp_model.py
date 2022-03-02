@@ -39,6 +39,7 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler \
 
 logger = logging.getLogger(__name__)
 
+
 GPModel = Union[GaussianProcessRegression, GPRegressionMCMC]
 
 
@@ -49,7 +50,6 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     integrated out by MCMC sampling (`GPRegressionMCMC`).
 
     """
-
     def __init__(
             self, state: TuningJobState,
             gpmodel: GPModel,
@@ -119,16 +119,17 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     def posterior_states(self) -> Optional[List[GaussProcPosteriorState]]:
         return self._gpmodel.states
 
-    def _current_best_filter_candidates(self, candidates):
-        candidates = super()._current_best_filter_candidates(candidates)
+    def _current_best_filter_candidates(self, candidates_trial_ids):
+        unfiltered_list = super()._current_best_filter_candidates(
+            candidates_trial_ids)
         hp_ranges = self.state.hp_ranges
-        candidates = hp_ranges.filter_for_last_pos_value(candidates)
-        assert candidates, \
-            "state.hp_ranges does not contain any candidates " + \
-            "(labeled or pending) with resource attribute " + \
-            "'{}' = {}".format(
-                hp_ranges.name_last_pos, hp_ranges.value_for_last_pos)
-        return candidates
+        filtered_list = [tpl for tpl in unfiltered_list
+                         if hp_ranges.check_last_pos_value(tpl[0])]
+        assert filtered_list, \
+            "state.hp_ranges does not contain any labeled candidates " + \
+            "with resource attribute " + \
+            f"'{hp_ranges.name_last_pos}' = {hp_ranges.value_for_last_pos}"
+        return filtered_list
 
 
 @dataclass
@@ -220,7 +221,7 @@ class GaussProcModelFactory(TransformerModelFactory):
     def profiler(self) -> Optional[SimpleProfiler]:
         return self._profiler
 
-    def _model_kwargs(self, state: TuningJobState, fit_params: bool) -> Dict:
+    def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
         """
         Parameters of `self._gpmodel` are optimized iff `fit_params`. This
         requires `state` to contain labeled examples.
@@ -254,13 +255,11 @@ class GaussProcModelFactory(TransformerModelFactory):
             fantasy_samples = state_with_fantasies.pending_evaluations
         else:
             fantasy_samples = []
-        return {'state': state, 'active_metric': self.active_metric,
-                'gpmodel': self._gpmodel, 'fantasy_samples': fantasy_samples,
-                'normalize_mean': self._mean, 'normalize_std': self._std,
-                'filter_observed_data': self._filter_observed_data}
-
-    def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
-        return GaussProcSurrogateModel(**self._model_kwargs(state=state, fit_params=fit_params))
+        return GaussProcSurrogateModel(
+            state=state, active_metric=self.active_metric,
+            gpmodel=self._gpmodel, fantasy_samples=fantasy_samples,
+            normalize_mean=self._mean, normalize_std=self._std,
+            filter_observed_data=self._filter_observed_data)
 
     def _get_num_fantasy_samples(self) -> int:
         raise NotImplementedError()
@@ -278,7 +277,7 @@ class GaussProcModelFactory(TransformerModelFactory):
 
         """
         assert state.num_observed_cases(self.active_metric) > 0, \
-            "Cannot compute posterior: state has no labeled datapoints " + \
+            "Cannot compute posterior: state has no labeled datapoints " +\
             f"for metric {self.active_metric}"
         internal_candidate_evaluations = get_internal_candidate_evaluations(
             state, self.active_metric, self.normalize_targets,
@@ -363,7 +362,7 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
             profiler: Optional[SimpleProfiler] = None,
             debug_log: Optional[DebugLogPrinter] = None,
             filter_observed_data: Optional[ConfigurationFilter] = None,
-            no_fantasizing: bool = False, **kwargs):
+            no_fantasizing: bool = False):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy

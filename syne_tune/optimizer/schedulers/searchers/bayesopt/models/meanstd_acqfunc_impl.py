@@ -380,11 +380,11 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
             self, model: SurrogateOutputModel) -> CurrentBestProvider:
         active_model = model[self.active_metric]
         assert isinstance(active_model, BaseSurrogateModel)
-        all_means_active = active_model.predict_mean_current_candidates()
+        all_means_active, _ = active_model.predict_mean_current_candidates()
         num_samples_active = len(all_means_active)
         constraint_model = model[self.constraint_metric]
         assert isinstance(constraint_model, BaseSurrogateModel)
-        all_means_constraint = constraint_model.predict_mean_current_candidates()
+        all_means_constraint, _ = constraint_model.predict_mean_current_candidates()
         common_shape = all_means_active[0].shape
         assert all(x.shape == common_shape for x in all_means_constraint), \
             "Shape mismatch between models for predict_mean_current_candidates"

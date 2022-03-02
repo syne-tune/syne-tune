@@ -13,6 +13,8 @@
 from typing import List, Optional
 import numpy as np
 import logging
+from collections import Counter
+from operator import itemgetter
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
@@ -34,12 +36,13 @@ class BaseSurrogateModel(SurrogateModel):
             filter_observed_data: Optional[ConfigurationFilter] = None):
         super().__init__(state, active_metric)
         self._current_best = None
+        self._current_best_trial_id = None
         self._filter_observed_data = filter_observed_data
 
-    def predict_mean_current_candidates(self) -> List[np.ndarray]:
+    def predict_mean_current_candidates(self) -> (List[np.ndarray], List[int]):
         """
         Returns the predictive mean (signal with key 'mean') at all current candidates
-        in the state (observed, pending).
+        in the state (observed).
 
         If the hyperparameters of the surrogate model are being optimized (e.g.,
         by empirical Bayes), the returned list has length 1. If its
@@ -48,9 +51,11 @@ class BaseSurrogateModel(SurrogateModel):
 
         :return: List of predictive means
         """
-        candidates, _ = self.state.observed_data_for_metric(self.active_metric)
-        candidates += self.state.pending_configurations()
-        candidates = self._current_best_filter_candidates(candidates)
+        candidates_trial_ids = [
+            (self.state.config_for_trial[ev.trial_id], ev.trial_id)
+            for ev in self.state.trials_evaluations]
+        candidates, trial_ids = zip(
+            *self._current_best_filter_candidates(candidates_trial_ids))
         assert len(candidates) > 0, \
             "Cannot predict means at current candidates with no candidates at all"
         inputs = self.hp_ranges_for_prediction().to_ndarray_matrix(candidates)
@@ -61,23 +66,40 @@ class BaseSurrogateModel(SurrogateModel):
             if means.ndim == 1:  # In case of no fantasizing
                 means = means.reshape((-1, 1))
             all_means.append(means)
-        return all_means
+        return all_means, trial_ids
+
+    def _current_best_internal(self):
+        if self._current_best is None:
+            all_means, trial_ids = self.predict_mean_current_candidates()
+            self._current_best = [
+                np.min(means, axis=0) for means in all_means]
+            self._current_best_trial_id = []
+            for means in all_means:
+                min_pos = np.argmin(means, axis=0)
+                if min_pos.size == 1:
+                    min_pos = min_pos.item()
+                else:
+                    # Use majority vote over columns
+                    histogram = Counter(min_pos)
+                    min_pos, _ = max(histogram.items(), key=itemgetter(1))
+                self._current_best_trial_id.append(trial_ids[min_pos])
 
     def current_best(self) -> List[np.ndarray]:
-        if self._current_best is None:
-            all_means = self.predict_mean_current_candidates()
-            result = [np.min(means, axis=0) for means in all_means]
-            self._current_best = result
+        self._current_best_internal()
         return self._current_best
 
-    def _current_best_filter_candidates(self, candidates):
+    def current_best_trial_id(self) -> List[int]:
+        self._current_best_internal()
+        return self._current_best_trial_id
+
+    def _current_best_filter_candidates(self, candidates_trial_ids):
         """
         In some subclasses, 'current_best' is not computed over all (observed
         and pending) candidates: they need to implement this filter.
 
         """
         if self._filter_observed_data is None:
-            return candidates  # Default: No filtering
+            return candidates_trial_ids  # Default: No filtering
         else:
-            return [config for config in candidates
-                    if self._filter_observed_data(config)]
+            return [tpl for tpl in candidates_trial_ids
+                    if self._filter_observed_data(tpl[0])]

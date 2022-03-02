@@ -54,10 +54,14 @@ class GaussianProcessRegression(GaussianProcessModel):
 
     """
     def __init__(
-            self, kernel: KernelFunction, mean: MeanFunction = None,
+            self, kernel: KernelFunction,
+            mean: MeanFunction = None,
             initial_noise_variance: float = None,
+            noise_variance_lower_bound: float = None,
+            noise_variance_upper_bound: float = None,
             optimization_config: OptimizationConfig = None,
-            random_seed=None, fit_reset_params: bool = True,
+            random_seed=None,
+            fit_reset_params: bool = True,
             test_intermediates: Optional[dict] = None):
         super().__init__(random_seed)
         if mean is None:
@@ -70,7 +74,9 @@ class GaussianProcessRegression(GaussianProcessModel):
         self._test_intermediates = test_intermediates
         self.likelihood = MarginalLikelihood(
             kernel=kernel, mean=mean,
-            initial_noise_variance=initial_noise_variance)
+            initial_noise_variance=initial_noise_variance,
+            noise_variance_lower_bound=noise_variance_lower_bound,
+            noise_variance_upper_bound=noise_variance_upper_bound)
         self.reset_params()
 
     @property

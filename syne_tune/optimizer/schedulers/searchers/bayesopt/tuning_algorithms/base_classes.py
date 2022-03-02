@@ -123,8 +123,8 @@ class SurrogateModel(ABC):
         """
         Returns the so-called incumbent, to be used in acquisition functions
         such as expected improvement. This is the minimum of predictive means
-        (signal with key 'mean') at all current candidate locations (both
-        state.trials_evaluations and state.pending_evaluations).
+        (signal with key 'mean') at all candidates for which observations have
+        been obtained (those in `state.trials_evaluations`).
         Normally, a scalar is returned, but if the model supports fantasizing
         and the state contains pending evaluations, there is one incumbent
         per fantasy sample, so a vector is returned.
@@ -135,6 +135,17 @@ class SurrogateModel(ABC):
         entry per MCMC sample.
 
         :return: Incumbent
+        """
+        pass
+
+    @abstractmethod
+    def current_best_trial_id(self) -> List[int]:
+        """
+        Argmin for `current_best`, returns trial_id for which incumbent is
+        attained. If hyperparameters are averaged over by MCMC, the returned list has one
+        entry per MCMC sample.
+
+        :return: trial_id(s) at which incumbent is attained
         """
         pass
 

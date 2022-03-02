@@ -37,6 +37,7 @@ class Methods:
     ZEROSHOT = 'ZS'
     SGPT = 'SGPT'
     TPE = 'TPE'
+    TURBO = 'TuRBO'
 
     
 methods = {
@@ -162,6 +163,14 @@ methods = {
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         points_to_evaluate=list()
+    ),
+    Methods.TURBO: lambda method_arguments: FIFOScheduler(
+        method_arguments.config_space,
+        searcher="turbo",
+        search_options={'debug_log': False, 'threshold_failure': 14},
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
     ),
 }
 
