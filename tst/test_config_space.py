@@ -15,7 +15,7 @@ import numpy as np
 
 from syne_tune.config_space import randint, lograndint, uniform, \
     loguniform, choice, config_space_size, randn, to_dict, from_dict, \
-    finrange, logfinrange, restric_domain
+    finrange, logfinrange, restrict_domain
 
 
 def test_convert_config_space():
@@ -146,6 +146,7 @@ def test_finrange_domain(domain, value_set):
     (randint(0, 10), int),
     (lograndint(1, 10), int),
     (finrange(0.1, 1.0, 10), float),
+    (finrange(0.1, 1.0, 1), float),
     (logfinrange(np.exp(0.1), np.exp(1.0), 10), float),
     (finrange(0, 8, 5, cast_int=True), int),
     (logfinrange(8, 512, 7, cast_int=True), int),

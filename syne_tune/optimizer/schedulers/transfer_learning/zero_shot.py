@@ -20,7 +20,7 @@ import xgboost
 from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations, TransferLearningMixin
-from syne_tune.search_space import Domain
+from syne_tune.config_space import Domain
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +53,9 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         :param use_surrogates: If the same configuration is not evaluated on all tasks, set this to true. This will
         generate a set of configurations and will impute their performance using surrogate models.
         """
-        super().__init__(config_space=config_space, configspace=config_space,
+        super().__init__(config_space=config_space,
                          transfer_learning_evaluations=transfer_learning_evaluations, metric=metric,
-                         metric_names=[metric], mode=mode)
+                         metric_names=[metric])
         self._mode = mode
         self._random_state = np.random.RandomState(random_seed)
         if use_surrogates:

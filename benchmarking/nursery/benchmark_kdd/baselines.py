@@ -117,7 +117,7 @@ methods = {
     ),
     Methods.REA: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
-        searcher=RegularizedEvolution(configspace=method_arguments.config_space,
+        searcher=RegularizedEvolution(config_space=method_arguments.config_space,
                                       metric=method_arguments.metric,
                                       mode=method_arguments.mode,
                                       random_seed=method_arguments.random_seed,

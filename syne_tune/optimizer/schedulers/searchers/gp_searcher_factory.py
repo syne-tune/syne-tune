@@ -183,7 +183,7 @@ def _create_sgpt_model(
         gp_models.append(gp_model)
     filter_observed_data = result['filter_observed_data']
     model_factory = ScalableGaussianProcessTransferModelFactory(
-        config_space=kwargs['configspace'],
+        config_space=kwargs['config_space'],
         transfer_learning_evaluations=kwargs['transfer_learning_evaluations'],
         sample_size=kwargs['sample_size'],
         bandwidth=kwargs['bandwidth'],

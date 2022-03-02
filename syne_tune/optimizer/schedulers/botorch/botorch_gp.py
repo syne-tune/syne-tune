@@ -26,7 +26,7 @@ from gpytorch.utils.errors import NotPSDError
 from syne_tune.optimizer.scheduler import TrialScheduler, \
     TrialSuggestion, SchedulerDecision
 from syne_tune.backend.trial_status import Trial
-import syne_tune.search_space as sp
+import syne_tune.config_space as cs
 
 __all__ = ['BotorchGP']
 
@@ -64,7 +64,7 @@ class BotorchGP(TrialScheduler):
         self.categorical_maps = {
             k: {cat: i for i, cat in enumerate(v.categories)}
             for k, v in config_space.items()
-            if isinstance(v, sp.Categorical)
+            if isinstance(v, cs.Categorical)
         }
         self.inv_categorical_maps = {
             hp: dict(zip(map.values(), map.keys())) for hp, map in self.categorical_maps.items()
@@ -97,7 +97,7 @@ class BotorchGP(TrialScheduler):
     def sample_random(self) -> Dict:
         return {
             k: v.sample()
-            if isinstance(v, sp.Domain) else v
+            if isinstance(v, cs.Domain) else v
             for k, v in self.config_space.items()
         }
 
@@ -146,7 +146,7 @@ class BotorchGP(TrialScheduler):
         :return: encoded vector.
         """
         def numerize(value, domain, categorical_map):
-            if isinstance(domain, sp.Categorical):
+            if isinstance(domain, cs.Categorical):
                 res = np.zeros(len(domain))
                 res[categorical_map[value]] = 1
                 return res
@@ -158,7 +158,7 @@ class BotorchGP(TrialScheduler):
         return np.hstack([
             numerize(value=config[k], domain=v, categorical_map=categorical_maps.get(k, {}))
             for k, v in config_space.items()
-            if isinstance(v, sp.Domain)
+            if isinstance(v, cs.Domain)
         ])
 
     @staticmethod
@@ -172,11 +172,11 @@ class BotorchGP(TrialScheduler):
         :return:
         """
         def inv_numerize(values, domain, categorical_map):
-            if not isinstance(domain, sp.Domain):
+            if not isinstance(domain, cs.Domain):
                 # constant value
                 return domain
             else:
-                if isinstance(domain, sp.Categorical):
+                if isinstance(domain, cs.Categorical):
                     values = 1.0 * (values == values.max())
                     index = max(np.arange(len(domain)) * values)
                     return categorical_map[index]
@@ -189,7 +189,7 @@ class BotorchGP(TrialScheduler):
         res = {}
         for k, domain in config_space.items():
             if hasattr(domain, "sample"):
-                length = len(domain) if isinstance(domain, sp.Categorical) else 1
+                length = len(domain) if isinstance(domain, cs.Categorical) else 1
                 res[k] = domain.cast(
                     inv_numerize(
                         values=encoded_vector[cur_pos:cur_pos + length],

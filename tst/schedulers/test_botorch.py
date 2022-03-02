@@ -1,4 +1,4 @@
-import syne_tune.search_space as sp
+import syne_tune.config_space as cs
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
@@ -8,22 +8,22 @@ from syne_tune.optimizer.schedulers.botorch.botorch_gp import BotorchGP
 def test_featurize():
     config_space = {
         "steps": 100,
-        "x": sp.randint(0, 20),
-        "y": sp.uniform(0, 1),
-        "z": sp.choice(["a", "b", "c"]),
+        "x": cs.randint(0, 20),
+        "y": cs.uniform(0, 1),
+        "z": cs.choice(["a", "b", "c"]),
     }
 
     categorical_maps = {
         k: {cat: i for i, cat in enumerate(v.categories)}
         for k, v in config_space.items()
-        if isinstance(v, sp.Categorical)
+        if isinstance(v, cs.Categorical)
     }
     inv_categorical_maps = {hp: dict(zip(map.values(), map.keys())) for hp, map in categorical_maps.items()}
     np.random.seed(0)
     for _ in range(3):
         config = {
             k: v.sample()
-            if isinstance(v, sp.Domain) else v
+            if isinstance(v, cs.Domain) else v
             for k, v in config_space.items()
         }
         feature_vector = BotorchGP._encode_config(config_space, config, categorical_maps)
@@ -37,9 +37,9 @@ def test_featurize():
 def test_calls():
     config_space = {
         "steps": 100,
-        "x": sp.randint(0, 20),
-        "y": sp.uniform(0, 1),
-        "z": sp.choice(["a", "b", "c"]),
+        "x": cs.randint(0, 20),
+        "y": cs.uniform(0, 1),
+        "z": cs.choice(["a", "b", "c"]),
     }
     np.random.seed(0)
 

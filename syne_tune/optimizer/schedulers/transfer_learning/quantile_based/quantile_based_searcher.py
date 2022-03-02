@@ -12,7 +12,7 @@ import pandas as pd
 
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import from_string
-from syne_tune.search_space import Domain
+from syne_tune.config_space import Domain
 from syne_tune.util import catchtime
 
 
@@ -111,7 +111,7 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
         :param random_seed:
         """
         super(QuantileBasedSurrogateSearcher, self).__init__(
-            configspace=config_space,
+            config_space=config_space,
             metric=metric,
             random_seed=random_seed,
             points_to_evaluate=[],
@@ -154,7 +154,7 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
     def _sample_random_config(self):
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
-            for k, v in self.configspace.items()
+            for k, v in self.config_space.items()
         }
 
 def run_ts():
