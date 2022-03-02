@@ -62,7 +62,7 @@ class SimulatedTimeKeeper(TimeKeeper):
 
     def advance(self, step: float):
         self._assert_has_started()
-        # assert step >= 0
+        assert step >= 0
         self._current_time += step
 
     def advance_to(self, to_time: float):
