@@ -328,11 +328,13 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
         print(row)
     df_ranks = pd.DataFrame(rows).set_index("benchmark")
     avg_row = dict(df_ranks.mean())
-    avg_row["benchmark"] = "average"
+    avg_row["benchmark"] = "Average"
     df_ranks = pd.DataFrame(rows + [avg_row]).set_index("benchmark")
+    benchmark_names = {"fcnet": "\\FCNet{}", "nas201": "\\NASBench{}", "lcbench": "\\LCBench{}"}
+    df_ranks.index = df_ranks.index.map(lambda s: benchmark_names.get(s, s))
+    df_ranks.columns = df_ranks.columns.map(lambda s: "\\" + s.replace("-", "") + "{}")
     print(df_ranks.to_string())
-    print(df_ranks.to_latex(float_format="%.2f", na_rep="-"))
-
+    print(df_ranks.to_latex(float_format="%.2f", na_rep="-", escape=False))
 
 def load_and_cache(experiment_tag: Union[str, List[str]], load_cache_if_exists: bool = True, methods_to_show=None):
 
