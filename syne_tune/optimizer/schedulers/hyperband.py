@@ -131,7 +131,7 @@ class HyperbandScheduler(FIFOScheduler):
     Cost-aware schedulers or searchers:
 
     Some schedulers (e.g., type == 'cost_promotion') or searchers may depend
-    on cost values (with key `rungs_system_kwargs['cost_attr']`) reported
+    on cost values (with key `rung_system_kwargs['cost_attr']`) reported
     alongside the target metric. For promotion-based scheduling, a trial may
     pause and resume several times. The cost received in `on_trial_result` only
     counts the cost since the last resume. We maintain the sum of such costs in
@@ -239,7 +239,7 @@ class HyperbandScheduler(FIFOScheduler):
                 This is a cost-aware variant of 'promotion', see
                 :class:`CostPromotionRungSystem` for details. In this case,
                 costs must be reported under the name
-                `rungs_system_kwargs['cost_attr']` in results.
+                `rung_system_kwargs['cost_attr']` in results.
             pasha:
                 Similar to promotion type Hyperband, but it progressively
                 expands the available resources until the ranking
