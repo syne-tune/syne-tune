@@ -5,8 +5,6 @@ import pandas as pd
 import numpy as np
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
 
