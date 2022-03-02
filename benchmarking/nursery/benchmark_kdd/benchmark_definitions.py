@@ -65,20 +65,7 @@ benchmark_definitions = {
     "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
 }
 
-# benchmark_definitions = {}
-# lc_bench_datasets = [
-#     "APSFailure", "Amazon_employee_access", "Australian", "Fashion-MNIST", "KDDCup09_appetency", "MiniBooNE", "adult",
-#     "airlines", "albert", "bank-marketing", "blood-transfusion-service-center", "car", "christine", "cnae-9",
-#     "connect-4", "covertype", "credit-g", "dionis", "fabert", "helena", "higgs", "jannis", "jasmine",
-#     "jungle_chess_2pcs_raw_endgame_complete", "kc1", "kr-vs-kp", "mfeat-factors", "nomao", "numerai28.6",
-#     "phoneme", "segment", "shuttle", "sylvine", "vehicle", "volkert"
-# ]
-# lc_bench_datasets = [
-#     "Fashion-MNIST", "KDDCup09_appetency",
-#     "airlines", "bank-marketing",
-#     # "volkert"
-# ]
-# 5 most expensive
+# 5 most expensive lcbench datasets
 lc_bench_datasets = [
     "Fashion-MNIST",
     "airlines",
