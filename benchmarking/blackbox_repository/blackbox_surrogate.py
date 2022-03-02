@@ -6,7 +6,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 from benchmarking.blackbox_repository.blackbox import Blackbox
 
 

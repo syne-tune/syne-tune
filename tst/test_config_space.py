@@ -13,9 +13,9 @@
 import pytest
 import numpy as np
 
-from syne_tune.search_space import randint, lograndint, uniform, \
-    loguniform, choice, search_space_size, randn, to_dict, from_dict, \
-    finrange, logfinrange, restrict_domain
+from syne_tune.config_space import randint, lograndint, uniform, \
+    loguniform, choice, config_space_size, randn, to_dict, from_dict, \
+    finrange, logfinrange, restric_domain
 
 
 def test_convert_config_space():
@@ -89,7 +89,7 @@ def test_serialization():
                 == {k: v for k, v in x2.__dict__.items() if k != "sampler"}
 
 
-def test_search_space_size():
+def test_config_space_size():
     upper_limit = 2 ** 20
     config_space = {
         'a': randint(1, 6),
@@ -109,9 +109,9 @@ def test_search_space_size():
         (dict(config_space, f=lograndint(1, upper_limit / 10)), None),
     ]
     for cs, size in cases:
-        _size = search_space_size(cs)
+        _size = config_space_size(cs)
         assert _size == size, \
-            f"search_space_size(cs) = {_size} != {size}\n{cs}"
+            f"config_space_size(cs) = {_size} != {size}\n{cs}"
 
 
 @pytest.mark.parametrize('domain,value_set', [

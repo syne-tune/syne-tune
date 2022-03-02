@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 from benchmarking.blackbox_repository.blackbox_offline import serialize, BlackboxOffline
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path, upload
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 
 
 def download(blackbox: str):

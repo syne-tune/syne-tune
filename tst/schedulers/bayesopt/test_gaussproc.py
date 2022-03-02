@@ -30,7 +30,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
     import EIAcquisitionFunction
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import default_gpmodel, default_gpmodel_mcmc
-from syne_tune.search_space import uniform
+from syne_tune.config_space import uniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import create_tuning_job_state, tuples_to_configs
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \

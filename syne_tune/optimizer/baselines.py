@@ -192,7 +192,7 @@ class REA(FIFOScheduler):
             config_space=config_space,
             metric=metric,
             searcher=RegularizedEvolution(
-                configspace=config_space, metric=metric,
+                config_space=config_space, metric=metric,
                 population_size=population_size, sample_size=sample_size,
                 **kwargs),
             **kwargs,

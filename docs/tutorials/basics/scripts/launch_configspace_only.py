@@ -24,7 +24,7 @@
 import logging
 from pathlib import Path
 
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 
 
 if __name__ == '__main__':

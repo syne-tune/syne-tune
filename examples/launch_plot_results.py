@@ -17,7 +17,7 @@ from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 from syne_tune import StoppingCriterion
 
 

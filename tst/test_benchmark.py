@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import argparse
 
-from syne_tune.search_space import add_to_argparse, randint, uniform, \
+from syne_tune.config_space import add_to_argparse, randint, uniform, \
     loguniform
 
 

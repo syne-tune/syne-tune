@@ -36,7 +36,7 @@ def test_pickle_gp_fifo_searcher():
     num_pending = 2
     data = sample_data(Ackley, num_train=num_data + num_pending, num_grid=5)
     # Create searcher1 using default arguments
-    searcher_options['configspace'] = data['state'].hp_ranges.config_space
+    searcher_options['config_space'] = data['state'].hp_ranges.config_space
     searcher_options['scheduler'] = 'fifo'
     searcher_options['random_seed'] = random_seed
     reward_attr = 'accuracy'
@@ -98,7 +98,7 @@ def test_pickle_constrained_gp_fifo_searcher():
     num_pending = 2
     data = sample_data(Ackley, num_train=num_data + num_pending, num_grid=5)
     # Create searcher1 using default arguments
-    searcher_options['configspace'] = data['state'].hp_ranges.config_space
+    searcher_options['config_space'] = data['state'].hp_ranges.config_space
     searcher_options['scheduler'] = 'fifo'
     searcher_options['random_seed'] = random_seed
     reward_attr = 'accuracy'
@@ -165,7 +165,7 @@ def test_pickle_cost_aware_gp_fifo_searcher():
     num_pending = 2
     data = sample_data(Ackley, num_train=num_data + num_pending, num_grid=5)
     # Create searcher1 using default arguments
-    searcher_options['configspace'] = data['state'].hp_ranges.config_space
+    searcher_options['config_space'] = data['state'].hp_ranges.config_space
     searcher_options['scheduler'] = 'fifo'
     searcher_options['random_seed'] = random_seed
     reward_attr = 'accuracy'

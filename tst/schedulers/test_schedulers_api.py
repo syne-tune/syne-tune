@@ -19,7 +19,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
 from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import \
@@ -173,7 +173,7 @@ def test_async_schedulers_api(scheduler):
     for i in trial_ids:
         suggestion = scheduler.suggest(i)
         assert all(x in suggestion.config.keys() for x in config_space.keys()), \
-            "suggestion configuration should contain all keys of configspace."
+            "suggestion configuration should contain all keys of config_space."
         trials.append(Trial(trial_id=i, config=suggestion.config, creation_time=None))
 
     for trial in trials:

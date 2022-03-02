@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import d
     INTERNAL_METRIC_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import dimensionality_and_warping_ranges, create_tuning_job_state
-from syne_tune.search_space import uniform, randint, choice, loguniform
+from syne_tune.config_space import uniform, randint, choice, loguniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 

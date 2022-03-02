@@ -16,7 +16,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector 
     import DuplicateDetectorIdentical, DuplicateDetectorNoDetection
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from syne_tune.search_space import uniform, randint, choice
+from syne_tune.config_space import uniform, randint, choice
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import create_exclusion_set
 

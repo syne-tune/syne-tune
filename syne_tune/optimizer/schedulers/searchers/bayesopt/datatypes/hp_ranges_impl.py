@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Dict, List, Any, Optional, Union
 import numpy as np
 
-from syne_tune.search_space import Domain, is_log_space, FiniteRange, Categorical
+from syne_tune.config_space import Domain, is_log_space, FiniteRange, Categorical
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
@@ -199,7 +199,7 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
             self, name: str, lower_bound: float, upper_bound: float,
             size: int, scaling: Scaling, cast_int: bool = False):
         """
-        See :class:`FiniteRange` in `search_space`. Internally, we use an int
+        See :class:`FiniteRange` in `config_space`. Internally, we use an int
         with linear scaling.
         Note: Different to `HyperparameterRangeContinuous`, we require that
         `lower_bound < upper_bound` and `size >=2`.

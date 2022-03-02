@@ -24,7 +24,7 @@
 import logging
 from pathlib import Path
 
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune import Tuner

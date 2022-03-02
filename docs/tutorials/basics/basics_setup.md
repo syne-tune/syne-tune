@@ -73,11 +73,11 @@ to be tuned by Syne Tune: [traincode_report_end.py](scripts/traincode_report_end
   we report the validation accuracy as `report(accuracy=accuracy)`.
 
 
-## Step 2: Defining the Search Space
+## Step 2: Defining the Configuration Space
 
 Having defined the objective, we still need to specify the space we would like
 to search over. The most flexible way to run HPO experiments in Syne Tune is
-by writing a *launcher script*, and to define the search space in there.
+by writing a *launcher script*, and to define the configuration space in there.
 Please have a look at [launch_configspace_only.py](scripts/launch_configspace_only.py),
 the first part of a launcher script.
 * [1] First, we make some basic choices, which will only become fully clear once
@@ -87,17 +87,17 @@ the first part of a launcher script.
   mode of optimization (in `mode`). For our example, we maximize the metric
   `'accuracy'`. Here, `metric` needs to be the parameter name used in the
   `report` call in our training script.
-* [3] Most importantly, we need to define the search space for our problem,
+* [3] Most importantly, we need to define the configuration space for our problem,
   which we do with `config_space`.
 
-The search space is a dictionary with key names corresponding to command line
+The configuration space is a dictionary with key names corresponding to command line
 input parameters of our training script. For each parameter you would like to
-tune, you need to specify a `Domain`, imported from `syne_tune.search_space`.
+tune, you need to specify a `Domain`, imported from `syne_tune.config_space`.
 A domain consists of a type (float, int, categorical), a range (inclusive on
 both ends), and an encoding (linear or logarithmic).
 
 ```python
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 
 config_space = {
     'n_units_1': randint(4, 1024),
@@ -116,7 +116,7 @@ and `learning_rate`, `weight_decay` are float with logarithmic encoding (`loguni
 We also need to specify upper and lower bounds: `n_units_1` lies between 4 and 1024,
 the range includes both boundary values.
 
-Choosing a good search space for a given problem may require some iterations.
+Choosing a good configuration space for a given problem may require some iterations.
 Parameters like learning rate or regularization constants are often log-encoded, as
 best values may vary over several orders of magnitude and may be close to 0. On
 the other hand, probabilities are linearly encoded. Search ranges need to be chosen
@@ -124,15 +124,15 @@ wide enough not to discount potentially useful values up front, but setting them
 overly large risks a long tuning time. In general, the range definitions are more
 critical for methods based on random exploration than for model-based HPO methods.
 
-More details on choosing the search space are provided [here](../../search_space.md),
+More details on choosing the configuration space are provided [here](../../search_space.md),
 where you will also learn about two more types: categorical and finite range.
 
 Finally, you can also tune only a subset of the hyperparameters of your training
 script, providing fixed (default) values for the remaining ones. For example, the
-following search space fixes the model architecture:
+following configuration space fixes the model architecture:
 
 ```python
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 
 config_space = {
     'n_units_1': 512,

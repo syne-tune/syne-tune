@@ -8,7 +8,7 @@ import logging
 from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
 
-from syne_tune import search_space
+from syne_tune.config_space import randint, choice
 from syne_tune.util import catchtime
 
 logger = logging.getLogger(__name__)
@@ -141,12 +141,12 @@ def convert_dataset(data, dataset):
     save_objective_values_helper('params', params)
 
     configuration_space = {
-        node: search_space.choice(['avg_pool_3x3', 'nor_conv_3x3', 'skip_connect', 'nor_conv_1x1', 'none'])
+        node: choice(['avg_pool_3x3', 'nor_conv_3x3', 'skip_connect', 'nor_conv_1x1', 'none'])
         for node in hp_cols
     }
 
     fidelity_space = {
-        RESOURCE_ATTR: search_space.randint(lower=1, upper=201)
+        RESOURCE_ATTR: randint(lower=1, upper=201)
     }
 
     objective_names = [f"metric_{m}" for m in objective_names]
@@ -224,7 +224,7 @@ def generate_nasbench201(s3_root: Optional[str] = None):
         serialize(bb_dict=bb_dict, path=repository_path / BLACKBOX_NAME)
 
     with catchtime("uploading to S3"):
-        from benchmarking.blackbox_repository.conversion_scripts import upload
+        from benchmarking.blackbox_repository.conversion_scripts.utils import upload
         upload(BLACKBOX_NAME, s3_root=s3_root)
 
 
@@ -232,7 +232,7 @@ if __name__ == '__main__':
     generate_nasbench201()
 
     # plot one learning-curve for sanity-check
-    from blackbox_repository import load
+    from benchmarking.blackbox_repository import load
 
     bb_dict = load(BLACKBOX_NAME)
 

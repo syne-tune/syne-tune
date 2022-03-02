@@ -203,7 +203,7 @@ def _create_sgpt_model(
 
 def _create_gp_additive_model(
         model: str, hp_ranges: HyperparameterRanges,
-        active_metric: Optional[str], random_seed: int, configspace_ext,
+        active_metric: Optional[str], random_seed: int, config_space_ext,
         **kwargs):
     result = _create_gp_common(hp_ranges, **kwargs)
     if model == 'gp_issm':
@@ -230,7 +230,7 @@ def _create_gp_additive_model(
         gpmodel=gpmodel,
         num_fantasy_samples=num_fantasy_samples,
         active_metric=active_metric,
-        configspace_ext=configspace_ext,
+        config_space_ext=config_space_ext,
         profiler=result['profiler'],
         debug_log=result['debug_log'],
         filter_observed_data=filter_observed_data,
@@ -297,7 +297,7 @@ def _create_common_objects(model=None, **kwargs):
     }
     if is_hyperband:
         epoch_range = (1, kwargs['max_epochs'])
-        result['configspace_ext'] = ExtendedConfiguration(
+        result['config_space_ext'] = ExtendedConfiguration(
             hp_ranges,
             resource_attr_key=kwargs['resource_attr'],
             resource_attr_range=epoch_range)
@@ -323,7 +323,7 @@ def _create_common_objects(model=None, **kwargs):
             hp_ranges=hp_ranges,
             active_metric=INTERNAL_METRIC_NAME,
             random_seed=random_seed,
-            configspace_ext=result['configspace_ext'],
+            config_space_ext=result['config_space_ext'],
             **_kwargs))
     result['num_initial_candidates'] = kwargs['num_init_candidates']
     result['num_initial_random_choices'] = kwargs['num_init_random']
@@ -341,7 +341,7 @@ def gp_fifo_searcher_factory(**kwargs) -> Dict:
 
     Extensions of kwargs by the scheduler:
     - scheduler: Name of scheduler ('fifo', 'hyperband_*')
-    - configspace: Configuration space
+    - config_space: Configuration space
     Only Hyperband schedulers:
     - resource_attr: Name of resource (or time) attribute
     - max_epochs: Maximum resource value

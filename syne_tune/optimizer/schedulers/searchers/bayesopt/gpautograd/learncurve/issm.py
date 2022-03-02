@@ -41,10 +41,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl 
 
 def _prepare_data_internal(
         state: TuningJobState, data_lst: List[Tuple[Configuration, List, str]],
-        configspace_ext: ExtendedConfiguration, active_metric: str,
+        config_space_ext: ExtendedConfiguration, active_metric: str,
         do_fantasizing: bool, mean: float,
         std: float) -> (List[Configuration], List[np.ndarray], List[str]):
-    r_min, r_max = configspace_ext.resource_attr_range
+    r_min, r_max = config_space_ext.resource_attr_range
     configs = [x[0] for x in data_lst]
     trial_ids = [x[2] for x in data_lst]
     targets = []
@@ -130,7 +130,7 @@ def _create_tuple(
 
 
 def prepare_data(
-        state: TuningJobState, configspace_ext: ExtendedConfiguration,
+        state: TuningJobState, config_space_ext: ExtendedConfiguration,
         active_metric: str, normalize_targets: bool = False,
         do_fantasizing: bool = False) -> Dict:
     """
@@ -153,14 +153,14 @@ def prepare_data(
     normalized targets as well.
 
     :param state: `TuningJobState` with data
-    :param configspace_ext: Extended config space
+    :param config_space_ext: Extended config space
     :param active_metric:
     :param normalize_targets: See above
     :param do_fantasizing: See above
     :return: See above
     """
-    r_min, r_max = configspace_ext.resource_attr_range
-    hp_ranges = configspace_ext.hp_ranges
+    r_min, r_max = config_space_ext.resource_attr_range
+    hp_ranges = config_space_ext.hp_ranges
     data_lst = []
     targets = []
     for ev in state.trials_evaluations:
@@ -177,7 +177,7 @@ def prepare_data(
     configs, targets, trial_ids = _prepare_data_internal(
         state=state,
         data_lst=data_lst,
-        configspace_ext=configspace_ext,
+        config_space_ext=config_space_ext,
         active_metric=active_metric,
         do_fantasizing=do_fantasizing,
         mean=mean, std=std)
@@ -200,7 +200,7 @@ def prepare_data(
 
 
 def prepare_data_with_pending(
-        state: TuningJobState, configspace_ext: ExtendedConfiguration,
+        state: TuningJobState, config_space_ext: ExtendedConfiguration,
         active_metric: str, normalize_targets: bool = False) -> (Dict, Dict):
     """
     Similar to `prepare_data` with `do_fantasizing=False`, but two dicts are
@@ -213,14 +213,14 @@ def prepare_data_with_pending(
     evals are contiguous (when it comes to resource levels).
 
     :param state: See `prepare_data`
-    :param configspace_ext: See `prepare_data`
+    :param config_space_ext: See `prepare_data`
     :param active_metric: See `prepare_data`
     :param normalize_targets: See `prepare_data`
     :return: See above
 
     """
-    r_min, r_max = configspace_ext.resource_attr_range
-    hp_ranges = configspace_ext.hp_ranges
+    r_min, r_max = config_space_ext.resource_attr_range
+    hp_ranges = config_space_ext.hp_ranges
     data1_lst = []  # trials without pending evals
     data2_lst = []  # trials with pending evals
     num_pending = []
@@ -257,7 +257,7 @@ def prepare_data_with_pending(
         configs, targets, trial_ids = _prepare_data_internal(
             state=state,
             data_lst=data_lst,
-            configspace_ext=configspace_ext,
+            config_space_ext=config_space_ext,
             active_metric=active_metric,
             do_fantasizing=False,
             mean=mean, std=std)

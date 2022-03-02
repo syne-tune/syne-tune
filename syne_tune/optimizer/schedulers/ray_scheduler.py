@@ -16,7 +16,7 @@ import logging
 from syne_tune.optimizer.scheduler import TrialScheduler, \
     TrialSuggestion
 from syne_tune.backend.trial_status import Trial
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 
 __all__ = ['RayTuneScheduler']
 

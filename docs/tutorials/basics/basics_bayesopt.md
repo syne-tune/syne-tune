@@ -125,11 +125,11 @@ While our running example does not have any, hyperparameters of categorical type
 are often used. For example:
 
 ```python
-from syne_tune.search_space import randint, choice
+from syne_tune.config_space import randint, choice
 
 config_space = {
     'n_units_1': randint(4, 1024),
-     # ...
+    # ...
     'activation': choice(['ReLU', 'LeakyReLU', 'Softplus']),
 }
 ```

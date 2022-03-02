@@ -13,7 +13,7 @@
 from typing import Tuple
 import copy
 
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \

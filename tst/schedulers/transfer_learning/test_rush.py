@@ -18,7 +18,7 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.hyperband_rush import RUSHStoppingRungSystem, RUSHDecider
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 
 
 @pytest.fixture()
