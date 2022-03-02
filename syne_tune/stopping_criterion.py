@@ -29,6 +29,7 @@ class StoppingCriterion:
     Using this class is needed when using the remote launcher to ensure serialization works correctly.
     """
     max_wallclock_time: float = None
+    max_num_evaluations: int = None
     max_num_trials_started: int = None
     max_num_trials_completed: int = None
     max_cost: float = None
@@ -56,7 +57,9 @@ class StoppingCriterion:
         if self.max_cost is not None and status.cost > self.max_cost:
             logger.info(f"reaching max cost ({self.max_cost}), stopping there.")
             return True
-
+        if self.max_num_evaluations is not None and status.overall_metric_statistics.count > self.max_num_evaluations:
+            logger.info(f"reaching {status.overall_metric_statistics.count} evaluations, stopping there. ")
+            return True
         if self.max_metric_value is not None and status.overall_metric_statistics.count > 0:
             max_metrics_observed = status.overall_metric_statistics.max_metrics
             for metric, max_metric_accepted in self.max_metric_value.items():
@@ -71,6 +74,5 @@ class StoppingCriterion:
                 if metric in min_metrics_observed and min_metrics_observed[metric] < min_metric_accepted:
                     logger.info(f"found {metric} with value ({min_metrics_observed[metric]}), "
                                 f"bellow the provided threshold {min_metric_accepted} stopping there.")
-
                     return True
         return False

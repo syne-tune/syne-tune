@@ -27,8 +27,8 @@ import matplotlib.pyplot as plt
 def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
 
     if len(df_task) > 0:
-        metric = df_task.loc[:, 'metric'].values[0]
-        mode = df_task.loc[:, 'mode'].values[0]
+        metric = df_task.loc[:, 'metric_names'].values[0]
+        mode = df_task.loc[:, 'metric_mode'].values[0]
 
         fig, ax = plt.subplots()
 
