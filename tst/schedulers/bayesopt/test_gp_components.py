@@ -63,13 +63,14 @@ def test_get_internal_candidate_evaluations():
 
 
 def test_dimensionality_and_warping_ranges():
+    # Note: `choice` with binary value range is encoded as 1, not 2 dims
     hp_ranges = make_hyperparameter_ranges({
-        'a': choice(['X', 'Y']),
-        'b': loguniform(0.1, 10.0),
-        'c': choice(['a', 'b', 'c']),
-        'd': uniform(0.0, 10.0),
-        'e': choice(['X', 'Y'])})
+        'a': choice(['X', 'Y']),  # pos 0
+        'b': loguniform(0.1, 10.0),  # pos 1
+        'c': choice(['a', 'b', 'c']),  # pos 2
+        'd': uniform(0.0, 10.0),  # pos 5
+        'e': choice(['X', 'Y'])})  # pos 6
 
     dim, warping_ranges = dimensionality_and_warping_ranges(hp_ranges)
-    assert dim == 9
-    assert warping_ranges == {2: (0.0, 1.0), 6: (0.0, 1.0)}
+    assert dim == 7
+    assert warping_ranges == {1: (0.0, 1.0), 5: (0.0, 1.0)}

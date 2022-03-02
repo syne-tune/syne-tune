@@ -93,7 +93,7 @@ def _create_base_gp_kernel(
         # Transfer learning: Specific base kernel
         kernel = create_base_gp_kernel_for_warmstarting(hp_ranges, **kwargs)
     else:
-        kernel = Matern52(dimension=hp_ranges.ndarray_size(), ARD=True)
+        kernel = Matern52(dimension=hp_ranges.ndarray_size, ARD=True)
     return kernel
 
 

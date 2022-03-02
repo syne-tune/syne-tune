@@ -56,10 +56,10 @@ def scale_from_zero_one(
         value: float, lower_bound: float, upper_bound: float, scaling: Scaling,
         lower_internal: float, upper_internal: float):
     assert -EPS <= value <= 1.0 + EPS, value
-    range = upper_internal - lower_internal
+    size = upper_internal - lower_internal
     hp = lower_bound
-    if range > 0:
-        internal_value = value * range + lower_internal
+    if size > 0:
+        internal_value = value * size + lower_internal
         hp = np.clip(
             scaling.from_internal(internal_value), lower_bound, upper_bound)
     return hp
@@ -171,7 +171,7 @@ class HyperparameterRangeInteger(HyperparameterRange):
         return self._continuous_range.to_ndarray(float(hp))
 
     def _round_to_int(self, value: float) -> int:
-        return np.clip(int(round(value)), self.lower_bound, self.upper_bound)
+        return int(np.clip(round(value), self.lower_bound, self.upper_bound))
 
     def from_ndarray(self, ndarray: np.ndarray) -> Hyperparameter:
         continuous = self._continuous_range.from_ndarray(ndarray)
@@ -267,19 +267,53 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
 
 class HyperparameterRangeCategorical(HyperparameterRange):
     def __init__(
-            self, name: str, choices: Tuple[Any, ...],
-            active_choices: Tuple[Any, ...] = None):
-        """
-        Can take on discrete set of values.
-        :param name: name of dimension.
-        :param choices: possible values of the hyperparameter
-        :param active_choices: If given, must be nonempty subset of `choices`.
-        """
+            self, name: str, choices: Tuple[Any, ...]):
         super().__init__(name)
         self._assert_choices(choices)
         self.choices = list(choices)
         self.num_choices = len(self.choices)
         assert self.num_choices > 0
+
+    @staticmethod
+    def _assert_value_type(value):
+        assert isinstance(value, str) or isinstance(value, int) or \
+            isinstance(value, float), \
+            f"value = {value} has type {type(value)}, must be str, int, or float"
+
+    @staticmethod
+    def _assert_choices(choices: Tuple[Any, ...]):
+        assert len(choices) > 0
+        HyperparameterRangeCategorical._assert_value_type(choices[0])
+        value_type = type(choices[0])
+        assert any(type(x) == value_type for x in choices), \
+            f"All entries in choices = {choices} must have the same type {value_type}"
+
+    def __repr__(self) -> str:
+        return "{}({}, {})".format(
+            self.__class__.__name__, repr(self.name), repr(self.choices)
+        )
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, HyperparameterRangeCategorical):
+            return self.name == other.name \
+                   and self.choices == other.choices
+        return False
+
+
+class HyperparameterRangeCategoricalNonBinary(HyperparameterRangeCategorical):
+    def __init__(
+            self, name: str, choices: Tuple[Any, ...],
+            active_choices: Tuple[Any, ...] = None):
+        """
+        Can take on discrete set of values. We use one-hot encoding internally.
+        If the value range has size 2, it is more efficient to use
+        :class:`HyperparameterRangeCategoricalBinary`.
+
+        :param name: name of dimension.
+        :param choices: possible values of the hyperparameter
+        :param active_choices: If given, must be nonempty subset of `choices`.
+        """
+        super().__init__(name, choices)
         if active_choices is None:
             if self.num_choices > 1:
                 self._ndarray_bounds = [(0.0, 1.0)] * self.num_choices
@@ -300,19 +334,8 @@ class HyperparameterRangeCategorical(HyperparameterRange):
                 f"active_choices = {active_choices} must be a subset of " +\
                 f"choices = {choices}"
 
-    @staticmethod
-    def _assert_value_type(value):
-        assert isinstance(value, str) or isinstance(value, int) or \
-            isinstance(value, float), \
-            f"value = {value} has type {type(value)}, must be str, int, or float"
-
-    @staticmethod
-    def _assert_choices(choices: Tuple[Any, ...]):
-        assert len(choices) > 0
-        HyperparameterRangeCategorical._assert_value_type(choices[0])
-        value_type = type(choices[0])
-        assert any(type(x) == value_type for x in choices), \
-            f"All entries in choices = {choices} must have the same type {value_type}"
+    def ndarray_size(self) -> int:
+        return self.num_choices
 
     def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
         self._assert_value_type(hp)
@@ -326,22 +349,58 @@ class HyperparameterRangeCategorical(HyperparameterRange):
         assert len(cand_ndarray) == self.num_choices, (cand_ndarray, self)
         return self.choices[int(np.argmax(cand_ndarray))]
 
-    def ndarray_size(self) -> int:
-        return self.num_choices
-
-    def __repr__(self) -> str:
-        return "{}({}, {})".format(
-            self.__class__.__name__, repr(self.name), repr(self.choices)
-        )
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, HyperparameterRangeCategorical):
-            return self.name == other.name \
-                   and self.choices == other.choices
-        return False
-
     def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
         return self._ndarray_bounds
+
+
+class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
+    def __init__(
+            self, name: str, choices: Tuple[Any, ...],
+            active_choices: Tuple[Any, ...] = None):
+        """
+        Here, the value range must be of size 2. The internal encoding is an
+        single int, so 1 instead of 2 dimensions.
+
+        :param name: name of dimension.
+        :param choices: possible values of the hyperparameter (size 2)
+        :param active_choices: If given, must be nonempty subset of `choices`.
+        """
+        assert len(choices) == 2, \
+            f"len(choices) = {len(choices)}, must be 2. Use " +\
+            "HyperparameterRangeCategoricalNonBinary instead"
+        super().__init__(name, choices)
+        active_value = None
+        if active_choices is not None:
+            self._assert_choices(active_choices)
+            _active_choices = set(active_choices)
+            num = 0
+            for pos, val in enumerate(self.choices):
+                if val in _active_choices:
+                    active_value = pos
+                    num += 1
+            assert num == len(_active_choices), \
+                f"active_choices = {active_choices} must be a subset of " +\
+                f"choices = {choices}"
+            if num == 2:
+                active_value = None
+        # Internal encoding
+        self._range_int = HyperparameterRangeInteger(
+            name=name + '_INTERNAL', lower_bound=0, upper_bound=1,
+            scaling=LinearScaling(), active_lower_bound=active_value,
+            active_upper_bound=active_value)
+
+    def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
+        self._assert_value_type(hp)
+        assert hp in self.choices, "{} not in {}".format(hp, self)
+        idx = self.choices.index(hp)
+        return self._range_int.to_ndarray(idx)
+
+    def from_ndarray(self, cand_ndarray: np.ndarray) -> Hyperparameter:
+        assert len(cand_ndarray) == 1
+        return self.choices[self._range_int.from_ndarray(cand_ndarray)]
+
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        return self._range_int.get_ndarray_bounds()
 
 
 class HyperparameterRangesImpl(HyperparameterRanges):
@@ -365,7 +424,11 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                         self.active_config_space[name].categories)
                 else:
                     active_choices = None
-                hp_ranges.append(HyperparameterRangeCategorical(
+                if len(hp_range.categories) == 2:
+                    _cls = HyperparameterRangeCategoricalBinary
+                else:
+                    _cls = HyperparameterRangeCategoricalNonBinary
+                hp_ranges.append(_cls(
                     name, choices=tuple(hp_range.categories),
                     active_choices=active_choices))
             else:
@@ -396,6 +459,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                         hp_ranges.append(HyperparameterRangeInteger(**kwargs))
         self._hp_ranges = hp_ranges
         self._ndarray_size = sum(d.ndarray_size() for d in hp_ranges)
+
+    @property
+    def ndarray_size(self) -> int:
+        return self._ndarray_size
 
     def to_ndarray(self, config: Configuration) -> np.ndarray:
         config_tpl = self.config_to_tuple(config)
@@ -432,7 +499,7 @@ class HyperparameterRangesImpl(HyperparameterRanges):
             assert hp_range.name == self.name_last_pos
             enc_fixed = hp_range.to_ndarray(
                 self.value_for_last_pos).reshape((-1,))
-            offset = self.ndarray_size() - enc_fixed.size
+            offset = self.ndarray_size - enc_fixed.size
             for i, val in enumerate(enc_fixed):
                 bounds[i + offset] = (val, val)
         return bounds

@@ -224,7 +224,7 @@ def resource_for_acquisition_factory(
         str(SUPPORTED_RESOURCE_FOR_ACQUISITION)
     if resource_acq == 'bohb':
         threshold = kwargs.get(
-            'resource_acq_bohb_threshold', hp_ranges.ndarray_size())
+            'resource_acq_bohb_threshold', hp_ranges.ndarray_size)
         resource_for_acquisition = ResourceForAcquisitionBOHB(
             threshold=threshold)
     elif resource_acq == 'first':
