@@ -45,12 +45,12 @@ if __name__ == '__main__':
         Methods.REA,
         Methods.GP,
         Methods.MSR,
-        Methods.BOHB,
         Methods.ASHA,
+        Methods.BOHB,
         Methods.MOBSTER,
+        Methods.ZEROSHOT,
         Methods.ASHA_BB,
         Methods.ASHA_CTS,
-        Methods.ZEROSHOT,
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
 
