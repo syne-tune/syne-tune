@@ -24,7 +24,7 @@ def convert_task(bench, dataset_name):
 
     configuration_space = {
         "num_layers": sp.randint(1, 5),
-        "max_units": sp.lograndint(64, 512),
+        "max_units": sp.lograndint(64, 1024),
         "batch_size": sp.lograndint(16, 512),
         "learning_rate": sp.loguniform(1e-4, 1e-1),
         "weight_decay": sp.uniform(1e-5, 1e-1),
