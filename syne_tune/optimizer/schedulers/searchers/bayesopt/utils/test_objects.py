@@ -104,7 +104,11 @@ def dimensionality_and_warping_ranges(hp_ranges: HyperparameterRanges) -> \
                 assert _lower == _upper
             dims += 1
         else:
-            dims += len(hp_range.categories)
+            # For binary, we use a single dimension, not 2
+            sz = len(hp_range.categories)
+            if sz == 2:
+                sz = 1
+            dims += sz
     return dims, warping_ranges
 
 

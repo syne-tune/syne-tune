@@ -71,8 +71,9 @@ def test_continuous_to_and_from_ndarray(
 
 
 @pytest.mark.parametrize('choices,external_hp,internal_ndarray', [
-    (['a', 'b'], 'a', [1.0, 0.0]),
-    (['a', 'b'], 'b', [0.0, 1.0]),
+    (['a', 'b'], 'a', [0.25]),
+    (['a', 'b'], 'b', [0.75]),
+    (['a', 'b', 'c'], 'b', [0.0, 1.0, 0.0]),
     (['a', 'b', 'c', 'd'], 'c', [0.0, 0.0, 1.0, 0.0]),
 ])
 def test_categorical_to_and_from_ndarray(choices, external_hp, internal_ndarray):

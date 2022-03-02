@@ -103,7 +103,7 @@ def create_base_gp_kernel_for_warmstarting(
     # `create_hp_ranges_for_warmstarting`
     assert hp_ranges.internal_keys[0] == task_attr  # Sanity check
     categ_dim = len(hp_range)
-    full_dim = hp_ranges.ndarray_size()
+    full_dim = hp_ranges.ndarray_size
     model = kwargs.get('transfer_learning_model', 'matern52_product')
     kernel2 = Matern52(full_dim - categ_dim, ARD=True)
     if model == 'matern52_product':
