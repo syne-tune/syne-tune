@@ -26,8 +26,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
     import SurrogateOutputModel, SurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
-    import HyperparameterRangesImpl
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl_new \
+    import HyperparameterRangesImplNew
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 __all__ = ['TuRBOFIFOSearcher']
 
 
-class TuRBOHyperparameterRanges(HyperparameterRangesImpl):
+class TuRBOHyperparameterRanges(HyperparameterRangesImplNew):
     def __init__(self, config_space: Dict,
                  ndarray_bounds: List[Tuple[float, float]]):
         super().__init__(config_space)
@@ -141,6 +141,11 @@ class TuRBOFIFOSearcher(GPFIFOSearcher):
         self._thresholds = [self.threshold_failure, self.threshold_success]
         # See `_is_trust_region_too_narrow`
         self._fallback_initial_candidates = None
+        # TODO: This is a temporary solution
+
+    def _hp_ranges_in_state(self):
+
+        # HIER
 
     @property
     def counter_success(self) -> int:

@@ -102,8 +102,14 @@ if __name__ == '__main__':
         max_t = max(backend.blackbox.fidelity_values)
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
 
+        config_space = benchmark.config_space
+        if config_space is None:
+            # Use default of blackbox
+            config_space = backend.blackbox.configuration_space
+        # print(f"config_space:\n" + str(config_space))
+
         scheduler = methods[method](MethodArguments(
-            config_space=backend.blackbox.configuration_space,
+            config_space=config_space,
             metric=benchmark.metric,
             mode=benchmark.mode,
             random_seed=seed,
