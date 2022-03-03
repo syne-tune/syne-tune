@@ -12,7 +12,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-from benchmarking.nursery.benchmark_kdd.baselines import Methods
+from benchmarking.nursery.benchmark_automl.baselines import Methods
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import get_metadata, load_experiments_df
 
@@ -293,7 +293,7 @@ def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
 
 def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
     from sklearn.preprocessing import QuantileTransformer
-    from benchmarking.nursery.benchmark_kdd.results_analysis.utils import compute_best_value_over_time
+    from benchmarking.nursery.benchmark_automl.results_analysis.utils import compute_best_value_over_time
     import pandas as pd
 
     benchmarks = ['fcnet', 'nas201', 'lcbench']

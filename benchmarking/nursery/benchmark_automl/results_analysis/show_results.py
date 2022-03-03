@@ -1,10 +1,10 @@
 # %%
 import logging
 from argparse import ArgumentParser
-from benchmarking.nursery.benchmark_kdd.baselines import Methods
+from benchmarking.nursery.benchmark_automl.baselines import Methods
 from datetime import datetime
 
-from benchmarking.nursery.benchmark_kdd.results_analysis.utils import method_styles, load_and_cache, plot_results, \
+from benchmarking.nursery.benchmark_automl.results_analysis.utils import method_styles, load_and_cache, plot_results, \
     print_rank_table
 
 if __name__ == '__main__':

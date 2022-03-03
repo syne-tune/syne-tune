@@ -168,8 +168,8 @@ methods = {
 
 if __name__ == '__main__':
     # Run a loop that initializes all schedulers on all benchmark to see if they all work
-    from benchmarking.nursery.benchmark_kdd.benchmark_main import get_transfer_learning_evaluations
-    from benchmarking.nursery.benchmark_kdd.benchmark_definitions import benchmark_definitions
+    from benchmarking.nursery.benchmark_automl.benchmark_main import get_transfer_learning_evaluations
+    from benchmarking.nursery.benchmark_automl.benchmark_definitions import benchmark_definitions
     benchmarks = ["fcnet-protein", "nas201-cifar10", "lcbench-Fashion-MNIST"]
     for benchmark_name in benchmarks:
         benchmark = benchmark_definitions[benchmark_name]

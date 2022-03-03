@@ -4,7 +4,7 @@ from pathlib import Path
 from coolname import generate_slug
 from sagemaker.pytorch import PyTorch
 
-from benchmarking.nursery.benchmark_kdd.baselines import methods, Methods
+from benchmarking.nursery.benchmark_automl.baselines import methods, Methods
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 import syne_tune
 import benchmarking

@@ -4,8 +4,8 @@ from pathlib import Path
 from datetime import datetime
 from matplotlib import cm
 
-from benchmarking.nursery.benchmark_kdd.baselines import Methods
-from benchmarking.nursery.benchmark_kdd.results_analysis.utils import MethodSyle, load_and_cache, plot_results
+from benchmarking.nursery.benchmark_automl.baselines import Methods
+from benchmarking.nursery.benchmark_automl.results_analysis.utils import MethodSyle, load_and_cache, plot_results
 
 show_seeds = False
 
