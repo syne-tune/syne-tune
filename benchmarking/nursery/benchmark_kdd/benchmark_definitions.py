@@ -64,6 +64,7 @@ def lcbench_benchmark(dataset_name):
         dataset_name=dataset_name,
         surrogate="KNeighborsRegressor",
         max_num_evaluations=4000,
+        search_options={'threshold_failure': 7},
     )
 
 
