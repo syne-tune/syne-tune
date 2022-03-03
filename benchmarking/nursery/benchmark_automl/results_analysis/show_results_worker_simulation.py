@@ -1,4 +1,6 @@
 import logging
+from pathlib import Path
+
 from matplotlib import cm
 
 from benchmarking.nursery.benchmark_automl.baselines import Methods
@@ -183,7 +185,7 @@ if __name__ == '__main__':
 
     plot_worker_speed(ax=axes[0])
     experiment = {
-        'title': 'simulation versus local backend',
+        'title': 'Simulation versus local backend',
         'experiment_names': ('jmlr-4',),
         'metadata_to_setup': compare_asha_sim_local_setupmap,
         'setups': COMPARE_ASHA_SIM_LOCAL_SETUPS,
@@ -200,4 +202,6 @@ if __name__ == '__main__':
         'tick_params': {'labelsize': 8},
     }
     plot_results_for_experiment(experiment, ax=axes[1])
+    plt.tight_layout()
+    plt.savefig(str(Path(__file__).parent / "figures/worker-speed-simulation.pdf"))
     plt.show()
