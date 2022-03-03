@@ -16,6 +16,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_facto
     import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
     import HyperparameterRanges
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl_new \
+    import HyperparameterRangesImplNew
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Configuration, ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
@@ -39,6 +41,10 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
     config_space = kwargs['config_space']
     prefix_keys = None
     active_config_space = None
+    # TODO: Temporary hack. Need all searches to use the new code!
+    if kwargs.get('trust_region_bo', False):
+        assert task_attr is None
+        return HyperparameterRangesImplNew(config_space=config_space)
     if task_attr is not None:
         from syne_tune.config_space import Categorical
 

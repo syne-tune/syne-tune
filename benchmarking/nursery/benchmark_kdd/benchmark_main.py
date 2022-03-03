@@ -106,7 +106,7 @@ if __name__ == '__main__':
         if config_space is None:
             # Use default of blackbox
             config_space = backend.blackbox.configuration_space
-        # print(f"config_space:\n" + str(config_space))
+        print(f"config_space:\n" + str(config_space))
 
         scheduler = methods[method](MethodArguments(
             config_space=config_space,

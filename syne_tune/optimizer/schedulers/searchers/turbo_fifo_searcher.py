@@ -141,10 +141,8 @@ class TuRBOFIFOSearcher(GPFIFOSearcher):
         self._thresholds = [self.threshold_failure, self.threshold_success]
         # See `_is_trust_region_too_narrow`
         self._fallback_initial_candidates = None
-        # TODO: This is a temporary solution. Ultimately, all searchers should
-        # use the new code
-        self.hp_ranges = HyperparameterRangesImplNew(
-            config_space=self.hp_ranges.config_space)
+        # DEBUG:
+        print(f"hp_ranges.ndarray_size = {self.hp_ranges.ndarray_size}")
 
     @property
     def counter_success(self) -> int:
