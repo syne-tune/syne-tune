@@ -14,6 +14,7 @@ class BenchmarkDefinition:
     time_this_resource_attr: Optional[str] = None
     max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
+    search_options: Optional[dict] = None
 
 
 def fcnet_benchmark(dataset_name):
@@ -25,6 +26,7 @@ def fcnet_benchmark(dataset_name):
         mode="min",
         blackbox_name="fcnet",
         dataset_name=dataset_name,
+        search_options={'threshold_failure': 14},
     )
 
 
@@ -38,6 +40,10 @@ def nas201_benchmark(dataset_name):
         mode="min",
         blackbox_name="nasbench201",
         dataset_name=dataset_name,
+        search_options={'searcher_sidelength_init': 1.5,
+                        'searcher_sidelength_max': 2.0,
+                        'searcher_sidelength_min': 0.25,
+                        'threshold_failure': 15},
     )
 
 
