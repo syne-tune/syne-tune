@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-import syne_tune.search_space as sp
+import syne_tune.config_space as sp
 
 from benchmarking.blackbox_repository.conversion_scripts.scripts.lcbench.api import Benchmark
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path

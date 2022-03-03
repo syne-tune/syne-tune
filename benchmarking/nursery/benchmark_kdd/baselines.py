@@ -191,8 +191,6 @@ if __name__ == '__main__':
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
         )
-        # _methods = {Methods.TURBO: methods[Methods.TURBO]}
-        # for method_name, method_fun in _methods.items():
         for method_name, method_fun in methods.items():
             if method_name == Methods.SGPT:
                 continue
