@@ -192,6 +192,8 @@ if __name__ == '__main__':
             dataset=benchmark.dataset_name,
         )
         for method_name, method_fun in methods.items():
+            if method_name == Methods.SGPT:
+                continue
             print(f"checking initialization of: {method_name}, {benchmark_name}")
             scheduler = method_fun(MethodArguments(
                 config_space=backend.blackbox.configuration_space,

@@ -144,7 +144,7 @@ class TuRBOFIFOSearcher(GPFIFOSearcher):
         # TODO: This is a temporary solution
 
     def _hp_ranges_in_state(self):
-
+        pass
         # HIER
 
     @property
