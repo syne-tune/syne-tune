@@ -31,7 +31,7 @@ if __name__ == '__main__':
         f'{Methods.ASHA} (8 workers)': MethodSyle(cmap(1.0), "-"),
     }
 
-    load_cache_if_exists = False
+    load_cache_if_exists = True
     methods_to_show = list(method_styles.keys())
 
     result_file = Path(f"~/Downloads/cached-results-{experiment_tag}.dill").expanduser()

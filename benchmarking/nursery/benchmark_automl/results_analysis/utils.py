@@ -139,13 +139,15 @@ def plot_result_benchmark(
         title: str,
         show_seeds: bool = False,
         method_styles: Optional[Dict] = None,
+        ax = None,
 ):
     agg_results = {}
     if len(df_task) > 0:
         metric = df_task.loc[:, 'metric_names'].values[0]
         mode = df_task.loc[:, 'metric_mode'].values[0]
 
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
         for algorithm, method_style in method_styles.items():
             ts = []
             ys = []
@@ -208,12 +210,12 @@ def plot_result_benchmark(
     return ax, t_range, agg_results
 
 
-def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix: str = "", title: str = None):
+def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix: str = "", title: str = None, ax=None):
     agg_results = {}
 
     for benchmark, df_task in benchmarks_to_df.items():
         ax, t_range, agg_result = plot_result_benchmark(
-            df_task=df_task, title=benchmark, method_styles=method_styles, show_seeds=show_seeds
+            df_task=df_task, title=benchmark, method_styles=method_styles, show_seeds=show_seeds, ax=ax,
         )
         if title is not None:
             ax.set_title(title)
@@ -223,10 +225,11 @@ def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix:
             ax.set_ylim([plotargs.ymin, plotargs.ymax])
             ax.set_xlim([plotargs.xmin, plotargs.xmax])
 
-        plt.tight_layout()
-        os.makedirs("figures/", exist_ok=True)
-        plt.savefig(f"figures/{prefix}{benchmark}.pdf")
-        plt.show()
+        if ax is None:
+            plt.tight_layout()
+            os.makedirs("figures/", exist_ok=True)
+            plt.savefig(f"figures/{prefix}{benchmark}.pdf")
+            plt.show()
 
 
 def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
