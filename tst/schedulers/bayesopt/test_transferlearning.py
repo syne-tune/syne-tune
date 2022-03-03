@@ -54,7 +54,7 @@ def test_create_transfer_learning():
 
     hp_ranges = kwargs_int['hp_ranges']
     assert hp_ranges.internal_keys == ['task_id', 'a', 'b', 'c']
-    assert hp_ranges.ndarray_size() == 9
+    assert hp_ranges.ndarray_size == 9
     expected_ndarray_bounds = [
         (0.0, 0.0), (0.0, 0.0), (1.0, 1.0), (0.0, 0.0),
         (0.1, 0.4),
