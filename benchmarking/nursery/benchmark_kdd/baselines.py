@@ -21,7 +21,7 @@ class MethodArguments:
     max_t: int
     resource_attr: str
     transfer_learning_evaluations: Optional[Dict] = None
-    use_surrogates: bool = False,
+    use_surrogates: bool = False
     search_options: Optional[dict] = None
 
 
