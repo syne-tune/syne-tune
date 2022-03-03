@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from benchmarking.definitions.definition_nashpobench import _config_space
+
 
 @dataclass
 class BenchmarkDefinition:
@@ -14,8 +16,12 @@ class BenchmarkDefinition:
     time_this_resource_attr: Optional[str] = None
     max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
+    search_options: Optional[dict] = None
+    config_space: Optional[dict] = None  # overrides blackbox default
 
 
+# We override `config_space` here, in order to avoid errors if the
+# default in the blackbox is outdated
 def fcnet_benchmark(dataset_name):
     return BenchmarkDefinition(
         max_wallclock_time=1200,
@@ -25,6 +31,8 @@ def fcnet_benchmark(dataset_name):
         mode="min",
         blackbox_name="fcnet",
         dataset_name=dataset_name,
+        search_options={'threshold_failure': 14},
+        config_space=_config_space,
     )
 
 
@@ -38,6 +46,10 @@ def nas201_benchmark(dataset_name):
         mode="min",
         blackbox_name="nasbench201",
         dataset_name=dataset_name,
+        search_options={'searcher_sidelength_init': 1.5,
+                        'searcher_sidelength_max': 2.0,
+                        'searcher_sidelength_min': 0.25,
+                        'threshold_failure': 15},
     )
 
 

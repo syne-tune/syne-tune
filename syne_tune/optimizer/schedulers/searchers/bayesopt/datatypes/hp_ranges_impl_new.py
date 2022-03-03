@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.scaling \
     import Scaling, LinearScaling, LogScaling
 
-__all__ = ['HyperparameterRangesImpl']
+__all__ = ['HyperparameterRangesImplNew']
 
 # Epsilon margin to account for numerical errors
 EPS = 1e-8
@@ -404,7 +404,7 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
         return self._range_int.get_ndarray_bounds()
 
 
-class HyperparameterRangesImpl(HyperparameterRanges):
+class HyperparameterRangesImplNew(HyperparameterRanges):
     """
     Basic implementation of :class:`HyperparameterRanges`. 
     """
@@ -425,11 +425,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                         self.active_config_space[name].categories)
                 else:
                     active_choices = None
-                # TODO: Activate binary special case, BO will benefit!
-                #if len(hp_range.categories) == 2:
-                #    _cls = HyperparameterRangeCategoricalBinary
-                #else:
-                #    _cls = HyperparameterRangeCategoricalNonBinary
+                if len(hp_range.categories) == 2:
+                    _cls = HyperparameterRangeCategoricalBinary
+                else:
+                    _cls = HyperparameterRangeCategoricalNonBinary
                 _cls = HyperparameterRangeCategoricalNonBinary
                 hp_ranges.append(_cls(
                     name, choices=tuple(hp_range.categories),
@@ -513,6 +512,6 @@ class HyperparameterRangesImpl(HyperparameterRanges):
         )
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, HyperparameterRangesImpl):
+        if isinstance(other, HyperparameterRangesImplNew):
             return self._hp_ranges == other._hp_ranges
         return False

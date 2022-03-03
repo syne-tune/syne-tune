@@ -97,7 +97,7 @@ def scheduler_factory(
             if scheduler == 'fifo':
                 supported_searchers.update(
                     {'bayesopt_cost_coarse', 'bayesopt_cost_fine',
-                     'bayesopt_constrained'})
+                     'bayesopt_constrained', 'turbo'})
             elif scheduler != 'hyperband_synchronous':
                 supported_searchers.add('bayesopt_cost')
             _check_searcher(searcher, supported_searchers)

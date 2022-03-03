@@ -21,7 +21,8 @@ class MethodArguments:
     max_t: int
     resource_attr: str
     transfer_learning_evaluations: Optional[Dict] = None
-    use_surrogates: bool = False
+    use_surrogates: bool = False,
+    search_options: Optional[dict] = None
 
 
 class Methods:
@@ -37,6 +38,7 @@ class Methods:
     ZEROSHOT = 'ZS'
     SGPT = 'SGPT'
     TPE = 'TPE'
+    TURBO = 'TuRBO'
 
     
 methods = {
@@ -163,6 +165,16 @@ methods = {
         metric=method_arguments.metric,
         points_to_evaluate=list()
     ),
+    Methods.TURBO: lambda method_arguments: FIFOScheduler(
+        method_arguments.config_space,
+        searcher="turbo",
+        search_options=dict(
+            dict() if method_arguments.search_options is None else method_arguments.search_options,
+            debug_log=False),
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
+    ),
 }
 
 
@@ -192,6 +204,7 @@ if __name__ == '__main__':
                     blackbox_name=benchmark.blackbox_name,
                     test_task=benchmark.dataset_name,
                 ),
+                search_options=benchmark.search_options,
             ))
             scheduler.suggest(0)
             scheduler.suggest(1)

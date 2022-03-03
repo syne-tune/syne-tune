@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import autograd.numpy as anp
+import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import INITIAL_NOISE_VARIANCE, NOISE_VARIANCE_LOWER_BOUND, \
@@ -42,18 +43,35 @@ class MarginalLikelihood(Block):
         residual noise variance
     """
     def __init__(
-            self, kernel: KernelFunction, mean: MeanFunction = None,
-            initial_noise_variance=None, encoding_type=None, **kwargs):
+            self, kernel: KernelFunction,
+            mean: MeanFunction = None,
+            initial_noise_variance=None,
+            encoding_type=None,
+            noise_variance_lower_bound=None,
+            noise_variance_upper_bound=None,
+            **kwargs):
         super(MarginalLikelihood, self).__init__(**kwargs)
         if mean is None:
             mean = ScalarMeanFunction()
         if initial_noise_variance is None:
             initial_noise_variance = INITIAL_NOISE_VARIANCE
+        if noise_variance_lower_bound is None:
+            noise_variance_lower_bound = NOISE_VARIANCE_LOWER_BOUND
+        if noise_variance_upper_bound is None:
+            noise_variance_upper_bound = NOISE_VARIANCE_UPPER_BOUND
+        if not (noise_variance_lower_bound < initial_noise_variance < noise_variance_upper_bound):
+            initial_noise_variance = np.exp(
+                (np.log(noise_variance_lower_bound) +
+                 np.log(noise_variance_upper_bound))/2)
         if encoding_type is None:
             encoding_type = DEFAULT_ENCODING
         self.encoding = create_encoding(
-             encoding_type, initial_noise_variance, NOISE_VARIANCE_LOWER_BOUND,
-             NOISE_VARIANCE_UPPER_BOUND, 1, Gamma(mean=0.1, alpha=0.1))
+            encoding_type,
+            init_val=initial_noise_variance,
+            constr_lower=noise_variance_lower_bound,
+            constr_upper=noise_variance_upper_bound,
+            dimension=1,
+            prior=Gamma(mean=0.1, alpha=0.1))
         self.mean = mean
         self.kernel = kernel
         with self.name_scope():

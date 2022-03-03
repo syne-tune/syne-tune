@@ -95,7 +95,7 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
         """
         return [np.zeros_like(input)]
 
-    def predict_mean_current_candidates(self) -> List[np.ndarray]:
+    def predict_mean_current_candidates(self) -> (List[np.ndarray], List[int]):
         raise NotImplementedError()
 
     # We currently do not support cost models for the primary metric to be
@@ -103,6 +103,8 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     def current_best(self) -> List[np.ndarray]:
         raise NotImplementedError()
 
+    def current_best_trial_id(self) -> List[int]:
+        raise NotImplementedError()
 
 class CostSurrogateModelFactory(TransformerModelFactory):
     def __init__(

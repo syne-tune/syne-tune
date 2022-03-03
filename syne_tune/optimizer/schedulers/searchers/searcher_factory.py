@@ -24,6 +24,8 @@ from syne_tune.optimizer.schedulers.searchers.cost_aware_gp_multifidelity_search
     import CostAwareGPMultiFidelitySearcher
 from syne_tune.optimizer.schedulers.searchers.searcher import \
     RandomSearcher
+from syne_tune.optimizer.schedulers.searchers.turbo_fifo_searcher import \
+    TuRBOFIFOSearcher
 
 __all__ = ['searcher_factory']
 
@@ -83,6 +85,9 @@ def searcher_factory(searcher_name, **kwargs):
         else:
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = CostAwareGPMultiFidelitySearcher
+    elif searcher_name == 'turbo':
+        supported_schedulers = {'fifo'}
+        searcher_cls = TuRBOFIFOSearcher
     else:
         raise AssertionError(f"searcher '{searcher_name}' is not supported")
 

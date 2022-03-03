@@ -13,6 +13,7 @@
 import autograd.numpy as anp
 from autograd.tracer import getval
 from abc import abstractmethod
+import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
     import INITIAL_COVARIANCE_SCALE, INITIAL_INVERSE_BANDWIDTHS, \
@@ -87,17 +88,36 @@ class SquaredDistance(Block):
     d components (with d=dimension, i.e., the number of features in X)
     otherwise, inverse_bandwidths is (1,d)
     """
-    def __init__(self, dimension, ARD=False, encoding_type=DEFAULT_ENCODING, **kwargs):
+    def __init__(
+            self, dimension,
+            ARD=False,
+            encoding_type=DEFAULT_ENCODING,
+            initial_inverse_bandwidths=None,
+            inverse_bandwidths_lower_bound=None,
+            inverse_bandwidths_upper_bound=None,
+            **kwargs):
         super().__init__(**kwargs)
         self.ARD = ARD
         inverse_bandwidths_dimension = 1 if not ARD else dimension
+        if inverse_bandwidths_lower_bound is None:
+            inverse_bandwidths_lower_bound = INVERSE_BANDWIDTHS_LOWER_BOUND
+        if inverse_bandwidths_upper_bound is None:
+            inverse_bandwidths_upper_bound = INVERSE_BANDWIDTHS_UPPER_BOUND
+        if initial_inverse_bandwidths is None:
+            initial_inverse_bandwidths = INITIAL_INVERSE_BANDWIDTHS
+        if not (inverse_bandwidths_lower_bound < initial_inverse_bandwidths < inverse_bandwidths_upper_bound):
+            initial_inverse_bandwidths = np.exp(
+                (np.log(inverse_bandwidths_lower_bound) +
+                 np.log(inverse_bandwidths_upper_bound))/2)
         self.encoding = create_encoding(
-            encoding_type, INITIAL_INVERSE_BANDWIDTHS,
-            INVERSE_BANDWIDTHS_LOWER_BOUND, INVERSE_BANDWIDTHS_UPPER_BOUND,
-            inverse_bandwidths_dimension,
-            Uniform(INVERSE_BANDWIDTHS_LOWER_BOUND,
-                    INVERSE_BANDWIDTHS_UPPER_BOUND))
-        
+            encoding_type,
+            init_val=initial_inverse_bandwidths,
+            constr_lower=inverse_bandwidths_lower_bound,
+            constr_upper=inverse_bandwidths_upper_bound,
+            dimension=inverse_bandwidths_dimension,
+            prior=Uniform(inverse_bandwidths_lower_bound,
+                          inverse_bandwidths_upper_bound))
+
         with self.name_scope():
             self.inverse_bandwidths_internal = register_parameter(
                 self.params, 'inverse_bandwidths', self.encoding,
@@ -160,7 +180,7 @@ class SquaredDistance(Block):
                 assert k in param_dict, "'{}' not in param_dict = {}".format(k, param_dict)
             inverse_bandwidths = [param_dict[k] for k in keys]
         self.encoding.set(self.inverse_bandwidths_internal, inverse_bandwidths)
-        
+
 
 class Matern52(KernelFunction):
     """
@@ -175,16 +195,42 @@ class Matern52(KernelFunction):
     d components (with d=dimension, i.e., the number of features in X)
     otherwise (ARD == True), inverse_bandwidths is (1,d)
     """
-    def __init__(self, dimension, ARD=False, encoding_type=DEFAULT_ENCODING,
-                 **kwargs):
+    def __init__(
+            self, dimension,
+            ARD=False,
+            encoding_type=DEFAULT_ENCODING,
+            initial_inverse_bandwidths=None,
+            inverse_bandwidths_lower_bound=None,
+            inverse_bandwidths_upper_bound=None,
+            initial_covariance_scale=None,
+            covariance_scale_lower_bound=None,
+            covariance_scale_upper_bound=None,
+            **kwargs):
         super(Matern52, self).__init__(dimension, **kwargs)
+        if covariance_scale_lower_bound is None:
+            covariance_scale_lower_bound = COVARIANCE_SCALE_LOWER_BOUND
+        if covariance_scale_upper_bound is None:
+            covariance_scale_upper_bound = COVARIANCE_SCALE_UPPER_BOUND
+        if initial_covariance_scale is None:
+            initial_covariance_scale = INITIAL_COVARIANCE_SCALE
+        if not (covariance_scale_lower_bound < initial_covariance_scale < covariance_scale_upper_bound):
+            initial_covariance_scale = np.exp(
+                (np.log(covariance_scale_lower_bound) +
+                 np.log(covariance_scale_upper_bound))/2)
         self.encoding = create_encoding(
-            encoding_type, INITIAL_COVARIANCE_SCALE,
-            COVARIANCE_SCALE_LOWER_BOUND, COVARIANCE_SCALE_UPPER_BOUND, 1,
-            LogNormal(0.0, 1.0))
+            encoding_type,
+            init_val=initial_covariance_scale,
+            constr_lower=covariance_scale_lower_bound,
+            constr_upper=covariance_scale_upper_bound,
+            dimension=1,
+            prior=LogNormal(0.0, 1.0))
         self.ARD = ARD
         self.squared_distance = SquaredDistance(
-            dimension=dimension, ARD=ARD, encoding_type=encoding_type)
+            dimension=dimension,
+            ARD=ARD, encoding_type=encoding_type,
+            inverse_bandwidths_lower_bound=inverse_bandwidths_lower_bound,
+            inverse_bandwidths_upper_bound=inverse_bandwidths_upper_bound,
+            **kwargs)
             
         with self.name_scope():
             self.covariance_scale_internal = register_parameter(

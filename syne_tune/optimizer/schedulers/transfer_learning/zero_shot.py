@@ -15,7 +15,6 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
-import xgboost
 
 from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
@@ -92,6 +91,8 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         """
         Creates transfer_learning_evaluations where each configuration is evaluated on each task using surrogate models.
         """
+        import xgboost
+
         surrogate_transfer_learning_evaluations = dict()
         for task_name, task_data in transfer_learning_evaluations.items():
             estimator = BlackboxSurrogate.make_model_pipeline(

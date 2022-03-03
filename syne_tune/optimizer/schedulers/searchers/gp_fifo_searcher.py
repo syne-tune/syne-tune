@@ -131,8 +131,6 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             model_factory=model_factory,
             init_state=init_state,
             skip_optimization=skip_optimization)
-        self.random_generator = RandomStatefulCandidateGenerator(
-            self._hp_ranges_for_prediction(), random_state=self.random_state)
         self.set_profiler(model_factory.profiler)
         self._cost_attr = cost_attr
         self._resource_attr = resource_attr
@@ -359,7 +357,6 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def _restore_from_state(self, state: dict):
         super()._restore_from_state(state)
         self.state_transformer.set_params(state['model_params'])
-        self.random_generator.random_state = self.random_state
         if 'random_searcher_state' in state:
             # Restore self._random_searcher as well
             # Note: It is important to call `_assign_random_searcher` with a
@@ -552,7 +549,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 random_seed_generator=kwargs.get('random_seed_generator'),
                 random_seed=kwargs.get('random_seed'))
             kwargs['config_space'] = config_space
-            kwargs['metric'] = metric
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
             # Internal constructor, bypassing the factory
@@ -607,6 +603,30 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def _postprocess_config(self, config: dict) -> dict:
         return config
 
+    def _get_config_modelbased_prepare_bo(
+            self, model: SurrogateOutputModel,
+            exclusion_candidates: ExclusionList,
+            hp_ranges: Optional[HyperparameterRanges] = None,
+            **kwargs) -> dict:
+        if hp_ranges is None:
+            hp_ranges = self._hp_ranges_for_prediction()
+        random_generator = RandomStatefulCandidateGenerator(
+            hp_ranges, random_state=self.random_state)
+        initial_candidates_scorer = create_initial_candidates_scorer(
+            initial_scoring=self.initial_scoring,
+            model=model,
+            acquisition_class=self.acquisition_class,
+            random_state=self.random_state)
+        local_optimizer = self.local_minimizer_class(
+            hp_ranges=hp_ranges,
+            model=model,
+            acquisition_class=self.acquisition_class,
+            active_metric=INTERNAL_METRIC_NAME)
+        return {
+            'initial_candidates_generator': random_generator,
+            'initial_candidates_scorer': initial_candidates_scorer,
+            'local_optimizer': local_optimizer}
+
     def _get_config_modelbased(self, exclusion_candidates, **kwargs) -> \
             Optional[Configuration]:
         # Obtain current SurrogateModel from state transformer. Based on
@@ -622,21 +642,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
         # Select and fix target resource attribute (relevant in subclasses)
         self._fix_resource_attribute(**kwargs)
         # Create BO algorithm
-        initial_candidates_scorer = create_initial_candidates_scorer(
-            initial_scoring=self.initial_scoring,
-            model=model,
-            acquisition_class=self.acquisition_class,
-            random_state=self.random_state)
-        local_optimizer = self.local_minimizer_class(
-            hp_ranges=self._hp_ranges_for_prediction(),
-            model=model,
-            acquisition_class=self.acquisition_class,
-            active_metric=INTERNAL_METRIC_NAME)
+        bo_kwargs = self._get_config_modelbased_prepare_bo(
+            model, exclusion_candidates, **kwargs)
         bo_algorithm = BayesianOptimizationAlgorithm(
-            initial_candidates_generator=self.random_generator,
-            initial_candidates_scorer=initial_candidates_scorer,
+            **bo_kwargs,
             num_initial_candidates=self.num_initial_candidates,
-            local_optimizer=local_optimizer,
             pending_candidate_state_transformer=None,
             exclusion_candidates=exclusion_candidates,
             num_requested_candidates=1,
@@ -708,16 +718,8 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 # Select and fix target resource attribute (relevant in subclasses)
                 self._fix_resource_attribute(**kwargs)
                 # Create BO algorithm
-                initial_candidates_scorer = create_initial_candidates_scorer(
-                    initial_scoring=self.initial_scoring,
-                    model=model,
-                    acquisition_class=self.acquisition_class,
-                    random_state=self.random_state)
-                local_optimizer = self.local_minimizer_class(
-                    hp_ranges=self._hp_ranges_for_prediction(),
-                    model=model,
-                    acquisition_class=self.acquisition_class,
-                    active_metric=INTERNAL_METRIC_NAME)
+                bo_kwargs = self._get_config_modelbased_prepare_bo(
+                    model, exclusion_candidates)
                 pending_candidate_state_transformer = None
                 if num_requested_candidates > 1:
                     # Internally, if num_requested_candidates > 1, the candidates are
@@ -737,11 +739,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
                             init_state=temporary_state,
                             skip_optimization=AlwaysSkipPredicate())
                 bo_algorithm = BayesianOptimizationAlgorithm(
-                    initial_candidates_generator=self.random_generator,
-                    initial_candidates_scorer=initial_candidates_scorer,
+                    **bo_kwargs,
                     num_initial_candidates=self.num_initial_candidates,
                     num_initial_candidates_for_batch=num_init_candidates_for_batch,
-                    local_optimizer=local_optimizer,
                     pending_candidate_state_transformer=pending_candidate_state_transformer,
                     exclusion_candidates=exclusion_candidates,
                     num_requested_candidates=num_requested_candidates,

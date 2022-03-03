@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Tuple
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 import logging
@@ -72,6 +72,12 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
         # Number criterion evaluations in last recent optimize call
         self.num_evaluations = None
 
+    @staticmethod
+    def _ensure_initial_point_feasible(
+            x0: np.ndarray, bounds: List[Tuple[float, float]]) -> np.ndarray:
+        a_min, a_max = zip(*bounds)
+        return np.clip(x0, a_min=a_min, a_max=a_max)
+
     def optimize(self, candidate: Configuration,
                  model: Optional[SurrogateOutputModel] = None) -> Configuration:
         # Before local minimization, the model for this state_id should have been fitted.
@@ -82,8 +88,9 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
         acquisition_function = acquisition_class(
             model, self.active_metric, **acquisition_kwargs)
 
-        x0 = self.hp_ranges.to_ndarray(candidate)
         bounds = self.hp_ranges.get_ndarray_bounds()
+        x0 = self._ensure_initial_point_feasible(
+            self.hp_ranges.to_ndarray(candidate), bounds)
         n_evaluations = [0]  # wrapped in list to allow access from function
 
         # unwrap 2d arrays
