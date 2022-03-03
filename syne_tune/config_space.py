@@ -612,14 +612,14 @@ class FiniteRange(Domain):
         self.size = size
         if not log_scale:
             self._lower_internal = lower
-            self._step_internal = (upper - lower) / (size - 1) if size > 2 else 1
+            self._step_internal = (upper - lower) / (size - 1) if size > 1 else 0
         else:
             self._lower_internal = np.log(lower)
             upper_internal = np.log(upper)
-            self._step_internal = (upper_internal - self._lower_internal) / (size - 1) if size > 2 else 1
+            self._step_internal = (upper_internal - self._lower_internal) / (size - 1) if size > 1 else 0
         self._values = [self._map_from_int(x) for x in range(self.size)]
 
-    def _map_from_int(self, x: int) -> float:
+    def _map_from_int(self, x: int) -> Union[float, int]:
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
             y = np.exp(y)
@@ -638,7 +638,7 @@ class FiniteRange(Domain):
 
     def _map_to_int(self, value) -> int:
         if self._step_internal == 0:
-            return self.lower
+            return 0
         else:
             int_value = np.clip(value, self.lower, self.upper)
             if self.log_scale:

@@ -96,7 +96,7 @@ class Bore(SearcherWithRandomSeed):
         elif self.classifier == 'gp':
             self.model = GPModel(**classifier_kwargs)
         elif self.classifier == 'mlp':
-            self.model = MLP(n_inputs=self._hp_ranges.ndarray_size(), **classifier_kwargs)
+            self.model = MLP(n_inputs=self._hp_ranges.ndarray_size, **classifier_kwargs)
 
         self.inputs = []
         self.targets = []

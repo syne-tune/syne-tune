@@ -72,7 +72,7 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
             if num_done < num_cands:
                 logger.warning(
                     f"Could only sample {num_done} candidates where "
-                    f"{num_cands} were requested. len(exclusion_list) ="
+                    f"{num_cands} were requested. len(exclusion_list) = "
                     f"{len(exclusion_list)}")
             return configs
 
