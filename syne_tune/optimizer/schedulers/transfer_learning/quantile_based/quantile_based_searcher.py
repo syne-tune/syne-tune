@@ -1,12 +1,11 @@
 import logging
 from typing import Dict, Optional
 import numpy as np
-import xgboost
 from sklearn.model_selection import train_test_split
 
 from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher, SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 
 import pandas as pd
 
@@ -37,8 +36,11 @@ def fit_model(
         normalization: str,
         max_fit_samples: int,
         random_state,
-        model=xgboost.XGBRegressor()
+        model=None,
 ):
+    if model is None:
+        import xgboost
+        model = xgboost.XGBRegressor()
     model_pipeline = BlackboxSurrogate.make_model_pipeline(
         configuration_space=config_space,
         fidelity_space={},
@@ -110,6 +112,8 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
         worse.
         :param random_seed:
         """
+        import xgboost
+
         super(QuantileBasedSurrogateSearcher, self).__init__(
             config_space=config_space,
             metric=metric,

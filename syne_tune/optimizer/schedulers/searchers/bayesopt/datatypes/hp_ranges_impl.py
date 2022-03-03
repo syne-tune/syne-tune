@@ -402,6 +402,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
         self._hp_ranges = hp_ranges
         self._ndarray_size = sum(d.ndarray_size() for d in hp_ranges)
 
+    @property
+    def ndarray_size(self) -> int:
+        return self._ndarray_size
+
     def to_ndarray(self, config: Configuration) -> np.ndarray:
         config_tpl = self.config_to_tuple(config)
         pieces = [hp_range.to_ndarray(hp)
