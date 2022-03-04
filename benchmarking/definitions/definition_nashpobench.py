@@ -16,6 +16,14 @@ from benchmarking.blackbox_repository.conversion_scripts.scripts.fcnet_import \
     import METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
 
 
+DATASET_NAMES = [
+    "protein_structure",
+    "naval_propulsion",
+    "parkinsons_telemonitoring",
+    "slice_localization",
+]
+
+
 # This configuration space allows to use the tabulated blackbox without any
 # interpolation (surrogate), meaning that all numerical HPs have finite ranges.
 # Note that `hp_init_lr` remains categorical and will be 1-hot encoded. It

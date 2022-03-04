@@ -13,6 +13,15 @@ from benchmarking.blackbox_repository.conversion_scripts.utils import repository
 from syne_tune.util import catchtime
 
 
+BLACKBOX_NAME = 'lcbench'
+
+METRIC_ACCURACY = 'val_accuracy'
+
+METRIC_ELAPSED_TIME = 'time'
+
+RESOURCE_ATTR = 'epoch'
+
+
 def convert_task(bench, dataset_name):
     n_config = 2000
     num_epochs = 52
@@ -32,7 +41,7 @@ def convert_task(bench, dataset_name):
         "max_dropout": sp.uniform(0.0, 1.0),
     }
     fidelity_space = {
-        "epoch": sp.finrange(lower=1, upper=num_epochs, size=num_epochs, cast_int=True)
+        RESOURCE_ATTR: sp.finrange(lower=1, upper=num_epochs, size=num_epochs, cast_int=True)
     }
     for j, tag in enumerate(["Train/val_accuracy", "time"]):
         for i in range(n_config):
@@ -43,12 +52,12 @@ def convert_task(bench, dataset_name):
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
         fidelity_values=np.arange(1, num_epochs),
-        objectives_names=["val_accuracy", "time"],
+        objectives_names=[METRIC_ACCURACY, METRIC_ELAPSED_TIME],
     )
 
 
 def generate_lcbench(s3_root: Optional[str] = None):
-    blackbox_name = "lcbench"
+    blackbox_name = BLACKBOX_NAME
     data_file = repository_path / "data_2k_lw.zip"
     if not data_file.exists():
         src = "https://figshare.com/ndownloader/files/21188598"

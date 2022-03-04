@@ -12,15 +12,21 @@
 # permissions and limitations under the License.
 import logging
 
-from benchmarking.definitions.definition_nasbench201 import nasbench201_benchmark, \
-    nasbench201_default_params
+from benchmarking.definitions.definition_nasbench201 import \
+    nasbench201_benchmark, nasbench201_default_params, \
+    DATASET_NAMES as NB201_DATASET_NAMES
+from benchmarking.definitions.definition_nashpobench import \
+    nashpobench_benchmark, nashpobench_default_params, \
+    DATASET_NAMES as FCNET_DATASET_NAMES
+from benchmarking.definitions.definition_lcbench import \
+    lcbench_benchmark, lcbench_default_params, \
+    DATASET_NAMES as LCBENCH_DATASET_NAMES
 from benchmarking.definitions.definition_mlp_on_fashion_mnist \
     import mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
 from benchmarking.definitions.definition_resnet_cifar10 import \
     resnet_cifar10_benchmark, resnet_cifar10_default_params
 from benchmarking.nursery.lstm_wikitext2.definition_lstm_wikitext2 import \
     lstm_wikitext2_benchmark, lstm_wikitext2_default_params
-from benchmarking.definitions.definition_nashpobench import nashpobench_benchmark, nashpobench_default_params
 
 logger = logging.getLogger(__name__)
 
@@ -28,29 +34,41 @@ __all__ = ['supported_benchmarks',
            'benchmark_factory']
 
 
+MULTI_DATASET_BENCHMARKS = [
+    'nasbench201_',
+    'nashpobench_',
+    'lcbench_',
+]
+
+
+_NB201_BENCHMARKS = {
+    f"nasbench201_{dataset}": (
+        nasbench201_benchmark, nasbench201_default_params)
+    for dataset in NB201_DATASET_NAMES
+}
+
+_FCNET_BENCHMARKS = {
+    f"nashpobench_{dataset}": (
+        nashpobench_benchmark, nashpobench_default_params)
+    for dataset in FCNET_DATASET_NAMES
+}
+
+_LCBENCH_BENCHMARKS = {
+    f"lcbench_{dataset}": (
+        lcbench_benchmark, lcbench_default_params)
+    for dataset in LCBENCH_DATASET_NAMES
+}
+
 BENCHMARKS = {
+    **_NB201_BENCHMARKS,
+    **_FCNET_BENCHMARKS,
+    **_LCBENCH_BENCHMARKS,
     'mlp_fashionmnist': (
         mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params),
-    'nasbench201': (
-        nasbench201_benchmark, nasbench201_default_params),
-    'nasbench201_cifar10': (
-        nasbench201_benchmark, nasbench201_default_params),
-    'nasbench201_cifar100': (
-        nasbench201_benchmark, nasbench201_default_params),
-    'nasbench201_ImageNet16-120': (
-        nasbench201_benchmark, nasbench201_default_params),
     'resnet_cifar10': (
         resnet_cifar10_benchmark, resnet_cifar10_default_params),
     'lstm_wikitext2': (
         lstm_wikitext2_benchmark, lstm_wikitext2_default_params),
-    'nashpobench_protein_structure': (
-        nashpobench_benchmark, nashpobench_default_params),
-    'nashpobench_naval_propulsion': (
-        nashpobench_benchmark, nashpobench_default_params),
-    'nashpobench_parkinsons_telemonitoring': (
-        nashpobench_benchmark, nashpobench_default_params),
-    'nashpobench_slice_localization': (
-        nashpobench_benchmark, nashpobench_default_params),
 }
 
 
@@ -63,13 +81,10 @@ def benchmark_factory(params):
     assert name in supported_benchmarks(), \
         f"benchmark_name = {name} not supported, choose from:\n{supported_benchmarks()}"
 
-    if name.startswith('nasbench201_'):
-        dataset_name = name[len('nasbench201_'):]
-        params['dataset_name'] = dataset_name
-
-    if name.startswith('nashpobench_'):
-        dataset_name = name[len('nashpobench_'):]
-        params['dataset_name'] = dataset_name
+    for prefix in MULTI_DATASET_BENCHMARKS:
+        if name.startswith(prefix):
+            dataset_name = name[len(prefix):]
+            params['dataset_name'] = dataset_name
 
     benchmark, default_params = BENCHMARKS[name]
     # We want to use `default_params` of the benchmark as input if not in
