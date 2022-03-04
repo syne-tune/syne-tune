@@ -49,6 +49,7 @@ def _assert_allclose_config(c1, c2, hp_ranges):
     (0.1, 100, 1.0, 1.0/3, loguniform, None),
     (1, 10001, 5001, 0.5, randint, None),
     (-10, 10, 0, 0.5, randint, None),
+    (0.1, 1.0, 0.1, 0.5, finrange, 1),
     (0.1, 1.0, 0.1, 0.5/10, finrange, 10),
     (0.1, 1.0, 1.0, 9.5/10, finrange, 10),
     (0.1, 1.0, 0.5, 4.5/10, finrange, 10),
