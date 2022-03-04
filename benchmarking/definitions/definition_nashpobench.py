@@ -13,7 +13,8 @@
 from syne_tune.config_space import choice, logfinrange, finrange
 
 from benchmarking.blackbox_repository.conversion_scripts.scripts.fcnet_import \
-    import METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, BLACKBOX_NAME
+    import METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, \
+    BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE
 
 
 DATASET_NAMES = [
@@ -24,26 +25,9 @@ DATASET_NAMES = [
 ]
 
 
-# This configuration space allows to use the tabulated blackbox without any
-# interpolation (surrogate), meaning that all numerical HPs have finite ranges.
-# Note that `hp_init_lr` remains categorical and will be 1-hot encoded. It
-# would be better for BO to use a surrogate.
-_config_space = {
-    "hp_activation_fn_1": choice(["tanh", "relu"]),
-    "hp_activation_fn_2": choice(["tanh", "relu"]),
-    "hp_batch_size": logfinrange(8, 64, 4, cast_int=True),
-    "hp_dropout_1": finrange(0.0, 0.6, 3),
-    "hp_dropout_2": finrange(0.0, 0.6, 3),
-    "hp_init_lr": choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
-    'hp_lr_schedule': choice(["cosine", "const"]),
-    "hp_n_units_1": logfinrange(16, 512, 6, cast_int=True),
-    "hp_n_units_2": logfinrange(16, 512, 6, cast_int=True),
-}
-
-
 def nashpobench_default_params(params=None):
     return {
-        'max_resource_level': 100,
+        'max_resource_level': MAX_RESOURCE_LEVEL,
         'grace_period': 1,
         'reduction_factor': 3,
         'instance_type': 'ml.m5.large',
@@ -61,7 +45,7 @@ def nashpobench_benchmark(params):
 
     """
     config_space = dict(
-        _config_space,
+        CONFIGURATION_SPACE,
         epochs=params['max_resource_level'],
         dataset_name=params['dataset_name'])
     return {

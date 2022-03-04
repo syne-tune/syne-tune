@@ -10,10 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.config_space import randint, lograndint, uniform, loguniform
-
 from benchmarking.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench \
-    import METRIC_ELAPSED_TIME, METRIC_ACCURACY, RESOURCE_ATTR, BLACKBOX_NAME
+    import METRIC_ELAPSED_TIME, METRIC_ACCURACY, RESOURCE_ATTR, \
+    BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE
 
 
 DATASET_NAMES = [
@@ -55,22 +54,9 @@ DATASET_NAMES = [
 ]
 
 
-# This configuration space requires a surrogate to be used. This is needed
-# anyway, since the blackbox is not densely evaluated on a grid
-_config_space = {
-    "num_layers": randint(1, 5),
-    "max_units": lograndint(64, 1024),
-    "batch_size": lograndint(16, 512),
-    "learning_rate": loguniform(1e-4, 1e-1),
-    "weight_decay": uniform(1e-5, 1e-1),
-    "momentum": uniform(0.1, 0.99),
-    "max_dropout": uniform(0.0, 1.0),
-}
-
-
 def lcbench_default_params(params=None):
     return {
-        'max_resource_level': 52,
+        'max_resource_level': MAX_RESOURCE_LEVEL,
         'grace_period': 1,
         'reduction_factor': 3,
         'instance_type': 'ml.m5.large',
@@ -88,7 +74,7 @@ def lcbench_benchmark(params):
 
     """
     config_space = dict(
-        _config_space,
+        CONFIGURATION_SPACE,
         epochs=params['max_resource_level'],
         dataset_name=params['dataset_name'])
     return {
