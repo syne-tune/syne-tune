@@ -3,10 +3,9 @@ from typing import Dict, Callable, Optional
 
 import pandas as pd
 
-import syne_tune.config_space as sp
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningMixin, TransferLearningTaskEvaluations
-from syne_tune.config_space import Categorical
+from syne_tune.config_space import Categorical, restrict_domain, choice, config_space_size
 
 
 class BoundingBox(TransferLearningMixin, TrialScheduler):
@@ -54,7 +53,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
             metric=metric
         )
         print(f"hyperparameter ranges of best previous configurations {config_space}")
-        print(f"({sp.config_space_size(config_space)} options)")
+        print(f"({config_space_size(config_space)} options)")
         self.scheduler = scheduler_fun(config_space, mode, metric)
 
     def compute_box(self,
@@ -77,10 +76,10 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
             if hasattr(domain, "sample"):
                 if isinstance(domain, Categorical):
                     hp_values = list(sorted(hp_df.loc[:, name].unique()))
-                    new_config_space[name] = sp.choice(hp_values)
+                    new_config_space[name] = choice(hp_values)
                 elif hasattr(domain, "lower") and hasattr(domain, "upper"):
                     # domain is numerical, set new lower and upper ranges with bounding-box values
-                    new_config_space[name] = sp.restrict_domain(
+                    new_config_space[name] = restrict_domain(
                         numerical_domain=domain,
                         lower=hp_df.loc[:, name].min(),
                         upper=hp_df.loc[:, name].max()

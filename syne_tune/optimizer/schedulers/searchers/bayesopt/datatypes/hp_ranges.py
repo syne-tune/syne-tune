@@ -10,13 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
 from typing import Tuple, List, Iterable, Dict, Optional
 import numpy as np
 from numpy.random import RandomState
 
-from syne_tune.config_space import Domain, Categorical, \
-    non_constant_hyperparameter_keys, is_log_space, config_to_match_string
+from syne_tune.config_space import non_constant_hyperparameter_keys, \
+    is_log_space, config_to_match_string
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 
@@ -28,18 +27,7 @@ def _filter_constant_hyperparameters(config_space: Dict) -> Dict:
     return {k: v for k, v in config_space.items() if k in nonconst_keys}
 
 
-def _ndarray_size(config_space: Dict) -> int:
-    size = 0
-    for name, hp_range in config_space.items():
-        assert isinstance(hp_range, Domain)
-        if isinstance(hp_range, Categorical):
-            size += len(hp_range.categories)
-        else:
-            size += 1
-    return size
-
-
-class HyperparameterRanges(ABC):
+class HyperparameterRanges(object):
     def __init__(
             self, config_space: Dict, name_last_pos: Optional[str] = None,
             value_for_last_pos=None,
@@ -81,7 +69,6 @@ class HyperparameterRanges(ABC):
         self.config_space = _filter_constant_hyperparameters(config_space)
         self.name_last_pos = name_last_pos
         self.value_for_last_pos = value_for_last_pos
-        self._ndarray_size = _ndarray_size(self.config_space)
         self._set_internal_keys(prefix_keys)
         self._set_active_config_space(active_config_space)
 
@@ -127,7 +114,6 @@ class HyperparameterRanges(ABC):
     def config_space_for_sampling(self) -> Dict:
         return self._config_space_for_sampling
 
-    @abstractmethod
     def to_ndarray(self, config: Configuration) -> np.ndarray:
         """
         Categorical values are one-hot encoded.
@@ -135,28 +121,27 @@ class HyperparameterRanges(ABC):
         :param config: Config to encode
         :return: Encoded HP vector
         """
-        pass
+        raise NotImplementedError()
 
     def to_ndarray_matrix(
             self, configs: Iterable[Configuration]) -> np.ndarray:
         return np.vstack(
             [self.to_ndarray(config) for config in configs])
 
+    @property
     def ndarray_size(self) -> int:
         """
-        Default assumes that each categorical HP is one-hot encoded.
         :return: Dimensionality of encoded HP vector returned by `to_ndarray`
         """
-        return self._ndarray_size
+        raise NotImplementedError()
 
-    @abstractmethod
     def from_ndarray(self, enc_config: np.ndarray) -> Configuration:
         """
         Converts a config from internal ndarray representation (fed to the
         GP) to its external (dict) representation. This typically involves
         rounding.
         """
-        pass
+        raise NotImplementedError()
 
     def is_attribute_fixed(self):
         return (self.name_last_pos is not None) and \
@@ -187,21 +172,18 @@ class HyperparameterRanges(ABC):
             self._transform_config(config) for config in self._random_configs(
                 random_state, num_configs)]
 
-    @abstractmethod
     def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
         """
         Returns (lower, upper) bounds for each dimension in ndarray vector
         representation.
         """
-        pass
+        raise NotImplementedError()
 
-    @abstractmethod
     def __repr__(self) -> str:
-        pass
+        raise NotImplementedError()
 
-    @abstractmethod
     def __eq__(self, other: object) -> bool:
-        pass
+        raise NotImplementedError()
 
     def __len__(self) -> int:
         return len(self.config_space)

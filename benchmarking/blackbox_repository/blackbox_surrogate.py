@@ -30,7 +30,7 @@ class BlackboxSurrogate(Blackbox):
             configuration_space: Dict,
             fidelity_space: Optional[Dict] = None,
             fidelity_values: Optional[np.array] = None,
-            surrogate=KNeighborsRegressor(n_neighbors=1),
+            surrogate=None,
             max_fit_samples: Optional[int] = None,
             name: Optional[str] = None,
     ):
@@ -43,11 +43,14 @@ class BlackboxSurrogate(Blackbox):
         :param y: dataframe containing objectives values
         :param configuration_space:
         :param fidelity_space:
-        :param surrogate: the model that is fitted to predict objectives given any configuration.
+        :param surrogate: the model that is fitted to predict objectives given any configuration, default to
+        KNeighborsRegressor(n_neighbors=1).
         Possible examples: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator obeying Scikit-learn API.
         The model is fit on top of pipeline that applies basic feature-processing to convert rows in X to vectors.
         We use the configuration_space hyperparameters types to deduce the types of columns in X (for instance
         CategoricalHyperparameter are one-hot encoded).
+        :param max_fit_samples: maximum number of samples to be fed to the surrogate estimator, if the more data points
+        than this number are passed, then they are subsampled without replacement.
         :param name:
         """
         super(BlackboxSurrogate, self).__init__(
@@ -57,7 +60,7 @@ class BlackboxSurrogate(Blackbox):
         )
         assert len(X) == len(y)
         # todo other types of assert with configuration_space, objective_names, ...
-        self.surrogate = surrogate
+        self.surrogate = surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
         self.max_fit_samples = max_fit_samples
         self.fit_surrogate(X=X, y=y, surrogate=surrogate, max_samples=self.max_fit_samples)
         self.name = name
@@ -101,14 +104,14 @@ class BlackboxSurrogate(Blackbox):
             ('model', model)
         ])
 
-    def fit_surrogate(self, X, y, surrogate=KNeighborsRegressor(n_neighbors=1), max_samples: Optional[int] = None) -> Blackbox:
+    def fit_surrogate(self, X, y, surrogate=None, max_samples: Optional[int] = None) -> Blackbox:
         """
         Fits a surrogate model to a blackbox.
         :param surrogate: fits the model and apply the model transformation when evaluating a
         blackbox configuration. Possible example: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator
         obeying Scikit-learn API.
         """
-        self.surrogate = surrogate
+        self.surrogate = surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
 
         self.surrogate_pipeline = self.make_model_pipeline(
             configuration_space=self.configuration_space,
@@ -157,7 +160,7 @@ class BlackboxSurrogate(Blackbox):
             return objectives_values
 
 
-def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=1), **kwargs):
+def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=1)):
     """
     Fits a blackbox surrogates that can be evaluated anywhere, which can be useful for supporting
     interpolation/extrapolation.
@@ -178,5 +181,4 @@ def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=
         fidelity_space=blackbox.fidelity_space,
         fidelity_values=blackbox.fidelity_values,
         surrogate=surrogate,
-        **kwargs,
     )

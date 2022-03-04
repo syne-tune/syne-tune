@@ -168,6 +168,34 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         return status, results
 
 
+def make_surrogate(surrogate: Optional[str] = None, surrogate_kwargs: Optional[Dict] = None):
+    """
+    :param surrogate: optionally, a model that is fitted to predict objectives given any configuration.
+    Possible examples: "KNeighborsRegressor" or "MLPRegressor" or "XGBRegressor" which would enable using
+    the corresponding Scikit-learn estimator.
+    The model is fit on top of pipeline that applies basic feature-processing to convert hyperparameters
+    rows in X to vectors. The configuration_space hyperparameters types are used to deduce the types of columns in
+     X (for instance CategoricalHyperparameter are one-hot encoded).
+    :param surrogate_kwargs: arguments for the scikit-learn estimator, for instance {"n_neighbors": 1} can be used
+    if `surrogate="KNeighborsRegressor"` is chosen.
+    :return:
+    """
+    if surrogate is None:
+        return None
+    else:
+        from sklearn.neighbors import KNeighborsRegressor
+        from sklearn.neural_network import MLPRegressor
+        import xgboost
+        surrogate_dict = {
+            "KNeighborsRegressor": KNeighborsRegressor,
+            "MLPRegressor": MLPRegressor,
+            "XGBRegressor": xgboost.XGBRegressor,
+        }
+        assert surrogate in surrogate_dict, f"surrogate passed {surrogate} is not supported, " \
+                                            f"only {list(surrogate_dict.keys())} are available"
+        return surrogate_dict[surrogate](**surrogate_kwargs)
+
+
 class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
 
     def __init__(
@@ -211,6 +239,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self.blackbox_name = blackbox_name
         self.dataset = dataset
         self._blackbox = None
+        if surrogate is not None:
+            # makes sure the surrogate can be constructed
+            make_surrogate(surrogate=surrogate, surrogate_kwargs=surrogate_kwargs)
         self._surrogate = surrogate
         self._surrogate_kwargs = surrogate_kwargs if surrogate_kwargs is not None else {}
 
@@ -226,16 +257,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             else:
                 self._blackbox = load(self.blackbox_name)[self.dataset]
             if self._surrogate is not None:
-                # TODO assert earlier that keys are valid
-                from sklearn.neighbors import KNeighborsRegressor
-                from sklearn.neural_network import MLPRegressor
-                import xgboost
-                surrogate_dict = {
-                    "KNeighborsRegressor": KNeighborsRegressor,
-                    "MLPRegressor": MLPRegressor,
-                    "XGBRegressor": xgboost.XGBRegressor,
-                }
-                surrogate = surrogate_dict[self._surrogate](**self._surrogate_kwargs)
+                surrogate = make_surrogate(surrogate=self._surrogate, surrogate_kwargs=self._surrogate_kwargs)
                 self._blackbox = add_surrogate(self._blackbox, surrogate=surrogate)
 
         return self._blackbox

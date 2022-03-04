@@ -94,7 +94,6 @@ class PASHA(HyperbandScheduler):
             searcher="random",
             resource_attr=resource_attr,
             type='pasha',
-            ranking_criterion='soft_ranking',
             **kwargs,
         )
 

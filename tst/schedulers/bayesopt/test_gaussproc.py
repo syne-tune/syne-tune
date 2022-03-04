@@ -194,7 +194,9 @@ def test_gp_fantasizing():
     # would be hard to compare below.
     pending_tuples = [tuple(np.random.rand(2,)) for _ in range(num_pending)]
     state = create_tuning_job_state(
-        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y,
+        hp_ranges=hp_ranges,
+        cand_tuples=X,
+        metrics=Y,
         pending_tuples=pending_tuples)
     model, gpmodel = _make_model_gp_optimize(
         state, random_seed, num_fantasy_samples=num_fantasy_samples,
@@ -215,10 +217,13 @@ def test_gp_fantasizing():
         Y_full = Y + [dictionarize_objective(eval.fantasies[INTERNAL_METRIC_NAME][:, it])
                       for eval in fantasy_samples]
         state2 = create_tuning_job_state(
-            hp_ranges=hp_ranges, cand_tuples=X_full, metrics=Y_full)
+            hp_ranges=hp_ranges,
+            cand_tuples=X_full,
+            metrics=Y_full)
         # We have to skip parameter optimization here
         model_factory = GaussProcEmpiricalBayesModelFactory(
-            active_metric=INTERNAL_METRIC_NAME, gpmodel=gpmodel,
+            active_metric=INTERNAL_METRIC_NAME,
+            gpmodel=gpmodel,
             num_fantasy_samples=num_fantasy_samples,
             normalize_targets=False)
         model2 = model_factory.model(state2, fit_params=False)

@@ -1,5 +1,7 @@
 import zipfile
 import urllib
+from typing import Optional
+
 import pandas as pd
 import numpy as np
 
@@ -22,7 +24,7 @@ def convert_task(bench, dataset_name):
 
     configuration_space = {
         "num_layers": sp.randint(1, 5),
-        "max_units": sp.lograndint(64, 512),
+        "max_units": sp.lograndint(64, 1024),
         "batch_size": sp.lograndint(16, 512),
         "learning_rate": sp.loguniform(1e-4, 1e-1),
         "weight_decay": sp.uniform(1e-5, 1e-1),
@@ -45,7 +47,7 @@ def convert_task(bench, dataset_name):
     )
 
 
-def generate_lcbench():
+def generate_lcbench(s3_root: Optional[str] = None):
     blackbox_name = "lcbench"
     data_file = repository_path / "data_2k_lw.zip"
     if not data_file.exists():
@@ -68,7 +70,7 @@ def generate_lcbench():
 
     with catchtime("uploading to s3"):
         from benchmarking.blackbox_repository.conversion_scripts.utils import upload
-        upload(blackbox_name)
+        upload(blackbox_name, s3_root=s3_root)
 
 
 if __name__ == '__main__':

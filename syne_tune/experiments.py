@@ -14,7 +14,6 @@ import json
 import logging
 from datetime import datetime
 from json.decoder import JSONDecodeError
-from pathlib import Path
 from typing import List, Dict, Callable, Optional
 
 import boto3
@@ -166,7 +165,8 @@ def load_experiment(
 
 def get_metadata(name_filter: Callable[[str], bool] = None) -> Dict[str, Dict]:
     """
-    :param name_filter:
+    :param name_filter: if passed then only experiments whose path matching the filter are kept. This allows
+    rapid filtering in the presence of many experiments.
     :return: dictionary from tuner name to metadata dict
     """
     res = {}

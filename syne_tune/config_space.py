@@ -612,14 +612,18 @@ class FiniteRange(Domain):
         self.size = size
         if not log_scale:
             self._lower_internal = lower
-            self._step_internal = (upper - lower) / (size - 1) if size > 2 else 1
+            self._step_internal = (upper - lower) / (size - 1) if size > 1 else 0
         else:
             self._lower_internal = np.log(lower)
             upper_internal = np.log(upper)
-            self._step_internal = (upper_internal - self._lower_internal) / (size - 1) if size > 2 else 1
+            self._step_internal = (upper_internal - self._lower_internal) / (size - 1) if size > 1 else 0
         self._values = [self._map_from_int(x) for x in range(self.size)]
 
-    def _map_from_int(self, x: int) -> float:
+    @property
+    def values(self):
+        return self._values
+
+    def _map_from_int(self, x: int) -> Union[float, int]:
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
             y = np.exp(y)
@@ -638,7 +642,7 @@ class FiniteRange(Domain):
 
     def _map_to_int(self, value) -> int:
         if self._step_internal == 0:
-            return self.lower
+            return 0
         else:
             int_value = np.clip(value, self.lower, self.upper)
             if self.log_scale:
@@ -975,8 +979,15 @@ def from_dict(d: Dict) -> Domain:
     return domain
 
 
-def restrict_domain(numerical_domain: FiniteRange, lower, upper) -> Domain:
+def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Domain:
+    """
+    Restricts a numerical domain to be in the range [lower, upper]
+    :return:
+    """
     assert hasattr(numerical_domain, "lower") and hasattr(numerical_domain, "upper")
+    lower = numerical_domain.cast(lower)
+    upper = numerical_domain.cast(upper)
+    assert lower <= upper
     if not isinstance(numerical_domain, FiniteRange):
         # domain is numerical, set new lower and upper ranges with bounding-box values
         new_domain_dict = to_dict(numerical_domain)
@@ -984,7 +995,9 @@ def restrict_domain(numerical_domain: FiniteRange, lower, upper) -> Domain:
         new_domain_dict['domain_kwargs']['upper'] = upper
         return from_dict(new_domain_dict)
     else:
-        values = numerical_domain._values
+        values = numerical_domain.values
+        assert lower < max(numerical_domain._values)
+        assert upper > min(numerical_domain._values)
         i = 0
         while values[i] < lower and i < len(values) - 1:
             i += 1
@@ -997,7 +1010,7 @@ def restrict_domain(numerical_domain: FiniteRange, lower, upper) -> Domain:
         return FiniteRange(
             lower=new_lower,
             upper=new_upper,
-            size=len(values) - i - (len(values) - j - 1),
+            size=j-i+1,
             cast_int=numerical_domain.cast_int,
             log_scale=numerical_domain.log_scale
         )

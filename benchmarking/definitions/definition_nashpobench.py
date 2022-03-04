@@ -67,5 +67,4 @@ def nashpobench_benchmark(params):
         'cost_model': None,
         'supports_simulated': True,
         'blackbox_name': BLACKBOX_NAME,
-        'time_this_resource_attr': METRIC_ELAPSED_TIME,
     }
