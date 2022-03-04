@@ -996,8 +996,8 @@ def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Dom
         return from_dict(new_domain_dict)
     else:
         values = numerical_domain.values
-        assert lower < max(numerical_domain._values)
-        assert upper > min(numerical_domain._values)
+        assert lower <= max(numerical_domain._values)
+        assert upper >= min(numerical_domain._values)
         i = 0
         while values[i] < lower and i < len(values) - 1:
             i += 1
