@@ -981,6 +981,8 @@ def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Dom
     :return:
     """
     assert hasattr(numerical_domain, "lower") and hasattr(numerical_domain, "upper")
+    lower = numerical_domain.cast(lower)
+    upper = numerical_domain.cast(upper)
     assert lower <= upper
     if not isinstance(numerical_domain, FiniteRange):
         # domain is numerical, set new lower and upper ranges with bounding-box values
@@ -1004,7 +1006,7 @@ def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Dom
         return FiniteRange(
             lower=new_lower,
             upper=new_upper,
-            size=len(values) - i - (len(values) - j - 1),
+            size=j-i+1,
             cast_int=numerical_domain.cast_int,
             log_scale=numerical_domain.log_scale
         )
