@@ -619,6 +619,10 @@ class FiniteRange(Domain):
             self._step_internal = (upper_internal - self._lower_internal) / (size - 1) if size > 1 else 0
         self._values = [self._map_from_int(x) for x in range(self.size)]
 
+    @property
+    def values(self):
+        return self._values
+
     def _map_from_int(self, x: int) -> Union[float, int]:
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
@@ -991,7 +995,7 @@ def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Dom
         new_domain_dict['domain_kwargs']['upper'] = upper
         return from_dict(new_domain_dict)
     else:
-        values = numerical_domain._values
+        values = numerical_domain.values
         assert lower < max(numerical_domain._values)
         assert upper > min(numerical_domain._values)
         i = 0
