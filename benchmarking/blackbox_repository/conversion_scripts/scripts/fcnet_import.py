@@ -18,7 +18,7 @@ from benchmarking.blackbox_repository.blackbox_tabular import serialize, Blackbo
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
 
 from syne_tune.util import catchtime
-import syne_tune.config_space as sp
+from syne_tune.config_space import choice, logfinrange, finrange, randint
 
 
 BLACKBOX_NAME = 'fcnet'
@@ -28,6 +28,20 @@ METRIC_VALID_LOSS = 'metric_valid_loss'
 METRIC_ELAPSED_TIME = 'metric_elapsed_time'
 
 RESOURCE_ATTR = 'hp_epoch'
+
+MAX_RESOURCE_LEVEL = 100
+
+CONFIGURATION_SPACE = {
+    "hp_activation_fn_1": choice(["tanh", "relu"]),
+    "hp_activation_fn_2": choice(["tanh", "relu"]),
+    "hp_batch_size": logfinrange(8, 64, 4, cast_int=True),
+    "hp_dropout_1": finrange(0.0, 0.6, 3),
+    "hp_dropout_2": finrange(0.0, 0.6, 3),
+    "hp_init_lr": choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
+    'hp_lr_schedule': choice(["cosine", "const"]),
+    'hp_n_units_1': logfinrange(16, 512, 6, cast_int=True),
+    'hp_n_units_2': logfinrange(16, 512, 6, cast_int=True),
+}
 
 
 def convert_dataset(dataset_path: Path, max_rows: int = None):
@@ -48,7 +62,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     ]
 
     # todo for now only full metrics
-    fidelity_values = np.arange(1, 101)
+    fidelity_values = np.arange(1, MAX_RESOURCE_LEVEL + 1)
     n_fidelities = len(fidelity_values)
     n_objectives = len(objective_names)
     n_seeds = 4
@@ -85,8 +99,10 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     # linear interpolation to go from total training time to training time per epoch as in fcnet code
     # (n_hps, n_seeds, n_epochs)
     # todo utilize expand dim instead of reshape
-    epochs = np.repeat(np.arange(1, 101).reshape(1, -1), n_hps * n_seeds, axis=0).reshape(n_hps, n_seeds, -1)
-    elapsed_time = (epochs / 100) * runtime.reshape((n_hps, n_seeds, 1))
+    epochs = np.repeat(fidelity_values.reshape(1, -1),
+                       n_hps * n_seeds, axis=0).reshape(n_hps, n_seeds, -1)
+    elapsed_time = (epochs / MAX_RESOURCE_LEVEL) * runtime.reshape(
+        (n_hps, n_seeds, 1))
     
     save_objective_values_helper('elapsed_time', elapsed_time)
 
@@ -98,19 +114,8 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
             np.stack([data[key][m][:].astype('float32') for key in keys])
         )
 
-    configuration_space = {
-        "hp_activation_fn_1": sp.choice(["tanh", "relu"]),
-        "hp_activation_fn_2": sp.choice(["tanh", "relu"]),
-        "hp_batch_size": sp.logfinrange(8, 64, 4, cast_int=True),
-        "hp_dropout_1": sp.finrange(0.0, 0.6, 3),
-        "hp_dropout_2": sp.finrange(0.0, 0.6, 3),
-        "hp_init_lr": sp.choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
-        'hp_lr_schedule': sp.choice(["cosine", "const"]),
-        'hp_n_units_1': sp.logfinrange(16, 512, 6, cast_int=True),
-        'hp_n_units_2': sp.logfinrange(16, 512, 6, cast_int=True),
-    }
     fidelity_space = {
-        RESOURCE_ATTR: sp.randint(lower=1, upper=100)
+        RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)
     }
 
     objective_names = [f"metric_{m}" for m in objective_names]
@@ -119,7 +124,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     assert objective_names[4] == METRIC_ELAPSED_TIME
     return BlackboxTabular(
         hyperparameters=hyperparameters,
-        configuration_space=configuration_space,
+        configuration_space=CONFIGURATION_SPACE,
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
         fidelity_values=fidelity_values,
@@ -163,7 +168,7 @@ def plot_learning_curves():
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}
     print(configuration)
     errors = []
-    for i in range(1, 101):
+    for i in range(1, MAX_RESOURCE_LEVEL + 1):
         res = b.objective_function(configuration=configuration, fidelity={'epochs': i})
         errors.append(res[METRIC_VALID_LOSS])
     plt.plot(errors)

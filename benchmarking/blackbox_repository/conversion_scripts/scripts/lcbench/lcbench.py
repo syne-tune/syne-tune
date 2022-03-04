@@ -6,49 +6,60 @@ import pandas as pd
 import numpy as np
 
 from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-import syne_tune.search_space as sp
-
+from syne_tune.config_space import randint, lograndint, uniform, loguniform
+from syne_tune.util import catchtime
 from benchmarking.blackbox_repository.conversion_scripts.scripts.lcbench.api import Benchmark
 from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
-from syne_tune.util import catchtime
+
+
+BLACKBOX_NAME = 'lcbench'
+
+METRIC_ACCURACY = 'val_accuracy'
+
+METRIC_ELAPSED_TIME = 'time'
+
+RESOURCE_ATTR = 'epoch'
+
+MAX_RESOURCE_LEVEL = 52
+
+CONFIGURATION_SPACE = {
+    "num_layers": randint(1, 5),
+    "max_units": lograndint(64, 1024),
+    "batch_size": lograndint(16, 512),
+    "learning_rate": loguniform(1e-4, 1e-1),
+    "weight_decay": uniform(1e-5, 1e-1),
+    "momentum": uniform(0.1, 0.99),
+    "max_dropout": uniform(0.0, 1.0),
+}
 
 
 def convert_task(bench, dataset_name):
     n_config = 2000
-    num_epochs = 52
+    num_epochs = MAX_RESOURCE_LEVEL
     configs = [bench.query(dataset_name=dataset_name, tag="config", config_id=i) for i in range(n_config)]
     hyperparameters = pd.DataFrame(configs)
     # remove constant columns
     hyperparameters = hyperparameters.loc[:, (hyperparameters != hyperparameters.iloc[0]).any()]
     objective_evaluations = np.zeros((n_config, 1, num_epochs, 2))
 
-    configuration_space = {
-        "num_layers": sp.randint(1, 5),
-        "max_units": sp.lograndint(64, 1024),
-        "batch_size": sp.lograndint(16, 512),
-        "learning_rate": sp.loguniform(1e-4, 1e-1),
-        "weight_decay": sp.uniform(1e-5, 1e-1),
-        "momentum": sp.uniform(0.1, 0.99),
-        "max_dropout": sp.uniform(0.0, 1.0),
-    }
     fidelity_space = {
-        "epoch": sp.finrange(lower=1, upper=num_epochs, size=num_epochs, cast_int=True)
+        RESOURCE_ATTR: randint(lower=1, upper=num_epochs)
     }
     for j, tag in enumerate(["Train/val_accuracy", "time"]):
         for i in range(n_config):
             objective_evaluations[i, 0, :, j] = bench.query(dataset_name=dataset_name, tag=tag, config_id=i)
     return BlackboxTabular(
         hyperparameters=hyperparameters,
-        configuration_space=configuration_space,
+        configuration_space=CONFIGURATION_SPACE,
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
-        fidelity_values=np.arange(1, num_epochs),
-        objectives_names=["val_accuracy", "time"],
+        fidelity_values=np.arange(1, num_epochs + 1),
+        objectives_names=[METRIC_ACCURACY, METRIC_ELAPSED_TIME],
     )
 
 
 def generate_lcbench(s3_root: Optional[str] = None):
-    blackbox_name = "lcbench"
+    blackbox_name = BLACKBOX_NAME
     data_file = repository_path / "data_2k_lw.zip"
     if not data_file.exists():
         src = "https://figshare.com/ndownloader/files/21188598"

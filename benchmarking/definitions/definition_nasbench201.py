@@ -16,6 +16,13 @@ from benchmarking.blackbox_repository.conversion_scripts.scripts.nasbench201_imp
     RESOURCE_ATTR, BLACKBOX_NAME
 
 
+DATASET_NAMES = [
+    "cifar10",
+    "cifar100",
+    "ImageNet16-120",
+]
+
+
 METRIC_ELAPSED_TIME = 'metric_elapsed_time'
 
 
