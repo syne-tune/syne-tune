@@ -127,6 +127,9 @@ def test_config_space_size():
      np.array([0, 2, 4, 6, 8])),
     (logfinrange(8, 512, 7, cast_int=True),
      np.array([8, 16, 32, 64, 128, 256, 512])),
+    (finrange(0.1, 1.0, 1),
+     np.array([0.1])),
+
 ])
 def test_finrange_domain(domain, value_set):
     seed = 31415927
