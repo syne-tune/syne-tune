@@ -62,6 +62,17 @@ class SynchronousHyperbandBracketManager(object):
         # List of all brackets. We do not delete brackets which are
         # complete, but just keep them for a record
         self._brackets = []
+        # Maps bracket_id to offset
+        self._bracket_id_to_offset = []
+        # Maps (offset, level), level a rung level in the bracket, to
+        # the previous rung level (or 0)
+        self._level_to_prev_level = dict()
+        for offset, rungs in enumerate(bracket_rungs):
+            _, levels = zip(*rungs)
+            levels = (0,) + levels
+            self._level_to_prev_level.update(
+                ((offset, lv), plv) for (lv, plv) in zip(
+                    levels[1:], levels[:-1]))
         # Create primary bracket
         self._primary_bracket_id = self._create_new_bracket()
 
@@ -73,9 +84,21 @@ class SynchronousHyperbandBracketManager(object):
     def _next_bracket_id(self) -> int:
         return len(self._brackets)
 
+    def level_to_prev_level(self, bracket_id: int, level: int) -> int:
+        """
+        :param bracket_id:
+        :param level: Level in bracket
+        :return: Previous level; or 0
+        """
+        offset = self._bracket_id_to_offset[bracket_id]
+        return self._level_to_prev_level[(offset, level)]
+
     def _create_new_bracket(self) -> int:
+        # Sanity check:
+        assert len(self._brackets) == len(self._bracket_id_to_offset)
         bracket_id = self._next_bracket_id
         offset = bracket_id % self.num_bracket_offsets
+        self._bracket_id_to_offset.append(offset)
         self._brackets.append(SynchronousHyperbandBracket(
             self._bracket_rungs[offset], self.mode))
         return bracket_id
