@@ -17,7 +17,7 @@ inconsistencies can occur between similarly performing configurations. Hence, we
 benevolence in estimating the ranking. We propose to use a soft-ranking approach where we group configurations based on their validation performance metric (e.g. accuracy).
 
 In soft ranking, configurations are still sorted by predictive performance but they are considered
-equivalent if the performance difference is smaller than a fixed value $\epsilon$ (or equal to it). Instead of producing a sorted list of configurations, this provides a list of lists where for every position of the  ranking there is a list of equivalent configurations. The concept is explained graphically in Figure 2. In our experiments we have used soft ranking with fixed $\epsilon=0.025$, which has given consistently strong results.
+equivalent if the performance difference is smaller than a fixed value `epsilon` (or equal to it). Instead of producing a sorted list of configurations, this provides a list of lists where for every position of the  ranking there is a list of equivalent configurations. The concept is explained graphically in Figure 2. In our experiments we have used soft ranking with fixed `epsilon=0.025`, which has given consistently strong results.
 
 <img src="img/soft_ranking_w_caption.png" width="768">
 
@@ -25,7 +25,7 @@ equivalent if the performance difference is smaller than a fixed value $\epsilon
 
 We provide an example script [launch_pasha_nasbench201_demo.py](scripts/launch_pasha_nasbench201_demo.py) that shows how to run experiments with PASHA on NASBench201. We compare PASHA with ASHA (promotion type) and the relevant baselines - one epoch and random.
 
-In the script we also show how we can change the ranking function that PASHA uses. For example, the value of $\epsilon$ in soft ranking can be estimated automatically using the standard deviation of objective values in the previous rung (e.g. $2\sigma$). The script further explains how we can combine PASHA with sample-efficient strategies based on Bayesian Optimization.
+In the script we also show how we can change the ranking function that PASHA uses. For example, the value of `epsilon` in soft ranking can be estimated automatically using the standard deviation of objective values in the previous rung (e.g. `2*sigma`). The script further explains how we can combine PASHA with sample-efficient strategies based on Bayesian Optimization.
 
 ## What are the Results?
 After running the [launch_pasha_nasbench201_demo.py](scripts/launch_pasha_nasbench201_demo.py) script we obtain the results that we show in Table 1 (subject to changes in Syne Tune after writing the tutorial).
@@ -39,4 +39,4 @@ PASHA is an algorithm that is particularly useful for large-scale datasets with 
 
 A suitable stopping criterion for PASHA is the number of configurations that have been evaluated so far, but it can also be evaluated using stopping criteria based on the wallclock time. With time-based criteria PASHA would make an impact when the stopping time is selected as a small value.
 
-Selecting the value of $\epsilon$ for soft ranking requires some amount of domain expertise to judge what values are reasonable. However, we have found $\epsilon=0.025$ (2.5%) to be a good rule-of-thumb in practice. Another criterion that has worked well is $\epsilon=2\sigma$, which has the benefit of automatic selection of $\epsilon$.
+Selecting the value of `epsilon` for soft ranking requires some amount of domain expertise to judge what values are reasonable. However, we have found `epsilon=0.025` (2.5%) to be a good rule-of-thumb in practice. Another criterion that has worked well is `epsilon=2*sigma`, which has the benefit of automatic selection of `epsilon`.
