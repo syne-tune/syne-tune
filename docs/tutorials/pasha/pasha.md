@@ -6,11 +6,11 @@ The goal of PASHA is to identify well-performing configurations significantly fa
 
 PASHA is a variant of ASHA that starts with a small amount of initial resources and gradually increases them depending on the stability of configuration rankings in the top two rungs (rounds of promotion). Each time the ranking of configurations in the top two rungs becomes inconsistent, PASHA increases the maximum number of resources. This can be understood as "unlocking" a new rung level.  An illustration of how PASHA stops early if the ranking of configurations has stabilized is shown in Figure 1, and we summarize PASHA in Algorithm 1 and 2.
 
-<img src="img/pasha_early_stop_w_caption.png" width="600">
+<img src="img/pasha_early_stop_w_caption.png" width="768">
 
-<img src="img/pasha_algorithm.png" width="600">
+<img src="img/pasha_algorithm.png" width="768">
 
-<img src="img/get_job_algorithm.png" width="600">
+<img src="img/get_job_algorithm.png" width="768">
 
 Given that deep learning algorithms typically rely on stochastic gradient descent, ranking
 inconsistencies can occur between similarly performing configurations. Hence, we need some
@@ -19,7 +19,7 @@ benevolence in estimating the ranking. We propose to use a soft-ranking approach
 In soft ranking, configurations are still sorted by predictive performance but they are considered
 equivalent if the performance difference is smaller than a fixed value $\epsilon$ (or equal to it). Instead of producing a sorted list of configurations, this provides a list of lists where for every position of the  ranking there is a list of equivalent configurations. The concept is explained graphically in Figure 2. In our experiments we have used soft ranking with fixed $\epsilon=0.025$, which has given consistently strong results.
 
-<img src="img/soft_ranking_w_caption.png" width="600">
+<img src="img/soft_ranking_w_caption.png" width="768">
 
 ## Launcher Script
 
@@ -31,7 +31,7 @@ In the script we also show how we can change the ranking function that PASHA use
 After running the [launch_pasha_nasbench201_demo.py](scripts/launch_pasha_nasbench201_demo.py) script we obtain the results that we show in Table 1 (subject to changes in Syne Tune after writing the tutorial).
 The results suggest that PASHA consistently leads to strong improvements in runtime, while achieving similar accuracies as ASHA. The one epoch baseline has noticeably worse accuracies than ASHA or PASHA, suggesting that PASHA does a good job of deciding when to continue increasing the resources – it does not stop too early. Random baseline is a lot worse than the one epoch baseline, so there is value in performing NAS.
 
-<img src="img/pasha_results.png" width="600">
+<img src="img/pasha_results.png" width="768">
 
 ## Recommendations
 
