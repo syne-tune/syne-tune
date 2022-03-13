@@ -15,7 +15,7 @@ import numpy as np
 from numpy.random import RandomState
 
 from syne_tune.config_space import non_constant_hyperparameter_keys, \
-    is_log_space, config_to_match_string
+    is_log_space, config_to_match_string, is_reverse_log_space
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
     import Hyperparameter, Configuration
 
@@ -101,7 +101,8 @@ class HyperparameterRanges(object):
         for k, v in active_config_space.items():
             assert k in self.config_space, f"active_config_space[{k}] not in config_space"
             same_value_type = v.value_type == self.config_space[k].value_type
-            same_log_type = is_log_space(v) == is_log_space(self.config_space[k])
+            same_log_type = is_log_space(v) == is_log_space(self.config_space[k]) and \
+                is_reverse_log_space(v) == is_reverse_log_space(self.config_space[k])
             same_domain_type = isinstance(v, type(self.config_space[k]))
             assert k in self.config_space and same_value_type and same_log_type and same_domain_type, \
                 f"active_config_space[{k}] has different type"
