@@ -262,19 +262,19 @@ class FixedLayersMLPCostModel(MLPLinearCostModel):
 
     @staticmethod
     def get_expected_hidden_layer_width(
-            configspace: Dict, num_units_keys: List[str]):
+            config_space: Dict, num_units_keys: List[str]):
         """
         Constructs expected_hidden_layer_width function from the training
         evaluation function.
         Works because `impute_points_to_evaluate` imputes with the expected
         value under random sampling.
 
-        :param configspace: Configuration space
-        :param num_units_keys: Keys into `configspace` for number of
+        :param config_space: Configuration space
+        :param num_units_keys: Keys into `config_space` for number of
             units of different layers
         :return: expected_hidden_layer_width, exp_vals
         """
-        default_config = impute_points_to_evaluate(None, configspace)[0]
+        default_config = impute_points_to_evaluate(None, config_space)[0]
         exp_vals = [default_config[k] for k in num_units_keys]
 
         def expected_hidden_layer_width(x):

@@ -74,7 +74,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
 
     def __init__(
             self,
-            configspace: Dict,
+            config_space: Dict,
             metric: str,
             points_to_evaluate: Optional[List[Dict]] = None,
             mode: str = "min",
@@ -87,7 +87,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             resource_attr: str = 'epoch',
             **kwargs):
         super().__init__(
-            configspace,
+            config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
             mode=mode,

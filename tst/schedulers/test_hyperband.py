@@ -15,7 +15,7 @@ from typing import Optional, Dict, Tuple
 import pytest
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.search_space import randint, uniform
+from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.searchers.searcher import RandomSearcher
@@ -33,9 +33,9 @@ def _new_trial(trial_id: int, config: dict):
 
 
 class MyRandomSearcher(RandomSearcher):
-    def __init__(self, configspace, metric, points_to_evaluate=None, **kwargs):
+    def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
         super().__init__(
-            configspace, metric, points_to_evaluate, **kwargs)
+            config_space, metric, points_to_evaluate, **kwargs)
         self._pending_records = []
 
     def register_pending(
@@ -79,7 +79,7 @@ def test_register_pending():
             searcher_data=searcher_data)
         old_searcher = scheduler.searcher
         new_searcher = MyRandomSearcher(
-            old_searcher.configspace,
+            old_searcher.config_space,
             metric=old_searcher._metric)
         new_searcher._resource_attr = scheduler._resource_attr
         scheduler.searcher = new_searcher
@@ -166,7 +166,7 @@ def test_hyperband_max_t_inference():
         'max_epochs': randint(13, 22),
         'blurb': randint(0, 20)
     }
-    # Fields: (max_t, search_space, final_max_t)
+    # Fields: (max_t, config_space, final_max_t)
     # If final_max_t is None, an assertion should be raised
     cases = [
         (None, config_space1, 15),
@@ -185,10 +185,10 @@ def test_hyperband_max_t_inference():
         (10, config_space7, 10),
     ]
 
-    for max_t, configspace, final_max_t in cases:
+    for max_t, config_space, final_max_t in cases:
         if final_max_t is not None:
             myscheduler = HyperbandScheduler(
-                configspace,
+                config_space,
                 searcher='random',
                 max_t=max_t,
                 resource_attr='epoch',
@@ -198,7 +198,7 @@ def test_hyperband_max_t_inference():
         else:
             with pytest.raises(AssertionError):
                 myscheduler = HyperbandScheduler(
-                    configspace,
+                    config_space,
                     searcher='random',
                     max_t=max_t,
                     resource_attr='epoch',

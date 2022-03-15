@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 import pandas as pd
 import numpy as np
 
@@ -81,14 +81,19 @@ class BlackboxTabular(Blackbox):
 
     def _objective_function(
             self,
-            configuration: Dict,
+            configuration: Union[Dict, int],
             fidelity: Optional[Dict] = None,
             seed: Optional[int] = None
     ) -> Dict:
         if seed is not None:
             assert 0 <= seed < self.num_seeds
+        else:
+            seed = np.random.randint(0, self.num_seeds)
+        if not isinstance(configuration, dict):
+            objectives_values = self.objectives_evaluations[configuration, seed, :, :]
+            return objectives_values
         try:
-            key = tuple([configuration[key] for key in self._hp_cols])
+            key = tuple(configuration[key] for key in self._hp_cols)
             matching_index = self.hyperparameters_index.loc[key].values
         except KeyError:
             raise ValueError(
@@ -99,8 +104,6 @@ class BlackboxTabular(Blackbox):
         df_found = self.hyperparameters.loc[matching_index]
         assert len(df_found) == 1
         index = df_found.index.values[0]
-        if seed is None:
-            seed = np.random.randint(0, self.num_seeds)
 
         if fidelity is None:
             # returns all fidelities

@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from syne_tune.search_space import uniform, randint, choice
+from syne_tune.config_space import uniform, randint, choice
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
     gp_fifo_searcher_defaults, gp_fifo_searcher_factory
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
@@ -35,7 +35,7 @@ def test_create_transfer_learning():
     }
     search_options = {
         'scheduler': 'fifo',
-        'configspace': config_space,
+        'config_space': config_space,
         'transfer_learning_task_attr': 'task_id',
         'transfer_learning_active_task': '2',
         'transfer_learning_active_config_space': active_config_space,
@@ -54,7 +54,7 @@ def test_create_transfer_learning():
 
     hp_ranges = kwargs_int['hp_ranges']
     assert hp_ranges.internal_keys == ['task_id', 'a', 'b', 'c']
-    assert hp_ranges.ndarray_size() == 9
+    assert hp_ranges.ndarray_size == 9
     expected_ndarray_bounds = [
         (0.0, 0.0), (0.0, 0.0), (1.0, 1.0), (0.0, 0.0),
         (0.1, 0.4),

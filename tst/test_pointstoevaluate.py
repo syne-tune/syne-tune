@@ -13,7 +13,7 @@
 from typing import Dict
 import numpy as np
 
-from syne_tune.search_space import randint, lograndint, uniform, \
+from syne_tune.config_space import randint, lograndint, uniform, \
     loguniform, choice, finrange, logfinrange
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.searchers import RandomSearcher

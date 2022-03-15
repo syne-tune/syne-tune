@@ -13,8 +13,8 @@
 import pytest
 import numpy as np
 
-from syne_tune.search_space import randint, lograndint, uniform, \
-    loguniform, choice, search_space_size, randn, to_dict, from_dict, \
+from syne_tune.config_space import randint, lograndint, uniform, \
+    loguniform, choice, config_space_size, randn, to_dict, from_dict, \
     finrange, logfinrange
 
 
@@ -89,7 +89,7 @@ def test_serialization():
                 == {k: v for k, v in x2.__dict__.items() if k != "sampler"}
 
 
-def test_search_space_size():
+def test_config_space_size():
     upper_limit = 2 ** 20
     config_space = {
         'a': randint(1, 6),
@@ -109,9 +109,9 @@ def test_search_space_size():
         (dict(config_space, f=lograndint(1, upper_limit / 10)), None),
     ]
     for cs, size in cases:
-        _size = search_space_size(cs)
+        _size = config_space_size(cs)
         assert _size == size, \
-            f"search_space_size(cs) = {_size} != {size}\n{cs}"
+            f"config_space_size(cs) = {_size} != {size}\n{cs}"
 
 
 @pytest.mark.parametrize('domain,value_set', [
@@ -127,6 +127,9 @@ def test_search_space_size():
      np.array([0, 2, 4, 6, 8])),
     (logfinrange(8, 512, 7, cast_int=True),
      np.array([8, 16, 32, 64, 128, 256, 512])),
+    (finrange(0.1, 1.0, 1),
+     np.array([0.1])),
+
 ])
 def test_finrange_domain(domain, value_set):
     seed = 31415927

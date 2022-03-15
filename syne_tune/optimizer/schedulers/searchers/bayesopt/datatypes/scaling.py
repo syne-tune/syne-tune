@@ -13,6 +13,8 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
+from syne_tune.config_space import Domain, is_log_space, is_reverse_log_space
+
 
 class Scaling(ABC):
     @abstractmethod
@@ -56,3 +58,12 @@ class ReverseLogScaling(Scaling):
 
     def from_internal(self, value: float) -> float:
         return 1.0 - np.exp(-value)
+
+
+def get_scaling(hp_range: Domain) -> Scaling:
+    if is_log_space(hp_range):
+        return LogScaling()
+    elif is_reverse_log_space(hp_range):
+        return ReverseLogScaling()
+    else:
+        return LinearScaling()

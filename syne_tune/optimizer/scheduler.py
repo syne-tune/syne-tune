@@ -15,7 +15,7 @@ from typing import Optional, Dict, List
 import logging
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.search_space import non_constant_hyperparameter_keys, \
+from syne_tune.config_space import non_constant_hyperparameter_keys, \
     cast_config_values
 
 logger = logging.getLogger(__name__)

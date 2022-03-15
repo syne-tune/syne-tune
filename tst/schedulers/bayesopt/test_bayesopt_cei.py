@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
     INTERNAL_METRIC_NAME, INTERNAL_CONSTRAINT_NAME
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from syne_tune.search_space import uniform
+from syne_tune.config_space import uniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
     DEFAULT_MCMC_CONFIG, DEFAULT_OPTIMIZATION_CONFIG
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import \

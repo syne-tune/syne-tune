@@ -18,7 +18,7 @@ import logging
 import time
 
 from syne_tune import Reporter
-from syne_tune.search_space import loguniform, add_to_argparse
+from syne_tune.config_space import loguniform, add_to_argparse
 
 
 METRIC_ACCURACY = 'accuracy'

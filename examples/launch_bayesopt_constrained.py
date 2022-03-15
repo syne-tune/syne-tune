@@ -19,7 +19,7 @@ from pathlib import Path
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune import Tuner
-from syne_tune.search_space import uniform
+from syne_tune.config_space import uniform
 from syne_tune import StoppingCriterion
 
 

@@ -21,13 +21,13 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
     decode_state_from_old_encoding
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 
 
-def _common_kwargs(configspace: Dict) -> Dict:
+def _common_kwargs(config_space: Dict) -> Dict:
     return {
-        'configspace': configspace,
-        'max_epochs': configspace['epochs'],
+        'config_space': config_space,
+        'max_epochs': config_space['epochs'],
         'metric': 'accuracy',
         'resource_attr': 'epoch',
         'scheduler': 'hyperband_stopping',
@@ -38,9 +38,9 @@ def _common_kwargs(configspace: Dict) -> Dict:
 
 
 def build_gpiss_model_factory(
-        configspace: Dict, model_params: Dict, **kwargs):
+        config_space: Dict, model_params: Dict, **kwargs):
     kwargs = dict(
-        _common_kwargs(configspace),
+        _common_kwargs(config_space),
         model='gp_issm',
         issm_gamma_one=False,
         **kwargs)
@@ -141,13 +141,13 @@ def test_compare_gpiss_likelihood_oldnew(_model_params, _state):
     kwargs = dict(no_fantasizing=True)
     gpiss_objs = build_gpiss_model_factory(
         config_space, model_params, **kwargs)
-    configspace_ext = gpiss_objs['configspace_ext']
+    config_space_ext = gpiss_objs['config_space_ext']
     gpiss_model_factory.append(gpiss_objs['model_factory'])
     gpiss_model_factory.append(build_gpiss_model_factory(
         config_space, model_params, use_new_code=False,
         **kwargs)['model_factory'])
     state = decode_state_from_old_encoding(
-        enc_state=json.loads(_state), hp_ranges=configspace_ext.hp_ranges_ext)
+        enc_state=json.loads(_state), hp_ranges=config_space_ext.hp_ranges_ext)
 
     # Compare likelihoods
     likelihood = [
@@ -182,13 +182,13 @@ def test_compare_gpiss_likelihood_fantasizing_oldnew(_model_params, _state):
         no_fantasizing=False)
     gpiss_objs = build_gpiss_model_factory(
         config_space, model_params, **kwargs)
-    configspace_ext = gpiss_objs['configspace_ext']
+    config_space_ext = gpiss_objs['config_space_ext']
     gpiss_model_factory.append(gpiss_objs['model_factory'])
     gpiss_model_factory.append(build_gpiss_model_factory(
         config_space, model_params, use_new_code=False,
         **kwargs)['model_factory'])
     state = decode_state_from_old_encoding(
-        enc_state=json.loads(_state), hp_ranges=configspace_ext.hp_ranges_ext)
+        enc_state=json.loads(_state), hp_ranges=config_space_ext.hp_ranges_ext)
 
     # Compare likelihoods
     # We need to force them to use the same fantasy samples

@@ -26,7 +26,7 @@ from pathlib import Path
 
 from sagemaker.pytorch import PyTorch
 
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler

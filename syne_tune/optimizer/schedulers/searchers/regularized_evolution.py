@@ -5,7 +5,7 @@ from typing import Optional, Dict, List
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
-from syne_tune.search_space import Domain, Categorical
+from syne_tune.config_space import Domain, Categorical
 
 
 @dataclass
@@ -17,7 +17,7 @@ class PopulationElement:
 class RegularizedEvolution(SearcherWithRandomSeed):
     def __init__(
             self,
-            configspace,
+            config_space,
             metric: str,
             mode: str = 'min',
             population_size: int = 100,
@@ -40,7 +40,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
 
         Parameters
         ----------
-        configspace: dict
+        config_space: dict
             Configuration space for trial evaluation function
         metric : str
             Name of metric to optimize, key in result's obtained via
@@ -55,7 +55,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             Seed for the random number generation. If set to None, use random seed.
         """
 
-        super(RegularizedEvolution, self).__init__(configspace, metric, points_to_evaluate=points_to_evaluate, **kwargs)
+        super(RegularizedEvolution, self).__init__(config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs)
         self.mode = mode
         self.population_size = population_size
         self.sample_size = sample_size
@@ -67,11 +67,11 @@ class RegularizedEvolution(SearcherWithRandomSeed):
 
         # pick random hyperparameter and mutate it
         hypers = []
-        for k, v in self.configspace.items():
+        for k, v in self.config_space.items():
             if isinstance(v, Domain):
                 hypers.append(k)
         name = self.random_state.choice(hypers)
-        hyperparameter = self.configspace[name]
+        hyperparameter = self.config_space[name]
 
         if isinstance(hyperparameter, Categorical):
             # drop current values from potential choices to not sample the same value again
@@ -87,7 +87,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
     def sample_random_config(self) -> Dict:
         return {
           k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
-          for k, v in self.configspace.items()
+          for k, v in self.config_space.items()
         }
 
     def get_config(self, **kwargs):

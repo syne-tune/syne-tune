@@ -17,8 +17,8 @@ import pytest
 from numpy.testing import assert_allclose, assert_almost_equal
 from pytest import approx
 
-from syne_tune.search_space import uniform, randint, choice, loguniform, \
-    lograndint, finrange, logfinrange
+from syne_tune.config_space import uniform, randint, choice, loguniform, \
+    lograndint, finrange, logfinrange, reverseloguniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
@@ -47,8 +47,16 @@ def _assert_allclose_config(c1, c2, hp_ranges):
     (1.0, 10000.0, 1000.0, 0.75, loguniform, None),
     (0.001, 0.1, 0.01, 0.5, loguniform, None),
     (0.1, 100, 1.0, 1.0/3, loguniform, None),
+    (0.5, 0.99, 0.5, 0.0, reverseloguniform, None),
+    (0.5, 0.99, 0.99, 1.0, reverseloguniform, None),
+    (0.9, 0.99999, 0.99, 0.25, reverseloguniform, None),
+    (0.9, 0.99999, 0.999, 0.5, reverseloguniform, None),
+    (0.9, 0.99999, 0.9999, 0.75, reverseloguniform, None),
+    (0.5, 15.0/16.0, 0.75, 1.0/3, reverseloguniform, None),
+    (0.5, 15.0/16.0, 7.0/8.0, 2.0/3, reverseloguniform, None),
     (1, 10001, 5001, 0.5, randint, None),
     (-10, 10, 0, 0.5, randint, None),
+    (0.1, 1.0, 0.1, 0.5, finrange, 1),
     (0.1, 1.0, 0.1, 0.5/10, finrange, 10),
     (0.1, 1.0, 1.0, 9.5/10, finrange, 10),
     (0.1, 1.0, 0.5, 4.5/10, finrange, 10),
@@ -71,8 +79,9 @@ def test_continuous_to_and_from_ndarray(
 
 
 @pytest.mark.parametrize('choices,external_hp,internal_ndarray', [
-    (['a', 'b'], 'a', [1.0, 0.0]),
-    (['a', 'b'], 'b', [0.0, 1.0]),
+    (['a', 'b'], 'a', [0.25]),
+    (['a', 'b'], 'b', [0.75]),
+    (['a', 'b', 'c'], 'b', [0.0, 1.0, 0.0]),
     (['a', 'b', 'c', 'd'], 'c', [0.0, 0.0, 1.0, 0.0]),
 ])
 def test_categorical_to_and_from_ndarray(choices, external_hp, internal_ndarray):
@@ -94,6 +103,8 @@ def test_categorical_to_and_from_ndarray(choices, external_hp, internal_ndarray)
     (1.0, 1000.0, loguniform),
     (10.0, 15.0, loguniform),
     (0.1, 20.0, loguniform),
+    (0.0, 0.99, reverseloguniform),
+    (0.999999999, 0.99999999999, reverseloguniform),
 ])
 def test_continuous_to_ndarray_and_back(lower, upper, domain):
     # checks the lower bound upper bound and 10 random values
@@ -140,6 +151,7 @@ def test_distribution_of_random_candidates():
     hp_ranges = make_hyperparameter_ranges({
         '0': uniform(1.0, 1000.0),
         '1': loguniform(1.0, 1000.0),
+        '2': reverseloguniform(0.9, 0.9999),
         '3': randint(1, 1000),
         '4': lograndint(1, 1000),
         '5': choice(['a', 'b', 'c'])})
@@ -159,7 +171,7 @@ def test_distribution_of_random_candidates():
             else:
                 assert_almost_equal(hp, hp_converted_back)
 
-    hps0, hps1, hps3, hps4, hps5 = zip(*[
+    hps0, hps1, hps2, hps3, hps4, hps5 = zip(*[
         hp_ranges.config_to_tuple(x) for x in random_candidates])
     assert 200 < np.percentile(hps0, 25) < 300
     assert 450 < np.percentile(hps0, 50) < 550
@@ -168,7 +180,12 @@ def test_distribution_of_random_candidates():
     # same bounds as the previous but log scaling
     assert 3 < np.percentile(hps1, 25) < 10
     assert 20 < np.percentile(hps1, 50) < 40
-    assert 100 < np.percentile(hps1, 75) < 200
+    assert 100 < np.percentile(hps1, 75) < 250
+
+    # reverse log
+    assert 0.9 < np.percentile(hps2, 25) < 0.99
+    assert 0.99 < np.percentile(hps2, 50) < 0.999
+    assert 0.999 < np.percentile(hps2, 75) < 0.9999
 
     # integer
     assert 200 < np.percentile(hps3, 25) < 300
@@ -178,7 +195,7 @@ def test_distribution_of_random_candidates():
     # same bounds as the previous but log scaling
     assert 3 < np.percentile(hps4, 25) < 10
     assert 20 < np.percentile(hps4, 50) < 40
-    assert 100 < np.percentile(hps4, 75) < 200
+    assert 100 < np.percentile(hps4, 75) < 250
 
     counter = Counter(hps5)
     assert len(counter) == 3
@@ -197,15 +214,16 @@ def test_get_ndarray_bounds():
     config_space = {
         '0': uniform(1.0, 1000.0),
         '1': loguniform(1.0, 1000.0),
+        '2': reverseloguniform(0.9, 0.9999),
         '3': randint(1, 1000),
         '4': lograndint(1, 1000),
         '5': choice(['a', 'b', 'c'])}
     hp_ranges = make_hyperparameter_ranges(config_space)
     for epochs, val_last_pos in ((3, 1), (9, 3), (81, 81), (27, 1), (27, 9)):
-        configspace_ext = ExtendedConfiguration(
+        config_space_ext = ExtendedConfiguration(
             hp_ranges=hp_ranges, resource_attr_key='epoch',
             resource_attr_range=(1, epochs))
-        hp_ranges_ext = configspace_ext.hp_ranges_ext
+        hp_ranges_ext = config_space_ext.hp_ranges_ext
         hp_ranges_ext.value_for_last_pos = val_last_pos
         bounds = hp_ranges_ext.get_ndarray_bounds()
         val_enc = _int_encode(val_last_pos, lower=1, upper=epochs)
@@ -219,6 +237,7 @@ def test_active_ranges_valid():
     config_space = {
         '0': uniform(1.0, 1000.0),
         '1': loguniform(1.0, 1000.0),
+        '2': reverseloguniform(0.9, 0.9999),
         '3': randint(1, 1000),
         '4': lograndint(1, 1000),
         '5': choice(['a', 'b', 'c'])}
@@ -237,6 +256,14 @@ def test_active_ranges_valid():
         {
             '3': randint(1, 100),
             '4': lograndint(2, 1005),
+        },
+        {
+            '2': reverseloguniform(0.99, 0.99999),
+            '3': randint(5, 500),
+        },
+        {
+            '2': reverseloguniform(0.9, 0.999),
+            '4': lograndint(10, 1005),
         },
     ]
     for active_config_space in invalid_active_spaces:

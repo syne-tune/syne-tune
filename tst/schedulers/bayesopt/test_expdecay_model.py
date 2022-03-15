@@ -21,15 +21,15 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
     import check_and_merge_defaults
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
     decode_state_from_old_encoding
-from syne_tune.search_space import randint, uniform, loguniform
+from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
     import TuningJobState
 
 
-def _common_kwargs(configspace: Dict) -> Dict:
+def _common_kwargs(config_space: Dict) -> Dict:
     return {
-        'configspace': configspace,
-        'max_epochs': configspace['epochs'],
+        'config_space': config_space,
+        'max_epochs': config_space['epochs'],
         'metric': 'accuracy',
         'resource_attr': 'epoch',
         'scheduler': 'hyperband_stopping',
@@ -39,9 +39,9 @@ def _common_kwargs(configspace: Dict) -> Dict:
     }
 
 
-def build_gp_model_factory(configspace: Dict, model_params: Dict) -> Dict:
+def build_gp_model_factory(config_space: Dict, model_params: Dict) -> Dict:
     kwargs = dict(
-        _common_kwargs(configspace),
+        _common_kwargs(config_space),
         model='gp_multitask',
         gp_resource_kernel='freeze-thaw')
     _kwargs = check_and_merge_defaults(
@@ -76,9 +76,9 @@ def _convert_model_params(model_params: Dict) -> Dict:
 
 
 def build_gped_model_factory(
-        configspace: Dict, model_params: Dict, **kwargs):
+        config_space: Dict, model_params: Dict, **kwargs):
     kwargs = dict(
-        _common_kwargs(configspace),
+        _common_kwargs(config_space),
         model='gp_expdecay',
         expdecay_normalize_inputs=True,
         **kwargs)
@@ -176,13 +176,13 @@ def test_compare_gp_model_gped_model(_model_params, _state):
 
     model_params = json.loads(_model_params)
     gp_objs = build_gp_model_factory(config_space, model_params)
-    configspace_ext = gp_objs['configspace_ext']
+    config_space_ext = gp_objs['config_space_ext']
     gp_model_factory = gp_objs['model_factory']
     gped_model_factory = build_gped_model_factory(
         config_space, model_params)['model_factory']
 
     state = decode_state_from_old_encoding(
-        enc_state=json.loads(_state), hp_ranges=configspace_ext.hp_ranges_ext)
+        enc_state=json.loads(_state), hp_ranges=config_space_ext.hp_ranges_ext)
     if state.pending_evaluations:
         # Remove pending evaluations
         state = TuningJobState(
@@ -218,13 +218,13 @@ def test_compare_gped_likelihood_oldnew(_model_params, _state):
     kwargs = dict(no_fantasizing=True)
     gped_objs = build_gped_model_factory(
         config_space, model_params, **kwargs)
-    configspace_ext = gped_objs['configspace_ext']
+    config_space_ext = gped_objs['config_space_ext']
     gped_model_factory.append(gped_objs['model_factory'])
     gped_model_factory.append(build_gped_model_factory(
         config_space, model_params, use_new_code=False,
         **kwargs)['model_factory'])
     state = decode_state_from_old_encoding(
-        enc_state=json.loads(_state), hp_ranges=configspace_ext.hp_ranges_ext)
+        enc_state=json.loads(_state), hp_ranges=config_space_ext.hp_ranges_ext)
 
     # Compare likelihoods
     likelihood = [
@@ -259,13 +259,13 @@ def test_compare_gped_likelihood_fantasizing_oldnew(_model_params, _state):
         no_fantasizing=False)
     gped_objs = build_gped_model_factory(
         config_space, model_params, **kwargs)
-    configspace_ext = gped_objs['configspace_ext']
+    config_space_ext = gped_objs['config_space_ext']
     gped_model_factory.append(gped_objs['model_factory'])
     gped_model_factory.append(build_gped_model_factory(
         config_space, model_params, use_new_code=False,
         **kwargs)['model_factory'])
     state = decode_state_from_old_encoding(
-        enc_state=json.loads(_state), hp_ranges=configspace_ext.hp_ranges_ext)
+        enc_state=json.loads(_state), hp_ranges=config_space_ext.hp_ranges_ext)
 
     # Compare likelihoods
     # We need to force them to use the same fantasy samples

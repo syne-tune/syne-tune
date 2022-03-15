@@ -70,11 +70,11 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
     surrogate model.
 
     """
-    def __init__(self, configspace, metric, **kwargs):
+    def __init__(self, config_space, metric, **kwargs):
         assert kwargs.get('cost_attr') is not None, \
             "This searcher needs a cost attribute. Please specify its " +\
             "name in search_options['cost_attr']"
-        super().__init__(configspace, metric, **kwargs)
+        super().__init__(config_space, metric, **kwargs)
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(

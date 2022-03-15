@@ -24,7 +24,7 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import TrialScheduler, \
     SchedulerDecision, TrialSuggestion
 from syne_tune import Tuner
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 from syne_tune import StoppingCriterion
 
 

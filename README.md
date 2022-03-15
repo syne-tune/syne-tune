@@ -136,7 +136,7 @@ Below is a minimal example showing how to tune a script `train_height.py` with R
 
 ```python
 from pathlib import Path
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 from syne_tune.backend.local_backend import LocalBackend
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.stopping_criterion import StoppingCriterion

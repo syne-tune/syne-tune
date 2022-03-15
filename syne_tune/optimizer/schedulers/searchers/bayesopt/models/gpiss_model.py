@@ -125,7 +125,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             self, gpmodel: GaussianProcessLearningCurveModel,
             num_fantasy_samples: int,
             active_metric: str,
-            configspace_ext: ExtendedConfiguration,
+            config_space_ext: ExtendedConfiguration,
             normalize_targets: bool = False,
             profiler: Optional[SimpleProfiler] = None,
             debug_log: Optional[DebugLogPrinter] = None,
@@ -139,7 +139,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         :param gpmodel: GaussianProcessLearningCurveModel
         :param num_fantasy_samples: See above
         :param active_metric: Name of the metric to optimize.
-        :param configspace_ext: ExtendedConfiguration
+        :param config_space_ext: ExtendedConfiguration
         :param normalize_targets: Normalize observed target values?
         :param debug_log: DebugLogPrinter (optional)
         :param filter_observed_data: Filter for observed data before
@@ -148,13 +148,13 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         """
         self._gpmodel = gpmodel
         self.active_metric = active_metric
-        r_min, r_max = configspace_ext.resource_attr_range
+        r_min, r_max = config_space_ext.resource_attr_range
         assert 0 < r_min < r_max, \
             f"r_min = {r_min}, r_max = {r_max}: Need 0 < r_min < r_max"
         assert num_fantasy_samples >= 0, \
             f"num_fantasy_samples = {num_fantasy_samples}, must be non-negative int"
         self.num_fantasy_samples = num_fantasy_samples
-        self._configspace_ext = configspace_ext
+        self._config_space_ext = config_space_ext
         self._debug_log = debug_log
         self._profiler = profiler
         self._filter_observed_data = filter_observed_data
@@ -185,7 +185,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
 
         # [1] Fit model and compute posterior state, ignoring pending evals
         data = prepare_data(
-            state, self._configspace_ext, self.active_metric,
+            state, self._config_space_ext, self.active_metric,
             normalize_targets=self.normalize_targets,
             do_fantasizing=False)
         if fit_params:
@@ -214,7 +214,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             logger.info("Recomputing posterior state with fantasy targets")
             data = prepare_data(
                 state=state_with_fantasies,
-                configspace_ext=self._configspace_ext,
+                config_space_ext=self._config_space_ext,
                 active_metric=self.active_metric,
                 normalize_targets=self.normalize_targets,
                 do_fantasizing=True)
@@ -256,7 +256,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         # Recompute posterior state with fantasy samples
         data = prepare_data(
             state=state_with_fantasies,
-            configspace_ext=self._configspace_ext,
+            config_space_ext=self._config_space_ext,
             active_metric=self.active_metric,
             normalize_targets=self.normalize_targets,
             do_fantasizing=True)
@@ -292,7 +292,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         # evaluations at a time.
         data_nopending, data_pending = prepare_data_with_pending(
             state=state,
-            configspace_ext=self._configspace_ext,
+            config_space_ext=self._config_space_ext,
             active_metric=self.active_metric,
             normalize_targets=self.normalize_targets)
         if not data_nopending['configs']:
@@ -340,7 +340,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
                 else:
                     all_fantasy_targets[pos].append(fantasies)
         # Convert into `FantasizedPendingEvaluation`
-        r_min = self._configspace_ext.resource_attr_range[0]
+        r_min = self._config_space_ext.resource_attr_range[0]
         pending_evaluations_with_fantasies = []
         for trial_id, targets, fantasies in zip(
                 data_pending['trial_ids'], data_pending['targets'],

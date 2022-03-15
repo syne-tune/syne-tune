@@ -27,7 +27,7 @@ from syne_tune.optimizer.scheduler import TrialScheduler, \
     SchedulerDecision, TrialSuggestion
 from syne_tune.backend.time_keeper import TimeKeeper, RealTimeKeeper
 from syne_tune.backend.trial_status import Trial
-from syne_tune.search_space import cast_config_values
+from syne_tune.config_space import cast_config_values
 
 __all__ = ['FIFOScheduler',
            'ResourceLevelsScheduler']
@@ -201,7 +201,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
             else:
                 search_options = search_options.copy()
             search_options.update({
-                'configspace': self.config_space.copy(),
+                'config_space': self.config_space.copy(),
                 'metric': self.metric,
                 'points_to_evaluate': kwargs.get('points_to_evaluate'),
                 'scheduler_mode': kwargs['mode'],

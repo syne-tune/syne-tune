@@ -23,7 +23,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import RepeatedCandidateGenerator
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
-from syne_tune.search_space import randint, choice
+from syne_tune.config_space import randint, choice
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
     import create_tuning_job_state, create_exclusion_set
 

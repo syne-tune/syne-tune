@@ -19,7 +19,7 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
 from syne_tune import Tuner
 from syne_tune import StoppingCriterion
-from syne_tune.search_space import randint
+from syne_tune.config_space import randint
 from syne_tune.util import script_checkpoint_example_path
 from tst.util_test import temporary_local_backend
 
