@@ -9,7 +9,6 @@ from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCall
 from benchmarking.definitions.definition_nasbench201 import nasbench201_benchmark, nasbench201_default_params
 from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
 from benchmarking.blackbox_repository import load
-import random
 import pandas as pd
 import numpy as np
 import logging
