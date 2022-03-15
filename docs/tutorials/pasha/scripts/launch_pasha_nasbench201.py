@@ -186,12 +186,14 @@ if __name__ == '__main__':
     random_seed = 31415927
     n_workers = 4
     max_num_trials_started = 256
+    hpo_approach = 'pasha'
 
     # Initial data loading and pre-processing
     nb201_df = load_nb201(dataset_name, nb201_random_seed)
 
     # Run an experiment
-    experiment_name = run_experiment(dataset_name, random_seed, nb201_random_seed, 'pasha')
+    experiment_name = run_experiment(
+        dataset_name, random_seed, nb201_random_seed, hpo_approach)
 
     # To run PASHA with an alternative ranking function, e.g. soft ranking with $\epsilon=2\sigma$ use
     # rung_system_kwargs={'ranking_criterion': 'soft_ranking_std', 'epsilon_scaling': 2.0}
