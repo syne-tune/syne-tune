@@ -10,7 +10,6 @@ from benchmarking.definitions.definition_nasbench201 import nasbench201_benchmar
 from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
 from benchmarking.blackbox_repository import load
 import pandas as pd
-import numpy as np
 import logging
 
 
