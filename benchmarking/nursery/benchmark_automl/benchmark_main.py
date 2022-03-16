@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import numpy as np
 import itertools
@@ -18,10 +18,17 @@ from syne_tune.tuner import Tuner
 from coolname import generate_slug
 
 
-def get_transfer_learning_evaluations(blackbox_name: str, test_task: str, n_evals: Optional[int] = None) -> Dict:
+def get_transfer_learning_evaluations(
+        blackbox_name: str,
+        test_task: str,
+        datasets: Optional[List[str]],
+        n_evals: Optional[int] = None
+) -> Dict:
     """
     :param blackbox_name:
-    :param test_task:
+    :param test_task: task where the performance would be tested, it is excluded from transfer-learning evaluations
+    :param datasets: subset of datasets to consider, only evaluations from those datasets are provided to
+    transfer-learning methods. If none, all datasets are used.
     :param n_evals: maximum number of evaluations to be returned
     :return:
     """
@@ -37,7 +44,7 @@ def get_transfer_learning_evaluations(blackbox_name: str, test_task: str, n_eval
             objectives_names=[bb.objectives_names[metric_index]],
         )
         for task, bb in task_to_evaluations.items()
-        if task != test_task
+        if task != test_task and (datasets is None or task in datasets)
     }
 
     if n_evals is not None:
@@ -112,6 +119,7 @@ if __name__ == '__main__':
             transfer_learning_evaluations=get_transfer_learning_evaluations(
                 blackbox_name=benchmark.blackbox_name,
                 test_task=benchmark.dataset_name,
+                datasets=benchmark.datasets,
             ),
             use_surrogates=method == Methods.ZEROSHOT and 'lcbench' in benchmark_name,
         ))

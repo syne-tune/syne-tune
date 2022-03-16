@@ -35,7 +35,6 @@ class Methods:
     REA = 'REA'
     MOBSTER = 'MOB'
     ZEROSHOT = 'ZS'
-    SGPT = 'SGPT'
     TPE = 'TPE'
 
     
@@ -154,15 +153,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    # Methods.SGPT: lambda method_arguments: FIFOScheduler(
-    #     config_space=method_arguments.config_space,
-    #     searcher="bayesopt",
-    #     search_options={'sample_size': 1000, 'bandwidth': 0.3, 'model': 'sgpt',
-    #                     'transfer_learning_evaluations': method_arguments.transfer_learning_evaluations},
-    #     mode=method_arguments.mode,
-    #     metric=method_arguments.metric,
-    #     points_to_evaluate=list()
-    # ),
 }
 
 
@@ -180,8 +170,6 @@ if __name__ == '__main__':
             dataset=benchmark.dataset_name,
         )
         for method_name, method_fun in methods.items():
-            if method_name == Methods.SGPT:
-                continue
             print(f"checking initialization of: {method_name}, {benchmark_name}")
             scheduler = method_fun(MethodArguments(
                 config_space=backend.blackbox.configuration_space,
@@ -193,6 +181,7 @@ if __name__ == '__main__':
                 transfer_learning_evaluations=get_transfer_learning_evaluations(
                     blackbox_name=benchmark.blackbox_name,
                     test_task=benchmark.dataset_name,
+                    datasets=benchmark.datasets,
                 ),
             ))
             scheduler.suggest(0)

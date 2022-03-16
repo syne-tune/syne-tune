@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -14,6 +14,7 @@ class BenchmarkDefinition:
     time_this_resource_attr: Optional[str] = None
     max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
+    datasets: Optional[List[str]] = None
 
 
 def fcnet_benchmark(dataset_name):
@@ -41,7 +42,7 @@ def nas201_benchmark(dataset_name):
     )
 
 
-def lcbench_benchmark(dataset_name):
+def lcbench_benchmark(dataset_name, datasets):
     return BenchmarkDefinition(
         max_wallclock_time=7200,
         n_workers=4,
@@ -52,6 +53,7 @@ def lcbench_benchmark(dataset_name):
         dataset_name=dataset_name,
         surrogate="KNeighborsRegressor",
         max_num_evaluations=4000,
+        datasets=datasets,
     )
 
 
@@ -74,4 +76,4 @@ lc_bench_datasets = [
     "christine",
 ]
 for task in lc_bench_datasets:
-    benchmark_definitions["lcbench-" + task.replace("_", "-").replace(".", "")] = lcbench_benchmark(task)
+    benchmark_definitions["lcbench-" + task.replace("_", "-").replace(".", "")] = lcbench_benchmark(task, datasets=lc_bench_datasets)
