@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-from syne_tune.optimizer.baselines import ZeroShotTransfer
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -34,7 +33,6 @@ class Methods:
     BOHB = 'BOHB'
     REA = 'REA'
     MOBSTER = 'MOB'
-    ZEROSHOT = 'ZS'
     TPE = 'TPE'
 
     
@@ -97,14 +95,6 @@ methods = {
         metric=method_arguments.metric,
         max_t=200,
         resource_attr=method_arguments.resource_attr,
-    ),
-    Methods.ZEROSHOT: lambda method_arguments: ZeroShotTransfer(
-        config_space=method_arguments.config_space,
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
-        use_surrogates=method_arguments.use_surrogates,
-        random_seed=method_arguments.random_seed,
     ),
     Methods.GP: lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,

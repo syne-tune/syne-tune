@@ -24,7 +24,6 @@ tpe_color = "red"
 rea_color = "brown"
 hb_bb_color = "green"
 hb_ts_color = "yellow"
-zero_shot_color = "purple"
 fifo_style = 'solid'
 multifidelity_style = 'dashed'
 multifidelity_style2 = 'dashdot'
@@ -51,7 +50,6 @@ method_styles = {
     # transfer learning
     Methods.ASHA_BB: MethodSyle(hb_bb_color, multifidelity_style, "."),
     Methods.ASHA_CTS: MethodSyle(hb_ts_color, multifidelity_style, "."),
-    Methods.ZEROSHOT: MethodSyle(zero_shot_color, fifo_style, "."),
 }
 
 

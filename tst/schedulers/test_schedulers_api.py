@@ -11,7 +11,7 @@ import numpy as np
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
-    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER, ZeroShotTransfer
+    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -128,13 +128,6 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         mode='min',
         config_space=config_space,
         metric=metric1
-    ),
-    ZeroShotTransfer(
-        config_space=config_space,
-        metric=metric1,
-        mode='min',
-        transfer_learning_evaluations=transfer_learning_evaluations,
-        use_surrogates=True,
     ),
     RUSHScheduler(
         resource_attr=resource_attr,

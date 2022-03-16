@@ -1,6 +1,5 @@
 from typing import Dict
 
-from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
@@ -9,7 +8,6 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import \
     RegularizedEvolution
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
     SynchronousGeometricHyperbandScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 
 
 class RandomSearch(FIFOScheduler):
@@ -209,22 +207,6 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
             config_space=config_space,
             metric=metric,
             searcher="bayesopt_constrained",
-            **kwargs,
-        )
-
-class ZeroShotTransfer(FIFOScheduler):
-    def __init__(self, config_space: Dict, transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-                 metric: str, mode: str = 'min', sort_transfer_learning_evaluations: bool = True,
-                 use_surrogates: bool = False, random_seed: int = None, **kwargs):
-        super(ZeroShotTransfer, self).__init__(
-            config_space=config_space,
-            metric=metric,
-            searcher=zero_shot.ZeroShotTransfer(
-                config_space=config_space, metric=metric, mode=mode,
-                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations, random_seed=random_seed,
-                transfer_learning_evaluations=transfer_learning_evaluations, use_surrogates=use_surrogates
-            ),
-            mode=mode,
             **kwargs,
         )
 

@@ -121,7 +121,7 @@ if __name__ == '__main__':
                 test_task=benchmark.dataset_name,
                 datasets=benchmark.datasets,
             ),
-            use_surrogates=method == Methods.ZEROSHOT and 'lcbench' in benchmark_name,
+            use_surrogates='lcbench' in benchmark_name,
         ))
 
         stop_criterion = StoppingCriterion(

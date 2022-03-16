@@ -46,7 +46,6 @@ if __name__ == '__main__':
         Methods.ASHA,
         Methods.BOHB,
         Methods.MOBSTER,
-        Methods.ZEROSHOT,
         Methods.ASHA_BB,
         Methods.ASHA_CTS,
     ]
