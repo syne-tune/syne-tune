@@ -1,0 +1,8 @@
+pip
+requests
+filelock
+boto3
+torch==1.10.0
+datasets==1.8.0
+transformers
+syne-tune[extra]
