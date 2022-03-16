@@ -2,15 +2,11 @@
 import logging
 from argparse import ArgumentParser
 from benchmarking.nursery.benchmark_automl.baselines import Methods
-from datetime import datetime
 
 from benchmarking.nursery.benchmark_automl.results_analysis.utils import method_styles, load_and_cache, plot_results, \
     print_rank_table
 
 if __name__ == '__main__':
-    date_min = datetime.fromisoformat("2022-01-04")
-    date_max = datetime.fromisoformat("2023-01-04")
-
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag", type=str, required=False, default="purple-akita",
@@ -24,7 +20,9 @@ if __name__ == '__main__':
 
     # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
     methods_to_show = list(method_styles.keys())
-    benchmarks_to_df = load_and_cache(load_cache_if_exists=load_cache_if_exists, experiment_tag=experiment_tag, methods_to_show=methods_to_show)
+    benchmarks_to_df = load_and_cache(
+        load_cache_if_exists=load_cache_if_exists, experiment_tag=experiment_tag, methods_to_show=methods_to_show
+    )
 
     for bench, df_ in benchmarks_to_df.items():
         df_methods = df_.algorithm.unique()

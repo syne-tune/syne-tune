@@ -1,7 +1,6 @@
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-from datetime import datetime
 from matplotlib import cm
 
 from benchmarking.nursery.benchmark_automl.baselines import Methods
@@ -11,9 +10,6 @@ show_seeds = False
 
 
 if __name__ == '__main__':
-    date_min = datetime.fromisoformat("2022-01-04")
-    date_max = datetime.fromisoformat("2023-01-04")
-
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag", type=str, required=False, default="nworkers-rebel-ibex",
