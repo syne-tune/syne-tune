@@ -232,6 +232,22 @@ class Float(Domain):
             items = np.exp(log_items)
             return _sanitize_sample_result(items, domain)
 
+    # Transform is -log(1 - x)
+    class _ReverseLogUniform(LogUniform):
+        def sample(self,
+                   domain: "Float",
+                   spec: Optional[Union[List[Dict], Dict]] = None,
+                   size: int = 1,
+                   random_state: Optional[np.random.RandomState] = None):
+            assert 0 <= domain.lower <= domain.upper < 1
+            logmin = -np.log1p(-domain.lower)
+            logmax = -np.log1p(-domain.upper)
+            if random_state is None:
+                random_state = np.random
+            log_items = random_state.uniform(logmin, logmax, size=size)
+            items = -np.expm1(-log_items)
+            return _sanitize_sample_result(items, domain)
+
     class _Normal(Normal):
         def sample(self,
                    domain: "Float",
@@ -286,6 +302,17 @@ class Float(Domain):
                 "instead.")
         new = copy(self)
         new.set_sampler(self._LogUniform())
+        return new
+
+    def reverseloguniform(self):
+        if not (0 <= self.lower <= self.upper < 1):
+            raise ValueError(
+                "ReverseLogUniform requires 0 <= lower <= upper < 1."
+                f"Got: lower={self.lower}, upper={self.upper}. Did you "
+                "pass a variable that has been transformed as -log(1 - x)?"
+                "If so, pass the non-transformed values instead.")
+        new = copy(self)
+        new.set_sampler(self._ReverseLogUniform())
         return new
 
     def normal(self, mean=0., sd=1.):
@@ -732,6 +759,17 @@ def loguniform(lower: float, upper: float):
     return Float(lower, upper).loguniform()
 
 
+def reverseloguniform(lower: float, upper: float):
+    """Values 0 <= x < 1, internally represented as -log(1 - x)
+
+    Args:
+        lower (float): Lower boundary of the output interval (e.g. 0.99)
+        upper (float): Upper boundary of the output interval (e.g. 0.9999)
+
+    """
+    return Float(lower, upper).reverseloguniform()
+
+
 def qloguniform(lower: float, upper: float, q: float):
     """Sugar for sampling in different orders of magnitude.
 
@@ -867,6 +905,11 @@ def is_log_space(domain: Domain) -> bool:
         sampler = domain.get_sampler()
         return isinstance(sampler, Float._LogUniform) \
                or isinstance(sampler, Integer._LogUniform)
+
+
+def is_reverse_log_space(domain: Domain) -> bool:
+    return isinstance(domain, Float) and \
+           isinstance(domain.get_sampler(), Float._ReverseLogUniform)
 
 
 def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):

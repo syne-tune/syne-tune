@@ -192,15 +192,6 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         self._trial_to_pending_slot = dict()
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
-        # Maps (bracket_id, level), level a rung level in the bracket, to
-        # the previous rung level (or 0)
-        self._level_to_prev_level = dict()
-        for bracket_id, rungs in enumerate(bracket_rungs):
-            _, levels = zip(*rungs)
-            levels = (0,) + levels
-            self._level_to_prev_level.update(
-                ((bracket_id, lv), plv) for (lv, plv) in zip(
-                    levels[1:], levels[:-1]))
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         do_debug_log = self.searcher.debug_log is not None
@@ -285,7 +276,8 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                 f"'{self._resource_attr}' field"
             resource = int(result[self._resource_attr])
             milestone = slot_in_rung.level
-            prev_level = self._level_to_prev_level[(bracket_id, milestone)]
+            prev_level = self.bracket_manager.level_to_prev_level(
+                bracket_id, milestone)
             trial_decision = SchedulerDecision.CONTINUE
             if resource >= milestone:
                 assert resource == milestone, \
