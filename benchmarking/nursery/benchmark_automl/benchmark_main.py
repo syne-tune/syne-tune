@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from benchmarking.blackbox_repository import load
 from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-from benchmarking.nursery.benchmark_automl.baselines import MethodArguments, methods, Methods
+from benchmarking.nursery.benchmark_automl.baselines import MethodArguments, methods
 from benchmarking.nursery.benchmark_automl.benchmark_definitions import benchmark_definitions
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback

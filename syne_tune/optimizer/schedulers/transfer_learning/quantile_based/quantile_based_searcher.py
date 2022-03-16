@@ -5,8 +5,7 @@ import xgboost
 from sklearn.model_selection import train_test_split
 
 from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.searchers import BaseSearcher, SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 
 import pandas as pd
 
