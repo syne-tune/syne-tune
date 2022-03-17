@@ -1,46 +1,48 @@
-﻿instance;vCPU;Memory;price;type;GPU
-ml.m5.large;2;8 GiB;0.134;Standard Instances;0
-ml.m5.xlarge;4;16 GiB;0.269;Standard Instances;0
-ml.m5.2xlarge;8;32 GiB;0.538;Standard Instances;0
-ml.m5.4xlarge;16;64 GiB;1.075;Standard Instances;0
-ml.m5.12xlarge;48;192 GiB;3.226;Standard Instances;0
-ml.m5.24xlarge;96;384 GiB;6.451;Standard Instances;0
-ml.m4.xlarge;4;16 GiB;0.28;Standard Instances;0
-ml.m4.2xlarge;8;32 GiB;0.56;Standard Instances;0
-ml.m4.4xlarge;16;64 GiB;1.12;Standard Instances;0
-ml.m4.10xlarge;40;160 GiB;2.80;Standard Instances;0
-ml.m4.16xlarge;64;256 GiB;4.48;Standard Instances;0
-ml.c5.xlarge;4;8 GiB;0.238;Compute Optimized;0
-ml.c5.2xlarge;8;16 GiB;0.476;Compute Optimized;0
-ml.c5.4xlarge;16;32 GiB;0.952;Compute Optimized;0
-ml.c5.9xlarge;36;72 GiB;2.142;Compute Optimized;0
-ml.c5.18xlarge;72;144 GiB;4.284;Compute Optimized;0
-ml.c4.xlarge;4;7.5 GiB;0.279;Compute Optimized;0
-ml.c4.2xlarge;8;15 GiB;0.557;Compute Optimized;0
-ml.c4.4xlarge;16;30 GiB;1.114;Compute Optimized;0
-ml.c4.8xlarge;36;60 GiB;2.227;Compute Optimized;0
-ml.c5n.18xlarge;72;192 GiB;5.443;Compute Optimized;0
-ml.c5n.2xlarge;8;21 GiB;0.605;Compute Optimized;0
-ml.c5n.4xlarge;16;42 GiB;1.21;Compute Optimized;0
-ml.c5n.9xlarge;36;96 GiB;2.722;Compute Optimized;0
-ml.c5n.xlarge;4;10.5 GiB;0.302;Compute Optimized;0
-ml.p3.2xlarge;8;61 GiB;3.825;Accelerated Computing;1
-ml.p3.8xlarge;32;244 GiB;14.688;Accelerated Computing;4
-ml.p3.16xlarge;64;488 GiB;28.152;Accelerated Computing;8
-ml.p2.xlarge;4;61 GiB;1.125;Accelerated Computing;1
-ml.p2.8xlarge;32;488 GiB;8.64;Accelerated Computing;8
-ml.p2.16xlarge;64;732 GiB;16.56;Accelerated Computing;16
-ml.g4dn.xlarge;4;16 GiB;0.736;Accelerated Computing;1
-ml.g4dn.2xlarge;8;32 GiB;1.053;Accelerated Computing;1
-ml.g4dn.4xlarge;16;64 GiB;1.686;Accelerated Computing;1
-ml.g4dn.8xlarge;32;128 GiB;3.046;Accelerated Computing;1
-ml.g4dn.12xlarge;48;192 GiB;5.477;Accelerated Computing;4
-ml.g4dn.16xlarge;64;256 GiB;6.093;Accelerated Computing;1
-ml.g5.xlarge;4;16 GiB;1.006;Accelerated Computing;1
-ml.g5.2xlarge;8;32 GiB;1.212;Accelerated Computing;1
-ml.g5.4xlarge;16;64 GiB;1.624;Accelerated Computing;1
-ml.g5.8xlarge;32;128 GiB;2.448;Accelerated Computing;1
-ml.g5.12xlarge;48;192 GiB;5.672;Accelerated Computing;4
-ml.g5.16xlarge;64;256 GiB;4.096;Accelerated Computing;1
-ml.g5.24xlarge;96;384 GiB;8.144;Accelerated Computing;4
-ml.g5.48xlarge;192;768 GiB;16.288;Accelerated Computing;8
+instance;vCPU;Memory;price;type;GPU;GPUMemory
+ml.m5.large;2;8 GiB;0.134;Standard Instances;0;0
+ml.m5.xlarge;4;16 GiB;0.269;Standard Instances;0;0
+ml.m5.2xlarge;8;32 GiB;0.538;Standard Instances;0;0
+ml.m5.4xlarge;16;64 GiB;1.075;Standard Instances;0;0
+ml.m5.12xlarge;48;192 GiB;3.226;Standard Instances;0;0
+ml.m5.24xlarge;96;384 GiB;6.451;Standard Instances;0;0
+ml.m4.xlarge;4;16 GiB;0.28;Standard Instances;0;0
+ml.m4.2xlarge;8;32 GiB;0.56;Standard Instances;0;0
+ml.m4.4xlarge;16;64 GiB;1.12;Standard Instances;0;0
+ml.m4.10xlarge;40;160 GiB;2.80;Standard Instances;0;0
+ml.m4.16xlarge;64;256 GiB;4.48;Standard Instances;0;0
+ml.c5.xlarge;4;8 GiB;0.238;Compute Optimized;0;0
+ml.c5.2xlarge;8;16 GiB;0.476;Compute Optimized;0;0
+ml.c5.4xlarge;16;32 GiB;0.952;Compute Optimized;0;0
+ml.c5.9xlarge;36;72 GiB;2.142;Compute Optimized;0;0
+ml.c5.18xlarge;72;144 GiB;4.284;Compute Optimized;0;0
+ml.c4.xlarge;4;7.5 GiB;0.279;Compute Optimized;0;0
+ml.c4.2xlarge;8;15 GiB;0.557;Compute Optimized;0;0
+ml.c4.4xlarge;16;30 GiB;1.114;Compute Optimized;0;0
+ml.c4.8xlarge;36;60 GiB;2.227;Compute Optimized;0;0
+ml.c5n.18xlarge;72;192 GiB;5.443;Compute Optimized;0;0
+ml.c5n.2xlarge;8;21 GiB;0.605;Compute Optimized;0;0
+ml.c5n.4xlarge;16;42 GiB;1.21;Compute Optimized;0;0
+ml.c5n.9xlarge;36;96 GiB;2.722;Compute Optimized;0;0
+ml.c5n.xlarge;4;10.5 GiB;0.302;Compute Optimized;0;0
+ml.p4d.24xlarge;96;1152 GiB;37.688;Accelerated Computing;8;40 GiB
+ml.p3.2xlarge;8;61 GiB;3.825;Accelerated Computing;1;16 GiB
+ml.p3.8xlarge;32;244 GiB;14.688;Accelerated Computing;4;16 GiB
+ml.p3.16xlarge;64;488 GiB;28.152;Accelerated Computing;8;16 GiB
+ml.p3dn.24xlarge;96;768 GiB;35.894;Accelerated Computing;8;32 GiB
+ml.p2.xlarge;4;61 GiB;1.125;Accelerated Computing;1;12 GiB
+ml.p2.8xlarge;32;488 GiB;8.64;Accelerated Computing;8;12 GiB
+ml.p2.16xlarge;64;732 GiB;16.56;Accelerated Computing;16;12 GiB
+ml.g4dn.xlarge;4;16 GiB;0.736;Accelerated Computing;1;16 GiB
+ml.g4dn.2xlarge;8;32 GiB;1.053;Accelerated Computing;1;16 GiB
+ml.g4dn.4xlarge;16;64 GiB;1.686;Accelerated Computing;1;16 GiB
+ml.g4dn.8xlarge;32;128 GiB;3.046;Accelerated Computing;1;16 GiB
+ml.g4dn.12xlarge;48;192 GiB;5.477;Accelerated Computing;4;16 GiB
+ml.g4dn.16xlarge;64;256 GiB;6.093;Accelerated Computing;1;16 GiB
+ml.g5.xlarge;4;16 GiB;1.006;Accelerated Computing;1;24 GiB
+ml.g5.2xlarge;8;32 GiB;1.212;Accelerated Computing;1;24 GiB
+ml.g5.4xlarge;16;64 GiB;1.624;Accelerated Computing;1;24 GiB
+ml.g5.8xlarge;32;128 GiB;2.448;Accelerated Computing;1;24 GiB
+ml.g5.12xlarge;48;192 GiB;5.672;Accelerated Computing;4;24 GiB
+ml.g5.16xlarge;64;256 GiB;4.096;Accelerated Computing;1;24 GiB
+ml.g5.24xlarge;96;384 GiB;8.144;Accelerated Computing;4;24 GiB
+ml.g5.48xlarge;192;768 GiB;16.288;Accelerated Computing;8;24 GiB
