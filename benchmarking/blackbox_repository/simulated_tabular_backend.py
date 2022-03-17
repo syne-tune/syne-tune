@@ -193,6 +193,8 @@ def make_surrogate(surrogate: Optional[str] = None, surrogate_kwargs: Optional[D
         }
         assert surrogate in surrogate_dict, f"surrogate passed {surrogate} is not supported, " \
                                             f"only {list(surrogate_dict.keys())} are available"
+        if surrogate_kwargs is None:
+            surrogate_kwargs = {}
         return surrogate_dict[surrogate](**surrogate_kwargs)
 
 

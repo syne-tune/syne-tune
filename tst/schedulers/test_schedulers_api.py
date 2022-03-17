@@ -22,7 +22,10 @@ from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
 import syne_tune.config_space as sp
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import \
+    QuantileBasedSurrogateSearcher
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
+
 
 config_space = {
     "steps": 100,
@@ -67,6 +70,10 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
         ),
     }
 
+
+transfer_learning_evaluations = make_transfer_learning_evaluations()
+
+
 @pytest.mark.parametrize("scheduler", [
     FIFOScheduler(config_space, searcher='random', metric=metric1),
     FIFOScheduler(config_space, searcher='bayesopt', metric=metric1),
@@ -109,7 +116,18 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
         mode="min",
         config_space=config_space,
         metric=metric1,
-        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+        transfer_learning_evaluations=transfer_learning_evaluations,
+    ),
+    FIFOScheduler(
+        searcher=QuantileBasedSurrogateSearcher(
+            mode="min",
+            config_space=config_space,
+            metric=metric1,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+        ),
+        mode='min',
+        config_space=config_space,
+        metric=metric1
     ),
     RUSHScheduler(
         resource_attr=resource_attr,
