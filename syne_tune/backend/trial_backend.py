@@ -67,9 +67,18 @@ class TrialBackend:
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
         """
         Copy the checkpoint folder from one trial to the other.
+
         :param src_trial_id:
         :param tgt_trial_id:
-        :return:
+        """
+        raise NotImplementedError()
+
+    def delete_checkpoint(self, trial_id: int):
+        """
+        Removes checkpoint folder for a trial. It is OK for the folder not to
+        exist.
+
+        :param trial_id:
         """
         raise NotImplementedError()
 
