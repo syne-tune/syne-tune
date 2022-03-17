@@ -1,4 +1,4 @@
-# Benchmark Automl
+# Benchmark Automl submission
 
 This folder shows one way to run quick experiments running different scheduler on different benchmarks and plot
  results once they are done.
