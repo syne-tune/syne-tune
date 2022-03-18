@@ -42,7 +42,7 @@ def test_cost_offset():
         resource_attr='epoch',
         type='cost_promotion',
         max_resource_attr='epochs',
-        rung_system_kwargs={'cost_attr': 'cost'})
+        cost_attr='cost')
     # Start 4 trials
     trials = dict()
     for trial_id in range(4):
@@ -106,7 +106,7 @@ def test_reset_cost_offset():
         resource_attr='epoch',
         type='cost_promotion',
         max_resource_attr='epochs',
-        rung_system_kwargs={'cost_attr': 'cost'})
+        cost_attr='cost')
     # Start 4 trials
     trials = dict()
     for trial_id in range(4):
