@@ -1,5 +1,4 @@
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers import HyperbandScheduler, FIFOScheduler
 
 methods = {
     'RS': lambda config_space, metric, mode, random_seed, max_t, resource_attr: FIFOScheduler(

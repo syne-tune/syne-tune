@@ -11,11 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from syne_tune.optimizer.scheduler import TrialScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+from syne_tune.optimizer.schedulers import FIFOScheduler, HyperbandScheduler
+from syne_tune.optimizer.schedulers.synchronous import \
     SynchronousGeometricHyperbandScheduler
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.constants import ST_WORKER_TIME
 
 from benchmarking.cli.launch_utils import make_searcher_and_scheduler
@@ -185,8 +184,7 @@ def scheduler_factory(
         from ray.tune.schedulers import AsyncHyperBandScheduler
         from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
         from ray.tune.suggest.skopt import SkOptSearch
-        from syne_tune.optimizer.schedulers.ray_scheduler import \
-            RayTuneScheduler
+        from syne_tune.optimizer.schedulers import RayTuneScheduler
         from syne_tune.optimizer.schedulers.searchers import \
             impute_points_to_evaluate
 

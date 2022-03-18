@@ -10,3 +10,16 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+
+__all__ = ['FIFOScheduler',
+           'HyperbandScheduler',
+           'MedianStoppingRule',
+           'PopulationBasedTraining',
+           'RayTuneScheduler']
+
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.median_stopping_rule import \
+    MedianStoppingRule
+from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
+from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler

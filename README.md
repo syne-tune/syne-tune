@@ -137,10 +137,9 @@ Below is a minimal example showing how to tune a script `train_height.py` with R
 ```python
 from pathlib import Path
 from syne_tune.config_space import randint
-from syne_tune.backend.local_backend import LocalBackend
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune.backend import LocalBackend
+from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune import StoppingCriterion, Tuner
 
 config_space = {
     "steps": 100,
@@ -209,6 +208,8 @@ In addition, users can decide to run the tuning loop on a remote instance. This 
 a developer machine run and to benchmark many seed/model options.
 
 ```python
+from syne_tune.remote.remote_launcher import RemoteLauncher
+
 tuner = RemoteLauncher(
     tuner=Tuner(
         trial_backend=trial_backend,

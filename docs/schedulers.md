@@ -37,14 +37,12 @@ Here is a launcher script using `FIFOScheduler`:
 ```python
 import logging
 
-from syne_tune.backend.local_backend import LocalBackend
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.tuner import Tuner
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend import LocalBackend
+from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune import Tuner, StoppingCriterion
 
-from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import
-
-mlp_fashionmnist_benchmark
+from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
+    mlp_fashionmnist_benchmark
 
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.DEBUG)
@@ -73,7 +71,7 @@ if __name__ == '__main__':
     metric=benchmark['metric'])
 
   tuner = Tuner(
-    backend=backend,
+    trial_backend=backend,
     scheduler=scheduler,
     stop_criterion=StoppingCriterion(max_wallclock_time=120),
     n_workers=n_workers)
@@ -229,14 +227,12 @@ Here is a launcher script using `HyperbandScheduler`:
 ```python
 import logging
 
-from syne_tune.backend.local_backend import LocalBackend
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.tuner import Tuner
-from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.backend import LocalBackend
+from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune import Tuner, StoppingCriterion
 
-from examples.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import
-
-mlp_fashionmnist_benchmark
+from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
+    mlp_fashionmnist_benchmark
 
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.DEBUG)
@@ -271,7 +267,7 @@ if __name__ == '__main__':
     metric=benchmark['metric'])
 
   tuner = Tuner(
-    backend=backend,
+    trial_backend=backend,
     scheduler=scheduler,
     stop_criterion=StoppingCriterion(max_wallclock_time=120),
     n_workers=n_workers,

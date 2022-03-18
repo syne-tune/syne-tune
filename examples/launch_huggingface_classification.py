@@ -22,8 +22,7 @@ import syne_tune
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
+from syne_tune import Tuner, StoppingCriterion
 
 from benchmarking.definitions.definition_distilbert_on_imdb import \
     distilbert_imdb_benchmark, distilbert_imdb_default_params

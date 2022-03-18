@@ -19,10 +19,9 @@ from pathlib import Path
 import numpy as np
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from syne_tune import Tuner
+from syne_tune.optimizer.schedulers.multiobjective import MOASHA
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import uniform
-from syne_tune import StoppingCriterion
 
 
 if __name__ == '__main__':
