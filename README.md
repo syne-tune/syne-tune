@@ -25,6 +25,7 @@ you can run `pip install 'syne-tune[X]'` where `X` can be
 * `benchmarks`: For installing all dependencies required to run all benchmarks
 * `extra`: For installing all the above
 * `bore`: For Bore optimizer
+* `kde`: For KDE optimizer
 
 For instance, `pip install 'syne-tune[gpsearchers]'` will install Syne Tune along with many built-in Gaussian process 
 optimizers.

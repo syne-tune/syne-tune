@@ -7,12 +7,12 @@
 * [How can I utilize multiple GPUs?](#multiple-gpus)
 * [What is the default mode when performing optimization?](#default-mode)
 * [How are trials evaluated when evaluating trials on a local machine?](#trial-execution)
-* [What does the the output of the tuning contain?](#tuning-output)
+* [What does the output of the tuning contain?](#tuning-output)
+* [Where can I find the output of the tuning?](#tuning-output-location)
 * [How can I enable trial checkpointing?](#trial-checkpointing)
 * [Which schedulers make use of checkpointing?](#schedulers-checkpointing)
 * [Is the tuner checkpointed?](#tuner-checkpointing)
 * [Where can I find the output of my trials?](#trial-output)
-* [Where can I find the output of the tuning?](#reporter-metrics)
 * [How can I plot the results of a tuning?](#plotting-tuning)
 * [How can I specify additional tuning metadata?](#additional-metadata)
 * [How do I append additional information to the results which are stored?](#logging-additional-information) 
@@ -64,33 +64,46 @@ for step in range(3):
 
 ### <a name="multiple-gpus"></a> How can I utilize multiple GPUs?
 
-To utilize multiple GPUs you can either use the backend `LocalBackend` which will run on the GPU available in a local machine. You can also run on a remote AWS machine with multiple GPUs using the local backend and the remote launcher, see [I don’t want to wait, how can I launch the tuning on a remote machine?](https://quip-amazon.com/TGFSA6CJ7XD0#temp:C:CUV684fe27b049bbc7bd3d1a9877) or run with the SageMaker backend which spins-up one training job per trial.
+To utilize multiple GPUs you can either use the backend `LocalBackend` which will run on the GPU available in a local machine. You can also run on a remote AWS machine with multiple GPUs using the local backend and the remote launcher, see [I don’t want to wait, how can I launch the tuning on a remote machine?]((#remote-tuning)) or run with the SageMaker backend which spins-up one training job per trial.
 
 When evaluating trials on a local machine with `LocalBackend`, by default each trial is allocated to the least occupied GPU by setting `CUDA_VISIBLE_DEVICES` environment variable. 
 
 ### <a name="default-mode"></a> What is the default mode when performing optimization?
 
-The default mode is min when performing optimization. The mode can be configured when instantiating a scheduler.
+The default mode is min when performing optimization so the target metric is minimized. The mode can be configured when instantiating a scheduler.
 
 ### <a name="trial-execution"></a> How are trials evaluated when evaluating trials on a local machine?
 
 When trials are executed locally (e.g. when `LocalBackend` is used), each trial is evaluated as a different sub-process.
+As such the number of concurrent configurations evaluated at the same time (set by `n_workers`) should
+account for the capacity of the machine where the trials are executed.
 
-### <a name="tuning-output"></a> What does the the output of the tuning contain?
+### <a name="tuning-output-location"></a> Where can I find the output of the tuning?
 
-When running locally, Syne Tune store tuning results on  `~/syne-tune/{tuner-name}/`. This directory will contain `metadata.json`, `results.csv.zip`, and `tuner.dill` which are respectively metadata of the tuning job, results obtained at each time-step and state of the tuner.
+When running locally, the output of the tuning is saved under `~/syne-tune/{tuner-name}/`. 
+When running remotely, by default the tuning output is synced regularly to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/`.
+Note: If you run remote tuning via the CLI, the tuning output is synced to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-name}/{tuner-name}/`, where `experiment-name` is the prefix of `tuner-name` without the datetime extension (in the example above, `experiment-name = 'train-height'`).
 
-When running remotely, those files are saved by default under `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/`.
+
+### <a name="tuning-output"></a> What does the output of the tuning contain?
+
+Syne Tune stores the following files `metadata.json`, `results.csv.zip`, and `tuner.dill` which are respectively metadata of the tuning job, results obtained at each time-step and state of the tuner.
 
 ### <a name="trial-checkpointing"></a> How can I enable trial checkpointing?
 
 Since trials may be paused and resumed (either by schedulers or when using spot-instances), the user has the possibility to checkpoint intermediate results to avoid starting computation from scratch. Model outputs and checkpoints must be written into a specific local path given by the command line argument `st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load the state when the job is stopped/resumed (setting the folder correctly and uniquely per trial is the responsibility of the backend), see [checkpoint_example.py](https://github.com/awslabs/syne-tune/blob/main/examples/training_scripts/checkpoint_example/checkpoint_example.py) to see a fully working example of a tuning script with checkpoint enabled.
 
-When using SageMaker backend or tuning remotely, we use [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) under the hood to sync local checkpoints to s3. Checkpoints are synced to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/`, where `sagemaker-default-bucket` is the default bucket for SageMaker (can also be configured).
+When using SageMaker backend or tuning remotely, we use [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) under the hood to sync local checkpoints to s3. Checkpoints are synced to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/`, where `sagemaker-default-bucket` is the default bucket for SageMaker. 
+This can also be configured, for instance if you launch experiments with the benchmarking CLI,
+the files would be writen to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-name}/{tuner-name}/{trial-id}/`.
 
 ### <a name="schedulers-checkpointing"></a> Which schedulers make use of checkpointing?
 
-Checkpointing means storing the state of a trial (i.e., model parameters, optimizer or learning rate scheduler parameters), so that it can be paused and potentially resumed at a later point in time, without having to start training from scratch. Syne Tune checkpointing support is detailed in https://github.com/awslabs/syne-tune/blob/main/docs/benchmarks.md#checkpointing and https://github.com/awslabs/syne-tune/blob/main/examples/training_scripts/checkpoint_example/checkpoint_example.py. Once checkpointing to and from a local file is added to a training script, Syne Tune is managing the checkpoints (e.g., copy to/from cloud storage for distributed back-ends).
+Checkpointing means storing the state of a trial (i.e., model parameters, optimizer or learning rate scheduler 
+parameters), so that it can be paused and potentially resumed at a later point in time, without having to start 
+training from scratch. Syne Tune checkpointing support is detailed in 
+[checkpointing](https://github.com/awslabs/syne-tune/blob/main/docs/benchmarks.md#checkpointing) and 
+[checkpoint_example.py](https://github.com/awslabs/syne-tune/blob/main/examples/training_scripts/checkpoint_example/checkpoint_example.py). Once checkpointing to and from a local file is added to a training script, Syne Tune is managing the checkpoints (e.g., copy to/from cloud storage for distributed back-ends).
 
 The following schedulers make use of checkpointing:
 
@@ -147,11 +160,8 @@ tree ~/syne-tune/train-height-2022-01-12-11-08-40-971/
 └── tuner.dill
 ```
 
-### <a name="reporter-metrics"></a> Where can I find the output of the tuning?
-
-When running locally, the output of the tuning is saved under `~/syne-tune/{tuner-name}/`. 
-When running remotely, the tuning output is synced regularly to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/`.
-Note: If you run remote tuning via the CLI, the tuning output is synced to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-name}/{tuner-name}/`, where `experiment-name` is the prefix of `tuner-name` without the datetime extension (in the example above, `experiment-name = 'train-height'`).
+When running tuning remotely with the remote launcher, only `metadata.json`, `results.csv.zip` and `tuner.dill` 
+are synced with S3 unless `store_logs_localbackend` in which case the trial logs and informations are also persisted.
 
 ### <a name="plotting-tuning"></a> How can I plot the results of a tuning?
 
@@ -187,34 +197,43 @@ All Syne Tune and user metadata are saved when the tuner starts under `metadata.
 
 ### <a name="logging-additional-information"></a> How do I append additional information to the results which are stored? 
 
-Results are processed and stored by callbacks passed to `Tuner`, in particular see https://github.com/awslabs/syne-tune/blob/main/syne_tune/tuner_callback.py#L80. In order to add more information to these results, you can inherit from `StoreResultsCallback`. A good example is given in https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L63.
+Results are processed and stored by callbacks passed to `Tuner`, in particular see 
+[tuner_callback.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/tuner_callback.py#L80). 
+In order to add more information to these results, you can inherit from `StoreResultsCallback`. 
+A good example is given in 
+[searcher_callback.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L63).
 
-If you run experiments with tabulated benchmarks using the `SimulatorBackend`, as demonstrated in https://github.com/awslabs/syne-tune/blob/main/examples/launch_nasbench201_simulated.py, results are stored by `SimulatorCallback` instead, and you need to inherit from this class, as shown in https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L88.
+If you run experiments with tabulated benchmarks using the `SimulatorBackend`, as demonstrated in 
+[launch_nasbench201_simulated.py](https://github.com/awslabs/syne-tune/blob/main/examples/launch_nasbench201_simulated.py), results are stored by `SimulatorCallback` instead, and you need to inherit from this class, as shown in 
+[searcher_callback.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L88).
 
 ### <a name="remote-tuning"></a> I don’t want to wait, how can I launch the tuning on a remote machine?
 
 You can use the remote launcher to launch a tuning on a remote machine. The remote launcher supports both `LocalBackend` and `SagemakerBackend`. In the former case, multiple trials will be evaluated on the remote machine (one use-case being to use a beefy machine), in the latter case trials will be evaluated as separate SageMaker training jobs.
 
-See for an example on how to run tuning with the remote launcher: https://github.com/awslabs/syne-tune/blob/main/examples/launch_height_sagemaker_remotely.py
+See for an example on how to run tuning with the remote launcher: [launch_height_sagemaker_remotely.py](https://github.com/awslabs/syne-tune/blob/main/examples/launch_height_sagemaker_remotely.py)
 
 ### <a name="experiment-parallel"></a> How can I run many experiments in parallel?
 
-You can call the remote launcher multiple times to schedules a list of experiments. In some case, you will want more flexibility and directly write your experiment loop, you can check https://github.com/awslabs/syne-tune/tree/main/benchmarking/benchmark_loop for an example.
+You can call the remote launcher multiple times to schedules a list of experiments. In some case, you will want more flexibility and directly write your experiment loop, you can check 
+[benchmark_loop](https://github.com/awslabs/syne-tune/tree/main/benchmarking/benchmark_loop) for an example.
 
 ### <a name="results-remote-tuning"></a> How can I access results after tuning remotely?
 
 You can either call `load_experiment("{tuner-name}")` which will download files from s3 if the experiment is not found locally. You can also sync directly files from s3 under `~/syne-tune/` folder in batch for instance by running:
 
 ```
-aws s3 sync s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/ ~/syne-tune/
+aws s3 sync s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/ ~/syne-tune/  --include "*"  --exclude "*tuner.dill"
 ```
+
+To get all results without the tuner state (you can ommit the include and exclude if you also want to include the tuner state).
 
 ### <a name="dependencies-remote"></a> How can I specify dependencies to remote launcher or when using the SageMaker backend?
 
 When you run remote code, you often need to install packages (e.g. scipy) or have custom code available.
 
 * To install packages, you can add a file `requirements.txt` in the same folder as your endpoint script. All those packages will be installed by SageMaker when docker container starts.
-* To include custom code (for instance a library that you are working on), you can set the parameter `dependencies` on the remote launcher or on a SageMaker framework to a list of folders. The folders indicated will be compressed, sent to s3 and added to the python path when the container starts. You can see https://github.com/awslabs/syne-tune/blob/main/benchmarking/benchmark_loop/launch_remote.py#L28 for an example setting dependencies in a SageMaker estimator.
+* To include custom code (for instance a library that you are working on), you can set the parameter `dependencies` on the remote launcher or on a SageMaker framework to a list of folders. The folders indicated will be compressed, sent to s3 and added to the python path when the container starts. You can see [launch_remote.py](https://github.com/awslabs/syne-tune/blob/main/benchmarking/benchmark_loop/launch_remote.py#L28) for an example setting dependencies in a SageMaker estimator.
 
 ### <a name="benchmark-cli"></a> How can I benchmark different methods?
 
@@ -244,6 +263,8 @@ An overview of this landscape is given in https://github.com/awslabs/syne-tune/b
 * Synchronous Hyperband: https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/synchronous/hyperband_impl.py#L42
 * Transfer learning schedulers: https://github.com/awslabs/syne-tune/blob/main/examples/launch_nas201_transfer_learning.py
 * Wrappers for Ray Tune schedulers: https://github.com/awslabs/syne-tune/blob/main/examples/launch_height_ray.py
+
+Most of those methods can be accessed with short names by from [baselines.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/baselines.py).
 
 ### <a name="search-space"></a> How do I define the search space? 
 
