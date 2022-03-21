@@ -205,7 +205,6 @@ class RemoteLauncher:
         environment = self.estimator_kwargs.pop("environment", {})
         if "AWS_DEFAULT_REGION" not in environment:
           environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
-
         # the choice of the estimator is arbitrary here since we use a base image of Syne Tune.
         tuner_estimator = PyTorch(
             # path which calls the tuner

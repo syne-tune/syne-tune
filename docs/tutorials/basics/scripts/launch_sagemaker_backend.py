@@ -29,9 +29,8 @@ from sagemaker.pytorch import PyTorch
 from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
+from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.util import repository_root_path
 
 

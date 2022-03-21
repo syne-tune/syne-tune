@@ -204,14 +204,14 @@ def list_experiments(
 # TODO: Use conditional imports, in order not to fail if dependencies are not
 # installed
 def scheduler_name(scheduler):
-    from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+    from syne_tune.optimizer.schedulers import FIFOScheduler
 
     if isinstance(scheduler, FIFOScheduler):
         scheduler_name = f"ST-{scheduler.__class__.__name__}"
         searcher = scheduler.searcher.__class__.__name__
         return "-".join([scheduler_name, searcher])
     else:
-        from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+        from syne_tune.optimizer.schedulers import RayTuneScheduler
 
         if isinstance(scheduler, RayTuneScheduler):
             scheduler_name = f"Ray-{scheduler.scheduler.__class__.__name__}"

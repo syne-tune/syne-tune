@@ -552,6 +552,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 random_seed_generator=kwargs.get('random_seed_generator'),
                 random_seed=kwargs.get('random_seed'))
             kwargs['config_space'] = config_space
+            kwargs['metric'] = metric
             kwargs_int = self._create_kwargs_int(kwargs)
         else:
             # Internal constructor, bypassing the factory

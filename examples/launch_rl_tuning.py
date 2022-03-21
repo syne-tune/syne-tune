@@ -11,14 +11,15 @@ from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import ASHA
 import syne_tune.config_space as sp
-from syne_tune import Tuner
+from syne_tune import Tuner, StoppingCriterion
 
 if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.DEBUG)
     np.random.seed(0)
     max_steps = 100
-    trial_backend = LocalBackend(entry_point=Path(__file__).parent / "training_scripts" / "rl_cartpole" / "train_cartpole.py")
+    trial_backend = LocalBackend(
+        entry_point=Path(__file__).parent / "training_scripts" / "rl_cartpole" / "train_cartpole.py")
 
     scheduler = ASHA(
         config_space={
@@ -32,11 +33,12 @@ if __name__ == '__main__':
         search_options={'debug_log': False},
     )
 
+    stop_criterion = StoppingCriterion(max_wallclock_time=60)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
         # tune for 3 minutes
-        stop_criterion=lambda status: status.wallclock_time > 60,
+        stop_criterion=stop_criterion,
         n_workers=2,
     )
 

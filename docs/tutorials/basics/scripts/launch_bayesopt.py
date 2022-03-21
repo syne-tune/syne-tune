@@ -26,9 +26,8 @@ from pathlib import Path
 
 from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
+from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune import Tuner, StoppingCriterion
 
 
 if __name__ == '__main__':

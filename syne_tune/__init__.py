@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 
 try:
-    __all__ = ['config_space.py', 'StoppingCriterion', 'Tuner', 'Reporter']
+    __all__ = ['StoppingCriterion', 'Tuner', 'Reporter']
     from pathlib import Path
     from syne_tune.stopping_criterion import StoppingCriterion
     from syne_tune.report import Reporter

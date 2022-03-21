@@ -18,9 +18,8 @@ import logging
 from benchmarking.definitions.definition_mlp_on_fashion_mnist import mlp_fashionmnist_default_params, \
     mlp_fashionmnist_benchmark
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
+from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune import Tuner, StoppingCriterion
 
 
 if __name__ == '__main__':

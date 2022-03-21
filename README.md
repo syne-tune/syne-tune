@@ -1,6 +1,6 @@
 # Syne Tune
 
-[![Release](https://img.shields.io/badge/release-0.12-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![Release](https://img.shields.io/badge/release-0.2-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![Python Version](https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
