@@ -26,19 +26,26 @@ DATASET_NAMES = [
 ]
 
 
-_config_space = {
-    True: dict(
-        hp_activation_fn_1=choice(["tanh", "relu"]),
-        hp_activation_fn_2=choice(["tanh", "relu"]),
-        hp_lr_schedule=choice(["cosine", "const"]),
-        hp_batch_size=lograndint(8, 64),
-        hp_dropout_1=uniform(0.0, 0.6),
-        hp_dropout_2=uniform(0.0, 0.6),
-        hp_init_lr=loguniform(0.0005, 0.1),
-        hp_n_units_1=lograndint(16, 512),
-        hp_n_units_2=lograndint(16, 512)),
-    False: CONFIGURATION_SPACE,
-}
+def _config_space(interpolate_blackbox: bool) -> dict:
+    """
+    :param interpolate_blackbox: Are blackbox values interpolated by a
+        surrogate model?
+    :return: Configuration space to be used
+    """
+    if interpolate_blackbox:
+        return dict(
+            hp_activation_fn_1=choice(["tanh", "relu"]),
+            hp_activation_fn_2=choice(["tanh", "relu"]),
+            hp_lr_schedule=choice(["cosine", "const"]),
+            hp_batch_size=lograndint(8, 64),
+            hp_dropout_1=uniform(0.0, 0.6),
+            hp_dropout_2=uniform(0.0, 0.6),
+            hp_init_lr=loguniform(0.0005, 0.1),
+            hp_n_units_1=lograndint(16, 512),
+            hp_n_units_2=lograndint(16, 512),
+        )
+    else:
+        return CONFIGURATION_SPACE
 
 
 def nashpobench_default_params(params=None):
@@ -71,7 +78,7 @@ def nashpobench_benchmark(params):
     """
     interpolate_blackbox = params['interpolate_blackbox']
     config_space = dict(
-        _config_space[interpolate_blackbox],
+        _config_space(interpolate_blackbox),
         epochs=params['max_resource_level'],
         dataset_name=params['dataset_name'])
     if interpolate_blackbox:
