@@ -6,7 +6,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 
-import syne_tune.config_space as sp
+from syne_tune.config_space import Categorical
 from benchmarking.blackbox_repository.blackbox import Blackbox
 
 
@@ -84,7 +84,7 @@ class BlackboxSurrogate(Blackbox):
             surrogate_hps = configuration_space
 
         for hp_name, hp in surrogate_hps.items():
-            if isinstance(hp, sp.Categorical):
+            if isinstance(hp, Categorical):
                 categorical.append(hp_name)
             else:
                 numeric.append(hp_name)
@@ -160,24 +160,37 @@ class BlackboxSurrogate(Blackbox):
             return objectives_values
 
 
-def add_surrogate(blackbox: Blackbox, surrogate=KNeighborsRegressor(n_neighbors=1)):
+def add_surrogate(
+        blackbox: Blackbox,
+        surrogate=None,
+        configuration_space=None):
     """
-    Fits a blackbox surrogates that can be evaluated anywhere, which can be useful for supporting
-    interpolation/extrapolation.
+    Fits a blackbox surrogates that can be evaluated anywhere, which can be useful
+    for supporting interpolation/extrapolation.
     :param blackbox: the blackbox must implement `hyperparame`ter_objectives_values`
-    so that input/output are passed to estimate the model, see `BlackboxOffline` or `BlackboxTabular
-    :param surrogate: the model that is fitted to predict objectives given any configuration.
-    Possible examples: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator obeying Scikit-learn API.
-    The model is fit on top of pipeline that applies basic feature-processing to convert rows in X to vectors.
-    We use the configuration_space hyperparameters types to deduce the types of columns in X (for instance
-    CategoricalHyperparameter are one-hot encoded).
+        so that input/output are passed to estimate the model, see `BlackboxOffline`
+        or `BlackboxTabular
+    :param surrogate: the model that is fitted to predict objectives given any
+        configuration. Possible examples: `KNeighborsRegressor(n_neighbors=1)`,
+        `MLPRegressor()` or any estimator obeying Scikit-learn API.
+        The model is fit on top of pipeline that applies basic feature-processing
+        to convert rows in X to vectors. We use `config_space` to deduce the types
+        of columns in X (categorical parameters are 1-hot encoded).
+    :param config_space: configuration space for the resulting blackbox surrogate.
+        The default is `blackbox.configuration_space`. But note that if `blackbox`
+        is tabular, the domains in `blackbox.configuration_space` are typically
+        categorical even for numerical parameters.
     :return: a blackbox where the output is obtained through the fitted surrogate
     """
+    if surrogate is None:
+        surrogate = KNeighborsRegressor(n_neighbors=1)
+    if configuration_space is None:
+        configuration_space = blackbox.configuration_space
     X, y = blackbox.hyperparameter_objectives_values()
     return BlackboxSurrogate(
         X=X,
         y=y,
-        configuration_space=blackbox.configuration_space,
+        configuration_space=configuration_space,
         fidelity_space=blackbox.fidelity_space,
         fidelity_values=blackbox.fidelity_values,
         surrogate=surrogate,
