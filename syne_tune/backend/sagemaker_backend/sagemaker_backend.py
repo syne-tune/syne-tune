@@ -40,6 +40,7 @@ class SageMakerBackend(TrialBackend):
             sm_estimator: Framework,
             metrics_names: Optional[List[str]] = None,
             s3_path: Optional[str] = None,
+            delete_checkpoints: bool = False,
             *args,
             **sagemaker_fit_kwargs):
         """
@@ -52,6 +53,8 @@ class SageMakerBackend(TrialBackend):
         :param sagemaker_fit_kwargs: extra arguments that are passed to sagemaker.estimator.Framework when fitting the
         job, for instance `{'train': 's3://my-data-bucket/path/to/my/training/data'}`
         """
+        assert not delete_checkpoints, \
+            "delete_checkpoints=True not yet supported for SageMaker backend"
         super(SageMakerBackend, self).__init__()
         self.sm_estimator = sm_estimator
 
@@ -253,9 +256,13 @@ class SageMakerBackend(TrialBackend):
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
         # todo sync checkpoint path with s3 sync
         logger.warning(
-            "Starting trials with a previous checkpoint is not supported yet in Sagemaker. "
+            "Starting trials with a previous checkpoint is not supported yet in SageMaker. "
             "The trial will run from scratch."
         )
+
+    def delete_checkpoint(self, trial_id: int):
+        # TODO
+        logger.warning("Deleting checkpoints not yet supported for SageMaker backend")
 
     def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
         # we use the tuner-name to set the checkpoint directory

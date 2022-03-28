@@ -43,6 +43,7 @@ class LocalBackend(TrialBackend):
             self,
             entry_point: str,
             rotate_gpus: bool = True,
+            delete_checkpoints: bool = False
     ):
         """
         A backend running locally by spawning sub-process concurrently.
@@ -54,9 +55,11 @@ class LocalBackend(TrialBackend):
             scheduled on a different GPU. A new trial is preferentially
             scheduled on a free GPU, and otherwise the GPU with least prior
             assignments is chosen
+        :param delete_checkpoints: If True, checkpoints of stopped or completed
+            trials are deleted
 
         """
-        super(LocalBackend, self).__init__()
+        super(LocalBackend, self).__init__(delete_checkpoints)
 
         assert Path(entry_point).exists(), f"the script provided to tune does not exist ({entry_point})"
         self.entry_point = entry_point
@@ -74,13 +77,20 @@ class LocalBackend(TrialBackend):
         # sets the path where to write files, can be overidden later by Tuner.
         self.set_path(Path(experiment_path(tuner_name=random_string(length=10))))
 
-    def trial_path(self, trial_id: int):
+    def trial_path(self, trial_id: int) -> Path:
         return self.local_path / str(trial_id)
 
+    def _checkpoint_trial_path(self, trial_id: int):
+        return self.trial_path(trial_id) / "checkpoints"
+
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
-        src_checkpoint_path = self.trial_path(src_trial_id) / "checkpoints"
-        tgt_checkpoint_path = self.trial_path(tgt_trial_id) / "checkpoints"
+        src_checkpoint_path = self._checkpoint_trial_path(src_trial_id)
+        tgt_checkpoint_path = self._checkpoint_trial_path(tgt_trial_id)
         shutil.copytree(src_checkpoint_path, tgt_checkpoint_path)
+
+    def delete_checkpoint(self, trial_id: int):
+        checkpoint_path = self._checkpoint_trial_path(trial_id)
+        shutil.rmtree(checkpoint_path, ignore_errors=True)
 
     def _prepare_for_schedule(self, num_gpus=None):
         """
@@ -195,7 +205,14 @@ class LocalBackend(TrialBackend):
             # (which allows to write a time-stamp when the process finishes) but it is probably OK if all_results
             # is called every few seconds.
             if os.path.exists(trial_path / "end"):
-                training_end_time = self._read_time_stamp(trial_id=trial_id, name="end")
+                try:
+                    training_end_time = self._read_time_stamp(
+                        trial_id=trial_id, name="end")
+                except ValueError as exc:
+                    # File is present, but empty
+                    training_end_time = datetime.now()
+                    logger.warning(
+                        f"Timestamp file {str(trial_path / 'end')} exists, but is empty:\n{exc}")
             else:
                 training_end_time = datetime.now()
 
@@ -243,8 +260,12 @@ class LocalBackend(TrialBackend):
 
     def _write_time_stamp(self, trial_id: int, name: str):
         time_stamp_path = self._file_path(trial_id=trial_id, filename=name)
-        with open(time_stamp_path, 'w') as f:
-            f.write(str(datetime.now().timestamp()))
+        try:
+            with open(time_stamp_path, 'w') as f:
+                f.write(str(datetime.now().timestamp()))
+        except OSError as exc:
+            logger.warning(
+                f"Failed to write timestamp file {str(time_stamp_path)}:\n{exc}")
 
     def _read_time_stamp(self, trial_id: int, name: str):
         time_stamp_path = self._file_path(trial_id=trial_id, filename=name)
