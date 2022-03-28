@@ -205,14 +205,8 @@ class LocalBackend(TrialBackend):
             # (which allows to write a time-stamp when the process finishes) but it is probably OK if all_results
             # is called every few seconds.
             if os.path.exists(trial_path / "end"):
-                try:
-                    training_end_time = self._read_time_stamp(
-                        trial_id=trial_id, name="end")
-                except ValueError as exc:
-                    # File is present, but empty
-                    training_end_time = datetime.now()
-                    logger.warning(
-                        f"Timestamp file {str(trial_path / 'end')} exists, but is empty:\n{exc}")
+                training_end_time = self._read_time_stamp(
+                    trial_id=trial_id, name="end")
             else:
                 training_end_time = datetime.now()
 
