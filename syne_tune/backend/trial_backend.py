@@ -15,9 +15,12 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
+import logging
 
 from syne_tune.backend.trial_status import TrialResult, Trial, Status
 from syne_tune.constants import ST_WORKER_TIMESTAMP
+
+logger = logging.getLogger(__name__)
 
 
 class TrialBackend:
@@ -135,6 +138,7 @@ class TrialBackend:
         # todo assert trial_id has not been stopped or paused before
         self._stop_trial(trial_id=trial_id)
         if self.delete_checkpoints:
+            logger.info(f"Removing checkpoints for trial_id = {trial_id}")
             self.delete_checkpoint(trial_id=trial_id)  # checkpoint not needed anymore
 
     def _stop_trial(self, trial_id: int):
@@ -180,6 +184,7 @@ class TrialBackend:
                     new_metrics = trial_result.metrics[position_last_seen:]
                     self._last_metric_seen_index[trial_result.trial_id] += len(new_metrics)
                     if self.delete_checkpoints and trial_result.status == Status.completed:
+                        logger.info(f"Removing checkpoints for trial_id = {trial_result.trial_id}")
                         self.delete_checkpoint(trial_id=trial_result.trial_id)
                 for new_metric in new_metrics:
                     results.append((trial_result.trial_id, new_metric))
@@ -219,6 +224,7 @@ class TrialBackend:
                 self.stop_trial(trial_id=trial.trial_id)
         if self.delete_checkpoints:
             # Delete all remaining checkpoints (e.g., of paused trials)
+            logger.info("Removing all remaining checkpoints of trials")
             for trial_id in self.trial_ids:
                 self.delete_checkpoint(trial_id=trial_id)
 

@@ -260,12 +260,8 @@ class LocalBackend(TrialBackend):
 
     def _write_time_stamp(self, trial_id: int, name: str):
         time_stamp_path = self._file_path(trial_id=trial_id, filename=name)
-        try:
-            with open(time_stamp_path, 'w') as f:
-                f.write(str(datetime.now().timestamp()))
-        except OSError as exc:
-            logger.warning(
-                f"Failed to write timestamp file {str(time_stamp_path)}:\n{exc}")
+        with open(time_stamp_path, 'w') as f:
+            f.write(str(datetime.now().timestamp()))
 
     def _read_time_stamp(self, trial_id: int, name: str):
         time_stamp_path = self._file_path(trial_id=trial_id, filename=name)
