@@ -68,10 +68,13 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
         super().__init__(**kwargs)
         self._decider = RUSHDecider(num_threshold_candidates, self._mode)
 
-    def _task_continues(self, trial_id: str, mode: str, cutoff: float, metric_value: float, resource: int) -> bool:
-        task_continues = super()._task_continues(trial_id=trial_id, mode=mode, cutoff=cutoff, metric_value=metric_value,
-                                                 resource=resource)
-        return self._decider.task_continues(task_continues, trial_id, metric_value, resource)
+    def _task_continues(
+            self, metric_value: float, recorded: dict,
+            prom_quant: float, trial_id: str, resource: int) -> bool:
+        task_continues = super()._task_continues(
+            metric_value, recorded, prom_quant, trial_id, resource)
+        return self._decider.task_continues(
+            task_continues, trial_id, metric_value, resource)
 
 
 class RUSHPromotionRungSystem(PromotionRungSystem):
@@ -80,6 +83,10 @@ class RUSHPromotionRungSystem(PromotionRungSystem):
         super().__init__(**kwargs)
         self._decider = RUSHDecider(num_threshold_candidates, self._mode)
 
-    def _is_promotable_config(self, trial_id: str, metric_value: float, is_paused: bool, resource: int) -> bool:
-        task_continues = super()._is_promotable_config(trial_id, metric_value, is_paused, resource)
-        return self._decider.task_continues(task_continues, trial_id, metric_value, resource)
+    def _is_promotable_trial(
+            self, trial_id: str, metric_value: float, is_paused: bool,
+            resource: int) -> bool:
+        task_continues = super()._is_promotable_trial(
+            trial_id, metric_value, is_paused, resource)
+        return self._decider.task_continues(
+            task_continues, trial_id, metric_value, resource)
