@@ -44,23 +44,32 @@ class RungSystem(object):
     its milestone.
 
     """
-    def __init__(self, metric: str, mode: str, resource_attr: str):
+    def __init__(
+            self, rung_levels, promote_quantiles, metric, mode, resource_attr):
+        assert len(rung_levels) == len(promote_quantiles)
         self._metric = metric
         self._mode = mode
         self._resource_attr = resource_attr
+        # The data entry in `_rungs` is a dict with key trial_id. The
+        # value type depends on the subclass, but it contains the
+        # metric value
+        self._rungs = [
+            RungEntry(level=x, prom_quant=y, data=dict())
+            for x, y in reversed(list(zip(rung_levels, promote_quantiles)))]
 
     def on_task_schedule(self) -> dict:
         """
-        Called when new task is to be scheduled. For a promotion-bqsed
-        rung system, check whether any trial can be promoted. If so,
-        return `dict(trial_id, resume_from, milestone)`, where
-        `resume_from` is the rung level where the trial (to be promoted)
-        is paused, and `milestone` is the next rung level it will reach
-        (may be None).
+        Called when new task is to be scheduled.
+        For a promotion-based rung system, check whether any trial can be
+        promoted. If so, return dict with keys `trial_id`, `resume_from`
+        (rung level where trial is paused), `milestone` (next rung level
+        if will reach, or None).
+        If no trial can be promoted, or if the rung system is not
+        promotion-based, an empty dict is returned.
 
-        :return: dict(trial_id, resume_from, milestone) or dict()
+        :return: See above
         """
-        return dict()
+        raise NotImplementedError
 
     def on_task_add(self, trial_id: str, skip_rungs: int, **kwargs):
         """
@@ -104,7 +113,13 @@ class RungSystem(object):
             considered milestones for this task
         :return: First milestone to be considered
         """
-        raise NotImplementedError
+        return self._rungs[-(skip_rungs + 1)].level
+
+    def _milestone_rungs(self, skip_rungs: int) -> List[RungEntry]:
+        if skip_rungs > 0:
+            return self._rungs[:(-skip_rungs)]
+        else:
+            return self._rungs
 
     def get_milestones(self, skip_rungs: int) -> List[int]:
         """
@@ -112,7 +127,8 @@ class RungSystem(object):
             considered milestones for this task
         :return: All milestones to be considered
         """
-        raise NotImplementedError
+        milestone_rungs = self._milestone_rungs(skip_rungs)
+        return [x.level for x in milestone_rungs]
 
     def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, dict]]:
         """
@@ -123,7 +139,8 @@ class RungSystem(object):
             considered milestones for this task
         :return: Snapshot (see above)
         """
-        raise NotImplementedError
+        milestone_rungs = self._milestone_rungs(skip_rungs)
+        return [(x.level, x.data) for x in milestone_rungs]
 
 
 class StoppingRungSystem(RungSystem):
@@ -139,13 +156,10 @@ class StoppingRungSystem(RungSystem):
     """
     def __init__(
             self, rung_levels, promote_quantiles, metric, mode, resource_attr):
-        super().__init__(metric, mode, resource_attr)
-        assert len(rung_levels) == len(promote_quantiles)
+        super().__init__(
+            rung_levels, promote_quantiles, metric, mode, resource_attr)
         # The data entry in `_rungs` is a dict mapping trial_id to
-        # reward_value
-        self._rungs = [
-            RungEntry(level=x, prom_quant=y, data=dict())
-            for x, y in reversed(list(zip(rung_levels, promote_quantiles)))]
+        # metric value
 
     def _cutoff(self, recorded, prom_quant):
         values = list(recorded.values())
@@ -168,11 +182,8 @@ class StoppingRungSystem(RungSystem):
         return metric_value <= cutoff if self._mode == 'min' else \
             metric_value >= cutoff
 
-    def _milestone_rungs(self, skip_rungs: int) -> List[RungEntry]:
-        if skip_rungs > 0:
-            return self._rungs[:(-skip_rungs)]
-        else:
-            return self._rungs
+    def on_task_schedule(self) -> dict:
+        return dict()
 
     def on_task_report(
             self, trial_id: str, result: dict, skip_rungs: int) -> dict:
@@ -211,14 +222,3 @@ class StoppingRungSystem(RungSystem):
             'task_continues': task_continues,
             'milestone_reached': milestone_reached,
             'next_milestone': next_milestone}
-
-    def get_first_milestone(self, skip_rungs: int) -> int:
-        return self._rungs[-(skip_rungs + 1)].level
-
-    def get_milestones(self, skip_rungs: int) -> List[int]:
-        milestone_rungs = self._milestone_rungs(skip_rungs)
-        return [x.level for x in milestone_rungs]
-
-    def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, dict]]:
-        milestone_rungs = self._milestone_rungs(skip_rungs)
-        return [(x.level, x.data) for x in milestone_rungs]

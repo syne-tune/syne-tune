@@ -45,14 +45,11 @@ class PromotionRungSystem(RungSystem):
     """
     def __init__(self, rung_levels, promote_quantiles, metric, mode,
                  resource_attr, max_t):
-        super().__init__(metric, mode, resource_attr)
-        assert len(rung_levels) == len(promote_quantiles)
-        self.max_t = max_t
+        super().__init__(
+            rung_levels, promote_quantiles, metric, mode, resource_attr)
         # The data entry in `_rungs` is a dict mapping trial_id to
-        # (reward_value, was_promoted)
-        self._rungs = [
-            RungEntry(level=x, prom_quant=y, data=dict())
-            for x, y in reversed(list(zip(rung_levels, promote_quantiles)))]
+        # (metric_value, was_promoted)
+        self.max_t = max_t
         # `_running` maps `trial_id `to `dict(milestone, resume_from)`.
         # The tasks runs trial `trial_id` until resource reaches milestone.
         # The `resume_from` field can be None. If not, the task is running a
@@ -75,7 +72,8 @@ class PromotionRungSystem(RungSystem):
 
         :param recorded: Dict to scan
         :param prom_quant: Quantile for promotion
-        :param resource: Rung level
+        :param resource: Resource level of rung (i.e., amount of resource
+            spent by trials at this rung)
         :return: trial_id if found, otherwise None
         """
         ret_id = None
@@ -245,14 +243,3 @@ class PromotionRungSystem(RungSystem):
 
     def on_task_remove(self, trial_id: str):
         del self._running[trial_id]
-
-    def get_first_milestone(self, skip_rungs: int) -> int:
-        return self._rungs[-(skip_rungs + 1)].level
-
-    def get_milestones(self, skip_rungs: int) -> List[int]:
-        milestone_rungs = self._milestone_rungs(skip_rungs)
-        return [x.level for x in milestone_rungs]
-
-    def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, dict]]:
-        milestone_rungs = self._milestone_rungs(skip_rungs)
-        return [(x.level, x.data) for x in milestone_rungs]
