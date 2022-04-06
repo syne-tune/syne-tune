@@ -157,7 +157,7 @@ You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalit
 * [How can I utilize multiple GPUs?](#multiple-gpus)
 * [What is the default mode when performing optimization?](#default-mode)
 * [How are trials evaluated when evaluating trials on a local machine?](#trial-execution)
-* [What does the the output of the tuning contain?](#tuning-output)
+* [What does the output of the tuning contain?](#tuning-output)
 * [How can I enable trial checkpointing?](#trial-checkpointing)
 * [Which schedulers make use of checkpointing?](#schedulers-checkpointing)
 * [Is the tuner checkpointed?](#tuner-checkpointing)
