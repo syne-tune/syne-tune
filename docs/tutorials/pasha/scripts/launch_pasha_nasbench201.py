@@ -143,12 +143,13 @@ def run_experiment(dataset_name, random_seed, nb201_random_seed, hpo_approach,
     return tuner.name
 
 
-def analyse_experiment(experiment_name, reference_time=None):
+def analyse_experiment(experiment_name, nb201_df, reference_time=None):
     """
     Function to analyse the experiments that we run with run_experiment function.
 
     :param experiment_name: name of the experiment to analyse
-    :reference_time: optional argument with the time it takes to run the standard method - e.g. ASHA
+    :param nb201_df: dataframe with NASBench201 information about the selected dataset
+    :param reference_time: optional argument with the time it takes to run the standard method - e.g. ASHA
     :return: tuple of a line to display (string reporting the experiment results) and 
         the mean of the runtimes that can be used as reference time for other approaches
     """
@@ -202,5 +203,5 @@ if __name__ == '__main__':
 
     # Analysis of the results
     print('\nExperiment results:\n')
-    result_summary, _ = analyse_experiment(experiment_name)
+    result_summary, _ = analyse_experiment(experiment_name, nb201_df)
     print('PASHA' + result_summary)
