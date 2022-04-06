@@ -15,7 +15,7 @@ from benchmarking.blackbox_repository.conversion_scripts.scripts.fcnet_import \
     BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE, NUM_UNITS_1, \
     NUM_UNITS_2
 
-from syne_tune.search_space import choice, uniform, loguniform, lograndint
+from syne_tune.config_space import choice, uniform, loguniform, lograndint
 
 
 DATASET_NAMES = [
@@ -58,7 +58,7 @@ def nashpobench_default_params(params=None):
         'framework': 'PyTorch',
         'framework_version': '1.6',
         'dataset_name': 'protein_structure',
-        'interpolate_blackbox': True,
+        'interpolate_blackbox': False,
     }
 
 
