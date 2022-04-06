@@ -323,6 +323,8 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             self._config_space_surrogate = {
                 k: from_dict(v)
                 for k, v in state['config_space_surrogate'].items()}
+        else:
+            self._config_space_surrogate = None
 
 
 class UserBlackboxBackend(_BlackboxSimulatorBackend):
