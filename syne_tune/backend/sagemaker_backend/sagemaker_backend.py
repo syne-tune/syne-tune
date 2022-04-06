@@ -132,10 +132,11 @@ class SageMakerBackend(TrialBackend):
         return json.loads(json.dumps(dict, default=np_encoder))
 
     def _checkpoint_s3_uri_for_trial(self, trial_id: int) -> str:
-        parts = [self.s3_path, str(trial_id), 'checkpoints', '']
+        res_path = Path(self.s3_path)
         if self.tuner_name is not None:
-            parts.insert(1, self.tuner_name)
-        return '/'.join(parts)
+            res_path = res_path / self.tuner_name
+        res_path = res_path / str(trial_id) / 'checkpoints'
+        return str(res_path) + '/'
 
     def _schedule(self, trial_id: int, config: Dict):
         config[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
