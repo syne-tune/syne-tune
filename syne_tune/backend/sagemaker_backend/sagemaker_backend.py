@@ -267,14 +267,13 @@ class SageMakerBackend(TrialBackend):
         result = s3_copy_files_recursively(s3_source_path, s3_target_path)
         num_action_calls = result['num_action_calls']
         if num_action_calls == 0:
-            logger.warning(f"No checkpoint files found at {s3_source_path}")
+            logger.info(f"No checkpoint files found at {s3_source_path}")
         else:
             num_successful_action_calls = result['num_successful_action_calls']
-            if num_successful_action_calls < num_action_calls:
-                logger.warning(
-                    f"{num_successful_action_calls} files copied successfully, "
-                    f"{num_action_calls - num_successful_action_calls} failures. "
-                    "Error:\n" + result['first_error_message'])
+            assert num_successful_action_calls == num_action_calls, \
+                f"{num_successful_action_calls} files copied successfully, " +\
+                f"{num_action_calls - num_successful_action_calls} failures. " +\
+                "Error:\n" + result['first_error_message']
 
     def delete_checkpoint(self, trial_id: int):
         s3_path = self._checkpoint_s3_uri_for_trial(trial_id)
