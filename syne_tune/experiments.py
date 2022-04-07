@@ -207,27 +207,6 @@ def list_experiments(
     return sorted(res, key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0), reverse=True)
 
 
-
-# TODO: Use conditional imports, in order not to fail if dependencies are not
-# installed
-def scheduler_name(scheduler):
-    from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-
-    if isinstance(scheduler, FIFOScheduler):
-        scheduler_name = f"ST-{scheduler.__class__.__name__}"
-        searcher = scheduler.searcher.__class__.__name__
-        return "-".join([scheduler_name, searcher])
-    else:
-        from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-
-        if isinstance(scheduler, RayTuneScheduler):
-            scheduler_name = f"Ray-{scheduler.scheduler.__class__.__name__}"
-            searcher = scheduler.searcher.__class__.__name__
-            return "-".join([scheduler_name, searcher])
-        else:
-            return scheduler.__class__.__name__
-
-
 def load_experiments_df(
         path_filter: Callable[[str], bool] = None,
         experiment_filter: Callable[[ExperimentResult], bool] = None,
