@@ -219,7 +219,7 @@ def load_experiments_df(
     The columns contains trial-id, hyperparameter evaluated, metrics observed by `report`:
      metrics collected automatically by syne-tune:
      `st_worker_time` (indicating time spent in the worker when report was seen)
-     `time` (indicating wallclock time measured by the tuner)@
+     `time` (indicating wallclock time measured by the tuner)
      `decision` decision taken by the scheduler when observing the result
      `status` status of the trial that was shown to the tuner
      `config_{xx}` configuration value for the hyperparameter {xx}
