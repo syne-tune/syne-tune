@@ -64,7 +64,6 @@ if __name__ == '__main__':
     for scheduler in schedulers:
         print(f"running scheduler {scheduler}")
 
-        # Local back-end
         trial_backend = LocalBackend(entry_point=str(entry_point))
 
         stop_criterion = StoppingCriterion(max_wallclock_time=5, min_metric_value={"mean_loss": -6.0})

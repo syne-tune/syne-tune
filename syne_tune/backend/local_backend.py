@@ -54,7 +54,8 @@ class LocalBackend(TrialBackend):
         :param rotate_gpus: in case several GPUs are present, each trial is
             scheduled on a different GPU. A new trial is preferentially
             scheduled on a free GPU, and otherwise the GPU with least prior
-            assignments is chosen
+            assignments is chosen. If False, then all GPUs are used at the same
+            time for all trials.
         :param delete_checkpoints: If True, checkpoints of stopped or completed
             trials are deleted
 
