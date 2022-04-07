@@ -18,7 +18,9 @@ from typing import Dict, List, Optional
 import boto3
 from botocore.exceptions import ClientError
 import numpy as np
+
 from sagemaker import LocalSession, Session
+from sagemaker.estimator import Framework
 
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_CHECKPOINT_DIR
@@ -26,8 +28,8 @@ from syne_tune.util import s3_experiment_path
 from syne_tune.backend.trial_status import TrialResult, Status
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
     sagemaker_search, get_log, sagemaker_fit, metric_definitions_from_names, \
-    add_syne_tune_dependency, map_identifier_limited_length
-from sagemaker.estimator import Framework
+    add_syne_tune_dependency, map_identifier_limited_length, \
+    s3_copy_files_recursively, s3_delete_files_recursively
 
 
 logger = logging.getLogger(__name__)
@@ -87,7 +89,7 @@ class SageMakerBackend(TrialBackend):
         self.resumed_counter = dict()
         if s3_path is None:
             s3_path = s3_experiment_path()
-        self.s3_path = s3_path
+        self.s3_path = s3_path.rstrip('/')
         self.tuner_name = None
 
     @property
@@ -129,6 +131,13 @@ class SageMakerBackend(TrialBackend):
                 return object.item()
         return json.loads(json.dumps(dict, default=np_encoder))
 
+    def _checkpoint_s3_uri_for_trial(self, trial_id: int) -> str:
+        res_path = Path(self.s3_path)
+        if self.tuner_name is not None:
+            res_path = res_path / self.tuner_name
+        res_path = res_path / str(trial_id) / 'checkpoints'
+        return str(res_path) + '/'
+
     def _schedule(self, trial_id: int, config: Dict):
         config[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
         hyperparameters = config.copy()
@@ -150,10 +159,7 @@ class SageMakerBackend(TrialBackend):
             self.sm_estimator.instance_count = hyperparameters[ST_INSTANCE_COUNT]
 
         if self.sm_estimator.instance_type != "local":
-            if self.tuner_name is not None:
-                checkpoint_s3_uri = f"{self.s3_path}/{self.tuner_name}/{trial_id}/"
-            else:
-                checkpoint_s3_uri = f"{self.s3_path}/{trial_id}/"
+            checkpoint_s3_uri = self._checkpoint_s3_uri_for_trial(trial_id)
             logging.info(f"Trial {trial_id} will checkpoint results to {checkpoint_s3_uri}.")
         else:
             # checkpointing is not supported in local mode. When using local mode with remote tuner (for instance for
@@ -254,15 +260,36 @@ class SageMakerBackend(TrialBackend):
             self.sm_estimator.sagemaker_session = Session()
 
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
-        # todo sync checkpoint path with s3 sync
-        logger.warning(
-            "Starting trials with a previous checkpoint is not supported yet in SageMaker. "
-            "The trial will run from scratch."
-        )
+        s3_source_path = self._checkpoint_s3_uri_for_trial(src_trial_id)
+        s3_target_path = self._checkpoint_s3_uri_for_trial(tgt_trial_id)
+        logger.info(f"Copying checkpoint files from {s3_source_path} to " +
+                    s3_target_path)
+        result = s3_copy_files_recursively(s3_source_path, s3_target_path)
+        num_action_calls = result['num_action_calls']
+        if num_action_calls == 0:
+            logger.info(f"No checkpoint files found at {s3_source_path}")
+        else:
+            num_successful_action_calls = result['num_successful_action_calls']
+            assert num_successful_action_calls == num_action_calls, \
+                f"{num_successful_action_calls} files copied successfully, " +\
+                f"{num_action_calls - num_successful_action_calls} failures. " +\
+                "Error:\n" + result['first_error_message']
 
     def delete_checkpoint(self, trial_id: int):
-        # TODO
-        logger.warning("Deleting checkpoints not yet supported for SageMaker backend")
+        s3_path = self._checkpoint_s3_uri_for_trial(trial_id)
+        result = s3_delete_files_recursively(s3_path)
+        num_action_calls = result['num_action_calls']
+        if num_action_calls > 0:
+            num_successful_action_calls = result['num_successful_action_calls']
+            if num_successful_action_calls == num_action_calls:
+                logger.info(
+                    f"Deleted {num_action_calls} checkpoint files from {s3_path}")
+            else:
+                logger.warning(
+                    f"Successfully deleted {num_successful_action_calls} "
+                    f"checkpoint files from {s3_path}, but failed to delete "
+                    f"{num_action_calls - num_successful_action_calls} files. "
+                    "Error:\n" + result['first_error_message'])
 
     def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
         # we use the tuner-name to set the checkpoint directory

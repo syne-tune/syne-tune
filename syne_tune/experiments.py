@@ -108,8 +108,9 @@ def download_single_experiment(
     tgt_dir = experiment_path(tuner_name=tuner_name)
     tgt_dir.mkdir(exist_ok=True, parents=True)
     s3 = boto3.client('s3')
-    s3_bucket = s3_path.replace("s3://", "").split("/")[0]
-    s3_key = "/".join(s3_path.replace("s3://", "").split("/")[1:])
+    parts_path = s3_path.replace("s3://", "").split("/")
+    s3_bucket = parts_path[0]
+    s3_key = "/".join(parts_path[1:])
     for file in ["metadata.json", "results.csv.zip", "tuner.dill"]:
         try:
             logging.info(f"downloading {file} on {s3_path}")
