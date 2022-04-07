@@ -22,6 +22,7 @@ from typing import List, Tuple, Dict, Optional
 
 import boto3
 from botocore.config import Config
+from botocore.exceptions import ClientError
 from sagemaker.estimator import Framework
 
 import syne_tune
@@ -284,3 +285,144 @@ def map_identifier_limited_length(
         assert 1 < rnd_digits < max_length
         postfix = random_string(rnd_digits)
         return name[:(max_length - rnd_digits)] + postfix
+
+
+def _s3_traverse_recursively(
+        s3_client, action, bucket: str, prefix: str) -> dict:
+    """
+    Traverses directory from root `prefix`. The function `action` is applied
+    to all objects encountered, the signature is
+
+        `action(s3_client, bucket, object_key)`
+
+    'action' returns None if successful, otherwise an error message.
+    We return a dict with 'num_action_calls', 'num_successful_action_calls',
+    'first_error_message' (the error message for the first failed `action` call
+    encountered).
+
+    :param s3_client: S3 client
+    :param action: See above
+    :param bucket: S3 bucket name
+    :param prefix: Prefix from where to traverse, must end with '/'
+    :return: See above
+    """
+    more_objects = True
+    continuation_kwargs = dict()
+    list_objects_kwargs = dict(Bucket=bucket,
+                               Prefix=prefix,
+                               Delimiter='/')
+    all_next_prefixes = []
+    num_action_calls = 0
+    num_successful_action_calls = 0
+    first_error_message = None
+    while more_objects:
+        response = s3_client.list_objects_v2(
+            **list_objects_kwargs, **continuation_kwargs)
+        # Subdirectories
+        for next_prefix in response.get('CommonPrefixes', []):
+            all_next_prefixes.append(next_prefix['Prefix'])
+        # Objects
+        for source in response.get('Contents', []):
+            ret_msg = action(s3_client, bucket, source['Key'])
+            num_action_calls += 1
+            if ret_msg is None:
+                num_successful_action_calls += 1
+            elif first_error_message is None:
+                first_error_message = ret_msg
+        more_objects = 'NextContinuationToken' in response
+        if more_objects:
+            continuation_kwargs = {
+                'ContinuationToken': response['NextContinuationToken']}
+    # Recursive calls
+    for next_prefix in all_next_prefixes:
+        result = _s3_traverse_recursively(
+            s3_client, action, bucket, prefix=next_prefix)
+        num_action_calls += result['num_action_calls']
+        num_successful_action_calls += result['num_successful_action_calls']
+        if first_error_message is None:
+            first_error_message = result['first_error_message']
+    return dict(
+        num_action_calls=num_action_calls,
+        num_successful_action_calls=num_successful_action_calls,
+        first_error_message=first_error_message)
+
+
+def _split_bucket_prefix(s3_path: str) -> (str, str):
+    assert s3_path[:5] == 's3://', s3_path
+    parts = s3_path[5:].split('/')
+    bucket = parts[0]
+    prefix = '/'.join(parts[1:])
+    if prefix[-1] != '/':
+        prefix += '/'
+    return bucket, prefix
+
+
+def s3_copy_files_recursively(s3_source_path: str, s3_target_path: str) -> dict:
+    """
+    Recursively copies files from `s3_source_path` to `s3_target_path`.
+
+    We return a dict with 'num_action_calls', 'num_successful_action_calls',
+    'first_error_message' (the error message for the first failed `action` call
+    encountered).
+
+    :param s3_source_path:
+    :param s3_target_path:
+    :return: See above
+    """
+    src_bucket, src_prefix = _split_bucket_prefix(s3_source_path)
+    trg_bucket, trg_prefix = _split_bucket_prefix(s3_target_path)
+
+    def copy_action(s3_client, bucket: str, object_key: str) -> Optional[str]:
+        assert object_key.startswith(src_prefix), \
+            f"object_key = {object_key} must start with {src_prefix}"
+        target_key = trg_prefix + object_key[len(src_prefix):]
+        copy_source = dict(Bucket=bucket, Key=object_key)
+        ret_msg = None
+        try:
+            s3_client.copy_object(
+                CopySource=copy_source,
+                Bucket=trg_bucket,
+                Key=target_key)
+            logger.debug(f"Copied s3://{bucket}/{object_key}   to   s3://{trg_bucket}/{target_key}")
+        except ClientError as ex:
+            ret_msg = str(ex)
+        return ret_msg
+
+    s3 = boto3.client('s3')
+    return _s3_traverse_recursively(
+        s3_client=s3,
+        action=copy_action,
+        bucket=src_bucket,
+        prefix=src_prefix)
+
+
+def s3_delete_files_recursively(s3_path: str) -> dict:
+    """
+    Recursively deletes files from `s3_path`.
+
+    We return a dict with 'num_action_calls', 'num_successful_action_calls',
+    'first_error_message' (the error message for the first failed `action` call
+    encountered).
+
+    :param s3_path:
+    :return: See above
+    """
+    bucket_name, prefix = _split_bucket_prefix(s3_path)
+
+    def delete_action(s3_client, bucket: str, object_key: str) -> Optional[str]:
+        ret_msg = None
+        try:
+            s3_client.delete_object(
+                Bucket=bucket,
+                Key=object_key)
+            logger.debug(f"Deleted s3://{bucket}/{object_key}")
+        except ClientError as ex:
+            ret_msg = str(ex)
+        return ret_msg
+
+    s3 = boto3.client('s3')
+    return _s3_traverse_recursively(
+        s3_client=s3,
+        action=delete_action,
+        bucket=bucket_name,
+        prefix=prefix)

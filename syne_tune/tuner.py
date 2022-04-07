@@ -201,17 +201,19 @@ class Tuner:
                 mode=self.scheduler.metric_mode(),
             )
 
+            # Callbacks (typically includes writing final results)
+            for callback in self.callbacks:
+                callback.on_tuning_end()
+
+            # Serialize Tuner object
+            self.save()
+
             logger.info("Tuner finished, stopping trials that may still be running.")
             self.trial_backend.stop_all()
 
             # notify tuning status that jobs were stopped without having to query their status in the backend since
             # we know that all trials were stopped
             self.tuning_status.mark_running_job_as_stopped()
-
-            self.save()
-
-            for callback in self.callbacks:
-                callback.on_tuning_end()
 
             # in case too many errors were triggered, show log of last failed job and terminates with an error
             if self.tuning_status.num_trials_failed > self.max_failures:
