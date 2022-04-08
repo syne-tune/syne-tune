@@ -23,6 +23,7 @@ import dill as dill
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import Status, Trial
+from syne_tune.config_space import to_dict, Domain
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.tuner_callback import TunerCallback, StoreResultsCallback
@@ -208,7 +209,7 @@ class Tuner:
             # Serialize Tuner object
             self.save()
 
-            logger.info("Tuner finished, stopping trials that may still be running.")
+            logger.info("Stopping trials that may still be running.")
             self.trial_backend.stop_all()
 
             # notify tuning status that jobs were stopped without having to query their status in the backend since
@@ -218,6 +219,8 @@ class Tuner:
             # in case too many errors were triggered, show log of last failed job and terminates with an error
             if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
+
+            logger.info(f"Tuning finished, results of trials can be found on {self.tuner_path}")
 
     def _sleep(self):
         time.sleep(self.sleep_time)
@@ -244,6 +247,8 @@ class Tuner:
         self._set_metadata(res, 'entrypoint', self.trial_backend.entrypoint_path().stem)
         self._set_metadata(res, 'backend', str(type(self.trial_backend).__name__))
         self._set_metadata(res, 'scheduler_name', str(self.scheduler.__class__.__name__))
+        config_space_json = json.dumps({k: to_dict(v) if isinstance(v, Domain) else v for k, v in self.scheduler.config_space.items()})
+        self._set_metadata(res, 'config_space', config_space_json)
         return res
 
     def _save_metadata(self):
