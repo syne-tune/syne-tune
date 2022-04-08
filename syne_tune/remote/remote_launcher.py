@@ -185,7 +185,7 @@ class RemoteLauncher:
     def launch_tuning_job_on_sagemaker(self, wait: bool):
         # todo add Sagemaker cloudwatch metrics to visualize live results of tuning best results found over time.
         if self.instance_type != "local":
-            checkpoint_s3_root = f"{self.s3_path}/"
+            checkpoint_s3_root = f"{self.s3_path}/{self.tuner.name}"
             logger.info(f"Tuner will checkpoint results to {checkpoint_s3_root}{self.tuner.name}")
         else:
             # checkpointing is not supported in local mode. When using local mode with remote tuner (for instance for

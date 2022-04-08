@@ -181,6 +181,7 @@ def get_metadata(name_filter: Callable[[str], bool] = None, root = experiment_pa
                 tuner_name = path.name
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
+                    # we check that the metadata is valid by verifying that is a dict containing Syne Tune time-stamp
                     if isinstance(metadata, Dict) and ST_TUNER_CREATION_TIMESTAMP in metadata:
                         metadata["path"] = str(path.parent)
                         res[tuner_name] = metadata
