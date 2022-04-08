@@ -123,13 +123,16 @@ def load_experiment(
         tuner_name: str,
         download_if_not_found: bool = True,
         load_tuner: bool = False,
+        local_path: Optional[str] = None,
 ) -> ExperimentResult:
     """
     :param tuner_name: name of a tuning experiment previously run
     :param download_if_not_found: whether to fetch the experiment from s3 if not found locally
+    :param load_tuner: whether to load the tuner in addition to metadata and results
+    :param local_path: path containing the experiment to load if not specified, then `~/{SYNE_TUNE_FOLDER}/` is used.
     :return:
     """
-    path = experiment_path(tuner_name)
+    path = experiment_path(tuner_name, local_path)
 
     metadata_path = path / "metadata.json"
     try:
@@ -164,22 +167,24 @@ def load_experiment(
     )
 
 
-def get_metadata(name_filter: Callable[[str], bool] = None) -> Dict[str, Dict]:
+def get_metadata(name_filter: Callable[[str], bool] = None, root = experiment_path()) -> Dict[str, Dict]:
     """
     :param name_filter: if passed then only experiments whose path matching the filter are kept. This allows
     rapid filtering in the presence of many experiments.
     :return: dictionary from tuner name to metadata dict
     """
     res = {}
-    for path in experiment_path().rglob("*/metadata.json"):
+    for metadata_path in root.glob("**/metadata.json"):
+        path = metadata_path.parent
         if name_filter is None or name_filter(str(path)):
             try:
-                tuner_name = path.parent.name
-                path = experiment_path(tuner_name)
-                metadata_path = path / "metadata.json"
+                tuner_name = path.name
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
-                res[tuner_name] = metadata
+                    # we check that the metadata is valid by verifying that is a dict containing Syne Tune time-stamp
+                    if isinstance(metadata, Dict) and ST_TUNER_CREATION_TIMESTAMP in metadata:
+                        metadata["path"] = str(path.parent)
+                        res[tuner_name] = metadata
             except JSONDecodeError as e:
                 print(f"could not read {path}")
                 pass
@@ -187,48 +192,29 @@ def get_metadata(name_filter: Callable[[str], bool] = None) -> Dict[str, Dict]:
 
 
 def list_experiments(
-        name_filter: Callable[[str], bool] = None,
+        path_filter: Callable[[str], bool] = None,
         experiment_filter: Callable[[ExperimentResult], bool] = None,
         load_tuner: bool = False,
 ) -> List[ExperimentResult]:
     res = []
-    for path in experiment_path().rglob("*/results.csv*"):
-        if name_filter is None or name_filter(str(path)):
-            exp = load_experiment(path.parent.name, load_tuner)
+    for metadata_path in experiment_path().glob("**/metadata.json"):
+        path = metadata_path.parent
+        tuner_name = path.name
+        if path_filter is None or path_filter(metadata_path):
+            exp = load_experiment(tuner_name, load_tuner, local_path=path.parent)
             if experiment_filter is None or experiment_filter(exp):
                 if exp.results is not None and exp.metadata is not None:
                     res.append(exp)
     return sorted(res, key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0), reverse=True)
 
 
-
-# TODO: Use conditional imports, in order not to fail if dependencies are not
-# installed
-def scheduler_name(scheduler):
-    from syne_tune.optimizer.schedulers import FIFOScheduler
-
-    if isinstance(scheduler, FIFOScheduler):
-        scheduler_name = f"ST-{scheduler.__class__.__name__}"
-        searcher = scheduler.searcher.__class__.__name__
-        return "-".join([scheduler_name, searcher])
-    else:
-        from syne_tune.optimizer.schedulers import RayTuneScheduler
-
-        if isinstance(scheduler, RayTuneScheduler):
-            scheduler_name = f"Ray-{scheduler.scheduler.__class__.__name__}"
-            searcher = scheduler.searcher.__class__.__name__
-            return "-".join([scheduler_name, searcher])
-        else:
-            return scheduler.__class__.__name__
-
-
 def load_experiments_df(
-        name_filter: Callable[[str], bool] = None,
+        path_filter: Callable[[str], bool] = None,
         experiment_filter: Callable[[ExperimentResult], bool] = None,
         load_tuner: bool = False,
 ) -> pd.DataFrame:
     """
-    :param: name_filter: if specified, only experiment whose name matches the filter will be kept.
+    :param: name_filter: if specified, only experiment whose path name matches the filter will be kept.
     :param experiment_filter: only experiment where the filter is True are kept, default to None and returns everything.
     :return: a dataframe that contains all evaluations reported by tuners according to the filter given.
     The columns contains trial-id, hyperparameter evaluated, metrics observed by `report`:
@@ -243,7 +229,7 @@ def load_experiments_df(
     """
     dfs = []
     for experiment in list_experiments(
-            name_filter=name_filter, experiment_filter=experiment_filter, load_tuner=load_tuner
+            path_filter=path_filter, experiment_filter=experiment_filter, load_tuner=load_tuner
     ):
         assert experiment.results is not None
         assert experiment.metadata is not None
