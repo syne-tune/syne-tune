@@ -179,12 +179,6 @@ class PromotionRungSystem(RungSystem):
         assert trial_id not in recorded  # Sanity check
         recorded[trial_id] = (metric_value, False)
 
-    def _milestone_rungs(self, skip_rungs: int) -> List[RungEntry]:
-        if skip_rungs > 0:
-            return self._rungs[:(-skip_rungs)]
-        else:
-            return self._rungs
-
     def on_task_report(
             self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         """

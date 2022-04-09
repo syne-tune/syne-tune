@@ -154,13 +154,6 @@ class StoppingRungSystem(RungSystem):
     in case `mode == 'min'`. See `_task_continues`.
 
     """
-    def __init__(
-            self, rung_levels, promote_quantiles, metric, mode, resource_attr):
-        super().__init__(
-            rung_levels, promote_quantiles, metric, mode, resource_attr)
-        # The data entry in `_rungs` is a dict mapping trial_id to
-        # metric value
-
     def _cutoff(self, recorded, prom_quant):
         values = list(recorded.values())
         return quantile_cutoff(values, prom_quant, self._mode)
