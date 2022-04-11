@@ -188,31 +188,11 @@ class PASHARungSystem(PromotionRungSystem):
 
         return not keep_current_budget
 
-    def on_task_report(self, trial_id, result, skip_rungs):
+    def on_task_report(
+            self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         """
-        Decision on whether task may continue (task_continues = True), or
-        should be paused (task_continues = False).
-        milestone_reached is a flag whether resource coincides with a
-        milestone.
-        For this scheduler, we have that
-
-            task_continues == not milestone_reached,
-
-        since a trial is always paused at a milestone.
-
-        The function also checks the rankings and decides if to increase
-        the current maximum resources.
-
-        `ignore_data` is True if a result is received from a resumed trial
-        at a level <= `resume_from`. This happens if checkpointing is not
-        implemented (or not used), because resumed trials are started from
-        scratch then. These metric values should in general be ignored.
-
-        :param trial_id:
-        :param result:
-        :param skip_rungs:
-        :return: dict(task_continues, milestone_reached, next_milestone,
-                      ignore_data)
+        Apart from calling the superclass method, we also check the rankings
+        and decides if to increase the current maximum resources.
         """
         ret_dict = super().on_task_report(trial_id, result, skip_rungs)
 
