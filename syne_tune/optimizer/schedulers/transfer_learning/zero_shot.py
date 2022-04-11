@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import xgboost
 
-from benchmarking.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
+from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations, TransferLearningMixin
@@ -37,8 +37,8 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
             random_seed: Optional[int] = None
     ) -> None:
         """
-        A zero-shot transfer hyperparameter optimization method which selects configurations that minimize the average
-        rank obtained on historic metadata (transfer_learning_evaluations).
+        A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
+        average rank obtained on historic metadata (transfer_learning_evaluations).
 
         Reference: Sequential Model-Free Hyperparameter Tuning.
         Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
@@ -52,6 +52,7 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         transfer_learning_evaluations Are already in the same order. If set to True, hyperparameters are sorted.
         :param use_surrogates: If the same configuration is not evaluated on all tasks, set this to true. This will
         generate a set of configurations and will impute their performance using surrogate models.
+        :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
         """
         super().__init__(config_space=config_space,
                          transfer_learning_evaluations=transfer_learning_evaluations, metric=metric,
@@ -126,8 +127,11 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
     def get_config(self, **kwargs) -> Optional[Dict]:
         if self._ranks.shape[1] == 0:
             return None
+        # Select greedy-best configuration considering all others
         best_idx = self._ranks.mean(axis=0).idxmin()
+        # Update ranks for choosing each configuration considering the previously chosen ones
         self._ranks.clip(upper=self._ranks[best_idx], axis=0, inplace=True)
+        # Drop the chosen configuration as a future candidate
         self._scores.drop(columns=best_idx, inplace=True)
         best_config = self._hyperparameters.loc[best_idx]
         self._hyperparameters.drop(index=best_idx, inplace=True)
