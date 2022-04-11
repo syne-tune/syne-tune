@@ -6,8 +6,8 @@ import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
-from benchmarking.blackbox_repository import load
-from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
+from syne_tune.blackbox_repository import load
+from syne_tune.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
 from benchmarking.nursery.benchmark_automl.baselines import MethodArguments, methods
 from benchmarking.nursery.benchmark_automl.benchmark_definitions import benchmark_definitions
 

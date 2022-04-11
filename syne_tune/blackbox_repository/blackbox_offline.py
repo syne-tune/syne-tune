@@ -3,8 +3,8 @@ from typing import Dict, List, Optional, Union
 
 import pandas as pd
 
-from benchmarking.blackbox_repository.blackbox import Blackbox
-from benchmarking.blackbox_repository.serialize import serialize_configspace, deserialize_configspace, serialize_metadata, \
+from syne_tune.blackbox_repository.blackbox import Blackbox
+from syne_tune.blackbox_repository.serialize import serialize_configspace, deserialize_configspace, serialize_metadata, \
     deserialize_metadata
 
 

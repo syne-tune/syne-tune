@@ -4,13 +4,13 @@ from typing import List, Union, Dict, Optional
 
 import s3fs as s3fs
 
-from benchmarking.blackbox_repository.blackbox import Blackbox
-from benchmarking.blackbox_repository.blackbox_offline import deserialize as deserialize_offline
-from benchmarking.blackbox_repository.blackbox_tabular import deserialize as deserialize_tabular
+from syne_tune.blackbox_repository.blackbox import Blackbox
+from syne_tune.blackbox_repository.blackbox_offline import deserialize as deserialize_offline
+from syne_tune.blackbox_repository.blackbox_tabular import deserialize as deserialize_tabular
 
 # where the blackbox repository is stored on s3
-from benchmarking.blackbox_repository.conversion_scripts.recipes import generate_blackbox_recipe
-from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path, s3_blackbox_folder
+from syne_tune.blackbox_repository.conversion_scripts.recipes import generate_blackbox_recipe
+from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path, s3_blackbox_folder
 
 
 def blackbox_list() -> List[str]:
