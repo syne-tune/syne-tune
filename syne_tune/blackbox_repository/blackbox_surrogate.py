@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 
 from syne_tune.config_space import Categorical
-from benchmarking.blackbox_repository.blackbox import Blackbox
+from syne_tune.blackbox_repository.blackbox import Blackbox
 
 
 class Columns(BaseEstimator, TransformerMixin):

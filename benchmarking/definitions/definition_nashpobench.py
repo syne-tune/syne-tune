@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.blackbox_repository.conversion_scripts.scripts.fcnet_import \
+from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import \
     import METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, \
     BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE, NUM_UNITS_1, \
     NUM_UNITS_2

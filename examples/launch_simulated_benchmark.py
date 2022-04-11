@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 import syne_tune.config_space as sp
 
-from benchmarking.blackbox_repository import load, add_surrogate, \
+from syne_tune.blackbox_repository import load, add_surrogate, \
     BlackboxRepositoryBackend, UserBlackboxBackend
-from benchmarking.blackbox_repository.blackbox_tabular import BlackboxTabular
+from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.baselines import ASHA

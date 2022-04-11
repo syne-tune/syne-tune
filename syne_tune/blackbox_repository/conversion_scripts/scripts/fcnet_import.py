@@ -14,8 +14,8 @@ import numpy as np
 import ast
 import h5py
 
-from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
+from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 
 from syne_tune.util import catchtime
 from syne_tune.config_space import choice, logfinrange, finrange, randint
@@ -158,13 +158,13 @@ def generate_fcnet(s3_root: Optional[str] = None):
         serialize(bb_dict=bb_dict, path=repository_path / blackbox_name)
 
     with catchtime("uploading to s3"):
-        from benchmarking.blackbox_repository.conversion_scripts.utils import upload
+        from syne_tune.blackbox_repository.conversion_scripts.utils import upload
         upload(blackbox_name, s3_root=s3_root)
 
 
 def plot_learning_curves():
     import matplotlib.pyplot as plt
-    from benchmarking.blackbox_repository.repository import load
+    from syne_tune.blackbox_repository.repository import load
     # plot one learning-curve for sanity-check
     bb_dict = load(BLACKBOX_NAME)
 

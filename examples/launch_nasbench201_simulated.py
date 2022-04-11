@@ -17,7 +17,7 @@ import logging
 
 from benchmarking.definitions.definition_nasbench201 import \
     nasbench201_default_params, nasbench201_benchmark
-from benchmarking.blackbox_repository import BlackboxRepositoryBackend
+from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import \
     SimulatorCallback
 from syne_tune.optimizer.schedulers import HyperbandScheduler

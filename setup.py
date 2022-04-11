@@ -25,7 +25,7 @@ required_ray = load_requirements('requirements-ray.txt')
 required_gpsearchers = load_requirements('requirements-gpsearchers.txt')
 required_bore = load_requirements('requirements-bore.txt')
 required_kde = load_requirements('requirements-kde.txt')
-required_blackbox_repository = load_requirements('benchmarking/blackbox_repository/requirements.txt')
+required_blackbox_repository = load_requirements('syne_tune/blackbox_repository/requirements.txt')
 required_benchmarks = load_benchmark_requirements()
 
 long_description = (Path(__file__).parent / "README.md").read_text()

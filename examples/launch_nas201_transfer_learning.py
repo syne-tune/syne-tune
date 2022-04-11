@@ -1,6 +1,6 @@
 from typing import Dict
 
-from benchmarking.blackbox_repository import load, BlackboxRepositoryBackend
+from syne_tune.blackbox_repository import load, BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import \
     SimulatorCallback
 from syne_tune.experiments import load_experiment

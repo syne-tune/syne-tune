@@ -5,9 +5,9 @@ from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
 
-from benchmarking.blackbox_repository import BlackboxOffline
-from benchmarking.blackbox_repository.blackbox_surrogate import add_surrogate
-from benchmarking.blackbox_repository.blackbox_tabular import BlackboxTabular
+from syne_tune.blackbox_repository import BlackboxOffline
+from syne_tune.blackbox_repository.blackbox_surrogate import add_surrogate
+from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 
 import syne_tune.config_space as sp
 

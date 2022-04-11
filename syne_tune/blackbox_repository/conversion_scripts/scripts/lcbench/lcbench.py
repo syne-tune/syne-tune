@@ -5,11 +5,11 @@ from typing import Optional
 import pandas as pd
 import numpy as np
 
-from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.config_space import randint, lograndint, uniform, loguniform
 from syne_tune.util import catchtime
-from benchmarking.blackbox_repository.conversion_scripts.scripts.lcbench.api import Benchmark
-from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
+from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.api import Benchmark
+from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 
 
 BLACKBOX_NAME = 'lcbench'
@@ -80,7 +80,7 @@ def generate_lcbench(s3_root: Optional[str] = None):
         serialize(bb_dict=bb_dict, path=repository_path / blackbox_name)
 
     with catchtime("uploading to s3"):
-        from benchmarking.blackbox_repository.conversion_scripts.utils import upload
+        from syne_tune.blackbox_repository.conversion_scripts.utils import upload
         upload(blackbox_name, s3_root=s3_root)
 
 

@@ -7,7 +7,7 @@ from tqdm import tqdm
 from benchmarking.benchmark_loop.baselines import methods
 from benchmarking.benchmark_loop.benchmark_definitions import \
     benchmark_definitions
-from benchmarking.blackbox_repository import BlackboxRepositoryBackend
+from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 
 from syne_tune.backend.simulator_backend.simulator_callback import \
     SimulatorCallback
