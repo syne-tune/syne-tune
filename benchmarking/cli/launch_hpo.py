@@ -274,7 +274,7 @@ if __name__ == '__main__':
                 backend_kwargs['entry_point'] = benchmark['script']
                 trial_backend = SimulatorBackend(**backend_kwargs)
             else:
-                from benchmarking.blackbox_repository import BlackboxRepositoryBackend
+                from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 
                 # Tabulated benchmark from the blackbox repository (simulation
                 # runs faster)

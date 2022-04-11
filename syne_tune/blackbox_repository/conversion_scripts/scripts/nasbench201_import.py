@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 import logging
 
-from benchmarking.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-from benchmarking.blackbox_repository.conversion_scripts.utils import repository_path
+from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 
 from syne_tune.config_space import randint, choice
 from syne_tune.util import catchtime
@@ -213,7 +213,7 @@ def generate_nasbench201(s3_root: Optional[str] = None):
         serialize(bb_dict=bb_dict, path=repository_path / BLACKBOX_NAME)
 
     with catchtime("uploading to S3"):
-        from benchmarking.blackbox_repository.conversion_scripts.utils import upload
+        from syne_tune.blackbox_repository.conversion_scripts.utils import upload
         upload(BLACKBOX_NAME, s3_root=s3_root)
 
 
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     generate_nasbench201()
 
     # plot one learning-curve for sanity-check
-    from benchmarking.blackbox_repository import load
+    from syne_tune.blackbox_repository import load
 
     bb_dict = load(BLACKBOX_NAME)
 
