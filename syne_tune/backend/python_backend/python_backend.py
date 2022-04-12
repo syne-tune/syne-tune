@@ -79,12 +79,12 @@ class PythonBackend(LocalBackend):
     def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
         super(PythonBackend, self).set_path(results_root=results_root, tuner_name=tuner_name)
         if self.local_path.exists():
-            print(f"path {self.local_path} already exists, make sure you have a unique tuner name.")
             logging.error(f"path {self.local_path} already exists, make sure you have a unique tuner name.")
         self.tune_function_path = self.local_path / "tune_function"
 
     def _schedule(self, trial_id: int, config: Dict):
-        self.save_tune_function(self.tune_function)
+        if not (self.tune_function_path / "tune_function.dill").exists():
+            self.save_tune_function(self.tune_function)
         config = config.copy()
         config["tune_function_root"] = str(self.tune_function_path)
         # to detect if the serialized function is the same as the one passed by the user, we pass the md5 to the
@@ -93,7 +93,6 @@ class PythonBackend(LocalBackend):
         super(PythonBackend, self)._schedule(trial_id=trial_id, config=config)
 
     def save_tune_function(self, tune_function):
-        print(self.tune_function_path)
         self.tune_function_path.mkdir(parents=True, exist_ok=True)
         with open(self.tune_function_path / "tune_function.dill", "wb") as file:
             dill.dump(tune_function, file)

@@ -5,11 +5,14 @@ An example showing to launch a tuning of a python function `train_height`.
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend.python_backend import PythonBackend
 from syne_tune.config_space import randint
-from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import ASHA
 
 
 def train_height(steps: int, width: float, height: float):
+    """
+    The function to be tuned, note that import must be in PythonBackend and no global variable are allowed,
+    more details on requirements of tuned functions can be found in `PythonBackend`.
+    """
     import logging
     from syne_tune import Reporter
     import time
