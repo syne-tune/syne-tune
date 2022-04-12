@@ -71,9 +71,13 @@ class TransferLearningTaskEvaluations:
         assert mode in ['min', 'max'], f"Unknown mode {mode}, must be 'min' or 'max'."
         assert objective in self.objectives_names, f"Unknown objective {objective}."
 
-        # average over seed and take last fidelity
-        avg_objective_last_fidelity = self.objective_values(objective_name=objective).mean(axis=1)[:, -1]
-        best_hp_task_indices = avg_objective_last_fidelity.argsort()
+        # average over seed and take best fidelity
+        avg_objective = self.objective_values(objective_name=objective).mean(axis=1)
+        if mode == 'max':
+            avg_objective = avg_objective.max(axis=1)
+        else:
+            avg_objective = avg_objective.min(axis=1)
+        best_hp_task_indices = avg_objective.argsort()
         if mode == 'max':
             best_hp_task_indices = best_hp_task_indices[::-1]
         return self.hyperparameters.loc[best_hp_task_indices[:k]].to_dict('records')

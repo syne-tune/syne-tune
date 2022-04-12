@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from syne_tune.optimizer.schedulers import FIFOScheduler, HyperbandScheduler, \
     PopulationBasedTraining
@@ -7,6 +7,7 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import \
     RegularizedEvolution
 from syne_tune.optimizer.schedulers.synchronous import \
     SynchronousGeometricHyperbandScheduler
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations, zero_shot
 
 
 class RandomSearch(FIFOScheduler):
@@ -206,6 +207,41 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
             config_space=config_space,
             metric=metric,
             searcher="bayesopt_constrained",
+            **kwargs,
+        )
+
+
+class ZeroShotTransfer(FIFOScheduler):
+    def __init__(self, config_space: Dict, transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+                 metric: str, mode: str = 'min', sort_transfer_learning_evaluations: bool = True,
+                 use_surrogates: bool = False, random_seed: Optional[int] = None, **kwargs):
+        """
+        A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
+        average rank obtained on historic metadata (transfer_learning_evaluations).
+
+        Reference: Sequential Model-Free Hyperparameter Tuning.
+        Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
+        IEEE International Conference on Data Mining (ICDM) 2015.
+
+        :param config_space: Configuration space for trial evaluation function.
+        :param transfer_learning_evaluations: Dictionary from task name to offline evaluations.
+        :param metric: Objective name to optimize, must be present in transfer learning evaluations.
+        :param mode: Whether to minimize (min) or maximize (max)
+        :param sort_transfer_learning_evaluations: Use False if the hyperparameters for each task in
+        transfer_learning_evaluations Are already in the same order. If set to True, hyperparameters are sorted.
+        :param use_surrogates: If the same configuration is not evaluated on all tasks, set this to true. This will
+        generate a set of configurations and will impute their performance using surrogate models.
+        :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
+        """
+        super(ZeroShotTransfer, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher=zero_shot.ZeroShotTransfer(
+                config_space=config_space, metric=metric, mode=mode,
+                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations, random_seed=random_seed,
+                transfer_learning_evaluations=transfer_learning_evaluations, use_surrogates=use_surrogates
+            ),
+            mode=mode,
             **kwargs,
         )
 

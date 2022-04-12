@@ -11,7 +11,7 @@ import numpy as np
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
-    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER
+    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER, ZeroShotTransfer
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import FIFOScheduler, MedianStoppingRule, \
     HyperbandScheduler, PopulationBasedTraining, RayTuneScheduler
@@ -157,6 +157,12 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         max_resource_level=max_t,
         max_resource_attr='steps',
         brackets=3),
+    ZeroShotTransfer(
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=transfer_learning_evaluations,
+        use_surrogates=True,
+    )
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
