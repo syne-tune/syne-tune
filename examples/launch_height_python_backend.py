@@ -3,7 +3,7 @@ An example showing to launch a tuning of a python function `train_height`.
 """
 
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.backend.python_backend.python_backend import PythonBackend
+from syne_tune.backend.python_backend import PythonBackend
 from syne_tune.config_space import randint
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import ASHA
@@ -37,10 +37,8 @@ if __name__ == '__main__':
         "width": randint(0, 20),
         "height": randint(-100, 100)
     }
-    mode = "min"
-    metric = "mean_loss"
 
-    scheduler = ASHA(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode)
+    scheduler = ASHA(config_space, metric="mean_loss", resource_attr='epoch', max_t=max_steps, mode="min")
 
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)
 

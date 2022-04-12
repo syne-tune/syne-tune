@@ -1,12 +1,7 @@
 import tempfile
-import time
-import types
-
-from syne_tune import Tuner, StoppingCriterion
-from syne_tune.backend.python_backend.python_backend import PythonBackend
+from syne_tune.backend import PythonBackend
 from syne_tune.backend.trial_status import Status
-from syne_tune.config_space import randint, uniform
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.config_space import randint
 from tst.util_test import wait_until_all_trials_completed
 
 
