@@ -12,8 +12,9 @@
 # permissions and limitations under the License.
 
 __all__ = ['LocalBackend',
-           'SageMakerBackend']
+           'SageMakerBackend', 'PythonBackend']
 
 from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.backend.python_backend.python_backend import PythonBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_backend import \
     SageMakerBackend

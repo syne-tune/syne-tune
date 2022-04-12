@@ -10,13 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import time
 import logging
 from pathlib import Path
 
 from syne_tune.backend.trial_status import Status
 from syne_tune.util import script_checkpoint_example_path
-from tst.util_test import temporary_local_backend
+from tst.util_test import temporary_local_backend, wait_until_all_trials_completed
 
 
 def check_metrics(metrics_observed, metrics_expected):
@@ -29,13 +28,6 @@ def check_metrics(metrics_observed, metrics_expected):
 
 def status(backend, trial_ids):
     return [trial.status for trial in backend._all_trial_results(trial_ids)]
-
-
-def wait_until_all_trials_completed(backend):
-    i = 0
-    while not all([status == Status.completed for status in status(backend, backend.trial_ids)]):
-        time.sleep(0.1)
-        assert i < 100, "backend trials did not finish after 10s"
 
 
 def get_status_metrics(backend, trial_id):
