@@ -50,5 +50,3 @@ if __name__ == '__main__':
         n_workers=n_workers,
     )
     tuner.run()
-
-    load_experiment(tuner.name).plot()
