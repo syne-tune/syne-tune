@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List, Union, Dict, Optional
 
 import s3fs as s3fs
+from botocore.exceptions import NoCredentialsError
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import deserialize as deserialize_offline
@@ -25,7 +26,7 @@ def load(name: str, skip_if_present: bool = True,
          generate_if_not_found: bool = True) -> Union[Dict[str, Blackbox],
                                                       Blackbox]:
     """
-    :param name: name of a blackbox present in the repository, see list() to get list of available blackboxes
+    :param name: name of a blackbox present in the repository, see blackbox_list() to get list of available blackboxes
     :param skip_if_present: skip the download if the file locally exists
     :param s3_root: S3 root directory for blackbox repository. Defaults to
         S3 bucket name of SageMaker session
@@ -38,9 +39,12 @@ def load(name: str, skip_if_present: bool = True,
         logging.info(f"skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload")
     else:
         tgt_folder.mkdir(exist_ok=True, parents=True)
-        s3_folder = s3_blackbox_folder(s3_root)
-        fs = s3fs.S3FileSystem()
-        data_on_s3 = fs.exists(f"{s3_folder}/{name}/metadata.json")
+        try:
+            s3_folder = s3_blackbox_folder(s3_root)
+            fs = s3fs.S3FileSystem()
+            data_on_s3 = fs.exists(f"{s3_folder}/{name}/metadata.json")
+        except NoCredentialsError:
+            data_on_s3 = False
         if data_on_s3:
             logging.info("found blackbox on S3, copying it locally")
             # download files from s3 to repository_path
