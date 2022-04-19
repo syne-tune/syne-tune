@@ -40,7 +40,7 @@ For local development, we recommend to use the following setup which will enable
 
 ```bash
 pip install --upgrade pip
-git clone git@github.com:awslabs/syne-tune.git
+git clone https://github.com/awslabs/syne-tune.git
 cd syne-tune
 pip install -e '.[extra]'
 ```
