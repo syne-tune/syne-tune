@@ -73,8 +73,9 @@ class TuningStatus:
             {k: v[1] for k, v in trial_status_dict.items()})
 
         for trial_id, new_result in new_results:
-            self.overall_metric_statistics.add(new_result)
-            self.trial_metric_statistics[trial_id].add(new_result)
+            if isinstance(new_result, numbers.Number):
+                self.overall_metric_statistics.add(new_result)
+                self.trial_metric_statistics[trial_id].add(new_result)
 
         for trial_id, (trial, status) in trial_status_dict.items():
             num_metrics = self.trial_metric_statistics[trial_id].count
