@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numbers
+import logging
 import time
 from collections import defaultdict, OrderedDict
 from typing import List, Dict, Tuple
@@ -34,13 +35,23 @@ class MetricsStatistics:
         self.max_metrics = {}
         self.sum_metrics = {}
         self.last_metrics = {}
+        self.is_numeric = {}
 
     def add(self, metrics: Dict):
         for metric_name, current_metric in metrics.items():
-            if isinstance(current_metric, numbers.Number):
-                self.min_metrics[metric_name] = min(self.min_metrics.get(metric_name, np.inf), current_metric)
-                self.max_metrics[metric_name] = max(self.max_metrics.get(metric_name, -np.inf), current_metric)
-                self.sum_metrics[metric_name] = self.sum_metrics.get(metric_name, 0) + current_metric
+            if metric_name in self.is_numeric:
+                if self.is_numeric[metric_name] != isinstance(current_metric, numbers.Number):
+                    logging.warning(f'Numeric and non-numeric values reported for metric {metric_name}.')
+            if self.is_numeric.get(metric_name, True):
+                self.is_numeric[metric_name] = isinstance(current_metric, numbers.Number)
+                if self.is_numeric[metric_name]:
+                    self.min_metrics[metric_name] = min(self.min_metrics.get(metric_name, np.inf), current_metric)
+                    self.max_metrics[metric_name] = max(self.max_metrics.get(metric_name, -np.inf), current_metric)
+                    self.sum_metrics[metric_name] = self.sum_metrics.get(metric_name, 0) + current_metric
+                else:
+                    self.min_metrics.pop(metric_name, None)
+                    self.max_metrics.pop(metric_name, None)
+                    self.sum_metrics.pop(metric_name, None)
         self.metric_names = list(self.min_metrics.keys())
         self.last_metrics = metrics
         self.count += 1
