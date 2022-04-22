@@ -26,9 +26,9 @@ def test_status():
             1: (trial1, Status.in_progress),
         },
         new_results=[
-            (0, {"NLL": 2.0, "time": 10.0}),
-            (0, {"NLL": 1.0, "time": 12.0 }),
-            (1, {"NLL": 3.0, "time": 5.0}),
+            (0, {"NLL": 2.0, "time": 10.0, "debug": "str"}),
+            (0, {"NLL": 1.0, "time": 12.0, "debug": "str"}),
+            (1, {"NLL": 3.0, "time": 5.0, "debug": "str"}),
         ]
     )
     assert status.overall_metric_statistics.max_metrics

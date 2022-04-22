@@ -27,7 +27,6 @@ class MetricsStatistics:
     def __init__(self):
         """
         Allows to maintain simple running statistics (min/max/sum/count) of metrics provided.
-        :param metric_names: metrics to be tracked, if not passed all metrics seen in the first report are used.
         """
         self.metric_names = []
         self.count = 0
@@ -37,16 +36,12 @@ class MetricsStatistics:
         self.last_metrics = {}
 
     def add(self, metrics: Dict):
-        for name in metrics.keys():
-            if name not in self.metric_names:
-                self.metric_names.append(name)
-                self.min_metrics[name] = np.inf
-                self.max_metrics[name] = -np.inf
-                self.sum_metrics[name] = 0
-
-        self.min_metrics = {m: min(metrics[m], current) for m, current in self.min_metrics.items()}
-        self.max_metrics = {m: max(metrics[m], current) for m, current in self.max_metrics.items()}
-        self.sum_metrics = {m: metrics[m] + current for m, current in self.sum_metrics.items()}
+        for metric_name, current_metric in metrics.items():
+            if isinstance(current_metric, numbers.Number):
+                self.min_metrics[metric_name] = min(self.min_metrics.get(metric_name, np.inf), current_metric)
+                self.max_metrics[metric_name] = max(self.max_metrics.get(metric_name, -np.inf), current_metric)
+                self.sum_metrics[metric_name] = self.sum_metrics.get(metric_name, 0) + current_metric
+        self.metric_names = list(self.min_metrics.keys())
         self.last_metrics = metrics
         self.count += 1
 
@@ -74,9 +69,8 @@ class TuningStatus:
             {k: v[1] for k, v in trial_status_dict.items()})
 
         for trial_id, new_result in new_results:
-            if isinstance(new_result, numbers.Number):
-                self.overall_metric_statistics.add(new_result)
-                self.trial_metric_statistics[trial_id].add(new_result)
+            self.overall_metric_statistics.add(new_result)
+            self.trial_metric_statistics[trial_id].add(new_result)
 
         for trial_id, (trial, status) in trial_status_dict.items():
             num_metrics = self.trial_metric_statistics[trial_id].count
