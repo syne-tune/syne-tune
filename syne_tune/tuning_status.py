@@ -28,6 +28,7 @@ class MetricsStatistics:
     def __init__(self):
         """
         Allows to maintain simple running statistics (min/max/sum/count) of metrics provided.
+        Statistics are tracked for numeric types only. Types of first added metrics define its types.
         """
         self.metric_names = []
         self.count = 0
@@ -48,10 +49,6 @@ class MetricsStatistics:
                     self.min_metrics[metric_name] = min(self.min_metrics.get(metric_name, np.inf), current_metric)
                     self.max_metrics[metric_name] = max(self.max_metrics.get(metric_name, -np.inf), current_metric)
                     self.sum_metrics[metric_name] = self.sum_metrics.get(metric_name, 0) + current_metric
-                else:
-                    self.min_metrics.pop(metric_name, None)
-                    self.max_metrics.pop(metric_name, None)
-                    self.sum_metrics.pop(metric_name, None)
         self.metric_names = list(self.min_metrics.keys())
         self.last_metrics = metrics
         self.count += 1

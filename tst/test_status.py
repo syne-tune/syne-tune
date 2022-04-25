@@ -100,7 +100,7 @@ def test_stats_are_not_tracked_for_non_numeric_metrics():
         ]
     )
 
-    assert status.trial_metric_statistics[0].max_metrics == {}
-    assert status.trial_metric_statistics[0].min_metrics == {}
-    assert status.trial_metric_statistics[0].sum_metrics == {}
+    assert status.trial_metric_statistics[0].max_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].min_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].sum_metrics == {metric_names[0]: 2.0}
     assert status.trial_metric_statistics[0].last_metrics == {metric_names[0]: "str", metric_names[1]: 20}
