@@ -61,7 +61,10 @@ def experiment_path(
     if is_sagemaker:
         # if SM_MODEL_DIR is present in the environment variable, this means that we are running on Sagemaker
         # we use this path to store results as it is persisted by Sagemaker.
-        return Path('/opt/ml/checkpoints') / tuner_name
+        sagemaker_path = Path('/opt/ml/checkpoints')
+        if tuner_name is not None:
+            sagemaker_path = sagemaker_path / tuner_name
+        return sagemaker_path
     else:
         # means we are running on a local machine, we store results in a local path
         if local_path is None:
