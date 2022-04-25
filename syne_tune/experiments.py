@@ -135,13 +135,13 @@ def load_experiment(
     path = experiment_path(tuner_name, local_path)
 
     metadata_path = path / "metadata.json"
+    if not(metadata_path.exists()) and download_if_not_found:
+        logging.info(f"experiment {tuner_name} not found locally, trying to get it from s3.")
+        download_single_experiment(tuner_name=tuner_name)
     try:
         with open(metadata_path, "r") as f:
             metadata = json.load(f)
     except FileNotFoundError:
-        logging.info(f"experiment {tuner_name} not found locally, trying to get it from s3.")
-        if download_if_not_found:
-            download_single_experiment(tuner_name=tuner_name)
         metadata = None
     try:
         if (path / "results.csv.zip").exists():
