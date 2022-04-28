@@ -208,7 +208,7 @@ class RemoteLauncher:
 
         image_uri = self.estimator_kwargs.pop("image_uri", None)
         if image_uri is not None:
-            logger.info(f"Using custom image {image_uri}")
+            logger.info(f"Using custom image {image_uri}, make sure that Syne Tune is installed in your custom container.")
         else:
             image_uri = self.syne_tune_image_uri()
 
