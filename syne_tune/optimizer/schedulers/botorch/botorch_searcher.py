@@ -34,6 +34,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_facto
 logger = logging.getLogger(__name__)
 
 
+NOISE_LEVEL = 1e-3
+
 class BotorchSearcher(SearcherWithRandomSeed):
 
     def __init__(
@@ -49,11 +51,12 @@ class BotorchSearcher(SearcherWithRandomSeed):
             **kwargs,
     ):
         """
-        A searcher that suggest configurations using BOTORCH to build GP surrogate and optimize acquisition functions.
+        A searcher that suggest configurations using BOTORCH to build GP surrogate and optimize acquisition function.
+        `qExpectedImprovement is used for the acquisition function given that it supports pending evaluations.
         :param config_space: configuration space to optimize
         :param metric: metric to optimize, should be present in reported results.
-        :param num_init_random_draws: number of initial random draw, after this number the suggestion are obtained
-        using the posterior of a GP built on available observations.
+        :param num_init_random_draws: number of initial random draws, after this number the suggestion are obtained
+        from the GP surrogate model.
         :param mode: 'min' or 'max'
         :param points_to_evaluate: if passed, those configurations are evaluated first
         :param fantasising: whether to fantasize pending evaluations by sampling from the GP posterior
@@ -121,7 +124,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
             y = self.objectives()
 
             if self.max_num_observations is not None and len(X) >= self.max_num_observations:
-                perm = self.random_state.permutation(len(X))
+                perm = self.random_state.permutation(len(X))[:self.max_num_observations]
                 X = X[perm]
                 y = y[perm]
                 subsample = True
@@ -159,9 +162,10 @@ class BotorchSearcher(SearcherWithRandomSeed):
             if not self._is_config_already_seen(config):
                 return config
             else:
+                logger.warning("Optimization of the acquisition function yielded a config that was already seen.")
                 return self._sample_and_pick_acq_best(acq)
         except NotPSDError as _:
-            logging.info("Chlolesky inversion failed, sampling randomly.")
+            logging.warning("Chlolesky inversion failed, sampling randomly.")
             return self._sample_random()
 
     def _make_gp(self, X_tensor: torch.Tensor, Y_tensor: torch.Tensor) -> SingleTaskGP:
@@ -170,7 +174,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
             X_tensor = X_tensor.double()
             Y_tensor = Y_tensor.double()
 
-        noise_std = 1e-3
+        noise_std = NOISE_LEVEL
         Y_tensor += noise_std * torch.randn_like(Y_tensor)
 
         if self.input_warping:
