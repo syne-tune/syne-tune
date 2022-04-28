@@ -49,6 +49,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
             **kwargs,
     ):
         """
+        A searcher that suggest configurations using BOTORCH to build GP surrogate and optimize acquisition functions.
         :param config_space: configuration space to optimize
         :param metric: metric to optimize, should be present in reported results.
         :param num_init_random_draws: number of initial random draw, after this number the suggestion are obtained
@@ -74,7 +75,6 @@ class BotorchSearcher(SearcherWithRandomSeed):
         self.fantasising = fantasising
         self.max_num_observations = max_num_observations
         self.input_warping = input_warping
-
         self.trial_configs = {}
         self.pending_trials = set()
         self.y = {}
