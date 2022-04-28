@@ -77,11 +77,11 @@ class BotorchSearcher(SearcherWithRandomSeed):
         self.input_warping = input_warping
         self.trial_configs = {}
         self.pending_trials = set()
-        self.y = {}
+        self.trial_observations = {}
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
         trial_id = int(trial_id)
-        self.y[trial_id] = result[self.metric_name]
+        self.trial_observations[trial_id] = result[self.metric_name]
         self.pending_trials.remove(trial_id)
 
     def clone_from_state(self, state):
@@ -185,7 +185,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
         return normalize(X, bounds)
 
     def objectives(self):
-        return np.array(list(self.y.values()))
+        return np.array(list(self.trial_observations.values()))
 
     def _sample_and_pick_acq_best(self, acq, num_samples: int = 100) -> Dict:
         """
