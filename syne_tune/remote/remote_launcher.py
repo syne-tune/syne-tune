@@ -205,6 +205,13 @@ class RemoteLauncher:
         environment = self.estimator_kwargs.pop("environment", {})
         if "AWS_DEFAULT_REGION" not in environment:
           environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
+
+        image_uri = self.estimator_kwargs.pop("image_uri", None)
+        if image_uri is not None:
+            logger.info(f"Using custom image {image_uri}, make sure that Syne Tune is installed in your custom container.")
+        else:
+            image_uri = self.syne_tune_image_uri()
+
         # the choice of the estimator is arbitrary here since we use a base image of Syne Tune.
         tuner_estimator = PyTorch(
             # path which calls the tuner
@@ -215,7 +222,7 @@ class RemoteLauncher:
             role=self.role,
             py_version="py38",
             framework_version='1.10.0',
-            image_uri=self.syne_tune_image_uri(),
+            image_uri=image_uri,
             hyperparameters=hyperparameters,
             checkpoint_s3_uri=checkpoint_s3_root,
             environment=environment,
