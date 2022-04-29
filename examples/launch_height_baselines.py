@@ -19,6 +19,8 @@ from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
 # from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
 # from syne_tune.optimizer.schedulers.synchronous import \
 #    SynchronousGeometricHyperbandScheduler  # noqa: F401
+# from syne_tune.optimizer.schedulers import FIFOScheduler  # noqa: F401
+# from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher  # noqa: F401
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 
@@ -57,7 +59,12 @@ if __name__ == '__main__':
         #     batch_size=n_workers,
         #     mode=mode,
         #     metric=metric,
-        # )
+        # ),
+        # FIFOScheduler(
+        #     config_space,
+        #     searcher=BotorchSearcher(config_space=config_space, metric=metric, mode='min'),
+        #     metric=metric
+        # ),
 
     ]
 

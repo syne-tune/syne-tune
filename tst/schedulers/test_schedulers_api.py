@@ -15,6 +15,7 @@ from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import FIFOScheduler, MedianStoppingRule, \
     HyperbandScheduler, PopulationBasedTraining, RayTuneScheduler
+from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.transfer_learning import \
     TransferLearningTaskEvaluations, BoundingBox, RUSHScheduler
@@ -162,7 +163,12 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         metric=metric1,
         transfer_learning_evaluations=transfer_learning_evaluations,
         use_surrogates=True,
-    )
+    ),
+    FIFOScheduler(
+        config_space,
+        searcher=BotorchSearcher(config_space=config_space, metric=metric1, mode='min'),
+        metric=metric1
+    ),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)
