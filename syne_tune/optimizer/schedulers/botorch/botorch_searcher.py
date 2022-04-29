@@ -74,7 +74,6 @@ class BotorchSearcher(SearcherWithRandomSeed):
         self.num_minimum_observations = num_init_random_draws
         self.points_to_evaluate = points_to_evaluate
         self.config_seen = set()
-        self.hp_ranges = make_hyperparameter_ranges(config_space=config_space)
         self.fantasising = fantasising
         self.max_num_observations = max_num_observations
         self.input_warping = input_warping
