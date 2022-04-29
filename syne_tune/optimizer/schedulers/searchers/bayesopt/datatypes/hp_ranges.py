@@ -32,7 +32,9 @@ class HyperparameterRanges(object):
             self, config_space: Dict, name_last_pos: Optional[str] = None,
             value_for_last_pos=None,
             active_config_space: Optional[Dict] = None,
-            prefix_keys: Optional[List[str]] = None):
+            prefix_keys: Optional[List[str]] = None,
+            strictly_non_binary_choice_hyperparameter_keys: Optional[List[str]] = None
+    ):
         """
         If name_last_pos is given, the hyperparameter of that name is assigned
         the final position in the vector returned by `to_ndarray`. This can be
@@ -65,12 +67,15 @@ class HyperparameterRanges(object):
         :param prefix_keys: If given, these keys into `config_space` come first
             in the internal ordering, which determines the internal
             encoding
+        :param strictly_non_binary_choice_hyperparameter_keys: If given, these keys are considered to be strictly
+            non-binary even if number of choices are 2.
         """
         self.config_space = _filter_constant_hyperparameters(config_space)
         self.name_last_pos = name_last_pos
         self.value_for_last_pos = value_for_last_pos
         self._set_internal_keys(prefix_keys)
         self._set_active_config_space(active_config_space)
+        self.strictly_non_binary_choice_hyperparameter_keys = strictly_non_binary_choice_hyperparameter_keys or []
 
     def _set_internal_keys(self, prefix_keys: Optional[List[str]]):
         keys = sorted(self.config_space.keys())

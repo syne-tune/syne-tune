@@ -411,9 +411,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
     """
     def __init__(self, config_space: Dict, name_last_pos: str = None,
                  value_for_last_pos=None, active_config_space: Dict = None,
-                 prefix_keys: Optional[List[str]] = None):
+                 prefix_keys: Optional[List[str]] = None,
+                 strictly_non_binary_choice_hyperparameter_keys: Optional[List[str]] = None,):
         super().__init__(config_space, name_last_pos, value_for_last_pos,
-                         active_config_space, prefix_keys)
+                         active_config_space, prefix_keys, strictly_non_binary_choice_hyperparameter_keys)
         hp_ranges = []
         for name in self.internal_keys:
             hp_range = self.config_space[name]
@@ -425,7 +426,7 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                         self.active_config_space[name].categories)
                 else:
                     active_choices = None
-                if len(hp_range.categories) == 2:
+                if len(hp_range.categories) == 2 and name not in self.strictly_non_binary_choice_hyperparameter_keys:
                     _cls = HyperparameterRangeCategoricalBinary
                 else:
                     _cls = HyperparameterRangeCategoricalNonBinary

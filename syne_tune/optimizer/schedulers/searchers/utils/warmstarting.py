@@ -39,6 +39,7 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
     config_space = kwargs['config_space']
     prefix_keys = None
     active_config_space = None
+    strictly_non_binary_choice_hyperparameter_keys = None
     if task_attr is not None:
         from syne_tune.config_space import Categorical
 
@@ -61,9 +62,11 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
         task_param = Categorical(categories=[active_task])
         active_config_space = dict(
             active_config_space, **{task_attr: task_param})
+        strictly_non_binary_choice_hyperparameter_keys = [task_attr]
     return make_hyperparameter_ranges(
         config_space, active_config_space=active_config_space,
-        prefix_keys=prefix_keys)
+        prefix_keys=prefix_keys,
+        strictly_non_binary_choice_hyperparameter_keys=strictly_non_binary_choice_hyperparameter_keys)
 
 
 def create_filter_observed_data_for_warmstarting(
