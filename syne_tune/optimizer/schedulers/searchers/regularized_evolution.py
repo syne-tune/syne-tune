@@ -6,7 +6,7 @@ from typing import Optional, Dict, List
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
-from syne_tune.config_space import Domain, Categorical
+from syne_tune.config_space import Domain
 
 
 @dataclass
