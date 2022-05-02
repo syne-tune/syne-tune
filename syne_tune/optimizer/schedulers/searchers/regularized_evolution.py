@@ -1,11 +1,12 @@
 import copy
+import logging
 
 from collections import deque
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
-from syne_tune.config_space import Domain, Categorical
+from syne_tune.config_space import Domain
 
 
 @dataclass
@@ -60,27 +61,28 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         self.population_size = population_size
         self.sample_size = sample_size
         self.population = deque()
+        self.num_sample_try = 1000  # number of times allowed to sample a mutation
 
     def mutate_config(self, config: Dict) -> Dict:
 
         child_config = copy.deepcopy(config)
 
-        # pick random hyperparameter and mutate it
-        hypers = []
-        for k, v in self.config_space.items():
-            if isinstance(v, Domain):
-                hypers.append(k)
-        name = self.random_state.choice(hypers)
-        hyperparameter = self.config_space[name]
+        # sample mutation until a different configuration is found
+        for sample_try in range(self.num_sample_try):
+            if child_config == config:
+                # sample a random hyperparameter to mutate
+                hps = [(k, v) for k, v in self.config_space.items() if isinstance(v, Domain) and len(v) > 1]
+                assert len(hps) >= 0, "all hyperparameters only have a single value, cannot perform mutations."
+                hp_name, hp = hps[self.random_state.randint(len(hps))]
 
-        if isinstance(hyperparameter, Categorical):
-            # drop current values from potential choices to not sample the same value again
-            choices = [cat for cat in hyperparameter.categories if cat != config[name]]
-            new_value = self.random_state.choice(choices)
-        else:
-            new_value = hyperparameter.sample(random_state=self.random_state)
-
-        child_config[name] = new_value
+                # mutate the value by sampling
+                config[hp_name] = hp.sample(random_state=self.random_state)
+            else:
+                break
+        if sample_try == self.num_sample_try:
+            logging.INFO(f"Did not manage to sample a different configuration with {self.num_sample_try}, "
+                         f"sampling at random")
+            return self.sample_random_config()
 
         return child_config
 
