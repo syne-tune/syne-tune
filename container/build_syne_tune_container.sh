@@ -3,7 +3,7 @@
 # allows to build a docker image that can be used to run Syne Tune.
 set -x
 
-CONTEXT="cpu-py36"
+CONTEXT="cpu-py38"
 
 rm -rf ./source && mkdir ./source
 cat ../requirements.txt >> ./source/requirements.txt
