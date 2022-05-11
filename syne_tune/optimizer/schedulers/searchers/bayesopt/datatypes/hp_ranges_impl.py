@@ -455,7 +455,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                     else:
                         hp_ranges.append(HyperparameterRangeInteger(**kwargs))
         self._hp_ranges = hp_ranges
-        self._ndarray_size = sum(d.ndarray_size() for d in hp_ranges)
+        csum = [0] + list(np.cumsum([d.ndarray_size() for d in hp_ranges]))
+        self._ndarray_size = csum[-1]
+        self._encoded_ranges = dict(zip(
+            (d.name for d in hp_ranges), zip(csum[:-1], csum[1:])))
 
     @property
     def ndarray_size(self) -> int:
@@ -487,6 +490,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
             hps.append(hp_range.from_ndarray(enc_attr))
             start = end
         return self.tuple_to_config(tuple(hps))
+
+    @property
+    def encoded_ranges(self) -> Dict[str, Tuple[int, int]]:
+        return self._encoded_ranges
 
     def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
         bounds = [x for hp_range in self._hp_ranges
