@@ -78,8 +78,10 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
     FIFOScheduler(config_space, searcher='random', metric=metric1),
     FIFOScheduler(config_space, searcher='bayesopt', metric=metric1),
     FIFOScheduler(config_space, searcher='kde', metric=metric1),
+    FIFOScheduler(config_space, searcher='bore', metric=metric1),
     HyperbandScheduler(config_space, searcher='random', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(config_space, searcher='bayesopt', resource_attr=resource_attr, max_t=max_t, metric=metric1),
+    HyperbandScheduler(config_space, searcher='bore', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(
         config_space, searcher='random', type='pasha', max_t=max_t, resource_attr=resource_attr, metric=metric1
     ),

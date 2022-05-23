@@ -186,7 +186,9 @@ class Bore(SearcherWithRandomSeed):
                         else:
                             logging.warning("Re-sampled the same configuration. Retry...")
                             counter += 1  # we stop sampling if after 10 retires we are not able to find a new config
-
+                    if len(values) < self.feval_acq:
+                        logging.warning(f'Only {len(values)} instead of {self.feval_acq} configurations '
+                                        f'sampled to optimize the acquisition function')
                     ind = np.array(values).argmin()
                     config = X[ind]
 
