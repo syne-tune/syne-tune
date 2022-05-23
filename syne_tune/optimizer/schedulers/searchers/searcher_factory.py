@@ -60,6 +60,15 @@ def searcher_factory(searcher_name, **kwargs):
         else:
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = MultiFidelityKernelDensityEstimator
+    elif searcher_name == 'bore':
+        from syne_tune.optimizer.schedulers.searchers.bore import Bore
+        from syne_tune.optimizer.schedulers.searchers.bore.multi_fidelity_bore import MultiFidelityBore
+
+        if scheduler == 'fifo':
+            searcher_cls = Bore
+        else:
+            supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
+            searcher_cls = MultiFidelityBore
     elif searcher_name == 'bayesopt':
         if scheduler == 'fifo':
             searcher_cls = GPFIFOSearcher
