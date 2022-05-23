@@ -7,7 +7,7 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import \
     RegularizedEvolution
 from syne_tune.optimizer.schedulers.synchronous import \
     SynchronousGeometricHyperbandScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations, zero_shot
+from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
 
 
 class RandomSearch(FIFOScheduler):
@@ -233,6 +233,7 @@ class ZeroShotTransfer(FIFOScheduler):
         generate a set of configurations and will impute their performance using surrogate models.
         :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
         """
+        from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
         super(ZeroShotTransfer, self).__init__(
             config_space=config_space,
             metric=metric,
