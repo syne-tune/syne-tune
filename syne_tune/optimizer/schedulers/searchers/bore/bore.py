@@ -26,7 +26,6 @@ from syne_tune.optimizer.schedulers.searchers.searcher import \
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
     import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.bore.de import DifferentialevolutionOptimizer
-from syne_tune.optimizer.schedulers.searchers.bore.classififer import GPModel, MLP
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +92,10 @@ class Bore(SearcherWithRandomSeed):
         elif self.classifier == 'rf':
             self.model = RandomForestClassifier()
         elif self.classifier == 'gp':
+            from syne_tune.optimizer.schedulers.searchers.bore.classififer import GPModel
             self.model = GPModel(**classifier_kwargs)
         elif self.classifier == 'mlp':
+            from syne_tune.optimizer.schedulers.searchers.bore.classififer import MLP
             self.model = MLP(n_inputs=self._hp_ranges.ndarray_size, **classifier_kwargs)
 
         self.inputs = []
