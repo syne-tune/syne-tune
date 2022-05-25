@@ -51,6 +51,7 @@ class Tuner:
             asynchronous_scheduling: bool = True,
             callbacks: Optional[List[TunerCallback]] = None,
             metadata: Optional[Dict] = None,
+            suffix_tuner_name: bool = True
     ):
         """
         Allows to run an tuning job, call `run` after initializing.
@@ -76,6 +77,8 @@ class Tuner:
         :param metadata: dictionary of user-metadata that will be persistend in {tuner_path}/metadata.json, in addition
         to the metadata provided by the user, `SMT_TUNER_CREATION_TIMESTAMP` is always included which measures
         the time-stamp when the tuner started to run.
+        :param suffix_tuner_name: If True, a timestamp is appended to the provided `tuner_name` that ensures uniqueness
+        otherwise the name is left unchanged and is expected to be unique.
         """
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -93,7 +96,10 @@ class Tuner:
             check_valid_sagemaker_name(tuner_name)
         else:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace("_", "-")
-        self.name = name_from_base(tuner_name, default="st-tuner")
+        if suffix_tuner_name or tuner_name is None:
+            self.name = name_from_base(tuner_name, default="st-tuner")
+        else:
+            self.name = tuner_name
 
         # we keep track of the last result seen to send it to schedulers when trials complete.
         self.last_seen_result_per_trial = {}
