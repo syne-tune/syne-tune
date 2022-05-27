@@ -16,9 +16,8 @@ Example for how to tune one of the benchmarks.
 import logging
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
+from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune import Tuner, StoppingCriterion
 
 from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
     mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params

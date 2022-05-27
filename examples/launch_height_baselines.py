@@ -14,13 +14,15 @@ import logging
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA, MOBSTER
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
+    ASHA, MOBSTER
 # from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
-# from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+# from syne_tune.optimizer.schedulers.synchronous import \
 #    SynchronousGeometricHyperbandScheduler  # noqa: F401
-from syne_tune import Tuner
+# from syne_tune.optimizer.schedulers import FIFOScheduler  # noqa: F401
+# from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher  # noqa: F401
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
-from syne_tune import StoppingCriterion
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
@@ -57,14 +59,18 @@ if __name__ == '__main__':
         #     batch_size=n_workers,
         #     mode=mode,
         #     metric=metric,
-        # )
+        # ),
+        # FIFOScheduler(
+        #     config_space,
+        #     searcher=BotorchSearcher(config_space=config_space, metric=metric, mode='min'),
+        #     metric=metric
+        # ),
 
     ]
 
     for scheduler in schedulers:
         print(f"running scheduler {scheduler}")
 
-        # Local back-end
         trial_backend = LocalBackend(entry_point=str(entry_point))
 
         stop_criterion = StoppingCriterion(max_wallclock_time=5, min_metric_value={"mean_loss": -6.0})

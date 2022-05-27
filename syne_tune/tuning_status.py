@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import numbers
+import logging
 import time
 from collections import defaultdict, OrderedDict
 from typing import List, Dict, Tuple
@@ -26,7 +28,7 @@ class MetricsStatistics:
     def __init__(self):
         """
         Allows to maintain simple running statistics (min/max/sum/count) of metrics provided.
-        :param metric_names: metrics to be tracked, if not passed all metrics seen in the first report are used.
+        Statistics are tracked for numeric types only. Types of first added metrics define its types.
         """
         self.metric_names = []
         self.count = 0
@@ -34,18 +36,20 @@ class MetricsStatistics:
         self.max_metrics = {}
         self.sum_metrics = {}
         self.last_metrics = {}
+        self.is_numeric = {}
 
     def add(self, metrics: Dict):
-        for name in metrics.keys():
-            if name not in self.metric_names:
-                self.metric_names.append(name)
-                self.min_metrics[name] = np.inf
-                self.max_metrics[name] = -np.inf
-                self.sum_metrics[name] = 0
-
-        self.min_metrics = {m: min(metrics[m], current) for m, current in self.min_metrics.items()}
-        self.max_metrics = {m: max(metrics[m], current) for m, current in self.max_metrics.items()}
-        self.sum_metrics = {m: metrics[m] + current for m, current in self.sum_metrics.items()}
+        for metric_name, current_metric in metrics.items():
+            if metric_name in self.is_numeric:
+                if self.is_numeric[metric_name] != isinstance(current_metric, numbers.Number):
+                    logging.warning(f'Numeric and non-numeric values reported for metric {metric_name}.')
+            if self.is_numeric.get(metric_name, True):
+                self.is_numeric[metric_name] = isinstance(current_metric, numbers.Number)
+                if self.is_numeric[metric_name]:
+                    self.min_metrics[metric_name] = min(self.min_metrics.get(metric_name, np.inf), current_metric)
+                    self.max_metrics[metric_name] = max(self.max_metrics.get(metric_name, -np.inf), current_metric)
+                    self.sum_metrics[metric_name] = self.sum_metrics.get(metric_name, 0) + current_metric
+        self.metric_names = list(self.min_metrics.keys())
         self.last_metrics = metrics
         self.count += 1
 

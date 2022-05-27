@@ -1,8 +1,25 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
+
+__all__ = ['TransferLearningTaskEvaluations',
+           'TransferLearningMixin',
+           'BoundingBox',
+           'RUSHScheduler']
 
 
 @dataclass
@@ -54,9 +71,13 @@ class TransferLearningTaskEvaluations:
         assert mode in ['min', 'max'], f"Unknown mode {mode}, must be 'min' or 'max'."
         assert objective in self.objectives_names, f"Unknown objective {objective}."
 
-        # average over seed and take last fidelity
-        avg_objective_last_fidelity = self.objective_values(objective_name=objective).mean(axis=1)[:, -1]
-        best_hp_task_indices = avg_objective_last_fidelity.argsort()
+        # average over seed and take best fidelity
+        avg_objective = self.objective_values(objective_name=objective).mean(axis=1)
+        if mode == 'max':
+            avg_objective = avg_objective.max(axis=1)
+        else:
+            avg_objective = avg_objective.min(axis=1)
+        best_hp_task_indices = avg_objective.argsort()
         if mode == 'max':
             best_hp_task_indices = best_hp_task_indices[::-1]
         return self.hyperparameters.loc[best_hp_task_indices[:k]].to_dict('records')
@@ -78,12 +99,12 @@ class TransferLearningMixin:
         :param metric_names: name of the metric to be optimized.
         """
         super().__init__(config_space=config_space, **kwargs)
+        self._metric_names = metric_names
         self._check_consistency(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
             metric_names=metric_names,
         )
-        self._metric_names = metric_names
 
     def _check_consistency(
             self,
@@ -126,3 +147,9 @@ class TransferLearningMixin:
             best_hps[task] = evaluation.top_k_hyperparameter_configurations(num_hyperparameters_per_task,
                                                                             mode, metric)
         return best_hps
+
+
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import \
+    BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
+

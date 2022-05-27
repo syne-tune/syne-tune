@@ -3,33 +3,34 @@ from pathlib import Path
 
 import dill
 import pytest
+# FIXME: Needs Ray to be installed
 from ray.tune.schedulers import AsyncHyperBandScheduler
-from ray.tune.suggest.skopt import SkOptSearch
 import pandas as pd
 import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
-    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER
+    ASHA, MOBSTER, REA, SyncHyperband, SyncBOHB, SyncMOBSTER, ZeroShotTransfer
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
-from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
-from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-import syne_tune.config_space as sp
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
-from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
-from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
+from syne_tune.optimizer.schedulers import FIFOScheduler, MedianStoppingRule, \
+    HyperbandScheduler, PopulationBasedTraining, RayTuneScheduler
+from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher
+from syne_tune.optimizer.schedulers.multiobjective import MOASHA
+from syne_tune.optimizer.schedulers.transfer_learning import \
+    TransferLearningTaskEvaluations, BoundingBox, RUSHScheduler
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import \
+    QuantileBasedSurrogateSearcher
+from syne_tune.config_space import randint, uniform, choice
+
 
 config_space = {
     "steps": 100,
-    "x": sp.randint(0, 20),
-    "y": sp.uniform(0, 1),
-    "z": sp.choice(["a", "b", "c"]),
+    "x": randint(0, 20),
+    "y": uniform(0, 1),
+    "z": choice(["a", "b", "c"]),
 }
+
 metric1 = "objective1"
 metric2 = "objective2"
 resource_attr = 'step'
@@ -37,6 +38,8 @@ max_t = 10
 
 
 def make_ray_skopt():
+    from ray.tune.suggest.skopt import SkOptSearch
+
     ray_searcher = SkOptSearch()
     ray_searcher.set_search_properties(
         mode='min', metric=metric1,
@@ -67,12 +70,18 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
         ),
     }
 
+
+transfer_learning_evaluations = make_transfer_learning_evaluations()
+
+
 @pytest.mark.parametrize("scheduler", [
     FIFOScheduler(config_space, searcher='random', metric=metric1),
     FIFOScheduler(config_space, searcher='bayesopt', metric=metric1),
     FIFOScheduler(config_space, searcher='kde', metric=metric1),
+    FIFOScheduler(config_space, searcher='bore', metric=metric1),
     HyperbandScheduler(config_space, searcher='random', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(config_space, searcher='bayesopt', resource_attr=resource_attr, max_t=max_t, metric=metric1),
+    HyperbandScheduler(config_space, searcher='bore', resource_attr=resource_attr, max_t=max_t, metric=metric1),
     HyperbandScheduler(
         config_space, searcher='random', type='pasha', max_t=max_t, resource_attr=resource_attr, metric=metric1
     ),
@@ -109,7 +118,18 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
         mode="min",
         config_space=config_space,
         metric=metric1,
-        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+        transfer_learning_evaluations=transfer_learning_evaluations,
+    ),
+    FIFOScheduler(
+        searcher=QuantileBasedSurrogateSearcher(
+            mode="min",
+            config_space=config_space,
+            metric=metric1,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+        ),
+        mode='min',
+        config_space=config_space,
+        metric=metric1
     ),
     RUSHScheduler(
         resource_attr=resource_attr,
@@ -140,6 +160,17 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
         max_resource_level=max_t,
         max_resource_attr='steps',
         brackets=3),
+    ZeroShotTransfer(
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=transfer_learning_evaluations,
+        use_surrogates=True,
+    ),
+    FIFOScheduler(
+        config_space,
+        searcher=BotorchSearcher(config_space=config_space, metric=metric1, mode='min'),
+        metric=metric1
+    ),
 ])
 def test_async_schedulers_api(scheduler):
     trial_ids = range(4)

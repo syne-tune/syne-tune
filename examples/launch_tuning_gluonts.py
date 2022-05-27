@@ -21,8 +21,7 @@ import numpy as np
 
 from sagemaker.mxnet import MXNet
 
-from syne_tune.backend import LocalBackend
-from syne_tune.backend import SageMakerBackend
+from syne_tune.backend import LocalBackend, SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune import Tuner, StoppingCriterion

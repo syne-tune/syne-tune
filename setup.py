@@ -24,12 +24,14 @@ required_core = load_requirements('requirements.txt')
 required_ray = load_requirements('requirements-ray.txt')
 required_gpsearchers = load_requirements('requirements-gpsearchers.txt')
 required_bore = load_requirements('requirements-bore.txt')
+required_botorch = load_requirements('requirements-botorch.txt')
 required_kde = load_requirements('requirements-kde.txt')
-required_blackbox_repository = load_requirements('benchmarking/blackbox_repository/requirements.txt')
+required_blackbox_repository = load_requirements('syne_tune/blackbox_repository/requirements.txt')
 required_benchmarks = load_benchmark_requirements()
 
 long_description = (Path(__file__).parent / "README.md").read_text()
-
+required_extra = required_ray + required_gpsearchers + required_benchmarks + required_blackbox_repository + \
+                 required_kde + required_botorch
 setup(
     name='syne_tune',
     version=read_version(),
@@ -48,7 +50,7 @@ setup(
         'gpsearchers': required_gpsearchers,
         'benchmarks': required_benchmarks,
         'blackbox-repository': required_blackbox_repository,
-        'extra': required_ray + required_gpsearchers + required_benchmarks + required_blackbox_repository + required_kde,
+        'extra': required_extra,
     },
     install_requires=required_core,
     include_package_data=True,

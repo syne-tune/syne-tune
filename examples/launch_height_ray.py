@@ -18,10 +18,9 @@ from ray.tune.suggest.skopt import SkOptSearch
 import numpy as np
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-from syne_tune import Tuner
+from syne_tune.optimizer.schedulers import RayTuneScheduler
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
-from syne_tune import StoppingCriterion
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)

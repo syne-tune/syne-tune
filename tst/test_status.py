@@ -26,9 +26,9 @@ def test_status():
             1: (trial1, Status.in_progress),
         },
         new_results=[
-            (0, {"NLL": 2.0, "time": 10.0}),
-            (0, {"NLL": 1.0, "time": 12.0 }),
-            (1, {"NLL": 3.0, "time": 5.0}),
+            (0, {"NLL": 2.0, "time": 10.0, "debug": "str"}),
+            (0, {"NLL": 1.0, "time": 12.0, "debug": "str"}),
+            (1, {"NLL": 3.0, "time": 5.0, "debug": "str"}),
         ]
     )
     assert status.overall_metric_statistics.max_metrics
@@ -71,3 +71,36 @@ def test_status():
     )
     assert best_trialid == 1
     assert best_metric == 3.0
+
+
+def test_stats_are_not_tracked_for_non_numeric_metrics():
+    metric_names = ['metric1', 'metric2']
+    status = TuningStatus(metric_names=metric_names)
+
+    trial0 = Trial(trial_id=0, config={"x": 1.0}, creation_time=None)
+    status.update(
+        trial_status_dict={
+            0: (trial0, Status.in_progress),
+        },
+        new_results=[
+            (0, {metric_names[0]: 2.0, metric_names[1]: "str"}),
+        ]
+    )
+    assert status.trial_metric_statistics[0].max_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].min_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].sum_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].last_metrics == {metric_names[0]: 2.0, metric_names[1]: "str"}
+
+    status.update(
+        trial_status_dict={
+            0: (trial0, Status.in_progress),
+        },
+        new_results=[
+            (0, {metric_names[0]: "str", metric_names[1]: 20}),
+        ]
+    )
+
+    assert status.trial_metric_statistics[0].max_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].min_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].sum_metrics == {metric_names[0]: 2.0}
+    assert status.trial_metric_statistics[0].last_metrics == {metric_names[0]: "str", metric_names[1]: 20}

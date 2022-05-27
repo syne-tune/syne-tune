@@ -11,11 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from syne_tune.optimizer.scheduler import TrialScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import \
+from syne_tune.optimizer.schedulers import FIFOScheduler, HyperbandScheduler
+from syne_tune.optimizer.schedulers.synchronous import \
     SynchronousGeometricHyperbandScheduler
-from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.constants import ST_WORKER_TIME
 
 from benchmarking.cli.launch_utils import make_searcher_and_scheduler
@@ -122,13 +121,8 @@ def scheduler_factory(
                     cost_attr = benchmark[k]
                     break
             if cost_attr is not None:
-                if scheduler == 'hyperband_cost_promotion':
-                    if 'rung_system_kwargs' in scheduler_options:
-                        scheduler_options['rung_system_kwargs'][
-                            'cost_attr'] = cost_attr
-                    else:
-                        scheduler_options['rung_system_kwargs'] = {
-                            'cost_attr': cost_attr}
+                if scheduler.startswith('hyperband'):
+                    scheduler_options['cost_attr'] = cost_attr
                 if searcher.startswith('bayesopt_cost'):
                     search_options['cost_attr'] = cost_attr
         k = 'points_to_evaluate'
@@ -185,8 +179,7 @@ def scheduler_factory(
         from ray.tune.schedulers import AsyncHyperBandScheduler
         from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
         from ray.tune.suggest.skopt import SkOptSearch
-        from syne_tune.optimizer.schedulers.ray_scheduler import \
-            RayTuneScheduler
+        from syne_tune.optimizer.schedulers import RayTuneScheduler
         from syne_tune.optimizer.schedulers.searchers import \
             impute_points_to_evaluate
 

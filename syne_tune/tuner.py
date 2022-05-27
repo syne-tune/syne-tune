@@ -23,6 +23,7 @@ import dill as dill
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import Status, Trial
+from syne_tune.config_space import to_dict, Domain
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.tuner_callback import TunerCallback, StoreResultsCallback
@@ -50,6 +51,7 @@ class Tuner:
             asynchronous_scheduling: bool = True,
             callbacks: Optional[List[TunerCallback]] = None,
             metadata: Optional[Dict] = None,
+            suffix_tuner_name: bool = True
     ):
         """
         Allows to run an tuning job, call `run` after initializing.
@@ -75,6 +77,8 @@ class Tuner:
         :param metadata: dictionary of user-metadata that will be persistend in {tuner_path}/metadata.json, in addition
         to the metadata provided by the user, `SMT_TUNER_CREATION_TIMESTAMP` is always included which measures
         the time-stamp when the tuner started to run.
+        :param suffix_tuner_name: If True, a timestamp is appended to the provided `tuner_name` that ensures uniqueness
+        otherwise the name is left unchanged and is expected to be unique.
         """
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -92,7 +96,10 @@ class Tuner:
             check_valid_sagemaker_name(tuner_name)
         else:
             tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace("_", "-")
-        self.name = name_from_base(tuner_name, default="st-tuner")
+        if suffix_tuner_name or tuner_name is None:
+            self.name = name_from_base(tuner_name, default="st-tuner")
+        else:
+            self.name = tuner_name
 
         # we keep track of the last result seen to send it to schedulers when trials complete.
         self.last_seen_result_per_trial = {}
@@ -201,21 +208,25 @@ class Tuner:
                 mode=self.scheduler.metric_mode(),
             )
 
-            logger.info("Tuner finished, stopping trials that may still be running.")
+            # Callbacks (typically includes writing final results)
+            for callback in self.callbacks:
+                callback.on_tuning_end()
+
+            # Serialize Tuner object
+            self.save()
+
+            logger.info("Stopping trials that may still be running.")
             self.trial_backend.stop_all()
 
             # notify tuning status that jobs were stopped without having to query their status in the backend since
             # we know that all trials were stopped
             self.tuning_status.mark_running_job_as_stopped()
 
-            self.save()
-
-            for callback in self.callbacks:
-                callback.on_tuning_end()
-
             # in case too many errors were triggered, show log of last failed job and terminates with an error
             if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
+
+            logger.info(f"Tuning finished, results of trials can be found on {self.tuner_path}")
 
     def _sleep(self):
         time.sleep(self.sleep_time)
@@ -242,6 +253,8 @@ class Tuner:
         self._set_metadata(res, 'entrypoint', self.trial_backend.entrypoint_path().stem)
         self._set_metadata(res, 'backend', str(type(self.trial_backend).__name__))
         self._set_metadata(res, 'scheduler_name', str(self.scheduler.__class__.__name__))
+        config_space_json = json.dumps({k: to_dict(v) if isinstance(v, Domain) else v for k, v in self.scheduler.config_space.items()})
+        self._set_metadata(res, 'config_space', config_space_json)
         return res
 
     def _save_metadata(self):

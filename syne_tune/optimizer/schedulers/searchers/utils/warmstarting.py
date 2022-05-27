@@ -98,11 +98,10 @@ def create_base_gp_kernel_for_warmstarting(
     """
     task_attr = kwargs.get('transfer_learning_task_attr')
     assert task_attr is not None
-    hp_range = hp_ranges.config_space.get(task_attr)
     # Note: This attribute is the first in `hp_ranges`, see
     # `create_hp_ranges_for_warmstarting`
     assert hp_ranges.internal_keys[0] == task_attr  # Sanity check
-    categ_dim = len(hp_range)
+    _, categ_dim = hp_ranges.encoded_ranges[task_attr]
     full_dim = hp_ranges.ndarray_size
     model = kwargs.get('transfer_learning_model', 'matern52_product')
     kernel2 = Matern52(full_dim - categ_dim, ARD=True)

@@ -15,13 +15,26 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
+import logging
 
 from syne_tune.backend.trial_status import TrialResult, Trial, Status
 from syne_tune.constants import ST_WORKER_TIMESTAMP
 
+logger = logging.getLogger(__name__)
+
 
 class TrialBackend:
-    def __init__(self, ):
+    def __init__(self, delete_checkpoints: bool = False):
+        """
+        If `delete_checkpoints` is True, the checkpoints written by a trial are
+        deleted once the trial is stopped or is registered as completed. Also,
+        as part of `stop_all` called at the end of the tuning loop, all remaining
+        checkpoints are deleted.
+
+        :param delete_checkpoints: See above
+
+        """
+        self.delete_checkpoints = delete_checkpoints
         self.trial_ids = []
         self._trial_dict = {}
 
@@ -54,8 +67,27 @@ class TrialBackend:
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
         """
         Copy the checkpoint folder from one trial to the other.
+
         :param src_trial_id:
         :param tgt_trial_id:
+        """
+        raise NotImplementedError()
+
+    def delete_checkpoint(self, trial_id: int):
+        """
+        Removes checkpoint folder for a trial. It is OK for the folder not to
+        exist.
+
+        :param trial_id:
+        """
+        raise NotImplementedError()
+
+    def delete_checkpoint(self, trial_id: int):
+        """
+        Removes checkpoint folder for a trial, if it exists. Otherwise, nothing
+        is done.
+
+        :param trial_id:
         :return:
         """
         raise NotImplementedError()
@@ -114,6 +146,9 @@ class TrialBackend:
         # todo assert trial_id is valid
         # todo assert trial_id has not been stopped or paused before
         self._stop_trial(trial_id=trial_id)
+        if self.delete_checkpoints:
+            logger.info(f"Removing checkpoints for trial_id = {trial_id}")
+            self.delete_checkpoint(trial_id=trial_id)  # checkpoint not needed anymore
 
     def _stop_trial(self, trial_id: int):
         """
@@ -157,6 +192,9 @@ class TrialBackend:
                     position_last_seen = self._last_metric_seen_index[trial_result.trial_id]
                     new_metrics = trial_result.metrics[position_last_seen:]
                     self._last_metric_seen_index[trial_result.trial_id] += len(new_metrics)
+                    if self.delete_checkpoints and trial_result.status == Status.completed:
+                        logger.info(f"Removing checkpoints for trial_id = {trial_result.trial_id}")
+                        self.delete_checkpoint(trial_id=trial_result.trial_id)
                 for new_metric in new_metrics:
                     results.append((trial_result.trial_id, new_metric))
 
@@ -193,6 +231,11 @@ class TrialBackend:
         for trial in trial_results:
             if trial.status == Status.in_progress:
                 self.stop_trial(trial_id=trial.trial_id)
+        if self.delete_checkpoints:
+            # Delete all remaining checkpoints (e.g., of paused trials)
+            logger.info("Removing all remaining checkpoints of trials")
+            for trial_id in self.trial_ids:
+                self.delete_checkpoint(trial_id=trial_id)
 
     def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
         """

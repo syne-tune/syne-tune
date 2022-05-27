@@ -58,7 +58,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
         # (metric_value, cost_value, was_promoted), where metric_value is
         # m(x, r), cost value is c(x, r).
 
-    def _find_promotable_config(self, recorded, prom_quant, resource):
+    def _find_promotable_trial(self, recorded, prom_quant, resource):
         """
         Check whether any not yet promoted entry in `recorded` is
         promotable (see header comment). If there are several such, the one

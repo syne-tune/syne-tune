@@ -15,13 +15,13 @@ Example for running the simulator back-end on a tabulated benchmark
 """
 import logging
 
-from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-
-from benchmarking.definitions.definition_nasbench201 import nasbench201_default_params, nasbench201_benchmark
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
+from benchmarking.definitions.definition_nasbench201 import \
+    nasbench201_default_params, nasbench201_benchmark
+from syne_tune.blackbox_repository import BlackboxRepositoryBackend
+from syne_tune.backend.simulator_backend.simulator_callback import \
+    SimulatorCallback
+from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune import Tuner, StoppingCriterion
 
 
 if __name__ == '__main__':

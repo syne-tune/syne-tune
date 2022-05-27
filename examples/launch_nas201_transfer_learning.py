@@ -1,14 +1,13 @@
 from typing import Dict
 
-from benchmarking.blackbox_repository import load
-from benchmarking.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.blackbox_repository import load, BlackboxRepositoryBackend
+from syne_tune.backend.simulator_backend.simulator_callback import \
+    SimulatorCallback
 from syne_tune.experiments import load_experiment
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
-from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
-from syne_tune import StoppingCriterion
-from syne_tune import Tuner
+from syne_tune.optimizer.schedulers import FIFOScheduler
+from syne_tune.optimizer.schedulers.transfer_learning import \
+    TransferLearningTaskEvaluations, BoundingBox
+from syne_tune import StoppingCriterion, Tuner
 
 
 def load_transfer_learning_evaluations(blackbox_name: str, test_task: str, metric: str) -> Dict[str, TransferLearningTaskEvaluations]:

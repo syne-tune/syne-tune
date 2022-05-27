@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import pytest
+
 import numpy as np
 import autograd.numpy as anp
 from autograd.tracer import getval
@@ -134,37 +136,64 @@ def test_matern52_wrongshape():
     kernel = Matern52(dimension=3)
     kernel.collect_params().initialize()
     X1 = anp.random.normal(0.0, 1.0, (5, 2))
-    try: kmat = kernel(X1, X1)
-    except Exception as e: print(e)
-    try: kdiag = kernel.diagonal(X1)
-    except Exception as e: print(e)
+
+    with pytest.raises(Exception):
+        kernel(X1, X1)
+
+    with pytest.raises(Exception):
+        kernel.diagonal(X1)
+
     X2 = anp.random.normal(0.0, 1.0, (3, 3))
-    try: kmat = kernel(X2, X1)
-    except Exception as e: print(e)    
+    with pytest.raises(Exception):
+        kernel(X2, X1)
 
 
-def test_product_wrongshape():
-    kernel1 = Matern52(dimension=2)
+def _create_product_kernel(kernel1, kernel2):
     kernel1.collect_params().initialize()
+    kernel2.collect_params().initialize()
+    return ProductKernelFunction(kernel1, kernel2)
+
+
+@pytest.mark.parametrize('kernel1, kernel2, input_data_dimension', [
+    (Matern52(dimension=1), Matern52(dimension=1), 2),
+    (Matern52(dimension=2), Matern52(dimension=2), 4),
+    (Matern52(dimension=3), Matern52(dimension=1), 4),
+    (FabolasKernelFunction(), Matern52(dimension=2), 3),
+])
+@pytest.mark.parametrize('X0_samples, X1_samples', [
+    (1, 1),
+    (1, 2),
+    (5, 7)
+])
+def test_product_kernel_happy_path(kernel1, kernel2, input_data_dimension, X0_samples, X1_samples):
+    product_kernel = _create_product_kernel(kernel1, kernel2)
+    X0 = anp.random.randn(X0_samples, input_data_dimension)
+    X1 = anp.random.randn(X1_samples, input_data_dimension)
+    kernel_output = product_kernel(X0, X1)
+    assert kernel_output.shape == (X0_samples, X1_samples)
+
+
+@pytest.mark.parametrize('kernel1, kernel2', [
+    (Matern52(dimension=2), Matern52(dimension=1)),
+    (FabolasKernelFunction(), Matern52(dimension=2)),
+])
+def test_product_kernel_wrong_shape(kernel1, kernel2):
+    product_kernel = _create_product_kernel(kernel1, kernel2)
+
+    X1 = anp.random.randn(5, 4)
+    with pytest.raises(Exception):
+        product_kernel(X1, X1)
     
-    kernels = [Matern52(dimension=1),
-               FabolasKernelFunction()]
+    with pytest.raises(Exception):
+        product_kernel.diagonal(X1)
 
-    for kernel2 in kernels:
+    X2 = anp.random.randn(3, 3)
+    with pytest.raises(Exception):
+        product_kernel(X2, X1)
 
-        kernel2.collect_params().initialize()
-        kernel = ProductKernelFunction(kernel1, kernel2)
-        X1 = anp.random.normal(0.0, 1.0, (5, 4))
-        try: kmat = kernel(X1, X1)
-        except Exception as e: print(e) 
-        try: kdiag = kernel.diagonal(X1)
-        except Exception as e: print(e)
-        X2 = anp.random.normal(0.0, 1.0, (3, 3))
-        try: kmat = kernel(X2, X1)
-        except Exception as e: print(e)
-        X1 = anp.random.normal(0.0, 1.0, (5, 2))
-        try: kmat = kernel(X1, X1)
-        except Exception as e: print(e)
+    X3 = anp.random.randn(5, 2)
+    with pytest.raises(Exception):
+        product_kernel(X3, X3)
 
 
 class ConstantKernelFunction(KernelFunction):

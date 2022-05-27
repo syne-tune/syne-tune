@@ -5,7 +5,7 @@ states, which can then be used in unit tests.
 import logging
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner
 
 from benchmarking.definitions.definition_mlp_on_fashion_mnist import \

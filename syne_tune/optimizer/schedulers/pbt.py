@@ -70,7 +70,7 @@ _CONSTRAINTS = {
 class PopulationBasedTraining(FIFOScheduler):
     """
     Implements the Population Based Training (PBT) algorithm. This is an adapted version of
-    the Raytune implementation for SagemakerTune:
+    the Raytune implementation for Syne Tune:
      https://docs.ray.io/en/latest/tune/tutorials/tune-advanced-tutorial.html
 
     PBT was original presented in the following paper:

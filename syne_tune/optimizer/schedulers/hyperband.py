@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 _ARGUMENT_KEYS = {
     'resource_attr', 'grace_period', 'reduction_factor', 'brackets', 'type',
-    'searcher_data', 'register_pending_myopic', 'do_snapshots',
+    'searcher_data', 'cost_attr', 'register_pending_myopic', 'do_snapshots',
     'rung_system_per_bracket', 'rung_levels', 'rung_system_kwargs'}
 
 _DEFAULT_OPTIONS = {
@@ -57,7 +57,6 @@ _DEFAULT_OPTIONS = {
     'do_snapshots': False,
     'rung_system_per_bracket': False,
     'rung_system_kwargs': {
-        'cost_attr': 'elapsed_time',
         'ranking_criterion': 'soft_ranking',
         'epsilon': 1.0,
         'epsilon_scaling': 1.0},
@@ -71,6 +70,7 @@ _CONSTRAINTS = {
     'brackets': Integer(1, None),
     'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha', 'rush_promotion', 'rush_stopping')),
     'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
+    'cost_attr': String(),
     'register_pending_myopic': Boolean(),
     'do_snapshots': Boolean(),
     'rung_system_per_bracket': Boolean(),
@@ -131,16 +131,16 @@ class HyperbandScheduler(FIFOScheduler):
     Cost-aware schedulers or searchers:
 
     Some schedulers (e.g., type == 'cost_promotion') or searchers may depend
-    on cost values (with key `rung_system_kwargs['cost_attr']`) reported
-    alongside the target metric. For promotion-based scheduling, a trial may
-    pause and resume several times. The cost received in `on_trial_result` only
-    counts the cost since the last resume. We maintain the sum of such costs in
-    `_cost_offset`, and append a new entry to `result` in `on_trial_result`
-    with the total cost.
+    on cost values (with key `cost_attr`) reported alongside the target metric.
+    For promotion-based scheduling, a trial may pause and resume several times.
+    The cost received in `on_trial_result` only counts the cost since the last
+    resume. We maintain the sum of such costs in `_cost_offset`, and append
+    a new entry to `result` in `on_trial_result` with the total cost.
     If the evaluation function does not implement checkpointing, once a trial
     is resumed, it has to start from scratch. We detect this in
     `on_trial_result` and reset the cost offset to 0 (if the trial runs from
     scratch, the cost reported needs no offset added).
+    NOTE: This process requires `cost_attr` to be set!
 
     Pending evaluations:
 
@@ -251,6 +251,10 @@ class HyperbandScheduler(FIFOScheduler):
                 See :class:`RUSHScheduler`.
             rush_promotion:
                 Same as rush_stopping but for promotion.
+    cost_attr : str
+        Required if the scheduler itself uses a cost metric (i.e.,
+        `type='cost_promotion'`), or if the searcher uses a cost metric.
+        See also header comment.
     searcher_data : str
         Relevant only if a model-based searcher is used.
         Example: For NN tuning and `resource_attr == epoch', we receive a
@@ -303,20 +307,6 @@ class HyperbandScheduler(FIFOScheduler):
         `max_t` (if not given).
     rung_system_kwargs : dict
         Arguments passed to the rung system:
-            cost_attr : str
-                Used if `type == 'cost_promotion'`. Name of cost attribute in result's
-                obtained via `on_trial_result`. The most common cost is training time.
-                Our implementation requires the cost metric to be (approximately)
-                additive w.r.t. a trial being run as several jobs (with pause and
-                resume in between). Namely, if r1 < r2, and trial is paused and resumed
-                at r1, then cost(0 -> r2) = cost(0 -> r1) + cost(r1 -> r2), where
-                cost(0 -> r) is cost starting from scratch, and cost(r1 -> r2) is cost
-                resuming from r1. There may be some overhead (e.g., loading and storing
-                checkpoints), therefore "approximately".
-                If checkpointing is not implemented for the training evaluation
-                function, resumed trials are started from scratch, in which case
-                additivity of cost is not needed. In this case, the cost of a trial
-                is given by just the last recent resume.
             ranking_criterion : str
                 Used if `type == 'pasha'`. Specifies what strategy to use
                 for deciding if the ranking is stable and if to increase the resource.
@@ -356,7 +346,9 @@ class HyperbandScheduler(FIFOScheduler):
         self.scheduler_type = scheduler_type
         self._resource_attr = kwargs['resource_attr']
         self._rung_system_kwargs = kwargs['rung_system_kwargs']
-        self._cost_attr = self._rung_system_kwargs['cost_attr']
+        self._cost_attr = kwargs.get('cost_attr')
+        assert not (scheduler_type == 'cost_promotion' and self._cost_attr is None), \
+            "cost_attr must be given if type='cost_promotion'"
         # Superclass constructor
         resume = kwargs['resume']
         kwargs['resume'] = False  # Cannot be done in superclass
@@ -433,23 +425,31 @@ class HyperbandScheduler(FIFOScheduler):
                 logger.exception(msg)
                 raise FileExistsError(msg)
 
+    def does_pause_resume(self) -> bool:
+        """
+        :return: Is this variant doing pause and resume scheduling, in the
+            sense that trials can be paused and resumed later?
+        """
+        return self.scheduler_type != 'stopping'
+
     def _extend_search_options(self, search_options: Dict) -> Dict:
         # Note: Needs self.scheduler_type to be set
         scheduler = 'hyperband_{}'.format(self.scheduler_type)
+        result = dict(
+            search_options,
+            scheduler=scheduler,
+            resource_attr=self._resource_attr)
         # Cost attribute: For promotion-based, cost needs to be accumulated
         # for each trial
         cost_attr = self._total_cost_attr()
-        return dict(
-            search_options,
-            scheduler=scheduler,
-            resource_attr=self._resource_attr,
-            cost_attr=cost_attr)
+        if cost_attr is not None:
+            result['cost_attr'] = cost_attr
+        return result
 
-    def _does_pause_resume(self) -> bool:
-        return self.scheduler_type != 'stopping'
-
-    def _total_cost_attr(self) -> str:
-        if self._does_pause_resume():
+    def _total_cost_attr(self) -> Optional[str]:
+        if self._cost_attr is None:
+            return None
+        elif self.does_pause_resume():
             return 'total_' + self._cost_attr
         else:
             return self._cost_attr
@@ -491,7 +491,7 @@ class HyperbandScheduler(FIFOScheduler):
         if debug_log is not None:
             # For log outputs:
             config['trial_id'] = trial_id
-        if self._does_pause_resume() and self.max_resource_attr is not None:
+        if self.does_pause_resume() and self.max_resource_attr is not None:
             # The new trial should only run until the next milestone.
             # This needs its config to be modified accordingly.
             config[self.max_resource_attr] = kwargs['milestone']
@@ -567,7 +567,7 @@ class HyperbandScheduler(FIFOScheduler):
                     f"{resume_from} to {next_milestone}")
             # In the case of a promoted trial, extra_kwargs plays a different
             # role
-            if self._does_pause_resume() and \
+            if self.does_pause_resume() and \
                     self.max_resource_attr is not None:
                 # The promoted trial should only run until the next milestone.
                 # This needs its config to be modified accordingly
@@ -702,8 +702,9 @@ class HyperbandScheduler(FIFOScheduler):
             time_since_start = self._elapsed_time()
             do_update = False
             config = self._preprocess_config(trial.config)
-            cost_and_promotion = (self._cost_attr in result) and \
-                                 self._does_pause_resume()
+            cost_and_promotion = self._cost_attr is not None and \
+                                 self._cost_attr in result and \
+                                 self.does_pause_resume()
             if cost_and_promotion:
                 # Trial may have paused/resumed before, so need to add cost
                 # offset from these
@@ -737,8 +738,9 @@ class HyperbandScheduler(FIFOScheduler):
                     if milestone_reached:
                         # Trial reached milestone and will pause there: Update
                         # cost offset
-                        self._cost_offset[trial_id] = \
-                            result[self._total_cost_attr()]
+                        if self._cost_attr is not None:
+                            self._cost_offset[trial_id] = \
+                                result[self._total_cost_attr()]
                     elif task_info.get('ignore_data', False):
                         # For a resumed trial, the report is for resource <=
                         # resume_from, where resume_from < milestone. This
@@ -791,7 +793,7 @@ class HyperbandScheduler(FIFOScheduler):
                         self._active_trials[trial_id][
                             'largest_update_resource'] = resource
                 if not task_continues:
-                    if (not self._does_pause_resume()) or resource >= self.max_t:
+                    if (not self.does_pause_resume()) or resource >= self.max_t:
                         trial_decision = SchedulerDecision.STOP
                         act_str = 'Terminating'
                     else:

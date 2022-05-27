@@ -30,6 +30,7 @@ jobs:
     - name: Test examples
       run: |
         python examples/launch_height_baselines.py
+        python examples/launch_height_python_backend.py
         python examples/launch_height_moasha.py
         python examples/launch_height_ray.py
         python examples/launch_height_standalone_scheduler.py

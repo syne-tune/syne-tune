@@ -15,12 +15,11 @@
 # docker/buildandpush.sh script.
 #
 # ----------------------------------------------------------------------------
-
-ARG CONTEXT=cpu-py36
+ARG CONTEXT=cpu-py38
 ARG REGION=us-west-2
-ARG MXNET=1.6.0
+ARG VERSION=1.11.0
 ARG DLAMI_REGISTRY_ID=763104351884
-FROM ${DLAMI_REGISTRY_ID}.dkr.ecr.${REGION}.amazonaws.com/mxnet-training:${MXNET}-${CONTEXT}-ubuntu16.04
+FROM ${DLAMI_REGISTRY_ID}.dkr.ecr.${REGION}.amazonaws.com/pytorch-training:${VERSION}-${CONTEXT}-ubuntu20.04-sagemaker
 
 # ----------------------------------------------------------------------------
 # TOOLING

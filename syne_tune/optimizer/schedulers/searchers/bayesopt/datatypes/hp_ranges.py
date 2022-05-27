@@ -144,6 +144,13 @@ class HyperparameterRanges(object):
         """
         raise NotImplementedError()
 
+    @property
+    def encoded_ranges(self) -> Dict[str, Tuple[int, int]]:
+        """
+        :return: Ranges of HPs in the encoded ndarray representation
+        """
+        raise NotImplementedError()
+
     def is_attribute_fixed(self):
         return (self.name_last_pos is not None) and \
                (self.value_for_last_pos is not None)

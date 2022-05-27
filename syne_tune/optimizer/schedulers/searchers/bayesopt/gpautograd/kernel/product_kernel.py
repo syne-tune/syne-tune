@@ -47,7 +47,7 @@ class ProductKernelFunction(KernelFunction):
         X1_1 = X1[:, :d1]
         X1_2 = X1[:, d1:]
         X2_1 = X2[:, :d1]
-        X2_2 = X1[:, d1:]
+        X2_2 = X2[:, d1:]
         kmat1 = self.kernel1(X1_1, X2_1)
         kmat2 = self.kernel2(X1_2, X2_2)
         return kmat1 * kmat2

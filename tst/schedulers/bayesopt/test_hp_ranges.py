@@ -360,3 +360,24 @@ def test_config_space_for_sampling():
     )
     assert hp_ranges.config_space_for_sampling == config_space, \
         "Incorrect config space is used for sampling."
+
+
+def test_encoded_ranges():
+    config_space = {
+        '0': uniform(0.0, 1.0),
+        '1': randint(1, 10),
+        '2': choice(['a', 'b', 'c']),
+        '3': finrange(0.1, 1.0, 10),
+        '4': choice([3, 2, 1]),
+        '5': choice([0.01, 0.001, 0.0001, 0.00001]),
+        '6': choice(['a', 'b'])
+    }
+    hp_ranges = make_hyperparameter_ranges(config_space)
+    encoded_ranges = hp_ranges.encoded_ranges
+    assert encoded_ranges['0'] == (0, 1)
+    assert encoded_ranges['1'] == (1, 2)
+    assert encoded_ranges['2'] == (2, 5)
+    assert encoded_ranges['3'] == (5, 6)
+    assert encoded_ranges['4'] == (6, 9)
+    assert encoded_ranges['5'] == (9, 13)
+    assert encoded_ranges['6'] == (13, 14)

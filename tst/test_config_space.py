@@ -15,7 +15,7 @@ import numpy as np
 
 from syne_tune.config_space import randint, lograndint, uniform, \
     loguniform, choice, config_space_size, randn, to_dict, from_dict, \
-    finrange, logfinrange
+    finrange, logfinrange, restrict_domain
 
 
 def test_convert_config_space():
@@ -149,6 +149,7 @@ def test_finrange_domain(domain, value_set):
     (randint(0, 10), int),
     (lograndint(1, 10), int),
     (finrange(0.1, 1.0, 10), float),
+    (finrange(0.1, 1.0, 1), float),
     (logfinrange(np.exp(0.1), np.exp(1.0), 10), float),
     (finrange(0, 8, 5, cast_int=True), int),
     (logfinrange(8, 512, 7, cast_int=True), int),
@@ -162,3 +163,17 @@ def test_type_of_sample(domain, tp):
     values = domain.sample(random_state=random_state, size=num_samples)
     assert isinstance(values, list) and len(values) == num_samples, domain
     assert all(isinstance(x, tp) for x in values), domain
+
+
+
+def test_restrict_domain():
+    domain = logfinrange(16, 512, 6, cast_int=True)
+    assert domain._values == [16, 32, 64, 128, 256, 512]
+
+    new_domain = restrict_domain(domain, 32, 512)
+    print(new_domain)
+    assert new_domain._values == [32, 64, 128, 256, 512]
+
+    new_domain = restrict_domain(domain, 32, 128)
+    print(new_domain)
+    assert new_domain._values == [32, 64, 128]

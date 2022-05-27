@@ -16,11 +16,7 @@ import itertools
 import copy
 import numpy as np
 
-from syne_tune.backend import LocalBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import \
-    SageMakerBackend
-from syne_tune.backend.simulator_backend.simulator_backend import \
-    SimulatorBackend
+from syne_tune.backend import LocalBackend, SageMakerBackend
 from syne_tune.optimizer.schedulers.searchers.searcher_callback import \
     StoreResultsAndModelParamsCallback, SimulatorAndModelParamsCallback
 from syne_tune import StoppingCriterion
@@ -270,13 +266,15 @@ if __name__ == '__main__':
                 tuner_sleep_time=params['tuner_sleep_time'],
                 debug_resource_attr=benchmark['resource_attr'])
             if blackbox_name is None:
+                # Tabulated benchmark given by a script (special case)
+                from syne_tune.backend.simulator_backend.simulator_backend import \
+                    SimulatorBackend
+
                 logger.info(f"Using 'simulated' back-end with entry_point = {benchmark['script']}")
-                # Tabulated benchmark given by a script
                 backend_kwargs['entry_point'] = benchmark['script']
                 trial_backend = SimulatorBackend(**backend_kwargs)
             else:
-                from benchmarking.blackbox_repository.simulated_tabular_backend \
-                    import BlackboxRepositoryBackend
+                from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 
                 # Tabulated benchmark from the blackbox repository (simulation
                 # runs faster)
@@ -284,10 +282,21 @@ if __name__ == '__main__':
                 seed = params.get('blackbox_seed')
                 if seed is not None:
                     logger.info(f"Using blackbox with blackbox_seed = {seed}")
+                surrogate = benchmark.get('surrogate')
+                if surrogate is not None:
+                    # If a surrogate is given, it interpolates the tabulated
+                    # blackbox to the configuration space of the benchmark,
+                    # which often has numerical domains where the tabulated
+                    # benchmark has categorical ones
+                    config_space_surrogate = benchmark['config_space']
+                else:
+                    config_space_surrogate = None
                 backend_kwargs.update({
                     'blackbox_name': blackbox_name,
                     'dataset': params.get('dataset_name'),
-                    'surrogate': benchmark.get('surrogate'),
+                    'surrogate': surrogate,
+                    'surrogate_kwargs': benchmark.get('surrogate_kwargs'),
+                    'config_space_surrogate': config_space_surrogate,
                     'time_this_resource_attr': benchmark.get(
                         'time_this_resource_attr'),
                     'max_resource_attr': benchmark.get('max_resource_attr'),

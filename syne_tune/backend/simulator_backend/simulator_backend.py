@@ -341,7 +341,7 @@ class SimulatorBackend(LocalBackend):
             StartEvent(trial_id=trial_id), event_time=time_start)
         self._debug_message('StartEvent', time=time_start, trial_id=trial_id,
                             pushed=True)
-        logger.info(f"Simulated time since start: {_time_start:.2f} secs")
+        logger.debug(f"Simulated time since start: {_time_start:.2f} secs")
         self._time_keeper.mark_exit()
 
     def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:

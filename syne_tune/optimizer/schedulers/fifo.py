@@ -205,6 +205,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
                 'metric': self.metric,
                 'points_to_evaluate': kwargs.get('points_to_evaluate'),
                 'scheduler_mode': kwargs['mode'],
+                'mode': kwargs['mode'],
                 'random_seed_generator': self.random_seed_generator})
             if self.max_t is not None:
                 search_options['max_epochs'] = self.max_t

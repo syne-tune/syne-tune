@@ -185,8 +185,8 @@ class RemoteLauncher:
     def launch_tuning_job_on_sagemaker(self, wait: bool):
         # todo add Sagemaker cloudwatch metrics to visualize live results of tuning best results found over time.
         if self.instance_type != "local":
-            checkpoint_s3_root = f"{self.s3_path}/"
-            logger.info(f"Tuner will checkpoint results to {checkpoint_s3_root}{self.tuner.name}")
+            checkpoint_s3_root = f"{self.s3_path}/{self.tuner.name}"
+            logger.info(f"Tuner will checkpoint results to {checkpoint_s3_root}")
         else:
             # checkpointing is not supported in local mode. When using local mode with remote tuner (for instance for
             # debugging), results are not stored.
@@ -206,6 +206,12 @@ class RemoteLauncher:
         if "AWS_DEFAULT_REGION" not in environment:
           environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
 
+        image_uri = self.estimator_kwargs.pop("image_uri", None)
+        if image_uri is not None:
+            logger.info(f"Using custom image {image_uri}, make sure that Syne Tune is installed in your custom container.")
+        else:
+            image_uri = self.syne_tune_image_uri()
+
         # the choice of the estimator is arbitrary here since we use a base image of Syne Tune.
         tuner_estimator = PyTorch(
             # path which calls the tuner
@@ -214,9 +220,9 @@ class RemoteLauncher:
             instance_type=self.instance_type,
             instance_count=1,
             role=self.role,
-            py_version="py3",
-            framework_version='1.6',
-            image_uri=self.syne_tune_image_uri(),
+            py_version="py38",
+            framework_version='1.10.0',
+            image_uri=image_uri,
             hyperparameters=hyperparameters,
             checkpoint_s3_uri=checkpoint_s3_root,
             environment=environment,
@@ -238,7 +244,7 @@ class RemoteLauncher:
         """
         :return: syne tune docker uri, if not present try to build it and returns an error if this failed.
         """
-        docker_image_name = "syne-tune-cpu-py36"
+        docker_image_name = "syne-tune-cpu-py38"
         account_id = boto3.client("sts").get_caller_identity()["Account"]
         region_name = boto3.Session().region_name
         image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"

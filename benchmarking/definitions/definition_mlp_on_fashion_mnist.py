@@ -55,6 +55,10 @@ def mlp_fashionmnist_benchmark(params):
 
 
 def get_cost_model(params):
+    """
+    This cost model ignores the batch size, but depends on the number of units
+    in the two layers only.
+    """
     try:
         from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
             import FixedLayersMLPCostModel

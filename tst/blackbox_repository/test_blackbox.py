@@ -5,13 +5,13 @@ import pandas as pd
 
 import syne_tune.config_space as sp
 
-from benchmarking.blackbox_repository import BlackboxOffline
-from benchmarking.blackbox_repository.blackbox import from_function
-from benchmarking.blackbox_repository.blackbox_tabular import BlackboxTabular
-from benchmarking.blackbox_repository.blackbox_offline import deserialize as deserialize_offline
-from benchmarking.blackbox_repository.blackbox_tabular import deserialize as deserialize_tabular
-from benchmarking.blackbox_repository.blackbox_offline import serialize as serialize_offline
-from benchmarking.blackbox_repository.blackbox_tabular import serialize as serialize_tabular
+from syne_tune.blackbox_repository import BlackboxOffline
+from syne_tune.blackbox_repository.blackbox import from_function
+from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
+from syne_tune.blackbox_repository.blackbox_offline import deserialize as deserialize_offline
+from syne_tune.blackbox_repository.blackbox_tabular import deserialize as deserialize_tabular
+from syne_tune.blackbox_repository.blackbox_offline import serialize as serialize_offline
+from syne_tune.blackbox_repository.blackbox_tabular import serialize as serialize_tabular
 
 
 n = 10

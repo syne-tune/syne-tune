@@ -4,16 +4,14 @@ import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
-from benchmarking.blackbox_repository.tabulated_benchmark import \
-    BlackboxRepositoryBackend
 from benchmarking.benchmark_loop.baselines import methods
 from benchmarking.benchmark_loop.benchmark_definitions import \
     benchmark_definitions
+from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 
 from syne_tune.backend.simulator_backend.simulator_callback import \
     SimulatorCallback
-from syne_tune import StoppingCriterion
-from syne_tune import Tuner
+from syne_tune import StoppingCriterion, Tuner
 from coolname import generate_slug
 
 
