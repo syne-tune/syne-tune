@@ -45,6 +45,7 @@ if __name__ == '__main__':
         Methods.MSR,
         Methods.ASHA,
         Methods.BOHB,
+        Methods.BORE,
         Methods.MOBSTER,
         Methods.ASHA_BB,
         Methods.ASHA_CTS,

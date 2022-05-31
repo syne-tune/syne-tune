@@ -3,6 +3,7 @@ from typing import Dict, Optional
 
 from syne_tune.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
 from syne_tune.optimizer.baselines import ZeroShotTransfer
+from syne_tune.optimizer.schedulers.searchers.bore import Bore
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -35,6 +36,7 @@ class Methods:
     REA = 'REA'
     MOBSTER = 'MOB'
     TPE = 'TPE'
+    BORE = 'BORE'
     ZERO_SHOT = 'ZS'
 
     
@@ -131,6 +133,13 @@ methods = {
         config_space=method_arguments.config_space,
         searcher="kde",
         search_options={'debug_log': False, 'min_bandwidth': 0.1},
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.BORE: lambda method_arguments: FIFOScheduler(
+        config_space=method_arguments.config_space,
+        searcher='bore',
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,

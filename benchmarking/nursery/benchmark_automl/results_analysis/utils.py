@@ -20,6 +20,7 @@ from syne_tune.util import catchtime
 rs_color = "blue"
 gp_color = "orange"
 tpe_color = "red"
+bore_color = "purple"
 rea_color = "brown"
 hb_bb_color = "green"
 hb_ts_color = "yellow"
@@ -40,6 +41,7 @@ show_seeds = False
 method_styles = {
     Methods.RS: MethodSyle(rs_color, fifo_style),
     Methods.TPE: MethodSyle(tpe_color, fifo_style),
+    Methods.BORE: MethodSyle(bore_color, fifo_style),
     Methods.GP: MethodSyle(gp_color, fifo_style),
     Methods.REA: MethodSyle(rea_color, fifo_style),
     Methods.ASHA: MethodSyle(rs_color, multifidelity_style),
