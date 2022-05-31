@@ -4,7 +4,7 @@ from pathlib import Path
 from matplotlib import cm
 
 from benchmarking.nursery.benchmark_automl.baselines import Methods
-from benchmarking.nursery.benchmark_automl.results_analysis.utils import MethodSyle, load_and_cache, plot_results
+from benchmarking.nursery.benchmark_automl.results_analysis.utils import MethodStyle, load_and_cache, plot_results
 
 show_seeds = False
 
@@ -21,10 +21,10 @@ if __name__ == '__main__':
 
     cmap = cm.get_cmap("viridis")
     method_styles = {
-        f'{Methods.ASHA} (1 workers)': MethodSyle(cmap(0), "-"),
-        f'{Methods.ASHA} (2 workers)': MethodSyle(cmap(0.25), "-"),
-        f'{Methods.ASHA} (4 workers)': MethodSyle(cmap(0.5), "-"),
-        f'{Methods.ASHA} (8 workers)': MethodSyle(cmap(1.0), "-"),
+        f'{Methods.ASHA} (1 workers)': MethodStyle(cmap(0), "-"),
+        f'{Methods.ASHA} (2 workers)': MethodStyle(cmap(0.25), "-"),
+        f'{Methods.ASHA} (4 workers)': MethodStyle(cmap(0.5), "-"),
+        f'{Methods.ASHA} (8 workers)': MethodStyle(cmap(1.0), "-"),
     }
 
     load_cache_if_exists = True

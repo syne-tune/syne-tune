@@ -6,6 +6,7 @@ from syne_tune.optimizer.baselines import ZeroShotTransfer
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
+from syne_tune.optimizer.schedulers.transfer_learning import RUSHScheduler
 from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import RegularizedEvolution
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import \
@@ -36,6 +37,7 @@ class Methods:
     MOBSTER = 'MOB'
     TPE = 'TPE'
     ZERO_SHOT = 'ZS'
+    RUSH = 'RUSH'
 
     
 methods = {
@@ -95,7 +97,7 @@ methods = {
         ),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
-        max_t=200,
+        max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
     ),
     Methods.GP: lambda method_arguments: FIFOScheduler(
@@ -151,6 +153,15 @@ methods = {
         mode=method_arguments.mode,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
         use_surrogates=method_arguments.use_surrogates,
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.RUSH: lambda method_arguments: RUSHScheduler(
+        config_space=method_arguments.config_space,
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
+        max_t=method_arguments.max_t,
+        resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
 }

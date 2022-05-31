@@ -23,6 +23,7 @@ tpe_color = "red"
 rea_color = "brown"
 hb_bb_color = "green"
 hb_ts_color = "yellow"
+zs_color = "cyan"
 fifo_style = 'solid'
 multifidelity_style = 'dashed'
 multifidelity_style2 = 'dashdot'
@@ -30,7 +31,7 @@ transfer_style = 'dotted'
 
 
 @dataclass
-class MethodSyle:
+class MethodStyle:
     color: str
     linestyle: str
     marker: str = None
@@ -38,17 +39,19 @@ class MethodSyle:
 
 show_seeds = False
 method_styles = {
-    Methods.RS: MethodSyle(rs_color, fifo_style),
-    Methods.TPE: MethodSyle(tpe_color, fifo_style),
-    Methods.GP: MethodSyle(gp_color, fifo_style),
-    Methods.REA: MethodSyle(rea_color, fifo_style),
-    Methods.ASHA: MethodSyle(rs_color, multifidelity_style),
-    Methods.MSR: MethodSyle(rs_color, multifidelity_style2),
-    Methods.BOHB: MethodSyle(tpe_color, multifidelity_style),
-    Methods.MOBSTER: MethodSyle(gp_color, multifidelity_style),
+    Methods.RS: MethodStyle(rs_color, fifo_style),
+    Methods.TPE: MethodStyle(tpe_color, fifo_style),
+    Methods.GP: MethodStyle(gp_color, fifo_style),
+    Methods.REA: MethodStyle(rea_color, fifo_style),
+    Methods.ASHA: MethodStyle(rs_color, multifidelity_style),
+    Methods.MSR: MethodStyle(rs_color, multifidelity_style2),
+    Methods.BOHB: MethodStyle(tpe_color, multifidelity_style),
+    Methods.MOBSTER: MethodStyle(gp_color, multifidelity_style),
     # transfer learning
-    Methods.ASHA_BB: MethodSyle(hb_bb_color, multifidelity_style, "."),
-    Methods.ASHA_CTS: MethodSyle(hb_ts_color, multifidelity_style, "."),
+    Methods.ASHA_BB: MethodStyle(hb_bb_color, multifidelity_style, "."),
+    Methods.ASHA_CTS: MethodStyle(hb_ts_color, multifidelity_style, "."),
+    Methods.ZERO_SHOT: MethodStyle(zs_color, fifo_style, "."),
+    Methods.RUSH: MethodStyle(rs_color, multifidelity_style, "."),
 }
 
 

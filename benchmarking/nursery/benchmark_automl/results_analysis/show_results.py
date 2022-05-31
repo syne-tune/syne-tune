@@ -48,6 +48,8 @@ if __name__ == '__main__':
         Methods.MOBSTER,
         Methods.ASHA_BB,
         Methods.ASHA_CTS,
+        Methods.ZERO_SHOT,
+        Methods.RUSH
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
 
