@@ -35,6 +35,7 @@ class Methods:
     REA = 'REA'
     MOBSTER = 'MOB'
     TPE = 'TPE'
+    BORE = 'BORE'
     ZERO_SHOT = 'ZS'
 
     
@@ -131,6 +132,13 @@ methods = {
         config_space=method_arguments.config_space,
         searcher="kde",
         search_options={'debug_log': False, 'min_bandwidth': 0.1},
+        metric=method_arguments.metric,
+        mode=method_arguments.mode,
+        random_seed=method_arguments.random_seed,
+    ),
+    Methods.BORE: lambda method_arguments: FIFOScheduler(
+        config_space=method_arguments.config_space,
+        searcher='bore',
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
