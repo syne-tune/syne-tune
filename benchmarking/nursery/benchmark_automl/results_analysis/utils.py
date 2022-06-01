@@ -211,7 +211,7 @@ def plot_result_benchmark(
         ax.set_xlabel("wallclock time")
         ax.set_ylabel("validation error")
         ax.legend()
-        ax.set_title(title)
+        # ax.set_title(title)
     return ax, t_range, agg_results
 
 

@@ -1,6 +1,7 @@
 # %%
 import logging
 from argparse import ArgumentParser
+import matplotlib.pyplot as plt
 from benchmarking.nursery.benchmark_automl.baselines import Methods
 
 from benchmarking.nursery.benchmark_automl.results_analysis.utils import method_styles, load_and_cache, plot_results, \
@@ -41,17 +42,24 @@ if __name__ == '__main__':
         Methods.RS,
         Methods.TPE,
         Methods.REA,
+        # Methods.BORE,
         Methods.GP,
         Methods.MSR,
         Methods.ASHA,
         Methods.BOHB,
-        Methods.BORE,
         Methods.MOBSTER,
+        Methods.RUSH,
         Methods.ASHA_BB,
-        Methods.ASHA_CTS,
         Methods.ZERO_SHOT,
-        Methods.RUSH
+        Methods.ASHA_CTS,
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
+
+    size = 20
+    params = {'legend.fontsize': 18,
+              'axes.labelsize': 22,
+              'xtick.labelsize': 18,
+              'ytick.labelsize': 18}
+    plt.rcParams.update(params)
 
     plot_results(benchmarks_to_df, method_styles, methods_to_show=methods_to_show)
