@@ -24,6 +24,7 @@ bore_color = "purple"
 rea_color = "brown"
 hb_bb_color = "green"
 hb_ts_color = "yellow"
+zs_color = "cyan"
 fifo_style = 'solid'
 multifidelity_style = 'dashed'
 multifidelity_style2 = 'dashdot'
@@ -31,7 +32,7 @@ transfer_style = 'dotted'
 
 
 @dataclass
-class MethodSyle:
+class MethodStyle:
     color: str
     linestyle: str
     marker: str = None
@@ -39,18 +40,20 @@ class MethodSyle:
 
 show_seeds = False
 method_styles = {
-    Methods.RS: MethodSyle(rs_color, fifo_style),
-    Methods.TPE: MethodSyle(tpe_color, fifo_style),
-    Methods.BORE: MethodSyle(bore_color, fifo_style),
-    Methods.GP: MethodSyle(gp_color, fifo_style),
-    Methods.REA: MethodSyle(rea_color, fifo_style),
-    Methods.ASHA: MethodSyle(rs_color, multifidelity_style),
-    Methods.MSR: MethodSyle(rs_color, multifidelity_style2),
-    Methods.BOHB: MethodSyle(tpe_color, multifidelity_style),
-    Methods.MOBSTER: MethodSyle(gp_color, multifidelity_style),
+    Methods.RS: MethodStyle(rs_color, fifo_style),
+    Methods.TPE: MethodStyle(tpe_color, fifo_style),
+    Methods.BORE: MethodStyle(bore_color, fifo_style),
+    Methods.GP: MethodStyle(gp_color, fifo_style),
+    Methods.REA: MethodStyle(rea_color, fifo_style),
+    Methods.ASHA: MethodStyle(rs_color, multifidelity_style),
+    Methods.MSR: MethodStyle(rs_color, multifidelity_style2),
+    Methods.BOHB: MethodStyle(tpe_color, multifidelity_style),
+    Methods.MOBSTER: MethodStyle(gp_color, multifidelity_style),
     # transfer learning
-    Methods.ASHA_BB: MethodSyle(hb_bb_color, multifidelity_style, "."),
-    Methods.ASHA_CTS: MethodSyle(hb_ts_color, multifidelity_style, "."),
+    Methods.ASHA_BB: MethodStyle(hb_bb_color, multifidelity_style, "."),
+    Methods.ASHA_CTS: MethodStyle(hb_ts_color, multifidelity_style, "."),
+    Methods.ZERO_SHOT: MethodStyle(zs_color, fifo_style, "."),
+    Methods.RUSH: MethodStyle(rs_color, multifidelity_style, "."),
 }
 
 
@@ -138,7 +141,8 @@ def plot_result_benchmark(
         title: str,
         show_seeds: bool = False,
         method_styles: Optional[Dict] = None,
-        ax = None,
+        ax=None,
+        methods_to_show: list = None
 ):
     agg_results = {}
     if len(df_task) > 0:
@@ -148,6 +152,8 @@ def plot_result_benchmark(
         if ax is None:
             fig, ax = plt.subplots()
         for algorithm, method_style in method_styles.items():
+            if methods_to_show is not None and algorithm not in methods_to_show:
+                continue
             ts = []
             ys = []
 
@@ -209,12 +215,14 @@ def plot_result_benchmark(
     return ax, t_range, agg_results
 
 
-def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix: str = "", title: str = None, ax=None):
+def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix: str = "", title: str = None, ax=None,
+                 methods_to_show: list = None):
     agg_results = {}
 
     for benchmark, df_task in benchmarks_to_df.items():
         ax, t_range, agg_result = plot_result_benchmark(
             df_task=df_task, title=benchmark, method_styles=method_styles, show_seeds=show_seeds, ax=ax,
+            methods_to_show=methods_to_show
         )
         if title is not None:
             ax.set_title(title)
@@ -224,11 +232,11 @@ def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix:
             ax.set_ylim([plotargs.ymin, plotargs.ymax])
             ax.set_xlim([plotargs.xmin, plotargs.xmax])
 
-        if ax is None:
+        if ax is not None:
             plt.tight_layout()
             os.makedirs("figures/", exist_ok=True)
             plt.savefig(f"figures/{prefix}{benchmark}.pdf")
-            plt.show()
+        ax = None
 
 
 def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
@@ -337,6 +345,7 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
     df_ranks.columns = df_ranks.columns.map(lambda s: "\\" + s.replace("-", "") + "{}")
     print(df_ranks.to_string())
     print(df_ranks.to_latex(float_format="%.2f", na_rep="-", escape=False))
+
 
 def load_and_cache(experiment_tag: Union[str, List[str]], load_cache_if_exists: bool = True, methods_to_show=None):
 
