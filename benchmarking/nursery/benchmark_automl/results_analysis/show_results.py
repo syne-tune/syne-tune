@@ -57,7 +57,6 @@ if __name__ == '__main__':
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
 
-    size = 20
     params = {'legend.fontsize': 18,
               'axes.labelsize': 22,
               'xtick.labelsize': 18,
