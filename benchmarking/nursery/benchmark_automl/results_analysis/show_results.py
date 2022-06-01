@@ -51,9 +51,7 @@ if __name__ == '__main__':
         Methods.RUSH,
         Methods.ASHA_BB,
         Methods.ZERO_SHOT,
-        Methods.ASHA_CTS,
-        Methods.ZERO_SHOT,
-        Methods.RUSH
+        Methods.ASHA_CTS
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
 
