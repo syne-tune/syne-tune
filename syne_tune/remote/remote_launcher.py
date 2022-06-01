@@ -244,7 +244,7 @@ class RemoteLauncher:
         """
         :return: syne tune docker uri, if not present try to build it and returns an error if this failed.
         """
-        docker_image_name = "syne-tune-cpu-py36"
+        docker_image_name = "syne-tune-cpu-py38"
         account_id = boto3.client("sts").get_caller_identity()["Account"]
         region_name = boto3.Session().region_name
         image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"

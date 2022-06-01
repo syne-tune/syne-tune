@@ -1,19 +1,16 @@
 # PASHA: Efficient HPO with Progressive Resource Allocation
 
-# Hyperparameter optimization(HPO) and neural architecture search(NAS)
-# are methods of choice to obtain the best-in-class machine learning models,
-# but in practice they can be costly to run. When models are trained
-# on large datasets, tuning them with HPO or NAS rapidly becomes
-# prohibitively expensive for practitioners, even when efficient methods
-# such as multi-fidelity ones are employed. To decrease the cost,
-# practitioners adopt ad-hoc heuristics with mixed results. We propose
-# an approach to tackle the challenge of tuning machine learning models
-# trained on large datasets with limited computational resources.
-# Our approach, named PASHA, is able to dynamically allocate resources
-# for the tuning procedure depending on the need. The experimental comparison
-# shows that PASHA identifies well-performing hyperparameter configurations
-# and architectures while consuming e.g. 2.8 times fewer computational
-# resources than solutions like ASHA.
+# Hyperparameter optimization(HPO) and neural architecture search(NAS) 
+# are methods of choice to obtain the best-in-class machine learning models, 
+# but in practice they can be costly to run. When models are trained on large 
+# datasets, tuning them with HPO or NAS rapidly becomes prohibitively expensive 
+# for practitioners, even when efficient multi-fidelity methods are employed. 
+# We propose an approach to tackle the challenge of tuning machine learning models 
+# trained on large datasets with limited computational resources. Our approach, 
+# named PASHA, is able to dynamically allocate resources for the tuning procedure 
+# depending on the need. The experimental comparison shows that PASHA identifies 
+# well-performing hyperparameter configurations and architectures while consuming 
+# significantly fewer computational resources than solutions like ASHA.
 
 
 from syne_tune.experiments import load_experiment

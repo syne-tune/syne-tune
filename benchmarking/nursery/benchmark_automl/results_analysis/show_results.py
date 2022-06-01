@@ -45,6 +45,7 @@ if __name__ == '__main__':
         Methods.MSR,
         Methods.ASHA,
         Methods.BOHB,
+        Methods.BORE,
         Methods.MOBSTER,
         Methods.ASHA_BB,
         Methods.ASHA_CTS,
@@ -53,4 +54,4 @@ if __name__ == '__main__':
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
 
-    plot_results(benchmarks_to_df, method_styles)
+    plot_results(benchmarks_to_df, method_styles, methods_to_show=methods_to_show)
