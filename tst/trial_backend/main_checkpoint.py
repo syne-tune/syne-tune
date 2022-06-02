@@ -35,15 +35,15 @@ def save_checkpoint(checkpoint_path: Path, content: str):
         f.write(content)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--name', type=str, required=True)
+    parser.add_argument("--name", type=str, required=True)
 
     # convention the path where to serialize and deserialize is given as checkpoint-dir
-    parser.add_argument(f'--{ST_CHECKPOINT_DIR}', type=str, default="./")
+    parser.add_argument(f"--{ST_CHECKPOINT_DIR}", type=str, default="./")
 
     args, _ = parser.parse_known_args()
 

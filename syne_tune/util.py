@@ -45,8 +45,8 @@ class RegularCallback:
 
 
 def experiment_path(
-        tuner_name: Optional[str] = None,
-        local_path: Optional[str] = None) -> Path:
+    tuner_name: Optional[str] = None, local_path: Optional[str] = None
+) -> Path:
     f"""
     :param tuner_name: name of a tuning experiment
     :param local_path: local path where results should be saved when running
@@ -61,7 +61,7 @@ def experiment_path(
     if is_sagemaker:
         # if SM_MODEL_DIR is present in the environment variable, this means that we are running on Sagemaker
         # we use this path to store results as it is persisted by Sagemaker.
-        sagemaker_path = Path('/opt/ml/checkpoints')
+        sagemaker_path = Path("/opt/ml/checkpoints")
         if tuner_name is not None:
             sagemaker_path = sagemaker_path / tuner_name
         return sagemaker_path
@@ -77,8 +77,10 @@ def experiment_path(
 
 
 def s3_experiment_path(
-        s3_bucket: Optional[str] = None, experiment_name: Optional[str] = None,
-        tuner_name: Optional[str] = None) -> str:
+    s3_bucket: Optional[str] = None,
+    experiment_name: Optional[str] = None,
+    tuner_name: Optional[str] = None,
+) -> str:
     """
     Returns S3 path for storing results and checkpoints.
 
@@ -93,13 +95,14 @@ def s3_experiment_path(
     s3_path = f"s3://{s3_bucket}/{SYNE_TUNE_FOLDER}"
     for part in (experiment_name, tuner_name):
         if part is not None:
-            s3_path += '/' + part
+            s3_path += "/" + part
     return s3_path
 
 
 def check_valid_sagemaker_name(name: str):
-    assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(name), \
-        f"{name} should consists in alpha-digits possibly separated by character -"
+    assert re.compile("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$").match(
+        name
+    ), f"{name} should consists in alpha-digits possibly separated by character -"
 
 
 def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:
@@ -125,14 +128,16 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]
-    timestamp = time.strftime("%Y-%m-%d-%H-%M-%S-{}".format(moment_ms), time.gmtime(moment))
+    timestamp = time.strftime(
+        "%Y-%m-%d-%H-%M-%S-{}".format(moment_ms), time.gmtime(moment)
+    )
     trimmed_base = base[: max_length - len(timestamp) - 1]
     return "{}-{}".format(trimmed_base, timestamp)
 
 
 def random_string(length: int) -> str:
     pool = string.ascii_letters + string.digits
-    return ''.join(random.choice(pool) for _ in range(length))
+    return "".join(random.choice(pool) for _ in range(length))
 
 
 def repository_root_path() -> Path:
@@ -148,8 +153,13 @@ def script_checkpoint_example_path() -> Path:
     Util to get easily the name of an example file
     :return:
     """
-    path = repository_root_path() / "examples" / "training_scripts" / \
-           "checkpoint_example" / "checkpoint_example.py"
+    path = (
+        repository_root_path()
+        / "examples"
+        / "training_scripts"
+        / "checkpoint_example"
+        / "checkpoint_example.py"
+    )
     assert path.exists()
     return path
 
@@ -159,8 +169,13 @@ def script_height_example_path():
     Util to get easily the name of an example file
     :return:
     """
-    path = repository_root_path() / "examples" / "training_scripts" / \
-           "height_example" / "train_height.py"
+    path = (
+        repository_root_path()
+        / "examples"
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
     assert path.exists()
     return path
 

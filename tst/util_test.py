@@ -33,6 +33,8 @@ def wait_until_all_trials_completed(backend):
         return [trial.status for trial in backend._all_trial_results(trial_ids)]
 
     i = 0
-    while not all([status == Status.completed for status in status(backend, backend.trial_ids)]):
+    while not all(
+        [status == Status.completed for status in status(backend, backend.trial_ids)]
+    ):
         time.sleep(0.1)
         assert i < 100, "backend trials did not finish after 10s"

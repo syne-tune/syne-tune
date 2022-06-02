@@ -14,7 +14,9 @@ class GaussianTransform:
      If none use lowest rank of duplicated values.
     """
 
-    def __init__(self, y: np.array, random_state: Optional[np.random.RandomState] = None):
+    def __init__(
+        self, y: np.array, random_state: Optional[np.random.RandomState] = None
+    ):
         assert y.ndim == 2
         self.dim = y.shape[1]
         self.sorted = y.copy()
@@ -22,7 +24,9 @@ class GaussianTransform:
         self.random_state = random_state
 
     @staticmethod
-    def z_transform(series, values_sorted, random_state: Optional[np.random.RandomState] = None):
+    def z_transform(
+        series, values_sorted, random_state: Optional[np.random.RandomState] = None
+    ):
         """
         :param series: shape (n, dim)
         :param values_sorted: series sorted on the first axis
@@ -31,25 +35,22 @@ class GaussianTransform:
         """
         # Cutoff ranks since `Phi^{-1}` is infinite at `0` and `1` with winsorized constants.
         def winsorized_delta(n):
-            return 1.0 / (4.0 * n ** 0.25 * np.sqrt(np.pi * np.log(n)))
+            return 1.0 / (4.0 * n**0.25 * np.sqrt(np.pi * np.log(n)))
+
         delta = winsorized_delta(len(series))
 
         def quantile(values_sorted, values_to_insert, delta):
-            low = np.searchsorted(values_sorted, values_to_insert, side='left')
+            low = np.searchsorted(values_sorted, values_to_insert, side="left")
             if random_state is not None:
                 # in case where multiple occurences of the same value exists in sorted array
                 # we return a random index in the valid range
-                high = np.searchsorted(values_sorted, values_to_insert, side='right')
+                high = np.searchsorted(values_sorted, values_to_insert, side="right")
                 res = random_state.randint(low, np.maximum(high, low + 1))
             else:
                 res = low
             return np.clip(res / len(values_sorted), a_min=delta, a_max=1 - delta)
 
-        quantiles = quantile(
-            values_sorted,
-            series,
-            delta
-        )
+        quantiles = quantile(values_sorted, series, delta)
 
         quantiles = np.clip(quantiles, a_min=delta, a_max=1 - delta)
 
@@ -62,14 +63,15 @@ class GaussianTransform:
         """
         assert y.shape[1] == self.dim
         # compute truncated quantile, apply gaussian inv cdf
-        return np.stack([
-            self.z_transform(y[:, i], self.sorted[:, i], self.random_state)
-            for i in range(self.dim)
-        ]).T
+        return np.stack(
+            [
+                self.z_transform(y[:, i], self.sorted[:, i], self.random_state)
+                for i in range(self.dim)
+            ]
+        ).T
 
 
 class StandardTransform:
-
     def __init__(self, y: np.array):
         """
         Transformation that removes mean and divide by standard error.

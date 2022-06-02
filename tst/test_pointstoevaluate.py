@@ -13,8 +13,15 @@
 from typing import Dict
 import numpy as np
 
-from syne_tune.config_space import randint, lograndint, uniform, \
-    loguniform, choice, finrange, logfinrange
+from syne_tune.config_space import (
+    randint,
+    lograndint,
+    uniform,
+    loguniform,
+    choice,
+    finrange,
+    logfinrange,
+)
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.searchers import RandomSearcher
 
@@ -37,25 +44,25 @@ def _log_avg(a, b):
 
 def _impute_config(config: Dict) -> Dict:
     new_config = config.copy()
-    k, lower, upper = 'int', 1, 5
+    k, lower, upper = "int", 1, 5
     if k not in config:
         new_config[k] = _to_int(_lin_avg(lower, upper), lower, upper)
-    k, lower, upper = 'logint', 3, 15
+    k, lower, upper = "logint", 3, 15
     if k not in config:
         new_config[k] = _to_int(_log_avg(lower, upper), lower, upper)
-    k, lower, upper = 'float', 5.5, 6.5
+    k, lower, upper = "float", 5.5, 6.5
     if k not in config:
         new_config[k] = _to_float(_lin_avg(lower, upper), lower, upper)
-    k, lower, upper = 'logfloat', 7.5, 8.5
+    k, lower, upper = "logfloat", 7.5, 8.5
     if k not in config:
         new_config[k] = _to_float(_log_avg(lower, upper), lower, upper)
-    k = 'categorical'
+    k = "categorical"
     if k not in config:
-        new_config[k] = 'a'
-    k = 'finrange'
+        new_config[k] = "a"
+    k = "finrange"
     if k not in config:
         new_config[k] = 0.5
-    k = 'logfinrange'
+    k = "logfinrange"
     if k not in config:
         new_config[k] = np.exp(3.0)
     return new_config
@@ -99,42 +106,48 @@ def _prepare_test(is_ray_tune=False):
     num_extra_cases = 30
 
     config_space = {
-        'int': randint(1, 5),
-        'logint': lograndint(3, 15),
-        'float': uniform(5.5, 6.5),
-        'logfloat': loguniform(7.5, 8.5),
-        'categorical': choice(['a', 'b', 'c']),
+        "int": randint(1, 5),
+        "logint": lograndint(3, 15),
+        "float": uniform(5.5, 6.5),
+        "logfloat": loguniform(7.5, 8.5),
+        "categorical": choice(["a", "b", "c"]),
     }
     configs = [
         dict(),
-        {'float': 5.75, 'categorical': 'b'},
-        {'int': 1, 'logint': 3, 'float': 5.5, 'logfloat': 7.5, 'categorical': 'a'},
-        {'int': 5, 'logint': 15, 'float': 6.5, 'logfloat': 8.5, 'categorical': 'c'},
-        {'logfloat': 8.125, 'logint': 5, 'int': 4},
-        {'float': 6.125},
-        {'categorical': 'c'},
+        {"float": 5.75, "categorical": "b"},
+        {"int": 1, "logint": 3, "float": 5.5, "logfloat": 7.5, "categorical": "a"},
+        {"int": 5, "logint": 15, "float": 6.5, "logfloat": 8.5, "categorical": "c"},
+        {"logfloat": 8.125, "logint": 5, "int": 4},
+        {"float": 6.125},
+        {"categorical": "c"},
     ]
     if not is_ray_tune:
-        config_space.update({
-            'finrange': finrange(0.1, 0.9, 9),
-            'logfinrange': logfinrange(1.0, np.exp(6.0), 7),
-        })
-        configs.extend([
-            {'finrange': 0.3},
-            {'logfinrange': np.exp(2.0)},
-        ])
+        config_space.update(
+            {
+                "finrange": finrange(0.1, 0.9, 9),
+                "logfinrange": logfinrange(1.0, np.exp(6.0), 7),
+            }
+        )
+        configs.extend(
+            [
+                {"finrange": 0.3},
+                {"logfinrange": np.exp(2.0)},
+            ]
+        )
 
     num_configs = len(configs)
     config_pairs = [(c, _impute_config(c)) for c in configs]
-    #for a, b in config_pairs:
+    # for a, b in config_pairs:
     #    print(f"{a} --- {b}")
-    testcases = [
-        (None, [config_pairs[0][1]]),
-        ([], [])] + [_gen_testcase([i], config_pairs)
-                     for i in range(num_configs)]
+    testcases = [(None, [config_pairs[0][1]]), ([], [])] + [
+        _gen_testcase([i], config_pairs) for i in range(num_configs)
+    ]
     testcases.append(
-        (_gen_testcase([0, 2, 4, 1, 4, 2], config_pairs)[0],
-         _gen_testcase([0, 2, 4, 1], config_pairs)[1]))
+        (
+            _gen_testcase([0, 2, 4, 1, 4, 2], config_pairs)[0],
+            _gen_testcase([0, 2, 4, 1], config_pairs)[1],
+        )
+    )
     for i in range(num_extra_cases):
         size = np.random.randint(1, 10)
         inds = np.random.randint(0, num_configs, size=size)
@@ -147,45 +160,49 @@ def _prepare_test(is_ray_tune=False):
 
 def test_points_to_evaluate():
     config_space, configs, testcases = _prepare_test()
-    search_options = {'debug_log': False}
+    search_options = {"debug_log": False}
     for tc_src, tc_trg in testcases:
         err_msg = f"tc_src = {tc_src}\ntc_trg = {tc_trg}"
         scheduler = FIFOScheduler(
-            config_space, searcher='random', search_options=search_options,
-            mode='min', metric='bogus', points_to_evaluate=tc_src)
+            config_space,
+            searcher="random",
+            search_options=search_options,
+            mode="min",
+            metric="bogus",
+            points_to_evaluate=tc_src,
+        )
         searcher: RandomSearcher = scheduler.searcher
         hp_ranges = searcher._hp_ranges
         assert len(tc_trg) == len(searcher._points_to_evaluate), err_msg
-        assert np.allclose(*_prepare_for_compare(
-            tc_trg, searcher._points_to_evaluate, hp_ranges)), err_msg
+        assert np.allclose(
+            *_prepare_for_compare(tc_trg, searcher._points_to_evaluate, hp_ranges)
+        ), err_msg
         tc_cmp = [scheduler.suggest(trial_id=i).config for i in range(len(tc_trg))]
         assert len(tc_trg) == len(tc_cmp), err_msg
-        assert np.allclose(*_prepare_for_compare(
-            tc_trg, tc_cmp, hp_ranges)), err_msg
+        assert np.allclose(*_prepare_for_compare(tc_trg, tc_cmp, hp_ranges)), err_msg
 
 
 def test_points_to_evaluate_raytune():
     from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
-    from syne_tune.optimizer.schedulers.ray_scheduler import \
-        RayTuneScheduler
-    from syne_tune.optimizer.schedulers.searchers import \
-        impute_points_to_evaluate
+    from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+    from syne_tune.optimizer.schedulers.searchers import impute_points_to_evaluate
 
     config_space, configs, testcases = _prepare_test(is_ray_tune=True)
     # This is just to get hp_ranges, which is needed for comparisons below
     _myscheduler = FIFOScheduler(
-        config_space, searcher='random', mode='min', metric='bogus')
+        config_space, searcher="random", mode="min", metric="bogus"
+    )
     _mysearcher: RandomSearcher = _myscheduler.searcher
     hp_ranges = _mysearcher._hp_ranges
     for tc_src, tc_trg in testcases:
         err_msg = f"tc_src = {tc_src}\ntc_trg = {tc_trg}"
         ray_scheduler = RT_FIFOScheduler()
-        ray_scheduler.set_search_properties(mode='min', metric='bogus')
+        ray_scheduler.set_search_properties(mode="min", metric="bogus")
         scheduler = RayTuneScheduler(
             config_space=config_space,
             ray_scheduler=ray_scheduler,
-            points_to_evaluate=impute_points_to_evaluate(tc_src, config_space))
+            points_to_evaluate=impute_points_to_evaluate(tc_src, config_space),
+        )
         tc_cmp = [scheduler.suggest(trial_id=i).config for i in range(len(tc_trg))]
         assert len(tc_trg) == len(tc_cmp), err_msg
-        assert np.allclose(*_prepare_for_compare(
-            tc_trg, tc_cmp, hp_ranges)), err_msg
+        assert np.allclose(*_prepare_for_compare(tc_trg, tc_cmp, hp_ranges)), err_msg

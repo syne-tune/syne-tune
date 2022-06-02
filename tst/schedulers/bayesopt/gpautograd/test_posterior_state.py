@@ -13,12 +13,14 @@
 import numpy
 import autograd.numpy as anp
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state \
-    import IncrementalUpdateGPPosteriorState, GaussProcPosteriorState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
-    import GaussianProcessRegression
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
-    import Matern52
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
+    IncrementalUpdateGPPosteriorState,
+    GaussProcPosteriorState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression import (
+    GaussianProcessRegression,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import Matern52
 
 
 def test_incremental_update():
@@ -27,7 +29,7 @@ def test_incremental_update():
 
     numpy.random.seed(298424)
     std_noise = 0.01
-    
+
     # Sample data
     features_list = []
     targets_list = []
@@ -45,7 +47,7 @@ def test_incremental_update():
             targs = f(feats)
             targs += anp.random.normal(0.0, std_noise, size=targs.shape)
             targets.append(targs)
-            
+
         features_list.append(features)
         targets_list.append(targets)
 
@@ -59,31 +61,39 @@ def test_incremental_update():
         model.fit(train_features, train_targets)
         noise_variance_1 = model.likelihood.get_noise_variance()
         state_incr = IncrementalUpdateGPPosteriorState(
-            features=train_features, targets=train_targets,
-            mean=model.likelihood.mean, kernel=model.likelihood.kernel,
-            noise_variance=model.likelihood.get_noise_variance(as_ndarray=True))
+            features=train_features,
+            targets=train_targets,
+            mean=model.likelihood.mean,
+            kernel=model.likelihood.kernel,
+            noise_variance=model.likelihood.get_noise_variance(as_ndarray=True),
+        )
         num_incr = num_incr_list[rep]
         for i in range(num_incr):
             state_incr = state_incr.update(
-                features[1][i].reshape((1, -1)),
-                targets[1][i].reshape((1, -1)))
+                features[1][i].reshape((1, -1)), targets[1][i].reshape((1, -1))
+            )
         noise_variance_2 = state_incr.noise_variance[0]
         # Posterior state by direct computation
         state_comp = GaussProcPosteriorState(
             features=anp.concatenate(features, axis=0),
             targets=anp.concatenate(targets, axis=0),
-            mean=model.likelihood.mean, kernel=model.likelihood.kernel,
-            noise_variance=state_incr.noise_variance)
+            mean=model.likelihood.mean,
+            kernel=model.likelihood.kernel,
+            noise_variance=state_incr.noise_variance,
+        )
         # Compare them
-        assert noise_variance_1 == noise_variance_2, "noise_variance_1 = {} != {} = noise_variance_2".format(
-                noise_variance_1, noise_variance_2)
+        assert (
+            noise_variance_1 == noise_variance_2
+        ), "noise_variance_1 = {} != {} = noise_variance_2".format(
+            noise_variance_1, noise_variance_2
+        )
         chol_fact_incr = state_incr.chol_fact
         chol_fact_comp = state_comp.chol_fact
         numpy.testing.assert_almost_equal(chol_fact_incr, chol_fact_comp, decimal=2)
         pred_mat_incr = state_incr.pred_mat
         pred_mat_comp = state_comp.pred_mat
         numpy.testing.assert_almost_equal(pred_mat_incr, pred_mat_comp, decimal=2)
-        
+
 
 if __name__ == "__main__":
     test_incremental_update()

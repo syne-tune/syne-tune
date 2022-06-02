@@ -15,11 +15,12 @@ from dataclasses import dataclass
 import numpy as np
 
 
-INTERNAL_METRIC_NAME = 'active_metric'
+INTERNAL_METRIC_NAME = "active_metric"
 
-INTERNAL_CONSTRAINT_NAME = 'constraint_metric'
+INTERNAL_CONSTRAINT_NAME = "constraint_metric"
 
-INTERNAL_COST_NAME = 'cost_metric'
+INTERNAL_COST_NAME = "cost_metric"
+
 
 def dictionarize_objective(x):
     return {INTERNAL_METRIC_NAME: x}
@@ -40,6 +41,7 @@ ConfigurationFilter = Callable[[Configuration], bool]
 
 MetricValues = Union[float, Dict[str, float]]
 
+
 @dataclass
 class TrialEvaluations:
     """
@@ -48,6 +50,7 @@ class TrialEvaluations:
     `metrics[k][str(r)]` is the value at resource level r.
 
     """
+
     trial_id: str
     metrics: Dict[str, MetricValues]
 
@@ -60,8 +63,9 @@ class TrialEvaluations:
         else:
             return 1
 
-    def _map_value_for_matching(self, value: MetricValues) -> (
-            Optional[List[str]], np.ndarray):
+    def _map_value_for_matching(
+        self, value: MetricValues
+    ) -> (Optional[List[str]], np.ndarray):
         if isinstance(value, dict):
             keys = list(sorted(value.keys()))
             vals = np.array(value[k] for k in keys)
@@ -79,8 +83,7 @@ class TrialEvaluations:
             return False
         for name, value in self.metrics.items():
             keys, vals = self._map_value_for_matching(value)
-            keys_other, vals_other = self._map_value_for_matching(
-                other.metrics[name])
+            keys_other, vals_other = self._map_value_for_matching(other.metrics[name])
             if keys != keys_other or (not np.allclose(vals, vals_other)):
                 return False
         return True
@@ -93,6 +96,7 @@ class PendingEvaluation(object):
 
     The minimum information is the candidate which has been queried.
     """
+
     def __init__(self, trial_id: str, resource: Optional[int] = None):
         self._trial_id = trial_id
         self._resource = resource
@@ -112,15 +116,19 @@ class FantasizedPendingEvaluation(PendingEvaluation):
     also called "fantasies".
 
     """
-    def __init__(self, trial_id: str, fantasies: Dict[str, np.ndarray],
-                 resource: Optional[int] = None):
+
+    def __init__(
+        self,
+        trial_id: str,
+        fantasies: Dict[str, np.ndarray],
+        resource: Optional[int] = None,
+    ):
         super().__init__(trial_id, resource)
-        fantasy_sizes = [
-            fantasy_values.size for fantasy_values in fantasies.values()]
-        assert all(fantasy_size > 0 for fantasy_size in fantasy_sizes), \
-            "fantasies must be non-empty"
-        assert len(set(fantasy_sizes)) == 1, \
-            "fantasies must all have the same length"
+        fantasy_sizes = [fantasy_values.size for fantasy_values in fantasies.values()]
+        assert all(
+            fantasy_size > 0 for fantasy_size in fantasy_sizes
+        ), "fantasies must be non-empty"
+        assert len(set(fantasy_sizes)) == 1, "fantasies must all have the same length"
         self._fantasies = fantasies.copy()
 
     @property

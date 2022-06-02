@@ -51,7 +51,11 @@ class ExperimentResult:
         df = self.results
         df = df.sort_values(ST_TUNER_TIME)
         x = df.loc[:, ST_TUNER_TIME]
-        y = df.loc[:, metric].cummax() if self.metric_mode() == "max" else df.loc[:, metric].cummin()
+        y = (
+            df.loc[:, metric].cummax()
+            if self.metric_mode() == "max"
+            else df.loc[:, metric].cummin()
+        )
         plt.plot(x, y, **plt_kwargs)
         plt.xlabel("wallclock time")
         plt.ylabel(metric)
@@ -60,13 +64,13 @@ class ExperimentResult:
         plt.show()
 
     def metric_mode(self) -> str:
-        return self.metadata['metric_mode']
+        return self.metadata["metric_mode"]
 
     def metric_names(self) -> List[str]:
-        return self.metadata['metric_names']
+        return self.metadata["metric_names"]
 
     def entrypoint_name(self) -> str:
-        return self.metadata['entrypoint']
+        return self.metadata["entrypoint"]
 
     def best_config(self) -> Dict:
         """
@@ -78,12 +82,14 @@ class ExperimentResult:
         metric_mode = self.metric_mode()
 
         if len(metric_names) > 1:
-            logging.warning("Several metrics exists so the best is not defined, this will return the best other the"
-                            f"first metric {metric_names}.")
+            logging.warning(
+                "Several metrics exists so the best is not defined, this will return the best other the"
+                f"first metric {metric_names}."
+            )
         metric_name = metric_names[0]
 
         # locate best result
-        if metric_mode == 'min':
+        if metric_mode == "min":
             best_index = self.results.loc[:, metric_name].argmin()
         else:
             best_index = self.results.loc[:, metric_name].argmax()
@@ -92,10 +98,11 @@ class ExperimentResult:
         # dont include internal fields
         return {k: v for k, v in res.items() if not k.startswith("st_")}
 
+
 def download_single_experiment(
-        tuner_name: str,
-        s3_bucket: Optional[str] = None,
-        experiment_name: Optional[str] = None,
+    tuner_name: str,
+    s3_bucket: Optional[str] = None,
+    experiment_name: Optional[str] = None,
 ):
     """
     Downloads results from s3 of a tuning experiment previously run with remote launcher.
@@ -104,10 +111,12 @@ def download_single_experiment(
     :param experiment_name: If given, this is used as first directory.
     :return:
     """
-    s3_path = s3_experiment_path(s3_bucket=s3_bucket, tuner_name=tuner_name, experiment_name=experiment_name)
+    s3_path = s3_experiment_path(
+        s3_bucket=s3_bucket, tuner_name=tuner_name, experiment_name=experiment_name
+    )
     tgt_dir = experiment_path(tuner_name=tuner_name)
     tgt_dir.mkdir(exist_ok=True, parents=True)
-    s3 = boto3.client('s3')
+    s3 = boto3.client("s3")
     parts_path = s3_path.replace("s3://", "").split("/")
     s3_bucket = parts_path[0]
     s3_key = "/".join(parts_path[1:])
@@ -120,10 +129,10 @@ def download_single_experiment(
 
 
 def load_experiment(
-        tuner_name: str,
-        download_if_not_found: bool = True,
-        load_tuner: bool = False,
-        local_path: Optional[str] = None,
+    tuner_name: str,
+    download_if_not_found: bool = True,
+    load_tuner: bool = False,
+    local_path: Optional[str] = None,
 ) -> ExperimentResult:
     """
     :param tuner_name: name of a tuning experiment previously run
@@ -135,8 +144,10 @@ def load_experiment(
     path = experiment_path(tuner_name, local_path)
 
     metadata_path = path / "metadata.json"
-    if not(metadata_path.exists()) and download_if_not_found:
-        logging.info(f"experiment {tuner_name} not found locally, trying to get it from s3.")
+    if not (metadata_path.exists()) and download_if_not_found:
+        logging.info(
+            f"experiment {tuner_name} not found locally, trying to get it from s3."
+        )
         download_single_experiment(tuner_name=tuner_name)
     try:
         with open(metadata_path, "r") as f:
@@ -167,7 +178,9 @@ def load_experiment(
     )
 
 
-def get_metadata(name_filter: Callable[[str], bool] = None, root = experiment_path()) -> Dict[str, Dict]:
+def get_metadata(
+    name_filter: Callable[[str], bool] = None, root=experiment_path()
+) -> Dict[str, Dict]:
     """
     :param name_filter: if passed then only experiments whose path matching the filter are kept. This allows
     rapid filtering in the presence of many experiments.
@@ -182,7 +195,10 @@ def get_metadata(name_filter: Callable[[str], bool] = None, root = experiment_pa
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
                     # we check that the metadata is valid by verifying that is a dict containing Syne Tune time-stamp
-                    if isinstance(metadata, Dict) and ST_TUNER_CREATION_TIMESTAMP in metadata:
+                    if (
+                        isinstance(metadata, Dict)
+                        and ST_TUNER_CREATION_TIMESTAMP in metadata
+                    ):
                         metadata["path"] = str(path.parent)
                         res[tuner_name] = metadata
             except JSONDecodeError as e:
@@ -192,9 +208,9 @@ def get_metadata(name_filter: Callable[[str], bool] = None, root = experiment_pa
 
 
 def list_experiments(
-        path_filter: Callable[[str], bool] = None,
-        experiment_filter: Callable[[ExperimentResult], bool] = None,
-        load_tuner: bool = False,
+    path_filter: Callable[[str], bool] = None,
+    experiment_filter: Callable[[ExperimentResult], bool] = None,
+    load_tuner: bool = False,
 ) -> List[ExperimentResult]:
     res = []
     for metadata_path in experiment_path().glob("**/metadata.json"):
@@ -205,13 +221,17 @@ def list_experiments(
             if experiment_filter is None or experiment_filter(exp):
                 if exp.results is not None and exp.metadata is not None:
                     res.append(exp)
-    return sorted(res, key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0), reverse=True)
+    return sorted(
+        res,
+        key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0),
+        reverse=True,
+    )
 
 
 def load_experiments_df(
-        path_filter: Callable[[str], bool] = None,
-        experiment_filter: Callable[[ExperimentResult], bool] = None,
-        load_tuner: bool = False,
+    path_filter: Callable[[str], bool] = None,
+    experiment_filter: Callable[[ExperimentResult], bool] = None,
+    load_tuner: bool = False,
 ) -> pd.DataFrame:
     """
     :param: name_filter: if specified, only experiment whose path name matches the filter will be kept.
@@ -229,7 +249,9 @@ def load_experiments_df(
     """
     dfs = []
     for experiment in list_experiments(
-            path_filter=path_filter, experiment_filter=experiment_filter, load_tuner=load_tuner
+        path_filter=path_filter,
+        experiment_filter=experiment_filter,
+        load_tuner=load_tuner,
     ):
         assert experiment.results is not None
         assert experiment.metadata is not None
@@ -249,8 +271,7 @@ def load_experiments_df(
     return pd.concat(dfs, ignore_index=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for exp in list_experiments():
         if exp.results is not None:
             print(exp)
-

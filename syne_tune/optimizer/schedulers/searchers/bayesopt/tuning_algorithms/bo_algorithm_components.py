@@ -16,14 +16,20 @@ from scipy.optimize import fmin_l_bfgs_b
 import logging
 from numpy.random import RandomState
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import SurrogateModel, ScoringFunction, LocalOptimizer, \
-    SurrogateOutputModel, AcquisitionClassAndArgs, \
-    unwrap_acquisition_class_and_kwargs
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    SurrogateModel,
+    ScoringFunction,
+    LocalOptimizer,
+    SurrogateOutputModel,
+    AcquisitionClassAndArgs,
+    unwrap_acquisition_class_and_kwargs,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +42,20 @@ class IndependentThompsonSampling(ScoringFunction):
     but incorrect.
 
     """
+
     def __init__(
-            self, model: SurrogateModel,
-            random_state: Optional[RandomState] = None):
+        self, model: SurrogateModel, random_state: Optional[RandomState] = None
+    ):
         self.model = model
         if random_state is None:
             random_state = RandomState(31415629)
         self.random_state = random_state
 
-    def score(self, candidates: Iterable[Configuration],
-              model: Optional[SurrogateModel] = None) -> List[float]:
+    def score(
+        self,
+        candidates: Iterable[Configuration],
+        model: Optional[SurrogateModel] = None,
+    ) -> List[float]:
         if model is None:
             model = self.model
         predictions_list = model.predict_candidates(candidates)
@@ -54,33 +64,40 @@ class IndependentThompsonSampling(ScoringFunction):
         # that case, samples are drawn for every column, then averaged (why
         # we need np.mean)
         for predictions in predictions_list:
-            posterior_means = predictions['mean']
-            posterior_stds = predictions['std']
+            posterior_means = predictions["mean"]
+            posterior_stds = predictions["std"]
             new_score = [
                 np.mean(self.random_state.normal(m, s))
-                for m, s in zip(posterior_means, posterior_stds)]
+                for m, s in zip(posterior_means, posterior_stds)
+            ]
             scores.append(new_score)
         return list(np.mean(np.array(scores), axis=0))
 
 
 class LBFGSOptimizeAcquisition(LocalOptimizer):
     def __init__(
-            self, hp_ranges: HyperparameterRanges, model: SurrogateOutputModel,
-            acquisition_class: AcquisitionClassAndArgs,
-            active_metric: str = None):
+        self,
+        hp_ranges: HyperparameterRanges,
+        model: SurrogateOutputModel,
+        acquisition_class: AcquisitionClassAndArgs,
+        active_metric: str = None,
+    ):
         super().__init__(hp_ranges, model, acquisition_class, active_metric)
         # Number criterion evaluations in last recent optimize call
         self.num_evaluations = None
 
-    def optimize(self, candidate: Configuration,
-                 model: Optional[SurrogateOutputModel] = None) -> Configuration:
+    def optimize(
+        self, candidate: Configuration, model: Optional[SurrogateOutputModel] = None
+    ) -> Configuration:
         # Before local minimization, the model for this state_id should have been fitted.
         if model is None:
             model = self.model
         acquisition_class, acquisition_kwargs = unwrap_acquisition_class_and_kwargs(
-            self.acquisition_class)
+            self.acquisition_class
+        )
         acquisition_function = acquisition_class(
-            model, self.active_metric, **acquisition_kwargs)
+            model, self.active_metric, **acquisition_kwargs
+        )
 
         x0 = self.hp_ranges.to_ndarray(candidate)
         bounds = self.hp_ranges.get_ndarray_bounds()
@@ -93,7 +110,7 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
 
         res = fmin_l_bfgs_b(f_df, x0=x0, bounds=bounds, maxiter=1000)
         self.num_evaluations = n_evaluations[0]
-        if res[2]['task'] == b'ABNORMAL_TERMINATION_IN_LNSRCH':
+        if res[2]["task"] == b"ABNORMAL_TERMINATION_IN_LNSRCH":
             # this condition was copied from the old GPyOpt code
             logger.warning(
                 f"ABNORMAL_TERMINATION_IN_LNSRCH in lbfgs after {n_evaluations[0]} evaluations, "
@@ -106,12 +123,17 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
             optimized_x = np.clip(res[0], a_min, a_max)
             # Make sure the above clipping does really just fix numerical rounding issues in LBFGS
             # if any bigger change was made there is a bug and we want to throw an exception
-            assert np.linalg.norm(res[0] - optimized_x) < 1e-6, (res[0], optimized_x, bounds)
+            assert np.linalg.norm(res[0] - optimized_x) < 1e-6, (
+                res[0],
+                optimized_x,
+                bounds,
+            )
             result = self.hp_ranges.from_ndarray(optimized_x.flatten())
             return result
 
 
 class NoOptimization(LocalOptimizer):
-    def optimize(self, candidate: Configuration,
-                 model: Optional[SurrogateModel] = None) -> Configuration:
+    def optimize(
+        self, candidate: Configuration, model: Optional[SurrogateModel] = None
+    ) -> Configuration:
         return candidate

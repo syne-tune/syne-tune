@@ -4,8 +4,12 @@ from typing import Dict, List, Optional, Union
 import pandas as pd
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
-from syne_tune.blackbox_repository.serialize import serialize_configspace, deserialize_configspace, serialize_metadata, \
-    deserialize_metadata
+from syne_tune.blackbox_repository.serialize import (
+    serialize_configspace,
+    deserialize_configspace,
+    serialize_metadata,
+    deserialize_metadata,
+)
 
 
 class BlackboxOffline(Blackbox):
@@ -31,14 +35,18 @@ class BlackboxOffline(Blackbox):
         if objectives_names is not None:
             self.metric_cols = objectives_names
             for col in objectives_names:
-                assert col in df_evaluations.columns, f"column {col} from metric columns not found in dataframe"
+                assert (
+                    col in df_evaluations.columns
+                ), f"column {col} from metric columns not found in dataframe"
         else:
-            self.metric_cols = [col for col in df_evaluations.columns if col.startswith("metric_")]
+            self.metric_cols = [
+                col for col in df_evaluations.columns if col.startswith("metric_")
+            ]
 
         super(BlackboxOffline, self).__init__(
             configuration_space=configuration_space,
             fidelity_space=fidelity_space,
-            objectives_names=objectives_names
+            objectives_names=objectives_names,
         )
 
         hp_names = list(configuration_space.keys())
@@ -54,7 +62,9 @@ class BlackboxOffline(Blackbox):
             self.index_cols.append(seed_col)
 
         for col in self.index_cols:
-            assert col in df_evaluations.columns, f"column {col} from configuration or fidelity space not found in dataframe"
+            assert (
+                col in df_evaluations.columns
+            ), f"column {col} from configuration or fidelity space not found in dataframe"
 
         self.df = df_evaluations.set_index(self.index_cols)
 
@@ -67,10 +77,10 @@ class BlackboxOffline(Blackbox):
         return X, y
 
     def _objective_function(
-            self,
-            configuration: Dict,
-            fidelity: Optional[Dict] = None,
-            seed: Optional[int] = None
+        self,
+        configuration: Dict,
+        fidelity: Optional[Dict] = None,
+        seed: Optional[int] = None,
     ) -> Dict[str, float]:
         """
         Return the dictionary of objectives for a configuration/fidelity/seed.
@@ -90,7 +100,9 @@ class BlackboxOffline(Blackbox):
             keys = tuple(set(self.index_cols) - set(self.fidelity_space.keys()))
         else:
             keys = self.index_cols
-        output = self.df.xs(tuple(key_dict[col] for col in keys), level=keys).loc[:, self.metric_cols]
+        output = self.df.xs(tuple(key_dict[col] for col in keys), level=keys).loc[
+            :, self.metric_cols
+        ]
         if len(output) == 0:
             raise ValueError(
                 f"the hyperparameter {configuration} is not present in available evaluations. Use `add_surrogate(blackbox)` if"
@@ -107,13 +119,15 @@ class BlackboxOffline(Blackbox):
         stats = {
             "total evaluations": len(self.df),
             "objectives": self.objectives_names,
-            "hyperparameters": self.configuration_space.get_hyperparameter_names()
+            "hyperparameters": self.configuration_space.get_hyperparameter_names(),
         }
         stats_str = ", ".join([f"{k}: {v}" for k, v in stats.items()])
         return f"offline blackbox: {stats_str}"
 
 
-def serialize(bb_dict: Dict[str, BlackboxOffline], path: str, categorical_cols: List[str] = []):
+def serialize(
+    bb_dict: Dict[str, BlackboxOffline], path: str, categorical_cols: List[str] = []
+):
     """
     :param bb_dict:
     :param path:
@@ -139,24 +153,29 @@ def serialize(bb_dict: Dict[str, BlackboxOffline], path: str, categorical_cols: 
     serialize_configspace(
         path=path,
         configuration_space=bb_first.configuration_space,
-        fidelity_space=bb_first.fidelity_space
+        fidelity_space=bb_first.fidelity_space,
     )
 
     for name, bb in bb_dict.items():
         df = bb.df
-        df['task'] = name
+        df["task"] = name
         # we use gzip as snappy is not supported for fastparquet engine compression
         # gzip is slower than the default snappy but more compact
-        df.reset_index().to_parquet(path / f"data-{name}.parquet", index=False, compression="gzip", engine="fastparquet")
+        df.reset_index().to_parquet(
+            path / f"data-{name}.parquet",
+            index=False,
+            compression="gzip",
+            engine="fastparquet",
+        )
 
     serialize_metadata(
         path=path,
         metadata={
-            'objectives_names': bb_first.objectives_names,
-            'task_names': list(bb_dict.keys()),
-            'seed_col': bb_first.seed_col,
-            'categorical_cols': categorical_cols,
-        }
+            "objectives_names": bb_first.objectives_names,
+            "task_names": list(bb_dict.keys()),
+            "seed_col": bb_first.seed_col,
+            "categorical_cols": categorical_cols,
+        },
     )
 
 
@@ -168,19 +187,25 @@ def deserialize(path: str) -> Union[Dict[str, BlackboxOffline], BlackboxOffline]
     """
     configuration_space, fidelity_space = deserialize_configspace(path)
 
-    assert configuration_space is not None, f"configspace.json could not be found in {path}"
+    assert (
+        configuration_space is not None
+    ), f"configspace.json could not be found in {path}"
 
     metadata = deserialize_metadata(path)
-    metric_cols = metadata['objectives_names']
-    seed_col = metadata['seed_col']
-    cat_cols = metadata.get('categorical_cols')  # optional
-    task_names = metadata.get('task_names')
+    metric_cols = metadata["objectives_names"]
+    seed_col = metadata["seed_col"]
+    cat_cols = metadata.get("categorical_cols")  # optional
+    task_names = metadata.get("task_names")
 
     # need to specify columns to have categorical encoding of columns (rather than int or float)
     # this is required as it has a massive effect on memory usage; we use fastparquet for the engine as pyarrow does
     # not handle categorization of int/float columns
     df_tasks = {
-        task: pd.read_parquet(Path(path) / f'data-{task}.parquet', categories=cat_cols, engine='fastparquet')
+        task: pd.read_parquet(
+            Path(path) / f"data-{task}.parquet",
+            categories=cat_cols,
+            engine="fastparquet",
+        )
         for task in task_names
     }
 

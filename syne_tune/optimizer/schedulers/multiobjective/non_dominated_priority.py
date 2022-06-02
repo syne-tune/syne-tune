@@ -14,6 +14,7 @@ from typing import Optional, List, Union
 
 import numpy as np
 
+
 def pareto_efficient(X: np.ndarray) -> np.ndarray:
     """
     Evaluates for each allocation in the provided array whether it is Pareto efficient. The costs
@@ -102,7 +103,10 @@ def compute_epsilon_net(X: np.ndarray, dim: Optional[int] = None) -> np.ndarray:
 
 
 def nondominated_sort(
-    X: np.ndarray, dim: Optional[int] = None, max_items: Optional[int] = None, flatten: bool = True
+    X: np.ndarray,
+    dim: Optional[int] = None,
+    max_items: Optional[int] = None,
+    flatten: bool = True,
 ) -> Union[List[int], List[List[int]]]:
     """
     Performs a multi-objective sort by iteratively computing the Pareto front and sparsifying the

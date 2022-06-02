@@ -14,14 +14,19 @@ from typing import Iterator, List, Union, Optional
 import numpy as np
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import CandidateGenerator
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration, ConfigurationFilter
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    CandidateGenerator,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+    ConfigurationFilter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
 from syne_tune.config_space import config_space_size
 
 logger = logging.getLogger(__name__)
@@ -36,8 +41,10 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
     called several times, different sequences are returned.
 
     """
-    def __init__(self, hp_ranges: HyperparameterRanges,
-                 random_state: np.random.RandomState):
+
+    def __init__(
+        self, hp_ranges: HyperparameterRanges, random_state: np.random.RandomState
+    ):
         self.hp_ranges = hp_ranges
         self.random_state = random_state
 
@@ -46,24 +53,28 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
             yield self.hp_ranges.random_config(self.random_state)
 
     def generate_candidates_en_bulk(
-            self, num_cands: int, exclusion_list=None) -> List[Configuration]:
+        self, num_cands: int, exclusion_list=None
+    ) -> List[Configuration]:
         if exclusion_list is None:
             return self.hp_ranges.random_configs(self.random_state, num_cands)
         else:
-            assert isinstance(exclusion_list, ExclusionList), \
-                "exclusion_list must be of type ExclusionList"
+            assert isinstance(
+                exclusion_list, ExclusionList
+            ), "exclusion_list must be of type ExclusionList"
             configs = []
             num_done = 0
             for i in range(MAX_RETRIES_CANDIDATES_EN_BULK):
                 # From iteration 1, we request more than what is still
                 # needed, because the config space seems to not have
                 # enough configs left
-                num_requested = min(
-                    num_cands, (num_cands - num_done) * (i + 1))
+                num_requested = min(num_cands, (num_cands - num_done) * (i + 1))
                 new_configs = [
-                    config for config in self.hp_ranges.random_configs(
-                        self.random_state, num_requested)
-                    if not exclusion_list.contains(config)]
+                    config
+                    for config in self.hp_ranges.random_configs(
+                        self.random_state, num_requested
+                    )
+                    if not exclusion_list.contains(config)
+                ]
                 num_new = min(num_cands - num_done, len(new_configs))
                 configs += new_configs[:num_new]
                 num_done += num_new
@@ -73,7 +84,8 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
                 logger.warning(
                     f"Could only sample {num_done} candidates where "
                     f"{num_cands} were requested. len(exclusion_list) = "
-                    f"{len(exclusion_list)}")
+                    f"{len(exclusion_list)}"
+                )
             return configs
 
 
@@ -87,9 +99,12 @@ class ExclusionList(object):
     is removed from the config.
 
     """
+
     def __init__(
-            self, state: Union[TuningJobState, dict],
-            filter_observed_data: Optional[ConfigurationFilter] = None):
+        self,
+        state: Union[TuningJobState, dict],
+        filter_observed_data: Optional[ConfigurationFilter] = None,
+    ):
         is_new = isinstance(state, TuningJobState)
         if is_new:
             self.hp_ranges = state.hp_ranges
@@ -100,22 +115,26 @@ class ExclusionList(object):
                 self.keys = keys
             else:
                 pos = keys.index(resource_attr)
-                self.keys = keys[:pos] + keys[(pos + 1):]
-            _elist = [x.trial_id for x in state.pending_evaluations] +\
-                     state.failed_trials
+                self.keys = keys[:pos] + keys[(pos + 1) :]
+            _elist = [
+                x.trial_id for x in state.pending_evaluations
+            ] + state.failed_trials
             observed_trial_ids = [x.trial_id for x in state.trials_evaluations]
             if filter_observed_data is not None:
                 observed_trial_ids = [
-                    trial_id for trial_id in observed_trial_ids
-                    if filter_observed_data(state.config_for_trial[trial_id])]
+                    trial_id
+                    for trial_id in observed_trial_ids
+                    if filter_observed_data(state.config_for_trial[trial_id])
+                ]
             _elist = set(_elist + observed_trial_ids)
             self.excl_set = set(
                 self._to_matchstr(state.config_for_trial[trial_id])
-                for trial_id in _elist)
+                for trial_id in _elist
+            )
         else:
-            self.hp_ranges = state['hp_ranges']
-            self.excl_set = state['excl_set']
-            self.keys = state['keys']
+            self.hp_ranges = state["hp_ranges"]
+            self.excl_set = state["excl_set"]
+            self.keys = state["keys"]
         self.configspace_size = config_space_size(self.hp_ranges.config_space)
 
     def _to_matchstr(self, config) -> str:
@@ -127,30 +146,36 @@ class ExclusionList(object):
     def add(self, config: Configuration):
         self.excl_set.add(self._to_matchstr(config))
 
-    def copy(self) -> 'ExclusionList':
+    def copy(self) -> "ExclusionList":
         return ExclusionList(
-            {'hp_ranges': self.hp_ranges,
-             'excl_set': set(self.excl_set),
-             'keys': self.keys})
+            {
+                "hp_ranges": self.hp_ranges,
+                "excl_set": set(self.excl_set),
+                "keys": self.keys,
+            }
+        )
 
     @staticmethod
-    def empty_list(hp_ranges: HyperparameterRanges) -> 'ExclusionList':
+    def empty_list(hp_ranges: HyperparameterRanges) -> "ExclusionList":
         return ExclusionList(TuningJobState.empty_state(hp_ranges))
 
     def __len__(self) -> int:
         return len(self.excl_set)
 
     def config_space_exhausted(self) -> bool:
-        return (self.configspace_size is not None) and \
-               len(self.excl_set) >= self.configspace_size
+        return (self.configspace_size is not None) and len(
+            self.excl_set
+        ) >= self.configspace_size
 
 
 MAX_RETRIES_ON_DUPLICATES = 10000
 
 
 def generate_unique_candidates(
-        candidates_generator: CandidateGenerator, num_candidates: int,
-        exclusion_candidates: ExclusionList) -> List[Configuration]:
+    candidates_generator: CandidateGenerator,
+    num_candidates: int,
+    exclusion_candidates: ExclusionList,
+) -> List[Configuration]:
     exclusion_candidates = exclusion_candidates.copy()  # Copy
     result = []
     num_results = 0
@@ -160,9 +185,10 @@ def generate_unique_candidates(
         if just_added:
             if exclusion_candidates.config_space_exhausted():
                 logger.warning(
-                    "All entries of finite config space (size " +
-                    f"{exclusion_candidates.configspace_size}) have been selected. Returning " +
-                    f"{len(result)} configs instead of {num_candidates}")
+                    "All entries of finite config space (size "
+                    + f"{exclusion_candidates.configspace_size}) have been selected. Returning "
+                    + f"{len(result)} configs instead of {num_candidates}"
+                )
                 break
             just_added = False
         if not exclusion_candidates.contains(cand):
@@ -182,6 +208,7 @@ def generate_unique_candidates(
                 logger.warning(
                     f"Reached limit of {MAX_RETRIES_ON_DUPLICATES} retries "
                     f"with i={i}. Returning {len(result)} candidates instead "
-                    f"of the requested {num_candidates}")
+                    f"of the requested {num_candidates}"
+                )
             break
     return result

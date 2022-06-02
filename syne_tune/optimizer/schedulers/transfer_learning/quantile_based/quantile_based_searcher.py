@@ -9,16 +9,22 @@ from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 
 import pandas as pd
 
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import from_string
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    TransferLearningTaskEvaluations,
+)
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalization_transforms import (
+    from_string,
+)
 from syne_tune.config_space import Domain
 from syne_tune.util import catchtime
 
 
-def extract_input_output(transfer_learning_evaluations, normalization: str, random_state):
+def extract_input_output(
+    transfer_learning_evaluations, normalization: str, random_state
+):
     X = pd.concat(
         [evals.hyperparameters for evals in transfer_learning_evaluations.values()],
-        ignore_index=True
+        ignore_index=True,
     )
     normalizer = from_string(normalization)
     ys = []
@@ -31,22 +37,28 @@ def extract_input_output(transfer_learning_evaluations, normalization: str, rand
 
 
 def fit_model(
-        config_space,
-        transfer_learning_evaluations,
-        normalization: str,
-        max_fit_samples: int,
-        random_state,
-        model=xgboost.XGBRegressor()
+    config_space,
+    transfer_learning_evaluations,
+    normalization: str,
+    max_fit_samples: int,
+    random_state,
+    model=xgboost.XGBRegressor(),
 ):
     model_pipeline = BlackboxSurrogate.make_model_pipeline(
         configuration_space=config_space,
         fidelity_space={},
         model=model,
     )
-    X, y = extract_input_output(transfer_learning_evaluations, normalization, random_state=random_state)
+    X, y = extract_input_output(
+        transfer_learning_evaluations, normalization, random_state=random_state
+    )
     with catchtime("time to fit the model"):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=random_state)
-        X_train, y_train = subsample(X_train, y_train, max_samples=max_fit_samples, random_state=random_state)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.1, random_state=random_state
+        )
+        X_train, y_train = subsample(
+            X_train, y_train, max_samples=max_fit_samples, random_state=random_state
+        )
         model_pipeline.fit(X_train, y_train)
 
         # compute residuals (num_metrics,)
@@ -67,7 +79,12 @@ def eval_model(model_pipeline, X, y):
     return res.mean()
 
 
-def subsample(X_train, z_train, max_samples: int = 10000, random_state: np.random.RandomState = None):
+def subsample(
+    X_train,
+    z_train,
+    max_samples: int = 10000,
+    random_state: np.random.RandomState = None,
+):
     assert len(X_train) == len(z_train)
     X_train.reset_index(inplace=True)
     if max_samples is not None and max_samples < len(X_train):
@@ -81,16 +98,15 @@ def subsample(X_train, z_train, max_samples: int = 10000, random_state: np.rando
 
 
 class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
-
     def __init__(
-            self,
-            config_space: Dict,
-            metric: str,
-            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            mode: Optional[str] = None,
-            max_fit_samples: int = 100000,
-            normalization: str = "gaussian",
-            random_seed: Optional[int] = None,
+        self,
+        config_space: Dict,
+        metric: str,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        mode: Optional[str] = None,
+        max_fit_samples: int = 100000,
+        normalization: str = "gaussian",
+        random_seed: Optional[int] = None,
     ):
         """
         Implement the transfer-learning method:
@@ -130,7 +146,9 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
         with catchtime("time to predict"):
             # note the candidates could also be sampled every time, we cache them rather to save compute time.
             num_candidates = 100000
-            self.X_candidates = pd.DataFrame([self._sample_random_config() for _ in range(num_candidates)])
+            self.X_candidates = pd.DataFrame(
+                [self._sample_random_config() for _ in range(num_candidates)]
+            )
             self.mu_pred = self.model_pipeline.predict(self.X_candidates)
             # simple homoskedastic variance estimate for now
             if self.mu_pred.ndim == 1:
@@ -145,7 +163,7 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
 
     def get_config(self, **kwargs):
         samples = self.random_state.normal(loc=self.mu_pred, scale=self.sigma_pred)
-        if self.mode == 'max':
+        if self.mode == "max":
             samples *= -1
         candidate = self.X_candidates.loc[np.argmin(samples)]
         return dict(candidate)

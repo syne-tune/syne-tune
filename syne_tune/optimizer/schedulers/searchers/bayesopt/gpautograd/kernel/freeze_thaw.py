@@ -14,19 +14,24 @@ import autograd.numpy as anp
 from autograd.builtins import isinstance
 from autograd.tracer import getval
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
-    import KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.exponential_decay \
-    import ExponentialDecayResourcesKernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import DEFAULT_ENCODING
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
-    import register_parameter, create_encoding
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
-    import MeanFunction
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.exponential_decay import (
+    ExponentialDecayResourcesKernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    DEFAULT_ENCODING,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
+    register_parameter,
+    create_encoding,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    MeanFunction,
+)
 
-__all__ = ['FreezeThawKernelFunction',
-           'FreezeThawMeanFunction']
+__all__ = ["FreezeThawKernelFunction", "FreezeThawMeanFunction"]
 
 
 class FreezeThawKernelFunction(KernelFunction):
@@ -55,10 +60,18 @@ class FreezeThawKernelFunction(KernelFunction):
     assumptions allow for faster inference, as implemented in
     :class:`GaussProcExpDecayPosteriorState`.
     """
+
     def __init__(
-            self, kernel_x: KernelFunction, mean_x: MeanFunction,
-            encoding_type=DEFAULT_ENCODING, alpha_init=1.0, mean_lam_init=0.5,
-            gamma_init=0.5, max_metric_value=1.0, **kwargs):
+        self,
+        kernel_x: KernelFunction,
+        mean_x: MeanFunction,
+        encoding_type=DEFAULT_ENCODING,
+        alpha_init=1.0,
+        mean_lam_init=0.5,
+        gamma_init=0.5,
+        max_metric_value=1.0,
+        **kwargs
+    ):
         """
         :param kernel_x: Kernel k_x(x, x') over configs
         :param mean_x: Mean function mu_x(x) over configs
@@ -75,36 +88,45 @@ class FreezeThawKernelFunction(KernelFunction):
         self.mean_x = mean_x
         alpha_lower, alpha_upper = 1e-6, 250.0
         alpha_init = ExponentialDecayResourcesKernelFunction._wrap_initvals(
-            alpha_init, alpha_lower, alpha_upper)
+            alpha_init, alpha_lower, alpha_upper
+        )
         self.encoding_alpha = create_encoding(
-            encoding_type, alpha_init, alpha_lower, alpha_upper, 1, None)
+            encoding_type, alpha_init, alpha_lower, alpha_upper, 1, None
+        )
         mean_lam_lower, mean_lam_upper = 1e-4, 50.0
         mean_lam_init = ExponentialDecayResourcesKernelFunction._wrap_initvals(
-            mean_lam_init, mean_lam_lower, mean_lam_upper)
+            mean_lam_init, mean_lam_lower, mean_lam_upper
+        )
         self.encoding_mean_lam = create_encoding(
-            encoding_type, mean_lam_init, mean_lam_lower, mean_lam_upper, 1,
-            None)
-        gamma_lower= max_metric_value * 0.0001
+            encoding_type, mean_lam_init, mean_lam_lower, mean_lam_upper, 1, None
+        )
+        gamma_lower = max_metric_value * 0.0001
         gamma_upper = max_metric_value
         gamma_init = ExponentialDecayResourcesKernelFunction._wrap_initvals(
-            gamma_init, gamma_lower, gamma_upper)
+            gamma_init, gamma_lower, gamma_upper
+        )
         self.encoding_gamma = create_encoding(
-            encoding_type, gamma_init, gamma_lower, gamma_upper, 1, None)
+            encoding_type, gamma_init, gamma_lower, gamma_upper, 1, None
+        )
 
         with self.name_scope():
             self.alpha_internal = register_parameter(
-                self.params, "alpha", self.encoding_alpha)
+                self.params, "alpha", self.encoding_alpha
+            )
             self.mean_lam_internal = register_parameter(
-                self.params, "mean_lam", self.encoding_mean_lam)
+                self.params, "mean_lam", self.encoding_mean_lam
+            )
             self.gamma_internal = register_parameter(
-                self.params, "gamma", self.encoding_gamma)
+                self.params, "gamma", self.encoding_gamma
+            )
 
     def _compute_terms(self, X, alpha, mean_lam, ret_mean=False):
         dim = self.kernel_x.dimension
         cfg = X[:, :dim]
         res = X[:, dim:]
         kappa = ExponentialDecayResourcesKernelFunction._compute_kappa(
-            res, alpha, mean_lam)
+            res, alpha, mean_lam
+        )
         if ret_mean:
             mean = self.mean_x(cfg)
         else:
@@ -114,19 +136,22 @@ class FreezeThawKernelFunction(KernelFunction):
 
     def _get_params(self, X, **kwargs):
         alpha = ExponentialDecayResourcesKernelFunction._unwrap(
-            X, kwargs, 'alpha', self.encoding_alpha, self.alpha_internal)
+            X, kwargs, "alpha", self.encoding_alpha, self.alpha_internal
+        )
         mean_lam = ExponentialDecayResourcesKernelFunction._unwrap(
-            X, kwargs, 'mean_lam', self.encoding_mean_lam,
-            self.mean_lam_internal)
+            X, kwargs, "mean_lam", self.encoding_mean_lam, self.mean_lam_internal
+        )
         gamma = ExponentialDecayResourcesKernelFunction._unwrap(
-            X, kwargs, 'gamma', self.encoding_gamma, self.gamma_internal)
+            X, kwargs, "gamma", self.encoding_gamma, self.gamma_internal
+        )
 
         return (alpha, mean_lam, gamma)
 
     @staticmethod
     def _to_tuples(cfg):
-        return [tuple(anp.ravel(x))
-                for x in anp.split(cfg, getval(cfg.shape[0]), axis=0)]
+        return [
+            tuple(anp.ravel(x)) for x in anp.split(cfg, getval(cfg.shape[0]), axis=0)
+        ]
 
     def forward(self, X1, X2, **kwargs):
         alpha, mean_lam, gamma = self._get_params(X1, **kwargs)
@@ -141,18 +166,17 @@ class FreezeThawKernelFunction(KernelFunction):
             cfg2, res2, kappa2, cfg2_tpls = cfg1, res1, kappa1, cfg1_tpls
             cfg_set = set(cfg1_tpls)
         cfg_map = dict(zip(cfg_set, range(len(cfg_set))))
-        cfg1_ind = anp.reshape(
-            anp.array([cfg_map[x] for x in cfg1_tpls]), (-1, 1))
+        cfg1_ind = anp.reshape(anp.array([cfg_map[x] for x in cfg1_tpls]), (-1, 1))
         if X2 is not X1:
-            cfg2_ind = anp.reshape(
-                anp.array([cfg_map[x] for x in cfg2_tpls]), (1, -1))
+            cfg2_ind = anp.reshape(anp.array([cfg_map[x] for x in cfg2_tpls]), (1, -1))
         else:
             cfg2_ind = anp.reshape(cfg1_ind, (1, -1))
 
         res2 = anp.reshape(res2, (1, -1))
         kappa2 = anp.reshape(kappa2, (1, -1))
         kappa12 = ExponentialDecayResourcesKernelFunction._compute_kappa(
-            anp.add(res1, res2), alpha, mean_lam)
+            anp.add(res1, res2), alpha, mean_lam
+        )
         kmat_res = anp.subtract(kappa12, anp.multiply(kappa1, kappa2))
         kmat_res = kmat_res * anp.square(gamma)
         kmat_res = kmat_res * (cfg1_ind == cfg2_ind)
@@ -165,7 +189,8 @@ class FreezeThawKernelFunction(KernelFunction):
         gamma = anp.reshape(gamma, (1, 1))
         cfg, res, kappa, _ = self._compute_terms(X, alpha, mean_lam)
         kappa2 = ExponentialDecayResourcesKernelFunction._compute_kappa(
-            res * 2, alpha, mean_lam)
+            res * 2, alpha, mean_lam
+        )
         kdiag_res = anp.subtract(kappa2, anp.square(kappa))
         kdiag_res = anp.reshape(kdiag_res * anp.square(gamma), (-1,))
 
@@ -179,7 +204,8 @@ class FreezeThawKernelFunction(KernelFunction):
         enc_list = [
             (self.alpha_internal, self.encoding_alpha),
             (self.mean_lam_internal, self.encoding_mean_lam),
-            (self.gamma_internal, self.encoding_gamma)]
+            (self.gamma_internal, self.encoding_gamma),
+        ]
         enc_list.extend(self.kernel_x.param_encoding_pairs())
         enc_list.extend(self.mean_x.param_encoding_pairs())
         return enc_list
@@ -187,8 +213,7 @@ class FreezeThawKernelFunction(KernelFunction):
     def mean_function(self, X):
         alpha, mean_lam, gamma = self._get_params(X)
         gamma = anp.reshape(gamma, (1, 1))
-        cfg, res, kappa, mean = self._compute_terms(
-            X, alpha, mean_lam, ret_mean=True)
+        cfg, res, kappa, mean = self._compute_terms(X, alpha, mean_lam, ret_mean=True)
         return anp.add(mean, anp.multiply(kappa, gamma))
 
     def get_params(self):
@@ -198,24 +223,22 @@ class FreezeThawKernelFunction(KernelFunction):
         'kernelx_') and of self.mean_x (prefix 'meanx_').
         """
         values = list(self._get_params(None))
-        keys = ['alpha', 'mean_lam', 'gamma']
+        keys = ["alpha", "mean_lam", "gamma"]
         result = {k: anp.reshape(v, (1,))[0] for k, v in zip(keys, values)}
-        for pref, func in [('kernelx_', self.kernel_x), ('meanx_', self.mean_x)]:
-            result.update({
-                (pref + k): v for k, v in func.get_params().items()})
+        for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
+            result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
     def set_params(self, param_dict):
-        for pref, func in [('kernelx_', self.kernel_x), ('meanx_', self.mean_x)]:
+        for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
             len_pref = len(pref)
             stripped_dict = {
-                k[len_pref:]: v for k, v in param_dict.items()
-                if k.startswith(pref)}
+                k[len_pref:]: v for k, v in param_dict.items() if k.startswith(pref)
+            }
             func.set_params(stripped_dict)
-        self.encoding_alpha.set(self.alpha_internal, param_dict['alpha'])
-        self.encoding_mean_lam.set(
-            self.mean_lam_internal, param_dict['mean_lam'])
-        self.encoding_gamma.set(self.gamma_internal, param_dict['gamma'])
+        self.encoding_alpha.set(self.alpha_internal, param_dict["alpha"])
+        self.encoding_mean_lam.set(self.mean_lam_internal, param_dict["mean_lam"])
+        self.encoding_gamma.set(self.gamma_internal, param_dict["gamma"])
 
 
 class FreezeThawMeanFunction(MeanFunction):

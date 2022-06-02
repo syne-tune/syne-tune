@@ -18,10 +18,11 @@ import scipy.stats as sps
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 import syne_tune.config_space as sp
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
-    import DebugLogPrinter
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
+    DebugLogPrinter,
+)
 
-__all__ = ['KernelDensityEstimator']
+__all__ = ["KernelDensityEstimator"]
 
 logger = logging.getLogger(__name__)
 
@@ -84,22 +85,25 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
     """
 
     def __init__(
-            self,
-            config_space: Dict,
-            metric: str,
-            points_to_evaluate: Optional[List[Dict]] = None,
-            mode: str = "min",
-            num_min_data_points: int = None,
-            top_n_percent: int = 15,
-            min_bandwidth: float = 1e-3,
-            num_candidates: int = 64,
-            bandwidth_factor: int = 3,
-            random_fraction: float = .33,
-            **kwargs
+        self,
+        config_space: Dict,
+        metric: str,
+        points_to_evaluate: Optional[List[Dict]] = None,
+        mode: str = "min",
+        num_min_data_points: int = None,
+        top_n_percent: int = 15,
+        min_bandwidth: float = 1e-3,
+        num_candidates: int = 64,
+        bandwidth_factor: int = 3,
+        random_fraction: float = 0.33,
+        **kwargs,
     ):
         super().__init__(
-            config_space=config_space, metric=metric,
-            points_to_evaluate=points_to_evaluate, **kwargs)
+            config_space=config_space,
+            metric=metric,
+            points_to_evaluate=points_to_evaluate,
+            **kwargs,
+        )
         self.mode = mode
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
@@ -115,7 +119,8 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             if isinstance(v, sp.Categorical)
         }
         self.inv_categorical_maps = {
-            hp: dict(zip(map.values(), map.keys())) for hp, map in self.categorical_maps.items()
+            hp: dict(zip(map.values(), map.keys()))
+            for hp, map in self.categorical_maps.items()
         }
 
         self.good_kde = None
@@ -125,22 +130,24 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
         for name, hp in self.config_space.items():
             if isinstance(hp, sp.Categorical):
-                self.vartypes.append(('u', len(hp.categories)))
+                self.vartypes.append(("u", len(hp.categories)))
             elif isinstance(hp, sp.Integer):
-                self.vartypes.append(('o', (hp.lower, hp.upper)))
+                self.vartypes.append(("o", (hp.lower, hp.upper)))
             elif isinstance(hp, sp.Float):
-                self.vartypes.append(('c', 0))
+                self.vartypes.append(("c", 0))
             elif isinstance(hp, sp.FiniteRange):
                 if hp.cast_int:
-                    self.vartypes.append(('o', (hp.lower, hp.upper)))
+                    self.vartypes.append(("o", (hp.lower, hp.upper)))
                 else:
-                    self.vartypes.append(('c', 0))
+                    self.vartypes.append(("c", 0))
 
-        self.num_min_data_points = len(self.vartypes) if num_min_data_points is None else num_min_data_points
+        self.num_min_data_points = (
+            len(self.vartypes) if num_min_data_points is None else num_min_data_points
+        )
         assert self.num_min_data_points >= len(self.vartypes)
-        self._resource_attr = kwargs.get('resource_attr')
+        self._resource_attr = kwargs.get("resource_attr")
         # Debug log printing (switched on by default)
-        debug_log = kwargs.get('debug_log', True)
+        debug_log = kwargs.get("debug_log", True)
         if isinstance(debug_log, bool):
             if debug_log:
                 self._debug_log = DebugLogPrinter()
@@ -169,11 +176,17 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                 b = domain.upper
                 return [(value - a) / (b - a)]
 
-        return np.hstack([
-            numerize(value=config[k], domain=v, categorical_map=self.categorical_maps.get(k, {}))
-            for k, v in self.config_space.items()
-            if isinstance(v, sp.Domain)
-        ])
+        return np.hstack(
+            [
+                numerize(
+                    value=config[k],
+                    domain=v,
+                    categorical_map=self.categorical_maps.get(k, {}),
+                )
+                for k, v in self.config_space.items()
+                if isinstance(v, sp.Domain)
+            ]
+        )
 
     def from_feature(self, feature_vector):
         def inv_numerize(values, domain, categorical_map):
@@ -206,7 +219,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                     inv_numerize(
                         values=feature_vector[curr_pos],
                         domain=domain,
-                        categorical_map=self.inv_categorical_maps.get(k, {})
+                        categorical_map=self.inv_categorical_maps.get(k, {}),
                     )
                 )
                 curr_pos += 1
@@ -217,14 +230,15 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
     def configure_scheduler(self, scheduler):
         from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
-        assert isinstance(scheduler, FIFOScheduler), \
-            "This searcher requires FIFOScheduler scheduler"
+        assert isinstance(
+            scheduler, FIFOScheduler
+        ), "This searcher requires FIFOScheduler scheduler"
         super().configure_scheduler(scheduler)
 
     def to_objective(self, result: Dict):
-        if self.mode == 'min':
+        if self.mode == "min":
             return result[self._metric]
-        elif self.mode == 'max':
+        elif self.mode == "max":
             return -result[self._metric]
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
@@ -235,7 +249,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             if self._resource_attr is not None:
                 # For HyperbandScheduler, also add the resource attribute
                 resource = int(result[self._resource_attr])
-                trial_id = trial_id + ':{}'.format(resource)
+                trial_id = trial_id + ":{}".format(resource)
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
@@ -248,7 +262,10 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             if models is None or self.random_state.rand() < self.random_fraction:
                 # return random candidate because a) we don't have enough data points or
                 # b) we sample some fraction of all samples randomly
-                suggestion = {k: v.sample() if isinstance(v, sp.Domain) else v for k, v in self.config_space.items()}
+                suggestion = {
+                    k: v.sample() if isinstance(v, sp.Domain) else v
+                    for k, v in self.config_space.items()
+                }
             else:
                 self.bad_kde = models[0]
                 self.good_kde = models[1]
@@ -268,31 +285,43 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                         bw = max(bw, self.min_bandwidth)
                         vartype = t[0]
                         domain = t[1]
-                        if vartype == 'c':
+                        if vartype == "c":
                             # continuous parameter
                             bw = self.bandwidth_factor * bw
-                            candidate.append(sps.truncnorm.rvs(
-                                -m / bw, (1 - m) / bw, loc=m, scale=bw,
-                                random_state=self.random_state))
+                            candidate.append(
+                                sps.truncnorm.rvs(
+                                    -m / bw,
+                                    (1 - m) / bw,
+                                    loc=m,
+                                    scale=bw,
+                                    random_state=self.random_state,
+                                )
+                            )
                         else:
                             # categorical or integer parameter
                             if self.random_state.rand() < (1 - bw):
                                 candidate.append(m)
                             else:
-                                if vartype == 'o':
+                                if vartype == "o":
                                     # integer
                                     sample = self.random_state.randint(
-                                        domain[0], domain[1])
-                                    sample = (sample - domain[0]) / (domain[1] - domain[0])
+                                        domain[0], domain[1]
+                                    )
+                                    sample = (sample - domain[0]) / (
+                                        domain[1] - domain[0]
+                                    )
                                     candidate.append(sample)
-                                elif vartype == 'u':
+                                elif vartype == "u":
                                     # categorical
                                     candidate.append(
-                                        self.random_state.randint(domain) / domain)
+                                        self.random_state.randint(domain) / domain
+                                    )
                     val = acquisition_function(candidate)
 
                     if not np.isfinite(val):
-                        logging.warning("candidate has non finite acquisition function value")
+                        logging.warning(
+                            "candidate has non finite acquisition function value"
+                        )
 
                     if val_current_best is None or val_current_best > val:
                         current_best = candidate
@@ -307,13 +336,18 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         if train_data.shape[0] < self.num_min_data_points:
             return None
 
-        n_good = max(self.num_min_data_points, (self.top_n_percent * train_data.shape[0]) // 100)
-        n_bad = max(self.num_min_data_points, ((100 - self.top_n_percent) * train_data.shape[0]) // 100)
+        n_good = max(
+            self.num_min_data_points, (self.top_n_percent * train_data.shape[0]) // 100
+        )
+        n_bad = max(
+            self.num_min_data_points,
+            ((100 - self.top_n_percent) * train_data.shape[0]) // 100,
+        )
 
         idx = np.argsort(train_targets)
 
         train_data_good = train_data[idx[:n_good]]
-        train_data_bad = train_data[idx[n_good:n_good + n_bad]]
+        train_data_bad = train_data[idx[n_good : n_good + n_bad]]
 
         if train_data_good.shape[0] <= train_data_good.shape[1]:
             return None
@@ -322,8 +356,12 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
         types = [t[0] for t in self.vartypes]
 
-        bad_kde = sm.nonparametric.KDEMultivariate(data=train_data_bad, var_type=types, bw='normal_reference')
-        good_kde = sm.nonparametric.KDEMultivariate(data=train_data_good, var_type=types, bw='normal_reference')
+        bad_kde = sm.nonparametric.KDEMultivariate(
+            data=train_data_bad, var_type=types, bw="normal_reference"
+        )
+        good_kde = sm.nonparametric.KDEMultivariate(
+            data=train_data_good, var_type=types, bw="normal_reference"
+        )
 
         bad_kde.bw = np.clip(bad_kde.bw, self.min_bandwidth, None)
         good_kde.bw = np.clip(good_kde.bw, self.min_bandwidth, None)

@@ -13,17 +13,27 @@
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
-    import KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import DEFAULT_ENCODING
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
-    import unwrap_parameter, IdentityScalarEncoding, register_parameter, get_name_internal, create_encoding
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
-    import MeanFunction
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    DEFAULT_ENCODING,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
+    unwrap_parameter,
+    IdentityScalarEncoding,
+    register_parameter,
+    get_name_internal,
+    create_encoding,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    MeanFunction,
+)
 
-__all__ = ['ExponentialDecayResourcesKernelFunction',
-           'ExponentialDecayResourcesMeanFunction']
+__all__ = [
+    "ExponentialDecayResourcesKernelFunction",
+    "ExponentialDecayResourcesMeanFunction",
+]
 
 
 class ExponentialDecayResourcesKernelFunction(KernelFunction):
@@ -57,11 +67,20 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
     inputs (x, r) (dimension d + 1), where the resource attribute r >= 0 is
     last.
     """
+
     def __init__(
-            self, kernel_x: KernelFunction, mean_x: MeanFunction,
-            encoding_type=DEFAULT_ENCODING, alpha_init=1.0, mean_lam_init=0.5,
-            gamma_init=0.5, delta_fixed_value=None, delta_init=0.5,
-            max_metric_value=1.0, **kwargs):
+        self,
+        kernel_x: KernelFunction,
+        mean_x: MeanFunction,
+        encoding_type=DEFAULT_ENCODING,
+        alpha_init=1.0,
+        mean_lam_init=0.5,
+        gamma_init=0.5,
+        delta_fixed_value=None,
+        delta_init=0.5,
+        max_metric_value=1.0,
+        **kwargs
+    ):
         """
         :param kernel_x: Kernel k_x(x, x') over configs
         :param mean_x: Mean function mu_x(x) over configs
@@ -82,43 +101,51 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         alpha_lower, alpha_upper = 1e-6, 250.0
         alpha_init = self._wrap_initvals(alpha_init, alpha_lower, alpha_upper)
         self.encoding_alpha = create_encoding(
-            encoding_type, alpha_init, alpha_lower, alpha_upper, 1, None)
+            encoding_type, alpha_init, alpha_lower, alpha_upper, 1, None
+        )
         mean_lam_lower, mean_lam_upper = 1e-4, 50.0
         mean_lam_init = self._wrap_initvals(
-            mean_lam_init, mean_lam_lower, mean_lam_upper)
+            mean_lam_init, mean_lam_lower, mean_lam_upper
+        )
         self.encoding_mean_lam = create_encoding(
-            encoding_type, mean_lam_init, mean_lam_lower, mean_lam_upper, 1,
-            None)
+            encoding_type, mean_lam_init, mean_lam_lower, mean_lam_upper, 1, None
+        )
         # If f(x, 0) is the metric value at r -> 0, f(x) at r -> infty,
         # then f(x, 0) = gamma (for delta = 1), or f(x, 0) = gamma + f(x) for
         # delta = 0. gamma should not be larger than the maximum metric
         # value.
-        gamma_lower= max_metric_value * 0.0001
+        gamma_lower = max_metric_value * 0.0001
         gamma_upper = max_metric_value
         gamma_init = self._wrap_initvals(gamma_init, gamma_lower, gamma_upper)
         self.encoding_gamma = create_encoding(
-            encoding_type, gamma_init, gamma_lower, gamma_upper, 1, None)
+            encoding_type, gamma_init, gamma_lower, gamma_upper, 1, None
+        )
         if delta_fixed_value is None:
             delta_init = self._wrap_initvals(delta_init, 0.0, 1.0)
             self.encoding_delta = IdentityScalarEncoding(
-                constr_lower=0.0, constr_upper=1.0, init_val=delta_init)
+                constr_lower=0.0, constr_upper=1.0, init_val=delta_init
+            )
         else:
-            assert 0.0 <= delta_fixed_value <= 1.0, \
-                "delta_fixed_value = {}, must lie in [0, 1]".format(
-                    delta_fixed_value)
+            assert (
+                0.0 <= delta_fixed_value <= 1.0
+            ), "delta_fixed_value = {}, must lie in [0, 1]".format(delta_fixed_value)
             self.encoding_delta = None
             self.delta_fixed_value = delta_fixed_value
 
         with self.name_scope():
             self.alpha_internal = register_parameter(
-                self.params, "alpha", self.encoding_alpha)
+                self.params, "alpha", self.encoding_alpha
+            )
             self.mean_lam_internal = register_parameter(
-                self.params, "mean_lam", self.encoding_mean_lam)
+                self.params, "mean_lam", self.encoding_mean_lam
+            )
             self.gamma_internal = register_parameter(
-                self.params, "gamma", self.encoding_gamma)
+                self.params, "gamma", self.encoding_gamma
+            )
             if delta_fixed_value is None:
                 self.delta_internal = register_parameter(
-                    self.params, "delta", self.encoding_delta)
+                    self.params, "delta", self.encoding_delta
+                )
 
     @staticmethod
     def _wrap_initvals(init, lower, upper):
@@ -127,8 +154,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
     @staticmethod
     def _compute_kappa(x, alpha, mean_lam):
         beta = alpha / mean_lam
-        return anp.power(anp.divide(
-            beta, anp.add(x, beta)), alpha)
+        return anp.power(anp.divide(beta, anp.add(x, beta)), alpha)
 
     def _compute_terms(self, X, alpha, mean_lam, gamma, delta, ret_mean=False):
         dim = self.kernel_x.dimension
@@ -136,7 +162,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         res = X[:, dim:]
         kappa = self._compute_kappa(res, alpha, mean_lam)
         kr_pref = anp.reshape(gamma, (1, 1))
-        
+
         if ret_mean or (self.encoding_delta is not None) or delta > 0.0:
             mean = self.mean_x(cfg)
         else:
@@ -145,60 +171,64 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
             kr_pref = anp.subtract(kr_pref, anp.multiply(delta, mean))
         elif delta > 0.0:
             kr_pref = anp.subtract(kr_pref, mean * delta)
-            
+
         return cfg, res, kappa, kr_pref, mean
 
     @staticmethod
     def _unwrap(X, kwargs, key, enc, var_internal):
-        return enc.get(kwargs.get(
-            get_name_internal(key), unwrap_parameter(var_internal, X)))
+        return enc.get(
+            kwargs.get(get_name_internal(key), unwrap_parameter(var_internal, X))
+        )
 
     def _get_params(self, X, **kwargs):
         alpha = self._unwrap(
-            X, kwargs, 'alpha', self.encoding_alpha, self.alpha_internal)
+            X, kwargs, "alpha", self.encoding_alpha, self.alpha_internal
+        )
         mean_lam = self._unwrap(
-            X, kwargs, 'mean_lam', self.encoding_mean_lam,
-            self.mean_lam_internal)
+            X, kwargs, "mean_lam", self.encoding_mean_lam, self.mean_lam_internal
+        )
         gamma = self._unwrap(
-            X, kwargs, 'gamma', self.encoding_gamma, self.gamma_internal)
+            X, kwargs, "gamma", self.encoding_gamma, self.gamma_internal
+        )
         if self.encoding_delta is not None:
-            delta = anp.reshape(self._unwrap(
-                X, kwargs, 'delta', self.encoding_delta,
-                self.delta_internal), (1, 1))
+            delta = anp.reshape(
+                self._unwrap(
+                    X, kwargs, "delta", self.encoding_delta, self.delta_internal
+                ),
+                (1, 1),
+            )
         else:
             delta = self.delta_fixed_value
-            
+
         return (alpha, mean_lam, gamma, delta)
 
     def forward(self, X1, X2, **kwargs):
         alpha, mean_lam, gamma, delta = self._get_params(X1, **kwargs)
         cfg1, res1, kappa1, kr_pref1, _ = self._compute_terms(
-            X1, alpha, mean_lam, gamma, delta)
+            X1, alpha, mean_lam, gamma, delta
+        )
         if X2 is not X1:
             cfg2, res2, kappa2, kr_pref2, _ = self._compute_terms(
-                X2, alpha, mean_lam, gamma, delta)
+                X2, alpha, mean_lam, gamma, delta
+            )
         else:
             cfg2, res2, kappa2, kr_pref2 = cfg1, res1, kappa1, kr_pref1
         res2 = anp.reshape(res2, (1, -1))
         kappa2 = anp.reshape(kappa2, (1, -1))
         kr_pref2 = anp.reshape(kr_pref2, (1, -1))
-        kappa12 = self._compute_kappa(
-            anp.add(res1, res2), alpha, mean_lam)
+        kappa12 = self._compute_kappa(anp.add(res1, res2), alpha, mean_lam)
         kmat_res = anp.subtract(kappa12, anp.multiply(kappa1, kappa2))
-        kmat_res = anp.multiply(kr_pref1, anp.multiply(
-            kr_pref2, kmat_res))
+        kmat_res = anp.multiply(kr_pref1, anp.multiply(kr_pref2, kmat_res))
 
         kmat_x = self.kernel_x(cfg1, cfg2)
         if self.encoding_delta is None:
             if delta > 0.0:
-                tmpmat = anp.add(kappa1, anp.subtract(
-                    kappa2, kappa12 * delta))
+                tmpmat = anp.add(kappa1, anp.subtract(kappa2, kappa12 * delta))
                 tmpmat = tmpmat * (-delta) + 1.0
             else:
                 tmpmat = 1.0
         else:
-            tmpmat = anp.add(kappa1, anp.subtract(
-                kappa2, anp.multiply(kappa12, delta)))
+            tmpmat = anp.add(kappa1, anp.subtract(kappa2, anp.multiply(kappa12, delta)))
             tmpmat = anp.multiply(tmpmat, -delta) + 1.0
 
         return kmat_x * tmpmat + kmat_res
@@ -206,11 +236,11 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
     def diagonal(self, X):
         alpha, mean_lam, gamma, delta = self._get_params(X)
         cfg, res, kappa, kr_pref, _ = self._compute_terms(
-            X, alpha, mean_lam, gamma, delta)
+            X, alpha, mean_lam, gamma, delta
+        )
         kappa2 = self._compute_kappa(res * 2, alpha, mean_lam)
         kdiag_res = anp.subtract(kappa2, anp.square(kappa))
-        kdiag_res = anp.reshape(
-            anp.multiply(kdiag_res, anp.square(kr_pref)), (-1,))
+        kdiag_res = anp.reshape(anp.multiply(kdiag_res, anp.square(kr_pref)), (-1,))
         kdiag_x = self.kernel_x.diagonal(cfg)
         if self.encoding_delta is None:
             if delta > 0.0:
@@ -220,8 +250,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
                 tmpvec = 1.0
         else:
             tmpvec = anp.subtract(kappa * 2, anp.multiply(kappa2, delta))
-            tmpvec = anp.reshape(
-                anp.multiply(tmpvec, -delta) + 1.0, (-1,))
+            tmpvec = anp.reshape(anp.multiply(tmpvec, -delta) + 1.0, (-1,))
 
         return kdiag_x * tmpvec + kdiag_res
 
@@ -232,19 +261,21 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         enc_list = [
             (self.alpha_internal, self.encoding_alpha),
             (self.mean_lam_internal, self.encoding_mean_lam),
-            (self.gamma_internal, self.encoding_gamma)]
+            (self.gamma_internal, self.encoding_gamma),
+        ]
         if self.encoding_delta is not None:
             enc_list.append((self.delta_internal, self.encoding_delta))
         enc_list.extend(self.kernel_x.param_encoding_pairs())
         enc_list.extend(self.mean_x.param_encoding_pairs())
-        
+
         return enc_list
 
     def mean_function(self, X):
         alpha, mean_lam, gamma, delta = self._get_params(X)
         cfg, res, kappa, kr_pref, mean = self._compute_terms(
-            X, alpha, mean_lam, gamma, delta, ret_mean=True)
-            
+            X, alpha, mean_lam, gamma, delta, ret_mean=True
+        )
+
         return anp.add(mean, anp.multiply(kappa, kr_pref))
 
     def get_params(self):
@@ -254,35 +285,32 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         'kernelx_') and of self.mean_x (prefix 'meanx_').
         """
         values = list(self._get_params(None))
-        keys = ['alpha', 'mean_lam', 'gamma', 'delta']
+        keys = ["alpha", "mean_lam", "gamma", "delta"]
         if self.encoding_delta is None:
             values.pop()
             keys.pop()
         result = {k: anp.reshape(v, (1,))[0] for k, v in zip(keys, values)}
-        for pref, func in [('kernelx_', self.kernel_x), ('meanx_', self.mean_x)]:
-            result.update({
-                (pref + k): v for k, v in func.get_params().items()})
-                
+        for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
+            result.update({(pref + k): v for k, v in func.get_params().items()})
+
         return result
 
     def set_params(self, param_dict):
-        for pref, func in [('kernelx_', self.kernel_x), ('meanx_', self.mean_x)]:
+        for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
             len_pref = len(pref)
             stripped_dict = {
-                k[len_pref:]: v for k, v in param_dict.items()
-                if k.startswith(pref)}
+                k[len_pref:]: v for k, v in param_dict.items() if k.startswith(pref)
+            }
             func.set_params(stripped_dict)
-        self.encoding_alpha.set(self.alpha_internal, param_dict['alpha'])
-        self.encoding_mean_lam.set(
-            self.mean_lam_internal, param_dict['mean_lam'])
-        self.encoding_gamma.set(self.gamma_internal, param_dict['gamma'])
+        self.encoding_alpha.set(self.alpha_internal, param_dict["alpha"])
+        self.encoding_mean_lam.set(self.mean_lam_internal, param_dict["mean_lam"])
+        self.encoding_gamma.set(self.gamma_internal, param_dict["gamma"])
         if self.encoding_delta is not None:
-            self.encoding_delta.set(self.delta_internal, param_dict['delta'])
+            self.encoding_delta.set(self.delta_internal, param_dict["delta"])
 
 
 class ExponentialDecayResourcesMeanFunction(MeanFunction):
-    def __init__(self, kernel: ExponentialDecayResourcesKernelFunction,
-                 **kwargs):
+    def __init__(self, kernel: ExponentialDecayResourcesKernelFunction, **kwargs):
         super(ExponentialDecayResourcesMeanFunction, self).__init__(**kwargs)
         assert isinstance(kernel, ExponentialDecayResourcesKernelFunction)
         self.kernel = kernel

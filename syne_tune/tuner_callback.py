@@ -24,7 +24,6 @@ from syne_tune.util import RegularCallback
 
 
 class TunerCallback(ABC):
-
     def on_tuning_start(self, tuner):
         pass
 
@@ -38,9 +37,9 @@ class TunerCallback(ABC):
         pass
 
     def on_fetch_status_results(
-            self,
-            trial_status_dict: Tuple[Dict[int, Tuple[Trial, str]]],
-            new_results: List[Tuple[int, Dict]],
+        self,
+        trial_status_dict: Tuple[Dict[int, Tuple[Trial, str]]],
+        new_results: List[Tuple[int, Dict]],
     ):
         """
         Called with the results of `backend.fetch_status_results`.
@@ -79,8 +78,8 @@ class TunerCallback(ABC):
 
 class StoreResultsCallback(TunerCallback):
     def __init__(
-            self,
-            add_wallclock_time: bool = True,
+        self,
+        add_wallclock_time: bool = True,
     ):
         """
         Minimal callback that enables plotting results over time,
@@ -104,15 +103,16 @@ class StoreResultsCallback(TunerCallback):
             result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp
 
     def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
-        assert self.save_results_at_frequency is not None, \
-            "on_tuning_start must always be called before on_trial_result."
+        assert (
+            self.save_results_at_frequency is not None
+        ), "on_tuning_start must always be called before on_trial_result."
         result = copy.copy(result)
         result[ST_DECISION] = decision
         result[ST_STATUS] = status
         result[ST_TRIAL_ID] = trial.trial_id
 
         for key in trial.config:
-            result[f'config_{key}'] = trial.config[key]
+            result[f"config_{key}"] = trial.config[key]
 
         self._set_time_fields(result)
 
@@ -136,8 +136,8 @@ class StoreResultsCallback(TunerCallback):
         # we only save results every `results_update_frequency` seconds as this operation
         # may be expensive on remote storage.
         self.save_results_at_frequency = RegularCallback(
-             lambda: self.store_results(),
-             call_seconds_frequency=tuner.results_update_interval,
+            lambda: self.store_results(),
+            call_seconds_frequency=tuner.results_update_interval,
         )
         if self.add_wallclock_time:
             self._start_time_stamp = perf_counter()

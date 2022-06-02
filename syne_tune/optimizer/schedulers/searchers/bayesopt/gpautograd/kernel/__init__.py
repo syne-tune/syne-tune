@@ -11,17 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 # TODO wildcard import should be avoided
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
-    import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.exponential_decay \
-    import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.fabolas \
-    import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.product_kernel \
-    import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.freeze_thaw \
-    import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.cross_validation \
-    import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.range_kernel \
-    import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.exponential_decay import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.fabolas import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.product_kernel import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.freeze_thaw import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.cross_validation import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.range_kernel import *  # noqa: F401

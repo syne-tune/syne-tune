@@ -14,82 +14,107 @@ from typing import List
 import numpy as np
 import pytest
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
-    INTERNAL_METRIC_NAME, INTERNAL_CONSTRAINT_NAME
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
-    import make_hyperparameter_ranges
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    INTERNAL_METRIC_NAME,
+    INTERNAL_CONSTRAINT_NAME,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+    make_hyperparameter_ranges,
+)
 from syne_tune.config_space import uniform
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
-    DEFAULT_MCMC_CONFIG, DEFAULT_OPTIMIZATION_CONFIG
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import \
-    CEIAcquisitionFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import \
-    GaussProcSurrogateModel, GaussProcEmpiricalBayesModelFactory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model \
-    import GaussProcMCMCModelFactory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import \
-    LBFGSOptimizeAcquisition
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import \
-    default_gpmodel, default_gpmodel_mcmc
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import create_tuning_job_state
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    DEFAULT_MCMC_CONFIG,
+    DEFAULT_OPTIMIZATION_CONFIG,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
+    CEIAcquisitionFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
+    GaussProcSurrogateModel,
+    GaussProcEmpiricalBayesModelFactory,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model import (
+    GaussProcMCMCModelFactory,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
+    LBFGSOptimizeAcquisition,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
+    default_gpmodel,
+    default_gpmodel_mcmc,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
+    create_tuning_job_state,
+)
 
 
 def _construct_models(X, Y, metric, hp_ranges, do_mcmc, with_pending):
     pending_tuples = [(0.5, 0.5), (0.2, 0.2)] if with_pending else None
     state = create_tuning_job_state(
-        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y,
-        pending_tuples=pending_tuples)
+        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y, pending_tuples=pending_tuples
+    )
     random_seed = 0
 
     gpmodel = default_gpmodel(
-        state, random_seed=random_seed,
-        optimization_config=DEFAULT_OPTIMIZATION_CONFIG)
+        state, random_seed=random_seed, optimization_config=DEFAULT_OPTIMIZATION_CONFIG
+    )
     model_factory = GaussProcEmpiricalBayesModelFactory(
-        active_metric=metric, gpmodel=gpmodel, num_fantasy_samples=2)
+        active_metric=metric, gpmodel=gpmodel, num_fantasy_samples=2
+    )
     result = [model_factory.model(state, fit_params=True)]
     if do_mcmc:
         gpmodel_mcmc = default_gpmodel_mcmc(
-            state, random_seed=random_seed,
-            mcmc_config=DEFAULT_MCMC_CONFIG)
+            state, random_seed=random_seed, mcmc_config=DEFAULT_MCMC_CONFIG
+        )
         model_factory = GaussProcMCMCModelFactory(
-            active_metric=metric, gpmodel=gpmodel_mcmc)
+            active_metric=metric, gpmodel=gpmodel_mcmc
+        )
         result.append(model_factory.model(state, fit_params=True))
     return result
 
 
-def default_models(metric, do_mcmc=True, with_pending=False) -> List[GaussProcSurrogateModel]:
-    config_space = {
-        'x': uniform(0.0, 1.0),
-        'y': uniform(0.0, 1.0)}
+def default_models(
+    metric, do_mcmc=True, with_pending=False
+) -> List[GaussProcSurrogateModel]:
+    config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
     # Continuous constraint, such as memory requirement: the larger x[0] the larger the memory footprint, and
     # the feasible region (i.e., Y <= 0) is for x[0] <= 0.5
-    Y = [{INTERNAL_METRIC_NAME: np.sum(x) * 10.0,
-          INTERNAL_CONSTRAINT_NAME: x[0] * 2.0 - 1.0}
-         for x in X]
+    Y = [
+        {
+            INTERNAL_METRIC_NAME: np.sum(x) * 10.0,
+            INTERNAL_CONSTRAINT_NAME: x[0] * 2.0 - 1.0,
+        }
+        for x in X
+    ]
     result = _construct_models(X, Y, metric, hp_ranges, do_mcmc, with_pending)
     return result
 
 
 def _build_models_with_and_without_feasible_candidates(do_mcmc, with_pending):
-    active_models = default_models(INTERNAL_METRIC_NAME, do_mcmc=do_mcmc, with_pending=with_pending)
-    constraint_models = default_models(INTERNAL_CONSTRAINT_NAME, do_mcmc=do_mcmc, with_pending=with_pending)
+    active_models = default_models(
+        INTERNAL_METRIC_NAME, do_mcmc=do_mcmc, with_pending=with_pending
+    )
+    constraint_models = default_models(
+        INTERNAL_CONSTRAINT_NAME, do_mcmc=do_mcmc, with_pending=with_pending
+    )
     active_models_infeasible = default_models_all_infeasible(
-        INTERNAL_METRIC_NAME, do_mcmc=do_mcmc, with_pending=with_pending)
+        INTERNAL_METRIC_NAME, do_mcmc=do_mcmc, with_pending=with_pending
+    )
     constraint_models_infeasible = default_models_all_infeasible(
-        INTERNAL_CONSTRAINT_NAME, do_mcmc=do_mcmc, with_pending=with_pending)
+        INTERNAL_CONSTRAINT_NAME, do_mcmc=do_mcmc, with_pending=with_pending
+    )
 
     all_active_models = active_models + active_models_infeasible
     all_constraint_models = constraint_models + constraint_models_infeasible
     return all_active_models, all_constraint_models
 
 
-def default_models_all_infeasible(metric, do_mcmc=True, with_pending=False) -> List[GaussProcSurrogateModel]:
-    config_space = {
-        'x': uniform(0.0, 1.0),
-        'y': uniform(0.0, 1.0)}
+def default_models_all_infeasible(
+    metric, do_mcmc=True, with_pending=False
+) -> List[GaussProcSurrogateModel]:
+    config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [
         (0.5, 0.0),
@@ -104,9 +129,13 @@ def default_models_all_infeasible(metric, do_mcmc=True, with_pending=False) -> L
 
     # Continuous constraint, such as memory requirement: the larger x[0] the larger the memory footprint, and
     # There are no feasible points.
-    Y = [{INTERNAL_METRIC_NAME: np.sum(x) * 10.0,
-          INTERNAL_CONSTRAINT_NAME: x[0] * 2.0 + 0.01}
-         for x in X]
+    Y = [
+        {
+            INTERNAL_METRIC_NAME: np.sum(x) * 10.0,
+            INTERNAL_CONSTRAINT_NAME: x[0] * 2.0 + 0.01,
+        }
+        for x in X
+    ]
     result = _construct_models(X, Y, metric, hp_ranges, do_mcmc, with_pending)
     return result
 
@@ -119,14 +148,14 @@ def plot_ei_mean_std(model, cei, max_grid=1.0):
     inputs = np.hstack([Xgrid.reshape(-1, 1), Ygrid.reshape(-1, 1)])
     Z_ei = cei.compute_acq(inputs)[0]
     predictions = model.predict(inputs)[0]
-    Z_means = predictions['mean']
-    Z_std = predictions['std']
-    titles = ['CEI', 'mean', 'std']
+    Z_means = predictions["mean"]
+    Z_std = predictions["std"]
+    titles = ["CEI", "mean", "std"]
     for i, (Z, title) in enumerate(zip([Z_ei, Z_means, Z_std], titles)):
         plt.subplot(1, 3, i + 1)
         plt.imshow(
-            Z.reshape(Xgrid.shape), extent=[0, max_grid, 0, max_grid],
-            origin='lower')
+            Z.reshape(Xgrid.shape), extent=[0, max_grid, 0, max_grid], origin="lower"
+        )
         plt.colorbar()
         plt.title(title)
     plt.show()
@@ -142,23 +171,32 @@ def test_sanity_check():
     # - test that this holds both with and without pending candidates/fantasizing
 
     for with_pending in [False, True]:
-        active_models = default_models(INTERNAL_METRIC_NAME, do_mcmc=False, with_pending=with_pending)
-        constraint_models = default_models(INTERNAL_CONSTRAINT_NAME, do_mcmc=False, with_pending=with_pending)
+        active_models = default_models(
+            INTERNAL_METRIC_NAME, do_mcmc=False, with_pending=with_pending
+        )
+        constraint_models = default_models(
+            INTERNAL_CONSTRAINT_NAME, do_mcmc=False, with_pending=with_pending
+        )
         for active_model, constraint_model in zip(active_models, constraint_models):
-            models = {INTERNAL_METRIC_NAME: active_model, INTERNAL_CONSTRAINT_NAME: constraint_model}
+            models = {
+                INTERNAL_METRIC_NAME: active_model,
+                INTERNAL_CONSTRAINT_NAME: constraint_model,
+            }
             cei = CEIAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
-            X = np.array([
-                (0.0, 0.0),  # 0
-                (1.0, 0.0),  # 1
-                (0.0, 1.0),  # 2
-                (1.0, 1.0),  # 3
-                (0.4, 0.0),  # 4
-                (0.0, 0.4),  # 5
-                (0.1, 0.0),  # 6
-                (0.0, 0.1),  # 7
-                (0.1, 0.1),  # 8
-                (0.9, 0.9),  # 9
-            ])
+            X = np.array(
+                [
+                    (0.0, 0.0),  # 0
+                    (1.0, 0.0),  # 1
+                    (0.0, 1.0),  # 2
+                    (1.0, 1.0),  # 3
+                    (0.4, 0.0),  # 4
+                    (0.0, 0.4),  # 5
+                    (0.1, 0.0),  # 6
+                    (0.0, 0.1),  # 7
+                    (0.1, 0.1),  # 8
+                    (0.9, 0.9),  # 9
+                ]
+            )
             acq = list(cei.compute_acq(X).flatten())
             assert all(a <= 0 for a in acq), acq
 
@@ -186,22 +224,29 @@ def test_no_feasible_candidates():
 
     for with_pending in [False, True]:
         active_models = default_models_all_infeasible(
-            INTERNAL_METRIC_NAME, do_mcmc=False, with_pending=with_pending)
+            INTERNAL_METRIC_NAME, do_mcmc=False, with_pending=with_pending
+        )
         constraint_models = default_models_all_infeasible(
-            INTERNAL_CONSTRAINT_NAME, do_mcmc=False, with_pending=with_pending)
+            INTERNAL_CONSTRAINT_NAME, do_mcmc=False, with_pending=with_pending
+        )
         for active_model, constraint_model in zip(active_models, constraint_models):
-            models = {INTERNAL_METRIC_NAME: active_model, INTERNAL_CONSTRAINT_NAME: constraint_model}
+            models = {
+                INTERNAL_METRIC_NAME: active_model,
+                INTERNAL_CONSTRAINT_NAME: constraint_model,
+            }
             cei = CEIAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
-            X = np.array([
-                (1.0, 1.0),  # 0
-                (1.0, 0.0),  # 1
-                (0.5, 0.0),  # 2
-                (0.4, 0.0),  # 3
-                (0.3, 0.0),  # 4
-                (0.2, 0.0),  # 5
-                (0.1, 0.0),  # 6
-                (.05, 0.0),  # 7
-            ])
+            X = np.array(
+                [
+                    (1.0, 1.0),  # 0
+                    (1.0, 0.0),  # 1
+                    (0.5, 0.0),  # 2
+                    (0.4, 0.0),  # 3
+                    (0.3, 0.0),  # 4
+                    (0.2, 0.0),  # 5
+                    (0.1, 0.0),  # 6
+                    (0.05, 0.0),  # 7
+                ]
+            )
             acq = list(cei.compute_acq(X).flatten())
 
             # the acquisition function should return only non-positive values
@@ -221,7 +266,10 @@ def test_best_value():
     active_models = default_models(INTERNAL_METRIC_NAME)
     constraint_models = default_models(INTERNAL_CONSTRAINT_NAME)
     for active_model, constraint_model in zip(active_models, constraint_models):
-        models = {INTERNAL_METRIC_NAME: active_model, INTERNAL_CONSTRAINT_NAME: constraint_model}
+        models = {
+            INTERNAL_METRIC_NAME: active_model,
+            INTERNAL_CONSTRAINT_NAME: constraint_model,
+        }
         cei = CEIAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
 
         random = np.random.RandomState(42)
@@ -253,26 +301,28 @@ def test_optimization_improves():
     active_models = default_models(INTERNAL_METRIC_NAME)
     constraint_models = default_models(INTERNAL_CONSTRAINT_NAME)
     for active_model, constraint_model in zip(active_models, constraint_models):
-        models = {INTERNAL_METRIC_NAME: active_model, INTERNAL_CONSTRAINT_NAME: constraint_model}
+        models = {
+            INTERNAL_METRIC_NAME: active_model,
+            INTERNAL_CONSTRAINT_NAME: constraint_model,
+        }
         cei = CEIAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
         hp_ranges = active_model.hp_ranges_for_prediction()
         opt = LBFGSOptimizeAcquisition(
-            hp_ranges, models, CEIAcquisitionFunction, INTERNAL_METRIC_NAME)
+            hp_ranges, models, CEIAcquisitionFunction, INTERNAL_METRIC_NAME
+        )
         non_zero_acq_at_least_once = False
         initial_point = random.uniform(low=0.0, high=0.1, size=(2,))
         acq0, df0 = cei.compute_acq_with_gradient(initial_point)
         if debug_output:
-            print('\nInitial point: f(x0) = {}, x0 = {}'.format(
-                acq0, initial_point))
-            print('grad0 = {}'.format(df0))
+            print("\nInitial point: f(x0) = {}, x0 = {}".format(acq0, initial_point))
+            print("grad0 = {}".format(df0))
         if acq0 != 0:
             non_zero_acq_at_least_once = True
             init_cand = hp_ranges.from_ndarray(initial_point)
             optimized = hp_ranges.to_ndarray(opt.optimize(init_cand))
             acq_opt = cei.compute_acq(optimized)[0]
             if debug_output:
-                print('Final point: f(x1) = {}, x1 = {}'.format(
-                    acq_opt, optimized))
+                print("Final point: f(x1) = {}, x1 = {}".format(acq_opt, optimized))
             assert acq_opt < 0
             assert acq_opt < acq0
 
@@ -288,11 +338,18 @@ def test_numerical_gradient():
     eps = 1e-6
 
     for with_pending in [True, False]:
-        all_active_models, all_constraint_models = \
-            _build_models_with_and_without_feasible_candidates(do_mcmc, with_pending)
+        (
+            all_active_models,
+            all_constraint_models,
+        ) = _build_models_with_and_without_feasible_candidates(do_mcmc, with_pending)
 
-        for active_model, constraint_model in zip(all_active_models, all_constraint_models):
-            models = {INTERNAL_METRIC_NAME: active_model, INTERNAL_CONSTRAINT_NAME: constraint_model}
+        for active_model, constraint_model in zip(
+            all_active_models, all_constraint_models
+        ):
+            models = {
+                INTERNAL_METRIC_NAME: active_model,
+                INTERNAL_CONSTRAINT_NAME: constraint_model,
+            }
             cei = CEIAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
 
             high = 1.0
@@ -300,22 +357,30 @@ def test_numerical_gradient():
             f0, analytical_gradient = cei.compute_acq_with_gradient(x)
             analytical_gradient = analytical_gradient.flatten()
             if debug_output:
-                print('x0 = {}, f(x_0) = {}, grad(x_0) = {}'.format(
-                    x, f0, analytical_gradient))
+                print(
+                    "x0 = {}, f(x_0) = {}, grad(x_0) = {}".format(
+                        x, f0, analytical_gradient
+                    )
+                )
 
             for i in range(2):
                 h = np.zeros_like(x)
                 h[i] = eps
-                fpeps = cei.compute_acq(x+h)[0]
-                fmeps = cei.compute_acq(x-h)[0]
+                fpeps = cei.compute_acq(x + h)[0]
+                fmeps = cei.compute_acq(x - h)[0]
                 numerical_derivative = (fpeps - fmeps) / (2 * eps)
                 if debug_output:
-                    print('f(x0+eps) = {}, f(x0-eps) = {}, findiff = {}, deriv = {}'.format(
-                        fpeps[0], fmeps[0], numerical_derivative[0],
-                        analytical_gradient[i]))
+                    print(
+                        "f(x0+eps) = {}, f(x0-eps) = {}, findiff = {}, deriv = {}".format(
+                            fpeps[0],
+                            fmeps[0],
+                            numerical_derivative[0],
+                            analytical_gradient[i],
+                        )
+                    )
                 np.testing.assert_almost_equal(
-                    numerical_derivative.item(), analytical_gradient[i],
-                    decimal=2)
+                    numerical_derivative.item(), analytical_gradient[i], decimal=2
+                )
 
 
 def test_value_same_as_with_gradient():
@@ -323,10 +388,17 @@ def test_value_same_as_with_gradient():
     # both when the feasible best exists and when it does not
     do_mcmc = False
     for with_pending in [True, False]:
-        all_active_models, all_constraint_models = \
-            _build_models_with_and_without_feasible_candidates(do_mcmc, with_pending)
-        for active_model, constraint_model in zip(all_active_models, all_constraint_models):
-            models = {INTERNAL_METRIC_NAME: active_model, INTERNAL_CONSTRAINT_NAME: constraint_model}
+        (
+            all_active_models,
+            all_constraint_models,
+        ) = _build_models_with_and_without_feasible_candidates(do_mcmc, with_pending)
+        for active_model, constraint_model in zip(
+            all_active_models, all_constraint_models
+        ):
+            models = {
+                INTERNAL_METRIC_NAME: active_model,
+                INTERNAL_CONSTRAINT_NAME: constraint_model,
+            }
             cei = CEIAcquisitionFunction(models, active_metric=INTERNAL_METRIC_NAME)
 
             random = np.random.RandomState(42)

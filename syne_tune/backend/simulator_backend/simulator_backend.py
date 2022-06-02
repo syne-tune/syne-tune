@@ -24,18 +24,22 @@ import subprocess
 from syne_tune.report import retrieve
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.trial_status import TrialResult, Status, Trial
-from syne_tune.backend.simulator_backend.time_keeper import \
-    SimulatedTimeKeeper
-from syne_tune.backend.simulator_backend.events import SimulatorState, \
-    StartEvent, CompleteEvent, StopEvent, OnTrialResultEvent
-from syne_tune.constants import ST_CHECKPOINT_DIR, ST_WORKER_TIMESTAMP, \
-    ST_TUNER_TIME
+from syne_tune.backend.simulator_backend.time_keeper import SimulatedTimeKeeper
+from syne_tune.backend.simulator_backend.events import (
+    SimulatorState,
+    StartEvent,
+    CompleteEvent,
+    StopEvent,
+    OnTrialResultEvent,
+)
+from syne_tune.constants import ST_CHECKPOINT_DIR, ST_WORKER_TIMESTAMP, ST_TUNER_TIME
 from syne_tune.tuner import DEFAULT_SLEEP_TIME
 
 logger = logging.getLogger(__name__)
 
 
 DEFAULT_DELAY = 0.05
+
 
 @dataclass
 class SimulatorConfig:
@@ -57,6 +61,7 @@ class SimulatorConfig:
         Time from stop signal being sent at back-end to signal received at
         worker (which is running)
     """
+
     delay_on_trial_result: float = DEFAULT_DELAY
     delay_complete_after_final_report: float = DEFAULT_DELAY
     delay_complete_after_stop: float = DEFAULT_DELAY
@@ -75,12 +80,12 @@ class SimulatorConfig:
 
 class SimulatorBackend(LocalBackend):
     def __init__(
-            self,
-            entry_point: str,
-            elapsed_time_attr: str,
-            simulator_config: Optional[SimulatorConfig] = None,
-            tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
-            debug_resource_attr: Optional[str] = None,
+        self,
+        entry_point: str,
+        elapsed_time_attr: str,
+        simulator_config: Optional[SimulatorConfig] = None,
+        tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
+        debug_resource_attr: Optional[str] = None,
     ):
         """
         This simulator back-end drives experiments with tabulated training
@@ -120,8 +125,7 @@ class SimulatorBackend(LocalBackend):
             information is needed in `SimulatorCallback`
 
         """
-        super().__init__(
-            entry_point=entry_point, rotate_gpus=False)
+        super().__init__(entry_point=entry_point, rotate_gpus=False)
         self.elapsed_time_attr = elapsed_time_attr
         if simulator_config is None:
             self.simulator_config = SimulatorConfig()
@@ -141,21 +145,25 @@ class SimulatorBackend(LocalBackend):
 
     @staticmethod
     def _debug_message(
-            event_name: str, time: float, trial_id: int, pushed: bool = False,
-            **kwargs):
+        event_name: str, time: float, trial_id: int, pushed: bool = False, **kwargs
+    ):
         msg_part = "push " if pushed else ""
         msg = f"[{msg_part}{event_name}:"
         parts = [f"time = {time:.2f}", f"trial_id = {trial_id}"] + [
-            f"{k} = {v}" for k, v in kwargs.items()]
-        msg += ', '.join(parts) + ']'
+            f"{k} = {v}" for k, v in kwargs.items()
+        ]
+        msg += ", ".join(parts) + "]"
         logger.debug(msg)
 
-    def start_trial(self, config: Dict,
-                    checkpoint_trial_id: Optional[int] = None) -> Trial:
+    def start_trial(
+        self, config: Dict, checkpoint_trial_id: Optional[int] = None
+    ) -> Trial:
         # Overwritten to record the correct `creation_time`
         trial_id = self.new_trial_id()
         if checkpoint_trial_id is not None:
-            self.copy_checkpoint(src_trial_id=checkpoint_trial_id, tgt_trial_id=trial_id)
+            self.copy_checkpoint(
+                src_trial_id=checkpoint_trial_id, tgt_trial_id=trial_id
+            )
         self.trial_ids.append(trial_id)
         self._schedule(trial_id=trial_id, config=config)
         now = self._time_keeper.time_stamp()
@@ -179,17 +187,18 @@ class SimulatorBackend(LocalBackend):
             time_event, event = next_event
             trial_id = event.trial_id
             if isinstance(event, StartEvent):
-                self._debug_message('StartEvent', time=time_event, trial_id=trial_id)
+                self._debug_message("StartEvent", time=time_event, trial_id=trial_id)
                 # Run training script and push event for each result
-                self._process_start_event(
-                    trial_id=trial_id, time_event=time_event)
+                self._process_start_event(trial_id=trial_id, time_event=time_event)
             elif isinstance(event, CompleteEvent):
                 trial_result = self._trial_dict[trial_id]
                 status = event.status
-                self._debug_message('CompleteEvent', time=time_event,
-                                    trial_id=trial_id, status=status)
-                training_end_time = self._time_keeper.start_time_stamp + \
-                                    timedelta(seconds=time_event)
+                self._debug_message(
+                    "CompleteEvent", time=time_event, trial_id=trial_id, status=status
+                )
+                training_end_time = self._time_keeper.start_time_stamp + timedelta(
+                    seconds=time_event
+                )
                 if isinstance(trial_result, TrialResult):
                     trial_result.status = status
                     trial_result.training_end_time = training_end_time
@@ -197,11 +206,10 @@ class SimulatorBackend(LocalBackend):
                     # No results reported for the trial. This can happen if
                     # the trial failed
                     self._trial_dict[trial_id] = trial_result.add_results(
-                        metrics=[], status=status,
-                        training_end_time=training_end_time)
+                        metrics=[], status=status, training_end_time=training_end_time
+                    )
             elif isinstance(event, StopEvent):
-                self._debug_message('StopEvent', time=time_event,
-                                    trial_id=trial_id)
+                self._debug_message("StopEvent", time=time_event, trial_id=trial_id)
                 # Remove all remaining events for `trial_id`. This includes
                 # the `CompleteEvent` pushed with `StartEvent`, so there can
                 # be no confusion with the 2nd `CompleteEvent` pushed by
@@ -209,9 +217,13 @@ class SimulatorBackend(LocalBackend):
                 self._simulator_state.remove_events(trial_id)
             elif isinstance(event, OnTrialResultEvent):
                 result = copy.copy(event.result)
-                epoch = result.get('epoch')  # DEBUG
-                self._debug_message('OnTrialResultEvent', time=time_event,
-                                    trial_id=trial_id, epoch=epoch)
+                epoch = result.get("epoch")  # DEBUG
+                self._debug_message(
+                    "OnTrialResultEvent",
+                    time=time_event,
+                    trial_id=trial_id,
+                    epoch=epoch,
+                )
                 # Append timestamps to `result`. This is done here, but not in
                 # the other back-ends, for which timestamps are only added when
                 # results are written out.
@@ -225,8 +237,10 @@ class SimulatorBackend(LocalBackend):
                     trial_result.metrics.append(result)
                 else:
                     self._trial_dict[trial_id] = trial_result.add_results(
-                        metrics=[result], status=Status.in_progress,
-                        training_end_time=None)
+                        metrics=[result],
+                        status=Status.in_progress,
+                        training_end_time=None,
+                    )
                 # Counts the total number of results obtained for a trial_id,
                 # even if resumed multiple times
                 self._last_metric_seen_index[trial_id] += 1
@@ -235,48 +249,52 @@ class SimulatorBackend(LocalBackend):
             next_event = self._simulator_state.next_until(time_now)
 
     def _process_start_event(
-            self, trial_id: int, time_event: float,
-            config: Optional[dict] = None):
+        self, trial_id: int, time_event: float, config: Optional[dict] = None
+    ):
         # Run training script and record results
-        status, results = self._run_job_and_collect_results(
-            trial_id, config=config)
+        status, results = self._run_job_and_collect_results(trial_id, config=config)
         time_final_result = time_event
         deb_it = 0  # DEBUG
         for i, result in enumerate(results):
             elapsed_time = result.get(self.elapsed_time_attr)
-            assert elapsed_time is not None, \
-                f"Result for trial_id = {trial_id} does not contain " + \
-                f"{self.elapsed_time_attr} entry. Your code needs " + \
-                "to report elapsed time, and the attribute name " + \
-                "must be set as elapsed_time_attr here."
+            assert elapsed_time is not None, (
+                f"Result for trial_id = {trial_id} does not contain "
+                + f"{self.elapsed_time_attr} entry. Your code needs "
+                + "to report elapsed time, and the attribute name "
+                + "must be set as elapsed_time_attr here."
+            )
             _time_result = time_event + float(elapsed_time)
-            time_result = _time_result + \
-                          self.simulator_config.delay_on_trial_result
+            time_result = _time_result + self.simulator_config.delay_on_trial_result
             self._simulator_state.push(
                 OnTrialResultEvent(trial_id=trial_id, result=result),
-                event_time=time_result)
+                event_time=time_result,
+            )
             time_final_result = max(time_final_result, _time_result)
             # DEBUG:
             if deb_it < 10:
-               self._debug_message(
-                   'OnTrialResultEvent', time=time_result,
-                   trial_id=trial_id, pushed=True)
-               deb_it += 1
-        time_complete = \
-            time_final_result + \
-            self.simulator_config.delay_complete_after_final_report
+                self._debug_message(
+                    "OnTrialResultEvent",
+                    time=time_result,
+                    trial_id=trial_id,
+                    pushed=True,
+                )
+                deb_it += 1
+        time_complete = (
+            time_final_result + self.simulator_config.delay_complete_after_final_report
+        )
         self._simulator_state.push(
-            CompleteEvent(trial_id=trial_id, status=status),
-            event_time=time_complete)
-        self._debug_message('CompleteEvent', time=time_complete,
-                            trial_id=trial_id, pushed=True)
+            CompleteEvent(trial_id=trial_id, status=status), event_time=time_complete
+        )
+        self._debug_message(
+            "CompleteEvent", time=time_complete, trial_id=trial_id, pushed=True
+        )
 
     def _advance_by_outside_time(self):
-        self._time_keeper.advance(
-            self._time_keeper.real_time_since_last_recent_exit())
+        self._time_keeper.advance(self._time_keeper.real_time_since_last_recent_exit())
 
-    def fetch_status_results(self, trial_ids: List[int]) -> \
-            Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, Dict]]]:
+    def fetch_status_results(
+        self, trial_ids: List[int]
+    ) -> Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, Dict]]]:
         self._advance_by_outside_time()
         # Process all events in the past
         self._process_events_until_now()
@@ -290,19 +308,21 @@ class SimulatorBackend(LocalBackend):
                 del self._next_results_to_fetch[trial_id]
         if self._next_results_to_fetch:
             warn_msg = [
-                'The following trials reported results, but are not covered '
-                'by trial_ids. These results will be ignored:']
+                "The following trials reported results, but are not covered "
+                "by trial_ids. These results will be ignored:"
+            ]
             for trial_id, result_list in self._next_results_to_fetch.items():
                 status = self._trial_dict[trial_id].status
                 msg_line = f"  trial_id {trial_id}: status = {status}, "
                 if self._debug_resource_attr is None:
                     msg_line += f"num_results = {len(result_list)}"
                 else:
-                    resources = [result[self._debug_resource_attr]
-                                 for result in result_list]
+                    resources = [
+                        result[self._debug_resource_attr] for result in result_list
+                    ]
                     msg_line += f"resources = {resources}"
                 warn_msg.append(msg_line)
-            logger.warning('\n'.join(warn_msg))
+            logger.warning("\n".join(warn_msg))
             self._next_results_to_fetch = dict()
 
         if len(results) > 0 and ST_WORKER_TIMESTAMP in results[0]:
@@ -311,8 +331,11 @@ class SimulatorBackend(LocalBackend):
         trial_status_dict = dict()
         for trial_id in trial_ids:
             trial_result = self._trial_dict[trial_id]
-            status = trial_result.status if isinstance(
-                trial_result, TrialResult) else Status.in_progress
+            status = (
+                trial_result.status
+                if isinstance(trial_result, TrialResult)
+                else Status.in_progress
+            )
             trial = Trial(
                 trial_id=trial_result.trial_id,
                 config=trial_result.config,
@@ -337,10 +360,10 @@ class SimulatorBackend(LocalBackend):
         self._process_events_until_now()
         _time_start = self._time_keeper.time()
         time_start = _time_start + self.simulator_config.delay_start
-        self._simulator_state.push(
-            StartEvent(trial_id=trial_id), event_time=time_start)
-        self._debug_message('StartEvent', time=time_start, trial_id=trial_id,
-                            pushed=True)
+        self._simulator_state.push(StartEvent(trial_id=trial_id), event_time=time_start)
+        self._debug_message(
+            "StartEvent", time=time_start, trial_id=trial_id, pushed=True
+        )
         logger.debug(f"Simulated time since start: {_time_start:.2f} secs")
         self._time_keeper.mark_exit()
 
@@ -378,31 +401,31 @@ class SimulatorBackend(LocalBackend):
         """
         self._advance_by_outside_time()
         time_stop = self._time_keeper.time() + self.simulator_config.delay_stop
-        self._simulator_state.push(
-            StopEvent(trial_id=trial_id), event_time=time_stop)
-        self._debug_message('StopEvent', time=time_stop, trial_id=trial_id,
-                            pushed=True)
+        self._simulator_state.push(StopEvent(trial_id=trial_id), event_time=time_stop)
+        self._debug_message("StopEvent", time=time_stop, trial_id=trial_id, pushed=True)
         # Note: We need to call `_process_events_until_now` twice. If we first
         # pushed the final `CompleteEvent`, it would be removed by the
         # `StopEvent`.
         self._time_keeper.advance_to(time_stop + 1e-3)
         # Process events up to and including `StopEvent`
         self._process_events_until_now()
-        time_complete = self._time_keeper.time() + \
-                        self.simulator_config.delay_complete_after_stop
+        time_complete = (
+            self._time_keeper.time() + self.simulator_config.delay_complete_after_stop
+        )
         self._simulator_state.push(
-            CompleteEvent(trial_id=trial_id, status=status),
-            event_time=time_complete)
-        self._debug_message('CompleteEvent', time=time_complete, trial_id=trial_id,
-                            pushed=True)
+            CompleteEvent(trial_id=trial_id, status=status), event_time=time_complete
+        )
+        self._debug_message(
+            "CompleteEvent", time=time_complete, trial_id=trial_id, pushed=True
+        )
         # Process final `CompleteEvent`
         self._time_keeper.advance_to(time_complete + 1e-3)
         self._process_events_until_now()
         self._time_keeper.mark_exit()
 
     def _run_job_and_collect_results(
-            self, trial_id: int,
-            config: Optional[dict] = None) -> (str, List[dict]):
+        self, trial_id: int, config: Optional[dict] = None
+    ) -> (str, List[dict]):
         """
         Runs training evaluation script for trial `trial_id`, using the config
         `trial(trial_id).config`. This is a blocking call, we wait for the
@@ -411,8 +434,9 @@ class SimulatorBackend(LocalBackend):
         :param trial_id:
         :return: (final status, list of all results reported)
         """
-        assert trial_id in self._trial_dict, \
-            f"Trial with trial_id = {trial_id} not registered with back-end"
+        assert (
+            trial_id in self._trial_dict
+        ), f"Trial with trial_id = {trial_id} not registered with back-end"
         if config is None:
             config = self._trial_dict[trial_id].config
 
@@ -421,7 +445,9 @@ class SimulatorBackend(LocalBackend):
         os.makedirs(trial_path, exist_ok=True)
         config_copy = config.copy()
         config_copy[ST_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
-        config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
+        config_str = " ".join(
+            [f"--{key} {value}" for key, value in config_copy.items()]
+        )
 
         def np_encoder(obj):
             if isinstance(obj, np.generic):
@@ -433,13 +459,11 @@ class SimulatorBackend(LocalBackend):
         cmd = f"python {self.entry_point} {config_str}"
         env = dict(os.environ)
         logging.info(f"running script with command: {cmd}")
-        with open(trial_path / "std.out", 'a') as stdout:
-            with open(trial_path / "std.err", 'a') as stderr:
+        with open(trial_path / "std.out", "a") as stdout:
+            with open(trial_path / "std.err", "a") as stderr:
                 return_status = subprocess.run(
-                    cmd.split(" "),
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=env)
+                    cmd.split(" "), stdout=stdout, stderr=stderr, env=env
+                )
         if return_status.returncode == 0:
             status = Status.completed
         else:
@@ -450,9 +474,10 @@ class SimulatorBackend(LocalBackend):
         # received before (in case the trial is resumed at least once).
         all_results = retrieve(log_lines=self.stdout(trial_id=trial_id))
         num_already_before = self._last_metric_seen_index[trial_id]
-        assert num_already_before <= len(all_results), \
-            f"Found {len(all_results)} total results, but have already " +\
-            f"processed {num_already_before} before!"
+        assert num_already_before <= len(all_results), (
+            f"Found {len(all_results)} total results, but have already "
+            + f"processed {num_already_before} before!"
+        )
         results = all_results[num_already_before:]
 
         return status, results

@@ -4,14 +4,21 @@ from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 from benchmarking.nursery.benchmark_automl.baselines import Methods
 
-from benchmarking.nursery.benchmark_automl.results_analysis.utils import method_styles, load_and_cache, plot_results, \
-    print_rank_table
+from benchmarking.nursery.benchmark_automl.results_analysis.utils import (
+    method_styles,
+    load_and_cache,
+    plot_results,
+    print_rank_table,
+)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
-        "--experiment_tag", type=str, required=False, default="purple-akita",
-        help="the experiment tag that was displayed when running the experiment"
+        "--experiment_tag",
+        type=str,
+        required=False,
+        default="purple-akita",
+        help="the experiment tag that was displayed when running the experiment",
     )
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
@@ -22,7 +29,9 @@ if __name__ == '__main__':
     # benchmarks_to_df = {bench: df[] for bench, df in benchmarks_to_df.items()}
     methods_to_show = list(method_styles.keys())
     benchmarks_to_df = load_and_cache(
-        load_cache_if_exists=load_cache_if_exists, experiment_tag=experiment_tag, methods_to_show=methods_to_show
+        load_cache_if_exists=load_cache_if_exists,
+        experiment_tag=experiment_tag,
+        methods_to_show=methods_to_show,
     )
 
     for bench, df_ in benchmarks_to_df.items():
@@ -31,7 +40,7 @@ if __name__ == '__main__':
             if x not in df_methods:
                 logging.warning(f"method {x} not found in {bench}")
 
-    for benchmark in ['fcnet', 'nas201']:
+    for benchmark in ["fcnet", "nas201"]:
         n = 0
         for key, df in benchmarks_to_df.items():
             if benchmark in key:
@@ -51,14 +60,16 @@ if __name__ == '__main__':
         Methods.RUSH,
         Methods.ASHA_BB,
         Methods.ZERO_SHOT,
-        Methods.ASHA_CTS
+        Methods.ASHA_CTS,
     ]
     print_rank_table(benchmarks_to_df, methods_to_show)
 
-    params = {'legend.fontsize': 18,
-              'axes.labelsize': 22,
-              'xtick.labelsize': 18,
-              'ytick.labelsize': 18}
+    params = {
+        "legend.fontsize": 18,
+        "axes.labelsize": 22,
+        "xtick.labelsize": 18,
+        "ytick.labelsize": 18,
+    }
     plt.rcParams.update(params)
 
     plot_results(benchmarks_to_df, method_styles, methods_to_show=methods_to_show)

@@ -7,11 +7,11 @@ from argparse import ArgumentParser
 from syne_tune import Reporter
 from ray.rllib.agents.ppo import PPOTrainer
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--max_training_steps', type=int, default=100)
-    parser.add_argument('--lr', type=float, default=5e-5)
-    parser.add_argument('--gamma', type=float, default=0.99)
+    parser.add_argument("--max_training_steps", type=int, default=100)
+    parser.add_argument("--lr", type=float, default=5e-5)
+    parser.add_argument("--gamma", type=float, default=0.99)
     args, _ = parser.parse_known_args()
 
     # Configure the algorithm.
@@ -36,6 +36,6 @@ if __name__ == '__main__':
     for i in range(args.max_training_steps):
         results = trainer.train()
         reporter(
-            training_iter=i+1,
-            episode_reward_mean=results['episode_reward_mean'],
+            training_iter=i + 1,
+            episode_reward_mean=results["episode_reward_mean"],
         )

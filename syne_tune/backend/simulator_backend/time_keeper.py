@@ -27,6 +27,7 @@ class SimulatedTimeKeeper(TimeKeeper):
     start, advancing the time counter accordingly.
 
     """
+
     def __init__(self):
         self._current_time = None
         self._start_time_stamp = None
@@ -49,8 +50,9 @@ class SimulatedTimeKeeper(TimeKeeper):
         self.mark_exit()
 
     def _assert_has_started(self):
-        assert self._current_time is not None, \
-            "RealTimeKeeper needs to be started, by calling start_of_time"
+        assert (
+            self._current_time is not None
+        ), "RealTimeKeeper needs to be started, by calling start_of_time"
 
     def time(self) -> float:
         self._assert_has_started()

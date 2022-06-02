@@ -19,56 +19,61 @@ import logging
 import time
 
 from syne_tune import Reporter
-from syne_tune.config_space import randint, uniform, loguniform, \
-    add_to_argparse
-from benchmarking.utils import resume_from_checkpointed_model, \
-    checkpoint_model_at_rung_level, add_checkpointing_to_argparse, \
-    pytorch_load_save_functions, parse_bool
+from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
+from benchmarking.utils import (
+    resume_from_checkpointed_model,
+    checkpoint_model_at_rung_level,
+    add_checkpointing_to_argparse,
+    pytorch_load_save_functions,
+    parse_bool,
+)
 
 
-NUM_UNITS_1 = 'n_units_1'
+NUM_UNITS_1 = "n_units_1"
 
-NUM_UNITS_2 = 'n_units_2'
+NUM_UNITS_2 = "n_units_2"
 
-METRIC_NAME = 'accuracy'
+METRIC_NAME = "accuracy"
 
-RESOURCE_ATTR = 'epoch'
+RESOURCE_ATTR = "epoch"
 
-ELAPSED_TIME_ATTR = 'elapsed_time'
+ELAPSED_TIME_ATTR = "elapsed_time"
 
 
 _config_space = {
     NUM_UNITS_1: randint(4, 1024),
     NUM_UNITS_2: randint(4, 1024),
-    'batch_size': randint(8, 128),
-    'dropout_1': uniform(0, 0.99),
-    'dropout_2': uniform(0, 0.99),
-    'learning_rate': loguniform(1e-6, 1),
-    'weight_decay': loguniform(1e-8, 1)
+    "batch_size": randint(8, 128),
+    "dropout_1": uniform(0, 0.99),
+    "dropout_2": uniform(0, 0.99),
+    "learning_rate": loguniform(1e-6, 1),
+    "weight_decay": loguniform(1e-8, 1),
 }
 
 
 # Boilerplate for objective
 
+
 def download_data(config):
-    path = os.path.join(config['dataset_path'], 'FashionMNIST')
+    path = os.path.join(config["dataset_path"], "FashionMNIST")
     os.makedirs(path, exist_ok=True)
     # Lock protection is needed for backends which run multiple worker
     # processes on the same instance
-    lock_path = os.path.join(path, 'lock')
+    lock_path = os.path.join(path, "lock")
     lock = SoftFileLock(lock_path)
     try:
         with lock.acquire(timeout=120, poll_intervall=1):
             data_train = datasets.FashionMNIST(
-                root=path, train=True, download=True,
-                transform=transforms.ToTensor())
+                root=path, train=True, download=True, transform=transforms.ToTensor()
+            )
     except Timeout:
         print(
             "WARNING: Could not obtain lock for dataset files. Trying anyway...",
-            flush=True)
+            flush=True,
+        )
         data_train = datasets.FashionMNIST(
-            root=path, train=True, download=True,
-            transform=transforms.ToTensor())
+            root=path, train=True, download=True, transform=transforms.ToTensor()
+        )
     return data_train
 
 
@@ -80,11 +85,11 @@ def split_data(config, data_train):
     valid_sampler = SubsetRandomSampler(valid_idx)
     batch_size = config["batch_size"]
     train_loader = torch.utils.data.DataLoader(
-        data_train, batch_size=batch_size, sampler=train_sampler,
-        drop_last=True)
+        data_train, batch_size=batch_size, sampler=train_sampler, drop_last=True
+    )
     valid_loader = torch.utils.data.DataLoader(
-        data_train, batch_size=batch_size, sampler=valid_sampler,
-        drop_last=True)
+        data_train, batch_size=batch_size, sampler=valid_sampler, drop_last=True
+    )
     return train_loader, valid_loader
 
 
@@ -103,22 +108,21 @@ def model_and_optimizer(config):
         nn.Linear(n_units_1, n_units_2),
         nn.Dropout(p=dropout_2),
         nn.ReLU(),
-        nn.Linear(n_units_2, 10)]
+        nn.Linear(n_units_2, 10),
+    ]
     model = nn.Sequential(*comp_list)
     optimizer = torch.optim.Adam(
-        model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+        model.parameters(), lr=learning_rate, weight_decay=weight_decay
+    )
     criterion = nn.CrossEntropyLoss()
-    return {
-        'model': model,
-        'optimizer': optimizer,
-        'criterion': criterion}
+    return {"model": model, "optimizer": optimizer, "criterion": criterion}
 
 
 def train_model(config, state, train_loader):
-    model = state['model']
-    optimizer = state['optimizer']
-    criterion = state['criterion']
-    batch_size = config['batch_size']
+    model = state["model"]
+    optimizer = state["optimizer"]
+    criterion = state["criterion"]
+    batch_size = config["batch_size"]
     model.train()
     for data, target in train_loader:
         optimizer.zero_grad()
@@ -129,8 +133,8 @@ def train_model(config, state, train_loader):
 
 
 def validate_model(config, state, valid_loader):
-    batch_size = config['batch_size']
-    model = state['model']
+    batch_size = config["batch_size"]
+    model = state["model"]
     model.eval()
     correct = 0
     total = 0
@@ -143,7 +147,7 @@ def validate_model(config, state, valid_loader):
 
 
 def objective(config):
-    report_current_best = parse_bool(config['report_current_best'])
+    report_current_best = parse_bool(config["report_current_best"])
 
     data_train = download_data(config)
 
@@ -158,12 +162,13 @@ def objective(config):
 
     # Checkpointing
     load_model_fn, save_model_fn = pytorch_load_save_functions(
-        {'model': state['model'], 'optimizer': state['optimizer']})
+        {"model": state["model"], "optimizer": state["optimizer"]}
+    )
     # Resume from checkpoint (optional)
     resume_from = resume_from_checkpointed_model(config, load_model_fn)
 
     current_best = None
-    for epoch in range(resume_from + 1, config['epochs'] + 1):
+    for epoch in range(resume_from + 1, config["epochs"] + 1):
         train_model(config, state, train_loader)
         accuracy = validate_model(config, state, valid_loader)
         elapsed_time = time.time() - ts_start
@@ -171,14 +176,18 @@ def objective(config):
             current_best = accuracy
         # Feed the score back to Tune.
         objective = current_best if report_current_best else accuracy
-        report(**{RESOURCE_ATTR: epoch,
-                  METRIC_NAME: objective,
-                  ELAPSED_TIME_ATTR: elapsed_time})
+        report(
+            **{
+                RESOURCE_ATTR: epoch,
+                METRIC_NAME: objective,
+                ELAPSED_TIME_ATTR: elapsed_time,
+            }
+        )
         # Write checkpoint (optional)
         checkpoint_model_at_rung_level(config, save_model_fn, epoch)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Benchmark-specific imports are done here, in order to avoid import
     # errors if the dependencies are not installed (such errors should happen
     # only when the code is really called)
@@ -193,9 +202,9 @@ if __name__ == '__main__':
     root.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, required=True)
-    parser.add_argument('--dataset_path', type=str, required=True)
-    parser.add_argument('--report_current_best', type=str, default='False')
+    parser.add_argument("--epochs", type=int, required=True)
+    parser.add_argument("--dataset_path", type=str, required=True)
+    parser.add_argument("--report_current_best", type=str, default="False")
     add_to_argparse(parser, _config_space)
     add_checkpointing_to_argparse(parser)
 

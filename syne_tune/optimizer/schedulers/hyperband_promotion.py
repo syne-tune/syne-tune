@@ -12,8 +12,10 @@
 # permissions and limitations under the License.
 from typing import Optional
 
-from syne_tune.optimizer.schedulers.hyperband_stopping import quantile_cutoff, \
-    RungSystem
+from syne_tune.optimizer.schedulers.hyperband_stopping import (
+    quantile_cutoff,
+    RungSystem,
+)
 
 
 class PromotionRungSystem(RungSystem):
@@ -43,10 +45,11 @@ class PromotionRungSystem(RungSystem):
     not be used for the searcher model (`ignore_data = True`), namely as long
     as the evaluation has not yet gone beyond level resume_from.
     """
-    def __init__(self, rung_levels, promote_quantiles, metric, mode,
-                 resource_attr, max_t):
-        super().__init__(
-            rung_levels, promote_quantiles, metric, mode, resource_attr)
+
+    def __init__(
+        self, rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
+    ):
+        super().__init__(rung_levels, promote_quantiles, metric, mode, resource_attr)
         # The data entry in `_rungs` is a dict mapping trial_id to
         # (metric_value, was_promoted)
         self.max_t = max_t
@@ -62,8 +65,8 @@ class PromotionRungSystem(RungSystem):
         return quantile_cutoff(values, prom_quant, self._mode)
 
     def _find_promotable_trial(
-            self, recorded: dict, prom_quant: float,
-            resource: int) -> Optional[str]:
+        self, recorded: dict, prom_quant: float, resource: int
+    ) -> Optional[str]:
         """
         Check whether any not yet promoted entry in `recorded` is
         promotable, i.e. its value is better or equal to the cutoff
@@ -79,22 +82,26 @@ class PromotionRungSystem(RungSystem):
         ret_id = None
         # Code is written for 'max' mode. For 'min', we just negate all
         # criterion values
-        sign = 1 - 2 * (self._mode == 'min')
+        sign = 1 - 2 * (self._mode == "min")
         cutoff = self._cutoff(recorded, prom_quant)
         if cutoff is not None:
             # Best id among trials paused at this rung (i.e., not yet promoted)
             trial_id, val = max(
-                ((k, v[0]) for k, v in recorded.items() if self._is_promotable_trial(
-                    k, v[0], not v[1], resource)),
+                (
+                    (k, v[0])
+                    for k, v in recorded.items()
+                    if self._is_promotable_trial(k, v[0], not v[1], resource)
+                ),
                 key=lambda x: sign * x[1],
-                default=(None, 0.0))
+                default=(None, 0.0),
+            )
             if trial_id is not None and sign * (val - cutoff) >= 0:
                 ret_id = trial_id
         return ret_id
 
     def _is_promotable_trial(
-            self, trial_id: str, metric_value: float, is_paused: bool,
-            resource: int) -> bool:
+        self, trial_id: str, metric_value: float, is_paused: bool, resource: int
+    ) -> bool:
         """
         Checks whether trial in rung level is promotable in principle, used
         as filter in `_find_promotable_trial`. Can be used in subclasses to
@@ -135,7 +142,8 @@ class PromotionRungSystem(RungSystem):
             _recorded = rung.data
             if _milestone < self._effective_max_t():
                 trial_id = self._find_promotable_trial(
-                    _recorded, prom_quant, rung.level)
+                    _recorded, prom_quant, rung.level
+                )
             if trial_id is not None:
                 recorded = _recorded
                 milestone = _milestone
@@ -145,9 +153,10 @@ class PromotionRungSystem(RungSystem):
         if trial_id is not None:
             self._mark_as_promoted(recorded, trial_id)
             ret_dict = {
-                'trial_id': trial_id,
-                'resume_from': milestone,
-                'milestone': next_milestone}
+                "trial_id": trial_id,
+                "resume_from": milestone,
+                "milestone": next_milestone,
+            }
         return ret_dict
 
     def on_task_add(self, trial_id: str, skip_rungs: int, **kwargs):
@@ -157,7 +166,7 @@ class PromotionRungSystem(RungSystem):
         to the next milestone (False). In the latter case, kwargs contains
         additional information about the promotion.
         """
-        new_config = kwargs.get('new_config', True)
+        new_config = kwargs.get("new_config", True)
         if new_config:
             # New trial
             milestone = self.get_first_milestone(skip_rungs)
@@ -166,21 +175,19 @@ class PromotionRungSystem(RungSystem):
             # Existing trial is resumed
             # Note that self._rungs has already been updated in
             # on_task_schedule
-            milestone = kwargs['milestone']
-            resume_from = kwargs['resume_from']
+            milestone = kwargs["milestone"]
+            resume_from = kwargs["resume_from"]
             assert resume_from < milestone  # Sanity check
-        self._running[trial_id] = {
-            'milestone': milestone,
-            'resume_from': resume_from}
+        self._running[trial_id] = {"milestone": milestone, "resume_from": resume_from}
 
     def _register_metrics_at_rung_level(
-            self, trial_id: str, result: dict, recorded: dict):
+        self, trial_id: str, result: dict, recorded: dict
+    ):
         metric_value = result[self._metric]
         assert trial_id not in recorded  # Sanity check
         recorded[trial_id] = (metric_value, False)
 
-    def on_task_report(
-            self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         """
         Decision on whether task may continue (task_continues = True), or
         should be paused (task_continues = False).
@@ -207,33 +214,36 @@ class PromotionRungSystem(RungSystem):
         resource = result[self._resource_attr]
         milestone_reached = False
         next_milestone = None
-        milestone = self._running[trial_id]['milestone']
-        resume_from = self._running[trial_id]['resume_from']
+        milestone = self._running[trial_id]["milestone"]
+        resume_from = self._running[trial_id]["resume_from"]
         ignore_data = (resume_from is not None) and (resource <= resume_from)
         if resource >= milestone:
-            assert resource == milestone, \
-                f"trial_id {trial_id}: resource = {resource} > {milestone} " +\
-                "milestone. Make sure to report time attributes covering " +\
-                "all milestones"
+            assert resource == milestone, (
+                f"trial_id {trial_id}: resource = {resource} > {milestone} "
+                + "milestone. Make sure to report time attributes covering "
+                + "all milestones"
+            )
             milestone_reached = True
             try:
-                rung_pos = next(i for i, v in enumerate(self._rungs)
-                                if v.level == milestone)
+                rung_pos = next(
+                    i for i, v in enumerate(self._rungs) if v.level == milestone
+                )
                 # Register metric_value at rung level (as not promoted)
                 recorded = self._rungs[rung_pos].data
-                self._register_metrics_at_rung_level(
-                    trial_id, result, recorded)
-                next_milestone = self._rungs[rung_pos - 1].level \
-                    if rung_pos > 0 else self.max_t
+                self._register_metrics_at_rung_level(trial_id, result, recorded)
+                next_milestone = (
+                    self._rungs[rung_pos - 1].level if rung_pos > 0 else self.max_t
+                )
             except StopIteration:
                 # milestone not a rung level. This can happen, in particular
                 # if milestone == self.max_t
                 pass
         return {
-            'task_continues': not milestone_reached,
-            'milestone_reached': milestone_reached,
-            'next_milestone': next_milestone,
-            'ignore_data': ignore_data}
+            "task_continues": not milestone_reached,
+            "milestone_reached": milestone_reached,
+            "next_milestone": next_milestone,
+            "ignore_data": ignore_data,
+        }
 
     def on_task_remove(self, trial_id: str):
         del self._running[trial_id]

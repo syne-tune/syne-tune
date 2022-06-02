@@ -13,27 +13,41 @@
 from typing import List
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
-    dictionarize_objective, INTERNAL_METRIC_NAME
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
-    import make_hyperparameter_ranges
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    dictionarize_objective,
+    INTERNAL_METRIC_NAME,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+    make_hyperparameter_ranges,
+)
 from syne_tune.config_space import uniform
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import \
-    DEFAULT_MCMC_CONFIG, DEFAULT_OPTIMIZATION_CONFIG
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl \
-    import EIAcquisitionFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc \
-    import ActiveMetricCurrentBestProvider
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import \
-    GaussProcSurrogateModel, GaussProcEmpiricalBayesModelFactory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model \
-    import GaussProcMCMCModelFactory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import \
-    LBFGSOptimizeAcquisition
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import \
-    default_gpmodel, default_gpmodel_mcmc
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
-    import create_tuning_job_state
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    DEFAULT_MCMC_CONFIG,
+    DEFAULT_OPTIMIZATION_CONFIG,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
+    EIAcquisitionFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc import (
+    ActiveMetricCurrentBestProvider,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
+    GaussProcSurrogateModel,
+    GaussProcEmpiricalBayesModelFactory,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model import (
+    GaussProcMCMCModelFactory,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
+    LBFGSOptimizeAcquisition,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
+    default_gpmodel,
+    default_gpmodel_mcmc,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
+    create_tuning_job_state,
+)
 
 
 # This setup makes little sense for good testing.
@@ -57,28 +71,27 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects \
 # In fact, if EI is optimized starting at a point outside [0, 0.1]^2, the optimizer
 # returns with the starting point, and test_optimization_improves fails.
 def default_models(do_mcmc=True) -> List[GaussProcSurrogateModel]:
-    config_space = {
-        'x': uniform(0.0, 1.0),
-        'y': uniform(0.0, 1.0)}
+    config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
     Y = [dictionarize_objective(np.sum(x) * 10.0) for x in X]
-    state = create_tuning_job_state(
-        hp_ranges=hp_ranges, cand_tuples=X, metrics=Y)
+    state = create_tuning_job_state(hp_ranges=hp_ranges, cand_tuples=X, metrics=Y)
     random_seed = 0
 
     gpmodel = default_gpmodel(
-        state, random_seed=random_seed,
-        optimization_config=DEFAULT_OPTIMIZATION_CONFIG)
+        state, random_seed=random_seed, optimization_config=DEFAULT_OPTIMIZATION_CONFIG
+    )
     model_factory = GaussProcEmpiricalBayesModelFactory(
-        active_metric=INTERNAL_METRIC_NAME, gpmodel=gpmodel, num_fantasy_samples=20)
+        active_metric=INTERNAL_METRIC_NAME, gpmodel=gpmodel, num_fantasy_samples=20
+    )
     result = [model_factory.model(state, fit_params=True)]
     if do_mcmc:
         gpmodel_mcmc = default_gpmodel_mcmc(
-            state, random_seed=random_seed,
-            mcmc_config=DEFAULT_MCMC_CONFIG)
+            state, random_seed=random_seed, mcmc_config=DEFAULT_MCMC_CONFIG
+        )
         model_factory = GaussProcMCMCModelFactory(
-            active_metric=INTERNAL_METRIC_NAME, gpmodel=gpmodel_mcmc)
+            active_metric=INTERNAL_METRIC_NAME, gpmodel=gpmodel_mcmc
+        )
         result.append(model_factory.model(state, fit_params=True))
     return result
 
@@ -91,14 +104,14 @@ def plot_ei_mean_std(model, ei, max_grid=1.0):
     inputs = np.hstack([Xgrid.reshape(-1, 1), Ygrid.reshape(-1, 1)])
     Z_ei = ei.compute_acq(inputs)[0]
     predictions = model.predict(inputs)[0]
-    Z_means = predictions['mean']
-    Z_std = predictions['std']
-    titles = ['EI', 'mean', 'std']
+    Z_means = predictions["mean"]
+    Z_std = predictions["std"]
+    titles = ["EI", "mean", "std"]
     for i, (Z, title) in enumerate(zip([Z_ei, Z_means, Z_std], titles)):
         plt.subplot(1, 3, i + 1)
         plt.imshow(
-            Z.reshape(Xgrid.shape), extent=[0, max_grid, 0, max_grid],
-            origin='lower')
+            Z.reshape(Xgrid.shape), extent=[0, max_grid, 0, max_grid], origin="lower"
+        )
         plt.colorbar()
         plt.title(title)
     plt.show()
@@ -113,21 +126,23 @@ def test_sanity_check():
     # - test that points closer to better points have higher expected improvement
     for model in default_models(do_mcmc=False):
         ei = EIAcquisitionFunction(model)
-        X = np.array([
-            (0.0, 0.0),  # 0
-            (1.0, 0.0),  # 1
-            (0.0, 1.0),  # 2
-            (1.0, 1.0),  # 3
-            (0.2, 0.0),  # 4
-            (0.0, 0.2),  # 5
-            (0.1, 0.0),  # 6
-            (0.0, 0.1),  # 7
-            (0.1, 0.1),  # 8
-            (0.9, 0.9),  # 9
-        ])
+        X = np.array(
+            [
+                (0.0, 0.0),  # 0
+                (1.0, 0.0),  # 1
+                (0.0, 1.0),  # 2
+                (1.0, 1.0),  # 3
+                (0.2, 0.0),  # 4
+                (0.0, 0.2),  # 5
+                (0.1, 0.0),  # 6
+                (0.0, 0.1),  # 7
+                (0.1, 0.1),  # 8
+                (0.9, 0.9),  # 9
+            ]
+        )
         _acq = ei.compute_acq(X).flatten()
-        #print('Negative EI values:')
-        #print(_acq)
+        # print('Negative EI values:')
+        # print(_acq)
         acq = list(_acq)
 
         assert all(a <= 0 for a in acq), acq
@@ -156,15 +171,15 @@ def test_best_value():
         acq0_best0 = ei.compute_acq(zero_row)
 
         # override current best
-        ei._current_bests = ActiveMetricCurrentBestProvider(
-            [np.array([10.0])])
+        ei._current_bests = ActiveMetricCurrentBestProvider([np.array([10.0])])
 
         acq_best10 = list(ei.compute_acq(test_X).flatten())
         acq0_best10 = ei.compute_acq(zero_row)
 
         # if the best is 10, the acquisition function should be better (lower value)
-        assert all(a10 < a0 for a10, a0 in zip(acq_best10, acq_best0)), \
-            f"\nbest=0:  {acq_best0}\nbest=10: {acq_best10}"
+        assert all(
+            a10 < a0 for a10, a0 in zip(acq_best10, acq_best0)
+        ), f"\nbest=0:  {acq_best0}\nbest=10: {acq_best10}"
 
         # there should be a considerable gap at the point of the best evaluation
         assert acq0_best10 < acq0_best0 - 1.0
@@ -187,9 +202,9 @@ def test_optimization_improves():
         hp_ranges = model.hp_ranges_for_prediction()
         opt = LBFGSOptimizeAcquisition(hp_ranges, model, EIAcquisitionFunction)
         if debug_output:
-            print('\n\nGP MCMC' if model.does_mcmc() else 'GP Opt')
+            print("\n\nGP MCMC" if model.does_mcmc() else "GP Opt")
             fzero = ei.compute_acq(np.zeros((1, 2)))[0]
-            print('f(0) = {}'.format(fzero))
+            print("f(0) = {}".format(fzero))
         if debug_output and not model.does_mcmc():
             # Plot the thing!
             plot_ei_mean_std(model, ei, max_grid=0.001)
@@ -199,25 +214,26 @@ def test_optimization_improves():
 
         non_zero_acq_at_least_once = False
         for iter in range(10):
-            #initial_point = random.uniform(low=0.0, high=1.0, size=(2,))
+            # initial_point = random.uniform(low=0.0, high=1.0, size=(2,))
             initial_point = random.uniform(low=0.0, high=0.1, size=(2,))
             acq0, df0 = ei.compute_acq_with_gradient(initial_point)
             if debug_output:
-                print('\nInitial point: f(x0) = {}, x0 = {}'.format(
-                    acq0, initial_point))
-                print('grad0 = {}'.format(df0))
+                print(
+                    "\nInitial point: f(x0) = {}, x0 = {}".format(acq0, initial_point)
+                )
+                print("grad0 = {}".format(df0))
             if acq0 != 0:
                 non_zero_acq_at_least_once = True
                 init_cand = hp_ranges.from_ndarray(initial_point)
                 optimized = hp_ranges.to_ndarray(opt.optimize(init_cand))
                 acq_opt = ei.compute_acq(optimized)[0]
                 if debug_output:
-                    print('Final point: f(x1) = {}, x1 = {}'.format(
-                        acq_opt, optimized))
+                    print("Final point: f(x1) = {}, x1 = {}".format(acq_opt, optimized))
                 assert acq_opt < 0
                 assert acq_opt < acq0
 
         assert non_zero_acq_at_least_once
+
 
 # Changes from original version: Half of the time, we sample x in [0, 0.02]^2, where
 # the shape of EI is more interesting
@@ -235,8 +251,11 @@ def test_numerical_gradient():
             f0, analytical_gradient = ei.compute_acq_with_gradient(x)
             analytical_gradient = analytical_gradient.flatten()
             if debug_output:
-                print('x0 = {}, f(x_0) = {}, grad(x_0) = {}'.format(
-                    x, f0, analytical_gradient))
+                print(
+                    "x0 = {}, f(x_0) = {}, grad(x_0) = {}".format(
+                        x, f0, analytical_gradient
+                    )
+                )
 
             for i in range(2):
                 h = np.zeros_like(x)
@@ -245,12 +264,17 @@ def test_numerical_gradient():
                 fmeps = ei.compute_acq(x - h)[0]
                 numerical_derivative = (fpeps - fmeps) / (2 * eps)
                 if debug_output:
-                    print('f(x0+eps) = {}, f(x0-eps) = {}, findiff = {}, deriv = {}'.format(
-                        fpeps[0], fmeps[0], numerical_derivative[0],
-                        analytical_gradient[i]))
+                    print(
+                        "f(x0+eps) = {}, f(x0-eps) = {}, findiff = {}, deriv = {}".format(
+                            fpeps[0],
+                            fmeps[0],
+                            numerical_derivative[0],
+                            analytical_gradient[i],
+                        )
+                    )
                 np.testing.assert_almost_equal(
-                    numerical_derivative.item(), analytical_gradient[i],
-                    decimal=4)
+                    numerical_derivative.item(), analytical_gradient[i], decimal=4
+                )
 
 
 def test_value_same_as_with_gradient():

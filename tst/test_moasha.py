@@ -19,8 +19,11 @@ import numpy as np
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA, _Bracket
-from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import FixedObjectivePriority, \
-    LinearScalarizationPriority, NonDominatedPriority
+from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
+    FixedObjectivePriority,
+    LinearScalarizationPriority,
+    NonDominatedPriority,
+)
 from syne_tune.config_space import randint
 
 
@@ -49,6 +52,7 @@ def make_trial(trial_id: int):
         creation_time=datetime.now(),
     )
 
+
 scheduler_fun = partial(
     MOASHA,
     max_t=max_steps,
@@ -60,12 +64,19 @@ scheduler_fun = partial(
 )
 
 
-@pytest.mark.parametrize("scheduler", [
-    scheduler_fun(mode="max", multiobjective_priority=FixedObjectivePriority()),
-    scheduler_fun(mode="max", multiobjective_priority=LinearScalarizationPriority()),
-    scheduler_fun(mode=["max", "max"], multiobjective_priority=LinearScalarizationPriority()),
-    scheduler_fun(mode="max", multiobjective_priority=NonDominatedPriority()),
-])
+@pytest.mark.parametrize(
+    "scheduler",
+    [
+        scheduler_fun(mode="max", multiobjective_priority=FixedObjectivePriority()),
+        scheduler_fun(
+            mode="max", multiobjective_priority=LinearScalarizationPriority()
+        ),
+        scheduler_fun(
+            mode=["max", "max"], multiobjective_priority=LinearScalarizationPriority()
+        ),
+        scheduler_fun(mode="max", multiobjective_priority=NonDominatedPriority()),
+    ],
+)
 def test_moasha_mode_max(scheduler):
     np.random.seed(0)
     trial1 = make_trial(trial_id=0)
@@ -85,12 +96,19 @@ def test_moasha_mode_max(scheduler):
     assert decision3 == SchedulerDecision.STOP
 
 
-@pytest.mark.parametrize("scheduler", [
-    scheduler_fun(mode="min", multiobjective_priority=FixedObjectivePriority()),
-    scheduler_fun(mode="min", multiobjective_priority=LinearScalarizationPriority()),
-    scheduler_fun(mode=["min", "min"], multiobjective_priority=LinearScalarizationPriority()),
-    scheduler_fun(mode="min", multiobjective_priority=NonDominatedPriority()),
-])
+@pytest.mark.parametrize(
+    "scheduler",
+    [
+        scheduler_fun(mode="min", multiobjective_priority=FixedObjectivePriority()),
+        scheduler_fun(
+            mode="min", multiobjective_priority=LinearScalarizationPriority()
+        ),
+        scheduler_fun(
+            mode=["min", "min"], multiobjective_priority=LinearScalarizationPriority()
+        ),
+        scheduler_fun(mode="min", multiobjective_priority=NonDominatedPriority()),
+    ],
+)
 def test_moasha_mode_min(scheduler):
     np.random.seed(0)
     trial1 = make_trial(trial_id=0)
@@ -110,20 +128,31 @@ def test_moasha_mode_min(scheduler):
     assert decision3 == SchedulerDecision.STOP
 
 
-@pytest.mark.parametrize("mo_priority,expected_priority", [
-    (LinearScalarizationPriority(), [1.0, 4.0, 7.0, 10.0, 13.0]),
-    (
-        LinearScalarizationPriority(weights=[0.2, 0.4, 0.8]),
-        [0.6666666666666666, 2.066666666666667, 3.466666666666667, 4.866666666666667, 6.266666666666667]
-    ),
-    (NonDominatedPriority(), [0, 1, 2, 3, 4]),
-    (NonDominatedPriority(dim=1), [0, 1, 2, 3, 4]),
-    (NonDominatedPriority(max_num_samples=10), [0, 1, 2, 3, 4]),
-])
+@pytest.mark.parametrize(
+    "mo_priority,expected_priority",
+    [
+        (LinearScalarizationPriority(), [1.0, 4.0, 7.0, 10.0, 13.0]),
+        (
+            LinearScalarizationPriority(weights=[0.2, 0.4, 0.8]),
+            [
+                0.6666666666666666,
+                2.066666666666667,
+                3.466666666666667,
+                4.866666666666667,
+                6.266666666666667,
+            ],
+        ),
+        (NonDominatedPriority(), [0, 1, 2, 3, 4]),
+        (NonDominatedPriority(dim=1), [0, 1, 2, 3, 4]),
+        (NonDominatedPriority(max_num_samples=10), [0, 1, 2, 3, 4]),
+    ],
+)
 def test_multiobjective_priorities(mo_priority, expected_priority):
     num_samples = 5
     num_objectives = 3
-    objectives = np.arange(num_samples * num_objectives).reshape((num_samples, num_objectives))
+    objectives = np.arange(num_samples * num_objectives).reshape(
+        (num_samples, num_objectives)
+    )
 
     priorities = mo_priority.__call__(objectives=objectives)
     assert np.allclose(priorities, expected_priority)

@@ -15,10 +15,15 @@ from typing import Dict, Optional, Union, List
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import TrialScheduler, SchedulerDecision, \
-    TrialSuggestion
-from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority \
-    import MOPriority, NonDominatedPriority
+from syne_tune.optimizer.scheduler import (
+    TrialScheduler,
+    SchedulerDecision,
+    TrialSuggestion,
+)
+from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority import (
+    MOPriority,
+    NonDominatedPriority,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,16 +63,18 @@ class MOASHA(TrialScheduler):
             halving rate, specified by the reduction factor.
     """
 
-    def __init__(self,
-                 config_space: Dict,
-                 metrics: List[str],
-                 time_attr: str = "training_iteration",
-                 multiobjective_priority: Optional[MOPriority] = None,
-                 mode: Optional[Union[str, List[str]]] = None,
-                 max_t: int = 100,
-                 grace_period: int = 1,
-                 reduction_factor: float = 3,
-                 brackets: int = 1):
+    def __init__(
+        self,
+        config_space: Dict,
+        metrics: List[str],
+        time_attr: str = "training_iteration",
+        multiobjective_priority: Optional[MOPriority] = None,
+        mode: Optional[Union[str, List[str]]] = None,
+        max_t: int = 100,
+        grace_period: int = 1,
+        reduction_factor: float = 3,
+        brackets: int = 1,
+    ):
         super(MOASHA, self).__init__(config_space=config_space)
         assert max_t > 0, "Max (time_attr) not valid!"
         assert max_t >= grace_period, "grace_period must be <= max_t!"
@@ -77,7 +84,9 @@ class MOASHA(TrialScheduler):
         if mode:
             if isinstance(mode, List):
                 assert len(mode) == len(metrics), "one mode should be given per metric"
-                assert all(m in ["min", "max"] for m in mode), "all modes should be 'min' or 'max'."
+                assert all(
+                    m in ["min", "max"] for m in mode
+                ), "all modes should be 'min' or 'max'."
             else:
                 assert mode in ["min", "max"], "`mode` must be 'min' or 'max'."
         else:
@@ -94,7 +103,9 @@ class MOASHA(TrialScheduler):
 
         # Tracks state for new trial add
         self._brackets = [
-            _Bracket(grace_period, max_t, reduction_factor, s, self._multiobjective_priority)
+            _Bracket(
+                grace_period, max_t, reduction_factor, s, self._multiobjective_priority
+            )
             for s in range(brackets)
         ]
         self._num_stopped = 0
@@ -107,9 +118,9 @@ class MOASHA(TrialScheduler):
             }
         else:
             if self._mode == "min":
-                self._metric_op = dict(zip(self._metrics, [1.] * len(self._metrics)))
+                self._metric_op = dict(zip(self._metrics, [1.0] * len(self._metrics)))
             elif self._mode == "max":
-                self._metric_op = dict(zip(self._metrics, [-1.] * len(self._metrics)))
+                self._metric_op = dict(zip(self._metrics, [-1.0] * len(self._metrics)))
         self._time_attr = time_attr
 
     def metric_names(self) -> List[str]:
@@ -170,7 +181,7 @@ class MOASHA(TrialScheduler):
         bracket.on_result(
             trial_id=trial.trial_id,
             cur_iter=result[self._time_attr],
-            metrics=self._metric_dict(result)
+            metrics=self._metric_dict(result),
         )
         del self._trial_info[trial.trial_id]
 
@@ -178,19 +189,26 @@ class MOASHA(TrialScheduler):
         del self._trial_info[trial.trial_id]
 
 
-class _Bracket():
+class _Bracket:
     """Bookkeeping system to track recorded values.
 
     Rungs are created in reversed order so that we can more easily find
     the correct rung corresponding to the current iteration of the result.
     """
 
-    def __init__(self, min_t: int, max_t: int, reduction_factor: float,
-                 s: int, mo_priority: MOPriority = NonDominatedPriority()):
+    def __init__(
+        self,
+        min_t: int,
+        max_t: int,
+        reduction_factor: float,
+        s: int,
+        mo_priority: MOPriority = NonDominatedPriority(),
+    ):
         self.rf = reduction_factor
         MAX_RUNGS = int(np.log(max_t / min_t) / np.log(self.rf) - s + 1)
-        self._rungs = [(min_t * self.rf ** (k + s), {})
-                       for k in reversed(range(MAX_RUNGS))]
+        self._rungs = [
+            (min_t * self.rf ** (k + s), {}) for k in reversed(range(MAX_RUNGS))
+        ]
         self.priority = mo_priority
 
     def on_result(self, trial_id: int, cur_iter: int, metrics: Optional[Dict]) -> str:
@@ -205,7 +223,10 @@ class _Bracket():
                 else:
                     # get the list of metrics seen for the rung, compute multiobjective priority and decide to continue
                     # if priority is in the top ones according to a rank induced by the `reduction_factor`.
-                    metric_recorded = np.array([list(x.values()) for x in recorded.values()] + [list(metrics.values())])
+                    metric_recorded = np.array(
+                        [list(x.values()) for x in recorded.values()]
+                        + [list(metrics.values())]
+                    )
                     priorities = self.priority(metric_recorded)
 
                     # self._plot(milestone, metric_recorded, priorities)
@@ -213,7 +234,9 @@ class _Bracket():
                     # We sort priorities at every call, assuming the cost of sort would be negligible
                     # in case this becomes slow, we could just maintain a sorted list of priorities in cost
                     # of memory.
-                    ranks = np.searchsorted(sorted(priorities), priorities) / len(priorities)
+                    ranks = np.searchsorted(sorted(priorities), priorities) / len(
+                        priorities
+                    )
                     new_priority_rank = ranks[-1]
                     if new_priority_rank > 1 / self.rf:
                         action = SchedulerDecision.STOP
@@ -238,7 +261,7 @@ class _Bracket():
         ax.scatter(metric_recorded[:, 0], metric_recorded[:, 1])
 
         font_size = 14
-        plt.rcParams.update({'font.size': font_size})
+        plt.rcParams.update({"font.size": font_size})
 
         for i, indice in enumerate(ranks):
             ax.annotate(

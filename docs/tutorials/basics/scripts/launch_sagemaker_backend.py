@@ -34,7 +34,7 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.util import repository_root_path
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
@@ -47,29 +47,31 @@ if __name__ == '__main__':
     # - Metrics need to be reported after each epoch, `resource_attr` must match
     #   what is reported in the training script
     entry_point = str(Path(__file__).parent / "traincode_report_withcheckpointing.py")
-    mode = 'max'
-    metric = 'accuracy'
-    resource_attr = 'epoch'
-    max_resource_attr = 'epochs'
+    mode = "max"
+    metric = "accuracy"
+    resource_attr = "epoch"
+    max_resource_attr = "epochs"
 
     # Search space (or configuration space)
     # For each tunable parameter, need to define type, range, and encoding
     # (linear, logarithmic)
     config_space = {
-        'n_units_1': randint(4, 1024),
-        'n_units_2': randint(4, 1024),
-        'batch_size': randint(8, 128),
-        'dropout_1': uniform(0, 0.99),
-        'dropout_2': uniform(0, 0.99),
-        'learning_rate': loguniform(1e-6, 1),
-        'weight_decay': loguniform(1e-8, 1),
+        "n_units_1": randint(4, 1024),
+        "n_units_2": randint(4, 1024),
+        "batch_size": randint(8, 128),
+        "dropout_1": uniform(0, 0.99),
+        "dropout_2": uniform(0, 0.99),
+        "learning_rate": loguniform(1e-6, 1),
+        "weight_decay": loguniform(1e-8, 1),
     }
 
     # Additional fixed parameters
-    config_space.update({
-        max_resource_attr: max_resource_level,
-        'dataset_path': './',
-    })
+    config_space.update(
+        {
+            max_resource_attr: max_resource_level,
+            "dataset_path": "./",
+        }
+    )
 
     # SageMaker back-end: Responsible for scheduling trials
     # Each trial is run as a separate SageMaker training job. This is useful for
@@ -86,8 +88,8 @@ if __name__ == '__main__':
             role=get_execution_role(),
             dependencies=[str(repository_root_path() / "benchmarking")],
             max_run=int(1.05 * max_wallclock_time),
-            framework_version='1.7.1',
-            py_version='py3',
+            framework_version="1.7.1",
+            py_version="py3",
             disable_profiler=True,
         ),
         metrics_names=[metric],
@@ -101,14 +103,14 @@ if __name__ == '__main__':
     # on a Gaussian process surrogate model. The latter models learning curves
     # f(x, r), x the configuration, r the number of epochs done, not just final
     # values f(x).
-    searcher = 'bayesopt'
+    searcher = "bayesopt"
     search_options = {
-        'num_init_random': n_workers + 2,
-        'gp_resource_kernel': 'exp-decay-sum',  # GP surrogate model
+        "num_init_random": n_workers + 2,
+        "gp_resource_kernel": "exp-decay-sum",  # GP surrogate model
     }
     scheduler = HyperbandScheduler(
         config_space,
-        type='stopping',
+        type="stopping",
         searcher=searcher,
         search_options=search_options,
         grace_period=1,

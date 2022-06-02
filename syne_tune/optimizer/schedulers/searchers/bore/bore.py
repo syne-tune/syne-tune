@@ -21,25 +21,35 @@ from sklearn.calibration import CalibratedClassifierCV
 
 from typing import Dict
 
-from syne_tune.optimizer.schedulers.searchers.searcher import \
-    SearcherWithRandomSeed
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
-    import make_hyperparameter_ranges
-from syne_tune.optimizer.schedulers.searchers.bore.de import DifferentialevolutionOptimizer
+from syne_tune.optimizer.schedulers.searchers.searcher import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+    make_hyperparameter_ranges,
+)
+from syne_tune.optimizer.schedulers.searchers.bore.de import (
+    DifferentialevolutionOptimizer,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class Bore(SearcherWithRandomSeed):
-
     def __init__(
-            self, config_space: dict, metric: str,
-            points_to_evaluate=None,
-            random_seed=None, mode: str = 'max', gamma: float = 0.25,
-            calibrate: bool = False, classifier: str = 'xgboost',
-            acq_optimizer: str = 'rs', feval_acq: int = 500,
-            random_prob: float = 0.0, init_random: int = 6,
-            classifier_kwargs: dict = None, **kwargs):
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate=None,
+        random_seed=None,
+        mode: str = "max",
+        gamma: float = 0.25,
+        calibrate: bool = False,
+        classifier: str = "xgboost",
+        acq_optimizer: str = "rs",
+        feval_acq: int = 500,
+        random_prob: float = 0.0,
+        init_random: int = 6,
+        classifier_kwargs: dict = None,
+        **kwargs,
+    ):
 
         """
         Implements "Bayesian optimization by Density Ratio Estimation" as described in the following paper:
@@ -68,13 +78,16 @@ class Bore(SearcherWithRandomSeed):
         """
 
         super().__init__(
-            config_space, metric=metric, points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed)
+            config_space,
+            metric=metric,
+            points_to_evaluate=points_to_evaluate,
+            random_seed=random_seed,
+        )
 
         self.calibrate = calibrate
         self.gamma = gamma
         self.classifier = classifier
-        assert acq_optimizer in {'rs', 'de', 'rs_with_replacement'}
+        assert acq_optimizer in {"rs", "de", "rs_with_replacement"}
         self.acq_optimizer = acq_optimizer
         self.feval_acq = feval_acq
         self.init_random = init_random
@@ -85,17 +98,23 @@ class Bore(SearcherWithRandomSeed):
 
         if classifier_kwargs is None:
             classifier_kwargs = dict()
-        if self.classifier == 'xgboost':
+        if self.classifier == "xgboost":
             self.model = xgboost.XGBClassifier(use_label_encoder=False)
         elif self.classifier == "logreg":
             self.model = LogisticRegression()
-        elif self.classifier == 'rf':
+        elif self.classifier == "rf":
             self.model = RandomForestClassifier()
-        elif self.classifier == 'gp':
-            from syne_tune.optimizer.schedulers.searchers.bore.gp_classififer import GPModel
+        elif self.classifier == "gp":
+            from syne_tune.optimizer.schedulers.searchers.bore.gp_classififer import (
+                GPModel,
+            )
+
             self.model = GPModel(**classifier_kwargs)
-        elif self.classifier == 'mlp':
-            from syne_tune.optimizer.schedulers.searchers.bore.mlp_classififer import MLP
+        elif self.classifier == "mlp":
+            from syne_tune.optimizer.schedulers.searchers.bore.mlp_classififer import (
+                MLP,
+            )
+
             self.model = MLP(n_inputs=self._hp_ranges.ndarray_size, **classifier_kwargs)
 
         self.inputs = []
@@ -104,17 +123,18 @@ class Bore(SearcherWithRandomSeed):
     def configure_scheduler(self, scheduler):
         from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
-        assert isinstance(scheduler, FIFOScheduler), \
-            "This searcher requires FIFOScheduler scheduler"
+        assert isinstance(
+            scheduler, FIFOScheduler
+        ), "This searcher requires FIFOScheduler scheduler"
 
         super().configure_scheduler(scheduler)
 
     def loss(self, x):
         if len(x.shape) < 2:
-            y = - self.model.predict_proba(x[None, :])
+            y = -self.model.predict_proba(x[None, :])
         else:
-            y = - self.model.predict_proba(x)
-        if self.classifier in ['gp', 'mlp']:
+            y = -self.model.predict_proba(x)
+        if self.classifier in ["gp", "mlp"]:
             return y[:, 0]
         else:
             return y[:, 1]  # return probability of class 1
@@ -148,7 +168,7 @@ class Bore(SearcherWithRandomSeed):
 
             else:
 
-                if self.acq_optimizer == 'de':
+                if self.acq_optimizer == "de":
 
                     def wrapper(x):
                         l = self.loss(x)
@@ -158,11 +178,13 @@ class Bore(SearcherWithRandomSeed):
                     lower = bounds[:, 0]
                     upper = bounds[:, 1]
 
-                    de = DifferentialevolutionOptimizer(wrapper, lower, upper, self.feval_acq)
+                    de = DifferentialevolutionOptimizer(
+                        wrapper, lower, upper, self.feval_acq
+                    )
                     best, traj = de.run()
                     config = self._hp_ranges.from_ndarray(best)
 
-                elif self.acq_optimizer == 'rs_with_replacement':
+                elif self.acq_optimizer == "rs_with_replacement":
                     values = []
                     X = []
                     for i in range(self.feval_acq):
@@ -185,18 +207,24 @@ class Bore(SearcherWithRandomSeed):
                             values.append(self.loss(self._hp_ranges.to_ndarray(xi))[0])
                             counter = 0
                         else:
-                            logging.warning("Re-sampled the same configuration. Retry...")
+                            logging.warning(
+                                "Re-sampled the same configuration. Retry..."
+                            )
                             counter += 1  # we stop sampling if after 10 retires we are not able to find a new config
                     if len(values) < self.feval_acq:
-                        logging.warning(f'Only {len(values)} instead of {self.feval_acq} configurations '
-                                        f'sampled to optimize the acquisition function')
+                        logging.warning(
+                            f"Only {len(values)} instead of {self.feval_acq} configurations "
+                            f"sampled to optimize the acquisition function"
+                        )
                     ind = np.array(values).argmin()
                     config = X[ind]
 
         opt_time = time.time() - start_time
-        logging.debug(f"[Select new candidate: "
-                      f"config={config}] "
-                      f"optimization time : {opt_time}")
+        logging.debug(
+            f"[Select new candidate: "
+            f"config={config}] "
+            f"optimization time : {opt_time}"
+        )
 
         return config
 
@@ -206,17 +234,18 @@ class Bore(SearcherWithRandomSeed):
 
         X = np.array(self.inputs)
 
-        if self.mode == 'min':
+        if self.mode == "min":
             y = np.array(self.targets)
         else:
-            y = - np.array(self.targets)
+            y = -np.array(self.targets)
 
         tau = np.quantile(y, q=self.gamma)
         z = np.less(y, tau)
 
         if self.calibrate:
             self.model = CalibratedClassifierCV(
-                self.model, cv=2, method=self.calibration)
+                self.model, cv=2, method=self.calibration
+            )
             self.model.fit(X, np.array(z, dtype=np.int))
         else:
             self.model.fit(X, np.array(z, dtype=np.int))
@@ -225,10 +254,12 @@ class Bore(SearcherWithRandomSeed):
         accuracy = np.mean(z_hat == z)
 
         train_time = time.time() - start_time
-        logging.debug(f"[Model fit: "
-                      f"accuracy={accuracy:.3f}] "
-                      f"dataset size: {X.shape[0]}, "
-                      f"train time : {train_time}")
+        logging.debug(
+            f"[Model fit: "
+            f"accuracy={accuracy:.3f}] "
+            f"dataset size: {X.shape[0]}, "
+            f"train time : {train_time}"
+        )
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
         """Update surrogate model with result

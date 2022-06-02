@@ -13,12 +13,11 @@
 from typing import Dict, Optional, List
 import logging
 
-from syne_tune.optimizer.scheduler import TrialScheduler, \
-    TrialSuggestion
+from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
 from syne_tune.backend.trial_status import Trial
 import syne_tune.config_space as sp
 
-__all__ = ['RayTuneScheduler']
+__all__ = ["RayTuneScheduler"]
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,9 @@ class RayTuneScheduler(TrialScheduler):
     from ray.tune.suggest import Searcher as RT_Searcher
 
     class RandomSearch(RT_Searcher):
-        def __init__(self, config_space: Dict, points_to_evaluate: List[Dict], mode: str):
+        def __init__(
+            self, config_space: Dict, points_to_evaluate: List[Dict], mode: str
+        ):
             super().__init__(mode=mode)
             self.config_space = config_space
             self._points_to_evaluate = points_to_evaluate
@@ -44,20 +45,22 @@ class RayTuneScheduler(TrialScheduler):
             if config is None:
                 config = {
                     k: v.sample() if hasattr(v, "sample") else v
-                    for k, v in self.config_space.items()}
+                    for k, v in self.config_space.items()
+                }
             return config
 
         def on_trial_complete(
-                self, trial_id: str, result: Optional[Dict] = None,
-                error: bool = False):
+            self, trial_id: str, result: Optional[Dict] = None, error: bool = False
+        ):
             pass
 
     def __init__(
-            self,
-            config_space: Dict,
-            ray_scheduler=None,
-            ray_searcher: Optional[RT_Searcher] = None,
-            points_to_evaluate: Optional[List[Dict]] = None):
+        self,
+        config_space: Dict,
+        ray_scheduler=None,
+        ray_searcher: Optional[RT_Searcher] = None,
+        points_to_evaluate: Optional[List[Dict]] = None,
+    ):
         """
         Allow to use Ray scheduler and searcher. Any searcher/scheduler should
         work, except such which need access to TrialRunner (e.g., PBT), this
@@ -97,7 +100,7 @@ class RayTuneScheduler(TrialScheduler):
             if hasattr(ray_scheduler, "_mode"):
                 self.mode = ray_scheduler._mode
             else:
-                self.mode = 'min'
+                self.mode = "min"
 
         if ray_searcher is None:
             ray_searcher = self.RandomSearch(
@@ -109,13 +112,16 @@ class RayTuneScheduler(TrialScheduler):
         elif points_to_evaluate is not None:
             logger.warning(
                 "points_to_evaluate specified here will not be used. Pass this"
-                " argument when creating ray_searcher")
+                " argument when creating ray_searcher"
+            )
         self.searcher = ray_searcher
         # todo this one is not implemented yet, PBT would require it
         self.trial_runner_wrapper = None
 
         if self.searcher.metric is not None and self.scheduler.metric is not None:
-            assert self.scheduler.metric == self.searcher.metric, "searcher and scheduler must have the same metric."
+            assert (
+                self.scheduler.metric == self.searcher.metric
+            ), "searcher and scheduler must have the same metric."
 
     def on_trial_add(self, trial: Trial):
         self.scheduler.on_trial_add(
@@ -131,32 +137,30 @@ class RayTuneScheduler(TrialScheduler):
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
         self._check_valid_result(result=result)
-        self.searcher.on_trial_result(
-            trial_id=str(trial.trial_id), result=result)
+        self.searcher.on_trial_result(trial_id=str(trial.trial_id), result=result)
         return self.scheduler.on_trial_result(
-            trial_runner=self.trial_runner_wrapper,
-            trial=trial,
-            result=result)
+            trial_runner=self.trial_runner_wrapper, trial=trial, result=result
+        )
 
     def on_trial_complete(self, trial: Trial, result: Dict):
         self._check_valid_result(result=result)
-        self.searcher.on_trial_complete(
-            trial_id=str(trial.trial_id), result=result)
+        self.searcher.on_trial_complete(trial_id=str(trial.trial_id), result=result)
         self.scheduler.on_trial_complete(
-            trial_runner=self.trial_runner_wrapper,
-            trial=trial,
-            result=result)
+            trial_runner=self.trial_runner_wrapper, trial=trial, result=result
+        )
 
     def _check_valid_result(self, result: Dict):
         for m in self.metric_names():
-            assert m in result, f"metric {m} is not present in reported results {result}," \
-                                f" the metrics present when calling `report(...)` in your training functions should" \
-                                f" be identical to the ones passed as metrics/time_attr to the scheduler and searcher"
+            assert m in result, (
+                f"metric {m} is not present in reported results {result},"
+                f" the metrics present when calling `report(...)` in your training functions should"
+                f" be identical to the ones passed as metrics/time_attr to the scheduler and searcher"
+            )
 
     def on_trial_remove(self, trial: Trial):
         return self.scheduler.on_trial_remove(
-            trial_runner=self.trial_runner_wrapper,
-            trial=trial)
+            trial_runner=self.trial_runner_wrapper, trial=trial
+        )
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         config = self.searcher.suggest(trial_id=str(trial_id))
@@ -184,8 +188,9 @@ class RayTuneScheduler(TrialScheduler):
 
         ray_config_space = dict()
         for name, hp_range in config_space.items():
-            assert not isinstance(hp_range, sp.FiniteRange), \
-                f"'{name}' has type FiniteRange, not supported by Ray Tune"
+            assert not isinstance(
+                hp_range, sp.FiniteRange
+            ), f"'{name}' has type FiniteRange, not supported by Ray Tune"
             if isinstance(hp_range, sp.Domain):
                 cls_mapping = {
                     sp.Integer: ray_sp.Integer,
@@ -204,14 +209,18 @@ class RayTuneScheduler(TrialScheduler):
                 }
 
                 ray_cls = cls_mapping[type(hp_range)]
-                domain_kwargs = {k: v for k, v in hp_range.__dict__.items() if k != 'sampler'}
+                domain_kwargs = {
+                    k: v for k, v in hp_range.__dict__.items() if k != "sampler"
+                }
 
                 # Note: `tune.randint` has exclusive upper while we have inclusive
                 if isinstance(hp_range, sp.Integer):
-                    domain_kwargs['upper'] = domain_kwargs['upper'] + 1
+                    domain_kwargs["upper"] = domain_kwargs["upper"] + 1
 
                 ray_domain = ray_cls(**domain_kwargs)
-                ray_sampler = sampler_mapping[type(hp_range.get_sampler())](**hp_range.get_sampler().__dict__)
+                ray_sampler = sampler_mapping[type(hp_range.get_sampler())](
+                    **hp_range.get_sampler().__dict__
+                )
                 ray_domain.set_sampler(ray_sampler)
                 ray_config_space[name] = ray_domain
             else:

@@ -13,7 +13,9 @@
 from typing import Optional, List
 
 import numpy as np
-from syne_tune.optimizer.schedulers.multiobjective.non_dominated_priority import nondominated_sort
+from syne_tune.optimizer.schedulers.multiobjective.non_dominated_priority import (
+    nondominated_sort,
+)
 
 
 class MOPriority(object):
@@ -42,7 +44,9 @@ class MOPriority(object):
 
 
 class LinearScalarizationPriority(MOPriority):
-    def __init__(self, metrics: Optional[List[str]] = None, weights: Optional[np.array] = None):
+    def __init__(
+        self, metrics: Optional[List[str]] = None, weights: Optional[np.array] = None
+    ):
         """
         A simple multiobjective scalarization strategy that do a weighed sum to assign a priority to the objectives.
         :param metrics:
@@ -81,10 +85,10 @@ class FixedObjectivePriority(MOPriority):
 
 class NonDominatedPriority(MOPriority):
     def __init__(
-            self,
-            metrics: Optional[List[str]] = None,
-            dim: Optional[int] = 0,
-            max_num_samples: Optional[int] = None
+        self,
+        metrics: Optional[List[str]] = None,
+        dim: Optional[int] = 0,
+        max_num_samples: Optional[int] = None,
     ):
         """
         A non-dominated sort strategy that uses an epsilon-net strategy instead of crowding distance proposed in:
@@ -105,4 +109,8 @@ class NonDominatedPriority(MOPriority):
         self.max_num_samples = max_num_samples
 
     def priority_unsafe(self, objectives: np.array) -> np.array:
-        return np.array(nondominated_sort(X=objectives, dim=self.dim, max_items=self.max_num_samples))
+        return np.array(
+            nondominated_sort(
+                X=objectives, dim=self.dim, max_items=self.max_num_samples
+            )
+        )

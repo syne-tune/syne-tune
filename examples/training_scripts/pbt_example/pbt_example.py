@@ -46,11 +46,11 @@ def pbt_function(config):
     faster convergence. Training will not converge without PBT.
     """
     lr = config["lr"]
-    checkpoint_dir = config.get('st_checkpoint_dir')
+    checkpoint_dir = config.get("st_checkpoint_dir")
     accuracy = 0.0  # end = 1000
     start = 1
     if checkpoint_dir and os.path.isdir(checkpoint_dir):
-        with open(os.path.join(checkpoint_dir, "checkpoint.json"), 'r') as f:
+        with open(os.path.join(checkpoint_dir, "checkpoint.json"), "r") as f:
             state = json.loads(f.read())
             accuracy = state["acc"]
             start = state["step"]
@@ -98,16 +98,15 @@ def pbt_function(config):
         time.sleep(2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lr', type=float)
+    parser.add_argument("--lr", type=float)
     parser.add_argument(f"--{ST_CHECKPOINT_DIR}", type=str)
 
     args, _ = parser.parse_known_args()
 
     params = vars(args)
     pbt_function(params)
-

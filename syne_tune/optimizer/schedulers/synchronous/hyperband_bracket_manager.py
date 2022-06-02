@@ -13,10 +13,13 @@
 from typing import Tuple
 import copy
 
-from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import \
-    SynchronousHyperbandBracket, SlotInRung
-from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system \
-    import RungSystemsPerBracket
+from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import (
+    SynchronousHyperbandBracket,
+    SlotInRung,
+)
+from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system import (
+    RungSystemsPerBracket,
+)
 
 
 class SynchronousHyperbandBracketManager(object):
@@ -42,6 +45,7 @@ class SynchronousHyperbandBracketManager(object):
     a free slot, a new bracket is created.
 
     """
+
     def __init__(self, bracket_rungs: RungSystemsPerBracket, mode: str):
         """
         :param bracket_rungs: Rungs for successive brackets, from largest to
@@ -50,13 +54,14 @@ class SynchronousHyperbandBracketManager(object):
         """
         self.num_bracket_offsets = len(bracket_rungs)
         assert self.num_bracket_offsets > 0
-        assert mode in {'min', 'max'}
+        assert mode in {"min", "max"}
         self.mode = mode
         self.max_num_rungs = len(bracket_rungs[0])
         for offset, rungs in enumerate(bracket_rungs):
-            assert len(rungs) == self.max_num_rungs - offset, \
-                f"bracket_rungs[{offset}] has size {len(rungs)}, should " +\
-                f"have size {self.max_num_rungs - offset}"
+            assert len(rungs) == self.max_num_rungs - offset, (
+                f"bracket_rungs[{offset}] has size {len(rungs)}, should "
+                + f"have size {self.max_num_rungs - offset}"
+            )
             SynchronousHyperbandBracket.assert_check_rungs(rungs)
         self._bracket_rungs = copy.deepcopy(bracket_rungs)
         # List of all brackets. We do not delete brackets which are
@@ -71,8 +76,8 @@ class SynchronousHyperbandBracketManager(object):
             _, levels = zip(*rungs)
             levels = (0,) + levels
             self._level_to_prev_level.update(
-                ((offset, lv), plv) for (lv, plv) in zip(
-                    levels[1:], levels[:-1]))
+                ((offset, lv), plv) for (lv, plv) in zip(levels[1:], levels[:-1])
+            )
         # Create primary bracket
         self._primary_bracket_id = self._create_new_bracket()
 
@@ -99,8 +104,9 @@ class SynchronousHyperbandBracketManager(object):
         bracket_id = self._next_bracket_id
         offset = bracket_id % self.num_bracket_offsets
         self._bracket_id_to_offset.append(offset)
-        self._brackets.append(SynchronousHyperbandBracket(
-            self._bracket_rungs[offset], self.mode))
+        self._brackets.append(
+            SynchronousHyperbandBracket(self._bracket_rungs[offset], self.mode)
+        )
         return bracket_id
 
     def next_job(self) -> Tuple[int, SlotInRung]:
@@ -132,8 +138,7 @@ class SynchronousHyperbandBracketManager(object):
         # None of the existing brackets accept jobs. Create a new one
         bracket_id = self._create_new_bracket()
         slot_in_rung = self._brackets[bracket_id].next_free_slot()
-        assert slot_in_rung is not None, \
-            "Newly created bracket has to have a free slot"
+        assert slot_in_rung is not None, "Newly created bracket has to have a free slot"
         return bracket_id, slot_in_rung
 
     def on_result(self, result: Tuple[int, SlotInRung]):
@@ -144,9 +149,10 @@ class SynchronousHyperbandBracketManager(object):
         :param result: Tuple (bracket_id, slot_in_rung)
         """
         bracket_id, slot_in_rung = result
-        assert self._primary_bracket_id <= bracket_id < self._next_bracket_id, \
-            f"Invalid bracket_id = {bracket_id}, must be in " +\
-            f"[{self._primary_bracket_id}, {self._next_bracket_id})"
+        assert self._primary_bracket_id <= bracket_id < self._next_bracket_id, (
+            f"Invalid bracket_id = {bracket_id}, must be in "
+            + f"[{self._primary_bracket_id}, {self._next_bracket_id})"
+        )
         bracket = self._brackets[bracket_id]
         bracket.on_result(slot_in_rung)
         for_primary = bracket_id == self._primary_bracket_id
@@ -155,7 +161,10 @@ class SynchronousHyperbandBracketManager(object):
             # unlikely, brackets after the primary one could be complete
             # as well
             last_bracket = self._next_bracket_id - 1
-            while bracket.is_bracket_complete() and self._primary_bracket_id < last_bracket:
+            while (
+                bracket.is_bracket_complete()
+                and self._primary_bracket_id < last_bracket
+            ):
                 self._primary_bracket_id += 1
                 bracket = self._brackets[self._primary_bracket_id]
             # May have to create a new bracket

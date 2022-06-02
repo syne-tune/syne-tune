@@ -8,19 +8,23 @@ from typing import Optional, Dict, List
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import TrialScheduler, SchedulerDecision, TrialSuggestion
+from syne_tune.optimizer.scheduler import (
+    TrialScheduler,
+    SchedulerDecision,
+    TrialSuggestion,
+)
 
 
 class MedianStoppingRule(TrialScheduler):
     def __init__(
-            self,
-            scheduler: TrialScheduler,
-            resource_attr: str,
-            running_average: bool = True,
-            metric: Optional[str] = None,
-            grace_time: Optional[int] = 1,
-            grace_population: int = 5,
-            rank_cutoff: float = 0.5,
+        self,
+        scheduler: TrialScheduler,
+        resource_attr: str,
+        running_average: bool = True,
+        metric: Optional[str] = None,
+        grace_time: Optional[int] = 1,
+        grace_population: int = 5,
+        rank_cutoff: float = 0.5,
     ):
         """
         Applies median stopping rule in top of an existing scheduler.
@@ -59,7 +63,7 @@ class MedianStoppingRule(TrialScheduler):
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
         new_metric = result[self.metric]
-        if self.mode == 'max':
+        if self.mode == "max":
             new_metric *= -1
         time_step = result[self.resource_attr]
 
@@ -70,7 +74,9 @@ class MedianStoppingRule(TrialScheduler):
 
         # insert new metric in sorted results acquired at this resource
         index = np.searchsorted(self.sorted_results[time_step], new_metric)
-        self.sorted_results[time_step] = np.insert(self.sorted_results[time_step], index, new_metric)
+        self.sorted_results[time_step] = np.insert(
+            self.sorted_results[time_step], index, new_metric
+        )
         normalized_rank = index / float(len(self.sorted_results[time_step]))
 
         if self.grace_condition(time_step=time_step):
@@ -88,7 +94,10 @@ class MedianStoppingRule(TrialScheduler):
     def grace_condition(self, time_step: float) -> bool:
         # lets the trial continue when the time is bellow the grace time and when not sufficiently many observations
         # are present for this time budget
-        if self.min_samples_required is not None and len(self.sorted_results[time_step]) < self.min_samples_required:
+        if (
+            self.min_samples_required is not None
+            and len(self.sorted_results[time_step]) < self.min_samples_required
+        ):
             return True
         if self.grace_time is not None and time_step < self.grace_time:
             return True

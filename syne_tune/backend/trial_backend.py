@@ -41,7 +41,9 @@ class TrialBackend:
         # index of the last metric that was seen for each trial-id
         self._last_metric_seen_index = defaultdict(lambda: 0)
 
-    def start_trial(self, config: Dict, checkpoint_trial_id: Optional[int] = None) -> TrialResult:
+    def start_trial(
+        self, config: Dict, checkpoint_trial_id: Optional[int] = None
+    ) -> TrialResult:
         """
         :param config: program arguments of `script`
         :param checkpoint_trial_id: id of a trial to be resumed, if given the checkpoint of this trial-id is be copied
@@ -49,7 +51,9 @@ class TrialBackend:
         """
         trial_id = self.new_trial_id()
         if checkpoint_trial_id is not None:
-            self.copy_checkpoint(src_trial_id=checkpoint_trial_id, tgt_trial_id=trial_id)
+            self.copy_checkpoint(
+                src_trial_id=checkpoint_trial_id, tgt_trial_id=trial_id
+            )
         self.trial_ids.append(trial_id)
         self._schedule(trial_id=trial_id, config=config)
         now = datetime.now()
@@ -58,7 +62,7 @@ class TrialBackend:
             config=config,
             creation_time=now,
             status=Status.in_progress,
-            metrics=[]
+            metrics=[],
         )
         self._trial_dict[trial_id] = trial
 
@@ -92,15 +96,16 @@ class TrialBackend:
         """
         raise NotImplementedError()
 
-    def resume_trial(
-            self, trial_id: int, new_config: Optional[dict] = None):
+    def resume_trial(self, trial_id: int, new_config: Optional[dict] = None):
         """
         :param trial_id: id of the trial to be resumed
         :param new_config: If given, the config maintained in trial.config is
             replaced by new_config
         :return:
         """
-        assert trial_id < len(self.trial_ids), "cannot resume a trial id that is not present"
+        assert trial_id < len(
+            self.trial_ids
+        ), "cannot resume a trial id that is not present"
         # todo assert that status is not running
         trial = self._trial_dict[trial_id]
         self._resume_trial(trial_id)
@@ -172,7 +177,9 @@ class TrialBackend:
         """
         pass
 
-    def fetch_status_results(self, trial_ids: List[int]) -> Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, Dict]]]:
+    def fetch_status_results(
+        self, trial_ids: List[int]
+    ) -> Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, Dict]]]:
         """
         :param trial_ids: trials whose information should be fetch.
         :return: A tuple containing 1) a dictionary from trial-id to Trial and status information 2) list of
@@ -184,16 +191,29 @@ class TrialBackend:
         for trial_result in all_trial_results:
             self._trial_dict[trial_result.trial_id] = trial_result
             if len(trial_result.metrics) > 0:
-                if trial_result.status in [Status.paused, Status.stopping, Status.stopped]:
+                if trial_result.status in [
+                    Status.paused,
+                    Status.stopping,
+                    Status.stopped,
+                ]:
                     # metrics obtained after a stopping decision from a scheduler are hidden.
                     new_metrics = []
                 else:
                     # we return the list of all new metrics, which may be empty if no new metrics were generated.
-                    position_last_seen = self._last_metric_seen_index[trial_result.trial_id]
+                    position_last_seen = self._last_metric_seen_index[
+                        trial_result.trial_id
+                    ]
                     new_metrics = trial_result.metrics[position_last_seen:]
-                    self._last_metric_seen_index[trial_result.trial_id] += len(new_metrics)
-                    if self.delete_checkpoints and trial_result.status == Status.completed:
-                        logger.info(f"Removing checkpoints for trial_id = {trial_result.trial_id}")
+                    self._last_metric_seen_index[trial_result.trial_id] += len(
+                        new_metrics
+                    )
+                    if (
+                        self.delete_checkpoints
+                        and trial_result.status == Status.completed
+                    ):
+                        logger.info(
+                            f"Removing checkpoints for trial_id = {trial_result.trial_id}"
+                        )
                         self.delete_checkpoint(trial_id=trial_result.trial_id)
                 for new_metric in new_metrics:
                     results.append((trial_result.trial_id, new_metric))
@@ -237,7 +257,9 @@ class TrialBackend:
             for trial_id in self.trial_ids:
                 self.delete_checkpoint(trial_id=trial_id)
 
-    def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
+    def set_path(
+        self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
+    ):
         """
         :param results_root: the local folder that should contains the results of the tuning experiment.
         Used by Tuner to indicate a desired path where the results should be written to. This is used

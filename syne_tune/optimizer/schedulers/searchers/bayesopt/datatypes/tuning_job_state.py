@@ -12,11 +12,16 @@
 # permissions and limitations under the License.
 from typing import List, Dict, Optional
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration, TrialEvaluations, PendingEvaluation, \
-    MetricValues, INTERNAL_METRIC_NAME
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+    TrialEvaluations,
+    PendingEvaluation,
+    MetricValues,
+    INTERNAL_METRIC_NAME,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
 
 
 class TuningJobState(object):
@@ -36,19 +41,22 @@ class TuningJobState(object):
     r.
 
     """
+
     def __init__(
-            self, hp_ranges: HyperparameterRanges,
-            config_for_trial: Dict[str, Configuration],
-            trials_evaluations: List[TrialEvaluations],
-            failed_trials: List[str] = None,
-            pending_evaluations: List[PendingEvaluation] = None):
+        self,
+        hp_ranges: HyperparameterRanges,
+        config_for_trial: Dict[str, Configuration],
+        trials_evaluations: List[TrialEvaluations],
+        failed_trials: List[str] = None,
+        pending_evaluations: List[PendingEvaluation] = None,
+    ):
         if failed_trials is None:
             failed_trials = []
         if pending_evaluations is None:
             pending_evaluations = []
         self._check_trial_ids(
-            config_for_trial, trials_evaluations, failed_trials,
-            pending_evaluations)
+            config_for_trial, trials_evaluations, failed_trials, pending_evaluations
+        )
         self.hp_ranges = hp_ranges
         self.config_for_trial = config_for_trial
         self.trials_evaluations = trials_evaluations
@@ -57,62 +65,69 @@ class TuningJobState(object):
 
     @staticmethod
     def _check_all_string(trial_ids: List[str], name: str):
-        assert all(isinstance(x, str) for x in trial_ids), \
-            f"trial_ids in {name} contain non-string values:\n{trial_ids}"
+        assert all(
+            isinstance(x, str) for x in trial_ids
+        ), f"trial_ids in {name} contain non-string values:\n{trial_ids}"
 
     @staticmethod
     def _check_trial_ids(
-            config_for_trial, trials_evaluations, failed_trials,
-            pending_evaluations):
+        config_for_trial, trials_evaluations, failed_trials, pending_evaluations
+    ):
         observed_trials = [x.trial_id for x in trials_evaluations]
         pending_trials = [x.trial_id for x in pending_evaluations]
-        TuningJobState._check_all_string(observed_trials, 'trials_evaluations')
-        TuningJobState._check_all_string(failed_trials, 'failed_trials')
-        TuningJobState._check_all_string(pending_trials, 'pending_evaluations')
+        TuningJobState._check_all_string(observed_trials, "trials_evaluations")
+        TuningJobState._check_all_string(failed_trials, "failed_trials")
+        TuningJobState._check_all_string(pending_trials, "pending_evaluations")
         trial_ids = set(observed_trials + failed_trials + pending_trials)
         for trial_id in trial_ids:
-            assert trial_id in config_for_trial, \
-                f"trial_id {trial_id} not contained in configs_for_trials"
+            assert (
+                trial_id in config_for_trial
+            ), f"trial_id {trial_id} not contained in configs_for_trials"
 
     @staticmethod
-    def empty_state(hp_ranges: HyperparameterRanges) -> 'TuningJobState':
+    def empty_state(hp_ranges: HyperparameterRanges) -> "TuningJobState":
         return TuningJobState(
             hp_ranges=hp_ranges,
             config_for_trial=dict(),
             trials_evaluations=[],
             failed_trials=[],
-            pending_evaluations=[])
+            pending_evaluations=[],
+        )
 
     def _find_labeled(self, trial_id: str) -> int:
         try:
             return next(
-                i for i, x in enumerate(self.trials_evaluations)
-                if x.trial_id == trial_id)
+                i
+                for i, x in enumerate(self.trials_evaluations)
+                if x.trial_id == trial_id
+            )
         except StopIteration:
             return -1
 
-    def _find_pending(
-            self, trial_id: str,
-            resource: Optional[int] = None) -> int:
+    def _find_pending(self, trial_id: str, resource: Optional[int] = None) -> int:
         try:
             return next(
-                i for i, x in enumerate(self.pending_evaluations)
-                if x.trial_id == trial_id and x.resource == resource)
+                i
+                for i, x in enumerate(self.pending_evaluations)
+                if x.trial_id == trial_id and x.resource == resource
+            )
         except StopIteration:
             return -1
 
     def _register_config_for_trial(
-            self, trial_id: str, config: Optional[Configuration] = None):
+        self, trial_id: str, config: Optional[Configuration] = None
+    ):
         if config is None:
-            assert trial_id in self.config_for_trial, \
-                f"trial_id = {trial_id} not yet registered in " + \
-                "config_for_trial, so config must be given"
+            assert trial_id in self.config_for_trial, (
+                f"trial_id = {trial_id} not yet registered in "
+                + "config_for_trial, so config must be given"
+            )
         elif trial_id not in self.config_for_trial:
             self.config_for_trial[trial_id] = config.copy()
 
     def metrics_for_trial(
-            self, trial_id: str,
-            config: Optional[Configuration] = None) -> MetricValues:
+        self, trial_id: str, config: Optional[Configuration] = None
+    ) -> MetricValues:
         """
         Helper for inserting new entry into `trials_evaluations`. If `trial_id`
         is already contained there, the corresponding `eval.metrics` is
@@ -136,15 +151,12 @@ class TuningJobState(object):
             self.trials_evaluations.append(new_eval)
         return metrics
 
-    def num_observed_cases(
-            self, metric_name: str = INTERNAL_METRIC_NAME) -> int:
-        return sum(ev.num_cases(metric_name)
-                   for ev in self.trials_evaluations)
+    def num_observed_cases(self, metric_name: str = INTERNAL_METRIC_NAME) -> int:
+        return sum(ev.num_cases(metric_name) for ev in self.trials_evaluations)
 
     def observed_data_for_metric(
-            self, metric_name: str = INTERNAL_METRIC_NAME,
-            resource_attr_name: str = None) -> (
-            List[Configuration], List[float]):
+        self, metric_name: str = INTERNAL_METRIC_NAME, resource_attr_name: str = None
+    ) -> (List[Configuration], List[float]):
         """
         Extracts datapoints from `trials_evaluations` for particular
         metric `metric_name`, in the form of a list of configs and a list of
@@ -172,12 +184,11 @@ class TuningJobState(object):
             metric_entry = ev.metrics.get(metric_name)
             if metric_entry is not None:
                 if isinstance(metric_entry, dict):
-                    assert resource_attr_name is not None, \
-                        "Need resource_attr_name for dict-valued metric " +\
-                        metric_name
+                    assert resource_attr_name is not None, (
+                        "Need resource_attr_name for dict-valued metric " + metric_name
+                    )
                     for resource, metric_val in metric_entry.items():
-                        config_ext = dict(
-                            config, **{resource_attr_name: int(resource)})
+                        config_ext = dict(config, **{resource_attr_name: int(resource)})
                         configs.append(config_ext)
                         metric_values.append(metric_val)
                 else:
@@ -189,8 +200,11 @@ class TuningJobState(object):
         return self._find_pending(trial_id, resource) != -1
 
     def is_labeled(
-            self, trial_id: str, metric_name: str = INTERNAL_METRIC_NAME,
-            resource: Optional[int] = None) -> bool:
+        self,
+        trial_id: str,
+        metric_name: str = INTERNAL_METRIC_NAME,
+        resource: Optional[int] = None,
+    ) -> bool:
         """
         Checks whether `trial_id` has observed data under `metric_name`. If
         `resource` is given, the observation must be at that resource level.
@@ -199,8 +213,7 @@ class TuningJobState(object):
         pos = self._find_labeled(trial_id)
         result = False
         if pos != -1:
-            metric_entry = self.trials_evaluations[pos].metrics.get(
-                metric_name)
+            metric_entry = self.trials_evaluations[pos].metrics.get(metric_name)
             if metric_entry is not None:
                 if resource is None:
                     result = True
@@ -209,8 +222,11 @@ class TuningJobState(object):
         return result
 
     def append_pending(
-            self, trial_id: str, config: Optional[Configuration] = None,
-            resource: Optional[int] = None):
+        self,
+        trial_id: str,
+        config: Optional[Configuration] = None,
+        resource: Optional[int] = None,
+    ):
         """
         Appends new pending evaluation. If the trial has not been registered
         here, `config` must be given. Otherwise, it is ignored.
@@ -218,11 +234,11 @@ class TuningJobState(object):
         """
         self._register_config_for_trial(trial_id, config)
         assert not self.is_pending(trial_id, resource)
-        self.pending_evaluations.append(PendingEvaluation(
-            trial_id=trial_id, resource=resource))
+        self.pending_evaluations.append(
+            PendingEvaluation(trial_id=trial_id, resource=resource)
+        )
 
-    def remove_pending(self, trial_id: str,
-                       resource: Optional[int] = None) -> bool:
+    def remove_pending(self, trial_id: str, resource: Optional[int] = None) -> bool:
         pos = self._find_pending(trial_id, resource)
         if pos != -1:
             self.pending_evaluations.pop(pos)
@@ -231,7 +247,8 @@ class TuningJobState(object):
             return False
 
     def pending_configurations(
-            self, resource_attr_name: str = None) -> List[Configuration]:
+        self, resource_attr_name: str = None
+    ) -> List[Configuration]:
         """
         Returns list of configurations corresponding to pending evaluations.
         If the latter have resource values, the configs are extended.
@@ -244,28 +261,33 @@ class TuningJobState(object):
             config = self.config_for_trial[pend_eval.trial_id]
             resource = pend_eval.resource
             if resource is not None:
-                assert resource_attr_name is not None, \
-                    f"Need resource_attr_name, or hp_ranges to be extended"
-                config = dict(
-                    config, **{resource_attr_name: int(resource)})
+                assert (
+                    resource_attr_name is not None
+                ), f"Need resource_attr_name, or hp_ranges to be extended"
+                config = dict(config, **{resource_attr_name: int(resource)})
             configs.append(config)
         return configs
 
     def _map_configs_for_matching(
-            self, config_for_trial: Dict[str, Configuration]) -> Dict[str, str]:
+        self, config_for_trial: Dict[str, Configuration]
+    ) -> Dict[str, str]:
         return {
             trial_id: self.hp_ranges.config_to_match_string(config)
-            for trial_id, config in config_for_trial.items()}
+            for trial_id, config in config_for_trial.items()
+        }
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, TuningJobState):
             return False
-        if self.failed_trials != other.failed_trials or \
-                self.pending_evaluations != other.pending_evaluations:
+        if (
+            self.failed_trials != other.failed_trials
+            or self.pending_evaluations != other.pending_evaluations
+        ):
             return False
         if self.hp_ranges != other.hp_ranges:
             return False
         if self.trials_evaluations != other.trials_evaluations:
             return False
-        return self._map_configs_for_matching(self.config_for_trial) == \
-               self._map_configs_for_matching(other.config_for_trial)
+        return self._map_configs_for_matching(
+            self.config_for_trial
+        ) == self._map_configs_for_matching(other.config_for_trial)

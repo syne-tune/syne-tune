@@ -1,25 +1,33 @@
 from typing import Dict
 
 from syne_tune.blackbox_repository import load, BlackboxRepositoryBackend
-from syne_tune.backend.simulator_backend.simulator_callback import \
-    SimulatorCallback
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers import FIFOScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import \
-    TransferLearningTaskEvaluations, BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    TransferLearningTaskEvaluations,
+    BoundingBox,
+)
 from syne_tune import StoppingCriterion, Tuner
 
 
-def load_transfer_learning_evaluations(blackbox_name: str, test_task: str, metric: str) -> Dict[str, TransferLearningTaskEvaluations]:
+def load_transfer_learning_evaluations(
+    blackbox_name: str, test_task: str, metric: str
+) -> Dict[str, TransferLearningTaskEvaluations]:
     bb_dict = load(blackbox_name)
-    metric_index = [i for i, name in enumerate(bb_dict[test_task].objectives_names) if name == metric][0]
+    metric_index = [
+        i
+        for i, name in enumerate(bb_dict[test_task].objectives_names)
+        if name == metric
+    ][0]
     transfer_learning_evaluations = {
         task: TransferLearningTaskEvaluations(
             hyperparameters=bb.hyperparameters,
             configuration_space=bb.configuration_space,
-            objectives_evaluations=bb.objectives_evaluations[..., metric_index:metric_index + 1],
+            objectives_evaluations=bb.objectives_evaluations[
+                ..., metric_index : metric_index + 1
+            ],
             objectives_names=[metric],
-
         )
         for task, bb in bb_dict.items()
         if task != test_task
@@ -27,21 +35,23 @@ def load_transfer_learning_evaluations(blackbox_name: str, test_task: str, metri
     return transfer_learning_evaluations
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     blackbox_name = "nasbench201"
     test_task = "cifar100"
     elapsed_time_attr = "metric_elapsed_time"
-    time_this_resource_attr = 'metric_runtime'
+    time_this_resource_attr = "metric_runtime"
     metric = "metric_valid_error"
 
     bb_dict = load(blackbox_name)
-    transfer_learning_evaluations = load_transfer_learning_evaluations(blackbox_name, test_task, metric)
+    transfer_learning_evaluations = load_transfer_learning_evaluations(
+        blackbox_name, test_task, metric
+    )
 
     scheduler = BoundingBox(
         scheduler_fun=lambda new_config_space, mode, metric: FIFOScheduler(
             new_config_space,
             points_to_evaluate=[],
-            searcher='random',
+            searcher="random",
             metric=metric,
             mode=mode,
         ),

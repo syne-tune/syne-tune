@@ -15,32 +15,39 @@ DistilBERT fine-tuned on IMDB sentiment classification task
 """
 from pathlib import Path
 
-from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import \
-    METRIC_ACCURACY, RESOURCE_ATTR, _config_space
+from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import (
+    METRIC_ACCURACY,
+    RESOURCE_ATTR,
+    _config_space,
+)
 
 
 def distilbert_imdb_default_params(params=None):
     return {
-        'max_resource_level': 15,
-        'instance_type': 'ml.g4dn.xlarge',
-        'num_workers': 4,
-        'framework': 'HuggingFace',
-        'framework_version': '4.4',
-        'pytorch_version': '1.6',
-        'dataset_path': './'
+        "max_resource_level": 15,
+        "instance_type": "ml.g4dn.xlarge",
+        "num_workers": 4,
+        "framework": "HuggingFace",
+        "framework_version": "4.4",
+        "pytorch_version": "1.6",
+        "dataset_path": "./",
     }
 
 
 def distilbert_imdb_benchmark(params):
     config_space = dict(
         _config_space,
-        dataset_path=params['dataset_path'],
-        max_steps=params['max_resource_level'])
+        dataset_path=params["dataset_path"],
+        max_steps=params["max_resource_level"],
+    )
     return {
-        'script':  Path(__file__).parent.parent / "training_scripts" / "distilbert_on_imdb" / "distilbert_on_imdb.py",
-        'metric': METRIC_ACCURACY,
-        'mode': 'max',
-        'resource_attr': RESOURCE_ATTR,
-        'max_resource_attr': 'epochs',
-        'config_space': config_space,
+        "script": Path(__file__).parent.parent
+        / "training_scripts"
+        / "distilbert_on_imdb"
+        / "distilbert_on_imdb.py",
+        "metric": METRIC_ACCURACY,
+        "mode": "max",
+        "resource_attr": RESOURCE_ATTR,
+        "max_resource_attr": "epochs",
+        "config_space": config_space,
     }

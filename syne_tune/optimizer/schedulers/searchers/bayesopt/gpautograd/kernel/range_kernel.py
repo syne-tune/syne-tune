@@ -10,10 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
-    import KernelFunction
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
+    KernelFunction,
+)
 
-__all__ = ['RangeKernelFunction']
+__all__ = ["RangeKernelFunction"]
 
 
 class RangeKernelFunction(KernelFunction):
@@ -23,8 +24,8 @@ class RangeKernelFunction(KernelFunction):
         (x, y) -> K(x[R], y[R])
 
     """
-    def __init__(self, dimension: int, kernel: KernelFunction, start: int,
-                 **kwargs):
+
+    def __init__(self, dimension: int, kernel: KernelFunction, start: int, **kwargs):
         """
         :param dimension: Input dimension
         :param kernel: Kernel function K
@@ -32,8 +33,11 @@ class RangeKernelFunction(KernelFunction):
 
         """
         super().__init__(dimension, **kwargs)
-        assert start >= 0 and start + kernel.dimension <= dimension, \
-            (start, dimension, kernel.dimension)
+        assert start >= 0 and start + kernel.dimension <= dimension, (
+            start,
+            dimension,
+            kernel.dimension,
+        )
         self.kernel = kernel
         self.start = start
 

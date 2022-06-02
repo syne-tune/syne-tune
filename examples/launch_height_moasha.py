@@ -24,7 +24,7 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import uniform
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
     np.random.seed(0)
 
@@ -36,7 +36,12 @@ if __name__ == '__main__':
         "theta": uniform(0, np.pi / 2),
         "sleep_time": 0.01,
     }
-    entry_point = Path(__file__).parent / "training_scripts" / "mo_artificial" / "mo_artificial.py"
+    entry_point = (
+        Path(__file__).parent
+        / "training_scripts"
+        / "mo_artificial"
+        / "mo_artificial.py"
+    )
     mode = "min"
 
     np.random.seed(0)
@@ -58,4 +63,3 @@ if __name__ == '__main__':
         sleep_time=0.5,
     )
     tuner.run()
-

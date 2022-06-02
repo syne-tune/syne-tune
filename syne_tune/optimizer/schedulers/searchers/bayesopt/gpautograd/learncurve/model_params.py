@@ -14,14 +14,23 @@ from typing import Dict
 import autograd.numpy as anp
 from autograd.tracer import getval
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import COVARIANCE_SCALE_LOWER_BOUND, DEFAULT_ENCODING
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution \
-    import Gamma, Normal
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
-    import encode_unwrap_parameter, IdentityScalarEncoding, register_parameter, create_encoding
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
-    import MeanFunction
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    COVARIANCE_SCALE_LOWER_BOUND,
+    DEFAULT_ENCODING,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution import (
+    Gamma,
+    Normal,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
+    encode_unwrap_parameter,
+    IdentityScalarEncoding,
+    register_parameter,
+    create_encoding,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    MeanFunction,
+)
 
 
 class ISSModelParameters(MeanFunction):
@@ -36,16 +45,23 @@ class ISSModelParameters(MeanFunction):
     There is also gamma > 0, which can be fixed to 1.
 
     """
+
     def __init__(self, gamma_is_one: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.gamma_is_one = gamma_is_one
         if not gamma_is_one:
             self.gamma_encoding = create_encoding(
-                 DEFAULT_ENCODING, 1.0, COVARIANCE_SCALE_LOWER_BOUND,
-                 10.0, 1, Gamma(mean=1.0, alpha=0.1))
+                DEFAULT_ENCODING,
+                1.0,
+                COVARIANCE_SCALE_LOWER_BOUND,
+                10.0,
+                1,
+                Gamma(mean=1.0, alpha=0.1),
+            )
             with self.name_scope():
                 self.gamma_internal = register_parameter(
-                    self.params, 'gamma', self.gamma_encoding)
+                    self.params, "gamma", self.gamma_encoding
+                )
 
     def param_encoding_pairs(self):
         if self.gamma_is_one:
@@ -57,15 +73,14 @@ class ISSModelParameters(MeanFunction):
         if self.gamma_is_one:
             return 1.0
         else:
-            gamma = encode_unwrap_parameter(
-                self.gamma_internal, self.gamma_encoding)
+            gamma = encode_unwrap_parameter(self.gamma_internal, self.gamma_encoding)
             return anp.reshape(gamma, (1,))[0]
 
     def get_params(self):
         if self.gamma_is_one:
             return dict()
         else:
-            return {'gamma': self.get_gamma()}
+            return {"gamma": self.get_gamma()}
 
     def set_gamma(self, val):
         assert not self.gamma_is_one, "Cannot set gamma (fixed to 1)"
@@ -73,7 +88,7 @@ class ISSModelParameters(MeanFunction):
 
     def set_params(self, param_dict):
         if not self.gamma_is_one:
-            self.set_gamma(param_dict['gamma'])
+            self.set_gamma(param_dict["gamma"])
 
     def get_issm_params(self, features) -> Dict:
         """
@@ -93,32 +108,40 @@ class IndependentISSModelParameters(ISSModelParameters):
     the configuration.
 
     """
+
     def __init__(self, gamma_is_one: bool = False, **kwargs):
         super().__init__(gamma_is_one, **kwargs)
         self.negalpha_encoding = create_encoding(
-            DEFAULT_ENCODING, 0.5, 1e-3, 5.0, 1, Gamma(mean=0.5, alpha=0.1))
+            DEFAULT_ENCODING, 0.5, 1e-3, 5.0, 1, Gamma(mean=0.5, alpha=0.1)
+        )
         self.beta_encoding = IdentityScalarEncoding(
-            constr_lower=-5.0, constr_upper=5.0, init_val=0.0,
-            regularizer=Normal(0.0, 1.0))
+            constr_lower=-5.0,
+            constr_upper=5.0,
+            init_val=0.0,
+            regularizer=Normal(0.0, 1.0),
+        )
         with self.name_scope():
             self.negalpha_internal = register_parameter(
-                self.params, 'negalpha', self.negalpha_encoding)
+                self.params, "negalpha", self.negalpha_encoding
+            )
             self.beta_internal = register_parameter(
-                self.params, 'beta', self.beta_encoding)
+                self.params, "beta", self.beta_encoding
+            )
 
     def param_encoding_pairs(self):
         return super().param_encoding_pairs() + [
             (self.negalpha_internal, self.negalpha_encoding),
-            (self.beta_internal, self.beta_encoding)]
+            (self.beta_internal, self.beta_encoding),
+        ]
 
     def get_alpha(self):
         negalpha = encode_unwrap_parameter(
-            self.negalpha_internal, self.negalpha_encoding)
+            self.negalpha_internal, self.negalpha_encoding
+        )
         return -anp.reshape(negalpha, (1,))[0]
 
     def get_beta(self):
-        beta = encode_unwrap_parameter(
-            self.beta_internal, self.beta_encoding)
+        beta = encode_unwrap_parameter(self.beta_internal, self.beta_encoding)
         return anp.reshape(beta, (1,))[0]
 
     def get_params(self):
@@ -133,13 +156,14 @@ class IndependentISSModelParameters(ISSModelParameters):
 
     def set_params(self, param_dict):
         super().set_params(param_dict)
-        self.set_alpha(param_dict['alpha'])
-        self.set_beta(param_dict['beta'])
+        self.set_alpha(param_dict["alpha"])
+        self.set_beta(param_dict["beta"])
 
     def get_issm_params(self, features) -> Dict:
         n = getval(features.shape[0])
         one_vec = anp.ones((n,))
         return {
-            'alpha': one_vec * self.get_alpha(),
-            'beta': one_vec * self.get_beta(),
-            'gamma': self.get_gamma()}
+            "alpha": one_vec * self.get_alpha(),
+            "beta": one_vec * self.get_beta(),
+            "gamma": self.get_gamma(),
+        }

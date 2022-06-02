@@ -23,15 +23,15 @@ from argparse import ArgumentParser
 report = Reporter()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
     parser = ArgumentParser()
-    parser.add_argument('--steps', type=int)
-    parser.add_argument('--width', type=float)
-    parser.add_argument('--height', type=float)
-    parser.add_argument('--sleep_time', type=float, default=0.1)
+    parser.add_argument("--steps", type=int)
+    parser.add_argument("--width", type=float)
+    parser.add_argument("--height", type=float)
+    parser.add_argument("--sleep_time", type=float, default=0.1)
 
     args, _ = parser.parse_known_args()
 

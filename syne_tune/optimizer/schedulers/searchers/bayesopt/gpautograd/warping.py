@@ -12,17 +12,25 @@
 # permissions and limitations under the License.
 import autograd.numpy as anp
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import DEFAULT_ENCODING, INITIAL_WARPING, WARPING_LOWER_BOUND, \
-    WARPING_UPPER_BOUND, NUMERICAL_JITTER
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution \
-    import LogNormal
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
-    import KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon \
-    import Block
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
-    import encode_unwrap_parameter, register_parameter, create_encoding
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    DEFAULT_ENCODING,
+    INITIAL_WARPING,
+    WARPING_LOWER_BOUND,
+    WARPING_UPPER_BOUND,
+    NUMERICAL_JITTER,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution import (
+    LogNormal,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon import Block
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
+    encode_unwrap_parameter,
+    register_parameter,
+    create_encoding,
+)
 
 
 class OneDimensionalWarping(Block):
@@ -41,15 +49,22 @@ class OneDimensionalWarping(Block):
     :param input_range: tuple that contains the lower and upper bounds of the
         entries of x.
     """
+
     def __init__(self, input_range, encoding_type=DEFAULT_ENCODING, **kwargs):
         super().__init__(**kwargs)
         self.input_range = input_range
         self.encoding = create_encoding(
-            encoding_type, INITIAL_WARPING, WARPING_LOWER_BOUND,
-            WARPING_UPPER_BOUND, 2, LogNormal(0.0, 0.75))
+            encoding_type,
+            INITIAL_WARPING,
+            WARPING_LOWER_BOUND,
+            WARPING_UPPER_BOUND,
+            2,
+            LogNormal(0.0, 0.75),
+        )
         with self.name_scope():
             self.warping_internal = register_parameter(
-                self.params, 'warping', self.encoding, shape=(2,))
+                self.params, "warping", self.encoding, shape=(2,)
+            )
 
     def _rescale(self, x):
         """
@@ -58,8 +73,8 @@ class OneDimensionalWarping(Block):
         :param x: np.ndarray to be rescaled
         """
         lower, upper = self.input_range
-        P = (1. - 2 * NUMERICAL_JITTER)/(upper - lower)
-        Q = (NUMERICAL_JITTER * (upper + lower) - lower)/(upper - lower)
+        P = (1.0 - 2 * NUMERICAL_JITTER) / (upper - lower)
+        Q = (NUMERICAL_JITTER * (upper + lower) - lower) / (upper - lower)
 
         return P * x + Q
 
@@ -76,8 +91,7 @@ class OneDimensionalWarping(Block):
         warping_a = warping[0]
         warping_b = warping[1]
 
-        return 1. - anp.power(1. - anp.power(
-            self._rescale(x), warping_a), warping_b)
+        return 1.0 - anp.power(1.0 - anp.power(self._rescale(x), warping_a), warping_b)
 
     def param_encoding_pairs(self):
         """
@@ -85,15 +99,13 @@ class OneDimensionalWarping(Block):
         and their respective encodings
         """
         return [(self.warping_internal, self.encoding)]
-    
+
     def get_params(self):
         warping = anp.reshape(self._warping(), (-1,))
-        return {
-            'warping_a': warping[0],
-            'warping_b': warping[1]}
+        return {"warping_a": warping[0], "warping_b": warping[1]}
 
     def set_params(self, param_dict):
-        warping = [param_dict['warping_a'], param_dict['warping_b']]
+        warping = [param_dict["warping_a"], param_dict["warping_b"]]
         self.encoding.set(self.warping_internal, warping)
 
 
@@ -110,13 +122,15 @@ class Warping(Block):
         }
     that maps column indexes to their corresponding ranges.
     """
-    def __init__(self, dimension, index_to_range, encoding_type=DEFAULT_ENCODING,
-                 **kwargs):
+
+    def __init__(
+        self, dimension, index_to_range, encoding_type=DEFAULT_ENCODING, **kwargs
+    ):
         super().__init__(**kwargs)
 
         assert isinstance(index_to_range, dict)
         assert all(isinstance(r, tuple) for r in index_to_range.values())
-        assert all(r[0] < r[1] for r in index_to_range.values()) # for dictionary
+        assert all(r[0] < r[1] for r in index_to_range.values())  # for dictionary
 
         self.transformations = []
         self._params_encoding_pairs = []
@@ -127,7 +141,8 @@ class Warping(Block):
         for col_index in range(dimension):
             if col_index in index_to_range:
                 transformation = OneDimensionalWarping(
-                    index_to_range[col_index], encoding_type=encoding_type)
+                    index_to_range[col_index], encoding_type=encoding_type
+                )
                 # To make sure that OneDimensionalWarping will get initialized
                 # and managed by Warping, we register it as a child.
                 self.register_child(transformation, name=transformation.name)
@@ -137,8 +152,7 @@ class Warping(Block):
                 # if a column is not warped, we do not apply any transformation
                 transformation = lambda x: x
             self.transformations.append(transformation)
-        assert some_are_warped,\
-            "At least one of the dimensions must be warped"
+        assert some_are_warped, "At least one of the dimensions must be warped"
 
     def forward(self, X):
         """
@@ -148,7 +162,7 @@ class Warping(Block):
         """
         warped_X = []
         for col_index, transformation in enumerate(self.transformations):
-            x = X[:, col_index:(col_index+1)]
+            x = X[:, col_index : (col_index + 1)]
             warped_X.append(transformation(x))
 
         return anp.concatenate(warped_X, axis=1)
@@ -196,6 +210,7 @@ class WarpedKernel(KernelFunction):
     """
     Block that composes warping with an arbitrary kernel
     """
+
     def __init__(self, kernel: KernelFunction, warping: Warping, **kwargs):
         super().__init__(kernel.dimension, **kwargs)
         self.kernel = kernel
@@ -223,15 +238,14 @@ class WarpedKernel(KernelFunction):
     def diagonal(self, X):
         # If kernel.diagonal does not depend on content of X (but just its
         # size), can pass X instead of self.warping(X)
-        warped_X = self.warping(X) if self.kernel.diagonal_depends_on_X()             else X
+        warped_X = self.warping(X) if self.kernel.diagonal_depends_on_X() else X
         return self.kernel.diagonal(warped_X)
 
     def diagonal_depends_on_X(self):
         return self.kernel.diagonal_depends_on_X()
 
     def param_encoding_pairs(self):
-        return self.kernel.param_encoding_pairs() + \
-               self.warping.param_encoding_pairs()
+        return self.kernel.param_encoding_pairs() + self.warping.param_encoding_pairs()
 
     def get_params(self):
         # We use the union of get_params for kernel and warping, without

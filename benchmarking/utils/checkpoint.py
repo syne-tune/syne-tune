@@ -16,10 +16,12 @@ import os
 
 from syne_tune.constants import ST_CHECKPOINT_DIR
 
-__all__ = ['add_checkpointing_to_argparse',
-           'resume_from_checkpointed_model',
-           'checkpoint_model_at_rung_level',
-           'pytorch_load_save_functions']
+__all__ = [
+    "add_checkpointing_to_argparse",
+    "resume_from_checkpointed_model",
+    "checkpoint_model_at_rung_level",
+    "pytorch_load_save_functions",
+]
 
 
 def add_checkpointing_to_argparse(parser: argparse.ArgumentParser):
@@ -34,8 +36,8 @@ def add_checkpointing_to_argparse(parser: argparse.ArgumentParser):
 
 
 def resume_from_checkpointed_model(
-        config: Dict,
-        load_model_fn: Callable[[str], int]) -> int:
+    config: Dict, load_model_fn: Callable[[str], int]
+) -> int:
     """
     Checks whether there is a checkpoint to be resumed from. If so, the
     checkpoint is loaded by calling `load_model_fn`. This function takes
@@ -55,17 +57,18 @@ def resume_from_checkpointed_model(
     local_path = config.get(ST_CHECKPOINT_DIR)
     if local_path is not None and os.path.exists(local_path):
         resume_from = load_model_fn(local_path)
-        trial_id = config.get('trial_id')
+        trial_id = config.get("trial_id")
         if trial_id is not None:
-            print(f"Trial {trial_id}: Loading checkpoint [resume_from = "
-                  f"{resume_from}, local_path = {local_path}]")
+            print(
+                f"Trial {trial_id}: Loading checkpoint [resume_from = "
+                f"{resume_from}, local_path = {local_path}]"
+            )
     return resume_from
 
 
 def checkpoint_model_at_rung_level(
-        config: Dict,
-        save_model_fn: Callable[[str, int], Any],
-        resource: int):
+    config: Dict, save_model_fn: Callable[[str, int], Any], resource: int
+):
     """
     If checkpointing is supported, checks whether a checkpoint is to be
     written. This is the case if the checkpoint dir is set in `config`.
@@ -84,21 +87,26 @@ def checkpoint_model_at_rung_level(
     local_path = config.get(ST_CHECKPOINT_DIR)
     if local_path is not None:
         save_model_fn(local_path, resource)
-        trial_id = config.get('trial_id')
+        trial_id = config.get("trial_id")
         if trial_id is not None:
-            print(f"Trial {trial_id}: Saving checkpoint [resource = "
-                  f"{resource}, local_path = {local_path}]")
+            print(
+                f"Trial {trial_id}: Saving checkpoint [resource = "
+                f"{resource}, local_path = {local_path}]"
+            )
 
 
-RESOURCE_NAME = 'st_resource'
+RESOURCE_NAME = "st_resource"
 
-STATE_DICT_PREFIX = 'st_state_dict_'
+STATE_DICT_PREFIX = "st_state_dict_"
 
-MUTABLE_STATE_PREFIX = 'st_mutable_'
+MUTABLE_STATE_PREFIX = "st_mutable_"
+
 
 def pytorch_load_save_functions(
-        state_dict_objects: dict, mutable_state: Optional[dict] = None,
-        fname: str = 'checkpoint.json'):
+    state_dict_objects: dict,
+    mutable_state: Optional[dict] = None,
+    fname: str = "checkpoint.json",
+):
     """
     Provides default `load_model_fn`, `save_model_fn` functions for standard
     PyTorch models (arguments to `resume_from_checkpointed_model`,
@@ -134,8 +142,9 @@ def pytorch_load_save_functions(
         os.makedirs(local_path, exist_ok=True)
         _mutable_state, local_filename = _common_init(local_path)
         local_filename = os.path.join(local_path, fname)
-        checkpoint = {STATE_DICT_PREFIX + k: v.state_dict()
-                      for k, v in state_dict_objects.items()}
+        checkpoint = {
+            STATE_DICT_PREFIX + k: v.state_dict() for k, v in state_dict_objects.items()
+        }
         checkpoint[RESOURCE_NAME] = resource
         for k, v in _mutable_state.items():
             checkpoint[MUTABLE_STATE_PREFIX + k] = v

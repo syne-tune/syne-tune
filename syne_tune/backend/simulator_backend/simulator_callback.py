@@ -13,8 +13,7 @@
 import logging
 
 from syne_tune.tuner_callback import StoreResultsCallback
-from syne_tune.backend.simulator_backend.simulator_backend import \
-    SimulatorBackend
+from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune import Tuner
 from syne_tune.constants import ST_TUNER_TIME
 from syne_tune import StoppingCriterion
@@ -47,6 +46,7 @@ class SimulatorCallback(StoreResultsCallback):
     time keeper.
 
     """
+
     def __init__(self):
         # Note: `results_update_interval` is w.r.t. real time, not
         # simulated time. Storing results intermediately is not important for
@@ -62,11 +62,12 @@ class SimulatorCallback(StoreResultsCallback):
         if not isinstance(stop_criterion, StoppingCriterion):
             # Note: We could raise an exception here ...
             logger.warning(
-                "The stop_criterion argument to Tuner is not of type " +\
-                "StoppingCriterion. This can be problematic when using " +\
-                "the SimulatorBackend. If your stop_criterion depends on " +\
-                "wallclock time, you'll get wrong behaviour. It is highly " +\
-                "recommended to use StoppingCriterion!")
+                "The stop_criterion argument to Tuner is not of type "
+                + "StoppingCriterion. This can be problematic when using "
+                + "the SimulatorBackend. If your stop_criterion depends on "
+                + "wallclock time, you'll get wrong behaviour. It is highly "
+                + "recommended to use StoppingCriterion!"
+            )
         elif stop_criterion.max_wallclock_time is not None:
             # Since `TuningStatus` is measuring real time, not simulated time,
             # we need to replace the `max_wallclock_time` part of this criterion
@@ -89,10 +90,12 @@ class SimulatorCallback(StoreResultsCallback):
         super(SimulatorCallback, self).on_tuning_start(tuner=tuner)
 
         backend = tuner.trial_backend
-        assert isinstance(backend, SimulatorBackend), \
-            "Use SimulatorCallback only together with SimulatorBackend"
-        assert tuner.sleep_time == 0, \
-            "Initialize Tuner with sleep_time = 0 if you use the SimulatorBackend"
+        assert isinstance(
+            backend, SimulatorBackend
+        ), "Use SimulatorCallback only together with SimulatorBackend"
+        assert (
+            tuner.sleep_time == 0
+        ), "Initialize Tuner with sleep_time = 0 if you use the SimulatorBackend"
         self._time_keeper = backend.time_keeper
         scheduler = tuner.scheduler
         if isinstance(scheduler, FIFOScheduler):

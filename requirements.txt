@@ -9,7 +9,3 @@ pandas
 ujson
 
 typing_extensions
-
-# for testing
-pytest
-

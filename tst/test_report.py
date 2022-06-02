@@ -25,9 +25,12 @@ def test_report_logger():
     report(train_nll=1.2, time=2.0, step=3)
 
     lines = [
-        "[tune-metric]: {\"train_nll\": 1.45, \"time\": 1.0, \"step\": 2}\n",
-        "[tune-metric]: {\"train_nll\": 1.2, \"time\": 2.0, \"step\": 3}\n",
+        '[tune-metric]: {"train_nll": 1.45, "time": 1.0, "step": 2}\n',
+        '[tune-metric]: {"train_nll": 1.2, "time": 2.0, "step": 3}\n',
     ]
     metrics = retrieve(log_lines=lines)
     print(metrics)
-    assert metrics == [{'train_nll': 1.45, 'time': 1.0, 'step': 2}, {'train_nll': 1.2, 'time': 2.0, 'step': 3}]
+    assert metrics == [
+        {"train_nll": 1.45, "time": 1.0, "step": 2},
+        {"train_nll": 1.2, "time": 2.0, "step": 3},
+    ]

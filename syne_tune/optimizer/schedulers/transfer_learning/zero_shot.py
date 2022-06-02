@@ -20,21 +20,24 @@ import xgboost
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningTaskEvaluations, TransferLearningMixin
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    TransferLearningTaskEvaluations,
+    TransferLearningMixin,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
     def __init__(
-            self,
-            config_space: Dict,
-            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            metric: str,
-            mode: str = 'min',
-            sort_transfer_learning_evaluations: bool = True,
-            use_surrogates: bool = False,
-            random_seed: Optional[int] = None
+        self,
+        config_space: Dict,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        metric: str,
+        mode: str = "min",
+        sort_transfer_learning_evaluations: bool = True,
+        use_surrogates: bool = False,
+        random_seed: Optional[int] = None,
     ) -> None:
         """
         A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
@@ -54,9 +57,12 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         generate a set of configurations and will impute their performance using surrogate models.
         :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
         """
-        super().__init__(config_space=config_space,
-                         transfer_learning_evaluations=transfer_learning_evaluations, metric=metric,
-                         metric_names=[metric])
+        super().__init__(
+            config_space=config_space,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+            metric=metric,
+            metric_names=[metric],
+        )
         self._mode = mode
         self._random_state = np.random.RandomState(random_seed)
         if use_surrogates and len(transfer_learning_evaluations) <= 1:
@@ -64,38 +70,51 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
             sort_transfer_learning_evaluations = False
         if use_surrogates:
             sort_transfer_learning_evaluations = False
-            transfer_learning_evaluations = self._create_surrogate_transfer_learning_evaluations(
-                config_space, transfer_learning_evaluations, metric
+            transfer_learning_evaluations = (
+                self._create_surrogate_transfer_learning_evaluations(
+                    config_space, transfer_learning_evaluations, metric
+                )
             )
-        warning_message = 'This searcher assumes that each hyperparameter configuration occurs in all tasks. '
+        warning_message = "This searcher assumes that each hyperparameter configuration occurs in all tasks. "
         scores = list()
         hyperparameters = None
         for task_name, task_data in transfer_learning_evaluations.items():
-            assert hyperparameters is None or task_data.hyperparameters.shape == hyperparameters.shape, warning_message
+            assert (
+                hyperparameters is None
+                or task_data.hyperparameters.shape == hyperparameters.shape
+            ), warning_message
             hyperparameters = task_data.hyperparameters
             if sort_transfer_learning_evaluations:
-                hyperparameters = task_data.hyperparameters.sort_values(list(task_data.hyperparameters.columns))
+                hyperparameters = task_data.hyperparameters.sort_values(
+                    list(task_data.hyperparameters.columns)
+                )
             idx = hyperparameters.index.values
             avg_scores = task_data.objective_values(metric).mean(axis=1)
-            if self._mode == 'max':
+            if self._mode == "max":
                 avg_scores = avg_scores.max(axis=1)[idx]
             else:
                 avg_scores = avg_scores.min(axis=1)[idx]
             scores.append(avg_scores)
         if not use_surrogates:
             if len(transfer_learning_evaluations) > 1:
-                logger.warning(warning_message + 'If this is not the case, this searcher fails without a warning.')
+                logger.warning(
+                    warning_message
+                    + "If this is not the case, this searcher fails without a warning."
+                )
             if not sort_transfer_learning_evaluations:
                 hyperparameters = hyperparameters.copy()
         hyperparameters.reset_index(drop=True, inplace=True)
         self._hyperparameters = hyperparameters
-        sign = 1 if self._mode == 'min' else -1
+        sign = 1 if self._mode == "min" else -1
         self._scores = sign * pd.DataFrame(scores)
         self._ranks = self._update_ranks()
 
     def _create_surrogate_transfer_learning_evaluations(
-            self, config_space: Dict, transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            metric: str) -> Dict[str, TransferLearningTaskEvaluations]:
+        self,
+        config_space: Dict,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        metric: str,
+    ) -> Dict[str, TransferLearningTaskEvaluations]:
         """
         Creates transfer_learning_evaluations where each configuration is evaluated on each task using surrogate models.
         """
@@ -108,19 +127,29 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
             )
             X_train = task_data.hyperparameters
             y_train = task_data.objective_values(metric).mean(axis=1)
-            if self._mode == 'max':
+            if self._mode == "max":
                 y_train = y_train.max(axis=1)
             else:
                 y_train = y_train.min(axis=1)
             estimator.fit(X_train, y_train)
 
             num_candidates = 10000 if len(config_space) >= 6 else 5 ** len(config_space)
-            hyperparameters_new = pd.DataFrame([self._sample_random_config(config_space)
-                                                for _ in range(num_candidates)])
-            objectives_evaluations_new = estimator.predict(hyperparameters_new).reshape(-1, 1, 1, 1)
-            surrogate_transfer_learning_evaluations[task_name] = TransferLearningTaskEvaluations(
-                configuration_space=config_space, hyperparameters=hyperparameters_new, objectives_names=[metric],
-                objectives_evaluations=objectives_evaluations_new
+            hyperparameters_new = pd.DataFrame(
+                [
+                    self._sample_random_config(config_space)
+                    for _ in range(num_candidates)
+                ]
+            )
+            objectives_evaluations_new = estimator.predict(hyperparameters_new).reshape(
+                -1, 1, 1, 1
+            )
+            surrogate_transfer_learning_evaluations[
+                task_name
+            ] = TransferLearningTaskEvaluations(
+                configuration_space=config_space,
+                hyperparameters=hyperparameters_new,
+                objectives_names=[metric],
+                objectives_evaluations=objectives_evaluations_new,
             )
         return surrogate_transfer_learning_evaluations
 

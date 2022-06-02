@@ -16,7 +16,7 @@ import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.kde_searcher import KernelDensityEstimator
 
-__all__ = ['MultiFidelityKernelDensityEstimator']
+__all__ = ["MultiFidelityKernelDensityEstimator"]
 
 logger = logging.getLogger(__name__)
 
@@ -73,19 +73,20 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     """
 
     def __init__(
-            self,
-            config_space: Dict,
-            metric: str,
-            points_to_evaluate: Optional[List[Dict]] = None,
-            mode: str = "min",
-            num_min_data_points: int = None,
-            top_n_percent: int = 15,
-            min_bandwidth: float = 0.1,
-            num_candidates: int = 64,
-            bandwidth_factor: int = 3,
-            random_fraction: float = .33,
-            resource_attr: str = 'epoch',
-            **kwargs):
+        self,
+        config_space: Dict,
+        metric: str,
+        points_to_evaluate: Optional[List[Dict]] = None,
+        mode: str = "min",
+        num_min_data_points: int = None,
+        top_n_percent: int = 15,
+        min_bandwidth: float = 0.1,
+        num_candidates: int = 64,
+        bandwidth_factor: int = 3,
+        random_fraction: float = 0.33,
+        resource_attr: str = "epoch",
+        **kwargs
+    ):
         super().__init__(
             config_space,
             metric=metric,
@@ -96,25 +97,31 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             min_bandwidth=min_bandwidth,
             num_candidates=num_candidates,
             bandwidth_factor=bandwidth_factor,
-            random_fraction=random_fraction, **kwargs)
+            random_fraction=random_fraction,
+            **kwargs
+        )
         self.resource_attr = resource_attr
         self.resource_levels = []
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import \
-            HyperbandScheduler
-        from syne_tune.optimizer.schedulers.synchronous.hyperband import \
-            SynchronousHyperbandScheduler
+        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+        from syne_tune.optimizer.schedulers.synchronous.hyperband import (
+            SynchronousHyperbandScheduler,
+        )
 
-        assert isinstance(scheduler, HyperbandScheduler) or \
-               isinstance(scheduler, SynchronousHyperbandScheduler), \
-            "This searcher requires HyperbandScheduler or " +\
-            "SynchronousHyperbandScheduler scheduler"
+        assert isinstance(scheduler, HyperbandScheduler) or isinstance(
+            scheduler, SynchronousHyperbandScheduler
+        ), (
+            "This searcher requires HyperbandScheduler or "
+            + "SynchronousHyperbandScheduler scheduler"
+        )
 
     def train_kde(self, train_data, train_targets):
 
         # find the highest resource level we have at least num_min_data_points data points
-        unique_resource_levels, counts = np.unique(self.resource_levels, return_counts=True)
+        unique_resource_levels, counts = np.unique(
+            self.resource_levels, return_counts=True
+        )
         idx = np.where(counts >= self.num_min_data_points)[0]
         if len(idx) == 0:
             return

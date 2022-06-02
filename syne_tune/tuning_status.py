@@ -41,14 +41,26 @@ class MetricsStatistics:
     def add(self, metrics: Dict):
         for metric_name, current_metric in metrics.items():
             if metric_name in self.is_numeric:
-                if self.is_numeric[metric_name] != isinstance(current_metric, numbers.Number):
-                    logging.warning(f'Numeric and non-numeric values reported for metric {metric_name}.')
+                if self.is_numeric[metric_name] != isinstance(
+                    current_metric, numbers.Number
+                ):
+                    logging.warning(
+                        f"Numeric and non-numeric values reported for metric {metric_name}."
+                    )
             if self.is_numeric.get(metric_name, True):
-                self.is_numeric[metric_name] = isinstance(current_metric, numbers.Number)
+                self.is_numeric[metric_name] = isinstance(
+                    current_metric, numbers.Number
+                )
                 if self.is_numeric[metric_name]:
-                    self.min_metrics[metric_name] = min(self.min_metrics.get(metric_name, np.inf), current_metric)
-                    self.max_metrics[metric_name] = max(self.max_metrics.get(metric_name, -np.inf), current_metric)
-                    self.sum_metrics[metric_name] = self.sum_metrics.get(metric_name, 0) + current_metric
+                    self.min_metrics[metric_name] = min(
+                        self.min_metrics.get(metric_name, np.inf), current_metric
+                    )
+                    self.max_metrics[metric_name] = max(
+                        self.max_metrics.get(metric_name, -np.inf), current_metric
+                    )
+                    self.sum_metrics[metric_name] = (
+                        self.sum_metrics.get(metric_name, 0) + current_metric
+                    )
         self.metric_names = list(self.min_metrics.keys())
         self.last_metrics = metrics
         self.count += 1
@@ -58,6 +70,7 @@ class TuningStatus:
     """
     Information of a tuning job to display as progress or to use to decide whether to stop the tuning job.
     """
+
     def __init__(self, metric_names: List[str]):
         self.metric_names = metric_names
         self.start_time = time.perf_counter()
@@ -68,13 +81,18 @@ class TuningStatus:
         self.last_trial_status_seen = OrderedDict()
         self.trial_rows = OrderedDict({})
 
-    def update(self, trial_status_dict: Dict[int, Tuple[Trial, str]], new_results: List[Tuple[int, Dict]]):
+    def update(
+        self,
+        trial_status_dict: Dict[int, Tuple[Trial, str]],
+        new_results: List[Tuple[int, Dict]],
+    ):
         """
         Updates the tuning status given new statuses and results.
         """
 
         self.last_trial_status_seen.update(
-            {k: v[1] for k, v in trial_status_dict.items()})
+            {k: v[1] for k, v in trial_status_dict.items()}
+        )
 
         for trial_id, new_result in new_results:
             self.overall_metric_statistics.add(new_result)
@@ -91,9 +109,13 @@ class TuningStatus:
             row.update(self.trial_metric_statistics[trial_id].last_metrics)
 
             if ST_WORKER_TIME in self.trial_metric_statistics[trial_id].max_metrics:
-                row["worker-time"] = self.trial_metric_statistics[trial_id].max_metrics[ST_WORKER_TIME]
+                row["worker-time"] = self.trial_metric_statistics[trial_id].max_metrics[
+                    ST_WORKER_TIME
+                ]
             if ST_WORKER_COST in self.trial_metric_statistics[trial_id].max_metrics:
-                row["worker-cost"] = self.trial_metric_statistics[trial_id].max_metrics[ST_WORKER_COST]
+                row["worker-cost"] = self.trial_metric_statistics[trial_id].max_metrics[
+                    ST_WORKER_COST
+                ]
 
             self.trial_rows[trial_id] = row
 
@@ -114,7 +136,10 @@ class TuningStatus:
         return len(self.last_trial_status_seen)
 
     def _num_trials(self, status: str):
-        return sum(trial_status == status for trial_status in self.last_trial_status_seen.values())
+        return sum(
+            trial_status == status
+            for trial_status in self.last_trial_status_seen.values()
+        )
 
     @property
     def num_trials_completed(self):
@@ -131,8 +156,12 @@ class TuningStatus:
         """
         # note it may be inefficient to query several times the dataframe in case a very large number of jobs are
         #  present, we could query the dataframe only once
-        return self._num_trials(status=Status.completed) + self._num_trials(status=Status.stopped) + \
-               self._num_trials(status=Status.stopping) + self._num_trials(status=Status.failed)
+        return (
+            self._num_trials(status=Status.completed)
+            + self._num_trials(status=Status.stopped)
+            + self._num_trials(status=Status.stopping)
+            + self._num_trials(status=Status.failed)
+        )
 
     @property
     def num_trials_running(self):
@@ -186,11 +215,12 @@ class TuningStatus:
             res_str = df.loc[:, cols].to_string(index=False, na_rep="-") + "\n"
         else:
             res_str = ""
-        res_str += \
-               f"{num_running} trials running, " \
-               f"{num_finished} finished ({self.num_trials_completed} until the end), " \
-               f"{self.wallclock_time:.2f}s wallclock-time"
-               # f"{self.user_time:.2f}s approximated user-time"
+        res_str += (
+            f"{num_running} trials running, "
+            f"{num_finished} finished ({self.num_trials_completed} until the end), "
+            f"{self.wallclock_time:.2f}s wallclock-time"
+        )
+        # f"{self.user_time:.2f}s approximated user-time"
         cost = self.cost
         if cost is not None and cost > 0.0:
             res_str += f", ${cost:.2f} estimated cost"
@@ -199,9 +229,7 @@ class TuningStatus:
 
 
 def print_best_metric_found(
-        tuning_status: TuningStatus,
-        metric_names: List[str],
-        mode: str
+    tuning_status: TuningStatus, metric_names: List[str], mode: str
 ) -> Tuple[int, float]:
     """
     Prints trial status summary and the best metric found.
@@ -217,7 +245,7 @@ def print_best_metric_found(
     metric_name = metric_names[0]
     print("-" * 20)
     print(f"Resource summary (last result is reported):\n{str(tuning_status)}")
-    if mode == 'min':
+    if mode == "min":
         metric_per_trial = [
             (trial_id, stats.min_metrics.get(metric_name, np.inf))
             for trial_id, stats in tuning_status.trial_metric_statistics.items()

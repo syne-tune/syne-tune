@@ -13,7 +13,7 @@ import dill
 from syne_tune.backend.python_backend.python_backend import file_md5
 from syne_tune.config_space import add_to_argparse, from_dict
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
@@ -28,14 +28,18 @@ if __name__ == '__main__':
     assert args.tune_function_root
     assert args.tune_function_hash
     root = Path(args.tune_function_root)
-    assert file_md5(root / "tune_function.dill") == args.tune_function_hash, \
-        "The hash of the tuned function should match the hash obtained when serializing in Syne Tune."
+    assert (
+        file_md5(root / "tune_function.dill") == args.tune_function_hash
+    ), "The hash of the tuned function should match the hash obtained when serializing in Syne Tune."
     with open(root / "tune_function.dill", "rb") as file:
         tuned_function = dill.load(file)
 
     with open(root / "configspace.json", "r") as file:
         config_space = json.load(file)
-        config_space = {k: from_dict(v) if isinstance(v, Dict) else v for k, v in config_space.items()}
+        config_space = {
+            k: from_dict(v) if isinstance(v, Dict) else v
+            for k, v in config_space.items()
+        }
 
     add_to_argparse(parser, config_space)
 

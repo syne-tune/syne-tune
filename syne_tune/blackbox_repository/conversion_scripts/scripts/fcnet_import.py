@@ -21,19 +21,19 @@ from syne_tune.util import catchtime
 from syne_tune.config_space import choice, logfinrange, finrange, randint
 
 
-BLACKBOX_NAME = 'fcnet'
+BLACKBOX_NAME = "fcnet"
 
-METRIC_VALID_LOSS = 'metric_valid_loss'
+METRIC_VALID_LOSS = "metric_valid_loss"
 
-METRIC_ELAPSED_TIME = 'metric_elapsed_time'
+METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
-RESOURCE_ATTR = 'hp_epoch'
+RESOURCE_ATTR = "hp_epoch"
 
 MAX_RESOURCE_LEVEL = 100
 
-NUM_UNITS_1 = 'hp_n_units_1'
+NUM_UNITS_1 = "hp_n_units_1"
 
-NUM_UNITS_2 = 'hp_n_units_2'
+NUM_UNITS_2 = "hp_n_units_2"
 
 CONFIGURATION_SPACE = {
     "hp_activation_fn_1": choice(["tanh", "relu"]),
@@ -42,7 +42,7 @@ CONFIGURATION_SPACE = {
     "hp_dropout_1": finrange(0.0, 0.6, 3),
     "hp_dropout_2": finrange(0.0, 0.6, 3),
     "hp_init_lr": choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]),
-    'hp_lr_schedule': choice(["cosine", "const"]),
+    "hp_lr_schedule": choice(["cosine", "const"]),
     NUM_UNITS_1: logfinrange(16, 512, 6, cast_int=True),
     NUM_UNITS_2: logfinrange(16, 512, 6, cast_int=True),
 }
@@ -55,14 +55,16 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
         keys = list(keys)[:max_rows]
 
     hyperparameters = pd.DataFrame(ast.literal_eval(key) for key in keys)
-    hyperparameters.rename(columns={col: "hp_" + col for col in hyperparameters.columns}, inplace=True)
+    hyperparameters.rename(
+        columns={col: "hp_" + col for col in hyperparameters.columns}, inplace=True
+    )
 
     objective_names = [
-        'valid_loss',
-        'train_loss',
-        'final_test_error',
-        'n_params',
-        'elapsed_time',
+        "valid_loss",
+        "train_loss",
+        "final_test_error",
+        "n_params",
+        "elapsed_time",
     ]
 
     # todo for now only full metrics
@@ -72,55 +74,55 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     n_seeds = 4
     n_hps = len(keys)
 
-    objective_evaluations = np.empty((n_hps, n_seeds, n_fidelities, n_objectives)).astype('float32')
+    objective_evaluations = np.empty(
+        (n_hps, n_seeds, n_fidelities, n_objectives)
+    ).astype("float32")
 
     def save_objective_values_helper(name, values):
         assert values.shape == (n_hps, n_seeds, n_fidelities)
 
-        name_index = dict(zip(
-            objective_names,
-            range(len(objective_names)))
-        )
+        name_index = dict(zip(objective_names, range(len(objective_names))))
         objective_evaluations[..., name_index[name]] = values
 
     # (n_hps, n_seeds,)
-    final_test_error = np.stack([data[key]['final_test_error'][:].astype('float32') for key in keys])
+    final_test_error = np.stack(
+        [data[key]["final_test_error"][:].astype("float32") for key in keys]
+    )
 
     # (n_hps, n_seeds, n_fidelities)
-    final_test_error = np.repeat(np.expand_dims(final_test_error, axis=-1), n_fidelities, axis=-1)
-    save_objective_values_helper('final_test_error', final_test_error)
+    final_test_error = np.repeat(
+        np.expand_dims(final_test_error, axis=-1), n_fidelities, axis=-1
+    )
+    save_objective_values_helper("final_test_error", final_test_error)
 
     # (n_hps, n_seeds,)
-    n_params = np.stack([data[key]['n_params'][:].astype('float32') for key in keys])
+    n_params = np.stack([data[key]["n_params"][:].astype("float32") for key in keys])
 
     # (n_hps, n_seeds, n_fidelities)
     n_params = np.repeat(np.expand_dims(n_params, axis=-1), n_fidelities, axis=-1)
-    save_objective_values_helper('n_params', n_params)
+    save_objective_values_helper("n_params", n_params)
 
     # (n_hps, n_seeds,)
-    runtime = np.stack([data[key]['runtime'][:].astype('float32') for key in keys])
+    runtime = np.stack([data[key]["runtime"][:].astype("float32") for key in keys])
 
     # linear interpolation to go from total training time to training time per epoch as in fcnet code
     # (n_hps, n_seeds, n_epochs)
     # todo utilize expand dim instead of reshape
-    epochs = np.repeat(fidelity_values.reshape(1, -1),
-                       n_hps * n_seeds, axis=0).reshape(n_hps, n_seeds, -1)
-    elapsed_time = (epochs / MAX_RESOURCE_LEVEL) * runtime.reshape(
-        (n_hps, n_seeds, 1))
-    
-    save_objective_values_helper('elapsed_time', elapsed_time)
+    epochs = np.repeat(fidelity_values.reshape(1, -1), n_hps * n_seeds, axis=0).reshape(
+        n_hps, n_seeds, -1
+    )
+    elapsed_time = (epochs / MAX_RESOURCE_LEVEL) * runtime.reshape((n_hps, n_seeds, 1))
+
+    save_objective_values_helper("elapsed_time", elapsed_time)
 
     # metrics that are fully observed, only use train/valid loss as mse are the same numbers
     # for m in ['train_loss', 'train_mse', 'valid_loss', 'valid_mse']:
-    for m in ['train_loss', 'valid_loss']:
+    for m in ["train_loss", "valid_loss"]:
         save_objective_values_helper(
-            m,
-            np.stack([data[key][m][:].astype('float32') for key in keys])
+            m, np.stack([data[key][m][:].astype("float32") for key in keys])
         )
 
-    fidelity_space = {
-        RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)
-    }
+    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
 
     objective_names = [f"metric_{m}" for m in objective_names]
     # Sanity checks:
@@ -149,9 +151,18 @@ def generate_fcnet(s3_root: Optional[str] = None):
 
     with catchtime("converting"):
         bb_dict = {}
-        for dataset in ['protein_structure', 'naval_propulsion', 'parkinsons_telemonitoring', 'slice_localization']:
+        for dataset in [
+            "protein_structure",
+            "naval_propulsion",
+            "parkinsons_telemonitoring",
+            "slice_localization",
+        ]:
             print(f"converting {dataset}")
-            dataset_path = repository_path / "fcnet_tabular_benchmarks" / f"fcnet_{dataset}_data.hdf5"
+            dataset_path = (
+                repository_path
+                / "fcnet_tabular_benchmarks"
+                / f"fcnet_{dataset}_data.hdf5"
+            )
             bb_dict[dataset] = convert_dataset(dataset_path=dataset_path)
 
     with catchtime("saving to disk"):
@@ -159,26 +170,28 @@ def generate_fcnet(s3_root: Optional[str] = None):
 
     with catchtime("uploading to s3"):
         from syne_tune.blackbox_repository.conversion_scripts.utils import upload
+
         upload(blackbox_name, s3_root=s3_root)
 
 
 def plot_learning_curves():
     import matplotlib.pyplot as plt
     from syne_tune.blackbox_repository.repository import load
+
     # plot one learning-curve for sanity-check
     bb_dict = load(BLACKBOX_NAME)
 
-    b = bb_dict['naval_propulsion']
+    b = bb_dict["naval_propulsion"]
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}
     print(configuration)
     errors = []
     for i in range(1, MAX_RESOURCE_LEVEL + 1):
-        res = b.objective_function(configuration=configuration, fidelity={'epochs': i})
+        res = b.objective_function(configuration=configuration, fidelity={"epochs": i})
         errors.append(res[METRIC_VALID_LOSS])
     plt.plot(errors)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     generate_fcnet()
 
     # plot_learning_curves()

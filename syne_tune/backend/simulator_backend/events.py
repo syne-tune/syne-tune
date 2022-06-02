@@ -21,6 +21,7 @@ class Event:
     Base class for events dealt with in the simulator.
 
     """
+
     trial_id: int
 
 
@@ -41,6 +42,7 @@ class CompleteEvent(Event):
     at the back-end.
 
     """
+
     status: str
 
 
@@ -60,6 +62,7 @@ class OnTrialResultEvent(Event):
     there.
 
     """
+
     result: dict
 
 
@@ -76,9 +79,10 @@ class SimulatorState(object):
     `events_added`. This means that ties are broken first_in_first_out.
 
     """
+
     def __init__(
-            self, event_heap: Optional[EventHeapType] = None,
-            events_added: int = 0):
+        self, event_heap: Optional[EventHeapType] = None, events_added: int = 0
+    ):
         if event_heap is None:
             event_heap = []
         self.event_heap = event_heap
@@ -91,8 +95,7 @@ class SimulatorState(object):
         :param event:
         :param event_time:
         """
-        heapq.heappush(
-            self.event_heap, (event_time, self.events_added, event))
+        heapq.heappush(self.event_heap, (event_time, self.events_added, event))
         self.events_added += 1
 
     def remove_events(self, trial_id: int):
@@ -102,7 +105,8 @@ class SimulatorState(object):
         :param trial_id:
         """
         self.event_heap = [
-            elem for elem in self.event_heap if elem[2].trial_id != trial_id]
+            elem for elem in self.event_heap if elem[2].trial_id != trial_id
+        ]
         heapq.heapify(self.event_heap)
 
     def next_until(self, time_until: float) -> Optional[Tuple[float, Event]]:

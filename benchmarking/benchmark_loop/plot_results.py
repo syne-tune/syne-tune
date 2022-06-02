@@ -27,8 +27,8 @@ import matplotlib.pyplot as plt
 def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
 
     if len(df_task) > 0:
-        metric = df_task.loc[:, 'metric_names'].values[0]
-        mode = df_task.loc[:, 'metric_mode'].values[0]
+        metric = df_task.loc[:, "metric_names"].values[0]
+        mode = df_task.loc[:, "metric_mode"].values[0]
 
         fig, ax = plt.subplots()
 
@@ -41,7 +41,11 @@ def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
                 sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
                 sub_df = sub_df.sort_values(ST_TUNER_TIME)
                 t = sub_df.loc[:, ST_TUNER_TIME].values
-                y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:, metric].cummin().values
+                y_best = (
+                    sub_df.loc[:, metric].cummax().values
+                    if mode == "max"
+                    else sub_df.loc[:, metric].cummin().values
+                )
                 if show_seeds:
                     ax.plot(t, y_best, color=colors[algorithm], alpha=0.2)
                 ts.append(t)
@@ -66,8 +70,11 @@ def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
             mean = y_ranges.mean(axis=0)
             std = y_ranges.std(axis=0)
             ax.fill_between(
-                t_range, mean - std, mean + std,
-                color=colors[algorithm], alpha=0.1,
+                t_range,
+                mean - std,
+                mean + std,
+                color=colors[algorithm],
+                alpha=0.1,
             )
             ax.plot(t_range, mean, color=colors[algorithm], label=algorithm)
 
@@ -82,18 +89,22 @@ def show_results(df_task, title: str, colors: Dict, show_seeds: bool = False):
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
-        "--experiment_tag", type=str, required=True,
-        help="the experiment tag that was displayed when running launch_rl_benchmark.py"
+        "--experiment_tag",
+        type=str,
+        required=True,
+        help="the experiment tag that was displayed when running launch_rl_benchmark.py",
     )
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
     logging.getLogger().setLevel(logging.INFO)
 
-    print(f"In case you ran experiments remotely, we assume that you pulled your results by running in a terminal: \n"          
-          f"aws s3 sync s3://{sagemaker.Session().default_bucket()}/{SYNE_TUNE_FOLDER}/{experiment_tag}/ ~/syne-tune/")
+    print(
+        f"In case you ran experiments remotely, we assume that you pulled your results by running in a terminal: \n"
+        f"aws s3 sync s3://{sagemaker.Session().default_bucket()}/{SYNE_TUNE_FOLDER}/{experiment_tag}/ ~/syne-tune/"
+    )
     experiment_filter = lambda exp: exp.metadata.get("tag") == experiment_tag
     name_filter = lambda path: experiment_tag in path
     df = load_experiments_df(name_filter, experiment_filter)
@@ -102,5 +113,7 @@ if __name__ == '__main__':
     for benchmark in benchmarks:
         df_task = df.loc[df.benchmark == benchmark, :]
         cmap = cm.Set3
-        colors = {algorithm: cmap(i) for i, algorithm in enumerate(df.algorithm.unique())}
+        colors = {
+            algorithm: cmap(i) for i, algorithm in enumerate(df.algorithm.unique())
+        }
         show_results(df_task=df_task, title=benchmark, colors=colors)

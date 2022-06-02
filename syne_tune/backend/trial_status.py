@@ -22,12 +22,12 @@ from syne_tune.constants import ST_WORKER_COST
 
 
 class Status:
-    completed: str = 'Completed'
-    in_progress: str = 'InProgress'
-    failed: str = 'Failed'
-    paused: str = 'Paused'
-    stopped: str = 'Stopped'
-    stopping: str = 'Stopping'
+    completed: str = "Completed"
+    in_progress: str = "InProgress"
+    failed: str = "Failed"
+    paused: str = "Paused"
+    stopped: str = "Stopped"
+    stopping: str = "Stopping"
 
 
 @dataclass
@@ -52,7 +52,13 @@ class TrialResult(Trial):
     # Metrics recorded for each call of `report`. Each metric is a dictionary from metric name to value (
     # could be numeric or string, the only constrain is that it must be compatible with json).
     metrics: List[Dict[str, object]]
-    status: Literal[Status.completed, Status.in_progress, Status.failed, Status.stopped, Status.stopping]
+    status: Literal[
+        Status.completed,
+        Status.in_progress,
+        Status.failed,
+        Status.stopped,
+        Status.stopping,
+    ]
 
     training_end_time: Optional[datetime] = None
 
@@ -61,8 +67,12 @@ class TrialResult(Trial):
         # todo the robustness of this logic could be improved. Currently, if the job is still running the runtime is the
         #  difference between training end and start time. If the job is still running, it is the difference between now
         #  and start time. However, it should be the difference between the last updated time and start time.
-        end_time = datetime.now() if self.training_end_time is None else self.training_end_time
-        return (end_time.replace(tzinfo=None) - self.creation_time.replace(tzinfo=None)).seconds
+        end_time = (
+            datetime.now() if self.training_end_time is None else self.training_end_time
+        )
+        return (
+            end_time.replace(tzinfo=None) - self.creation_time.replace(tzinfo=None)
+        ).seconds
 
     @property
     def cost(self):
