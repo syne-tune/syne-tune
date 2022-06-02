@@ -141,6 +141,7 @@ methods = {
     Methods.BORE: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
         searcher='bore',
+        search_options={'classifier': 'mlp'},
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,

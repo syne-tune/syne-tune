@@ -92,10 +92,10 @@ class Bore(SearcherWithRandomSeed):
         elif self.classifier == 'rf':
             self.model = RandomForestClassifier()
         elif self.classifier == 'gp':
-            from syne_tune.optimizer.schedulers.searchers.bore.classififer import GPModel
+            from syne_tune.optimizer.schedulers.searchers.bore.gp_classififer import GPModel
             self.model = GPModel(**classifier_kwargs)
         elif self.classifier == 'mlp':
-            from syne_tune.optimizer.schedulers.searchers.bore.classififer import MLP
+            from syne_tune.optimizer.schedulers.searchers.bore.mlp_classififer import MLP
             self.model = MLP(n_inputs=self._hp_ranges.ndarray_size, **classifier_kwargs)
 
         self.inputs = []
