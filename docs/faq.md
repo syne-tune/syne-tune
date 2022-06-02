@@ -31,7 +31,7 @@ Make sure that:
 
 * `awscli` is installed (see [this link](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html))
 * AWS credentials have been set properly (see [this link](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)).
-* The necessary SageMaker role has been created (see [this page](https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role-sagemaker-notebook.html) for instructions. If you created a SageMaker notebook in the past, this role should have been created for you)
+* The necessary SageMaker role has been created (see [this page](https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role-sagemaker-notebook.html) for instructions. If you've created a SageMaker notebook in the past, this role should have been created for you)
 
 The following command should run without error if your credentials are available:
 
