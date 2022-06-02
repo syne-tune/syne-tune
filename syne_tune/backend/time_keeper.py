@@ -24,6 +24,7 @@ class TimeKeeper(ABC):
     benchmark.
 
     """
+
     @abstractmethod
     def start_of_time(self):
         """
@@ -65,8 +66,9 @@ class RealTimeKeeper(TimeKeeper):
         self._start_time = time.time()
 
     def _assert_has_started(self):
-        assert self._start_time is not None, \
-            "RealTimeKeeper needs to be started, by calling start_of_time"
+        assert (
+            self._start_time is not None
+        ), "RealTimeKeeper needs to be started, by calling start_of_time"
 
     def time(self) -> float:
         self._assert_has_started()

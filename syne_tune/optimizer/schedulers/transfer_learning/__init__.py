@@ -16,10 +16,12 @@ from typing import Any, Dict, List
 import numpy as np
 import pandas as pd
 
-__all__ = ['TransferLearningTaskEvaluations',
-           'TransferLearningMixin',
-           'BoundingBox',
-           'RUSHScheduler']
+__all__ = [
+    "TransferLearningTaskEvaluations",
+    "TransferLearningMixin",
+    "BoundingBox",
+    "RUSHScheduler",
+]
 
 
 @dataclass
@@ -33,6 +35,7 @@ class TransferLearningTaskEvaluations:
         objectives_evaluations: np.array values of recorded objectives, must have shape
             (num_evals, num_seeds, num_fidelities, num_objectives)
     """
+
     configuration_space: Dict
     hyperparameters: pd.DataFrame
     objectives_names: List[str]
@@ -41,24 +44,31 @@ class TransferLearningTaskEvaluations:
     def __post_init__(self):
         assert len(self.objectives_names) == self.objectives_evaluations.shape[-1]
         assert len(self.hyperparameters) == self.objectives_evaluations.shape[0]
-        assert self.objectives_evaluations.ndim == 4, "objective evaluations should be of shape " \
-                                                      "(num_evals, num_seeds, num_fidelities, num_objectives)"
+        assert self.objectives_evaluations.ndim == 4, (
+            "objective evaluations should be of shape "
+            "(num_evals, num_seeds, num_fidelities, num_objectives)"
+        )
         for col in self.hyperparameters.keys():
             assert col in self.configuration_space
 
     def objective_values(self, objective_name: str) -> np.array:
-        return self.objectives_evaluations[..., self.objective_index(objective_name=objective_name)]
+        return self.objectives_evaluations[
+            ..., self.objective_index(objective_name=objective_name)
+        ]
 
     def objective_index(self, objective_name: str) -> int:
-        matches = [i for i, name in enumerate(self.objectives_names) if name == objective_name]
-        assert len(matches) >= 1, f"could not find objective {objective_name} in recorded objectives " \
-                                  f"{self.objectives_names}"
+        matches = [
+            i for i, name in enumerate(self.objectives_names) if name == objective_name
+        ]
+        assert len(matches) >= 1, (
+            f"could not find objective {objective_name} in recorded objectives "
+            f"{self.objectives_names}"
+        )
         return matches[0]
 
-    def top_k_hyperparameter_configurations(self,
-                                            k: int,
-                                            mode: str,
-                                            objective: str) -> List[Dict[str, Any]]:
+    def top_k_hyperparameter_configurations(
+        self, k: int, mode: str, objective: str
+    ) -> List[Dict[str, Any]]:
         """
         Returns the best k hyperparameter configurations.
         :param k: The number of top hyperparameters to return.
@@ -66,31 +76,29 @@ class TransferLearningTaskEvaluations:
         :param objective: The objective to consider for ranking hyperparameters.
         :returns: List of hyperparameters in order.
         """
-        assert k > 0 and isinstance(k, int), \
-            f"{k} is no positive integer."
-        assert mode in ['min', 'max'], f"Unknown mode {mode}, must be 'min' or 'max'."
+        assert k > 0 and isinstance(k, int), f"{k} is no positive integer."
+        assert mode in ["min", "max"], f"Unknown mode {mode}, must be 'min' or 'max'."
         assert objective in self.objectives_names, f"Unknown objective {objective}."
 
         # average over seed and take best fidelity
         avg_objective = self.objective_values(objective_name=objective).mean(axis=1)
-        if mode == 'max':
+        if mode == "max":
             avg_objective = avg_objective.max(axis=1)
         else:
             avg_objective = avg_objective.min(axis=1)
         best_hp_task_indices = avg_objective.argsort()
-        if mode == 'max':
+        if mode == "max":
             best_hp_task_indices = best_hp_task_indices[::-1]
-        return self.hyperparameters.loc[best_hp_task_indices[:k]].to_dict('records')
+        return self.hyperparameters.loc[best_hp_task_indices[:k]].to_dict("records")
 
 
 class TransferLearningMixin:
-
     def __init__(
-            self,
-            config_space: Dict,
-            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            metric_names: List[str],
-            **kwargs
+        self,
+        config_space: Dict,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        metric_names: List[str],
+        **kwargs,
     ):
         """
         A mixin that adds basic functionality for using offline evaluations.
@@ -107,29 +115,32 @@ class TransferLearningMixin:
         )
 
     def _check_consistency(
-            self,
-            config_space: Dict,
-            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            metric_names: List[str],
+        self,
+        config_space: Dict,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        metric_names: List[str],
     ):
         for task, evals in transfer_learning_evaluations.items():
             for key in config_space.keys():
-                assert key in evals.hyperparameters.columns, \
-                    f"the key {key} of the config space should appear in transfer learning evaluations " \
+                assert key in evals.hyperparameters.columns, (
+                    f"the key {key} of the config space should appear in transfer learning evaluations "
                     f"hyperparameters {evals.hyperparameters.columns}"
-            assert all([m in evals.objectives_names for m in metric_names]), \
-                f"all objectives used in the scheduler {self.metric_names()} should appear in transfer learning " \
+                )
+            assert all([m in evals.objectives_names for m in metric_names]), (
+                f"all objectives used in the scheduler {self.metric_names()} should appear in transfer learning "
                 f"evaluations objectives {evals.objectives_names}"
+            )
 
     def metric_names(self) -> List[str]:
         return self._metric_names
 
-    def top_k_hyperparameter_configurations_per_task(self,
-                                                     transfer_learning_evaluations: Dict[
-                                                         str, TransferLearningTaskEvaluations],
-                                                     num_hyperparameters_per_task: int,
-                                                     mode: str,
-                                                     metric: str) -> Dict[str, List[Dict[str, Any]]]:
+    def top_k_hyperparameter_configurations_per_task(
+        self,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        num_hyperparameters_per_task: int,
+        mode: str,
+        metric: str,
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """
         Returns the best hyperparameter configurations for each task.
         :param transfer_learning_evaluations: Set of candidates to choose from.
@@ -138,18 +149,18 @@ class TransferLearningMixin:
         :param metric: The metric to consider for ranking hyperparameters.
         :returns: Dict which maps from task name to list of hyperparameters in order.
         """
-        assert num_hyperparameters_per_task > 0 and isinstance(num_hyperparameters_per_task, int), \
-            f"{num_hyperparameters_per_task} is no positive integer."
-        assert mode in ['min', 'max'], f"Unknown mode {mode}, must be 'min' or 'max'."
+        assert num_hyperparameters_per_task > 0 and isinstance(
+            num_hyperparameters_per_task, int
+        ), f"{num_hyperparameters_per_task} is no positive integer."
+        assert mode in ["min", "max"], f"Unknown mode {mode}, must be 'min' or 'max'."
         assert metric in self.metric_names(), f"Unknown metric {metric}."
         best_hps = dict()
         for task, evaluation in transfer_learning_evaluations.items():
-            best_hps[task] = evaluation.top_k_hyperparameter_configurations(num_hyperparameters_per_task,
-                                                                            mode, metric)
+            best_hps[task] = evaluation.top_k_hyperparameter_configurations(
+                num_hyperparameters_per_task, mode, metric
+            )
         return best_hps
 
 
-from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import \
-    BoundingBox
+from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
 from syne_tune.optimizer.schedulers.transfer_learning.rush import RUSHScheduler
-

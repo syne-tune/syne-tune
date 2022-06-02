@@ -28,7 +28,12 @@ from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIME
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.tuner_callback import TunerCallback, StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
-from syne_tune.util import RegularCallback, experiment_path, name_from_base, check_valid_sagemaker_name
+from syne_tune.util import (
+    RegularCallback,
+    experiment_path,
+    name_from_base,
+    check_valid_sagemaker_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,22 +41,21 @@ DEFAULT_SLEEP_TIME = 5.0
 
 
 class Tuner:
-
     def __init__(
-            self,
-            trial_backend: TrialBackend,
-            scheduler: TrialScheduler,
-            stop_criterion: Callable[[TuningStatus], bool],
-            n_workers: int,
-            sleep_time: float = DEFAULT_SLEEP_TIME,
-            results_update_interval: float = 10.0,
-            print_update_interval: float = 30.0,
-            max_failures: int = 1,
-            tuner_name: Optional[str] = None,
-            asynchronous_scheduling: bool = True,
-            callbacks: Optional[List[TunerCallback]] = None,
-            metadata: Optional[Dict] = None,
-            suffix_tuner_name: bool = True
+        self,
+        trial_backend: TrialBackend,
+        scheduler: TrialScheduler,
+        stop_criterion: Callable[[TuningStatus], bool],
+        n_workers: int,
+        sleep_time: float = DEFAULT_SLEEP_TIME,
+        results_update_interval: float = 10.0,
+        print_update_interval: float = 30.0,
+        max_failures: int = 1,
+        tuner_name: Optional[str] = None,
+        asynchronous_scheduling: bool = True,
+        callbacks: Optional[List[TunerCallback]] = None,
+        metadata: Optional[Dict] = None,
+        suffix_tuner_name: bool = True,
     ):
         """
         Allows to run an tuning job, call `run` after initializing.
@@ -95,7 +99,9 @@ class Tuner:
         if tuner_name is not None:
             check_valid_sagemaker_name(tuner_name)
         else:
-            tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace("_", "-")
+            tuner_name = Path(self.trial_backend.entrypoint_path()).stem.replace(
+                "_", "-"
+            )
         if suffix_tuner_name or tuner_name is None:
             self.name = name_from_base(tuner_name, default="st-tuner")
         else:
@@ -109,7 +115,9 @@ class Tuner:
         # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
         self.trial_backend.set_path(results_root=self.tuner_path, tuner_name=self.name)
-        self.callbacks = callbacks if callbacks is not None else [self._default_callback()]
+        self.callbacks = (
+            callbacks if callbacks is not None else [self._default_callback()]
+        )
 
         self.tuning_status = None
 
@@ -122,16 +130,20 @@ class Tuner:
             logger.info(f"results of trials will be saved on {self.tuner_path}")
 
             if self.tuning_status is None:
-                self.tuning_status = TuningStatus(metric_names=self.scheduler.metric_names())
+                self.tuning_status = TuningStatus(
+                    metric_names=self.scheduler.metric_names()
+                )
             # prints the status every print_update_interval seconds
             self.status_printer = RegularCallback(
                 call_seconds_frequency=self.print_update_interval,
-                callback=lambda tuning_status: logger.info("tuning status (last metric is reported)\n" + str(tuning_status)),
+                callback=lambda tuning_status: logger.info(
+                    "tuning status (last metric is reported)\n" + str(tuning_status)
+                ),
             )
             # saves the tuner every results_update_interval seconds
             self.tuner_saver = RegularCallback(
                 callback=lambda tuner: tuner.save(),
-                call_seconds_frequency=self.results_update_interval
+                call_seconds_frequency=self.results_update_interval,
             )
 
             self.metadata[ST_TUNER_START_TIMESTAMP] = time.time()
@@ -180,8 +192,10 @@ class Tuner:
                     # if the search space is exhausted, we loop until the running trials are done or until the
                     # stop condition is reached
                     if len(running_trials_ids) > 0:
-                        logger.debug(f"Configuration space exhausted, waiting for completion of running trials "
-                                     f"{running_trials_ids}")
+                        logger.debug(
+                            f"Configuration space exhausted, waiting for completion of running trials "
+                            f"{running_trials_ids}"
+                        )
                         self._sleep()
                     else:
                         break
@@ -189,9 +203,13 @@ class Tuner:
                     try:
                         self._schedule_new_tasks(running_trials_ids=running_trials_ids)
                     except StopIteration:
-                        logger.info("Tuning is finishing as the whole configuration space got exhausted.")
+                        logger.info(
+                            "Tuning is finishing as the whole configuration space got exhausted."
+                        )
                         config_space_exhausted = True
-                        print("Tuning is finishing as the whole configuration space got exhausted.")
+                        print(
+                            "Tuning is finishing as the whole configuration space got exhausted."
+                        )
 
                 self.status_printer(self.tuning_status)
 
@@ -226,7 +244,9 @@ class Tuner:
             if self.tuning_status.num_trials_failed > self.max_failures:
                 self._handle_failure(done_trials_statuses=done_trials_statuses)
 
-            logger.info(f"Tuning finished, results of trials can be found on {self.tuner_path}")
+            logger.info(
+                f"Tuning finished, results of trials can be found on {self.tuner_path}"
+            )
 
     def _sleep(self):
         time.sleep(self.sleep_time)
@@ -239,7 +259,8 @@ class Tuner:
             logger.warning(
                 f"Entry {name} in metadata is used, but will be overwritten:\n"
                 f"Old value: {metadata[name]}\n"
-                f"Overwrite: {value}\n")
+                f"Overwrite: {value}\n"
+            )
         metadata[name] = value
 
     def _enrich_metadata(self, metadata: Dict):
@@ -248,13 +269,20 @@ class Tuner:
         """
         res = metadata if metadata is not None else dict()
         self._set_metadata(res, ST_TUNER_CREATION_TIMESTAMP, time.time())
-        self._set_metadata(res, 'metric_names', self.scheduler.metric_names())
-        self._set_metadata(res, 'metric_mode', self.scheduler.metric_mode())
-        self._set_metadata(res, 'entrypoint', self.trial_backend.entrypoint_path().stem)
-        self._set_metadata(res, 'backend', str(type(self.trial_backend).__name__))
-        self._set_metadata(res, 'scheduler_name', str(self.scheduler.__class__.__name__))
-        config_space_json = json.dumps({k: to_dict(v) if isinstance(v, Domain) else v for k, v in self.scheduler.config_space.items()})
-        self._set_metadata(res, 'config_space', config_space_json)
+        self._set_metadata(res, "metric_names", self.scheduler.metric_names())
+        self._set_metadata(res, "metric_mode", self.scheduler.metric_mode())
+        self._set_metadata(res, "entrypoint", self.trial_backend.entrypoint_path().stem)
+        self._set_metadata(res, "backend", str(type(self.trial_backend).__name__))
+        self._set_metadata(
+            res, "scheduler_name", str(self.scheduler.__class__.__name__)
+        )
+        config_space_json = json.dumps(
+            {
+                k: to_dict(v) if isinstance(v, Domain) else v
+                for k, v in self.scheduler.config_space.items()
+            }
+        )
+        self._set_metadata(res, "config_space", config_space_json)
         return res
 
     def _save_metadata(self):
@@ -262,7 +290,10 @@ class Tuner:
             json.dump(self.metadata, f)
 
     def _stop_condition(self) -> bool:
-        return self.stop_criterion(self.tuning_status) or self.tuning_status.num_trials_failed > self.max_failures
+        return (
+            self.stop_criterion(self.tuning_status)
+            or self.tuning_status.num_trials_failed > self.max_failures
+        )
 
     def _process_new_results(self, running_trials_ids: Set[int]):
         """
@@ -272,10 +303,14 @@ class Tuner:
         """
 
         # fetch new results
-        trial_status_dict, new_results = self.trial_backend.fetch_status_results(trial_ids=list(running_trials_ids))
+        trial_status_dict, new_results = self.trial_backend.fetch_status_results(
+            trial_ids=list(running_trials_ids)
+        )
 
         for callback in self.callbacks:
-            callback.on_fetch_status_results(trial_status_dict=trial_status_dict, new_results=new_results)
+            callback.on_fetch_status_results(
+                trial_status_dict=trial_status_dict, new_results=new_results
+            )
 
         assert len(running_trials_ids) <= self.n_workers
 
@@ -285,13 +320,14 @@ class Tuner:
         # - they were stopped independently of the scheduler, e.g. due to a timeout argument or a manual interruption
         # - scheduler decided to interrupt them.
         # Note: `done_trials` includes trials which are paused.
-        done_trials_statuses = self._update_running_trials(trial_status_dict, new_results, callbacks=self.callbacks)
+        done_trials_statuses = self._update_running_trials(
+            trial_status_dict, new_results, callbacks=self.callbacks
+        )
         trial_status_dict.update(done_trials_statuses)
 
         # update status with new results and all done trials
         self.tuning_status.update(
-            trial_status_dict=trial_status_dict,
-            new_results=new_results
+            trial_status_dict=trial_status_dict, new_results=new_results
         )
 
         return done_trials_statuses, new_results
@@ -301,15 +337,15 @@ class Tuner:
         Schedules new tasks if ressources are available or sleep.
         :param running_trials_ids: set if trial-ids currently running, gets updated if new trials are scheduled.
         """
-        running_trials_threshold = self.n_workers \
-            if self.asynchronous_scheduling else 1
+        running_trials_threshold = self.n_workers if self.asynchronous_scheduling else 1
         num_running_trials = len(running_trials_ids)
         if num_running_trials >= running_trials_threshold:
             # Note: For synchronous scheduling, we need to sleep here if at
             # least one worker is busy
             logger.debug(
                 f"{num_running_trials} of {self.n_workers} workers are "
-                f"busy, wait for {self.sleep_time} seconds")
+                f"busy, wait for {self.sleep_time} seconds"
+            )
             self._sleep()
 
         else:
@@ -333,7 +369,7 @@ class Tuner:
             # if given.
             trial = self.trial_backend.start_trial(
                 config=suggestion.config.copy(),
-                checkpoint_trial_id=suggestion.checkpoint_trial_id
+                checkpoint_trial_id=suggestion.checkpoint_trial_id,
             )
             self.scheduler.on_trial_add(trial=trial)
             logger.info(f"(trial {trial_id}) - scheduled {suggestion}")
@@ -345,7 +381,8 @@ class Tuner:
                 log_msg += f" with new_config = {suggestion.config}"
             logger.info(log_msg)
             self.trial_backend.resume_trial(
-                trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config)
+                trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config
+            )
             return suggestion.checkpoint_trial_id
 
     def _handle_failure(self, done_trials_statuses: Dict[int, Tuple[Trial, str]]):
@@ -380,10 +417,10 @@ class Tuner:
             return tuner
 
     def _update_running_trials(
-            self,
-            trial_status_dict: Dict[int, Tuple[Trial, str]],
-            new_results: List[Tuple[int, Dict]],
-            callbacks: List[TunerCallback],
+        self,
+        trial_status_dict: Dict[int, Tuple[Trial, str]],
+        new_results: List[Tuple[int, Dict]],
+        callbacks: List[TunerCallback],
     ) -> Dict[int, Tuple[Trial, str]]:
         """
         Updates schedulers with new results and sends decision to stop/pause trials to the backend.
@@ -437,11 +474,14 @@ class Tuner:
             if status == Status.completed:
                 # since the code above updates `trial_status_dict[trial_id]` after a pause/stop scheduling decision
                 # this callback is never called after a pause/stop scheduler decision.
-                if trial_id not in done_trials \
-                        or done_trials[trial_id][1] != Status.paused:
+                if (
+                    trial_id not in done_trials
+                    or done_trials[trial_id][1] != Status.paused
+                ):
                     logger.info(f"Trial trial_id {trial_id} completed.")
-                assert trial_id in self.last_seen_result_per_trial, \
-                    f"trial {trial_id} completed and no metrics got observed"
+                assert (
+                    trial_id in self.last_seen_result_per_trial
+                ), f"trial {trial_id} completed and no metrics got observed"
                 last_result = self.last_seen_result_per_trial[trial_id]
                 if not trial_id in done_trials:
                     self.scheduler.on_trial_complete(trial, last_result)
@@ -456,8 +496,13 @@ class Tuner:
 
             # For the case when the trial is stopped independently of the scheduler, we choose to use
             # scheduler.on_trial_error(...) since it was not the scheduler's decision to stop the trial.
-            if status == Status.stopped and trial_id not in self.trials_scheduler_stopped:
-                logger.info(f"Trial trial_id {trial_id} was stopped independently of the scheduler.")
+            if (
+                status == Status.stopped
+                and trial_id not in self.trials_scheduler_stopped
+            ):
+                logger.info(
+                    f"Trial trial_id {trial_id} was stopped independently of the scheduler."
+                )
                 self.scheduler.on_trial_error(trial)
                 done_trials[trial_id] = (trial, status)
 

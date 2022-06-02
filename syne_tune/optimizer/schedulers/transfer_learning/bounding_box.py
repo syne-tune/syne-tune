@@ -4,19 +4,27 @@ from typing import Dict, Callable, Optional
 import pandas as pd
 
 from syne_tune.optimizer.scheduler import TrialScheduler
-from syne_tune.optimizer.schedulers.transfer_learning import TransferLearningMixin, TransferLearningTaskEvaluations
-from syne_tune.config_space import Categorical, restrict_domain, choice, config_space_size
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    TransferLearningMixin,
+    TransferLearningTaskEvaluations,
+)
+from syne_tune.config_space import (
+    Categorical,
+    restrict_domain,
+    choice,
+    config_space_size,
+)
 
 
 class BoundingBox(TransferLearningMixin, TrialScheduler):
     def __init__(
-            self,
-            scheduler_fun: Callable[[Dict, str, str], TrialScheduler],
-            config_space: Dict,
-            metric: str,
-            transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-            mode: Optional[str] = 'min',
-            num_hyperparameters_per_task: int = 1,
+        self,
+        scheduler_fun: Callable[[Dict, str, str], TrialScheduler],
+        config_space: Dict,
+        metric: str,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        mode: Optional[str] = "min",
+        num_hyperparameters_per_task: int = 1,
     ):
         """
         Simple baseline that computes a bounding-box of the best candidate found in previous tasks to restrict the
@@ -40,35 +48,41 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
         :param num_hyperparameters_per_task: number of best hyperparameter to take per task when computing the bounding
         box, default to 1.
         """
-        super().__init__(config_space=config_space,
-                         transfer_learning_evaluations=transfer_learning_evaluations,
-                         metric_names=[metric])
-        assert mode in ['min', 'max'], "mode must be either 'min' or 'max'."
+        super().__init__(
+            config_space=config_space,
+            transfer_learning_evaluations=transfer_learning_evaluations,
+            metric_names=[metric],
+        )
+        assert mode in ["min", "max"], "mode must be either 'min' or 'max'."
 
         config_space = self.compute_box(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
             mode=mode,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
-            metric=metric
+            metric=metric,
         )
         print(f"hyperparameter ranges of best previous configurations {config_space}")
         print(f"({config_space_size(config_space)} options)")
         self.scheduler = scheduler_fun(config_space, mode, metric)
 
-    def compute_box(self,
-                    config_space: Dict,
-                    transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-                    mode: str,
-                    num_hyperparameters_per_task: int,
-                    metric: str
-                    ) -> Dict:
+    def compute_box(
+        self,
+        config_space: Dict,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        mode: str,
+        num_hyperparameters_per_task: int,
+        metric: str,
+    ) -> Dict:
         top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
             mode=mode,
-            metric=metric)
-        hp_df = pd.DataFrame([hp for _, top_k_hp in top_k_per_task.items() for hp in top_k_hp])
+            metric=metric,
+        )
+        hp_df = pd.DataFrame(
+            [hp for _, top_k_hp in top_k_per_task.items() for hp in top_k_hp]
+        )
 
         # compute bounding-box on all hyperparameters that are numerical or categorical
         new_config_space = {}
@@ -82,14 +96,16 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
                     new_config_space[name] = restrict_domain(
                         numerical_domain=domain,
                         lower=hp_df.loc[:, name].min(),
-                        upper=hp_df.loc[:, name].max()
+                        upper=hp_df.loc[:, name].max(),
                     )
                 else:
                     # no known way to compute bounding over non numerical domains such as functional
                     new_config_space[name] = domain
             else:
                 new_config_space[name] = domain
-        logging.info(f"new configuration space obtained after computing bounding-box: {new_config_space}")
+        logging.info(
+            f"new configuration space obtained after computing bounding-box: {new_config_space}"
+        )
 
         return new_config_space
 

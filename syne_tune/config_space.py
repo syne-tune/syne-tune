@@ -38,6 +38,7 @@ class Domain:
     ``loguniform()``).
 
     """
+
     sampler = None
     default_sampler_cls = None
 
@@ -51,11 +52,13 @@ class Domain:
 
     def set_sampler(self, sampler, allow_override=False):
         if self.sampler and not allow_override:
-            raise ValueError("You can only choose one sampler for parameter "
-                             "domains. Existing sampler for parameter {}: "
-                             "{}. Tried to add {}".format(
-                                 self.__class__.__name__, self.sampler,
-                                 sampler))
+            raise ValueError(
+                "You can only choose one sampler for parameter "
+                "domains. Existing sampler for parameter {}: "
+                "{}. Tried to add {}".format(
+                    self.__class__.__name__, self.sampler, sampler
+                )
+            )
         self.sampler = sampler
 
     def get_sampler(self) -> "Sampler":
@@ -71,8 +74,7 @@ class Domain:
         :return: Single value (`size == 1`) or list (`size > 1`)
         """
         sampler = self.get_sampler()
-        return sampler.sample(
-            self, spec=spec, size=size, random_state=random_state)
+        return sampler.sample(self, spec=spec, size=size, random_state=random_state)
 
     def is_grid(self):
         return isinstance(self.sampler, Grid)
@@ -115,11 +117,13 @@ class Domain:
 
 
 class Sampler:
-    def sample(self,
-               domain: Domain,
-               spec: Optional[Union[List[Dict], Dict]] = None,
-               size: int = 1,
-               random_state: Optional[np.random.RandomState] = None):
+    def sample(
+        self,
+        domain: Domain,
+        spec: Optional[Union[List[Dict], Dict]] = None,
+        size: int = 1,
+        random_state: Optional[np.random.RandomState] = None,
+    ):
         raise NotImplementedError
 
     def __eq__(self, other) -> bool:
@@ -149,6 +153,7 @@ class LogUniform(Sampler):
     internally.
 
     """
+
     def __init__(self, base: float = EXP_ONE):
         assert base > 0, "Base has to be strictly greater than 0"
         self.base = base  # Not really used internally
@@ -161,7 +166,7 @@ class LogUniform(Sampler):
 
 
 class Normal(Sampler):
-    def __init__(self, mean: float = 0., sd: float = 0.):
+    def __init__(self, mean: float = 0.0, sd: float = 0.0):
         self.mean = mean
         self.sd = sd
 
@@ -171,18 +176,23 @@ class Normal(Sampler):
         return "Normal"
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, Normal) and np.isclose(self.mean, other.mean) \
-               and np.isclose(self.sd, other.sd)
+        return (
+            isinstance(other, Normal)
+            and np.isclose(self.mean, other.mean)
+            and np.isclose(self.sd, other.sd)
+        )
 
 
 class Grid(Sampler):
     """Dummy sampler used for grid search"""
 
-    def sample(self,
-               domain: Domain,
-               spec: Optional[Union[List[Dict], Dict]] = None,
-               size: int = 1,
-               random_state: Optional[np.random.RandomState] = None):
+    def sample(
+        self,
+        domain: Domain,
+        spec: Optional[Union[List[Dict], Dict]] = None,
+        size: int = 1,
+        random_state: Optional[np.random.RandomState] = None,
+    ):
         return RuntimeError("Do not call `sample()` on grid.")
 
     def __eq__(self, other) -> bool:
@@ -198,30 +208,32 @@ def _sanitize_sample_result(items, domain: Domain):
 
 class Float(Domain):
     class _Uniform(Uniform):
-        def sample(self,
-                   domain: "Float",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-                   random_state: Optional[np.random.RandomState] = None):
-            assert domain.lower > float("-inf"), \
-                "Uniform needs a lower bound"
-            assert domain.upper < float("inf"), \
-                "Uniform needs a upper bound"
+        def sample(
+            self,
+            domain: "Float",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
+            assert domain.lower > float("-inf"), "Uniform needs a lower bound"
+            assert domain.upper < float("inf"), "Uniform needs a upper bound"
             if random_state is None:
                 random_state = np.random
             items = random_state.uniform(domain.lower, domain.upper, size=size)
             return _sanitize_sample_result(items, domain)
 
     class _LogUniform(LogUniform):
-        def sample(self,
-                   domain: "Float",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-                   random_state: Optional[np.random.RandomState] = None):
-            assert domain.lower > 0, \
-                "LogUniform needs a lower bound greater than 0"
-            assert 0 < domain.upper < float("inf"), \
-                "LogUniform needs a upper bound greater than 0"
+        def sample(
+            self,
+            domain: "Float",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
+            assert domain.lower > 0, "LogUniform needs a lower bound greater than 0"
+            assert (
+                0 < domain.upper < float("inf")
+            ), "LogUniform needs a upper bound greater than 0"
             # Note: We don't use `self.base` here, because it does not make a
             # difference
             logmin = np.log(domain.lower)
@@ -234,11 +246,13 @@ class Float(Domain):
 
     # Transform is -log(1 - x)
     class _ReverseLogUniform(LogUniform):
-        def sample(self,
-                   domain: "Float",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-                   random_state: Optional[np.random.RandomState] = None):
+        def sample(
+            self,
+            domain: "Float",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
             assert 0 <= domain.lower <= domain.upper < 1
             logmin = -np.log1p(-domain.lower)
             logmax = -np.log1p(-domain.upper)
@@ -249,15 +263,19 @@ class Float(Domain):
             return _sanitize_sample_result(items, domain)
 
     class _Normal(Normal):
-        def sample(self,
-                   domain: "Float",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-                   random_state: Optional[np.random.RandomState] = None):
-            assert not domain.lower or domain.lower == float("-inf"), \
-                "Normal sampling does not allow a lower value bound."
-            assert not domain.upper or domain.upper == float("inf"), \
-                "Normal sampling does not allow a upper value bound."
+        def sample(
+            self,
+            domain: "Float",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
+            assert not domain.lower or domain.lower == float(
+                "-inf"
+            ), "Normal sampling does not allow a lower value bound."
+            assert not domain.upper or domain.upper == float(
+                "inf"
+            ), "Normal sampling does not allow a upper value bound."
             if random_state is None:
                 random_state = np.random
             items = random_state.normal(self.mean, self.sd, size=size)
@@ -278,11 +296,13 @@ class Float(Domain):
         if not self.lower > float("-inf"):
             raise ValueError(
                 "Uniform requires a lower bound. Make sure to set the "
-                "`lower` parameter of `Float()`.")
+                "`lower` parameter of `Float()`."
+            )
         if not self.upper < float("inf"):
             raise ValueError(
                 "Uniform requires a upper bound. Make sure to set the "
-                "`upper` parameter of `Float()`.")
+                "`upper` parameter of `Float()`."
+            )
         new = copy(self)
         new.set_sampler(self._Uniform())
         return new
@@ -293,13 +313,15 @@ class Float(Domain):
                 "LogUniform requires a lower bound greater than 0."
                 f"Got: {self.lower}. Did you pass a variable that has "
                 "been log-transformed? If so, pass the non-transformed value "
-                "instead.")
+                "instead."
+            )
         if not 0 < self.upper < float("inf"):
             raise ValueError(
                 "LogUniform requires a upper bound greater than 0. "
                 f"Got: {self.lower}. Did you pass a variable that has "
                 "been log-transformed? If so, pass the non-transformed value "
-                "instead.")
+                "instead."
+            )
         new = copy(self)
         new.set_sampler(self._LogUniform())
         return new
@@ -310,27 +332,32 @@ class Float(Domain):
                 "ReverseLogUniform requires 0 <= lower <= upper < 1."
                 f"Got: lower={self.lower}, upper={self.upper}. Did you "
                 "pass a variable that has been transformed as -log(1 - x)?"
-                "If so, pass the non-transformed values instead.")
+                "If so, pass the non-transformed values instead."
+            )
         new = copy(self)
         new.set_sampler(self._ReverseLogUniform())
         return new
 
-    def normal(self, mean=0., sd=1.):
+    def normal(self, mean=0.0, sd=1.0):
         new = copy(self)
         new.set_sampler(self._Normal(mean, sd))
         return new
 
     def quantized(self, q: float):
-        if self.lower > float("-inf") and not isclose(self.lower / q,
-                                                      round(self.lower / q)):
+        if self.lower > float("-inf") and not isclose(
+            self.lower / q, round(self.lower / q)
+        ):
             raise ValueError(
                 f"Your lower variable bound {self.lower} is not divisible by "
-                f"quantization factor {q}.")
-        if self.upper < float("inf") and not isclose(self.upper / q,
-                                                     round(self.upper / q)):
+                f"quantization factor {q}."
+            )
+        if self.upper < float("inf") and not isclose(
+            self.upper / q, round(self.upper / q)
+        ):
             raise ValueError(
                 f"Your upper variable bound {self.upper} is not divisible by "
-                f"quantization factor {q}.")
+                f"quantization factor {q}."
+            )
 
         new = copy(self)
         new.set_sampler(Quantized(new.get_sampler(), q), allow_override=True)
@@ -353,36 +380,42 @@ class Float(Domain):
         return f"{value:.7e}"
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, Float) and super(Float, self).__eq__(other) \
-               and np.isclose(self.lower, other.lower) \
-               and np.isclose(self.upper, other.upper)
+        return (
+            isinstance(other, Float)
+            and super(Float, self).__eq__(other)
+            and np.isclose(self.lower, other.lower)
+            and np.isclose(self.upper, other.upper)
+        )
 
 
 class Integer(Domain):
     class _Uniform(Uniform):
-        def sample(self,
-                   domain: "Integer",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-                   random_state: Optional[np.random.RandomState] = None):
+        def sample(
+            self,
+            domain: "Integer",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
             if random_state is None:
                 random_state = np.random
             # Note: domain.upper is inclusive here, but exclusive in
             # `np.random.randint`.
-            items = random_state.randint(
-                domain.lower, domain.upper + 1, size=size)
+            items = random_state.randint(domain.lower, domain.upper + 1, size=size)
             return _sanitize_sample_result(items, domain)
 
     class _LogUniform(LogUniform):
-        def sample(self,
-                   domain: "Integer",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-               random_state: Optional[np.random.RandomState] = None):
-            assert domain.lower > 0, \
-                "LogUniform needs a lower bound greater than 0"
-            assert 0 < domain.upper < float("inf"), \
-                "LogUniform needs a upper bound greater than 0"
+        def sample(
+            self,
+            domain: "Integer",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
+            assert domain.lower > 0, "LogUniform needs a lower bound greater than 0"
+            assert (
+                0 < domain.upper < float("inf")
+            ), "LogUniform needs a upper bound greater than 0"
             # Note: We don't use `self.base` here, because it does not make a
             # difference
             logmin = np.log(domain.lower)
@@ -423,13 +456,15 @@ class Integer(Domain):
                 "LogUniform requires a lower bound greater than 0."
                 f"Got: {self.lower}. Did you pass a variable that has "
                 "been log-transformed? If so, pass the non-transformed value "
-                "instead.")
+                "instead."
+            )
         if not 0 < self.upper < float("inf"):
             raise ValueError(
                 "LogUniform requires a upper bound greater than 0. "
                 f"Got: {self.lower}. Did you pass a variable that has "
                 "been log-transformed? If so, pass the non-transformed value "
-                "instead.")
+                "instead."
+            )
         new = copy(self)
         new.set_sampler(self._LogUniform())
         return new
@@ -448,23 +483,29 @@ class Integer(Domain):
         return str(value)
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, Integer) \
-               and super(Integer, self).__eq__(other) \
-               and self.lower == other.lower and self.upper == other.upper
+        return (
+            isinstance(other, Integer)
+            and super(Integer, self).__eq__(other)
+            and self.lower == other.lower
+            and self.upper == other.upper
+        )
 
 
 class Categorical(Domain):
     class _Uniform(Uniform):
-        def sample(self,
-                   domain: "Categorical",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-                   random_state: Optional[np.random.RandomState] = None):
+        def sample(
+            self,
+            domain: "Categorical",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
             if random_state is None:
                 random_state = np.random
             categories = domain.categories
-            items = [categories[i] for i in random_state.choice(
-                len(categories), size=size)]
+            items = [
+                categories[i] for i in random_state.choice(len(categories), size=size)
+            ]
             return _sanitize_sample_result(items, domain)
 
     default_sampler_cls = _Uniform
@@ -473,8 +514,9 @@ class Categorical(Domain):
         assert len(categories) > 0
         self.categories = list(categories)
         value_type = self.value_type
-        assert all(type(x) == value_type for x in self.categories), \
-            f"All entries in categories = {self.categories} must have the same type"
+        assert all(
+            type(x) == value_type for x in self.categories
+        ), f"All entries in categories = {self.categories} must have the same type"
         if isinstance(self.value_type, float):
             logger.warning(
                 "The configuration space contains a categorical value with float type. "
@@ -512,16 +554,18 @@ class Categorical(Domain):
     def cast(self, value):
         value = self.value_type(value)
         if value not in self.categories:
-            assert isinstance(value, float), \
-                f"value = {value} not contained in categories = {self.categories}"
+            assert isinstance(
+                value, float
+            ), f"value = {value} not contained in categories = {self.categories}"
             # For value type float, we do nearest neighbor matching, in order to
             # avoid meaningless mistakes due to round-off or conversions from
             # string and back
             categ_arr = np.array(self.categories)
             distances = np.abs(categ_arr - value)
             minind = np.argmin(distances)
-            assert distances[minind] < 0.01 * abs(categ_arr[minind]), \
-                f"value = {value} not contained or close to any in categories = {self.categories}"
+            assert distances[minind] < 0.01 * abs(
+                categ_arr[minind]
+            ), f"value = {value} not contained or close to any in categories = {self.categories}"
             value = self.categories[minind]
         return value
 
@@ -532,18 +576,22 @@ class Categorical(Domain):
         return f"choice({self.categories})"
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, Categorical) \
-               and super(Categorical, self).__eq__(other) \
-               and self.categories == other.categories
+        return (
+            isinstance(other, Categorical)
+            and super(Categorical, self).__eq__(other)
+            and self.categories == other.categories
+        )
 
-      
+
 class Function(Domain):
     class _CallSampler(BaseSampler):
-        def sample(self,
-                   domain: "Function",
-                   spec: Optional[Union[List[Dict], Dict]] = None,
-                   size: int = 1,
-                   random_state: Optional[np.random.RandomState] = None):
+        def sample(
+            self,
+            domain: "Function",
+            spec: Optional[Union[List[Dict], Dict]] = None,
+            size: int = 1,
+            random_state: Optional[np.random.RandomState] = None,
+        ):
             if random_state is not None:
                 raise NotImplementedError()
             if domain.pass_spec:
@@ -573,7 +621,8 @@ class Function(Domain):
             except TypeError as exc:
                 raise ValueError(
                     "The function passed to a `Function` parameter must be "
-                    "callable with either 0 or 1 parameters.") from exc
+                    "callable with either 0 or 1 parameters."
+                ) from exc
 
         self.pass_spec = pass_spec
         self.func = func
@@ -602,11 +651,13 @@ class Quantized(Sampler):
     def get_sampler(self):
         return self.sampler
 
-    def sample(self,
-               domain: Domain,
-               spec: Optional[Union[List[Dict], Dict]] = None,
-               size: int = 1,
-               random_state: Optional[np.random.RandomState] = None):
+    def sample(
+        self,
+        domain: Domain,
+        spec: Optional[Union[List[Dict], Dict]] = None,
+        size: int = 1,
+        random_state: Optional[np.random.RandomState] = None,
+    ):
         values = self.sampler.sample(domain, spec, size, random_state)
         quantized = np.round(np.divide(values, self.q)) * self.q
         if not isinstance(quantized, np.ndarray):
@@ -614,8 +665,11 @@ class Quantized(Sampler):
         return list(quantized)
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, Quantized) and self.q == other.q \
-               and self.sampler == other.sampler
+        return (
+            isinstance(other, Quantized)
+            and self.q == other.q
+            and self.sampler == other.sampler
+        )
 
 
 class FiniteRange(Domain):
@@ -625,8 +679,15 @@ class FiniteRange(Domain):
     If `cast_int`, the value type is int (rounding after the transform).
 
     """
-    def __init__(self, lower: float, upper: float, size: int,
-                 log_scale: bool = False, cast_int: bool = False):
+
+    def __init__(
+        self,
+        lower: float,
+        upper: float,
+        size: int,
+        log_scale: bool = False,
+        cast_int: bool = False,
+    ):
         assert lower <= upper
         assert size >= 1
         if log_scale:
@@ -643,7 +704,9 @@ class FiniteRange(Domain):
         else:
             self._lower_internal = np.log(lower)
             upper_internal = np.log(upper)
-            self._step_internal = (upper_internal - self._lower_internal) / (size - 1) if size > 1 else 0
+            self._step_internal = (
+                (upper_internal - self._lower_internal) / (size - 1) if size > 1 else 0
+            )
         self._values = [self._map_from_int(x) for x in range(self.size)]
 
     @property
@@ -675,9 +738,13 @@ class FiniteRange(Domain):
             if self.log_scale:
                 int_value = np.log(int_value)
             sz = len(self._uniform_int)
-            return int(np.clip(round(
-                (int_value - self._lower_internal) / self._step_internal),
-                0, sz - 1))
+            return int(
+                np.clip(
+                    round((int_value - self._lower_internal) / self._step_internal),
+                    0,
+                    sz - 1,
+                )
+            )
 
     def cast(self, value):
         return self._values[self._map_to_int(value)]
@@ -706,11 +773,13 @@ class FiniteRange(Domain):
         return str(self._map_to_int(value))
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, FiniteRange) \
-               and np.isclose(self.lower, other.lower) \
-               and np.isclose(self.upper, other.upper) \
-               and self.log_scale == other.log_scale \
-               and self.cast_int == other.cast_int
+        return (
+            isinstance(other, FiniteRange)
+            and np.isclose(self.lower, other.lower)
+            and np.isclose(self.upper, other.upper)
+            and self.log_scale == other.log_scale
+            and self.cast_int == other.cast_int
+        )
 
 
 def sample_from(func: Callable[[Dict], Any]):
@@ -846,7 +915,7 @@ def qlograndint(lower: int, upper: int, q: int):
     return Integer(lower, upper).loguniform().quantized(q)
 
 
-def randn(mean: float = 0., sd: float = 1.):
+def randn(mean: float = 0.0, sd: float = 1.0):
     """Sample a float value normally with ``mean`` and ``sd``.
 
     Args:
@@ -903,13 +972,15 @@ def is_log_space(domain: Domain) -> bool:
         return domain.log_scale
     else:
         sampler = domain.get_sampler()
-        return isinstance(sampler, Float._LogUniform) \
-               or isinstance(sampler, Integer._LogUniform)
+        return isinstance(sampler, Float._LogUniform) or isinstance(
+            sampler, Integer._LogUniform
+        )
 
 
 def is_reverse_log_space(domain: Domain) -> bool:
-    return isinstance(domain, Float) and \
-           isinstance(domain.get_sampler(), Float._ReverseLogUniform)
+    return isinstance(domain, Float) and isinstance(
+        domain.get_sampler(), Float._ReverseLogUniform
+    )
 
 
 def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):
@@ -947,11 +1018,10 @@ def non_constant_hyperparameter_keys(config_space: Dict) -> List[str]:
     :param config_space:
     :return: Keys corresponding to (non-fixed) hyperparameters
     """
-    return [name for name, domain in config_space.items()
-            if isinstance(domain, Domain)]
+    return [name for name, domain in config_space.items() if isinstance(domain, Domain)]
 
 
-def config_space_size(config_space: Dict, upper_limit: int = 2 ** 20) -> Optional[int]:
+def config_space_size(config_space: Dict, upper_limit: int = 2**20) -> Optional[int]:
     """
     Counts the number of distinct configurations in the configuration space
     `config_space`. If this is infinite (due to real-valued parameters) or
@@ -995,18 +1065,15 @@ def to_dict(x: "Domain") -> Dict:
 
     """
     domain_kwargs = {
-        k: v for k, v in x.__dict__.items()
-        if k != 'sampler' and not k.startswith('_')}
+        k: v for k, v in x.__dict__.items() if k != "sampler" and not k.startswith("_")
+    }
     result = {
         "domain_cls": x.__class__.__name__,
         "domain_kwargs": domain_kwargs,
     }
     sampler = x.get_sampler()
     if sampler is not None:
-        result.update({
-            "sampler_cls": str(sampler),
-            "sampler_kwargs": sampler.__dict__
-        })
+        result.update({"sampler_cls": str(sampler), "sampler_kwargs": sampler.__dict__})
     return result
 
 
@@ -1034,8 +1101,8 @@ def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Dom
     if not isinstance(numerical_domain, FiniteRange):
         # domain is numerical, set new lower and upper ranges with bounding-box values
         new_domain_dict = to_dict(numerical_domain)
-        new_domain_dict['domain_kwargs']['lower'] = lower
-        new_domain_dict['domain_kwargs']['upper'] = upper
+        new_domain_dict["domain_kwargs"]["lower"] = lower
+        new_domain_dict["domain_kwargs"]["upper"] = upper
         return from_dict(new_domain_dict)
     else:
         values = numerical_domain.values
@@ -1053,7 +1120,7 @@ def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Dom
         return FiniteRange(
             lower=new_lower,
             upper=new_upper,
-            size=j-i+1,
+            size=j - i + 1,
             cast_int=numerical_domain.cast_int,
-            log_scale=numerical_domain.log_scale
+            log_scale=numerical_domain.log_scale,
         )

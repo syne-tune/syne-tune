@@ -19,11 +19,13 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 
-from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
-    mlp_fashionmnist_benchmark, mlp_fashionmnist_default_params
+from benchmarking.definitions.definition_mlp_on_fashion_mnist import (
+    mlp_fashionmnist_benchmark,
+    mlp_fashionmnist_default_params,
+)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
 
     # We pick the MLP on FashionMNIST benchmark
@@ -34,20 +36,20 @@ if __name__ == '__main__':
     n_workers = 4
     default_params = mlp_fashionmnist_default_params()
     benchmark = mlp_fashionmnist_benchmark(default_params)
-    mode = benchmark['mode']
-    metric = benchmark['metric']
+    mode = benchmark["mode"]
+    metric = benchmark["metric"]
 
     # If you don't like the default config_space, change it here. But let
     # us use the default
-    config_space = benchmark['config_space']
+    config_space = benchmark["config_space"]
 
     # Local back-end
-    trial_backend = LocalBackend(entry_point=benchmark['script'])
+    trial_backend = LocalBackend(entry_point=benchmark["script"])
 
     # GP-based Bayesian optimization searcher. Many options can be specified
     # via `search_options`, but let's use the defaults
-    searcher = 'bayesopt'
-    search_options = {'num_init_random': n_workers + 2}
+    searcher = "bayesopt"
+    search_options = {"num_init_random": n_workers + 2}
     # Hyperband (or successive halving) scheduler of the stopping type.
     # Together with 'bayesopt', this selects the MOBSTER algorithm.
     # If you don't like the defaults suggested, just change them:
@@ -55,13 +57,14 @@ if __name__ == '__main__':
         config_space,
         searcher=searcher,
         search_options=search_options,
-        max_t=default_params['max_resource_level'],
-        grace_period=default_params['grace_period'],
-        reduction_factor=default_params['reduction_factor'],
-        resource_attr=benchmark['resource_attr'],
+        max_t=default_params["max_resource_level"],
+        grace_period=default_params["grace_period"],
+        reduction_factor=default_params["reduction_factor"],
+        resource_attr=benchmark["resource_attr"],
         mode=mode,
         metric=metric,
-        random_seed=random_seed)
+        random_seed=random_seed,
+    )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=120)
     tuner = Tuner(

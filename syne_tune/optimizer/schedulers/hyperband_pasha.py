@@ -11,8 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
-from syne_tune.optimizer.schedulers.hyperband_promotion import \
-    PromotionRungSystem
+from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 
 
 class PASHARungSystem(PromotionRungSystem):
@@ -24,11 +23,21 @@ class PASHARungSystem(PromotionRungSystem):
     TODO: add link
     """
 
-    def __init__(self, rung_levels, promote_quantiles, metric, mode,
-                 resource_attr, max_t, ranking_criterion,
-                 epsilon, epsilon_scaling):
-        super().__init__(rung_levels, promote_quantiles, metric, mode,
-                         resource_attr, max_t)
+    def __init__(
+        self,
+        rung_levels,
+        promote_quantiles,
+        metric,
+        mode,
+        resource_attr,
+        max_t,
+        ranking_criterion,
+        epsilon,
+        epsilon_scaling,
+    ):
+        super().__init__(
+            rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
+        )
         self.ranking_criterion = ranking_criterion
         # define the index of the current top rung, starting from 1 for the lowest rung
         #
@@ -36,7 +45,7 @@ class PASHARungSystem(PromotionRungSystem):
         self.rung_levels = rung_levels
 
         # initialize current maximum resources
-        self.current_max_t = rung_levels[self.current_rung_idx-1]
+        self.current_max_t = rung_levels[self.current_rung_idx - 1]
 
         self.epsilon = epsilon
         self.epsilon_scaling = epsilon_scaling
@@ -61,7 +70,10 @@ class PASHARungSystem(PromotionRungSystem):
         """
         rankings = []
         # be careful, self._rungs is ordered with the highest resources level in the beginning
-        for rung in [self._rungs[-self.current_rung_idx], self._rungs[-self.current_rung_idx + 1]]:
+        for rung in [
+            self._rungs[-self.current_rung_idx],
+            self._rungs[-self.current_rung_idx + 1],
+        ]:
             if rung.data != {}:
                 trial_ids = rung.data.keys()
                 values = []
@@ -89,17 +101,18 @@ class PASHARungSystem(PromotionRungSystem):
         # filter only the relevant configurations from the earlier rung
         top_rung_keys = set([e[0] for e in rankings[0]])
         corresponding_previous_rung_trials = filter(
-            lambda e: e[0] in top_rung_keys, rankings[1])
+            lambda e: e[0] in top_rung_keys, rankings[1]
+        )
         # if we try to maximize the objective, we need to reverse the ranking
-        if self._mode == 'max':
+        if self._mode == "max":
             reverse = True
         else:
             reverse = False
 
-        sorted_top_rung = sorted(
-            rankings[0], key=lambda e: e[1], reverse=reverse)
+        sorted_top_rung = sorted(rankings[0], key=lambda e: e[1], reverse=reverse)
         sorted_previous_rung = sorted(
-            corresponding_previous_rung_trials, key=lambda e: e[1], reverse=reverse)
+            corresponding_previous_rung_trials, key=lambda e: e[1], reverse=reverse
+        )
         return sorted_top_rung, sorted_previous_rung
 
     def _evaluate_soft_ranking(self, sorted_top_rung, sorted_previous_rung) -> bool:
@@ -115,19 +128,31 @@ class PASHARungSystem(PromotionRungSystem):
         keep_current_budget = True
         if len(sorted_previous_rung) < 2:
             epsilon = 0.0
-        elif self.ranking_criterion == 'soft_ranking_std':
-            epsilon = np.std(
-                [e[2] for e in sorted_previous_rung]) * self.epsilon_scaling
-        elif self.ranking_criterion == 'soft_ranking_median_dst' or self.ranking_criterion == 'soft_ranking_mean_dst':
+        elif self.ranking_criterion == "soft_ranking_std":
+            epsilon = (
+                np.std([e[2] for e in sorted_previous_rung]) * self.epsilon_scaling
+            )
+        elif (
+            self.ranking_criterion == "soft_ranking_median_dst"
+            or self.ranking_criterion == "soft_ranking_mean_dst"
+        ):
             scores = [e[2] for e in sorted_previous_rung]
-            distances = [abs(e1-e2) for idx1, e1 in enumerate(scores)
-                         for idx2, e2 in enumerate(scores) if idx1 != idx2]
-            if self.ranking_criterion == 'soft_ranking_mean_dst':
+            distances = [
+                abs(e1 - e2)
+                for idx1, e1 in enumerate(scores)
+                for idx2, e2 in enumerate(scores)
+                if idx1 != idx2
+            ]
+            if self.ranking_criterion == "soft_ranking_mean_dst":
                 epsilon = np.mean(distances) * self.epsilon_scaling
-            elif self.ranking_criterion == 'soft_ranking_median_dst':
+            elif self.ranking_criterion == "soft_ranking_median_dst":
                 epsilon = np.median(distances) * self.epsilon_scaling
             else:
-                raise ValueError('Ranking criterion {} is not supported'.format(self.ranking_criterion))
+                raise ValueError(
+                    "Ranking criterion {} is not supported".format(
+                        self.ranking_criterion
+                    )
+                )
         else:
             epsilon = self.epsilon
 
@@ -139,7 +164,7 @@ class PASHARungSystem(PromotionRungSystem):
             for idx_after in range(idx + 1, len(sorted_previous_rung)):
                 new_item = sorted_previous_rung[idx_after]
 
-                if self._mode == 'max':
+                if self._mode == "max":
                     if new_item[2] < item[2] - epsilon:
                         break
                 else:
@@ -149,7 +174,7 @@ class PASHARungSystem(PromotionRungSystem):
             # add configurations that are before the current configuration
             for idx_before in range(idx - 1, -1, -1):
                 new_item = sorted_previous_rung[idx_before]
-                if self._mode == 'max':
+                if self._mode == "max":
                     if new_item[2] > item[2] + epsilon:
                         break
                 else:
@@ -165,7 +190,7 @@ class PASHARungSystem(PromotionRungSystem):
                 break
 
         return keep_current_budget
-    
+
     def _decide_resource_increase(self, rankings) -> bool:
         """
         Decide if to increase the resources given the current rankings.
@@ -184,12 +209,12 @@ class PASHARungSystem(PromotionRungSystem):
             return False
 
         keep_current_budget = self._evaluate_soft_ranking(
-            sorted_top_rung, sorted_previous_rung)
+            sorted_top_rung, sorted_previous_rung
+        )
 
         return not keep_current_budget
 
-    def on_task_report(
-            self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         """
         Apart from calling the superclass method, we also check the rankings
         and decides if to increase the current maximum resources.
@@ -208,7 +233,7 @@ class PASHARungSystem(PromotionRungSystem):
                 # be careful, self.rung_levels is ordered with the highest resources level at the end
                 # moreover, since we use rung levels for counting both from the beginning and from the end of the list
                 # we need to remember that counting from the beginning it's zero indexed
-                self.current_max_t = self.rung_levels[self.current_rung_idx-1]
+                self.current_max_t = self.rung_levels[self.current_rung_idx - 1]
             else:
                 self.current_max_t = self.max_t
 

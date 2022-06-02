@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 
 try:
-    __all__ = ['StoppingCriterion', 'Tuner', 'Reporter']
+    __all__ = ["StoppingCriterion", "Tuner", "Reporter"]
     from pathlib import Path
     from syne_tune.stopping_criterion import StoppingCriterion
     from syne_tune.report import Reporter
@@ -23,7 +23,7 @@ except ImportError:
 
 def read_version():
     with open(Path(__file__).parent / "version.py", "r") as f:
-        return f.readline().replace("\"", "")
+        return f.readline().replace('"', "")
 
 
 __version__ = read_version()

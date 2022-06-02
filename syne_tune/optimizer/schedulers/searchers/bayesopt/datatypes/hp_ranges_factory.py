@@ -13,24 +13,28 @@
 from typing import Dict, Optional, List
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
-    import HyperparameterRangesImpl
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
+    HyperparameterRangesImpl,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def make_hyperparameter_ranges(
-        config_space: Dict,
-        name_last_pos: Optional[str] = None,
-        value_for_last_pos=None,
-        active_config_space: Optional[Dict] = None,
-        prefix_keys: Optional[List[str]] = None) -> HyperparameterRanges:
+    config_space: Dict,
+    name_last_pos: Optional[str] = None,
+    value_for_last_pos=None,
+    active_config_space: Optional[Dict] = None,
+    prefix_keys: Optional[List[str]] = None,
+) -> HyperparameterRanges:
     hp_ranges = HyperparameterRangesImpl(
         config_space,
         name_last_pos=name_last_pos,
         value_for_last_pos=value_for_last_pos,
         active_config_space=active_config_space,
-        prefix_keys=prefix_keys)
+        prefix_keys=prefix_keys,
+    )
     return hp_ranges

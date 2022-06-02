@@ -14,16 +14,21 @@ from typing import Dict, List, Set
 import numpy as np
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
-    import TransformerModelFactory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base \
-    import BaseSurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model \
-    import CostModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import SurrogateModel
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
+    TransformerModelFactory,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
+    BaseSurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model import (
+    CostModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    SurrogateModel,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +50,14 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     should be implemented properly.
 
     """
+
     def __init__(
-            self, state: TuningJobState, model: CostModel,
-            fixed_resource: int, num_samples: int = 1):
+        self,
+        state: TuningJobState,
+        model: CostModel,
+        fixed_resource: int,
+        num_samples: int = 1,
+    ):
         """
         :param state: TuningJobSubState
         :param model: CostModel. Model parameters must have been fit
@@ -63,7 +73,7 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
 
     @staticmethod
     def keys_predict() -> Set[str]:
-        return {'mean'}
+        return {"mean"}
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         # Inputs are encoded. For cost models, need to decode them back
@@ -73,22 +83,26 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
         # a problem, since the resource attribute is simply ignored by the
         # cost model.
         hp_ranges = self.hp_ranges_for_prediction()
-        candidates = [hp_ranges.from_ndarray(enc_config)
-                      for enc_config in inputs]
+        candidates = [hp_ranges.from_ndarray(enc_config) for enc_config in inputs]
         resources = [self._fixed_resource] * len(candidates)
         prediction_list = []
         for _ in range(self._num_samples):
             self._model.resample()
             cost_values = self._model.sample_joint(candidates)
-            prediction_list.append(np.array(self._model.predict_times(
-                candidates=candidates,
-                resources=resources,
-                cost_values=cost_values)))
-        return [{'mean': np.mean(prediction_list, axis=0)}]
+            prediction_list.append(
+                np.array(
+                    self._model.predict_times(
+                        candidates=candidates,
+                        resources=resources,
+                        cost_values=cost_values,
+                    )
+                )
+            )
+        return [{"mean": np.mean(prediction_list, axis=0)}]
 
     def backward_gradient(
-            self, input: np.ndarray,
-            head_gradients: List[Dict[str, np.ndarray]]) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
+    ) -> List[np.ndarray]:
         """
         The gradient contribution through the cost model is blocked.
 
@@ -105,8 +119,7 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
 
 
 class CostSurrogateModelFactory(TransformerModelFactory):
-    def __init__(
-            self, model: CostModel, fixed_resource: int, num_samples: int = 1):
+    def __init__(self, model: CostModel, fixed_resource: int, num_samples: int = 1):
         """
         The name of the cost metric is `model.cost_metric_name`.
 
@@ -143,6 +156,8 @@ class CostSurrogateModelFactory(TransformerModelFactory):
         """
         self._model.update(state)
         return CostFixedResourceSurrogateModel(
-            state=state, model=self._model,
+            state=state,
+            model=self._model,
             fixed_resource=self._fixed_resource,
-            num_samples=self._num_samples)
+            num_samples=self._num_samples,
+        )

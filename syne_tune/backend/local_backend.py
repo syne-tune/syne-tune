@@ -33,17 +33,19 @@ logger = logging.getLogger(__name__)
 
 
 if "OMP_NUM_THREADS" not in os.environ:
-    logger.debug("OMP_NUM_THREADS is not set, it is going to be set to 1 to avoid performance issues in case of many "
-                 "workers are used locally. Overrides this behavior by setting a custom value.")
+    logger.debug(
+        "OMP_NUM_THREADS is not set, it is going to be set to 1 to avoid performance issues in case of many "
+        "workers are used locally. Overrides this behavior by setting a custom value."
+    )
     os.environ["OMP_NUM_THREADS"] = "1"
 
 
 class LocalBackend(TrialBackend):
     def __init__(
-            self,
-            entry_point: str,
-            rotate_gpus: bool = True,
-            delete_checkpoints: bool = False
+        self,
+        entry_point: str,
+        rotate_gpus: bool = True,
+        delete_checkpoints: bool = False,
     ):
         """
         A backend running locally by spawning sub-process concurrently.
@@ -62,7 +64,9 @@ class LocalBackend(TrialBackend):
         """
         super(LocalBackend, self).__init__(delete_checkpoints)
 
-        assert Path(entry_point).exists(), f"the script provided to tune does not exist ({entry_point})"
+        assert Path(
+            entry_point
+        ).exists(), f"the script provided to tune does not exist ({entry_point})"
         self.entry_point = entry_point
 
         self.trial_subprocess = {}
@@ -124,8 +128,7 @@ class LocalBackend(TrialBackend):
 
         """
         assert self.rotate_gpus
-        free_gpus = set(range(self.num_gpus)).difference(
-            self.trial_gpu.values())
+        free_gpus = set(range(self.num_gpus)).difference(self.trial_gpu.values())
         if free_gpus:
             eligible_gpus = free_gpus
             logging.debug(f"Free GPUs: {free_gpus}")
@@ -138,7 +141,8 @@ class LocalBackend(TrialBackend):
         # smaller than the number of workers).
         res_gpu, _ = min(
             ((gpu, self.gpu_times_assigned[gpu]) for gpu in eligible_gpus),
-            key=lambda x: x[1])
+            key=lambda x: x[1],
+        )
         self.gpu_times_assigned[res_gpu] += 1
         return res_gpu
 
@@ -146,12 +150,16 @@ class LocalBackend(TrialBackend):
         self._prepare_for_schedule()
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
-        with open(trial_path / "std.out", 'a') as stdout:
-            with open(trial_path / "std.err", 'a') as stderr:
-                logging.debug(f"scheduling {trial_id}, {self.entry_point}, {config}, logging into {trial_path}")
+        with open(trial_path / "std.out", "a") as stdout:
+            with open(trial_path / "std.err", "a") as stderr:
+                logging.debug(
+                    f"scheduling {trial_id}, {self.entry_point}, {config}, logging into {trial_path}"
+                )
                 config_copy = config.copy()
                 config_copy[ST_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
-                config_str = " ".join([f"--{key} {value}" for key, value in config_copy.items()])
+                config_str = " ".join(
+                    [f"--{key} {value}" for key, value in config_copy.items()]
+                )
 
                 def np_encoder(object):
                     if isinstance(object, np.generic):
@@ -169,16 +177,13 @@ class LocalBackend(TrialBackend):
                 logging.info(f"running subprocess with command: {cmd}")
 
                 self.trial_subprocess[trial_id] = subprocess.Popen(
-                    cmd.split(" "),
-                    stdout=stdout,
-                    stderr=stderr,
-                    env=env
+                    cmd.split(" "), stdout=stdout, stderr=stderr, env=env
                 )
 
     def _allocate_gpu(self, trial_id: int, env: dict):
         if self.rotate_gpus:
             gpu = self._gpu_for_new_trial()
-            env['CUDA_VISIBLE_DEVICES'] = str(gpu)
+            env["CUDA_VISIBLE_DEVICES"] = str(gpu)
             self.trial_gpu[trial_id] = gpu
             logging.debug(f"Assigned GPU {gpu} to trial_id {trial_id}")
 
@@ -206,8 +211,7 @@ class LocalBackend(TrialBackend):
             # (which allows to write a time-stamp when the process finishes) but it is probably OK if all_results
             # is called every few seconds.
             if os.path.exists(trial_path / "end"):
-                training_end_time = self._read_time_stamp(
-                    trial_id=trial_id, name="end")
+                training_end_time = self._read_time_stamp(trial_id=trial_id, name="end")
             else:
                 training_end_time = datetime.now()
 
@@ -255,12 +259,12 @@ class LocalBackend(TrialBackend):
 
     def _write_time_stamp(self, trial_id: int, name: str):
         time_stamp_path = self._file_path(trial_id=trial_id, filename=name)
-        with open(time_stamp_path, 'w') as f:
+        with open(time_stamp_path, "w") as f:
             f.write(str(datetime.now().timestamp()))
 
     def _read_time_stamp(self, trial_id: int, name: str):
         time_stamp_path = self._file_path(trial_id=trial_id, filename=name)
-        with open(time_stamp_path, 'r') as f:
+        with open(time_stamp_path, "r") as f:
             return datetime.fromtimestamp(float(f.readline()))
 
     def _is_process_done(self, trial_id: int) -> bool:
@@ -289,7 +293,9 @@ class LocalBackend(TrialBackend):
         with open(self.trial_path(trial_id=trial_id) / "std.err", "r") as f:
             return f.readlines()
 
-    def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
+    def set_path(
+        self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
+    ):
         self.local_path = Path(results_root)
 
     def entrypoint_path(self) -> Path:

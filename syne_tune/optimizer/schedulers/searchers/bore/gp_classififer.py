@@ -16,8 +16,7 @@ import GPy
 
 
 class GPModel:
-
-    def __init__(self, kernel_type: str = 'matern52'):
+    def __init__(self, kernel_type: str = "matern52"):
         self.kernel_type = kernel_type
 
     def fit(self, X, y):
@@ -25,9 +24,9 @@ class GPModel:
         noise_kernel = GPy.kern.White(X.shape[1])
         noise_kernel.set_prior(noise_prior)
 
-        if self.kernel_type == 'matern52':
+        if self.kernel_type == "matern52":
             kern = GPy.kern.Matern52(X.shape[1], ARD=True) + noise_kernel
-        elif self.kernel_type == 'rbf':
+        elif self.kernel_type == "rbf":
             kern = GPy.kern.RBF(X.shape[1], ARD=True) + noise_kernel
 
         self.m = GPy.models.GPClassification(X, y[:, None], kernel=kern)

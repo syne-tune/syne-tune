@@ -15,29 +15,33 @@ from scipy import optimize
 from autograd import value_and_grad
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon \
-    import Parameter
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
-    import encode_unwrap_parameter, param_to_pretty_string
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon import Parameter
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
+    encode_unwrap_parameter,
+    param_to_pretty_string,
+)
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['apply_lbfgs',
-           'apply_lbfgs_with_multiple_starts',
-           'add_regularizer_to_criterion',
-           'create_lbfgs_arguments']
+__all__ = [
+    "apply_lbfgs",
+    "apply_lbfgs_with_multiple_starts",
+    "add_regularizer_to_criterion",
+    "create_lbfgs_arguments",
+]
 
 
 default_LBFGS_tol, default_LBFGS_maxiter = 1e-5, 500
 N_STARTS = 5
-STARTING_POINT_RANDOMIZATION_STD = 1.
+STARTING_POINT_RANDOMIZATION_STD = 1.0
 
 
 class ParamVecDictConverter(object):
     def __init__(self, param_dict: dict):
         self.param_dict = param_dict
         self.names = sorted(
-            [name for name, value in param_dict.items() if value is not None])
+            [name for name, value in param_dict.items() if value is not None]
+        )
         self.shapes = []
         self.name_to_index = dict()
         pos = 0
@@ -53,7 +57,8 @@ class ParamVecDictConverter(object):
         for name, shape in zip(self.names, self.shapes):
             size = sum(shape)
             self.param_dict[name].set_data(
-                np.reshape(param_vec[pos:(pos + size)], shape))
+                np.reshape(param_vec[pos : (pos + size)], shape)
+            )
             pos += size
 
     def to_vec(self):
@@ -73,8 +78,12 @@ def _make_scipy_objective(autograd_func):
 
 
 def _apply_lbfgs_internal(
-        exec_func, param_converter: ParamVecDictConverter, param_numpy_array,
-        param_bounds, **kwargs):
+    exec_func,
+    param_converter: ParamVecDictConverter,
+    param_numpy_array,
+    param_bounds,
+    **kwargs
+):
 
     # Run L-BFGS-B
     LBFGS_tol = kwargs.get("tol", default_LBFGS_tol)
@@ -83,14 +92,16 @@ def _apply_lbfgs_internal(
     ret_info = None
 
     try:
-        output = optimize.minimize(exec_func,
-                                   param_numpy_array,
-                                   jac=True,
-                                   method="L-BFGS-B",
-                                   bounds=param_bounds,
-                                   tol=LBFGS_tol,
-                                   options={"maxiter": LBFGS_maxiter},
-                                   callback=LBFGS_callback)
+        output = optimize.minimize(
+            exec_func,
+            param_numpy_array,
+            jac=True,
+            method="L-BFGS-B",
+            bounds=param_bounds,
+            tol=LBFGS_tol,
+            options={"maxiter": LBFGS_maxiter},
+            callback=LBFGS_callback,
+        )
         # NOTE: Be aware that the stopping condition based on tol can terminate
         # with a gradient size which is not small.
         # To control L-BFGS convergence conditions for real, have to instead use
@@ -106,11 +117,8 @@ def _apply_lbfgs_internal(
         param_converter.from_vec(output.x)
 
     except Exception as inst:
-        ret_info = {
-            'type': type(inst),
-            'args': inst.args,
-            'msg': str(inst)}
-            
+        ret_info = {"type": type(inst), "args": inst.args, "msg": str(inst)}
+
     return ret_info
 
 
@@ -138,8 +146,7 @@ def _deep_copy_param_dict(input_param_dict):
     """
     output_param_dict = {}
     for name, param in input_param_dict.items():
-        param_copy = Parameter(
-            name=param.name, shape=param.shape, init=param.init)
+        param_copy = Parameter(name=param.name, shape=param.shape, init=param.init)
         param_copy.initialize()
         param_copy.set_data(param.data())
         output_param_dict[name] = param_copy
@@ -147,8 +154,12 @@ def _deep_copy_param_dict(input_param_dict):
 
 
 def _inplace_param_dict_randomization(
-        param_dict, mean_param_dict, bounds, random_state,
-        std=STARTING_POINT_RANDOMIZATION_STD):
+    param_dict,
+    mean_param_dict,
+    bounds,
+    random_state,
+    std=STARTING_POINT_RANDOMIZATION_STD,
+):
     """
     In order to initialize L-BFGS from multiple starting points, this function makes it possible to
     randomize, inplace, an param_dict (as used by executors to communicate parameters to L-BFGS).
@@ -171,13 +182,13 @@ def _inplace_param_dict_randomization(
         lower, upper = bounds[name]
         lower = lower if lower is not None else -np.inf
         upper = upper if upper is not None else np.inf
-        
+
         param_value_new = mean_param_dict[name].data() + random_state.normal(
-            0.0, std, size=param.shape)
+            0.0, std, size=param.shape
+        )
         # We project back param_dict[name] within its specified lower and upper bounds
         # (in case of we would have perturbed beyond those bounds)
-        param_dict[name].set_data(np.maximum(lower,
-            np.minimum(upper, param_value_new)))
+        param_dict[name].set_data(np.maximum(lower, np.minimum(upper, param_value_new)))
 
 
 def apply_lbfgs(exec_func, param_dict, bounds, **kwargs):
@@ -216,20 +227,21 @@ def apply_lbfgs(exec_func, param_dict, bounds, **kwargs):
     for name, bound in bounds.items():
         if name in param_names:
             param_bounds[name_to_index[name]] = bound
-    
+
     ret_info = _apply_lbfgs_internal(
-        exec_func, param_converter, param_numpy_array, param_bounds, **kwargs)
+        exec_func, param_converter, param_numpy_array, param_bounds, **kwargs
+    )
     if ret_info is not None:
         # Caught exception: Return parameters for which evaluation failed
-        ret_info['params'] = {
-            k: v.data() for k, v in param_dict.items()}
+        ret_info["params"] = {k: v.data() for k, v in param_dict.items()}
         # Restore initial evaluation point
         param_converter.from_vec(param_numpy_array)
     return ret_info
 
+
 def apply_lbfgs_with_multiple_starts(
-        exec_func, param_dict, bounds, random_state, n_starts=N_STARTS,
-        **kwargs):
+    exec_func, param_dict, bounds, random_state, n_starts=N_STARTS, **kwargs
+):
     """
     When dealing with non-convex problems (e.g., optimization the marginal
     likelihood), we typically need to start from various starting points. This
@@ -259,22 +271,23 @@ def apply_lbfgs_with_multiple_starts(
     copy_of_initial_param_dict = _deep_copy_param_dict(param_dict)
     best_objective_over_restarts = None
     best_param_dict_over_restarts = copy_of_initial_param_dict
-    
+
     # Loop over restarts
     ret_infos = []
     for iter in range(n_starts):
         if iter > 0:
             _inplace_param_dict_randomization(
-                param_dict, copy_of_initial_param_dict, bounds, random_state)
-            
+                param_dict, copy_of_initial_param_dict, bounds, random_state
+            )
+
         decorator = ExecutorDecorator(exec_func)
-        ret_info = apply_lbfgs(
-            decorator.exec_func, param_dict, bounds, **kwargs)
-        
+        ret_info = apply_lbfgs(decorator.exec_func, param_dict, bounds, **kwargs)
+
         ret_infos.append(ret_info)
         if ret_info is None and (
-                best_objective_over_restarts is None or
-                decorator.best_objective < best_objective_over_restarts):
+            best_objective_over_restarts is None
+            or decorator.best_objective < best_objective_over_restarts
+        ):
             best_objective_over_restarts = decorator.best_objective
             best_param_dict_over_restarts = _deep_copy_param_dict(param_dict)
 
@@ -304,9 +317,7 @@ def create_lbfgs_arguments(criterion, crit_args, verbose=False):
     :param crit_args: Arguments for criterion.forward
     :return: scipy_objective, param_dict
     """
-    param_dict = {
-        param.name: param
-        for param in criterion.collect_params().values()}
+    param_dict = {param.name: param for param in criterion.collect_params().values()}
     # Wraps param_dict, conversion to/from flat vector:
     param_converter = ParamVecDictConverter(param_dict)
 
@@ -317,7 +328,7 @@ def create_lbfgs_arguments(criterion, crit_args, verbose=False):
             msg_lst = ["[criterion = {}]".format(objective)]
             for param, encoding in criterion.param_encoding_pairs():
                 msg_lst.append(param_to_pretty_string(param, encoding))
-            logger.info('\n'.join(msg_lst))
+            logger.info("\n".join(msg_lst))
         return objective
 
     return _make_scipy_objective(executor), param_dict

@@ -15,27 +15,36 @@ import numpy as np
 import logging
 from dataclasses import dataclass
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
-    import TransformerModelFactory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base \
-    import BaseSurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import FantasizedPendingEvaluation, INTERNAL_METRIC_NAME, \
-    ConfigurationFilter
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
-    import GaussianProcessRegression
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc \
-    import GPRegressionMCMC
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state \
-    import GaussProcPosteriorState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import SurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
-    import DebugLogPrinter
-from syne_tune.optimizer.schedulers.utils.simple_profiler \
-    import SimpleProfiler
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
+    TransformerModelFactory,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
+    BaseSurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    FantasizedPendingEvaluation,
+    INTERNAL_METRIC_NAME,
+    ConfigurationFilter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression import (
+    GaussianProcessRegression,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc import (
+    GPRegressionMCMC,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
+    GaussProcPosteriorState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    SurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
+    DebugLogPrinter,
+)
+from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -50,13 +59,17 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     integrated out by MCMC sampling (`GPRegressionMCMC`).
 
     """
+
     def __init__(
-            self, state: TuningJobState,
-            gpmodel: GPModel,
-            fantasy_samples: List[FantasizedPendingEvaluation],
-            active_metric: str = None,
-            normalize_mean: float = 0.0, normalize_std: float = 1.0,
-            filter_observed_data: Optional[ConfigurationFilter] = None):
+        self,
+        state: TuningJobState,
+        gpmodel: GPModel,
+        fantasy_samples: List[FantasizedPendingEvaluation],
+        active_metric: str = None,
+        normalize_mean: float = 0.0,
+        normalize_std: float = 1.0,
+        filter_observed_data: Optional[ConfigurationFilter] = None,
+    ):
         """
         Both `state` and `gpmodel` are immutable. If parameters of the latter
         are to be fit, this has to be done before.
@@ -84,33 +97,37 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         predictions_list = []
-        for post_mean, post_variance in self._gpmodel.predict(
-                inputs):
-            assert post_mean.shape[0] == inputs.shape[0], \
-                (post_mean.shape, inputs.shape)
-            assert post_variance.shape == (inputs.shape[0],), \
-                (post_variance.shape, inputs.shape)
+        for post_mean, post_variance in self._gpmodel.predict(inputs):
+            assert post_mean.shape[0] == inputs.shape[0], (
+                post_mean.shape,
+                inputs.shape,
+            )
+            assert post_variance.shape == (inputs.shape[0],), (
+                post_variance.shape,
+                inputs.shape,
+            )
             # Undo normalization applied to targets
             mean_denorm = post_mean * self.std + self.mean
             std_denorm = np.sqrt(post_variance) * self.std
-            predictions_list.append(
-                {'mean': mean_denorm, 'std': std_denorm})
+            predictions_list.append({"mean": mean_denorm, "std": std_denorm})
         return predictions_list
 
     def backward_gradient(
-            self, input: np.ndarray,
-            head_gradients: List[Dict[str, np.ndarray]]) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
+    ) -> List[np.ndarray]:
         poster_states = self.posterior_states
-        assert poster_states is not None, \
-            "Cannot run backward_gradient without a posterior state"
-        assert len(poster_states) == len(head_gradients), \
-            "len(posterior_states) = {} != {} = len(head_gradients)".format(
-                len(poster_states), len(head_gradients))
+        assert (
+            poster_states is not None
+        ), "Cannot run backward_gradient without a posterior state"
+        assert len(poster_states) == len(
+            head_gradients
+        ), "len(posterior_states) = {} != {} = len(head_gradients)".format(
+            len(poster_states), len(head_gradients)
+        )
         return [
-            poster_state.backward_gradient(
-                input, head_gradient, self.mean, self.std)
-            for poster_state, head_gradient in zip(
-                poster_states, head_gradients)]
+            poster_state.backward_gradient(input, head_gradient, self.mean, self.std)
+            for poster_state, head_gradient in zip(poster_states, head_gradients)
+        ]
 
     def does_mcmc(self):
         return isinstance(self._gpmodel, GPRegressionMCMC)
@@ -123,11 +140,11 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         candidates = super()._current_best_filter_candidates(candidates)
         hp_ranges = self.state.hp_ranges
         candidates = hp_ranges.filter_for_last_pos_value(candidates)
-        assert candidates, \
-            "state.hp_ranges does not contain any candidates " + \
-            "(labeled or pending) with resource attribute " + \
-            "'{}' = {}".format(
-                hp_ranges.name_last_pos, hp_ranges.value_for_last_pos)
+        assert candidates, (
+            "state.hp_ranges does not contain any candidates "
+            + "(labeled or pending) with resource attribute "
+            + "'{}' = {}".format(hp_ranges.name_last_pos, hp_ranges.value_for_last_pos)
+        )
         return candidates
 
 
@@ -143,10 +160,14 @@ class InternalCandidateEvaluations:
 # of type FantasizedPendingEvaluation, which contain the fantasy samples. This
 # is the case only for internal states.
 def get_internal_candidate_evaluations(
-        state: TuningJobState, active_metric: str, normalize_targets: bool,
-        num_fantasy_samples: int) -> InternalCandidateEvaluations:
+    state: TuningJobState,
+    active_metric: str,
+    normalize_targets: bool,
+    num_fantasy_samples: int,
+) -> InternalCandidateEvaluations:
     candidates, evaluation_values = state.observed_data_for_metric(
-        metric_name=active_metric)
+        metric_name=active_metric
+    )
     hp_ranges = state.hp_ranges
     features = hp_ranges.to_ndarray_matrix(candidates)
     # Normalize
@@ -163,16 +184,20 @@ def get_internal_candidate_evaluations(
     if state.pending_evaluations:
         # In this case, y becomes a matrix, where the observed values are
         # broadcast
-        cand_lst = [hp_ranges.to_ndarray(config)
-                    for config in state.pending_configurations()]
+        cand_lst = [
+            hp_ranges.to_ndarray(config) for config in state.pending_configurations()
+        ]
         fanta_lst = []
         for pending_eval in state.pending_evaluations:
-            assert isinstance(pending_eval, FantasizedPendingEvaluation), \
-                "state.pending_evaluations has to contain FantasizedPendingEvaluation"
+            assert isinstance(
+                pending_eval, FantasizedPendingEvaluation
+            ), "state.pending_evaluations has to contain FantasizedPendingEvaluation"
             fantasies = pending_eval.fantasies[active_metric]
-            assert fantasies.size == num_fantasy_samples, \
-                "All state.pending_evaluations entries must have length {}".format(
-                    num_fantasy_samples)
+            assert (
+                fantasies.size == num_fantasy_samples
+            ), "All state.pending_evaluations entries must have length {}".format(
+                num_fantasy_samples
+            )
             fanta_lst.append(fantasies.reshape((1, -1)))
         targets = np.vstack([targets * np.ones((1, num_fantasy_samples))] + fanta_lst)
         features = np.vstack([features] + cand_lst)
@@ -181,12 +206,15 @@ def get_internal_candidate_evaluations(
 
 class GaussProcModelFactory(TransformerModelFactory):
     def __init__(
-            self, gpmodel: GPModel, active_metric: str,
-            normalize_targets: bool = True,
-            profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None,
-            filter_observed_data: Optional[ConfigurationFilter] = None,
-            no_fantasizing: bool = False):
+        self,
+        gpmodel: GPModel,
+        active_metric: str,
+        normalize_targets: bool = True,
+        profiler: Optional[SimpleProfiler] = None,
+        debug_log: Optional[DebugLogPrinter] = None,
+        filter_observed_data: Optional[ConfigurationFilter] = None,
+        no_fantasizing: bool = False,
+    ):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -240,9 +268,11 @@ class GaussProcModelFactory(TransformerModelFactory):
                 hp_ranges=state.hp_ranges,
                 config_for_trial=state.config_for_trial,
                 trials_evaluations=state.trials_evaluations,
-                failed_trials=state.failed_trials)
+                failed_trials=state.failed_trials,
+            )
         self._posterior_for_state(
-            no_pending_state, fit_params=fit_params, profiler=self._profiler)
+            no_pending_state, fit_params=fit_params, profiler=self._profiler
+        )
         if state.pending_evaluations and not self._no_fantasizing:
             # Sample fantasy values for pending evaluations
             state_with_fantasies = self._draw_fantasy_values(state)
@@ -250,22 +280,30 @@ class GaussProcModelFactory(TransformerModelFactory):
             # Note: profiler is not passed here, this would overwrite the
             # results from the first call
             self._posterior_for_state(
-                state_with_fantasies, fit_params=False, profiler=None)
+                state_with_fantasies, fit_params=False, profiler=None
+            )
             fantasy_samples = state_with_fantasies.pending_evaluations
         else:
             fantasy_samples = []
         return GaussProcSurrogateModel(
-            state=state, active_metric=self.active_metric,
-            gpmodel=self._gpmodel, fantasy_samples=fantasy_samples,
-            normalize_mean=self._mean, normalize_std=self._std,
-            filter_observed_data=self._filter_observed_data)
+            state=state,
+            active_metric=self.active_metric,
+            gpmodel=self._gpmodel,
+            fantasy_samples=fantasy_samples,
+            normalize_mean=self._mean,
+            normalize_std=self._std,
+            filter_observed_data=self._filter_observed_data,
+        )
 
     def _get_num_fantasy_samples(self) -> int:
         raise NotImplementedError()
 
     def _posterior_for_state(
-            self, state: TuningJobState, fit_params: bool,
-            profiler: Optional[SimpleProfiler] = None):
+        self,
+        state: TuningJobState,
+        fit_params: bool,
+        profiler: Optional[SimpleProfiler] = None,
+    ):
         """
         Computes posterior for state.
         If fit_params and state.pending_evaluations is empty, we first
@@ -275,12 +313,16 @@ class GaussProcModelFactory(TransformerModelFactory):
         sampled.
 
         """
-        assert state.num_observed_cases(self.active_metric) > 0, \
-            "Cannot compute posterior: state has no labeled datapoints " +\
-            f"for metric {self.active_metric}"
+        assert state.num_observed_cases(self.active_metric) > 0, (
+            "Cannot compute posterior: state has no labeled datapoints "
+            + f"for metric {self.active_metric}"
+        )
         internal_candidate_evaluations = get_internal_candidate_evaluations(
-            state, self.active_metric, self.normalize_targets,
-            self._get_num_fantasy_samples())
+            state,
+            self.active_metric,
+            self.normalize_targets,
+            self._get_num_fantasy_samples(),
+        )
         features = internal_candidate_evaluations.features
         targets = internal_candidate_evaluations.targets
         assert features.shape[0] == targets.shape[0]
@@ -300,8 +342,8 @@ class GaussProcModelFactory(TransformerModelFactory):
             self._debug_log.set_model_params(self.get_params())
             if not state.pending_evaluations:
                 deb_msg = "[GaussProcModelFactory._posterior_for_state]\n"
-                deb_msg += ("- self.mean = {}\n".format(self._mean))
-                deb_msg += ("- self.std = {}".format(self._std))
+                deb_msg += "- self.mean = {}\n".format(self._mean)
+                deb_msg += "- self.std = {}".format(self._std)
                 logger.info(deb_msg)
                 self._debug_log.set_targets(targets)
             else:
@@ -312,8 +354,7 @@ class GaussProcModelFactory(TransformerModelFactory):
     def _num_samples_for_fantasies(self) -> int:
         raise NotImplementedError()
 
-    def _draw_fantasy_values(
-            self, state: TuningJobState) -> TuningJobState:
+    def _draw_fantasy_values(self, state: TuningJobState) -> TuningJobState:
         """
         Note: The fantasy values need not be de-normalized, because they are
         only used internally here (e.g., get_internal_candidate_evaluations).
@@ -332,15 +373,20 @@ class GaussProcModelFactory(TransformerModelFactory):
             num_samples = self._num_samples_for_fantasies()
             # We need joint sampling for >1 new candidates
             num_candidates = len(configs)
-            sample_func = self._gpmodel.sample_joint if num_candidates > 1 else \
-                self._gpmodel.sample_marginals
-            targets_new = sample_func(
-                features_new, num_samples=num_samples).reshape(
-                (num_candidates, -1))
+            sample_func = (
+                self._gpmodel.sample_joint
+                if num_candidates > 1
+                else self._gpmodel.sample_marginals
+            )
+            targets_new = sample_func(features_new, num_samples=num_samples).reshape(
+                (num_candidates, -1)
+            )
             new_pending = [
                 FantasizedPendingEvaluation(
-                    trial_id=ev.trial_id, resource=ev.resource,
-                    fantasies={self.active_metric: y_new.reshape((1, -1))})
+                    trial_id=ev.trial_id,
+                    resource=ev.resource,
+                    fantasies={self.active_metric: y_new.reshape((1, -1))},
+                )
                 for ev, y_new in zip(state.pending_evaluations, targets_new)
             ]
         else:
@@ -350,18 +396,22 @@ class GaussProcModelFactory(TransformerModelFactory):
             config_for_trial=state.config_for_trial,
             trials_evaluations=state.trials_evaluations,
             failed_trials=state.failed_trials,
-            pending_evaluations=new_pending)
+            pending_evaluations=new_pending,
+        )
 
 
 class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
     def __init__(
-            self, gpmodel: GaussianProcessRegression, num_fantasy_samples: int,
-            active_metric: str = INTERNAL_METRIC_NAME,
-            normalize_targets: bool = True,
-            profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None,
-            filter_observed_data: Optional[ConfigurationFilter] = None,
-            no_fantasizing: bool = False):
+        self,
+        gpmodel: GaussianProcessRegression,
+        num_fantasy_samples: int,
+        active_metric: str = INTERNAL_METRIC_NAME,
+        normalize_targets: bool = True,
+        profiler: Optional[SimpleProfiler] = None,
+        debug_log: Optional[DebugLogPrinter] = None,
+        filter_observed_data: Optional[ConfigurationFilter] = None,
+        no_fantasizing: bool = False,
+    ):
         """
         We support pending evaluations via fantasizing. Note that state does
         not contain the fantasy values, but just the pending configs. Fantasy
@@ -376,10 +426,14 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         """
         assert num_fantasy_samples > 0
         super().__init__(
-            gpmodel=gpmodel, active_metric=active_metric,
-            normalize_targets=normalize_targets, profiler=profiler,
-            debug_log=debug_log, filter_observed_data=filter_observed_data,
-            no_fantasizing=no_fantasizing)
+            gpmodel=gpmodel,
+            active_metric=active_metric,
+            normalize_targets=normalize_targets,
+            profiler=profiler,
+            debug_log=debug_log,
+            filter_observed_data=filter_observed_data,
+            no_fantasizing=no_fantasizing,
+        )
         self.num_fantasy_samples = num_fantasy_samples
 
     def get_params(self):
@@ -395,5 +449,4 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         # Special case (see header comment): If the current posterior state
         # does not contain pending candidates (no fantasies), we sample
         # `num_fantasy_samples` times i.i.d.
-        return 1 if self._gpmodel.multiple_targets() \
-            else self.num_fantasy_samples
+        return 1 if self._gpmodel.multiple_targets() else self.num_fantasy_samples

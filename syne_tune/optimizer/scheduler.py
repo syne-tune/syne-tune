@@ -15,8 +15,7 @@ from typing import Optional, Dict, List
 import logging
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.config_space import non_constant_hyperparameter_keys, \
-    cast_config_values
+from syne_tune.config_space import non_constant_hyperparameter_keys, cast_config_values
 
 logger = logging.getLogger(__name__)
 
@@ -35,19 +34,25 @@ class TrialSuggestion:
     If `spawn_new_trial_id` is False, then the trial `checkpoint_trial_id` is resumed with its previous checkpoint.
     :param config: the configuration that should be evaluated.
     """
+
     spawn_new_trial_id: bool = True
     checkpoint_trial_id: Optional[int] = None
     config: Optional[Dict] = None
 
     def __post_init__(self):
         if self.spawn_new_trial_id:
-            assert self.checkpoint_trial_id is not None or self.config is not None, \
-                "Cannot start a new trial without specifying a checkpoint or a config."
+            assert (
+                self.checkpoint_trial_id is not None or self.config is not None
+            ), "Cannot start a new trial without specifying a checkpoint or a config."
         else:
-            assert self.checkpoint_trial_id is not None, "A trial-id must be passed to resume a trial."
+            assert (
+                self.checkpoint_trial_id is not None
+            ), "A trial-id must be passed to resume a trial."
 
     @staticmethod
-    def start_suggestion(config: Dict, checkpoint_trial_id: Optional[int] = None) -> "TrialSuggestion":
+    def start_suggestion(
+        config: Dict, checkpoint_trial_id: Optional[int] = None
+    ) -> "TrialSuggestion":
         """
         :param config: configuration to use for the new trial.
         :param checkpoint_trial_id: if given, then the checkpoint folder of the corresponding trial is used when
@@ -57,11 +62,13 @@ class TrialSuggestion:
         return TrialSuggestion(
             spawn_new_trial_id=True,
             config=config,
-            checkpoint_trial_id=checkpoint_trial_id
+            checkpoint_trial_id=checkpoint_trial_id,
         )
 
     @staticmethod
-    def resume_suggestion(trial_id: int, config: Optional[Dict] = None) -> "TrialSuggestion":
+    def resume_suggestion(
+        trial_id: int, config: Optional[Dict] = None
+    ) -> "TrialSuggestion":
         """
         :param trial_id:
         :param config:
@@ -133,7 +140,8 @@ class TrialScheduler(object):
                 ret_val = TrialSuggestion(
                     spawn_new_trial_id=ret_val.spawn_new_trial_id,
                     checkpoint_trial_id=ret_val.checkpoint_trial_id,
-                    config=self._postprocess_config(ret_val.config))
+                    config=self._postprocess_config(ret_val.config),
+                )
         return ret_val
 
     def _postprocess_config(self, config: Dict) -> Dict:
@@ -148,8 +156,7 @@ class TrialScheduler(object):
         :return: Post-processed config
         """
         new_config = self.config_space.copy()
-        new_config.update(cast_config_values(
-            config, config_space=self.config_space))
+        new_config.update(cast_config_values(config, config_space=self.config_space))
         return new_config
 
     def _preprocess_config(self, config: Dict) -> Dict:
@@ -165,7 +172,8 @@ class TrialScheduler(object):
         """
         return cast_config_values(
             {k: v for k, v in config.items() if k in self._hyperparameter_keys},
-            config_space=self.config_space)
+            config_space=self.config_space,
+        )
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         """
@@ -202,8 +210,7 @@ class TrialScheduler(object):
         return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: Dict):
-        """Notification for the completion of trial.
-        """
+        """Notification for the completion of trial."""
         pass
 
     def on_trial_remove(self, trial: Trial):
@@ -223,4 +230,4 @@ class TrialScheduler(object):
         """
         :return: 'min' if target metric is minimized, otherwise 'max', 'min' is the default in all schedulers.
         """
-        return 'min'
+        return "min"

@@ -20,8 +20,10 @@ import os
 import boto3
 from sagemaker.pytorch import PyTorch
 
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import \
-    add_syne_tune_dependency, get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    add_syne_tune_dependency,
+    get_execution_role,
+)
 from syne_tune import Tuner
 from syne_tune.util import s3_experiment_path
 from syne_tune.constants import ST_REMOTE_UPLOAD_DIR_NAME
@@ -33,16 +35,16 @@ logger = logging.getLogger(__name__)
 
 class RemoteLauncher:
     def __init__(
-            self,
-            tuner: Tuner,
-            role: Optional[str] = None,
-            instance_type: str = "ml.m5.xlarge",
-            dependencies: Optional[List[str]] = None,
-            store_logs_localbackend: bool = False,
-            log_level: Optional[int] = None,
-            s3_path: Optional[str] = None,
-            no_tuner_logging: bool = False,
-            **estimator_kwargs,
+        self,
+        tuner: Tuner,
+        role: Optional[str] = None,
+        instance_type: str = "ml.m5.xlarge",
+        dependencies: Optional[List[str]] = None,
+        store_logs_localbackend: bool = False,
+        log_level: Optional[int] = None,
+        s3_path: Optional[str] = None,
+        no_tuner_logging: bool = False,
+        **estimator_kwargs,
     ):
         """
         This class allows to launch a tuning job remotely
@@ -65,10 +67,11 @@ class RemoteLauncher:
         :param no_tuner_logging: If True, the logging level for
             syne_tune.tuner is set to ERROR
         """
-        assert not self.is_lambda(tuner.stop_criterion), \
-            "remote launcher does not support using lambda functions for stopping criterion. Use StoppingCriterion, " \
-            "with Tuner if you want to use the remote launcher. See launch_height_sagemaker_remotely.py for" \
+        assert not self.is_lambda(tuner.stop_criterion), (
+            "remote launcher does not support using lambda functions for stopping criterion. Use StoppingCriterion, "
+            "with Tuner if you want to use the remote launcher. See launch_height_sagemaker_remotely.py for"
             " a full example."
+        )
         self.tuner = tuner
         self.role = get_execution_role() if role is None else role
         self.instance_type = instance_type
@@ -100,8 +103,8 @@ class RemoteLauncher:
             return False
 
     def run(
-            self,
-            wait: bool = True,
+        self,
+        wait: bool = True,
     ):
         """
         :param wait: Whether the call should wait until the job completes (default: True). If False the call returns
@@ -113,7 +116,7 @@ class RemoteLauncher:
         if boto3.Session().region_name is None:
             # launching in this is needed to send a default configuration on the tuning loop running on Sagemaker
             # todo restore the env variable if present to avoid a side effect
-            os.environ['AWS_DEFAULT_REGION'] = 'us-west-2'
+            os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
         self.launch_tuning_job_on_sagemaker(wait=wait)
 
     def prepare_upload(self):
@@ -149,9 +152,13 @@ class RemoteLauncher:
             os.remove(tgt_requirement)
         except OSError:
             pass
-        endpoint_requirements = self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
+        endpoint_requirements = (
+            self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
+        )
         if endpoint_requirements.exists():
-            logger.info(f"copy endpoint script requirements to {self.remote_script_dir()}")
+            logger.info(
+                f"copy endpoint script requirements to {self.remote_script_dir()}"
+            )
             shutil.copy(endpoint_requirements, tgt_requirement)
             pass
 
@@ -163,7 +170,10 @@ class RemoteLauncher:
             return Path(self.tuner.trial_backend.entrypoint_path()).parent
 
     def is_source_dir_specified(self) -> bool:
-        return hasattr(self.tuner.trial_backend, "source_dir") and self.tuner.trial_backend.sm_estimator.source_dir is not None
+        return (
+            hasattr(self.tuner.trial_backend, "source_dir")
+            and self.tuner.trial_backend.sm_estimator.source_dir is not None
+        )
 
     def update_backend_with_remote_paths(self):
         """
@@ -171,10 +181,13 @@ class RemoteLauncher:
         """
         if self.is_source_dir_specified():
             # the source_dir is deployed to `upload_dir`
-            self.tuner.trial_backend.sm_estimator.source_dir = str(Path(self.upload_dir().name))
+            self.tuner.trial_backend.sm_estimator.source_dir = str(
+                Path(self.upload_dir().name)
+            )
         else:
             self.tuner.trial_backend.set_entrypoint(
-                f"{self.upload_dir().name}/{self.tuner.trial_backend.entrypoint_path().name}")
+                f"{self.upload_dir().name}/{self.tuner.trial_backend.entrypoint_path().name}"
+            )
 
     def upload_dir(self) -> Path:
         return Path(syne_tune.__path__[0]).parent / ST_REMOTE_UPLOAD_DIR_NAME
@@ -198,17 +211,19 @@ class RemoteLauncher:
             "no_tuner_logging": self.no_tuner_logging,
         }
         if self.log_level is not None:
-            hyperparameters['log_level'] = self.log_level
+            hyperparameters["log_level"] = self.log_level
 
         # avoids error "Must setup local AWS configuration with a region supported by SageMaker."
         # in case no region is explicitely configured by providing a default region
         environment = self.estimator_kwargs.pop("environment", {})
         if "AWS_DEFAULT_REGION" not in environment:
-          environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
+            environment["AWS_DEFAULT_REGION"] = boto3.Session().region_name
 
         image_uri = self.estimator_kwargs.pop("image_uri", None)
         if image_uri is not None:
-            logger.info(f"Using custom image {image_uri}, make sure that Syne Tune is installed in your custom container.")
+            logger.info(
+                f"Using custom image {image_uri}, make sure that Syne Tune is installed in your custom container."
+            )
         else:
             image_uri = self.syne_tune_image_uri()
 
@@ -221,7 +236,7 @@ class RemoteLauncher:
             instance_count=1,
             role=self.role,
             py_version="py38",
-            framework_version='1.10.0',
+            framework_version="1.10.0",
             image_uri=image_uri,
             hyperparameters=hyperparameters,
             checkpoint_s3_uri=checkpoint_s3_root,
@@ -247,7 +262,9 @@ class RemoteLauncher:
         docker_image_name = "syne-tune-cpu-py38"
         account_id = boto3.client("sts").get_caller_identity()["Account"]
         region_name = boto3.Session().region_name
-        image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
+        image_uri = (
+            f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
+        )
         try:
             logger.info(f"Fetching Syne Tune image {image_uri}")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
@@ -258,8 +275,10 @@ class RemoteLauncher:
                 f"`cd {Path(__file__).parent}/container; bash build_syne_tune_container.sh`\n"
                 f"in a terminal to build it. Trying to do it now."
             )
-            subprocess.run("./build_syne_tune_container.sh",
-                           cwd=Path(syne_tune.__path__[0]).parent / "container")
+            subprocess.run(
+                "./build_syne_tune_container.sh",
+                cwd=Path(syne_tune.__path__[0]).parent / "container",
+            )
             logger.info(f"attempting to fetch {docker_image_name} again.")
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
 

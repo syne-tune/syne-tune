@@ -13,22 +13,31 @@
 from typing import Dict, Optional
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import \
-    gp_multifidelity_searcher_factory, gp_multifidelity_searcher_defaults
-from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
-    import check_and_merge_defaults
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher \
-    import GPFIFOSearcher, decode_state
-from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import \
-    ResourceForAcquisitionMap
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import PendingEvaluation, MetricValues
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model \
-    import GaussProcAdditiveModelFactory
+from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
+    gp_multifidelity_searcher_factory,
+    gp_multifidelity_searcher_defaults,
+)
+from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
+    check_and_merge_defaults,
+)
+from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (
+    GPFIFOSearcher,
+    decode_state,
+)
+from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
+    ResourceForAcquisitionMap,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    PendingEvaluation,
+    MetricValues,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model import (
+    GaussProcAdditiveModelFactory,
+)
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['GPMultiFidelitySearcher']
+__all__ = ["GPMultiFidelitySearcher"]
 
 
 class GPMultiFidelitySearcher(GPFIFOSearcher):
@@ -157,10 +166,11 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     --------
     GPFIFOSearcher
     """
+
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
-            kwargs, *gp_multifidelity_searcher_defaults(),
-            dict_name='search_options')
+            kwargs, *gp_multifidelity_searcher_defaults(), dict_name="search_options"
+        )
         kwargs_int = gp_multifidelity_searcher_factory(**_kwargs)
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         return kwargs_int
@@ -169,30 +179,30 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         """
         Part of constructor which can be different in subclasses
         """
-        k = 'resource_for_acquisition'
+        k = "resource_for_acquisition"
         self.resource_for_acquisition = kwargs_int.get(k)
         if self.resource_for_acquisition is not None:
             kwargs_int.pop(k)
-            assert isinstance(self.resource_for_acquisition,
-                              ResourceForAcquisitionMap)
-        self.config_space_ext = kwargs_int.pop('config_space_ext')
+            assert isinstance(self.resource_for_acquisition, ResourceForAcquisitionMap)
+        self.config_space_ext = kwargs_int.pop("config_space_ext")
         self._create_internal(**kwargs_int)
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import \
-            HyperbandScheduler
+        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
         super().configure_scheduler(scheduler)
-        assert isinstance(scheduler, HyperbandScheduler), \
-            "This searcher requires HyperbandScheduler scheduler"
+        assert isinstance(
+            scheduler, HyperbandScheduler
+        ), "This searcher requires HyperbandScheduler scheduler"
         self._resource_attr = scheduler._resource_attr
         model_factory = self.state_transformer.model_factory
         if isinstance(model_factory, GaussProcAdditiveModelFactory):
-            assert scheduler.searcher_data == 'all', \
-                "For an additive Gaussian learning curve model (model=" +\
-                "'gp_issm' or model='gp_expdecay' in search_options), you " +\
-                "need to set searcher_data='all' when creating the " +\
-                "HyperbandScheduler"
+            assert scheduler.searcher_data == "all", (
+                "For an additive Gaussian learning curve model (model="
+                + "'gp_issm' or model='gp_expdecay' in search_options), you "
+                + "need to set searcher_data='all' when creating the "
+                + "HyperbandScheduler"
+            )
 
     def _hp_ranges_in_state(self):
         return self.config_space_ext.hp_ranges_ext
@@ -201,8 +211,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         resource = int(result[self._resource_attr])
         return self.config_space_ext.get(config, resource)
 
-    def _metric_val_update(
-            self, crit_val: float, result: Dict) -> MetricValues:
+    def _metric_val_update(self, crit_val: float, result: Dict) -> MetricValues:
         resource = result[self._resource_attr]
         return {str(resource): crit_val}
 
@@ -213,25 +222,28 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         return f"{trial_id}:{result[self._resource_attr]}"
 
     def register_pending(
-            self, trial_id: str, config: Optional[Dict] = None,
-            milestone=None):
+        self, trial_id: str, config: Optional[Dict] = None, milestone=None
+    ):
         """
         Registers trial as pending for resource level `milestone`. This means
         the corresponding evaluation task is running and should reach that
         level later, when update is called for it.
 
         """
-        assert milestone is not None, \
-            "This searcher works with a multi-fidelity scheduler only"
+        assert (
+            milestone is not None
+        ), "This searcher works with a multi-fidelity scheduler only"
         # It is OK for the candidate already to be registered as pending, in
         # which case we do nothing
         state = self.state_transformer.state
         if not state.is_pending(trial_id, resource=milestone):
-            assert not state.is_labeled(trial_id, resource=milestone), \
-                f"Trial trial_id = {trial_id} already has observation at " +\
-                f"resource = {milestone}, so cannot be pending there"
+            assert not state.is_labeled(trial_id, resource=milestone), (
+                f"Trial trial_id = {trial_id} already has observation at "
+                + f"resource = {milestone}, so cannot be pending there"
+            )
             self.state_transformer.append_trial(
-                trial_id, config=config, resource=milestone)
+                trial_id, config=config, resource=milestone
+            )
 
     def _fix_resource_attribute(self, **kwargs):
         """
@@ -259,7 +271,8 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             self.config_space_ext.hp_ranges_ext.value_for_last_pos = target_resource
             if self.debug_log is not None:
                 self.debug_log.append_extra(
-                    f"Score values computed at target_resource = {target_resource}")
+                    f"Score values computed at target_resource = {target_resource}"
+                )
 
     def _postprocess_config(self, config: dict) -> dict:
         # If `config` is normal (not extended), nothing is removed
@@ -280,6 +293,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         It is also called for a failed evaluation.
 
         """
+
         def filter_pred(x: PendingEvaluation) -> bool:
             return x.trial_id == trial_id
 
@@ -287,13 +301,12 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     def remove_case(self, trial_id: str, **kwargs):
         resource = kwargs[self._resource_attr]
-        self.state_transformer.remove_observed_case(
-            trial_id, key=str(resource))
+        self.state_transformer.remove_observed_case(trial_id, key=str(resource))
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
-        init_state = decode_state(state['state'], self._hp_ranges_in_state())
-        skip_optimization = state['skip_optimization']
+        init_state = decode_state(state["state"], self._hp_ranges_in_state())
+        skip_optimization = state["skip_optimization"]
         model_factory = self.state_transformer.model_factory
         # Call internal constructor
         new_searcher = GPMultiFidelitySearcher(
@@ -302,7 +315,8 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             init_state=init_state,
             skip_optimization=skip_optimization,
             config_space_ext=self.config_space_ext,
-            resource_for_acquisition=self.resource_for_acquisition)
+            resource_for_acquisition=self.resource_for_acquisition,
+        )
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)
         self.state_transformer = None

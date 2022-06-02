@@ -4,8 +4,12 @@ import pandas as pd
 import numpy as np
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
-from syne_tune.blackbox_repository.serialize import serialize_configspace, deserialize_configspace, deserialize_metadata, \
-    serialize_metadata
+from syne_tune.blackbox_repository.serialize import (
+    serialize_configspace,
+    deserialize_configspace,
+    deserialize_metadata,
+    serialize_metadata,
+)
 
 
 class BlackboxTabular(Blackbox):
@@ -34,13 +38,18 @@ class BlackboxTabular(Blackbox):
         super(BlackboxTabular, self).__init__(
             configuration_space=configuration_space,
             fidelity_space=fidelity_space,
-            objectives_names=objectives_names
+            objectives_names=objectives_names,
         )
         # todo missing-value support, should boils down to droping nans in `hyperparameter_objectives_values`
         num_hps = len(hyperparameters.columns)
 
         assert objectives_evaluations.ndim == 4
-        (num_evals, num_seeds, num_fidelities, num_objectives) = objectives_evaluations.shape
+        (
+            num_evals,
+            num_seeds,
+            num_fidelities,
+            num_objectives,
+        ) = objectives_evaluations.shape
 
         self.num_seeds = num_seeds
         self.num_fidelities = num_fidelities
@@ -71,8 +80,12 @@ class BlackboxTabular(Blackbox):
 
         assert len(self.objectives_evaluations) == len(hyperparameters)
         assert len(fidelity_space) == 1, "only support single fidelity for now"
-        assert max(self._fidelity_values) <= list(fidelity_space.values())[0].upper, f"{max(self._fidelity_values)}, {fidelity_space.get_hyperparameters()[0].upper}"
-        assert len(hyperparameters) == len(hyperparameters.drop_duplicates()), "some hps are duplicated, use a seed column"
+        assert (
+            max(self._fidelity_values) <= list(fidelity_space.values())[0].upper
+        ), f"{max(self._fidelity_values)}, {fidelity_space.get_hyperparameters()[0].upper}"
+        assert len(hyperparameters) == len(
+            hyperparameters.drop_duplicates()
+        ), "some hps are duplicated, use a seed column"
         assert len(configuration_space) == num_hps
         for name in configuration_space.keys():
             assert name in hyperparameters.columns
@@ -80,10 +93,10 @@ class BlackboxTabular(Blackbox):
         assert len(self.objectives_names) == num_objectives
 
     def _objective_function(
-            self,
-            configuration: Union[Dict, int],
-            fidelity: Optional[Dict] = None,
-            seed: Optional[int] = None
+        self,
+        configuration: Union[Dict, int],
+        fidelity: Optional[Dict] = None,
+        seed: Optional[int] = None,
     ) -> Dict:
         if seed is not None:
             assert 0 <= seed < self.num_seeds
@@ -111,7 +124,9 @@ class BlackboxTabular(Blackbox):
             return objectives_values
         else:
             fidelity_index = self.fidelity_map[list(fidelity.values())[0]]
-            objectives_values = self.objectives_evaluations[index, seed, fidelity_index, :]
+            objectives_values = self.objectives_evaluations[
+                index, seed, fidelity_index, :
+            ]
             return dict(zip(self.objectives_names, objectives_values))
 
     @property
@@ -145,19 +160,31 @@ class BlackboxTabular(Blackbox):
         # todo add test
         for old_name in objective_name_mapping.keys():
             assert old_name in self.objectives_names
-        objective_indices = dict(zip(self.objectives_names, range(len(self.objectives_names))))
-        new_objectives_indices = [objective_indices[old_obj_name] for old_obj_name in objective_name_mapping.keys()]
+        objective_indices = dict(
+            zip(self.objectives_names, range(len(self.objectives_names)))
+        )
+        new_objectives_indices = [
+            objective_indices[old_obj_name]
+            for old_obj_name in objective_name_mapping.keys()
+        ]
         return BlackboxTabular(
             hyperparameters=self.hyperparameters,
             configuration_space=self.configuration_space,
             fidelity_space=self.fidelity_space,
-            objectives_evaluations=self.objectives_evaluations[:, :, :, new_objectives_indices],
+            objectives_evaluations=self.objectives_evaluations[
+                :, :, :, new_objectives_indices
+            ],
             fidelity_values=self._fidelity_values,
             objectives_names=list(objective_name_mapping.values()),
         )
 
     def __str__(self):
-        (num_evals, num_seeds, num_fidelities, num_objectives) = self.objectives_evaluations.shape
+        (
+            num_evals,
+            num_seeds,
+            num_fidelities,
+            num_objectives,
+        ) = self.objectives_evaluations.shape
         stats = {
             "total evaluations": self.objectives_evaluations.size // num_fidelities,
             "num fidelities": num_fidelities,
@@ -165,7 +192,7 @@ class BlackboxTabular(Blackbox):
             "seeds": num_seeds,
             "fidelities": num_fidelities,
             "objectives": self.objectives_names,
-            "hyperparameter": list(self.configuration_space.keys())
+            "hyperparameter": list(self.configuration_space.keys()),
         }
         stats_str = ", ".join([f"{k}: {v}" for k, v in stats.items()])
         return f"tabular blackbox: {stats_str}"
@@ -190,29 +217,34 @@ def serialize(bb_dict: Dict[str, BlackboxTabular], path: str):
     serialize_configspace(
         path=path,
         configuration_space=bb_first.configuration_space,
-        fidelity_space=bb_first.fidelity_space
+        fidelity_space=bb_first.fidelity_space,
     )
 
     # we use gzip as snappy is not supported for fastparquet engine compression
     # gzip is slower than the default snappy but more compact
-    bb_first.hyperparameters.to_parquet(path / "hyperparameters.parquet", index=False, compression="gzip", engine="fastparquet")
+    bb_first.hyperparameters.to_parquet(
+        path / "hyperparameters.parquet",
+        index=False,
+        compression="gzip",
+        engine="fastparquet",
+    )
 
-    with open(path / 'objectives_evaluations.npy', 'wb') as f:
+    with open(path / "objectives_evaluations.npy", "wb") as f:
         # (num_tasks, num_hps, num_seeds, num_fidelities, num_objectives)
         objectives = np.stack(
             [bb_dict[task].objectives_evaluations for task in bb_dict.keys()]
         )
         np.save(f, objectives.astype(np.float32), allow_pickle=False)
 
-    with open(path / 'fidelities_values.npy', 'wb') as f:
+    with open(path / "fidelities_values.npy", "wb") as f:
         np.save(f, bb_first.fidelity_values, allow_pickle=False)
 
     serialize_metadata(
         path=path,
         metadata={
-            'objectives_names': bb_first.objectives_names,
-            'task_names': list(bb_dict.keys())
-        }
+            "objectives_names": bb_first.objectives_names,
+            "task_names": list(bb_dict.keys()),
+        },
     )
 
 
@@ -227,17 +259,19 @@ def deserialize(path: str) -> Dict[str, BlackboxTabular]:
     path = Path(path)
 
     configuration_space, fidelity_space = deserialize_configspace(path)
-    hyperparameters = pd.read_parquet(Path(path) / 'hyperparameters.parquet', engine='fastparquet')
+    hyperparameters = pd.read_parquet(
+        Path(path) / "hyperparameters.parquet", engine="fastparquet"
+    )
 
     metadata = deserialize_metadata(path)
-    objectives_names = metadata['objectives_names']
-    task_names = metadata['task_names']
+    objectives_names = metadata["objectives_names"]
+    task_names = metadata["task_names"]
 
-    with open(path / 'fidelities_values.npy', 'rb') as f:
+    with open(path / "fidelities_values.npy", "rb") as f:
         fidelity_values = np.load(f)
 
     # possibly we could use memmap to avoid memory use or speed-up loading times
-    with open(path / 'objectives_evaluations.npy', 'rb') as f:
+    with open(path / "objectives_evaluations.npy", "rb") as f:
         objectives_evaluations = np.load(f)
 
     return {

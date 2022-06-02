@@ -10,10 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
-    import KernelFunction
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
+    KernelFunction,
+)
 
-__all__ = ['ProductKernelFunction']
+__all__ = ["ProductKernelFunction"]
 
 
 class ProductKernelFunction(KernelFunction):
@@ -25,19 +26,26 @@ class ProductKernelFunction(KernelFunction):
 
     We assume that parameters of K1 and K2 are disjoint.
     """
-    def __init__(self, kernel1: KernelFunction, kernel2: KernelFunction,
-                 name_prefixes=None, **kwargs):
+
+    def __init__(
+        self,
+        kernel1: KernelFunction,
+        kernel2: KernelFunction,
+        name_prefixes=None,
+        **kwargs
+    ):
         """
         :param kernel1: Kernel function K1
         :param kernel2: Kernel function K2
         :param name_prefixes: Name prefixes for K1, K2 used in get_params
         """
         super(ProductKernelFunction, self).__init__(
-            kernel1.dimension + kernel2.dimension, **kwargs)
+            kernel1.dimension + kernel2.dimension, **kwargs
+        )
         self.kernel1 = kernel1
         self.kernel2 = kernel2
         if name_prefixes is None:
-            self.name_prefixes = ['kernel1', 'kernel2']
+            self.name_prefixes = ["kernel1", "kernel2"]
         else:
             assert len(name_prefixes) == 2
             self.name_prefixes = name_prefixes
@@ -61,31 +69,30 @@ class ProductKernelFunction(KernelFunction):
         return diag1 * diag2
 
     def diagonal_depends_on_X(self):
-        return (self.kernel1.diagonal_depends_on_X() or
-                self.kernel2.diagonal_depends_on_X())
+        return (
+            self.kernel1.diagonal_depends_on_X() or self.kernel2.diagonal_depends_on_X()
+        )
 
     def param_encoding_pairs(self):
         """
         Note: We assume that K1 and K2 have disjoint parameters, otherwise
         there will be a redundancy here.
         """
-        return self.kernel1.param_encoding_pairs() + \
-               self.kernel2.param_encoding_pairs()
+        return self.kernel1.param_encoding_pairs() + self.kernel2.param_encoding_pairs()
 
     def get_params(self):
         result = dict()
-        prefs = [k + '_' for k in self.name_prefixes]
+        prefs = [k + "_" for k in self.name_prefixes]
         for pref, kernel in zip(prefs, [self.kernel1, self.kernel2]):
-            result.update({
-                (pref + k): v for k, v in kernel.get_params().items()})
-                
+            result.update({(pref + k): v for k, v in kernel.get_params().items()})
+
         return result
 
     def set_params(self, param_dict):
-        prefs = [k + '_' for k in self.name_prefixes]
+        prefs = [k + "_" for k in self.name_prefixes]
         for pref, kernel in zip(prefs, [self.kernel1, self.kernel2]):
             len_pref = len(pref)
             stripped_dict = {
-                k[len_pref:]: v for k, v in param_dict.items()
-                if k.startswith(pref)}
+                k[len_pref:]: v for k, v in param_dict.items() if k.startswith(pref)
+            }
             kernel.set_params(stripped_dict)

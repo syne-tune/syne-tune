@@ -25,7 +25,7 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
@@ -35,18 +35,21 @@ if __name__ == '__main__':
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
-        "height": randint(-100, 100)
+        "height": randint(-100, 100),
     }
-    entry_point = Path(__file__).parent / "training_scripts" / "height_example" / "train_height.py"
+    entry_point = (
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
     mode = "min"
     metric = "mean_loss"
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space,
-        mode=mode,
-        metric=metric,
-        random_seed=random_seed)
+        config_space, mode=mode, metric=metric, random_seed=random_seed
+    )
 
     trial_backend = SageMakerBackend(
         # we tune a PyTorch Framework from Sagemaker
@@ -56,8 +59,8 @@ if __name__ == '__main__':
             instance_count=1,
             role=get_execution_role(),
             max_run=10 * 60,
-            framework_version='1.7.1',
-            py_version='py3',
+            framework_version="1.7.1",
+            py_version="py3",
         ),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example

@@ -10,10 +10,16 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import \
-    import METRIC_ELAPSED_TIME, METRIC_VALID_LOSS, RESOURCE_ATTR, \
-    BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE, NUM_UNITS_1, \
-    NUM_UNITS_2
+from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
+    METRIC_ELAPSED_TIME,
+    METRIC_VALID_LOSS,
+    RESOURCE_ATTR,
+    BLACKBOX_NAME,
+    MAX_RESOURCE_LEVEL,
+    CONFIGURATION_SPACE,
+    NUM_UNITS_1,
+    NUM_UNITS_2,
+)
 
 from syne_tune.config_space import choice, uniform, loguniform, lograndint
 
@@ -50,15 +56,15 @@ def _config_space(interpolate_blackbox: bool) -> dict:
 
 def nashpobench_default_params(params=None):
     return {
-        'max_resource_level': MAX_RESOURCE_LEVEL,
-        'grace_period': 1,
-        'reduction_factor': 3,
-        'instance_type': 'ml.m5.large',
-        'num_workers': 4,
-        'framework': 'PyTorch',
-        'framework_version': '1.6',
-        'dataset_name': 'protein_structure',
-        'interpolate_blackbox': False,
+        "max_resource_level": MAX_RESOURCE_LEVEL,
+        "grace_period": 1,
+        "reduction_factor": 3,
+        "instance_type": "ml.m5.large",
+        "num_workers": 4,
+        "framework": "PyTorch",
+        "framework_version": "1.6",
+        "dataset_name": "protein_structure",
+        "interpolate_blackbox": False,
     }
 
 
@@ -76,39 +82,40 @@ def nashpobench_benchmark(params):
     parameters has to be encoded as categorical.
 
     """
-    interpolate_blackbox = params['interpolate_blackbox']
+    interpolate_blackbox = params["interpolate_blackbox"]
     config_space = dict(
         _config_space(interpolate_blackbox),
-        epochs=params['max_resource_level'],
-        dataset_name=params['dataset_name'])
+        epochs=params["max_resource_level"],
+        dataset_name=params["dataset_name"],
+    )
     if interpolate_blackbox:
-        surrogate = 'RandomForestRegressor'
+        surrogate = "RandomForestRegressor"
         surrogate_kwargs = dict(max_samples=0.005, bootstrap=True)
     else:
         surrogate = None
         surrogate_kwargs = None
     return {
-        'script': None,
-        'metric': METRIC_VALID_LOSS,
-        'mode': 'min',
-        'resource_attr': RESOURCE_ATTR,
-        'elapsed_time_attr': METRIC_ELAPSED_TIME,
-        'max_resource_attr': 'epochs',
-        'config_space': config_space,
-        'cost_model': get_cost_model(params),
-        'supports_simulated': True,
-        'blackbox_name': BLACKBOX_NAME,
-        'surrogate': surrogate,
-        'surrogate_kwargs': surrogate_kwargs,
+        "script": None,
+        "metric": METRIC_VALID_LOSS,
+        "mode": "min",
+        "resource_attr": RESOURCE_ATTR,
+        "elapsed_time_attr": METRIC_ELAPSED_TIME,
+        "max_resource_attr": "epochs",
+        "config_space": config_space,
+        "cost_model": get_cost_model(params),
+        "supports_simulated": True,
+        "blackbox_name": BLACKBOX_NAME,
+        "surrogate": surrogate,
+        "surrogate_kwargs": surrogate_kwargs,
     }
 
 
 # See Table 1 in https://arxiv.org/abs/1905.04970
 _NUM_FEATURES = {
-    'protein_structure': 9,
-    'naval_propulsion': 15,
-    'parkinsons_telemonitoring': 20,
-    'slice_localization': 385,
+    "protein_structure": 9,
+    "naval_propulsion": 15,
+    "parkinsons_telemonitoring": 20,
+    "slice_localization": 385,
 }
 
 
@@ -118,18 +125,24 @@ def get_cost_model(params):
     in the two layers only.
     """
     try:
-        from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model \
-            import FixedLayersMLPCostModel
+        from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model import (
+            FixedLayersMLPCostModel,
+        )
 
-        num_inputs = _NUM_FEATURES[params['dataset_name']]
+        num_inputs = _NUM_FEATURES[params["dataset_name"]]
         num_outputs = 1  # All benchmarks are regression problems
         num_units_keys = [NUM_UNITS_1, NUM_UNITS_2]
-        expected_hidden_layer_width, exp_vals = \
-            FixedLayersMLPCostModel.get_expected_hidden_layer_width(
-                CONFIGURATION_SPACE, num_units_keys)
+        (
+            expected_hidden_layer_width,
+            exp_vals,
+        ) = FixedLayersMLPCostModel.get_expected_hidden_layer_width(
+            CONFIGURATION_SPACE, num_units_keys
+        )
         return FixedLayersMLPCostModel(
-            num_inputs=num_inputs, num_outputs=num_outputs,
+            num_inputs=num_inputs,
+            num_outputs=num_outputs,
             num_units_keys=num_units_keys,
-            expected_hidden_layer_width=expected_hidden_layer_width)
+            expected_hidden_layer_width=expected_hidden_layer_width,
+        )
     except Exception:
         return None

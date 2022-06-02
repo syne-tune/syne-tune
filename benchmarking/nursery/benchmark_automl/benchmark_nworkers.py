@@ -4,9 +4,17 @@ import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
-from syne_tune.blackbox_repository.simulated_tabular_backend import BlackboxRepositoryBackend
-from benchmarking.nursery.benchmark_automl.baselines import MethodArguments, methods, Methods
-from benchmarking.nursery.benchmark_automl.benchmark_definitions import benchmark_definitions
+from syne_tune.blackbox_repository.simulated_tabular_backend import (
+    BlackboxRepositoryBackend,
+)
+from benchmarking.nursery.benchmark_automl.baselines import (
+    MethodArguments,
+    methods,
+    Methods,
+)
+from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
+    benchmark_definitions,
+)
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.stopping_criterion import StoppingCriterion
@@ -14,9 +22,11 @@ from syne_tune.tuner import Tuner
 from coolname import generate_slug
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--experiment_tag", type=str, required=False, default=generate_slug(2))
+    parser.add_argument(
+        "--experiment_tag", type=str, required=False, default=generate_slug(2)
+    )
     parser.add_argument("--num_seeds", type=int, required=False, default=30)
     parser.add_argument("--method", type=str, required=False)
 
@@ -29,15 +39,21 @@ if __name__ == '__main__':
 
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
-    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(logging.WARNING)
+    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
+        logging.WARNING
+    )
     n_workers = [1, 2, 4, 8]
-    combinations = list(itertools.product(method_names, range(num_seeds), benchmark_names, n_workers))
+    combinations = list(
+        itertools.product(method_names, range(num_seeds), benchmark_names, n_workers)
+    )
 
     for method, seed, benchmark_name, n_workers in tqdm(combinations):
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
-        print(f"Starting experiment ({method}/{benchmark_name}/{seed}/{n_workers}) of {experiment_tag}")
+        print(
+            f"Starting experiment ({method}/{benchmark_name}/{seed}/{n_workers}) of {experiment_tag}"
+        )
 
         backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
@@ -49,14 +65,16 @@ if __name__ == '__main__':
         max_t = max(backend.blackbox.fidelity_values)
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
 
-        scheduler = methods[method](MethodArguments(
-            config_space=backend.blackbox.configuration_space,
-            metric=benchmark.metric,
-            mode=benchmark.mode,
-            random_seed=seed,
-            max_t=max_t,
-            resource_attr=resource_attr,
-        ))
+        scheduler = methods[method](
+            MethodArguments(
+                config_space=backend.blackbox.configuration_space,
+                metric=benchmark.metric,
+                mode=benchmark.mode,
+                random_seed=seed,
+                max_t=max_t,
+                resource_attr=resource_attr,
+            )
+        )
 
         stop_criterion = StoppingCriterion(max_wallclock_time=25000)
 
@@ -69,13 +87,15 @@ if __name__ == '__main__':
             callbacks=[SimulatorCallback()],
             results_update_interval=600,
             print_update_interval=600,
-            tuner_name=f"{experiment_tag}-{method}-{seed}-{benchmark_name}-{n_workers}".replace("_", "-"),
+            tuner_name=f"{experiment_tag}-{method}-{seed}-{benchmark_name}-{n_workers}".replace(
+                "_", "-"
+            ),
             metadata={
                 "seed": seed,
                 "algorithm": f"{method} ({n_workers} workers)",
                 "tag": experiment_tag,
                 "benchmark": benchmark_name,
                 "n_workers": n_workers,
-            }
+            },
         )
         tuner.run()

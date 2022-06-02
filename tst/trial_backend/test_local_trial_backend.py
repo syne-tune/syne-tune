@@ -20,9 +20,11 @@ from tst.util_test import temporary_local_backend, wait_until_all_trials_complet
 
 def check_metrics(metrics_observed, metrics_expected):
     assert len(metrics_observed) == len(metrics_expected)
-    for (trial_id1, result1), (trial_id2, result2) in zip(metrics_observed, metrics_expected):
+    for (trial_id1, result1), (trial_id2, result2) in zip(
+        metrics_observed, metrics_expected
+    ):
         assert trial_id1 == trial_id2
-        for key in ['step', 'train_acc']:
+        for key in ["step", "train_acc"]:
             assert result1[key] == result2[key]
 
 
@@ -32,7 +34,9 @@ def status(backend, trial_ids):
 
 def get_status_metrics(backend, trial_id):
     trial_status_dict, new_metrics = backend.fetch_status_results([trial_id])
-    trial_statuses = {trial_id: status for (trial_id, (_, status)) in trial_status_dict.items()}
+    trial_statuses = {
+        trial_id: status for (trial_id, (_, status)) in trial_status_dict.items()
+    }
     return trial_statuses, new_metrics
 
 
@@ -40,12 +44,18 @@ def test_local_backend_checkpoint(caplog):
     caplog.set_level(logging.INFO)
     path_script = script_checkpoint_example_path()
     backend = temporary_local_backend(entry_point=path_script)
-    trial_id = backend.start_trial(config={'num-epochs': 2}).trial_id
+    trial_id = backend.start_trial(config={"num-epochs": 2}).trial_id
     wait_until_all_trials_completed(backend)
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.completed}
-    check_metrics(new_metrics, [(trial_id, {'step': 0, 'train_acc': 1}), (trial_id, {'step': 1, 'train_acc': 2})])
+    check_metrics(
+        new_metrics,
+        [
+            (trial_id, {"step": 0, "train_acc": 1}),
+            (trial_id, {"step": 1, "train_acc": 2}),
+        ],
+    )
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     check_metrics(new_metrics, [])
@@ -64,13 +74,13 @@ def test_local_backend_checkpoint(caplog):
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert new_metrics == []
 
-    trial_id = backend.start_trial(config={'num-epochs': 200}).trial_id
+    trial_id = backend.start_trial(config={"num-epochs": 200}).trial_id
     backend.stop_trial(trial_id=trial_id)
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.stopped}
 
-    trial_id = backend.start_trial(config={'num-epochs': 200}).trial_id
+    trial_id = backend.start_trial(config={"num-epochs": 200}).trial_id
     backend.pause_trial(trial_id=trial_id)
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.paused}
@@ -80,25 +90,34 @@ def test_resume_config_local_backend(caplog):
     caplog.set_level(logging.INFO)
     path_script = script_checkpoint_example_path()
     backend = temporary_local_backend(entry_point=path_script)
-    trial_id = backend.start_trial(config={'num-epochs': 2}).trial_id
+    trial_id = backend.start_trial(config={"num-epochs": 2}).trial_id
 
     wait_until_all_trials_completed(backend)
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.completed}
-    check_metrics(new_metrics, [(trial_id, {'step': 0, 'train_acc': 1}), (trial_id, {'step': 1, 'train_acc': 2})])
+    check_metrics(
+        new_metrics,
+        [
+            (trial_id, {"step": 0, "train_acc": 1}),
+            (trial_id, {"step": 1, "train_acc": 2}),
+        ],
+    )
 
     backend.pause_trial(trial_id=trial_id)
-    backend.resume_trial(trial_id, new_config={'num-epochs': 4})
+    backend.resume_trial(trial_id, new_config={"num-epochs": 4})
 
     wait_until_all_trials_completed(backend)
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.completed}
-    check_metrics(new_metrics, [
-        (trial_id, {'step': 2, 'train_acc': 3}),
-        (trial_id, {'step': 3, 'train_acc': 4}),
-    ])
+    check_metrics(
+        new_metrics,
+        [
+            (trial_id, {"step": 2, "train_acc": 3}),
+            (trial_id, {"step": 3, "train_acc": 4}),
+        ],
+    )
 
 
 def test_start_config_previous_checkpoint(caplog):
@@ -120,8 +139,8 @@ def test_start_config_previous_checkpoint(caplog):
     # the two trials that were started should have reported the content of their checkpoint, e.g. state-0 and state-1.
     _, new_metrics = backend.fetch_status_results([0, 1, 2, 3])
     results = list(sorted(new_metrics, key=lambda x: x[0]))
-    results = [res['checkpoint_content'] for _, res in results]
-    assert results == ['nothing', 'nothing', 'state-0', 'state-1']
+    results = [res["checkpoint_content"] for _, res in results]
+    assert results == ["nothing", "nothing", "state-0", "state-1"]
 
 
 def test_gpu_allocation(caplog):

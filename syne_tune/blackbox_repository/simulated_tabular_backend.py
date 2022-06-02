@@ -28,12 +28,14 @@ logger = logging.getLogger(__name__)
 
 
 class _BlackboxSimulatorBackend(SimulatorBackend):
-
-    def __init__(self, elapsed_time_attr: str,
-                 time_this_resource_attr: Optional[str] = None,
-                 max_resource_attr: Optional[str] = None,
-                 seed: Optional[int] = None,
-                 **simulatorbackend_kwargs):
+    def __init__(
+        self,
+        elapsed_time_attr: str,
+        time_this_resource_attr: Optional[str] = None,
+        max_resource_attr: Optional[str] = None,
+        seed: Optional[int] = None,
+        **simulatorbackend_kwargs,
+    ):
         """
         Allows to simulate any blackbox from blackbox-repository, can be either a blackbox from a registered
         tabulated benchmark (in this case, you should use `BlackboxRepositoryBackend`) or a blackbox given from custom
@@ -100,26 +102,29 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         return next(iter(self.blackbox.fidelity_space.keys()))
 
     def config_objectives(self, config: dict, seed: int) -> List[dict]:
-        if self._max_resource_attr is not None \
-                and self._max_resource_attr in config:
+        if self._max_resource_attr is not None and self._max_resource_attr in config:
             max_resource = int(config[self._max_resource_attr])
             fidelity_range = (min(self.blackbox.fidelity_values), max_resource)
         else:
             fidelity_range = None  # All fidelity values
         return metrics_for_configuration(
-            blackbox=self.blackbox, config=config,
-            resource_attr=self.resource_attr, fidelity_range=fidelity_range,
-            seed=seed)
+            blackbox=self.blackbox,
+            config=config,
+            resource_attr=self.resource_attr,
+            fidelity_range=fidelity_range,
+            seed=seed,
+        )
 
     def _run_job_and_collect_results(
-            self, trial_id: int,
-            config: Optional[dict] = None) -> (str, List[dict]):
+        self, trial_id: int, config: Optional[dict] = None
+    ) -> (str, List[dict]):
         """
         :param trial_id:
         :return: (final status, list of all results reported)
         """
-        assert trial_id in self._trial_dict, \
-            f"Trial with trial_id = {trial_id} not registered with back-end"
+        assert (
+            trial_id in self._trial_dict
+        ), f"Trial with trial_id = {trial_id} not registered with back-end"
         if config is None:
             config = self._trial_dict[trial_id].config
 
@@ -146,13 +151,15 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         status = Status.completed
         num_already_before = self._last_metric_seen_index[trial_id]
         if num_already_before > 0:
-            assert num_already_before <= len(all_results), \
-                f"Found {len(all_results)} total results, but have already " + \
-                f"processed {num_already_before} before!"
+            assert num_already_before <= len(all_results), (
+                f"Found {len(all_results)} total results, but have already "
+                + f"processed {num_already_before} before!"
+            )
             results = all_results[num_already_before:]
             # Correct `elapsed_time_attr` values
             elapsed_time_offset = all_results[num_already_before - 1][
-                self.elapsed_time_attr]
+                self.elapsed_time_attr
+            ]
             for result in results:
                 result[self.elapsed_time_attr] -= elapsed_time_offset
         else:
@@ -163,13 +170,15 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         for i in range(1, len(results)):
             results[i][self.elapsed_time_attr] = max(
                 results[i][self.elapsed_time_attr],
-                results[i - 1][self.elapsed_time_attr] + 0.001
+                results[i - 1][self.elapsed_time_attr] + 0.001,
             )
 
         return status, results
 
 
-def make_surrogate(surrogate: Optional[str] = None, surrogate_kwargs: Optional[Dict] = None):
+def make_surrogate(
+    surrogate: Optional[str] = None, surrogate_kwargs: Optional[Dict] = None
+):
     """
     :param surrogate: optionally, a model that is fitted to predict objectives given any configuration.
     Possible examples: "KNeighborsRegressor" or "MLPRegressor" or "XGBRegressor" which would enable using
@@ -188,38 +197,40 @@ def make_surrogate(surrogate: Optional[str] = None, surrogate_kwargs: Optional[D
         from sklearn.neural_network import MLPRegressor
         from sklearn.ensemble import RandomForestRegressor
         import xgboost
+
         surrogate_dict = {
             "KNeighborsRegressor": KNeighborsRegressor,
             "MLPRegressor": MLPRegressor,
             "XGBRegressor": xgboost.XGBRegressor,
             "RandomForestRegressor": RandomForestRegressor,
         }
-        assert surrogate in surrogate_dict, f"surrogate passed {surrogate} is not supported, " \
-                                            f"only {list(surrogate_dict.keys())} are available"
+        assert surrogate in surrogate_dict, (
+            f"surrogate passed {surrogate} is not supported, "
+            f"only {list(surrogate_dict.keys())} are available"
+        )
         if surrogate_kwargs is None:
             surrogate_kwargs = {}
         return surrogate_dict[surrogate](**surrogate_kwargs)
 
 
 class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
-
     def __init__(
-            self,
-            blackbox_name: str,
-            elapsed_time_attr: str,
-            time_this_resource_attr: Optional[str] = None,
-            max_resource_attr: Optional[str] = None,
-            seed: Optional[int] = None,
-            dataset: Optional[str] = None,
-            surrogate: Optional[str] = None,
-            surrogate_kwargs: Optional[Dict] = None,
-            config_space_surrogate: Optional[Dict] = None,
-            **simulatorbackend_kwargs,
+        self,
+        blackbox_name: str,
+        elapsed_time_attr: str,
+        time_this_resource_attr: Optional[str] = None,
+        max_resource_attr: Optional[str] = None,
+        seed: Optional[int] = None,
+        dataset: Optional[str] = None,
+        surrogate: Optional[str] = None,
+        surrogate_kwargs: Optional[Dict] = None,
+        config_space_surrogate: Optional[Dict] = None,
+        **simulatorbackend_kwargs,
     ):
         """
         Backend for evaluations from the blackbox-repository, name of the blackbox and dataset should be present in the
         repository. See `examples/launch_simulated_benchmark.py` for an example on how to use.
-        If you want to add a new dataset, see the section `Adding a new dataset section` of 
+        If you want to add a new dataset, see the section `Adding a new dataset section` of
         `blackbox_repository/README.md`.
 
         :param blackbox_name: name of a blackbox, should have been registered in blackbox repository.
@@ -241,14 +252,16 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             blackbox, its numerical parameters have categorical domains, which is
             usually not what we want for a surrogate.
         """
-        assert config_space_surrogate is None or surrogate is not None, \
-            "config_space_surrogate only together with surrogate"
+        assert (
+            config_space_surrogate is None or surrogate is not None
+        ), "config_space_surrogate only together with surrogate"
         super().__init__(
             elapsed_time_attr=elapsed_time_attr,
             time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
             seed=seed,
-            **simulatorbackend_kwargs)
+            **simulatorbackend_kwargs,
+        )
         self.blackbox_name = blackbox_name
         self.dataset = dataset
         self._blackbox = None
@@ -256,11 +269,13 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             # makes sure the surrogate can be constructed
             make_surrogate(surrogate=surrogate, surrogate_kwargs=surrogate_kwargs)
         self._surrogate = surrogate
-        self._surrogate_kwargs = surrogate_kwargs if surrogate_kwargs is not None else {}
+        self._surrogate_kwargs = (
+            surrogate_kwargs if surrogate_kwargs is not None else {}
+        )
         if config_space_surrogate is not None:
             self._config_space_surrogate = {
-                k: v for k, v in config_space_surrogate.items()
-                if isinstance(v, Domain)}
+                k: v for k, v in config_space_surrogate.items() if isinstance(v, Domain)
+            }
         else:
             self._config_space_surrogate = None
 
@@ -270,17 +285,21 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             if self.dataset is None:
                 self._blackbox = load(self.blackbox_name)
                 # TODO: This could fail earlier
-                assert not isinstance(self._blackbox, dict), \
-                    f"blackbox_name = '{self.blackbox_name}' maps to a dict, " +\
-                    "dataset argument must be given"
+                assert not isinstance(self._blackbox, dict), (
+                    f"blackbox_name = '{self.blackbox_name}' maps to a dict, "
+                    + "dataset argument must be given"
+                )
             else:
                 self._blackbox = load(self.blackbox_name)[self.dataset]
             if self._surrogate is not None:
-                surrogate = make_surrogate(surrogate=self._surrogate, surrogate_kwargs=self._surrogate_kwargs)
+                surrogate = make_surrogate(
+                    surrogate=self._surrogate, surrogate_kwargs=self._surrogate_kwargs
+                )
                 self._blackbox = add_surrogate(
                     blackbox=self._blackbox,
                     surrogate=surrogate,
-                    configuration_space=self._config_space_surrogate)
+                    configuration_space=self._config_space_surrogate,
+                )
 
         return self._blackbox
 
@@ -288,54 +307,54 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         # we serialize only required metadata information since the blackbox data is contained in the repository and
         # its raw data does not need to be saved.
         state = {
-            'elapsed_time_attr': self.elapsed_time_attr,
-            'time_this_resource_attr': self._time_this_resource_attr,
-            'max_resource_attr': self._max_resource_attr,
-            'seed': self._seed,
-            'seed_for_trial': self._seed_for_trial,
-            'simulatorbackend_kwargs': self.simulatorbackend_kwargs,
-            'blackbox_name': self.blackbox_name,
-            'dataset': self.dataset,
-            'surrogate': self._surrogate,
-            'surrogate_kwargs': self._surrogate_kwargs,
+            "elapsed_time_attr": self.elapsed_time_attr,
+            "time_this_resource_attr": self._time_this_resource_attr,
+            "max_resource_attr": self._max_resource_attr,
+            "seed": self._seed,
+            "seed_for_trial": self._seed_for_trial,
+            "simulatorbackend_kwargs": self.simulatorbackend_kwargs,
+            "blackbox_name": self.blackbox_name,
+            "dataset": self.dataset,
+            "surrogate": self._surrogate,
+            "surrogate_kwargs": self._surrogate_kwargs,
         }
         if self._config_space_surrogate is not None:
-            state['config_space_surrogate'] = {
-                k: to_dict(v)
-                for k, v in self._config_space_surrogate.items()}
+            state["config_space_surrogate"] = {
+                k: to_dict(v) for k, v in self._config_space_surrogate.items()
+            }
         return state
 
     def __setstate__(self, state):
         super().__init__(
-            elapsed_time_attr=state['elapsed_time_attr'],
-            time_this_resource_attr=state['time_this_resource_attr'],
-            max_resource_attr=state['max_resource_attr'],
-            seed=state['seed'],
-            **state['simulatorbackend_kwargs'],
+            elapsed_time_attr=state["elapsed_time_attr"],
+            time_this_resource_attr=state["time_this_resource_attr"],
+            max_resource_attr=state["max_resource_attr"],
+            seed=state["seed"],
+            **state["simulatorbackend_kwargs"],
         )
-        self._seed_for_trial = state['seed_for_trial']
-        self.blackbox_name = state['blackbox_name']
-        self.dataset = state['dataset']
-        self._surrogate = state['surrogate']
-        self._surrogate_kwargs = state['surrogate_kwargs']
+        self._seed_for_trial = state["seed_for_trial"]
+        self.blackbox_name = state["blackbox_name"]
+        self.dataset = state["dataset"]
+        self._surrogate = state["surrogate"]
+        self._surrogate_kwargs = state["surrogate_kwargs"]
         self._blackbox = None
-        if 'config_space_surrogate' in state:
+        if "config_space_surrogate" in state:
             self._config_space_surrogate = {
-                k: from_dict(v)
-                for k, v in state['config_space_surrogate'].items()}
+                k: from_dict(v) for k, v in state["config_space_surrogate"].items()
+            }
         else:
             self._config_space_surrogate = None
 
 
 class UserBlackboxBackend(_BlackboxSimulatorBackend):
     def __init__(
-            self,
-            blackbox: Blackbox,
-            elapsed_time_attr: str,
-            time_this_resource_attr: Optional[str] = None,
-            max_resource_attr: Optional[str] = None,
-            seed: Optional[int] = None,
-            **simulatorbackend_kwargs,
+        self,
+        blackbox: Blackbox,
+        elapsed_time_attr: str,
+        time_this_resource_attr: Optional[str] = None,
+        max_resource_attr: Optional[str] = None,
+        seed: Optional[int] = None,
+        **simulatorbackend_kwargs,
     ):
         """
         Backend to run simulation from a user blackbox.
@@ -351,7 +370,8 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
             time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
             seed=seed,
-            **simulatorbackend_kwargs)
+            **simulatorbackend_kwargs,
+        )
         self._blackbox = blackbox
 
     @property

@@ -24,7 +24,7 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
@@ -34,20 +34,21 @@ if __name__ == '__main__':
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
-        "height": randint(-100, 100)
+        "height": randint(-100, 100),
     }
     entry_point = str(
-        Path(__file__).parent / "training_scripts" / "height_example" /
-        "train_height.py")
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
     mode = "min"
     metric = "mean_loss"
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space,
-        mode=mode,
-        metric=metric,
-        random_seed=random_seed)
+        config_space, mode=mode, metric=metric, random_seed=random_seed
+    )
 
     # indicate here an image_uri that is available in ecr, something like that "XXXXXXXXXXXX.dkr.ecr.us-west-2.amazonaws.com/my_image:latest"
     image_uri = ...
@@ -60,7 +61,7 @@ if __name__ == '__main__':
             role=get_execution_role(),
             image_uri=image_uri,
             max_run=10 * 60,
-            job_name_prefix='hpo-hyperband',
+            job_name_prefix="hpo-hyperband",
         ),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example

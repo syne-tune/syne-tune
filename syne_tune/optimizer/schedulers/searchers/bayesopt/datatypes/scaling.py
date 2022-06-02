@@ -52,8 +52,9 @@ class LogScaling(Scaling):
 
 class ReverseLogScaling(Scaling):
     def to_internal(self, value: float) -> float:
-        assert 0 <= value < 1, \
-            "Value must be between 0 (inclusive) and 1 (exclusive) to be reverse-log-scaled."
+        assert (
+            0 <= value < 1
+        ), "Value must be between 0 (inclusive) and 1 (exclusive) to be reverse-log-scaled."
         return -np.log(1.0 - value)
 
     def from_internal(self, value: float) -> float:

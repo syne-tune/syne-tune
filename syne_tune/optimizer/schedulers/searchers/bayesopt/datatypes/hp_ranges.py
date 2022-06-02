@@ -14,12 +14,18 @@ from typing import Tuple, List, Iterable, Dict, Optional
 import numpy as np
 from numpy.random import RandomState
 
-from syne_tune.config_space import non_constant_hyperparameter_keys, \
-    is_log_space, config_to_match_string, is_reverse_log_space
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Hyperparameter, Configuration
+from syne_tune.config_space import (
+    non_constant_hyperparameter_keys,
+    is_log_space,
+    config_to_match_string,
+    is_reverse_log_space,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Hyperparameter,
+    Configuration,
+)
 
-__all__ = ['HyperparameterRanges']
+__all__ = ["HyperparameterRanges"]
 
 
 def _filter_constant_hyperparameters(config_space: Dict) -> Dict:
@@ -29,10 +35,13 @@ def _filter_constant_hyperparameters(config_space: Dict) -> Dict:
 
 class HyperparameterRanges(object):
     def __init__(
-            self, config_space: Dict, name_last_pos: Optional[str] = None,
-            value_for_last_pos=None,
-            active_config_space: Optional[Dict] = None,
-            prefix_keys: Optional[List[str]] = None):
+        self,
+        config_space: Dict,
+        name_last_pos: Optional[str] = None,
+        value_for_last_pos=None,
+        active_config_space: Optional[Dict] = None,
+        prefix_keys: Optional[List[str]] = None,
+    ):
         """
         If name_last_pos is given, the hyperparameter of that name is assigned
         the final position in the vector returned by `to_ndarray`. This can be
@@ -76,15 +85,17 @@ class HyperparameterRanges(object):
         keys = sorted(self.config_space.keys())
         if prefix_keys is not None:
             pk_set = set(prefix_keys)
-            assert pk_set.issubset(set(keys)), \
-                f"prefix_keys = {prefix_keys} is not a subset of {keys}"
+            assert pk_set.issubset(
+                set(keys)
+            ), f"prefix_keys = {prefix_keys} is not a subset of {keys}"
             keys = prefix_keys + [key for key in keys if key not in pk_set]
         if self.name_last_pos is not None:
-            assert self.name_last_pos in keys, \
-                f"name_last_pos = '{self.name_last_pos}' not among " +\
-                f"hyperparameter names [{keys}]"
+            assert self.name_last_pos in keys, (
+                f"name_last_pos = '{self.name_last_pos}' not among "
+                + f"hyperparameter names [{keys}]"
+            )
             pos = keys.index(self.name_last_pos)
-            keys = keys[:pos] + keys[(pos + 1):] + [self.name_last_pos]
+            keys = keys[:pos] + keys[(pos + 1) :] + [self.name_last_pos]
         self._internal_keys = keys
 
     def _set_active_config_space(self, active_config_space: Dict):
@@ -95,22 +106,30 @@ class HyperparameterRanges(object):
             self._assert_sub_config_space(active_config_space)
             self.active_config_space = active_config_space
             self._config_space_for_sampling = dict(
-                self.config_space, **active_config_space)
+                self.config_space, **active_config_space
+            )
 
     def _assert_sub_config_space(self, active_config_space: Dict):
         for k, v in active_config_space.items():
-            assert k in self.config_space, f"active_config_space[{k}] not in config_space"
+            assert (
+                k in self.config_space
+            ), f"active_config_space[{k}] not in config_space"
             same_value_type = v.value_type == self.config_space[k].value_type
-            same_log_type = is_log_space(v) == is_log_space(self.config_space[k]) and \
-                is_reverse_log_space(v) == is_reverse_log_space(self.config_space[k])
+            same_log_type = is_log_space(v) == is_log_space(
+                self.config_space[k]
+            ) and is_reverse_log_space(v) == is_reverse_log_space(self.config_space[k])
             same_domain_type = isinstance(v, type(self.config_space[k]))
-            assert k in self.config_space and same_value_type and same_log_type and same_domain_type, \
-                f"active_config_space[{k}] has different type"
+            assert (
+                k in self.config_space
+                and same_value_type
+                and same_log_type
+                and same_domain_type
+            ), f"active_config_space[{k}] has different type"
 
     @property
     def internal_keys(self) -> List[str]:
         return self._internal_keys
-    
+
     @property
     def config_space_for_sampling(self) -> Dict:
         return self._config_space_for_sampling
@@ -124,10 +143,8 @@ class HyperparameterRanges(object):
         """
         raise NotImplementedError()
 
-    def to_ndarray_matrix(
-            self, configs: Iterable[Configuration]) -> np.ndarray:
-        return np.vstack(
-            [self.to_ndarray(config) for config in configs])
+    def to_ndarray_matrix(self, configs: Iterable[Configuration]) -> np.ndarray:
+        return np.vstack([self.to_ndarray(config) for config in configs])
 
     @property
     def ndarray_size(self) -> int:
@@ -152,8 +169,9 @@ class HyperparameterRanges(object):
         raise NotImplementedError()
 
     def is_attribute_fixed(self):
-        return (self.name_last_pos is not None) and \
-               (self.value_for_last_pos is not None)
+        return (self.name_last_pos is not None) and (
+            self.value_for_last_pos is not None
+        )
 
     def _fix_attribute_value(self, name):
         return self.is_attribute_fixed() and name == self.name_last_pos
@@ -164,21 +182,24 @@ class HyperparameterRanges(object):
         return config
 
     def _random_config(self, random_state: RandomState) -> Configuration:
-        return {k: v.sample(random_state=random_state)
-                for k, v in self._config_space_for_sampling.items()}
+        return {
+            k: v.sample(random_state=random_state)
+            for k, v in self._config_space_for_sampling.items()
+        }
 
     def random_config(self, random_state: RandomState) -> Configuration:
         return self._transform_config(self._random_config(random_state))
 
-    def _random_configs(self, random_state: RandomState,
-                        num_configs: int) -> List[Configuration]:
+    def _random_configs(
+        self, random_state: RandomState, num_configs: int
+    ) -> List[Configuration]:
         return [self._random_config(random_state) for _ in range(num_configs)]
 
-    def random_configs(self, random_state, num_configs: int) -> \
-            List[Configuration]:
+    def random_configs(self, random_state, num_configs: int) -> List[Configuration]:
         return [
-            self._transform_config(config) for config in self._random_configs(
-                random_state, num_configs)]
+            self._transform_config(config)
+            for config in self._random_configs(random_state, num_configs)
+        ]
 
     def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
         """
@@ -196,7 +217,9 @@ class HyperparameterRanges(object):
     def __len__(self) -> int:
         return len(self.config_space)
 
-    def filter_for_last_pos_value(self, configs: List[Configuration]) -> List[Configuration]:
+    def filter_for_last_pos_value(
+        self, configs: List[Configuration]
+    ) -> List[Configuration]:
         """
         If is_attribute_fixed, `configs` is filtered by removing
         entries whose name_last_pos attribute value is different from
@@ -205,13 +228,15 @@ class HyperparameterRanges(object):
         """
         if self.is_attribute_fixed():
             configs = [
-                config for config in configs
-                if config[self.name_last_pos] == self.value_for_last_pos]
+                config
+                for config in configs
+                if config[self.name_last_pos] == self.value_for_last_pos
+            ]
         return configs
 
     def config_to_tuple(
-            self, config: Configuration, keys=None,
-            skip_last: bool = False) -> Tuple[Hyperparameter, ...]:
+        self, config: Configuration, keys=None, skip_last: bool = False
+    ) -> Tuple[Hyperparameter, ...]:
         """
         :param config: Configuration
         :param keys: Overrides `_internal_keys`
@@ -227,8 +252,8 @@ class HyperparameterRanges(object):
         return tuple(config[k] for k in keys)
 
     def tuple_to_config(
-            self, config_tpl: Tuple[Hyperparameter, ...], keys=None,
-            skip_last: bool = False) -> Configuration:
+        self, config_tpl: Tuple[Hyperparameter, ...], keys=None, skip_last: bool = False
+    ) -> Configuration:
         if keys is None:
             keys = self.internal_keys
             if skip_last and self.name_last_pos is not None:
@@ -236,8 +261,8 @@ class HyperparameterRanges(object):
         return dict(zip(keys, config_tpl))
 
     def config_to_match_string(
-            self, config: Configuration, keys=None,
-            skip_last: bool = False) -> str:
+        self, config: Configuration, keys=None, skip_last: bool = False
+    ) -> str:
         """
         Maps configuration to  match string, used to compare for approximate
         equality. Two configurations are considered to be different if their

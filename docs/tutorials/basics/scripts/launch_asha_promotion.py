@@ -30,7 +30,7 @@ from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
@@ -43,29 +43,31 @@ if __name__ == '__main__':
     # - Metrics need to be reported after each epoch, `resource_attr` must match
     #   what is reported in the training script
     entry_point = str(Path(__file__).parent / "traincode_report_withcheckpointing.py")
-    mode = 'max'
-    metric = 'accuracy'
-    resource_attr = 'epoch'
-    max_resource_attr = 'epochs'
+    mode = "max"
+    metric = "accuracy"
+    resource_attr = "epoch"
+    max_resource_attr = "epochs"
 
     # Search space (or configuration space)
     # For each tunable parameter, need to define type, range, and encoding
     # (linear, logarithmic)
     config_space = {
-        'n_units_1': randint(4, 1024),
-        'n_units_2': randint(4, 1024),
-        'batch_size': randint(8, 128),
-        'dropout_1': uniform(0, 0.99),
-        'dropout_2': uniform(0, 0.99),
-        'learning_rate': loguniform(1e-6, 1),
-        'weight_decay': loguniform(1e-8, 1),
+        "n_units_1": randint(4, 1024),
+        "n_units_2": randint(4, 1024),
+        "batch_size": randint(8, 128),
+        "dropout_1": uniform(0, 0.99),
+        "dropout_2": uniform(0, 0.99),
+        "learning_rate": loguniform(1e-6, 1),
+        "weight_decay": loguniform(1e-8, 1),
     }
 
     # Additional fixed parameters
-    config_space.update({
-        max_resource_attr: max_resource_level,
-        'dataset_path': './',
-    })
+    config_space.update(
+        {
+            max_resource_attr: max_resource_level,
+            "dataset_path": "./",
+        }
+    )
 
     # Local back-end: Responsible for scheduling trials
     # The local back-end runs trials as sub-processes on a single instance
@@ -79,10 +81,10 @@ if __name__ == '__main__':
     # promoted later on, to run to the next higher rung.
     # We configure this scheduler with random search: configurations for new
     # trials are drawn at random
-    searcher = 'random'
+    searcher = "random"
     scheduler = HyperbandScheduler(
         config_space,
-        type='promotion',
+        type="promotion",
         searcher=searcher,
         grace_period=1,
         reduction_factor=3,

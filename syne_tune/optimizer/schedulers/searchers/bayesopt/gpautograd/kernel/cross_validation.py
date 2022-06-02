@@ -13,13 +13,14 @@
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
-    import KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
-    import MeanFunction
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    MeanFunction,
+)
 
-__all__ = ['CrossValidationKernelFunction',
-           'CrossValidationMeanFunction']
+__all__ = ["CrossValidationKernelFunction", "CrossValidationMeanFunction"]
 
 
 def decode_resource_values(res_encoded, num_folds):
@@ -66,9 +67,15 @@ class CrossValidationKernelFunction(KernelFunction):
     HP, even if it is not optimized over. This creates a dependence to how
     inputs are encoded.
     """
+
     def __init__(
-            self, kernel_main: KernelFunction, kernel_residual: KernelFunction,
-            mean_main: MeanFunction, num_folds: int, **kwargs):
+        self,
+        kernel_main: KernelFunction,
+        kernel_residual: KernelFunction,
+        mean_main: MeanFunction,
+        num_folds: int,
+        **kwargs,
+    ):
         """
         :param kernel_main: Kernel for main effect f(x)
         :param kernel_residual: Kernel for residuals g_k(x)
@@ -76,11 +83,13 @@ class CrossValidationKernelFunction(KernelFunction):
         :param num_folds: Maximum number of folds: 1 <= r <= `num_folds`
         """
         super().__init__(dimension=kernel_main.dimension + 1, **kwargs)
-        assert kernel_main.dimension == kernel_residual.dimension, \
-            f"kernel_main.dimension = {kernel_main.dimension} != " +\
-            f"{kernel_residual.dimension} = kernel_residual.dimension"
-        assert round(num_folds) == num_folds and num_folds >= 2, \
-            f"num_folds = {num_folds} must be int >= 2"
+        assert kernel_main.dimension == kernel_residual.dimension, (
+            f"kernel_main.dimension = {kernel_main.dimension} != "
+            + f"{kernel_residual.dimension} = kernel_residual.dimension"
+        )
+        assert (
+            round(num_folds) == num_folds and num_folds >= 2
+        ), f"num_folds = {num_folds} must be int >= 2"
         self.kernel_main = kernel_main
         self.kernel_residual = kernel_residual
         self.mean_main = mean_main
@@ -132,21 +141,24 @@ class CrossValidationKernelFunction(KernelFunction):
 
     def get_params(self):
         result = dict()
-        for pref, func in [('kernelm_', self.kernel_main),
-                           ('meanm_', self.mean_main),
-                           ('kernelr_', self.kernel_residual)]:
-            result.update({
-                (pref + k): v for k, v in func.get_params().items()})
+        for pref, func in [
+            ("kernelm_", self.kernel_main),
+            ("meanm_", self.mean_main),
+            ("kernelr_", self.kernel_residual),
+        ]:
+            result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
     def set_params(self, param_dict):
-        for pref, func in [('kernelm_', self.kernel_main),
-                           ('meanm_', self.mean_main),
-                           ('kernelr_', self.kernel_residual)]:
+        for pref, func in [
+            ("kernelm_", self.kernel_main),
+            ("meanm_", self.mean_main),
+            ("kernelr_", self.kernel_residual),
+        ]:
             len_pref = len(pref)
             stripped_dict = {
-                k[len_pref:]: v for k, v in param_dict.items()
-                if k.startswith(pref)}
+                k[len_pref:]: v for k, v in param_dict.items() if k.startswith(pref)
+            }
             func.set_params(stripped_dict)
 
 

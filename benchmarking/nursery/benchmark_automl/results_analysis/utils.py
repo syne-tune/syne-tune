@@ -25,10 +25,10 @@ rea_color = "brown"
 hb_bb_color = "green"
 hb_ts_color = "yellow"
 zs_color = "cyan"
-fifo_style = 'solid'
-multifidelity_style = 'dashed'
-multifidelity_style2 = 'dashdot'
-transfer_style = 'dotted'
+fifo_style = "solid"
+multifidelity_style = "dashed"
+multifidelity_style2 = "dashdot"
+transfer_style = "dotted"
 
 
 @dataclass
@@ -78,22 +78,24 @@ plot_range = {
 }
 
 
-def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=None) -> Dict[str, pd.DataFrame]:
+def generate_df_dict(
+    tag=None, date_min=None, date_max=None, methods_to_show=None
+) -> Dict[str, pd.DataFrame]:
     # todo load one df per task would be more efficient
     def metadata_filter(metadata, benchmark=None, tag=None):
-        if methods_to_show is not None and not metadata['algorithm'] in methods_to_show:
+        if methods_to_show is not None and not metadata["algorithm"] in methods_to_show:
             return False
-        if benchmark is not None and metadata['benchmark'] != benchmark:
+        if benchmark is not None and metadata["benchmark"] != benchmark:
             return False
         if tag is not None:
             if not isinstance(tag, list):
                 tag = [tag]
-            if not metadata['tag'] in tag:
+            if not metadata["tag"] in tag:
                 return False
         if date_min is None or date_max is None:
             return True
         else:
-            date_exp = datetime.fromtimestamp(metadata['st_tuner_creation_timestamp'])
+            date_exp = datetime.fromtimestamp(metadata["st_tuner_creation_timestamp"])
             return date_min <= date_exp <= date_max
 
     metadatas = get_metadata()
@@ -103,20 +105,32 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
         metadatas = {k: v for k, v in metadatas.items() if v.get("tag") in tag}
     # only select metadatas that contain the fields we are interested in
     metadatas = {
-        k: v for k, v in metadatas.items()
-        if all(key in v for key in ['algorithm', 'benchmark', 'tag', 'st_tuner_creation_timestamp'])
+        k: v
+        for k, v in metadatas.items()
+        if all(
+            key in v
+            for key in ["algorithm", "benchmark", "tag", "st_tuner_creation_timestamp"]
+        )
     }
     metadata_df = pd.DataFrame(metadatas.values())
-    metadata_df['creation_date'] = metadata_df['st_tuner_creation_timestamp'].apply(lambda x: datetime.fromtimestamp(x))
-    metadata_df.sort_values(by='creation_date', ascending=False)
-    metadata_df = metadata_df.drop_duplicates(['algorithm', 'benchmark', 'seed'])
-    creation_dates_min_max = metadata_df.groupby(['algorithm']).agg(['min', 'max'])['creation_date']
+    metadata_df["creation_date"] = metadata_df["st_tuner_creation_timestamp"].apply(
+        lambda x: datetime.fromtimestamp(x)
+    )
+    metadata_df.sort_values(by="creation_date", ascending=False)
+    metadata_df = metadata_df.drop_duplicates(["algorithm", "benchmark", "seed"])
+    creation_dates_min_max = metadata_df.groupby(["algorithm"]).agg(["min", "max"])[
+        "creation_date"
+    ]
     print("creation date per method:\n" + creation_dates_min_max.to_string())
 
-    count_per_seed = metadata_df.groupby(['algorithm', 'benchmark', 'seed']).count()['tag'].unstack()
+    count_per_seed = (
+        metadata_df.groupby(["algorithm", "benchmark", "seed"]).count()["tag"].unstack()
+    )
     print("num seeds per methods: \n" + count_per_seed.to_string())
 
-    num_seed_per_method = metadata_df.groupby(['algorithm', 'benchmark']).count()['tag'].unstack()
+    num_seed_per_method = (
+        metadata_df.groupby(["algorithm", "benchmark"]).count()["tag"].unstack()
+    )
     print("seeds present: \n" + num_seed_per_method.to_string())
 
     benchmarks = list(sorted(metadata_df.benchmark.dropna().unique()))
@@ -124,8 +138,15 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
     benchmark_to_df = {}
 
     for benchmark in tqdm(benchmarks):
-        valid_exps = set([name for name, metadata in metadatas.items() if metadata_filter(metadata, benchmark, tag)])
+        valid_exps = set(
+            [
+                name
+                for name, metadata in metadatas.items()
+                if metadata_filter(metadata, benchmark, tag)
+            ]
+        )
         if len(valid_exps) > 0:
+
             def name_filter(path):
                 tuner_name = Path(path).parent.stem
                 return tuner_name in valid_exps
@@ -137,17 +158,17 @@ def generate_df_dict(tag=None, date_min=None, date_max=None, methods_to_show=Non
 
 
 def plot_result_benchmark(
-        df_task,
-        title: str,
-        show_seeds: bool = False,
-        method_styles: Optional[Dict] = None,
-        ax=None,
-        methods_to_show: list = None
+    df_task,
+    title: str,
+    show_seeds: bool = False,
+    method_styles: Optional[Dict] = None,
+    ax=None,
+    methods_to_show: list = None,
 ):
     agg_results = {}
     if len(df_task) > 0:
-        metric = df_task.loc[:, 'metric_names'].values[0]
-        mode = df_task.loc[:, 'metric_mode'].values[0]
+        metric = df_task.loc[:, "metric_names"].values[0]
+        mode = df_task.loc[:, "metric_mode"].values[0]
 
         if ax is None:
             fig, ax = plt.subplots()
@@ -164,15 +185,19 @@ def plot_result_benchmark(
                 sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
                 sub_df = sub_df.sort_values(ST_TUNER_TIME)
                 t = sub_df.loc[:, ST_TUNER_TIME].values
-                y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:,
-                                                                                     metric].cummin().values
+                y_best = (
+                    sub_df.loc[:, metric].cummax().values
+                    if mode == "max"
+                    else sub_df.loc[:, metric].cummin().values
+                )
                 if show_seeds:
                     ax.plot(
-                        t, y_best,
+                        t,
+                        y_best,
                         color=method_style.color,
                         linestyle=method_style.linestyle,
                         marker=method_style.marker,
-                        alpha=0.2
+                        alpha=0.2,
                     )
                 ts.append(t)
                 ys.append(y_best)
@@ -196,11 +221,15 @@ def plot_result_benchmark(
             mean = y_ranges.mean(axis=0)
             std = y_ranges.std(axis=0)
             ax.fill_between(
-                t_range, mean - std, mean + std,
-                color=method_style.color, alpha=0.1,
+                t_range,
+                mean - std,
+                mean + std,
+                color=method_style.color,
+                alpha=0.1,
             )
             ax.plot(
-                t_range, mean,
+                t_range,
+                mean,
                 color=method_style.color,
                 linestyle=method_style.linestyle,
                 marker=method_style.marker,
@@ -215,14 +244,24 @@ def plot_result_benchmark(
     return ax, t_range, agg_results
 
 
-def plot_results(benchmarks_to_df, method_styles: Optional[Dict] = None, prefix: str = "", title: str = None, ax=None,
-                 methods_to_show: list = None):
+def plot_results(
+    benchmarks_to_df,
+    method_styles: Optional[Dict] = None,
+    prefix: str = "",
+    title: str = None,
+    ax=None,
+    methods_to_show: list = None,
+):
     agg_results = {}
 
     for benchmark, df_task in benchmarks_to_df.items():
         ax, t_range, agg_result = plot_result_benchmark(
-            df_task=df_task, title=benchmark, method_styles=method_styles, show_seeds=show_seeds, ax=ax,
-            methods_to_show=methods_to_show
+            df_task=df_task,
+            title=benchmark,
+            method_styles=method_styles,
+            show_seeds=show_seeds,
+            ax=ax,
+            methods_to_show=methods_to_show,
         )
         if title is not None:
             ax.set_title(title)
@@ -243,8 +282,8 @@ def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
     def get_results(df_task, methods_to_show):
         seed_results = {}
         if len(df_task) > 0:
-            metric = df_task.loc[:, 'metric_names'].values[0]
-            mode = df_task.loc[:, 'metric_mode'].values[0]
+            metric = df_task.loc[:, "metric_names"].values[0]
+            mode = df_task.loc[:, "metric_mode"].values[0]
 
             t_max = df_task.loc[:, ST_TUNER_TIME].max()
             t_range = np.linspace(0, t_max, 10)
@@ -258,8 +297,11 @@ def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
                     sub_df = df_scheduler[df_scheduler.tuner_name == tuner_name]
                     sub_df = sub_df.sort_values(ST_TUNER_TIME)
                     t = sub_df.loc[:, ST_TUNER_TIME].values
-                    y_best = sub_df.loc[:, metric].cummax().values if mode == 'max' else sub_df.loc[:,
-                                                                                         metric].cummin().values
+                    y_best = (
+                        sub_df.loc[:, metric].cummax().values
+                        if mode == "max"
+                        else sub_df.loc[:, metric].cummin().values
+                    )
                     ts.append(t)
                     ys.append(y_best)
 
@@ -303,11 +345,13 @@ def compute_best_value_over_time(benchmarks_to_df, methods_to_show):
 
 def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
     from sklearn.preprocessing import QuantileTransformer
-    from benchmarking.nursery.benchmark_automl.results_analysis.utils import compute_best_value_over_time
+    from benchmarking.nursery.benchmark_automl.results_analysis.utils import (
+        compute_best_value_over_time,
+    )
     import pandas as pd
 
-    benchmarks = ['fcnet', 'nas201', 'lcbench']
-    
+    benchmarks = ["fcnet", "nas201", "lcbench"]
+
     rows = []
     for benchmark in benchmarks:
         benchmark_to_df = {k: v for k, v in benchmarks_to_df.items() if benchmark in k}
@@ -318,7 +362,9 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
         methods_to_show = [x for x in methods_to_show if x in methods_present]
 
         # (num_benchmarks, num_methods, num_min_seeds, num_time_steps)
-        methods_to_show, benchmark_results = compute_best_value_over_time(benchmark_to_df, methods_to_show)
+        methods_to_show, benchmark_results = compute_best_value_over_time(
+            benchmark_to_df, methods_to_show
+        )
 
         for i, task in enumerate(benchmark_to_df.keys()):
             if "lcbench" in task:
@@ -330,9 +376,11 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
         benchmark_results = benchmark_results.swapaxes(0, 1)
 
         # (num_methods, num_benchmarks * num_min_seeds * num_time_steps)
-        ranks = QuantileTransformer().fit_transform(benchmark_results.reshape(len(benchmark_results), -1))
+        ranks = QuantileTransformer().fit_transform(
+            benchmark_results.reshape(len(benchmark_results), -1)
+        )
         # ranks_std = ranks.std(axis=-1).mean(axis=0)
-        row = {'benchmark': benchmark}
+        row = {"benchmark": benchmark}
         row.update(dict(zip(methods_to_show, ranks.mean(axis=-1))))
         rows.append(row)
         print(row)
@@ -340,23 +388,38 @@ def print_rank_table(benchmarks_to_df, methods_to_show: Optional[List[str]]):
     avg_row = dict(df_ranks.mean())
     avg_row["benchmark"] = "Average"
     df_ranks = pd.DataFrame(rows + [avg_row]).set_index("benchmark")
-    benchmark_names = {"fcnet": "\\FCNet{}", "nas201": "\\NASBench{}", "lcbench": "\\LCBench{}"}
+    benchmark_names = {
+        "fcnet": "\\FCNet{}",
+        "nas201": "\\NASBench{}",
+        "lcbench": "\\LCBench{}",
+    }
     df_ranks.index = df_ranks.index.map(lambda s: benchmark_names.get(s, s))
     df_ranks.columns = df_ranks.columns.map(lambda s: "\\" + s.replace("-", "") + "{}")
     print(df_ranks.to_string())
     print(df_ranks.to_latex(float_format="%.2f", na_rep="-", escape=False))
 
 
-def load_and_cache(experiment_tag: Union[str, List[str]], load_cache_if_exists: bool = True, methods_to_show=None):
+def load_and_cache(
+    experiment_tag: Union[str, List[str]],
+    load_cache_if_exists: bool = True,
+    methods_to_show=None,
+):
 
-    result_file = Path(f"~/Downloads/cached-results-{str(experiment_tag)}.dill").expanduser()
+    result_file = Path(
+        f"~/Downloads/cached-results-{str(experiment_tag)}.dill"
+    ).expanduser()
     if load_cache_if_exists and result_file.exists():
         with catchtime(f"loading results from {result_file}"):
             with open(result_file, "rb") as f:
                 benchmarks_to_df = dill.load(f)
     else:
         print(f"regenerating results to {result_file}")
-        benchmarks_to_df = generate_df_dict(experiment_tag, date_min=None, date_max=None, methods_to_show=methods_to_show)
+        benchmarks_to_df = generate_df_dict(
+            experiment_tag,
+            date_min=None,
+            date_max=None,
+            methods_to_show=methods_to_show,
+        )
         # metrics = df.metric_names
         with open(result_file, "wb") as f:
             dill.dump(benchmarks_to_df, f)

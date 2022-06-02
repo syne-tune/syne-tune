@@ -14,12 +14,14 @@ from typing import Tuple
 import copy
 
 from syne_tune.config_space import randint
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+)
 
-RESOURCE_ATTR_PREFIX = 'RESOURCE_ATTR_'
+RESOURCE_ATTR_PREFIX = "RESOURCE_ATTR_"
 
 
 class ExtendedConfiguration(object):
@@ -37,9 +39,13 @@ class ExtendedConfiguration(object):
     epoch < resource_attr_range[0]).
 
     """
+
     def __init__(
-            self, hp_ranges: HyperparameterRanges, resource_attr_key: str,
-            resource_attr_range: Tuple[int, int]):
+        self,
+        hp_ranges: HyperparameterRanges,
+        resource_attr_key: str,
+        resource_attr_range: Tuple[int, int],
+    ):
         assert resource_attr_range[0] >= 1
         assert resource_attr_range[1] >= resource_attr_range[0]
         self.hp_ranges = hp_ranges
@@ -49,13 +55,16 @@ class ExtendedConfiguration(object):
         config_space_ext = copy.deepcopy(hp_ranges.config_space)
         self.resource_attr_name = RESOURCE_ATTR_PREFIX + resource_attr_key
         # Allowed range: [1, resource_attr_range[1]]
-        assert self.resource_attr_name not in config_space_ext, \
-            f"key = {self.resource_attr_name} is reserved, but appears in " +\
-            f"config_space = {list(config_space_ext.keys())}"
+        assert self.resource_attr_name not in config_space_ext, (
+            f"key = {self.resource_attr_name} is reserved, but appears in "
+            + f"config_space = {list(config_space_ext.keys())}"
+        )
         config_space_ext[self.resource_attr_name] = randint(
-            lower=1, upper=resource_attr_range[1])
+            lower=1, upper=resource_attr_range[1]
+        )
         self.hp_ranges_ext = type(hp_ranges)(
-            config_space_ext, name_last_pos=self.resource_attr_name)
+            config_space_ext, name_last_pos=self.resource_attr_name
+        )
 
     def get(self, config: Configuration, resource: int) -> Configuration:
         """
@@ -78,8 +87,9 @@ class ExtendedConfiguration(object):
         :return: config_ext without resource attribute
         """
         if self.resource_attr_name in config_ext:
-            config = {k: v for k, v in config_ext.items()
-                      if k != self.resource_attr_name}
+            config = {
+                k: v for k, v in config_ext.items() if k != self.resource_attr_name
+            }
         else:
             config = config_ext
         return config

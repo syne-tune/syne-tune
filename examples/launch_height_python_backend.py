@@ -16,6 +16,7 @@ def train_height(steps: int, width: float, height: float):
     import logging
     from syne_tune import Reporter
     import time
+
     root = logging.getLogger()
     root.setLevel(logging.INFO)
     reporter = Reporter()
@@ -26,7 +27,7 @@ def train_height(steps: int, width: float, height: float):
         time.sleep(0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import logging
 
     root = logging.getLogger()
@@ -38,14 +39,22 @@ if __name__ == '__main__':
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
-        "height": randint(-100, 100)
+        "height": randint(-100, 100),
     }
 
-    scheduler = ASHA(config_space, metric="mean_loss", resource_attr='epoch', max_t=max_steps, mode="min")
+    scheduler = ASHA(
+        config_space,
+        metric="mean_loss",
+        resource_attr="epoch",
+        max_t=max_steps,
+        mode="min",
+    )
 
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=10, min_metric_value={"mean_loss": -6.0})
+    stop_criterion = StoppingCriterion(
+        max_wallclock_time=10, min_metric_value={"mean_loss": -6.0}
+    )
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

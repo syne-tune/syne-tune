@@ -28,7 +28,9 @@ from gpytorch.utils.errors import NotPSDError
 import syne_tune.config_space as cs
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import make_hyperparameter_ranges
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+    make_hyperparameter_ranges,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -36,19 +38,19 @@ logger = logging.getLogger(__name__)
 
 NOISE_LEVEL = 1e-3
 
-class BotorchSearcher(SearcherWithRandomSeed):
 
+class BotorchSearcher(SearcherWithRandomSeed):
     def __init__(
-            self,
-            config_space: Dict,
-            metric: str,
-            num_init_random_draws: int = 3,
-            mode: str = "min",
-            points_to_evaluate: Optional[List[Dict]] = None,
-            fantasising: bool = True,
-            max_num_observations: Optional[int] = 200,
-            input_warping: bool = True,
-            **kwargs,
+        self,
+        config_space: Dict,
+        metric: str,
+        num_init_random_draws: int = 3,
+        mode: str = "min",
+        points_to_evaluate: Optional[List[Dict]] = None,
+        fantasising: bool = True,
+        max_num_observations: Optional[int] = 200,
+        input_warping: bool = True,
+        **kwargs,
     ):
         """
         A searcher that suggest configurations using BOTORCH to build GP surrogate and optimize acquisition function.
@@ -65,9 +67,11 @@ class BotorchSearcher(SearcherWithRandomSeed):
         :param input_warping: whether to apply input warping when fitting the GP.
         :param kwargs: additional arguments of SearcherWithRandomSeed
         """
-        super(BotorchSearcher, self).__init__(config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs)
+        super(BotorchSearcher, self).__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
         assert num_init_random_draws >= 2
-        assert mode in ['min', 'max']
+        assert mode in ["min", "max"]
         self.hp_ranges = make_hyperparameter_ranges(config_space=config_space)
         self.mode = mode
         self.metric_name = metric
@@ -97,11 +101,15 @@ class BotorchSearcher(SearcherWithRandomSeed):
         config_suggested = self._next_initial_config()
 
         if config_suggested is None:
-            if self.points_to_evaluate is not None and self.num_suggestions() < len(self.points_to_evaluate):
+            if self.points_to_evaluate is not None and self.num_suggestions() < len(
+                self.points_to_evaluate
+            ):
                 # if we are not done yet with points_to_evaluate, we pick the next one from this list
                 config_suggested = self.points_to_evaluate[self.num_suggestions()]
             else:
-                not_enough_suggestion = len(self.objectives()) < self.num_minimum_observations
+                not_enough_suggestion = (
+                    len(self.objectives()) < self.num_minimum_observations
+                )
                 if not_enough_suggestion:
                     config_suggested = self._sample_random()
                 else:
@@ -122,8 +130,13 @@ class BotorchSearcher(SearcherWithRandomSeed):
             X = np.array(self._config_to_feature_matrix(self._configs_with_results()))
             y = self.objectives()
 
-            if self.max_num_observations is not None and len(X) >= self.max_num_observations:
-                perm = self.random_state.permutation(len(X))[:self.max_num_observations]
+            if (
+                self.max_num_observations is not None
+                and len(X) >= self.max_num_observations
+            ):
+                perm = self.random_state.permutation(len(X))[
+                    : self.max_num_observations
+                ]
                 X = X[perm]
                 y = y[perm]
                 subsample = True
@@ -143,8 +156,10 @@ class BotorchSearcher(SearcherWithRandomSeed):
 
             acq = qExpectedImprovement(
                 model=gp,
-                best_f=Y_tensor.min().item() if self.mode == 'min' else Y_tensor.max().item(),
-                maximize=self.mode == 'max',
+                best_f=Y_tensor.min().item()
+                if self.mode == "min"
+                else Y_tensor.max().item(),
+                maximize=self.mode == "max",
                 X_pending=X_pending,
             )
 
@@ -153,7 +168,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
                 bounds=torch.Tensor(self.hp_ranges.get_ndarray_bounds()).T,
                 q=1,
                 num_restarts=3,
-                raw_samples=100
+                raw_samples=100,
             )
 
             candidate = candidate.detach().numpy()[0]
@@ -161,7 +176,9 @@ class BotorchSearcher(SearcherWithRandomSeed):
             if not self._is_config_already_seen(config):
                 return config
             else:
-                logger.warning("Optimization of the acquisition function yielded a config that was already seen.")
+                logger.warning(
+                    "Optimization of the acquisition function yielded a config that was already seen."
+                )
                 return self._sample_and_pick_acq_best(acq)
         except NotPSDError as _:
             logging.warning("Chlolesky inversion failed, sampling randomly.")
@@ -198,7 +215,9 @@ class BotorchSearcher(SearcherWithRandomSeed):
         was not seen earlier, if all samples were seen, return a random sample instead.
         """
         configs_candidates = [self._sample_random() for _ in range(num_samples)]
-        configs_candidates = [x for x in configs_candidates if not self._is_config_already_seen(x)]
+        configs_candidates = [
+            x for x in configs_candidates if not self._is_config_already_seen(x)
+        ]
         logger.debug(f"Sampling among {len(configs_candidates)} unseen configs")
         if configs_candidates:
             X_tensor = self._config_to_feature_matrix(configs_candidates)
@@ -213,7 +232,8 @@ class BotorchSearcher(SearcherWithRandomSeed):
     def _sample_random(self) -> Dict:
         return {
             k: v.sample(random_state=self.random_state)
-            if isinstance(v, cs.Domain) else v
+            if isinstance(v, cs.Domain)
+            else v
             for k, v in self.config_space.items()
         }
 

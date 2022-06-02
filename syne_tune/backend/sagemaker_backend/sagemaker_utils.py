@@ -28,20 +28,14 @@ from sagemaker.estimator import Framework
 import syne_tune
 from syne_tune.backend.trial_status import TrialResult
 from syne_tune.report import retrieve
-from syne_tune.util import experiment_path, random_string, \
-    s3_experiment_path
+from syne_tune.util import experiment_path, random_string, s3_experiment_path
 
 logger = logging.getLogger(__name__)
 
 
 def default_config() -> Config:
     # a default config that avoid throttling
-    return Config(
-        retries={
-            'max_attempts': 10,
-            'mode': 'standard'
-        }
-    )
+    return Config(retries={"max_attempts": 10, "mode": "standard"})
 
 
 def get_log(jobname: str, log_client=None) -> List[str]:
@@ -52,42 +46,47 @@ def get_log(jobname: str, log_client=None) -> List[str]:
     :return: lines appearing in the log of the Sagemaker training job
     """
     if log_client is None:
-        log_client = boto3.client('logs', config=default_config())
-    streams = log_client.describe_log_streams(logGroupName="/aws/sagemaker/TrainingJobs", logStreamNamePrefix=jobname)
+        log_client = boto3.client("logs", config=default_config())
+    streams = log_client.describe_log_streams(
+        logGroupName="/aws/sagemaker/TrainingJobs", logStreamNamePrefix=jobname
+    )
     res = []
 
-    for stream in streams['logStreams']:
+    for stream in streams["logStreams"]:
         get_response = functools.partial(
             log_client.get_log_events,
             logGroupName="/aws/sagemaker/TrainingJobs",
-            logStreamName=stream['logStreamName'],
-            startFromHead=True
+            logStreamName=stream["logStreamName"],
+            startFromHead=True,
         )
         response = get_response()
-        for event in response['events']:
-            res.append(event['message'])
+        for event in response["events"]:
+            res.append(event["message"])
         next_token = None
-        while 'nextForwardToken' in response and next_token != response['nextForwardToken']:
-            next_token = response['nextForwardToken']
+        while (
+            "nextForwardToken" in response
+            and next_token != response["nextForwardToken"]
+        ):
+            next_token = response["nextForwardToken"]
             response = get_response(nextToken=next_token)
-            for event in response['events']:
-                res.append(event['message'])
+            for event in response["events"]:
+                res.append(event["message"])
     return res
 
 
 def decode_sagemaker_hyperparameter(hp: str):
     # Sagemaker encodes hyperparameters as literals which are compatible with Python, except for true and false
     # that are respectively encoded as 'true' and 'false'.
-    if hp == 'true':
+    if hp == "true":
         return True
-    elif hp == 'false':
+    elif hp == "false":
         return False
     return literal_eval(hp)
 
 
 def sagemaker_search(
-        trial_ids_and_names: List[Tuple[int, str]],
-        sm_client=None,
+    trial_ids_and_names: List[Tuple[int, str]],
+    sm_client=None,
 ) -> List[TrialResult]:
     """
     :param trial_ids_and_names: Trial ids and sagemaker jobnames to retrieve information from
@@ -96,7 +95,7 @@ def sagemaker_search(
     In term of speed around 100 jobs can be retrieved per second.
     """
     if sm_client is None:
-        sm_client = boto3.client(service_name='sagemaker', config=default_config())
+        sm_client = boto3.client(service_name="sagemaker", config=default_config())
 
     if len(trial_ids_and_names) == 0:
         return []
@@ -108,7 +107,7 @@ def sagemaker_search(
 
     def chunks(lst, n):
         for i in range(0, len(lst), n):
-            yield lst[i:i + n]
+            yield lst[i : i + n]
 
     # the results of Sagemaker search are sorted by last modified time,
     # we use this dictionary to return results sorted by trial-id
@@ -120,31 +119,27 @@ def sagemaker_search(
             "Resource": "TrainingJob",
             "SearchExpression": {
                 "Filters": [
-                    {
-                        "Name": "TrainingJobName",
-                        "Operator": "Equals",
-                        "Value": name
-                    } for (trial_id, name) in job_chunk
+                    {"Name": "TrainingJobName", "Operator": "Equals", "Value": name}
+                    for (trial_id, name) in job_chunk
                 ],
-                "Operator": "Or"},
+                "Operator": "Or",
+            },
         }
-        search_results = sm_client.search(**search_params)['Results']
+        search_results = sm_client.search(**search_params)["Results"]
 
         for results in search_results:
-            job_info = results['TrainingJob']
-            name = job_info['TrainingJobName']
+            job_info = results["TrainingJob"]
+            name = job_info["TrainingJobName"]
 
             # remove sagemaker specific stuff such as container_log_level from hyperparameters
             hps = {
                 k: v
-                for k, v in job_info['HyperParameters'].items()
+                for k, v in job_info["HyperParameters"].items()
                 if not k.startswith("sagemaker_")
             }
 
             # Sagemaker encodes hyperparameters as literals, we evaluate them to retrieve the original type
-            hps = {
-                k: decode_sagemaker_hyperparameter(v) for k, v in hps.items()
-            }
+            hps = {k: decode_sagemaker_hyperparameter(v) for k, v in hps.items()}
 
             metrics = retrieve(log_lines=get_log(name))
 
@@ -154,9 +149,9 @@ def sagemaker_search(
                 trial_id=trial_id,
                 config=hps,
                 metrics=metrics,
-                status=job_info['TrainingJobStatus'],
-                creation_time=job_info['CreationTime'],
-                training_end_time=job_info.get('TrainingEndTime', None),
+                status=job_info["TrainingJobStatus"],
+                creation_time=job_info["CreationTime"],
+                training_end_time=job_info.get("TrainingEndTime", None),
             )
 
     # Sagemaker Search returns results sorted by last modified time, we reorder the results so that they are returned
@@ -176,13 +171,14 @@ def metric_definitions_from_names(metrics_names):
     :return: a list of metric dictionaries that can be passed to sagemaker so that metrics are parsed from logs, the
     list can be passed to `metric_definitions` in sagemaker.
     """
+
     def metric_dict(metric_name):
         """
         :param metric_name:
         :return: a sagemaker metric definition to enable Sagemaker to interpret metrics from logs
         """
         regex = rf".*[tune-metric].*\"{re.escape(metric_name)}\": ([-+]?\d\.?\d*)"
-        return {'Name': metric_name, 'Regex': regex}
+        return {"Name": metric_name, "Regex": regex}
 
     return [metric_dict(m) for m in metrics_names]
 
@@ -190,17 +186,19 @@ def metric_definitions_from_names(metrics_names):
 def add_syne_tune_dependency(sm_estimator):
     # adds code of syne tune to the estimator to be sent with the estimator dependencies so that report.py or
     # other functions of syne tune can be found
-    sm_estimator.dependencies = sm_estimator.dependencies + [str(Path(syne_tune.__path__[0]))]
+    sm_estimator.dependencies = sm_estimator.dependencies + [
+        str(Path(syne_tune.__path__[0]))
+    ]
 
 
 def sagemaker_fit(
-        sm_estimator: Framework,
-        hyperparameters: Dict[str, object],
-        checkpoint_s3_uri: Optional[str] = None,
-        wait: bool = False,
-        job_name: Optional[str] = None,
-        *sagemaker_fit_args,
-        **sagemaker_fit_kwargs
+    sm_estimator: Framework,
+    hyperparameters: Dict[str, object],
+    checkpoint_s3_uri: Optional[str] = None,
+    wait: bool = False,
+    job_name: Optional[str] = None,
+    *sagemaker_fit_args,
+    **sagemaker_fit_kwargs,
 ):
     """
     :param sm_estimator: sagemaker estimator to be fitted
@@ -215,7 +213,9 @@ def sagemaker_fit(
     experiment._hyperparameters = hyperparameters
     experiment.checkpoint_s3_uri = checkpoint_s3_uri
 
-    experiment.fit(wait=wait, job_name=job_name, *sagemaker_fit_args, **sagemaker_fit_kwargs)
+    experiment.fit(
+        wait=wait, job_name=job_name, *sagemaker_fit_args, **sagemaker_fit_kwargs
+    )
 
     return experiment.latest_training_job.job_name
 
@@ -229,17 +229,21 @@ def get_execution_role():
     """
     if "AWS_ROLE" in os.environ:
         aws_role = os.environ["AWS_ROLE"]
-        logger.info(f"Using Sagemaker role {aws_role} passed set as environment variable $AWS_ROLE")
+        logger.info(
+            f"Using Sagemaker role {aws_role} passed set as environment variable $AWS_ROLE"
+        )
         return aws_role
     else:
-        logger.info(f"No Sagemaker role passed as environment variable $AWS_ROLE, inferring it.")
+        logger.info(
+            f"No Sagemaker role passed as environment variable $AWS_ROLE, inferring it."
+        )
         client = boto3.client("iam", config=default_config())
-        sm_roles = client.list_roles(PathPrefix="/service-role/")['Roles']
+        sm_roles = client.list_roles(PathPrefix="/service-role/")["Roles"]
         for role in sm_roles:
-            if 'AmazonSageMaker-ExecutionRole' in role['RoleName']:
-                return role['Arn']
+            if "AmazonSageMaker-ExecutionRole" in role["RoleName"]:
+                return role["Arn"]
         raise Exception(
-            "Could not infer Sagemaker role, specify it by specifying `AWS_ROLE` environement variable " \
+            "Could not infer Sagemaker role, specify it by specifying `AWS_ROLE` environement variable "
             "or refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html to create a new one"
         )
 
@@ -265,7 +269,8 @@ def download_sagemaker_results(s3_path: Optional[str] = None):
 
 
 def map_identifier_limited_length(
-        name: str, max_length: int = 63, rnd_digits: int = 4) -> str:
+    name: str, max_length: int = 63, rnd_digits: int = 4
+) -> str:
     """
     If `name` is longer than 'max_length` characters, it is mapped to a new
     identifier of length `max_length`, being the concatenation of the first
@@ -284,11 +289,10 @@ def map_identifier_limited_length(
     else:
         assert 1 < rnd_digits < max_length
         postfix = random_string(rnd_digits)
-        return name[:(max_length - rnd_digits)] + postfix
+        return name[: (max_length - rnd_digits)] + postfix
 
 
-def _s3_traverse_recursively(
-        s3_client, action, bucket: str, prefix: str) -> dict:
+def _s3_traverse_recursively(s3_client, action, bucket: str, prefix: str) -> dict:
     """
     Traverses directory from root `prefix`. The function `action` is applied
     to all objects encountered, the signature is
@@ -308,52 +312,52 @@ def _s3_traverse_recursively(
     """
     more_objects = True
     continuation_kwargs = dict()
-    list_objects_kwargs = dict(Bucket=bucket,
-                               Prefix=prefix,
-                               Delimiter='/')
+    list_objects_kwargs = dict(Bucket=bucket, Prefix=prefix, Delimiter="/")
     all_next_prefixes = []
     num_action_calls = 0
     num_successful_action_calls = 0
     first_error_message = None
     while more_objects:
         response = s3_client.list_objects_v2(
-            **list_objects_kwargs, **continuation_kwargs)
+            **list_objects_kwargs, **continuation_kwargs
+        )
         # Subdirectories
-        for next_prefix in response.get('CommonPrefixes', []):
-            all_next_prefixes.append(next_prefix['Prefix'])
+        for next_prefix in response.get("CommonPrefixes", []):
+            all_next_prefixes.append(next_prefix["Prefix"])
         # Objects
-        for source in response.get('Contents', []):
-            ret_msg = action(s3_client, bucket, source['Key'])
+        for source in response.get("Contents", []):
+            ret_msg = action(s3_client, bucket, source["Key"])
             num_action_calls += 1
             if ret_msg is None:
                 num_successful_action_calls += 1
             elif first_error_message is None:
                 first_error_message = ret_msg
-        more_objects = 'NextContinuationToken' in response
+        more_objects = "NextContinuationToken" in response
         if more_objects:
             continuation_kwargs = {
-                'ContinuationToken': response['NextContinuationToken']}
+                "ContinuationToken": response["NextContinuationToken"]
+            }
     # Recursive calls
     for next_prefix in all_next_prefixes:
-        result = _s3_traverse_recursively(
-            s3_client, action, bucket, prefix=next_prefix)
-        num_action_calls += result['num_action_calls']
-        num_successful_action_calls += result['num_successful_action_calls']
+        result = _s3_traverse_recursively(s3_client, action, bucket, prefix=next_prefix)
+        num_action_calls += result["num_action_calls"]
+        num_successful_action_calls += result["num_successful_action_calls"]
         if first_error_message is None:
-            first_error_message = result['first_error_message']
+            first_error_message = result["first_error_message"]
     return dict(
         num_action_calls=num_action_calls,
         num_successful_action_calls=num_successful_action_calls,
-        first_error_message=first_error_message)
+        first_error_message=first_error_message,
+    )
 
 
 def _split_bucket_prefix(s3_path: str) -> (str, str):
-    assert s3_path[:5] == 's3://', s3_path
-    parts = s3_path[5:].split('/')
+    assert s3_path[:5] == "s3://", s3_path
+    parts = s3_path[5:].split("/")
     bucket = parts[0]
-    prefix = '/'.join(parts[1:])
-    if prefix[-1] != '/':
-        prefix += '/'
+    prefix = "/".join(parts[1:])
+    if prefix[-1] != "/":
+        prefix += "/"
     return bucket, prefix
 
 
@@ -373,27 +377,27 @@ def s3_copy_files_recursively(s3_source_path: str, s3_target_path: str) -> dict:
     trg_bucket, trg_prefix = _split_bucket_prefix(s3_target_path)
 
     def copy_action(s3_client, bucket: str, object_key: str) -> Optional[str]:
-        assert object_key.startswith(src_prefix), \
-            f"object_key = {object_key} must start with {src_prefix}"
-        target_key = trg_prefix + object_key[len(src_prefix):]
+        assert object_key.startswith(
+            src_prefix
+        ), f"object_key = {object_key} must start with {src_prefix}"
+        target_key = trg_prefix + object_key[len(src_prefix) :]
         copy_source = dict(Bucket=bucket, Key=object_key)
         ret_msg = None
         try:
             s3_client.copy_object(
-                CopySource=copy_source,
-                Bucket=trg_bucket,
-                Key=target_key)
-            logger.debug(f"Copied s3://{bucket}/{object_key}   to   s3://{trg_bucket}/{target_key}")
+                CopySource=copy_source, Bucket=trg_bucket, Key=target_key
+            )
+            logger.debug(
+                f"Copied s3://{bucket}/{object_key}   to   s3://{trg_bucket}/{target_key}"
+            )
         except ClientError as ex:
             ret_msg = str(ex)
         return ret_msg
 
-    s3 = boto3.client('s3')
+    s3 = boto3.client("s3")
     return _s3_traverse_recursively(
-        s3_client=s3,
-        action=copy_action,
-        bucket=src_bucket,
-        prefix=src_prefix)
+        s3_client=s3, action=copy_action, bucket=src_bucket, prefix=src_prefix
+    )
 
 
 def s3_delete_files_recursively(s3_path: str) -> dict:
@@ -412,17 +416,13 @@ def s3_delete_files_recursively(s3_path: str) -> dict:
     def delete_action(s3_client, bucket: str, object_key: str) -> Optional[str]:
         ret_msg = None
         try:
-            s3_client.delete_object(
-                Bucket=bucket,
-                Key=object_key)
+            s3_client.delete_object(Bucket=bucket, Key=object_key)
             logger.debug(f"Deleted s3://{bucket}/{object_key}")
         except ClientError as ex:
             ret_msg = str(ex)
         return ret_msg
 
-    s3 = boto3.client('s3')
+    s3 = boto3.client("s3")
     return _s3_traverse_recursively(
-        s3_client=s3,
-        action=delete_action,
-        bucket=bucket_name,
-        prefix=prefix)
+        s3_client=s3, action=delete_action, bucket=bucket_name, prefix=prefix
+    )

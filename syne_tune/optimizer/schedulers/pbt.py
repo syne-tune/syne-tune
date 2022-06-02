@@ -24,10 +24,14 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.config_space import cast_config_values
-from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
-    import check_and_merge_defaults, Integer as DA_Integer, \
-    Boolean as DA_Boolean, filter_by_key, String as DA_String, \
-    Float as DA_Float
+from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
+    check_and_merge_defaults,
+    Integer as DA_Integer,
+    Boolean as DA_Boolean,
+    filter_by_key,
+    String as DA_String,
+    Float as DA_Float,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,26 +48,30 @@ class PBTTrialState:
 
 
 _ARGUMENT_KEYS = {
-    'resource_attr', 'population_size', 'perturbation_interval',
-    'quantile_fraction', 'resample_probability', 'log_config'
+    "resource_attr",
+    "population_size",
+    "perturbation_interval",
+    "quantile_fraction",
+    "resample_probability",
+    "log_config",
 }
 
 _DEFAULT_OPTIONS = {
-    'resource_attr': 'time_total_s',
-    'population_size': 4,
-    'perturbation_interval': 60.0,
-    'quantile_fraction': 0.25,
-    'resample_probability': 0.25,
-    'log_config': True,
+    "resource_attr": "time_total_s",
+    "population_size": 4,
+    "perturbation_interval": 60.0,
+    "quantile_fraction": 0.25,
+    "resample_probability": 0.25,
+    "log_config": True,
 }
 
 _CONSTRAINTS = {
-    'resource_attr': DA_String(),
-    'population_size': DA_Integer(1, None),
-    'perturbation_interval': DA_Float(0.01, None),
-    'quantile_fraction': DA_Float(0.0, 0.5),
-    'resample_probability': DA_Float(0.0, 1.0),
-    'log_config': DA_Boolean(),
+    "resource_attr": DA_String(),
+    "population_size": DA_Integer(1, None),
+    "perturbation_interval": DA_Float(0.01, None),
+    "quantile_fraction": DA_Float(0.0, 0.5),
+    "resample_probability": DA_Float(0.0, 1.0),
+    "log_config": DA_Boolean(),
 }
 
 
@@ -144,40 +152,44 @@ class PopulationBasedTraining(FIFOScheduler):
         See :class:`FIFOScheduler`
     """
 
-    def __init__(self, config_space: Dict,
-                 custom_explore_fn: Optional[Callable[[Dict], Dict]] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        config_space: Dict,
+        custom_explore_fn: Optional[Callable[[Dict], Dict]] = None,
+        **kwargs,
+    ):
         # The current implementation only supports a random searcher
-        searcher = kwargs.get('searcher')
+        searcher = kwargs.get("searcher")
         if searcher is not None:
-            assert isinstance(searcher, str) and searcher == 'random', \
-                "PopulationBasedTraining only supports searcher='random' for now"
+            assert (
+                isinstance(searcher, str) and searcher == "random"
+            ), "PopulationBasedTraining only supports searcher='random' for now"
         kwargs = check_and_merge_defaults(
-            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS,
-            dict_name='scheduler_options')
-        self._resource_attr = kwargs['resource_attr']
-        self._population_size = kwargs['population_size']
-        self._perturbation_interval = kwargs['perturbation_interval']
-        self._quantile_fraction = kwargs['quantile_fraction']
-        self._resample_probability = kwargs['resample_probability']
+            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
+        )
+        self._resource_attr = kwargs["resource_attr"]
+        self._population_size = kwargs["population_size"]
+        self._perturbation_interval = kwargs["perturbation_interval"]
+        self._quantile_fraction = kwargs["quantile_fraction"]
+        self._resample_probability = kwargs["resample_probability"]
         self._custom_explore_fn = custom_explore_fn
-        self._log_config = kwargs['log_config']
+        self._log_config = kwargs["log_config"]
         # Superclass constructor
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
-        assert self.max_t is not None, \
-            "Either max_t must be specified, or it has to be specified as " + \
-            "config_space['epochs'], config_space['max_t'], " + \
-            "config_space['max_epochs']"
+        assert self.max_t is not None, (
+            "Either max_t must be specified, or it has to be specified as "
+            + "config_space['epochs'], config_space['max_t'], "
+            + "config_space['max_epochs']"
+        )
 
-        self._metric_op = 1.0 if self.mode == 'max' else -1.0
+        self._metric_op = 1.0 if self.mode == "max" else -1.0
         self._trial_state = {}
         self._next_perturbation_sync = self._perturbation_interval
         self._trial_decisions_stack = deque()
         self._checkpointing_history = []
         self._num_checkpoints = 0
         self._num_perturbations = 0
-        self._random_state = np.random.RandomState(
-            self.random_seed_generator())
+        self._random_state = np.random.RandomState(self.random_seed_generator())
 
     def on_trial_add(self, trial: Trial):
         self._trial_state[trial.trial_id] = PBTTrialState(trial=trial)
@@ -202,16 +214,20 @@ class PopulationBasedTraining(FIFOScheduler):
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
         if self._resource_attr not in result:
-            time_missing_msg = f"Cannot find resource_attr {self._resource_attr} " \
-                               f"in trial result {result}. Make sure that this " \
-                               "attribute is returned in the " \
-                               "results of your Trainable."
+            time_missing_msg = (
+                f"Cannot find resource_attr {self._resource_attr} "
+                f"in trial result {result}. Make sure that this "
+                "attribute is returned in the "
+                "results of your Trainable."
+            )
             raise RuntimeError(time_missing_msg)
         if self.metric not in result:
-            metric_missing_msg = f"Cannot find metric {self.metric} in trial result {result}. " \
-                                 "Make sure that this attribute is returned " \
-                                 "in the " \
-                                 "results of your Trainable."
+            metric_missing_msg = (
+                f"Cannot find metric {self.metric} in trial result {result}. "
+                "Make sure that this attribute is returned "
+                "in the "
+                "results of your Trainable."
+            )
             raise RuntimeError(metric_missing_msg)
 
         cost = result[self._resource_attr]
@@ -234,7 +250,8 @@ class PopulationBasedTraining(FIFOScheduler):
 
         # bookkeeping for debugging reasons
         self._checkpointing_history.append(
-            (trial.trial_id, trial_id_to_continue, self._elapsed_time()))
+            (trial.trial_id, trial_id_to_continue, self._elapsed_time())
+        )
 
         if trial_id_to_continue == trial.trial_id:
             # continue current trial
@@ -246,7 +263,7 @@ class PopulationBasedTraining(FIFOScheduler):
 
             # explore step
             config = self._explore(trial_to_clone.config)
-            self._trial_decisions_stack.append((trial_id_to_continue,  config))
+            self._trial_decisions_stack.append((trial_id_to_continue, config))
             return SchedulerDecision.PAUSE
 
     def _save_trial_state(self, state: PBTTrialState, time: int, result: Dict) -> Dict:
@@ -282,11 +299,11 @@ class PopulationBasedTraining(FIFOScheduler):
             return [], []
         else:
             num_trials_in_quantile = int(
-                math.ceil(len(trials) * self._quantile_fraction))
+                math.ceil(len(trials) * self._quantile_fraction)
+            )
             if num_trials_in_quantile > len(trials) / 2:
                 num_trials_in_quantile = int(math.floor(len(trials) / 2))
-            return (trials[:num_trials_in_quantile],
-                    trials[-num_trials_in_quantile:])
+            return (trials[:num_trials_in_quantile], trials[-num_trials_in_quantile:])
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         # If no time keeper was provided at construction, we use a local
@@ -297,13 +314,14 @@ class PopulationBasedTraining(FIFOScheduler):
         else:
             assert self.time_keeper is not None  # Sanity check
             trial_id_to_continue, config = self._trial_decisions_stack.pop()
-            config['elapsed_time'] = self._elapsed_time()
+            config["elapsed_time"] = self._elapsed_time()
             config = cast_config_values(
-                config=config,
-                config_space=self.searcher.config_space)
-            config['trial_id'] = trial_id
-            return TrialSuggestion.start_suggestion(config=config,
-                                                    checkpoint_trial_id=trial_id_to_continue)
+                config=config, config_space=self.searcher.config_space
+            )
+            config["trial_id"] = trial_id
+            return TrialSuggestion.start_suggestion(
+                config=config, checkpoint_trial_id=trial_id_to_continue
+            )
 
     def _explore(self, config: Dict) -> Dict:
         """Return a config perturbed as specified.
@@ -318,37 +336,37 @@ class PopulationBasedTraining(FIFOScheduler):
 
         if self._custom_explore_fn:
             new_config = self._custom_explore_fn(new_config)
-            assert new_config is not None, \
-                "Custom explore fn failed to return new config"
+            assert (
+                new_config is not None
+            ), "Custom explore fn failed to return new config"
             return new_config
 
         for key, hp_range in self.config_space.items():
             if isinstance(hp_range, Domain):
                 # For `Categorical`, all values have the same distance from each
                 # other, so we can always resample uniformly
-                is_numerical = \
-                    isinstance(hp_range, Float) or isinstance(hp_range, Integer) \
+                is_numerical = (
+                    isinstance(hp_range, Float)
+                    or isinstance(hp_range, Integer)
                     or isinstance(hp_range, FiniteRange)
-                if (not is_numerical) or \
-                        self._random_state.rand() < self._resample_probability:
+                )
+                if (
+                    not is_numerical
+                ) or self._random_state.rand() < self._resample_probability:
                     new_config[key] = hp_range.sample(
-                        size=1, random_state=self._random_state)
+                        size=1, random_state=self._random_state
+                    )
                 else:
                     multiplier = 1.2 if self._random_state.rand() > 0.5 else 0.8
-                    new_config[key] = hp_range.cast(np.clip(
-                        config[key] * multiplier, hp_range.lower,
-                        hp_range.upper))
+                    new_config[key] = hp_range.cast(
+                        np.clip(
+                            config[key] * multiplier, hp_range.lower, hp_range.upper
+                        )
+                    )
 
         # Only log mutated hyperparameters and not entire config.
-        old_hparams = {
-            k: v
-            for k, v in config.items()
-            if k in self.config_space
-        }
-        new_hparams = {
-            k: v
-            for k, v in new_config.items() if k in self.config_space
-        }
+        old_hparams = {k: v for k, v in config.items() if k in self.config_space}
+        new_hparams = {k: v for k, v in new_config.items() if k in self.config_space}
         logger.debug(f"[explore] perturbed config from {old_hparams} -> {new_hparams}")
 
         return new_config

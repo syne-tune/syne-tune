@@ -20,61 +20,87 @@ import numpy as np
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband_cost_promotion import \
-    CostPromotionRungSystem
-from syne_tune.optimizer.schedulers.hyperband_pasha import \
-    PASHARungSystem
-from syne_tune.optimizer.schedulers.hyperband_promotion import \
-    PromotionRungSystem
-from syne_tune.optimizer.schedulers.hyperband_rush import \
-    RUSHPromotionRungSystem, RUSHStoppingRungSystem
-from syne_tune.optimizer.schedulers.hyperband_stopping import \
-    StoppingRungSystem
-from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
-    import check_and_merge_defaults, Integer, Boolean, Categorical, \
-    filter_by_key, String, Dictionary, Float
+from syne_tune.optimizer.schedulers.hyperband_cost_promotion import (
+    CostPromotionRungSystem,
+)
+from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
+from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
+from syne_tune.optimizer.schedulers.hyperband_rush import (
+    RUSHPromotionRungSystem,
+    RUSHStoppingRungSystem,
+)
+from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
+from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
+    check_and_merge_defaults,
+    Integer,
+    Boolean,
+    Categorical,
+    filter_by_key,
+    String,
+    Dictionary,
+    Float,
+)
 
-__all__ = ['HyperbandScheduler',
-           'HyperbandBracketManager']
+__all__ = ["HyperbandScheduler", "HyperbandBracketManager"]
 
 logger = logging.getLogger(__name__)
 
 
 _ARGUMENT_KEYS = {
-    'resource_attr', 'grace_period', 'reduction_factor', 'brackets', 'type',
-    'searcher_data', 'cost_attr', 'register_pending_myopic', 'do_snapshots',
-    'rung_system_per_bracket', 'rung_levels', 'rung_system_kwargs'}
+    "resource_attr",
+    "grace_period",
+    "reduction_factor",
+    "brackets",
+    "type",
+    "searcher_data",
+    "cost_attr",
+    "register_pending_myopic",
+    "do_snapshots",
+    "rung_system_per_bracket",
+    "rung_levels",
+    "rung_system_kwargs",
+}
 
 _DEFAULT_OPTIONS = {
-    'resource_attr': 'epoch',
-    'resume': False,
-    'grace_period': 1,
-    'reduction_factor': 3,
-    'brackets': 1,
-    'type': 'stopping',
-    'searcher_data': 'rungs',
-    'register_pending_myopic': False,
-    'do_snapshots': False,
-    'rung_system_per_bracket': False,
-    'rung_system_kwargs': {
-        'ranking_criterion': 'soft_ranking',
-        'epsilon': 1.0,
-        'epsilon_scaling': 1.0},
+    "resource_attr": "epoch",
+    "resume": False,
+    "grace_period": 1,
+    "reduction_factor": 3,
+    "brackets": 1,
+    "type": "stopping",
+    "searcher_data": "rungs",
+    "register_pending_myopic": False,
+    "do_snapshots": False,
+    "rung_system_per_bracket": False,
+    "rung_system_kwargs": {
+        "ranking_criterion": "soft_ranking",
+        "epsilon": 1.0,
+        "epsilon_scaling": 1.0,
+    },
 }
 
 _CONSTRAINTS = {
-    'resource_attr': String(),
-    'resume': Boolean(),
-    'grace_period': Integer(1, None),
-    'reduction_factor': Float(2, None),
-    'brackets': Integer(1, None),
-    'type': Categorical(('stopping', 'promotion', 'cost_promotion', 'pasha', 'rush_promotion', 'rush_stopping')),
-    'searcher_data': Categorical(('rungs', 'all', 'rungs_and_last')),
-    'cost_attr': String(),
-    'register_pending_myopic': Boolean(),
-    'do_snapshots': Boolean(),
-    'rung_system_per_bracket': Boolean(),
-    'rung_system_kwargs': Dictionary(),
+    "resource_attr": String(),
+    "resume": Boolean(),
+    "grace_period": Integer(1, None),
+    "reduction_factor": Float(2, None),
+    "brackets": Integer(1, None),
+    "type": Categorical(
+        (
+            "stopping",
+            "promotion",
+            "cost_promotion",
+            "pasha",
+            "rush_promotion",
+            "rush_stopping",
+        )
+    ),
+    "searcher_data": Categorical(("rungs", "all", "rungs_and_last")),
+    "cost_attr": String(),
+    "register_pending_myopic": Boolean(),
+    "do_snapshots": Boolean(),
+    "rung_system_per_bracket": Boolean(),
+    "rung_system_kwargs": Dictionary(),
 }
 
 
@@ -340,51 +366,65 @@ class HyperbandScheduler(FIFOScheduler):
         # To do this properly, we first check values and impute defaults for
         # `kwargs`.
         kwargs = check_and_merge_defaults(
-            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS,
-            dict_name='scheduler_options')
-        scheduler_type = kwargs['type']
+            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
+        )
+        scheduler_type = kwargs["type"]
         self.scheduler_type = scheduler_type
-        self._resource_attr = kwargs['resource_attr']
-        self._rung_system_kwargs = kwargs['rung_system_kwargs']
-        self._cost_attr = kwargs.get('cost_attr')
-        assert not (scheduler_type == 'cost_promotion' and self._cost_attr is None), \
-            "cost_attr must be given if type='cost_promotion'"
+        self._resource_attr = kwargs["resource_attr"]
+        self._rung_system_kwargs = kwargs["rung_system_kwargs"]
+        self._cost_attr = kwargs.get("cost_attr")
+        assert not (
+            scheduler_type == "cost_promotion" and self._cost_attr is None
+        ), "cost_attr must be given if type='cost_promotion'"
         # Superclass constructor
-        resume = kwargs['resume']
-        kwargs['resume'] = False  # Cannot be done in superclass
+        resume = kwargs["resume"]
+        kwargs["resume"] = False  # Cannot be done in superclass
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
-        assert self.max_t is not None, \
-            "Either max_t must be specified, or it has to be specified as " + \
-            "config_space['epochs'], config_space['max_t'], " + \
-            "config_space['max_epochs']"
+        assert self.max_t is not None, (
+            "Either max_t must be specified, or it has to be specified as "
+            + "config_space['epochs'], config_space['max_t'], "
+            + "config_space['max_epochs']"
+        )
 
         # If rung_levels is given, grace_period and reduction_factor are ignored
-        rung_levels = kwargs.get('rung_levels')
+        rung_levels = kwargs.get("rung_levels")
         if rung_levels is not None:
             assert isinstance(rung_levels, list)
-            if ('grace_period' in kwargs) or ('reduction_factor' in kwargs):
+            if ("grace_period" in kwargs) or ("reduction_factor" in kwargs):
                 logger.warning(
                     "Since rung_levels is given, the values grace_period = "
                     f"{kwargs.get('grace_period')} and reduction_factor = "
-                    f"{kwargs.get('reduction_factor')} are ignored!")
+                    f"{kwargs.get('reduction_factor')} are ignored!"
+                )
         rung_levels = _get_rung_levels(
-            rung_levels, grace_period=kwargs['grace_period'],
-            reduction_factor=kwargs['reduction_factor'], max_t=self.max_t)
-        brackets = kwargs['brackets']
-        do_snapshots = kwargs['do_snapshots']
-        assert (not do_snapshots) or (scheduler_type == 'stopping'), \
-            "Snapshots are supported only for type = 'stopping'"
-        rung_system_per_bracket = kwargs['rung_system_per_bracket']
+            rung_levels,
+            grace_period=kwargs["grace_period"],
+            reduction_factor=kwargs["reduction_factor"],
+            max_t=self.max_t,
+        )
+        brackets = kwargs["brackets"]
+        do_snapshots = kwargs["do_snapshots"]
+        assert (not do_snapshots) or (
+            scheduler_type == "stopping"
+        ), "Snapshots are supported only for type = 'stopping'"
+        rung_system_per_bracket = kwargs["rung_system_per_bracket"]
 
         self.terminator = HyperbandBracketManager(
-            scheduler_type, self._resource_attr, self.metric, self.mode,
-            self.max_t, rung_levels, brackets, rung_system_per_bracket,
+            scheduler_type,
+            self._resource_attr,
+            self.metric,
+            self.mode,
+            self.max_t,
+            rung_levels,
+            brackets,
+            rung_system_per_bracket,
             cost_attr=self._total_cost_attr(),
             random_seed=self.random_seed_generator(),
-            rung_system_kwargs=self._rung_system_kwargs)
+            rung_system_kwargs=self._rung_system_kwargs,
+        )
         self.do_snapshots = do_snapshots
-        self.searcher_data = kwargs['searcher_data']
-        self._register_pending_myopic = kwargs['register_pending_myopic']
+        self.searcher_data = kwargs["searcher_data"]
+        self._register_pending_myopic = kwargs["register_pending_myopic"]
         # _active_trials:
         # Maintains a snapshot of currently active tasks (running or paused),
         # needed by several features (for example, searcher_data ==
@@ -413,15 +453,14 @@ class HyperbandScheduler(FIFOScheduler):
         # recent milestone.
         self._cost_offset = dict()
         if resume:
-            checkpoint = kwargs.get('checkpoint')
-            assert checkpoint is not None, \
-                "Need checkpoint to be set if resume = True"
+            checkpoint = kwargs.get("checkpoint")
+            assert checkpoint is not None, "Need checkpoint to be set if resume = True"
             if os.path.isfile(checkpoint):
                 raise NotImplementedError()
                 # TODO! Need load
                 # self.load_state_dict(load(checkpoint))
             else:
-                msg = f'checkpoint path {checkpoint} is not available for resume.'
+                msg = f"checkpoint path {checkpoint} is not available for resume."
                 logger.exception(msg)
                 raise FileExistsError(msg)
 
@@ -430,32 +469,30 @@ class HyperbandScheduler(FIFOScheduler):
         :return: Is this variant doing pause and resume scheduling, in the
             sense that trials can be paused and resumed later?
         """
-        return self.scheduler_type != 'stopping'
+        return self.scheduler_type != "stopping"
 
     def _extend_search_options(self, search_options: Dict) -> Dict:
         # Note: Needs self.scheduler_type to be set
-        scheduler = 'hyperband_{}'.format(self.scheduler_type)
+        scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
-            search_options,
-            scheduler=scheduler,
-            resource_attr=self._resource_attr)
+            search_options, scheduler=scheduler, resource_attr=self._resource_attr
+        )
         # Cost attribute: For promotion-based, cost needs to be accumulated
         # for each trial
         cost_attr = self._total_cost_attr()
         if cost_attr is not None:
-            result['cost_attr'] = cost_attr
+            result["cost_attr"] = cost_attr
         return result
 
     def _total_cost_attr(self) -> Optional[str]:
         if self._cost_attr is None:
             return None
         elif self.does_pause_resume():
-            return 'total_' + self._cost_attr
+            return "total_" + self._cost_attr
         else:
             return self._cost_attr
 
-    def _on_config_suggest(
-            self, config: Dict, trial_id: str, **kwargs) -> Dict:
+    def _on_config_suggest(self, config: Dict, trial_id: str, **kwargs) -> Dict:
         """
         `kwargs` being used here:
         - elapsed_time: Time from start of experiment, set in
@@ -465,20 +502,20 @@ class HyperbandScheduler(FIFOScheduler):
         - milestone: First milestone the new trial will reach, set in
             `HyperbandScheduler._promote_trial`
         """
-        assert trial_id not in self._active_trials, \
-            f"Trial {trial_id} already exists"
+        assert trial_id not in self._active_trials, f"Trial {trial_id} already exists"
         # See `FIFOScheduler._on_config_suggest` for why we register the task
         # and pending evaluation here, and not later in `on_task_add`.
         debug_log = self.searcher.debug_log
         # Register new task
         first_milestone = self.terminator.on_task_add(
-            trial_id, bracket=kwargs['bracket'], new_config=True)[-1]
+            trial_id, bracket=kwargs["bracket"], new_config=True
+        )[-1]
         if debug_log is not None:
             logger.info(
-                f"trial_id {trial_id} starts (first milestone = "
-                f"{first_milestone})")
+                f"trial_id {trial_id} starts (first milestone = " f"{first_milestone})"
+            )
         # Register pending evaluation with searcher
-        if self.searcher_data == 'rungs':
+        if self.searcher_data == "rungs":
             pending_resources = [first_milestone]
         elif self._register_pending_myopic:
             pending_resources = [1]
@@ -486,24 +523,26 @@ class HyperbandScheduler(FIFOScheduler):
             pending_resources = list(range(1, first_milestone + 1))
         for resource in pending_resources:
             self.searcher.register_pending(
-                trial_id=trial_id, config=config, milestone=resource)
+                trial_id=trial_id, config=config, milestone=resource
+            )
         # Extra fields in `config`
         if debug_log is not None:
             # For log outputs:
-            config['trial_id'] = trial_id
+            config["trial_id"] = trial_id
         if self.does_pause_resume() and self.max_resource_attr is not None:
             # The new trial should only run until the next milestone.
             # This needs its config to be modified accordingly.
-            config[self.max_resource_attr] = kwargs['milestone']
+            config[self.max_resource_attr] = kwargs["milestone"]
 
         self._active_trials[trial_id] = {
-            'config': copy.copy(config),
-            'time_stamp': kwargs['elapsed_time'],
-            'bracket': kwargs['bracket'],
-            'reported_result': None,
-            'keep_case': False,
-            'running': True,
-            'largest_update_resource': None}
+            "config": copy.copy(config),
+            "time_stamp": kwargs["elapsed_time"],
+            "bracket": kwargs["bracket"],
+            "reported_result": None,
+            "keep_case": False,
+            "running": True,
+            "largest_update_resource": None,
+        }
 
         return config
 
@@ -527,51 +566,55 @@ class HyperbandScheduler(FIFOScheduler):
             # No trial to be promoted
             if self.do_snapshots:
                 # Append snapshot
-                bracket_id = extra_kwargs['bracket']
-                extra_kwargs['snapshot'] = {
-                    'tasks': self._snapshot_tasks(bracket_id),
-                    'rungs': self.terminator.snapshot_rungs(bracket_id),
-                    'max_resource': self.max_t}
+                bracket_id = extra_kwargs["bracket"]
+                extra_kwargs["snapshot"] = {
+                    "tasks": self._snapshot_tasks(bracket_id),
+                    "rungs": self.terminator.snapshot_rungs(bracket_id),
+                    "max_resource": self.max_t,
+                }
         else:
             # At this point, we can assume the trial will be resumed
-            extra_kwargs['new_config'] = False
+            extra_kwargs["new_config"] = False
             self.terminator.on_task_add(trial_id, **extra_kwargs)
             # Update information (note that 'time_stamp' is not exactly
             # correct, since the task may get started a little later)
-            assert trial_id in self._active_trials, \
-                f"Paused trial {trial_id} must be in _active_trials"
+            assert (
+                trial_id in self._active_trials
+            ), f"Paused trial {trial_id} must be in _active_trials"
             record = self._active_trials[trial_id]
-            assert not record['running'], \
-                f"Paused trial {trial_id} marked as running in _active_trials"
-            record.update({
-                'time_stamp': self._elapsed_time(),
-                'reported_result': None,
-                'keep_case': False,
-                'running': True})
+            assert not record[
+                "running"
+            ], f"Paused trial {trial_id} marked as running in _active_trials"
+            record.update(
+                {
+                    "time_stamp": self._elapsed_time(),
+                    "reported_result": None,
+                    "keep_case": False,
+                    "running": True,
+                }
+            )
             # Register pending evaluation(s) with searcher
-            next_milestone = extra_kwargs['milestone']
-            resume_from = extra_kwargs['resume_from']
-            if self.searcher_data == 'rungs':
+            next_milestone = extra_kwargs["milestone"]
+            resume_from = extra_kwargs["resume_from"]
+            if self.searcher_data == "rungs":
                 pending_resources = [next_milestone]
             elif self._register_pending_myopic:
                 pending_resources = [resume_from + 1]
             else:
-                pending_resources = list(range(resume_from + 1,
-                                               next_milestone + 1))
+                pending_resources = list(range(resume_from + 1, next_milestone + 1))
             for resource in pending_resources:
-                self.searcher.register_pending(
-                    trial_id=trial_id, milestone=resource)
+                self.searcher.register_pending(trial_id=trial_id, milestone=resource)
             if self.searcher.debug_log is not None:
                 logger.info(
                     f"trial_id {trial_id}: Promotion from "
-                    f"{resume_from} to {next_milestone}")
+                    f"{resume_from} to {next_milestone}"
+                )
             # In the case of a promoted trial, extra_kwargs plays a different
             # role
-            if self.does_pause_resume() and \
-                    self.max_resource_attr is not None:
+            if self.does_pause_resume() and self.max_resource_attr is not None:
                 # The promoted trial should only run until the next milestone.
                 # This needs its config to be modified accordingly
-                extra_kwargs = record['config'].copy()
+                extra_kwargs = record["config"].copy()
                 extra_kwargs[self.max_resource_attr] = next_milestone
             else:
                 extra_kwargs = None
@@ -584,17 +627,21 @@ class HyperbandScheduler(FIFOScheduler):
         all_running = not self.terminator._rung_system_per_bracket
         tasks = dict()
         for k, v in self._active_trials.items():
-            if v['running'] and (all_running or v['bracket'] == bracket_id):
-                reported_result = v['reported_result']
-                level = 0 if reported_result is None \
+            if v["running"] and (all_running or v["bracket"] == bracket_id):
+                reported_result = v["reported_result"]
+                level = (
+                    0
+                    if reported_result is None
                     else reported_result[self._resource_attr]
+                )
                 # It is possible to have tasks in _active_trials which have
                 # reached self.max_t. These must not end up in the snapshot
                 if level < self.max_t:
                     tasks[k] = {
-                        'config': v['config'],
-                        'time': v['time_stamp'],
-                        'level': level}
+                        "config": v["config"],
+                        "time": v["time_stamp"],
+                        "level": level,
+                    }
         return tasks
 
     def _cleanup_trial(self, trial_id: str):
@@ -607,25 +654,24 @@ class HyperbandScheduler(FIFOScheduler):
         self.terminator.on_task_remove(trial_id)
         if trial_id in self._active_trials:
             # We do not remove stopped trials
-            self._active_trials[trial_id]['running'] = False
+            self._active_trials[trial_id]["running"] = False
 
     def on_trial_error(self, trial: Trial):
         super().on_trial_error(trial)
         self._cleanup_trial(str(trial.trial_id))
 
-    def _update_searcher_internal(
-            self, trial_id: str, config: Dict, result: Dict):
-        if self.searcher_data == 'rungs_and_last':
+    def _update_searcher_internal(self, trial_id: str, config: Dict, result: Dict):
+        if self.searcher_data == "rungs_and_last":
             # Remove last recently added result for this task. This is not
             # done if it fell on a rung level (i.e., `keep_case` is True)
             record = self._active_trials[trial_id]
-            if (record['reported_result'] is not None) and \
-                    (not record['keep_case']):
-                rem_result = record['reported_result']
+            if (record["reported_result"] is not None) and (not record["keep_case"]):
+                rem_result = record["reported_result"]
                 self.searcher.remove_case(trial_id, **rem_result)
 
     def _update_searcher(
-            self, trial_id: str, config: Dict, result: Dict, task_info: Dict):
+        self, trial_id: str, config: Dict, result: Dict, task_info: Dict
+    ):
         """
         Updates searcher with `result` (depending on `searcher_data`), and
         registers pending config with searcher.
@@ -636,18 +682,18 @@ class HyperbandScheduler(FIFOScheduler):
         :param task_info: Info from `self.terminator.on_task_report`
         :return: Should searcher be updated?
         """
-        task_continues = task_info['task_continues']
-        milestone_reached = task_info['milestone_reached']
-        next_milestone = task_info.get('next_milestone')
+        task_continues = task_info["task_continues"]
+        milestone_reached = task_info["milestone_reached"]
+        next_milestone = task_info.get("next_milestone")
         do_update = False
         pending_resources = []
-        if self.searcher_data == 'rungs':
+        if self.searcher_data == "rungs":
             if milestone_reached:
                 # Update searcher with intermediate result
                 do_update = True
                 if task_continues and next_milestone is not None:
                     pending_resources = [next_milestone]
-        elif not task_info.get('ignore_data', False):
+        elif not task_info.get("ignore_data", False):
             # All results are reported to the searcher, except if
             # task_info['ignore_data'] is True. The latter happens only for
             # tasks running promoted configs. In this case, we may receive
@@ -663,28 +709,28 @@ class HyperbandScheduler(FIFOScheduler):
                 elif milestone_reached:
                     # Register pending evaluations for all resources up to
                     # `next_milestone`
-                    pending_resources = list(range(resource + 1,
-                                                   next_milestone + 1))
+                    pending_resources = list(range(resource + 1, next_milestone + 1))
         # Update searcher
         if do_update:
             self._update_searcher_internal(trial_id, config, result)
         # Register pending evaluations
         for resource in pending_resources:
             self.searcher.register_pending(
-                trial_id=trial_id, config=config,
-                milestone=resource)
+                trial_id=trial_id, config=config, milestone=resource
+            )
         return do_update
 
     def _check_result(self, result: Dict):
         super()._check_result(result)
         self._check_key_of_result(result, self._resource_attr)
-        if self.scheduler_type == 'cost_promotion':
+        if self.scheduler_type == "cost_promotion":
             self._check_key_of_result(result, self._cost_attr)
         resource = result[self._resource_attr]
-        assert 1 <= resource == round(resource), \
-            "Your training evaluation function needs to report positive " +\
-            f"integer values for key {self._resource_attr}. Obtained " +\
-            f"value {resource}, which is not permitted"
+        assert 1 <= resource == round(resource), (
+            "Your training evaluation function needs to report positive "
+            + f"integer values for key {self._resource_attr}. Obtained "
+            + f"value {resource}, which is not permitted"
+        )
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
         self._check_result(result)
@@ -696,21 +742,23 @@ class HyperbandScheduler(FIFOScheduler):
             if debug_log is not None:
                 logger.info(
                     f"trial_id {trial_id}: Skipping empty dict received "
-                    "from reporter")
+                    "from reporter"
+                )
         else:
             # Time since start of experiment
             time_since_start = self._elapsed_time()
             do_update = False
             config = self._preprocess_config(trial.config)
-            cost_and_promotion = self._cost_attr is not None and \
-                                 self._cost_attr in result and \
-                                 self.does_pause_resume()
+            cost_and_promotion = (
+                self._cost_attr is not None
+                and self._cost_attr in result
+                and self.does_pause_resume()
+            )
             if cost_and_promotion:
                 # Trial may have paused/resumed before, so need to add cost
                 # offset from these
                 cost_offset = self._cost_offset.get(trial_id, 0)
-                result[self._total_cost_attr()] = \
-                    result[self._cost_attr] + cost_offset
+                result[self._total_cost_attr()] = result[self._cost_attr] + cost_offset
             # We may receive a report from a trial which has been stopped or
             # paused before. In such a case, we override trial_decision to be
             # STOP or PAUSE as before, so the report is not taken into account
@@ -723,25 +771,28 @@ class HyperbandScheduler(FIFOScheduler):
                 trial_decision = SchedulerDecision.STOP
                 logger.warning(
                     f"trial_id {trial_id}: Was STOPPED, but receives another "
-                    f"report {result}\nThis report is ignored")
-            elif not self._active_trials[trial_id]['running']:
+                    f"report {result}\nThis report is ignored"
+                )
+            elif not self._active_trials[trial_id]["running"]:
                 # Trial must have been paused before
                 trial_decision = SchedulerDecision.PAUSE
                 logger.warning(
                     f"trial_id {trial_id}: Was PAUSED, but receives another "
-                    f"report {result}\nThis report is ignored")
+                    f"report {result}\nThis report is ignored"
+                )
             else:
                 task_info = self.terminator.on_task_report(trial_id, result)
-                task_continues = task_info['task_continues']
-                milestone_reached = task_info['milestone_reached']
+                task_continues = task_info["task_continues"]
+                milestone_reached = task_info["milestone_reached"]
                 if cost_and_promotion:
                     if milestone_reached:
                         # Trial reached milestone and will pause there: Update
                         # cost offset
                         if self._cost_attr is not None:
-                            self._cost_offset[trial_id] = \
-                                result[self._total_cost_attr()]
-                    elif task_info.get('ignore_data', False):
+                            self._cost_offset[trial_id] = result[
+                                self._total_cost_attr()
+                            ]
+                    elif task_info.get("ignore_data", False):
                         # For a resumed trial, the report is for resource <=
                         # resume_from, where resume_from < milestone. This
                         # happens if checkpointing is not implemented and a
@@ -752,14 +803,14 @@ class HyperbandScheduler(FIFOScheduler):
                         # have any offset.
                         if self._cost_offset[trial_id] > 0:
                             logger.info(
-                                f"trial_id {trial_id}: Resumed trial seems to have been " +
-                                "started from scratch (no checkpointing?), so we erase " +
-                                "the cost offset.")
+                                f"trial_id {trial_id}: Resumed trial seems to have been "
+                                + "started from scratch (no checkpointing?), so we erase "
+                                + "the cost offset."
+                            )
                         self._cost_offset[trial_id] = 0
 
                 # Update searcher and register pending
-                do_update = self._update_searcher(
-                    trial_id, config, result, task_info)
+                do_update = self._update_searcher(trial_id, config, result, task_info)
                 # Change snapshot entry for task
                 # Note: This must not be done above, because what _update_searcher
                 # is doing, depends on the entry *before* its update here.
@@ -772,51 +823,59 @@ class HyperbandScheduler(FIFOScheduler):
                 # Otherwise, it is removed once _update_searcher is called for
                 # the next recent result.
                 resource = int(result[self._resource_attr])
-                self._active_trials[trial_id].update({
-                    'time_stamp': time_since_start,
-                    'reported_result': {
-                        self.metric: result[self.metric],
-                        self._resource_attr: resource},
-                    'keep_case': milestone_reached})
+                self._active_trials[trial_id].update(
+                    {
+                        "time_stamp": time_since_start,
+                        "reported_result": {
+                            self.metric: result[self.metric],
+                            self._resource_attr: resource,
+                        },
+                        "keep_case": milestone_reached,
+                    }
+                )
                 if do_update:
                     largest_update_resource = self._active_trials[trial_id][
-                        'largest_update_resource']
+                        "largest_update_resource"
+                    ]
                     if largest_update_resource is None:
                         largest_update_resource = resource - 1
-                    assert largest_update_resource <= resource, \
-                        f"Internal error (trial_id {trial_id}): " +\
-                        f"on_trial_result called with resource = {resource}, " +\
-                        f"but largest_update_resource = {largest_update_resource}"
+                    assert largest_update_resource <= resource, (
+                        f"Internal error (trial_id {trial_id}): "
+                        + f"on_trial_result called with resource = {resource}, "
+                        + f"but largest_update_resource = {largest_update_resource}"
+                    )
                     if resource == largest_update_resource:
                         do_update = False  # Do not update again
                     else:
                         self._active_trials[trial_id][
-                            'largest_update_resource'] = resource
+                            "largest_update_resource"
+                        ] = resource
                 if not task_continues:
                     if (not self.does_pause_resume()) or resource >= self.max_t:
                         trial_decision = SchedulerDecision.STOP
-                        act_str = 'Terminating'
+                        act_str = "Terminating"
                     else:
                         trial_decision = SchedulerDecision.PAUSE
-                        act_str = 'Pausing'
+                        act_str = "Pausing"
                     self._cleanup_trial(trial_id)
                 if debug_log is not None:
                     if not task_continues:
                         logger.info(
                             f"trial_id {trial_id}: {act_str} evaluation "
-                            f"at {resource}")
+                            f"at {resource}"
+                        )
                     elif milestone_reached:
                         msg = f"trial_id {trial_id}: Reaches {resource}, continues"
-                        next_milestone = task_info.get('next_milestone')
+                        next_milestone = task_info.get("next_milestone")
                         if next_milestone is not None:
                             msg += f" to {next_milestone}"
                         logger.info(msg)
             self.searcher.on_trial_result(
-                trial_id, config, result=result, update=do_update)
+                trial_id, config, result=result, update=do_update
+            )
         # Extra info in debug mode
         log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
-        for k, is_float in (
-                (self._resource_attr, False), ('elapsed_time', True)):
+        for k, is_float in ((self._resource_attr, False), ("elapsed_time", True)):
             if k in result:
                 if is_float:
                     log_msg += f", {k} = {result[k]:.2f}"
@@ -833,7 +892,8 @@ class HyperbandScheduler(FIFOScheduler):
         # Check whether searcher was already updated based on `result`
         trial_id = str(trial.trial_id)
         largest_update_resource = self._active_trials[trial_id][
-            'largest_update_resource']
+            "largest_update_resource"
+        ]
         if largest_update_resource is not None:
             resource = int(result[self._resource_attr])
             if resource > largest_update_resource:
@@ -843,10 +903,12 @@ class HyperbandScheduler(FIFOScheduler):
         self._cleanup_trial(trial_id)
 
     def _get_paused_trials(self) -> Dict:
-        rem_keys = {'config', 'bracket', 'running'}
+        rem_keys = {"config", "bracket", "running"}
         return {
             k: {k2: v[k2] for k2 in rem_keys}
-            for k, v in self._active_trials.items() if not v['running']}
+            for k, v in self._active_trials.items()
+            if not v["running"]
+        }
 
 
 def _sample_bracket(num_brackets, rung_levels, random_state):
@@ -855,9 +917,12 @@ def _sample_bracket(num_brackets, rung_levels, random_state):
     if num_brackets > 1:
         smax_plus1 = len(rung_levels)
         assert num_brackets <= smax_plus1
-        probs = np.array([
-            smax_plus1 / ((smax_plus1 - s) * rung_levels[s])
-            for s in range(num_brackets)])
+        probs = np.array(
+            [
+                smax_plus1 / ((smax_plus1 - s) * rung_levels[s])
+                for s in range(num_brackets)
+            ]
+        )
         normalized = probs / probs.sum()
         return random_state.choice(num_brackets, p=normalized)
     else:
@@ -870,31 +935,36 @@ def _is_positive_int(x):
 
 def _get_rung_levels(rung_levels, grace_period, reduction_factor, max_t):
     if rung_levels is not None:
-        assert isinstance(rung_levels, list) and len(rung_levels) > 1, \
-            "rung_levels must be list of size >= 2"
-        assert all(_is_positive_int(x) for x in rung_levels), \
-            "rung_levels must be list of positive integers"
+        assert (
+            isinstance(rung_levels, list) and len(rung_levels) > 1
+        ), "rung_levels must be list of size >= 2"
+        assert all(
+            _is_positive_int(x) for x in rung_levels
+        ), "rung_levels must be list of positive integers"
         rung_levels = [int(x) for x in rung_levels]
-        assert all(x < y for x, y in zip(rung_levels, rung_levels[1:])), \
-            "rung_levels must be strictly increasing sequence"
-        assert rung_levels[-1] <= max_t, \
-            f"Last entry of rung_levels ({rung_levels[-1]}) must be <= max_t ({max_t})"
+        assert all(
+            x < y for x, y in zip(rung_levels, rung_levels[1:])
+        ), "rung_levels must be strictly increasing sequence"
+        assert (
+            rung_levels[-1] <= max_t
+        ), f"Last entry of rung_levels ({rung_levels[-1]}) must be <= max_t ({max_t})"
     else:
         # Rung levels given by grace_period, reduction_factor, max_t
         assert _is_positive_int(grace_period)
         assert reduction_factor >= 2
         assert _is_positive_int(max_t)
-        assert max_t > grace_period, \
-            f"max_t ({max_t}) must be greater than grace_period ({grace_period})"
+        assert (
+            max_t > grace_period
+        ), f"max_t ({max_t}) must be greater than grace_period ({grace_period})"
         rf = reduction_factor
         min_t = grace_period
         max_rungs = int(np.log(max_t / min_t) / np.log(rf) + 1)
-        rung_levels = [int(round(min_t * np.power(rf, k)))
-                       for k in range(max_rungs)]
+        rung_levels = [int(round(min_t * np.power(rf, k))) for k in range(max_rungs)]
         assert rung_levels[-1] <= max_t  # Sanity check
-        assert len(rung_levels) >= 2, \
-            f"grace_period = {grace_period}, reduction_factor = " +\
-            f"{reduction_factor}, max_t = {max_t} leads to single rung level only"
+        assert len(rung_levels) >= 2, (
+            f"grace_period = {grace_period}, reduction_factor = "
+            + f"{reduction_factor}, max_t = {max_t} leads to single rung level only"
+        )
     return rung_levels
 
 
@@ -937,9 +1007,19 @@ class HyperbandBracketManager(object):
     """
 
     def __init__(
-            self, scheduler_type, resource_attr, metric, mode, max_t,
-            rung_levels, brackets, rung_system_per_bracket, cost_attr,
-            random_seed, rung_system_kwargs):
+        self,
+        scheduler_type,
+        resource_attr,
+        metric,
+        mode,
+        max_t,
+        rung_levels,
+        brackets,
+        rung_system_per_bracket,
+        cost_attr,
+        random_seed,
+        rung_system_kwargs,
+    ):
         self._scheduler_type = scheduler_type
         self._resource_attr = resource_attr
         self._max_t = max_t
@@ -952,35 +1032,40 @@ class HyperbandBracketManager(object):
         num_systems = self.num_brackets if rung_system_per_bracket else 1
         rung_levels_plus_maxt = rung_levels[1:] + [max_t]
         # Promotion quantiles: q_j = r_j / r_{j+1}
-        promote_quantiles = [
-            x / y for x, y in zip(rung_levels, rung_levels_plus_maxt)]
+        promote_quantiles = [x / y for x, y in zip(rung_levels, rung_levels_plus_maxt)]
         kwargs = dict(metric=metric, mode=mode, resource_attr=resource_attr)
-        if scheduler_type == 'stopping':
+        if scheduler_type == "stopping":
             rs_type = StoppingRungSystem
-        elif scheduler_type == 'pasha':
-            kwargs['max_t'] = max_t
-            kwargs['ranking_criterion'] = rung_system_kwargs['ranking_criterion']
-            kwargs['epsilon'] = rung_system_kwargs['epsilon']
-            kwargs['epsilon_scaling'] = rung_system_kwargs['epsilon_scaling']
+        elif scheduler_type == "pasha":
+            kwargs["max_t"] = max_t
+            kwargs["ranking_criterion"] = rung_system_kwargs["ranking_criterion"]
+            kwargs["epsilon"] = rung_system_kwargs["epsilon"]
+            kwargs["epsilon_scaling"] = rung_system_kwargs["epsilon_scaling"]
             rs_type = PASHARungSystem
-        elif scheduler_type in ['rush_promotion', 'rush_stopping']:
-            kwargs['num_threshold_candidates'] = rung_system_kwargs.get('num_threshold_candidates', 0)
-            if scheduler_type == 'rush_stopping':
+        elif scheduler_type in ["rush_promotion", "rush_stopping"]:
+            kwargs["num_threshold_candidates"] = rung_system_kwargs.get(
+                "num_threshold_candidates", 0
+            )
+            if scheduler_type == "rush_stopping":
                 rs_type = RUSHStoppingRungSystem
             else:
-                kwargs['max_t'] = max_t
+                kwargs["max_t"] = max_t
                 rs_type = RUSHPromotionRungSystem
         else:
-            kwargs['max_t'] = max_t
-            if scheduler_type == 'promotion':
+            kwargs["max_t"] = max_t
+            if scheduler_type == "promotion":
                 rs_type = PromotionRungSystem
             else:
-                kwargs['cost_attr'] = cost_attr
+                kwargs["cost_attr"] = cost_attr
                 rs_type = CostPromotionRungSystem
         self._rung_systems = [
-            rs_type(rung_levels=rung_levels[s:],
-                    promote_quantiles=promote_quantiles[s:], **kwargs)
-            for s in range(num_systems)]
+            rs_type(
+                rung_levels=rung_levels[s:],
+                promote_quantiles=promote_quantiles[s:],
+                **kwargs,
+            )
+            for s in range(num_systems)
+        ]
         self.random_state = np.random.RandomState(random_seed)
 
     def _get_rung_system_for_bracket_id(self, bracket_id: int):
@@ -1012,8 +1097,8 @@ class HyperbandBracketManager(object):
         :param kwargs:
         :return: List of milestones in decreasing order, where max_t is first
         """
-        assert 'bracket' in kwargs
-        bracket_id = kwargs['bracket']
+        assert "bracket" in kwargs
+        bracket_id = kwargs["bracket"]
         self._task_info[trial_id] = bracket_id
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
         rung_sys.on_task_add(trial_id, skip_rungs=skip_rungs, **kwargs)
@@ -1040,21 +1125,25 @@ class HyperbandBracketManager(object):
         """
         rung_sys, bracket_id, skip_rungs = self._get_rung_system(trial_id)
         ret_dict = {
-            'bracket_id': bracket_id,
-            'task_continues': False,
-            'milestone_reached': True,
-            'next_milestone': None
+            "bracket_id": bracket_id,
+            "task_continues": False,
+            "milestone_reached": True,
+            "next_milestone": None,
         }
-        if self._scheduler_type != 'stopping':
-            ret_dict['ignore_data'] = False
+        if self._scheduler_type != "stopping":
+            ret_dict["ignore_data"] = False
         if result[self._resource_attr] < self._max_t:
-            ret_dict.update(rung_sys.on_task_report(
-                trial_id, result, skip_rungs=skip_rungs))
+            ret_dict.update(
+                rung_sys.on_task_report(trial_id, result, skip_rungs=skip_rungs)
+            )
             # Special case: If config just reached the last milestone in
             # the bracket and survived, next_milestone is equal to max_t
-            if ret_dict['task_continues'] and ret_dict['milestone_reached'] \
-                    and (ret_dict['next_milestone'] is None):
-                ret_dict['next_milestone'] = self._max_t
+            if (
+                ret_dict["task_continues"]
+                and ret_dict["milestone_reached"]
+                and (ret_dict["next_milestone"] is None)
+            ):
+                ret_dict["next_milestone"] = self._max_t
         return ret_dict
 
     def on_task_remove(self, trial_id):
@@ -1066,7 +1155,9 @@ class HyperbandBracketManager(object):
     def _sample_bracket(self):
         return _sample_bracket(
             num_brackets=self.num_brackets,
-            rung_levels=self.rung_levels, random_state=self.random_state)
+            rung_levels=self.rung_levels,
+            random_state=self.random_state,
+        )
 
     def on_task_schedule(self) -> (Optional[str], Dict):
         """
@@ -1077,17 +1168,16 @@ class HyperbandBracketManager(object):
         # Sample bracket for task to be scheduled
         bracket_id = self._sample_bracket()
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
-        extra_kwargs = {'bracket': bracket_id}
+        extra_kwargs = {"bracket": bracket_id}
         # Check whether config can be promoted
         ret_dict = rung_sys.on_task_schedule()
-        trial_id = ret_dict.get('trial_id')
+        trial_id = ret_dict.get("trial_id")
         if trial_id is not None:
-            for k in ('milestone', 'resume_from'):
+            for k in ("milestone", "resume_from"):
                 extra_kwargs[k] = ret_dict[k]
         else:
             # First milestone the new config will get to
-            extra_kwargs['milestone'] = rung_sys.get_first_milestone(
-                skip_rungs)
+            extra_kwargs["milestone"] = rung_sys.get_first_milestone(skip_rungs)
         return trial_id, extra_kwargs
 
     def snapshot_rungs(self, bracket_id):

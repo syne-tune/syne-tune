@@ -45,34 +45,40 @@ class GluontsTuneReporter(Callback):
         )
         # adding more than one worker throws an error, not sure why
         agg_metrics, item_metrics = Evaluator(num_workers=0)(
-            ts_it, forecast_it, num_series=len(dataset),
+            ts_it,
+            forecast_it,
+            num_series=len(dataset),
         )
         return agg_metrics
 
-    def on_validation_epoch_end(self, epoch_no: int, epoch_loss: float, training_network, trainer) -> bool:
+    def on_validation_epoch_end(
+        self, epoch_no: int, epoch_loss: float, training_network, trainer
+    ) -> bool:
         metrics = {
             "epoch_no": epoch_no + 1,
             "epoch_loss": epoch_loss,
         }
         predictor = self.estimator.create_predictor(
-             transformation=self.estimator.create_transformation(),
-             trained_network=training_network,
+            transformation=self.estimator.create_transformation(),
+            trained_network=training_network,
         )
-        metrics["mean_wQuantileLoss"] = self.compute_metrics(predictor, self.val_dataset)["mean_wQuantileLoss"]
+        metrics["mean_wQuantileLoss"] = self.compute_metrics(
+            predictor, self.val_dataset
+        )["mean_wQuantileLoss"]
         self.reporter(**metrics)
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
     parser = ArgumentParser()
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--num_cells', type=int, default=40)
-    parser.add_argument('--num_layers', type=int, default=2)
-    parser.add_argument('--epochs', type=int, default=1)
-    parser.add_argument('--dataset', type=str, default="m4_hourly")
+    parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--num_cells", type=int, default=40)
+    parser.add_argument("--num_layers", type=int, default=2)
+    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--dataset", type=str, default="m4_hourly")
 
     args, _ = parser.parse_known_args()
 
@@ -94,13 +100,11 @@ if __name__ == '__main__':
         num_hidden_dimensions=args.num_layers * [args.num_cells],
         prediction_length=prediction_length,
         freq=freq,
-        trainer=trainer
+        trainer=trainer,
     )
     # required to pass additional context so that the callback can compute forecasting metrics
     reporter.set_estimator(estimator)
 
     predictor = estimator.train(
-        dataset.train,
-        validation_data=validation_data,
-        num_workers=None
+        dataset.train, validation_data=validation_data, num_workers=None
     )

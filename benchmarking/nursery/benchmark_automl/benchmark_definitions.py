@@ -34,7 +34,7 @@ def nas201_benchmark(dataset_name):
         max_wallclock_time=3600 * 6,
         n_workers=4,
         elapsed_time_attr="metric_elapsed_time",
-        time_this_resource_attr='metric_runtime',
+        time_this_resource_attr="metric_runtime",
         metric="metric_valid_error",
         mode="min",
         blackbox_name="nasbench201",
@@ -76,4 +76,6 @@ lc_bench_datasets = [
     "christine",
 ]
 for task in lc_bench_datasets:
-    benchmark_definitions["lcbench-" + task.replace("_", "-").replace(".", "")] = lcbench_benchmark(task, datasets=lc_bench_datasets)
+    benchmark_definitions[
+        "lcbench-" + task.replace("_", "-").replace(".", "")
+    ] = lcbench_benchmark(task, datasets=lc_bench_datasets)
