@@ -78,10 +78,10 @@ class Bore(SearcherWithRandomSeed):
         """
 
         super().__init__(
-            config_space,
+            config_space=config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
-            random_seed=random_seed,
+            **kwargs,
         )
 
         self.calibrate = calibrate
