@@ -20,11 +20,11 @@ from syne_tune.util import catchtime
 rs_color = "blue"
 gp_color = "orange"
 tpe_color = "red"
-bore_color = "purple"
+bore_color = "violet"
 rea_color = "brown"
 hb_bb_color = "green"
 hb_ts_color = "yellow"
-zs_color = "cyan"
+zs_color = "paleturquoise"
 fifo_style = "solid"
 multifidelity_style = "dashed"
 multifidelity_style2 = "dashdot"
@@ -237,8 +237,15 @@ def plot_result_benchmark(
             )
             agg_results[algorithm] = mean
 
-        ax.set_xlabel("wallclock time")
-        ax.set_ylabel("validation error")
+        ax.set_xlabel("wall clock time")
+        y_label = None
+        if metric == "metric_valid_loss":
+            y_label = "mean squared error"
+        elif metric == "val_accuracy":
+            y_label = "classification accuracy"
+        elif metric == "metric_valid_error":
+            y_label = "classification error"
+        ax.set_ylabel(y_label)
         ax.legend()
         # ax.set_title(title)
     return ax, t_range, agg_results
