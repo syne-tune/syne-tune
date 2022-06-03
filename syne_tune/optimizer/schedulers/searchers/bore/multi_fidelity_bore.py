@@ -16,7 +16,7 @@ import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
 
-__all__ = ['MultiFidelityBore']
+__all__ = ["MultiFidelityBore"]
 
 logger = logging.getLogger(__name__)
 
@@ -53,16 +53,23 @@ class MultiFidelityBore(Bore):
     """
 
     def __init__(
-            self,
-            config_space: dict, metric: str,
-            points_to_evaluate=None,
-            random_seed=None, mode: str = 'max', gamma: float = 0.25,
-            calibrate: bool = False, classifier: str = 'xgboost',
-            acq_optimizer: str = 'rs_with_replacement', feval_acq: int = 500,
-            random_prob: float = 0.0, init_random: int = 6,
-            classifier_kwargs: dict = None,
-            resource_attr: str = 'epoch',
-            **kwargs):
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate=None,
+        random_seed=None,
+        mode: str = "max",
+        gamma: float = 0.25,
+        calibrate: bool = False,
+        classifier: str = "xgboost",
+        acq_optimizer: str = "rs_with_replacement",
+        feval_acq: int = 500,
+        random_prob: float = 0.0,
+        init_random: int = 6,
+        classifier_kwargs: dict = None,
+        resource_attr: str = "epoch",
+        **kwargs
+    ):
         super().__init__(
             config_space,
             metric=metric,
@@ -77,26 +84,31 @@ class MultiFidelityBore(Bore):
             random_prob=random_prob,
             init_random=init_random,
             classifier_kwargs=classifier_kwargs,
-            **kwargs)
+            **kwargs
+        )
 
         self.resource_attr = resource_attr
         self.resource_levels = []
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import \
-            HyperbandScheduler
-        from syne_tune.optimizer.schedulers.synchronous.hyperband import \
-            SynchronousHyperbandScheduler
+        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+        from syne_tune.optimizer.schedulers.synchronous.hyperband import (
+            SynchronousHyperbandScheduler,
+        )
 
-        assert isinstance(scheduler, HyperbandScheduler) or \
-               isinstance(scheduler, SynchronousHyperbandScheduler), \
-            "This searcher requires HyperbandScheduler or " + \
-            "SynchronousHyperbandScheduler scheduler"
+        assert isinstance(scheduler, HyperbandScheduler) or isinstance(
+            scheduler, SynchronousHyperbandScheduler
+        ), (
+            "This searcher requires HyperbandScheduler or "
+            + "SynchronousHyperbandScheduler scheduler"
+        )
 
     def train_model(self, train_data, train_targets):
         # find the highest resource level we have at least one data points of the positive class
         min_data_points = int(1 / self.gamma)
-        unique_resource_levels, counts = np.unique(self.resource_levels, return_counts=True)
+        unique_resource_levels, counts = np.unique(
+            self.resource_levels, return_counts=True
+        )
         idx = np.where(counts >= min_data_points)[0]
 
         if len(idx) == 0:

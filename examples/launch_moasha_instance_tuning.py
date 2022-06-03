@@ -27,7 +27,7 @@ from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune import StoppingCriterion, Tuner
 from syne_tune.config_space import loguniform, choice
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     n_workers = 2
@@ -41,13 +41,18 @@ if __name__ == '__main__':
 
     # define a search space that contains hyperparameters (learning-rate, weight-decay) and instance-type.
     config_space = {
-        'st_instance_type': choice(instance_types),
-        'learning_rate': loguniform(1e-6, 1e-4),
-        'weight_decay': loguniform(1e-5, 1e-2),
-        'epochs': epochs,
-        'dataset_path': './',
+        "st_instance_type": choice(instance_types),
+        "learning_rate": loguniform(1e-6, 1e-4),
+        "weight_decay": loguniform(1e-5, 1e-2),
+        "epochs": epochs,
+        "dataset_path": "./",
     }
-    entry_point = Path(__file__).parent / "training_scripts" / "distilbert_on_imdb" / "distilbert_on_imdb.py"
+    entry_point = (
+        Path(__file__).parent
+        / "training_scripts"
+        / "distilbert_on_imdb"
+        / "distilbert_on_imdb.py"
+    )
     metric = "accuracy"
 
     # Define a MOASHA scheduler that searches over the config space to maximise accuracy and minimize cost and time.
@@ -55,7 +60,7 @@ if __name__ == '__main__':
         max_t=epochs,
         time_attr="step",
         metrics=[metric, ST_WORKER_COST, ST_WORKER_TIME],
-        mode=['max', 'min', 'min'],
+        mode=["max", "min", "min"],
         config_space=config_space,
     )
 
@@ -64,13 +69,13 @@ if __name__ == '__main__':
     trial_backend = SageMakerBackend(
         sm_estimator=HuggingFace(
             entry_point=str(entry_point),
-            base_job_name='hpo-transformer',
+            base_job_name="hpo-transformer",
             # instance-type given here are override by Syne Tune with values sampled from `st_instance_type`.
-            instance_type='ml.m5.large',
+            instance_type="ml.m5.large",
             instance_count=1,
-            transformers_version='4.4',
-            pytorch_version='1.6',
-            py_version='py36',
+            transformers_version="4.4",
+            pytorch_version="1.6",
+            py_version="py36",
             max_run=3600,
             role=get_execution_role(),
             dependencies=[str(Path(__file__).parent.parent / "benchmarking")],

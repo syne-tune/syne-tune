@@ -27,7 +27,7 @@ from syne_tune.backend import SageMakerBackend
 from syne_tune.config_space import randint
 from syne_tune import StoppingCriterion, Tuner
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     max_steps = 100
@@ -36,11 +36,14 @@ if __name__ == '__main__':
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
-        "height": randint(-100, 100)
+        "height": randint(-100, 100),
     }
     entry_point = str(
-        Path(__file__).parent / "training_scripts" / "height_example" /
-        "train_height.py")
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
     mode = "min"
     metric = "mean_loss"
 
@@ -57,8 +60,8 @@ if __name__ == '__main__':
                 instance_count=1,
                 role=get_execution_role(),
                 max_run=10 * 60,
-                framework_version='1.6',
-                py_version='py3',
+                framework_version="1.6",
+                py_version="py3",
                 base_job_name="hpo-height",
             ),
         )
@@ -68,10 +71,7 @@ if __name__ == '__main__':
     for seed in range(2):
         # Random search without stopping
         scheduler = RandomSearch(
-            config_space,
-            mode=mode,
-            metric=metric,
-            random_seed=seed
+            config_space, mode=mode, metric=metric, random_seed=seed
         )
 
         tuner = RemoteLauncher(
@@ -85,7 +85,7 @@ if __name__ == '__main__':
             # Extra arguments describing the ressource of the remote tuning instance and whether we want to wait
             # the tuning to finish. The instance-type where the tuning job runs can be different than the
             # instance-type used for evaluating the training jobs.
-            instance_type='ml.m5.large',
+            instance_type="ml.m5.large",
         )
 
         tuner.run(wait=False)

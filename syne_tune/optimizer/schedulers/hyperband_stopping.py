@@ -30,7 +30,7 @@ def quantile_cutoff(values, prom_quant, mode):
     if len(values) < 2:
         # Cannot determine cutoff from one value
         return None
-    q = prom_quant if mode == 'min' else (1 - prom_quant)
+    q = prom_quant if mode == "min" else (1 - prom_quant)
     return np.quantile(values, q)
 
 
@@ -44,8 +44,8 @@ class RungSystem(object):
     its milestone.
 
     """
-    def __init__(
-            self, rung_levels, promote_quantiles, metric, mode, resource_attr):
+
+    def __init__(self, rung_levels, promote_quantiles, metric, mode, resource_attr):
         assert len(rung_levels) == len(promote_quantiles)
         self._metric = metric
         self._mode = mode
@@ -55,7 +55,8 @@ class RungSystem(object):
         # metric value
         self._rungs = [
             RungEntry(level=x, prom_quant=y, data=dict())
-            for x, y in reversed(list(zip(rung_levels, promote_quantiles)))]
+            for x, y in reversed(list(zip(rung_levels, promote_quantiles)))
+        ]
 
     def on_task_schedule(self) -> dict:
         """
@@ -82,8 +83,7 @@ class RungSystem(object):
         """
         pass
 
-    def on_task_report(
-            self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         """
         Called when a trial reports metric results. Returns dict with
         `milestone_reached` (trial reaches its milestone), `task_continues`
@@ -154,13 +154,19 @@ class StoppingRungSystem(RungSystem):
     in case `mode == 'min'`. See `_task_continues`.
 
     """
+
     def _cutoff(self, recorded, prom_quant):
         values = list(recorded.values())
         return quantile_cutoff(values, prom_quant, self._mode)
 
     def _task_continues(
-            self, metric_value: float, recorded: dict,
-            prom_quant: float, trial_id: str, resource: int) -> bool:
+        self,
+        metric_value: float,
+        recorded: dict,
+        prom_quant: float,
+        trial_id: str,
+        resource: int,
+    ) -> bool:
         """
         :param metric_value: f(x, r) for trial x at rung r
         :param recorded: Data for rung r (including r(x, r))
@@ -172,14 +178,12 @@ class StoppingRungSystem(RungSystem):
         cutoff = self._cutoff(recorded, prom_quant)
         if cutoff is None:
             return True
-        return metric_value <= cutoff if self._mode == 'min' else \
-            metric_value >= cutoff
+        return metric_value <= cutoff if self._mode == "min" else metric_value >= cutoff
 
     def on_task_schedule(self) -> dict:
         return dict()
 
-    def on_task_report(
-            self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         resource = result[self._resource_attr]
         metric_value = result[self._metric]
         task_continues = True
@@ -200,18 +204,23 @@ class StoppingRungSystem(RungSystem):
                     logger.warning(
                         f"resource = {resource} > {milestone} = milestone. "
                         "Make sure to report time attributes covering all milestones.\n"
-                        f"Continueing, but milestone {milestone} has been skipped.")
+                        f"Continueing, but milestone {milestone} has been skipped."
+                    )
                 else:
                     milestone_reached = True
                     # Enter new metric value before checking condition
                     recorded[trial_id] = metric_value
                     task_continues = self._task_continues(
-                        metric_value=metric_value, recorded=recorded,
-                        prom_quant=prom_quant, trial_id=trial_id,
-                        resource=resource)
+                        metric_value=metric_value,
+                        recorded=recorded,
+                        prom_quant=prom_quant,
+                        trial_id=trial_id,
+                        resource=resource,
+                    )
                 break
             next_milestone = milestone
         return {
-            'task_continues': task_continues,
-            'milestone_reached': milestone_reached,
-            'next_milestone': next_milestone}
+            "task_continues": task_continues,
+            "milestone_reached": milestone_reached,
+            "next_milestone": next_milestone,
+        }

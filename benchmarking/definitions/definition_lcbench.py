@@ -10,9 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench \
-    import METRIC_ELAPSED_TIME, METRIC_ACCURACY, RESOURCE_ATTR, \
-    BLACKBOX_NAME, MAX_RESOURCE_LEVEL, CONFIGURATION_SPACE
+from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench import (
+    METRIC_ELAPSED_TIME,
+    METRIC_ACCURACY,
+    RESOURCE_ATTR,
+    BLACKBOX_NAME,
+    MAX_RESOURCE_LEVEL,
+    CONFIGURATION_SPACE,
+)
 
 
 DATASET_NAMES = [
@@ -56,14 +61,14 @@ DATASET_NAMES = [
 
 def lcbench_default_params(params=None):
     return {
-        'max_resource_level': MAX_RESOURCE_LEVEL,
-        'grace_period': 1,
-        'reduction_factor': 3,
-        'instance_type': 'ml.m5.large',
-        'num_workers': 4,
-        'framework': 'PyTorch',
-        'framework_version': '1.6',
-        'dataset_name': 'Fashion-MNIST',
+        "max_resource_level": MAX_RESOURCE_LEVEL,
+        "grace_period": 1,
+        "reduction_factor": 3,
+        "instance_type": "ml.m5.large",
+        "num_workers": 4,
+        "framework": "PyTorch",
+        "framework_version": "1.6",
+        "dataset_name": "Fashion-MNIST",
     }
 
 
@@ -75,17 +80,18 @@ def lcbench_benchmark(params):
     """
     config_space = dict(
         CONFIGURATION_SPACE,
-        epochs=params['max_resource_level'],
-        dataset_name=params['dataset_name'])
+        epochs=params["max_resource_level"],
+        dataset_name=params["dataset_name"],
+    )
     return {
-        'script': None,
-        'metric': METRIC_ACCURACY,
-        'mode': 'max',
-        'resource_attr': RESOURCE_ATTR,
-        'elapsed_time_attr': METRIC_ELAPSED_TIME,
-        'max_resource_attr': 'epochs',
-        'config_space': config_space,
-        'cost_model': None,
-        'supports_simulated': True,
-        'blackbox_name': BLACKBOX_NAME,
+        "script": None,
+        "metric": METRIC_ACCURACY,
+        "mode": "max",
+        "resource_attr": RESOURCE_ATTR,
+        "elapsed_time_attr": METRIC_ELAPSED_TIME,
+        "max_resource_attr": "epochs",
+        "config_space": config_space,
+        "cost_model": None,
+        "supports_simulated": True,
+        "blackbox_name": BLACKBOX_NAME,
     }

@@ -47,55 +47,52 @@ class SimpleProfiler(object):
         self.start_time = dict()
         self.time_stamp_first_block = None
         self.meta_keys = None
-        self.prefix = ''
+        self.prefix = ""
 
     def begin_block(self, meta: dict):
-        assert not self.start_time, \
-            "Timers for these tags still running:\n{}".format(
-                self.start_time.keys())
+        assert not self.start_time, "Timers for these tags still running:\n{}".format(
+            self.start_time.keys()
+        )
         meta_keys = tuple(sorted(meta.keys()))
         if self.time_stamp_first_block is None:
             self.meta_keys = meta_keys
             self.time_stamp_first_block = time.time()
         else:
-            assert meta_keys == self.meta_keys, \
-                "meta.keys() = {}, but must be the same as for all previous meta dicts ({})".format(
-                    meta_keys, self.meta_keys)
+            assert (
+                meta_keys == self.meta_keys
+            ), "meta.keys() = {}, but must be the same as for all previous meta dicts ({})".format(
+                meta_keys, self.meta_keys
+            )
         time_stamp = time.time() - self.time_stamp_first_block
         new_block = ProfilingBlock(
-            meta=meta.copy(),
-            time_stamp=time_stamp,
-            durations=dict())
+            meta=meta.copy(), time_stamp=time_stamp, durations=dict()
+        )
         self.records.append(new_block)
-        self.prefix = ''
+        self.prefix = ""
 
     def push_prefix(self, prefix: str):
-        assert '_' not in prefix, "Prefix must not contain '_'"
-        self.prefix += (prefix + '_')
+        assert "_" not in prefix, "Prefix must not contain '_'"
+        self.prefix += prefix + "_"
 
     def pop_prefix(self):
         lpref = len(self.prefix)
         assert lpref > 0, "Prefix is empty"
-        pos = self.prefix.rfind('_', 0, lpref - 1)
+        pos = self.prefix.rfind("_", 0, lpref - 1)
         if pos != -1:
-            self.prefix = self.prefix[:(pos + 1)]
+            self.prefix = self.prefix[: (pos + 1)]
         else:
-            self.prefix = ''
+            self.prefix = ""
 
     def start(self, tag: str):
-        assert self.records, \
-            "No block has been started yet (use 'begin_block')"
+        assert self.records, "No block has been started yet (use 'begin_block')"
         tag = self.prefix + tag
-        assert tag not in self.start_time, \
-            "Timer for '{}' already running".format(tag)
+        assert tag not in self.start_time, "Timer for '{}' already running".format(tag)
         self.start_time[tag] = time.time()
 
     def stop(self, tag: str):
-        assert self.records, \
-            "No block has been started yet (use 'begin_block')"
+        assert self.records, "No block has been started yet (use 'begin_block')"
         tag = self.prefix + tag
-        assert tag in self.start_time, \
-            "Timer for '{}' does not exist".format(tag)
+        assert tag in self.start_time, "Timer for '{}' does not exist".format(tag)
         duration = time.time() - self.start_time[tag]
         block = self.records[-1]
         if tag in block.durations:
@@ -107,8 +104,11 @@ class SimpleProfiler(object):
     def clear(self):
         remaining_tags = list(self.start_time.keys())
         if remaining_tags:
-            logger.warning("Timers for these tags not stopped (will be removed):\n{}".format(
-                remaining_tags))
+            logger.warning(
+                "Timers for these tags not stopped (will be removed):\n{}".format(
+                    remaining_tags
+                )
+            )
         self.start_time = dict()
 
     def records_as_dict(self) -> dict:
@@ -124,9 +124,9 @@ class SimpleProfiler(object):
             return dict()
         # For each tag, we emit the following columns: tag_num, tag_mean,
         # tag_std
-        data = {'time_stamp': []}
+        data = {"time_stamp": []}
         union_tags = self._union_of_tags()
-        suffices = ('_num', '_mean', '_std', '_sum')
+        suffices = ("_num", "_mean", "_std", "_sum")
         for tag in union_tags:
             for suffix in suffices:
                 data[tag + suffix] = []
@@ -134,17 +134,17 @@ class SimpleProfiler(object):
             data[k] = []
         # fill the columns row by row
         for block in self.records:
-            data['time_stamp'].append(block.time_stamp)
+            data["time_stamp"].append(block.time_stamp)
             for k, v in block.meta.items():
                 data[k].append(v)
             for tag in union_tags:
                 for suffix in suffices:
                     data[tag + suffix].append(0)
             for tag, durations in block.durations.items():
-                data[tag + '_num'][-1] = len(durations)
-                data[tag + '_mean'][-1] = np.mean(durations)
-                data[tag + '_std'][-1] = np.std(durations)
-                data[tag + '_sum'][-1] = sum(durations)
+                data[tag + "_num"][-1] = len(durations)
+                data[tag + "_mean"][-1] = np.mean(durations)
+                data[tag + "_std"][-1] = np.std(durations)
+                data[tag + "_sum"][-1] = sum(durations)
         return data
 
     def _union_of_tags(self):

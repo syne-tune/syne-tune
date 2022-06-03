@@ -17,37 +17,56 @@ from typing import Tuple, Dict, List, Optional
 from numpy.random import RandomState
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
-    import KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
-    import MeanFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
-    import issm_likelihood_slow_computations, posterior_computations, \
-    sample_posterior_marginals, _inner_product, issm_likelihood_computations, \
-    issm_likelihood_precomputations, decode_features, _rowvec, \
-    update_posterior_state, update_posterior_pvec, _flatvec, _colvec
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
-    import sample_posterior_joint as sample_posterior_joint_issm, \
-    predict_posterior_marginals_extended as predict_posterior_marginals_issm
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
-    import sample_posterior_joint as sample_posterior_joint_expdecay, \
-    predict_posterior_marginals_extended as predict_posterior_marginals_expdecay
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.model_params \
-    import ISSModelParameters
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw \
-    import resource_kernel_likelihood_slow_computations, \
-    ExponentialDecayBaseKernelFunction, logdet_cholfact_cov_resource, \
-    resource_kernel_likelihood_computations, \
-    resource_kernel_likelihood_precomputations
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    MeanFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm import (
+    issm_likelihood_slow_computations,
+    posterior_computations,
+    sample_posterior_marginals,
+    _inner_product,
+    issm_likelihood_computations,
+    issm_likelihood_precomputations,
+    decode_features,
+    _rowvec,
+    update_posterior_state,
+    update_posterior_pvec,
+    _flatvec,
+    _colvec,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm import (
+    sample_posterior_joint as sample_posterior_joint_issm,
+    predict_posterior_marginals_extended as predict_posterior_marginals_issm,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw import (
+    sample_posterior_joint as sample_posterior_joint_expdecay,
+    predict_posterior_marginals_extended as predict_posterior_marginals_expdecay,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.model_params import (
+    ISSModelParameters,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw import (
+    resource_kernel_likelihood_slow_computations,
+    ExponentialDecayBaseKernelFunction,
+    logdet_cholfact_cov_resource,
+    resource_kernel_likelihood_computations,
+    resource_kernel_likelihood_precomputations,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+)
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['GaussProcAdditivePosteriorState',
-           'IncrementalUpdateGPAdditivePosteriorState',
-           'GaussProcISSMPosteriorState',
-           'GaussProcExpDecayPosteriorState']
+__all__ = [
+    "GaussProcAdditivePosteriorState",
+    "IncrementalUpdateGPAdditivePosteriorState",
+    "GaussProcISSMPosteriorState",
+    "GaussProcExpDecayPosteriorState",
+]
 
 
 class GaussProcAdditivePosteriorState(object):
@@ -63,8 +82,13 @@ class GaussProcAdditivePosteriorState(object):
     """
 
     def __init__(
-            self, data: Optional[Dict], mean: MeanFunction,
-            kernel: KernelFunction, noise_variance, **kwargs):
+        self,
+        data: Optional[Dict],
+        mean: MeanFunction,
+        kernel: KernelFunction,
+        noise_variance,
+        **kwargs
+    ):
         """
         `data` contains input points and targets, as obtained from
         `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
@@ -79,28 +103,27 @@ class GaussProcAdditivePosteriorState(object):
         self.noise_variance = noise_variance
         self.poster_state = None
         if data is not None:
-            self.r_min = data['r_min']
-            self.r_max = data['r_max']
+            self.r_min = data["r_min"]
+            self.r_max = data["r_max"]
             # Compute posterior state
             self._compute_posterior_state(data, noise_variance, **kwargs)
         else:
             # Copy constructor, used by `IncrementalUpdateGPISSMPosteriorState`
             # subclass
-            self.poster_state = kwargs['poster_state']
-            self.r_min = kwargs['r_min']
-            self.r_max = kwargs['r_max']
+            self.poster_state = kwargs["poster_state"]
+            self.r_min = kwargs["r_min"]
+            self.r_max = kwargs["r_max"]
 
-    def _compute_posterior_state(
-            self, data: Dict, noise_variance, **kwargs):
+    def _compute_posterior_state(self, data: Dict, noise_variance, **kwargs):
         raise NotImplementedError()
 
     def neg_log_likelihood(self):
-        assert 'criterion' in self.poster_state, \
-            "neg_log_likelihood not defined for fantasizing posterior state"
-        return self.poster_state['criterion']
+        assert (
+            "criterion" in self.poster_state
+        ), "neg_log_likelihood not defined for fantasizing posterior state"
+        return self.poster_state["criterion"]
 
-    def predict(
-            self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         We compute marginals over f(x, r), where `test_features` are extended
         features.
@@ -114,8 +137,11 @@ class GaussProcAdditivePosteriorState(object):
         raise NotImplementedError()
 
     def sample_marginals(
-            self, test_features: np.ndarray, num_samples: int = 1,
-            random_state: Optional[RandomState] = None) -> np.ndarray:
+        self,
+        test_features: np.ndarray,
+        num_samples: int = 1,
+        random_state: Optional[RandomState] = None,
+    ) -> np.ndarray:
         """
         See comments of `predict`.
 
@@ -127,13 +153,21 @@ class GaussProcAdditivePosteriorState(object):
         if random_state is None:
             random_state = np.random
         return sample_posterior_marginals(
-            self.poster_state, self.mean, self.kernel, test_features,
-            random_state=random_state, num_samples=num_samples)
+            self.poster_state,
+            self.mean,
+            self.kernel,
+            test_features,
+            random_state=random_state,
+            num_samples=num_samples,
+        )
 
     def backward_gradient(
-            self, input: np.ndarray,
-            head_gradients: Dict[str, np.ndarray],
-            mean_data: float, std_data: float) -> np.ndarray:
+        self,
+        input: np.ndarray,
+        head_gradients: Dict[str, np.ndarray],
+        mean_data: float,
+        std_data: float,
+    ) -> np.ndarray:
         """
         Implements SurrogateModel.backward_gradient, see comments there.
         This is for a single posterior state. If the SurrogateModel uses
@@ -152,8 +186,8 @@ class GaussProcAdditivePosteriorState(object):
             # De-normalize, and variance -> stddev
             pred_mean = norm_mean * std_data + mean_data
             pred_std = anp.sqrt(norm_variance) * std_data
-            head_gradients_mean = anp.reshape(head_gradients['mean'], pred_mean.shape)
-            head_gradients_std = anp.reshape(head_gradients['std'], pred_std.shape)
+            head_gradients_mean = anp.reshape(head_gradients["mean"], pred_mean.shape)
+            head_gradients_std = anp.reshape(head_gradients["std"], pred_std.shape)
             # Added to mimic mxnet.autograd.backward
             pred_mean_sum = _inner_product(pred_mean, head_gradients_mean)
             pred_std_sum = _inner_product(pred_std, head_gradients_std)
@@ -163,13 +197,20 @@ class GaussProcAdditivePosteriorState(object):
         return np.reshape(test_feature_gradient(test_feature), input.shape)
 
     def _sample_curves_internal(
-            self, data: Dict, poster_state: Dict, num_samples: int = 1,
-            random_state: Optional[RandomState] = None) -> List[Dict]:
+        self,
+        data: Dict,
+        poster_state: Dict,
+        num_samples: int = 1,
+        random_state: Optional[RandomState] = None,
+    ) -> List[Dict]:
         raise NotImplementedError()
 
     def sample_curves(
-            self, data: Dict, num_samples: int = 1,
-            random_state: Optional[RandomState] = None) -> List[Dict]:
+        self,
+        data: Dict,
+        num_samples: int = 1,
+        random_state: Optional[RandomState] = None,
+    ) -> List[Dict]:
         """
         Given data from one or more configurations (as returned by
         `issm.prepare_data`), for each config, sample a curve from the
@@ -193,8 +234,11 @@ class GaussProcAdditivePosteriorState(object):
         :return: See above
         """
         return self._sample_curves_internal(
-            data=data, poster_state=self.poster_state, num_samples=num_samples,
-            random_state=random_state)
+            data=data,
+            poster_state=self.poster_state,
+            num_samples=num_samples,
+            random_state=random_state,
+        )
 
     def has_precomputations(self, data: Dict) -> bool:
         raise NotImplementedError()
@@ -208,15 +252,20 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
     fantasizing.
 
     """
+
     def __init__(
-            self, data: Optional[Dict], mean: MeanFunction,
-            kernel: KernelFunction, noise_variance, **kwargs):
-        super().__init__(
-            data, mean, kernel, noise_variance, **kwargs)
+        self,
+        data: Optional[Dict],
+        mean: MeanFunction,
+        kernel: KernelFunction,
+        noise_variance,
+        **kwargs
+    ):
+        super().__init__(data, mean, kernel, noise_variance, **kwargs)
 
     def _prepare_update(
-            self, feature: np.ndarray, targets: np.ndarray) \
-            -> Tuple[float, float, float]:
+        self, feature: np.ndarray, targets: np.ndarray
+    ) -> Tuple[float, float, float]:
         """
         Helper method for `update`. Returns new entries for d, s, r2 vectors.
 
@@ -226,8 +275,7 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
         """
         raise NotImplementedError()
 
-    def _update_internal(
-            self, feature: np.ndarray, targets: np.ndarray) -> Dict:
+    def _update_internal(self, feature: np.ndarray, targets: np.ndarray) -> Dict:
         """
         Update posterior state, given a single new datapoint. `feature`,
         `targets` are like one entry of `data`. The method returns a new
@@ -241,7 +289,8 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
         feature = _rowvec(feature, _np=np)
         d_new, s_new, r2_new = self._prepare_update(feature, targets)
         new_poster_state = update_posterior_state(
-            self.poster_state, self.kernel, feature, d_new, s_new, r2_new)
+            self.poster_state, self.kernel, feature, d_new, s_new, r2_new
+        )
         # Return args to create new object by way of "copy constructor"
         return dict(
             data=None,
@@ -249,15 +298,16 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
             kernel=self.kernel,
             noise_variance=self.noise_variance,
             poster_state=new_poster_state,
-            r_min=self.r_min, r_max=self.r_max)
+            r_min=self.r_min,
+            r_max=self.r_max,
+        )
 
     def update(
-            self, feature: np.ndarray, targets: np.ndarray) \
-            -> 'IncrementalUpdateGPAdditivePosteriorState':
+        self, feature: np.ndarray, targets: np.ndarray
+    ) -> "IncrementalUpdateGPAdditivePosteriorState":
         raise NotImplementedError()
 
-    def update_pvec(
-            self, feature: np.ndarray, targets: np.ndarray) -> np.ndarray:
+    def update_pvec(self, feature: np.ndarray, targets: np.ndarray) -> np.ndarray:
         """
         Part of `update`: Only update prediction vector p. This cannot be used
         to update p for several new datapoints.
@@ -269,22 +319,29 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
         feature = _rowvec(feature, _np=np)
         d_new, s_new, r2_new = self._prepare_update(feature, targets)
         return update_posterior_pvec(
-            self.poster_state, self.kernel, feature, d_new, s_new, r2_new)
+            self.poster_state, self.kernel, feature, d_new, s_new, r2_new
+        )
 
     def _sample_posterior_joint_for_config(
-            self, poster_state: Dict, config: Configuration, feature: np.ndarray,
-            targets: np.ndarray, random_state: RandomState) -> np.ndarray:
-        data = {'features': [feature],
-                'targets': [targets],
-                'configs': [config]}
+        self,
+        poster_state: Dict,
+        config: Configuration,
+        feature: np.ndarray,
+        targets: np.ndarray,
+        random_state: RandomState,
+    ) -> np.ndarray:
+        data = {"features": [feature], "targets": [targets], "configs": [config]}
         results = self._sample_curves_internal(
-            data, poster_state, num_samples=1, random_state=random_state)
-        return results[0]['y']
+            data, poster_state, num_samples=1, random_state=random_state
+        )
+        return results[0]["y"]
 
     def sample_and_update_for_pending(
-            self, data_pending: Dict, sample_all_nonobserved: bool = False,
-            random_state: Optional[RandomState] = None) \
-            -> (List[np.ndarray], 'IncrementalUpdateGPAdditivePosteriorState'):
+        self,
+        data_pending: Dict,
+        sample_all_nonobserved: bool = False,
+        random_state: Optional[RandomState] = None,
+    ) -> (List[np.ndarray], "IncrementalUpdateGPAdditivePosteriorState"):
         """
         This function is needed for sampling fantasy targets, and also to
         support simulation-based scoring.
@@ -317,12 +374,18 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
         targets_lst = []
         final_state = self
         for config, feature, targets, num_pending in zip(
-                data_pending['configs'], data_pending['features'],
-                data_pending['targets'], data_pending['num_pending']):
+            data_pending["configs"],
+            data_pending["features"],
+            data_pending["targets"],
+            data_pending["num_pending"],
+        ):
             # Draw joint sample
-            fantasies = _flatvec(self._sample_posterior_joint_for_config(
-                curr_poster_state, config, feature, targets, random_state),
-                _np=np)
+            fantasies = _flatvec(
+                self._sample_posterior_joint_for_config(
+                    curr_poster_state, config, feature, targets, random_state
+                ),
+                _np=np,
+            )
             if not sample_all_nonobserved:
                 fantasies = fantasies[:num_pending]
             fantasies = _colvec(fantasies, _np=np)
@@ -343,10 +406,16 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
     form.
 
     """
+
     def __init__(
-            self, data: Optional[Dict], mean: MeanFunction,
-            kernel: KernelFunction, iss_model: ISSModelParameters,
-            noise_variance, **kwargs):
+        self,
+        data: Optional[Dict],
+        mean: MeanFunction,
+        kernel: KernelFunction,
+        iss_model: ISSModelParameters,
+        noise_variance,
+        **kwargs
+    ):
         """
         `data` contains input points and targets, as obtained from
         `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
@@ -358,44 +427,48 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
         :param noise_variance: Innovation and noise variance
         """
         self.iss_model = iss_model
-        super().__init__(
-            data, mean, kernel, noise_variance=noise_variance, **kwargs)
+        super().__init__(data, mean, kernel, noise_variance=noise_variance, **kwargs)
 
     def has_precomputations(self, data: Dict) -> bool:
-        return all(k in data for k in ('ydims', 'num_configs', 'deltay', 'logr'))
+        return all(k in data for k in ("ydims", "num_configs", "deltay", "logr"))
 
-    def _compute_posterior_state(
-            self, data: Dict, noise_variance, **kwargs):
-        profiler = kwargs.get('profiler')
+    def _compute_posterior_state(self, data: Dict, noise_variance, **kwargs):
+        profiler = kwargs.get("profiler")
         # Compute posterior state
-        issm_params = self.iss_model.get_issm_params(data['features'])
+        issm_params = self.iss_model.get_issm_params(data["features"])
         if self.has_precomputations(data):
             issm_likelihood = issm_likelihood_computations(
                 precomputed=data,
                 issm_params=issm_params,
-                r_min=self.r_min, r_max=self.r_max,
-                profiler=profiler)
+                r_min=self.r_min,
+                r_max=self.r_max,
+                profiler=profiler,
+            )
         else:
             issm_likelihood = issm_likelihood_slow_computations(
-                targets=data['targets'],
+                targets=data["targets"],
                 issm_params=issm_params,
-                r_min=self.r_min, r_max=self.r_max,
-                profiler=profiler)
+                r_min=self.r_min,
+                r_max=self.r_max,
+                profiler=profiler,
+            )
         if profiler is not None:
-            profiler.start('poster_comp')
+            profiler.start("poster_comp")
         self.poster_state = posterior_computations(
-            features=data['features'],
-            mean=self.mean, kernel=self.kernel,
+            features=data["features"],
+            mean=self.mean,
+            kernel=self.kernel,
             issm_likelihood=issm_likelihood,
-            noise_variance=noise_variance)
+            noise_variance=noise_variance,
+        )
         if profiler is not None:
-            profiler.stop('poster_comp')
+            profiler.stop("poster_comp")
 
-    def predict(
-            self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         resource_attr_range = (self.r_min, self.r_max)
         features, resources = decode_features(
-            test_features, resource_attr_range=resource_attr_range)
+            test_features, resource_attr_range=resource_attr_range
+        )
         issm_params = self.iss_model.get_issm_params(features)
         return predict_posterior_marginals_issm(
             poster_state=self.poster_state,
@@ -404,59 +477,73 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
             test_features=features,
             resources=resources,
             issm_params=issm_params,
-            r_min=self.r_min, r_max=self.r_max)
+            r_min=self.r_min,
+            r_max=self.r_max,
+        )
 
     @staticmethod
     def data_precomputations(data: Dict):
         logger.info("Enhancing data dictionary by precomputed variables")
-        data.update(issm_likelihood_precomputations(
-            targets=data['targets'], r_min=data['r_min']))
+        data.update(
+            issm_likelihood_precomputations(
+                targets=data["targets"], r_min=data["r_min"]
+            )
+        )
 
     def _sample_curves_internal(
-            self, data: Dict, poster_state: Dict, num_samples: int = 1,
-            random_state: Optional[RandomState] = None) -> List[Dict]:
+        self,
+        data: Dict,
+        poster_state: Dict,
+        num_samples: int = 1,
+        random_state: Optional[RandomState] = None,
+    ) -> List[Dict]:
         if random_state is None:
             random_state = np.random
         results = []
         for feature, targets, config in zip(
-                data['features'], data['targets'], data['configs']):
-            issm_params = self.iss_model.get_issm_params(
-                feature.reshape((1, -1)))
-            results.append(sample_posterior_joint_issm(
-                poster_state=poster_state,
-                mean=self.mean,
-                kernel=self.kernel,
-                feature=feature,
-                targets=targets,
-                issm_params=issm_params,
-                r_min=self.r_min, r_max=self.r_max,
-                random_state=random_state,
-                num_samples=num_samples))
+            data["features"], data["targets"], data["configs"]
+        ):
+            issm_params = self.iss_model.get_issm_params(feature.reshape((1, -1)))
+            results.append(
+                sample_posterior_joint_issm(
+                    poster_state=poster_state,
+                    mean=self.mean,
+                    kernel=self.kernel,
+                    feature=feature,
+                    targets=targets,
+                    issm_params=issm_params,
+                    r_min=self.r_min,
+                    r_max=self.r_max,
+                    random_state=random_state,
+                    num_samples=num_samples,
+                )
+            )
         return results
 
     def _prepare_update(
-            self, feature: np.ndarray, targets: np.ndarray) \
-            -> Tuple[float, float, float]:
+        self, feature: np.ndarray, targets: np.ndarray
+    ) -> Tuple[float, float, float]:
         issm_params = self.iss_model.get_issm_params(feature.reshape((1, -1)))
         issm_likelihood = issm_likelihood_slow_computations(
             targets=[_colvec(targets, _np=np)],
             issm_params=issm_params,
-            r_min=self.r_min, r_max=self.r_max)
-        d_new = issm_likelihood['d'].item()
-        vtv = issm_likelihood['vtv'].item()
-        wtv = issm_likelihood['wtv'].item()
+            r_min=self.r_min,
+            r_max=self.r_max,
+        )
+        d_new = issm_likelihood["d"].item()
+        vtv = issm_likelihood["vtv"].item()
+        wtv = issm_likelihood["wtv"].item()
         s_sq = vtv / self.noise_variance
         s_new = np.sqrt(s_sq)
-        muhat = _flatvec(self.mean(feature)).item() - issm_likelihood['c'].item()
+        muhat = _flatvec(self.mean(feature)).item() - issm_likelihood["c"].item()
         r2_new = wtv / self.noise_variance - s_sq * muhat
         return d_new, s_new, r2_new
 
     def update(
-            self, feature: np.ndarray, targets: np.ndarray) \
-            -> 'IncrementalUpdateGPAdditivePosteriorState':
+        self, feature: np.ndarray, targets: np.ndarray
+    ) -> "IncrementalUpdateGPAdditivePosteriorState":
         create_kwargs = self._update_internal(feature, targets)
-        return GaussProcISSMPosteriorState(
-            **create_kwargs, iss_model=self.iss_model)
+        return GaussProcISSMPosteriorState(**create_kwargs, iss_model=self.iss_model)
 
 
 class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
@@ -471,12 +558,16 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
     :class:`ExponentialDecayResourcesKernelFunction`).
 
     """
+
     def __init__(
-            self, data: Optional[Dict],
-            mean: MeanFunction,
-            kernel: KernelFunction,
-            res_kernel: ExponentialDecayBaseKernelFunction,
-            noise_variance, **kwargs):
+        self,
+        data: Optional[Dict],
+        mean: MeanFunction,
+        kernel: KernelFunction,
+        res_kernel: ExponentialDecayBaseKernelFunction,
+        noise_variance,
+        **kwargs
+    ):
         """
         `data` contains input points and targets, as obtained from
         `issm.prepare_data`.
@@ -489,101 +580,113 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         :param noise_variance: Innovation and noise variance
         """
         self.res_kernel = res_kernel
-        super().__init__(
-            data, mean, kernel, noise_variance=noise_variance, **kwargs)
-        assert self.r_min == res_kernel.r_min and self.r_max == res_kernel.r_max, \
-            ((self.r_min, self.r_max), (res_kernel.r_min, res_kernel.r_max))
+        super().__init__(data, mean, kernel, noise_variance=noise_variance, **kwargs)
+        assert self.r_min == res_kernel.r_min and self.r_max == res_kernel.r_max, (
+            (self.r_min, self.r_max),
+            (res_kernel.r_min, res_kernel.r_max),
+        )
 
     def has_precomputations(self, data: Dict) -> bool:
-        return all(k in data for k in ('ydims', 'num_configs', 'yflat'))
+        return all(k in data for k in ("ydims", "num_configs", "yflat"))
 
-    def _compute_posterior_state(
-            self, data: Dict, noise_variance, **kwargs):
-        profiler = kwargs.get('profiler')
+    def _compute_posterior_state(self, data: Dict, noise_variance, **kwargs):
+        profiler = kwargs.get("profiler")
         # Compute posterior state
         if profiler is not None:
-            profiler.start('likelihood')
+            profiler.start("likelihood")
         if self.has_precomputations(data):
             issm_likelihood = resource_kernel_likelihood_computations(
                 precomputed=data,
                 res_kernel=self.res_kernel,
-                noise_variance=noise_variance)
+                noise_variance=noise_variance,
+            )
         else:
             issm_likelihood = resource_kernel_likelihood_slow_computations(
-                targets=data['targets'],
+                targets=data["targets"],
                 res_kernel=self.res_kernel,
-                noise_variance=noise_variance)
+                noise_variance=noise_variance,
+            )
         if profiler is not None:
-            profiler.stop('likelihood')
-            profiler.start('poster_comp')
+            profiler.stop("likelihood")
+            profiler.start("poster_comp")
         self.poster_state = posterior_computations(
-            features=data['features'],
-            mean=self.mean, kernel=self.kernel,
+            features=data["features"],
+            mean=self.mean,
+            kernel=self.kernel,
             issm_likelihood=issm_likelihood,
-            noise_variance=noise_variance)
+            noise_variance=noise_variance,
+        )
         if profiler is not None:
-            profiler.stop('poster_comp')
+            profiler.stop("poster_comp")
         # Add missing term to criterion value
-        if 'criterion' in self.poster_state:
+        if "criterion" in self.poster_state:
             part3 = logdet_cholfact_cov_resource(issm_likelihood)
-            self.poster_state['criterion'] += part3
+            self.poster_state["criterion"] += part3
         # Extra terms required in `sample_curves`
-        self.poster_state['lfact_all'] = issm_likelihood['lfact_all']
-        self.poster_state['means_all'] = issm_likelihood['means_all']
-        self.poster_state['noise_variance'] = noise_variance
+        self.poster_state["lfact_all"] = issm_likelihood["lfact_all"]
+        self.poster_state["means_all"] = issm_likelihood["means_all"]
+        self.poster_state["noise_variance"] = noise_variance
 
-    def predict(
-            self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         resource_attr_range = (self.r_min, self.r_max)
         features, resources = decode_features(
-            test_features, resource_attr_range=resource_attr_range)
+            test_features, resource_attr_range=resource_attr_range
+        )
         return predict_posterior_marginals_expdecay(
             poster_state=self.poster_state,
             mean=self.mean,
             kernel=self.kernel,
             test_features=features,
             resources=resources,
-            res_kernel=self.res_kernel)
+            res_kernel=self.res_kernel,
+        )
 
     @staticmethod
     def data_precomputations(data: Dict):
-        data.update(resource_kernel_likelihood_precomputations(
-            targets=data['targets']))
+        data.update(resource_kernel_likelihood_precomputations(targets=data["targets"]))
 
     def _sample_curves_internal(
-            self, data: Dict, poster_state: Dict, num_samples: int = 1,
-            random_state: Optional[RandomState] = None) -> List[Dict]:
-        assert 'lfact_all' in poster_state
+        self,
+        data: Dict,
+        poster_state: Dict,
+        num_samples: int = 1,
+        random_state: Optional[RandomState] = None,
+    ) -> List[Dict]:
+        assert "lfact_all" in poster_state
         if random_state is None:
             random_state = np.random
-        lfact_all = poster_state['lfact_all']
-        means_all = poster_state['means_all']
-        noise_variance = poster_state['noise_variance']
+        lfact_all = poster_state["lfact_all"]
+        means_all = poster_state["means_all"]
+        noise_variance = poster_state["noise_variance"]
         results = []
-        for feature, targets in zip(data['features'], data['targets']):
-            results.append(sample_posterior_joint_expdecay(
-                poster_state=poster_state,
-                mean=self.mean,
-                kernel=self.kernel,
-                feature=feature,
-                targets=targets,
-                res_kernel=self.res_kernel,
-                noise_variance=noise_variance,
-                lfact_all=lfact_all,
-                means_all=means_all,
-                random_state=random_state,
-                num_samples=num_samples))
+        for feature, targets in zip(data["features"], data["targets"]):
+            results.append(
+                sample_posterior_joint_expdecay(
+                    poster_state=poster_state,
+                    mean=self.mean,
+                    kernel=self.kernel,
+                    feature=feature,
+                    targets=targets,
+                    res_kernel=self.res_kernel,
+                    noise_variance=noise_variance,
+                    lfact_all=lfact_all,
+                    means_all=means_all,
+                    random_state=random_state,
+                    num_samples=num_samples,
+                )
+            )
         return results
 
     def _prepare_update(
-            self, feature: np.ndarray, targets: np.ndarray) \
-            -> Tuple[float, float, float]:
+        self, feature: np.ndarray, targets: np.ndarray
+    ) -> Tuple[float, float, float]:
         issm_likelihood = resource_kernel_likelihood_slow_computations(
             targets=[_colvec(targets, _np=np)],
             res_kernel=self.res_kernel,
-            noise_variance=self.noise_variance)
-        vtv = issm_likelihood['vtv'].item()
-        wtv = issm_likelihood['wtv'].item()
+            noise_variance=self.noise_variance,
+        )
+        vtv = issm_likelihood["vtv"].item()
+        wtv = issm_likelihood["wtv"].item()
         s_sq = vtv / self.noise_variance
         s_new = np.sqrt(s_sq)
         muhat = _flatvec(self.mean(feature)).item()
@@ -591,12 +694,13 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         return 0.0, s_new, r2_new
 
     def update(
-            self, feature: np.ndarray, targets: np.ndarray) \
-            -> 'IncrementalUpdateGPAdditivePosteriorState':
+        self, feature: np.ndarray, targets: np.ndarray
+    ) -> "IncrementalUpdateGPAdditivePosteriorState":
         create_kwargs = self._update_internal(feature, targets)
         # Extra terms required in `sample_curves`
-        new_poster_state = create_kwargs['poster_state']
-        for k in ('lfact_all', 'means_all', 'noise_variance'):
+        new_poster_state = create_kwargs["poster_state"]
+        for k in ("lfact_all", "means_all", "noise_variance"):
             new_poster_state[k] = self.poster_state[k]
         return GaussProcExpDecayPosteriorState(
-            **create_kwargs, res_kernel=self.res_kernel)
+            **create_kwargs, res_kernel=self.res_kernel
+        )

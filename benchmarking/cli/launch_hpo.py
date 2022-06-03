@@ -17,8 +17,10 @@ import copy
 import numpy as np
 
 from syne_tune.backend import LocalBackend, SageMakerBackend
-from syne_tune.optimizer.schedulers.searchers.searcher_callback import \
-    StoreResultsAndModelParamsCallback, SimulatorAndModelParamsCallback
+from syne_tune.optimizer.schedulers.searchers.searcher_callback import (
+    StoreResultsAndModelParamsCallback,
+    SimulatorAndModelParamsCallback,
+)
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.remote.remote_launcher import RemoteLauncher
@@ -33,7 +35,7 @@ from benchmarking.utils import dict_get
 logger = logging.getLogger(__name__)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     Example for calling the CLI:
     
@@ -119,7 +121,7 @@ if __name__ == '__main__':
 
     """
     orig_params = parse_args(allow_lists_as_values=True)
-    if orig_params['debug_log_level'] and orig_params['local_tuner']:
+    if orig_params["debug_log_level"] and orig_params["local_tuner"]:
         # For remote tuning, 'debug_log_level' concerns the remote tuning
         # job, not the local one here (where logging.DEBUG just pollutes
         # the output)
@@ -129,32 +131,33 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(log_level)
 
     # Basic checks not done in `parse_args`
-    run_id = orig_params.get('run_id')
+    run_id = orig_params.get("run_id")
     if run_id is not None:
         if not isinstance(run_id, list):
             run_id = [run_id]
         else:
-            assert len(set(run_id)) == len(run_id), \
-                f"run_id = {run_id} contains duplicate entries"
+            assert len(set(run_id)) == len(
+                run_id
+            ), f"run_id = {run_id} contains duplicate entries"
         for rid in run_id:
             assert rid >= 0, f"run_id contains negative entry {rid}"
     else:
         # Alternative to specify `run_id`
-        num_runs = orig_params.get('num_runs')
+        num_runs = orig_params.get("num_runs")
         if num_runs is None:
             run_id = [0]
         else:
             assert num_runs >= 1, f"num_runs = {num_runs} must be positive"
             run_id = list(range(num_runs))
-            del orig_params['num_runs']
-        orig_params['run_id'] = run_id
+            del orig_params["num_runs"]
+        orig_params["run_id"] = run_id
 
     # Master random seed is offset plus run_id, modulo 2 ** 32. The offset
     # is drawn at random and displayed if not specified.
-    random_seed_offset = orig_params.get('random_seed_offset')
+    random_seed_offset = orig_params.get("random_seed_offset")
     if random_seed_offset is None:
-        random_seed_offset = np.random.randint(0, 2 ** 32)
-        orig_params['random_seed_offset'] = random_seed_offset
+        random_seed_offset = np.random.randint(0, 2**32)
+        orig_params["random_seed_offset"] = random_seed_offset
     logger.info(f"Using random_seed_offset = {random_seed_offset}")
 
     # Split into params with list values and normal values
@@ -168,10 +171,10 @@ if __name__ == '__main__':
                 keys_with_list.append(k)
         else:
             params_nolistvals[k] = v
-    argument_groups = orig_params.get('argument_groups')
+    argument_groups = orig_params.get("argument_groups")
     # Group list arguments together
     if argument_groups is not None:
-        groups = [x.strip() for x in argument_groups.split('|')]
+        groups = [x.strip() for x in argument_groups.split("|")]
         for group in groups:
             list_lists = []
             keys = group.split()
@@ -179,15 +182,17 @@ if __name__ == '__main__':
             if len(keys) > 1:
                 for k in keys:
                     v = params_listvals.get(k)
-                    assert v is not None, \
-                        f"{k} in argument_groups group {group} is not a list argument"
+                    assert (
+                        v is not None
+                    ), f"{k} in argument_groups group {group} is not a list argument"
                     if list_lists:
-                        assert len(v) == len(list_lists[0]), \
-                            f"Lists value in group {group} must all have " +\
-                            "the same length"
+                        assert len(v) == len(list_lists[0]), (
+                            f"Lists value in group {group} must all have "
+                            + "the same length"
+                        )
                     list_lists.append(v)
                     del params_listvals[k]
-                group_key = '|'.join(keys)
+                group_key = "|".join(keys)
                 params_listvals[group_key] = list(zip(*list_lists))
     num_experiments = 1
     keys = []
@@ -197,25 +202,31 @@ if __name__ == '__main__':
         list_values.append(v)
         num_experiments *= len(v)
 
-    skip_initial_experiments = orig_params['skip_initial_experiments']
-    assert skip_initial_experiments >= 0, \
-        "--skip_initial_experiments must be nonnegative"
+    skip_initial_experiments = orig_params["skip_initial_experiments"]
+    assert (
+        skip_initial_experiments >= 0
+    ), "--skip_initial_experiments must be nonnegative"
     if num_experiments > 1:
-        msg = f"The following arguments have list values: {keys_with_list}\n" +\
-              f"Total number of experiments: {num_experiments}"
+        msg = (
+            f"The following arguments have list values: {keys_with_list}\n"
+            + f"Total number of experiments: {num_experiments}"
+        )
         if skip_initial_experiments > 0:
-            msg += f"\nSkipping {skip_initial_experiments}, launching " +\
-                   f"{num_experiments - skip_initial_experiments}"
+            msg += (
+                f"\nSkipping {skip_initial_experiments}, launching "
+                + f"{num_experiments - skip_initial_experiments}"
+            )
         logger.info(msg)
 
     # Loop over all combinations
-    experiment_name = dict_get(orig_params, 'experiment_name', 'stune')
-    backend_name = orig_params['backend']
-    if backend_name == 'sagemaker' or not orig_params['local_tuner']:
+    experiment_name = dict_get(orig_params, "experiment_name", "stune")
+    backend_name = orig_params["backend"]
+    if backend_name == "sagemaker" or not orig_params["local_tuner"]:
         s3_path = s3_experiment_path(
-            s3_bucket=orig_params.get('s3_bucket'),
-            experiment_name=None if orig_params['no_experiment_subdirectory'] \
-                else experiment_name
+            s3_bucket=orig_params.get("s3_bucket"),
+            experiment_name=None
+            if orig_params["no_experiment_subdirectory"]
+            else experiment_name,
         )
     else:
         s3_path = None  # Not needed (avoid boto call)
@@ -231,12 +242,13 @@ if __name__ == '__main__':
             logger.info(
                 "\n---------------------------------\n"
                 f"Launching experiment {exp_id} of {num_experiments}\n"
-                "---------------------------------")
+                "---------------------------------"
+            )
         if keys:
             extra_dict = dict(zip(keys, values))
             for k in keys:
-                if '|' in k:
-                    extra_dict.update(zip(k.split('|'), extra_dict[k]))
+                if "|" in k:
+                    extra_dict.update(zip(k.split("|"), extra_dict[k]))
                     del extra_dict[k]
             params = dict(params_nolistvals, **extra_dict)
         else:
@@ -247,107 +259,124 @@ if __name__ == '__main__':
         benchmark, default_params = benchmark_factory(params)
 
         # Create scheduler from parameters
-        myscheduler, params = scheduler_factory(
-            params, benchmark, default_params)
+        myscheduler, params = scheduler_factory(params, benchmark, default_params)
 
         # Create backend
-        if backend_name == 'local':
-            logger.info(f"Using 'local' back-end with entry_point = {benchmark['script']}")
+        if backend_name == "local":
+            logger.info(
+                f"Using 'local' back-end with entry_point = {benchmark['script']}"
+            )
             trial_backend = LocalBackend(
-                entry_point=benchmark['script'],
-                rotate_gpus=params['rotate_gpus'])
-        elif backend_name == 'simulated':
-            assert benchmark.get('supports_simulated', False), \
-                f"Benchmark {params['benchmark_name']} does not support " +\
-                "the simulation back-end (has to be tabulated)"
-            blackbox_name = benchmark.get('blackbox_name')
+                entry_point=benchmark["script"], rotate_gpus=params["rotate_gpus"]
+            )
+        elif backend_name == "simulated":
+            assert benchmark.get("supports_simulated", False), (
+                f"Benchmark {params['benchmark_name']} does not support "
+                + "the simulation back-end (has to be tabulated)"
+            )
+            blackbox_name = benchmark.get("blackbox_name")
             backend_kwargs = dict(
-                elapsed_time_attr=benchmark['elapsed_time_attr'],
-                tuner_sleep_time=params['tuner_sleep_time'],
-                debug_resource_attr=benchmark['resource_attr'])
+                elapsed_time_attr=benchmark["elapsed_time_attr"],
+                tuner_sleep_time=params["tuner_sleep_time"],
+                debug_resource_attr=benchmark["resource_attr"],
+            )
             if blackbox_name is None:
                 # Tabulated benchmark given by a script (special case)
-                from syne_tune.backend.simulator_backend.simulator_backend import \
-                    SimulatorBackend
+                from syne_tune.backend.simulator_backend.simulator_backend import (
+                    SimulatorBackend,
+                )
 
-                logger.info(f"Using 'simulated' back-end with entry_point = {benchmark['script']}")
-                backend_kwargs['entry_point'] = benchmark['script']
+                logger.info(
+                    f"Using 'simulated' back-end with entry_point = {benchmark['script']}"
+                )
+                backend_kwargs["entry_point"] = benchmark["script"]
                 trial_backend = SimulatorBackend(**backend_kwargs)
             else:
                 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 
                 # Tabulated benchmark from the blackbox repository (simulation
                 # runs faster)
-                logger.info(f"Using 'simulated' back-end with blackbox_name = {blackbox_name}")
-                seed = params.get('blackbox_seed')
+                logger.info(
+                    f"Using 'simulated' back-end with blackbox_name = {blackbox_name}"
+                )
+                seed = params.get("blackbox_seed")
                 if seed is not None:
                     logger.info(f"Using blackbox with blackbox_seed = {seed}")
-                surrogate = benchmark.get('surrogate')
+                surrogate = benchmark.get("surrogate")
                 if surrogate is not None:
                     # If a surrogate is given, it interpolates the tabulated
                     # blackbox to the configuration space of the benchmark,
                     # which often has numerical domains where the tabulated
                     # benchmark has categorical ones
-                    config_space_surrogate = benchmark['config_space']
+                    config_space_surrogate = benchmark["config_space"]
                 else:
                     config_space_surrogate = None
-                backend_kwargs.update({
-                    'blackbox_name': blackbox_name,
-                    'dataset': params.get('dataset_name'),
-                    'surrogate': surrogate,
-                    'surrogate_kwargs': benchmark.get('surrogate_kwargs'),
-                    'config_space_surrogate': config_space_surrogate,
-                    'time_this_resource_attr': benchmark.get(
-                        'time_this_resource_attr'),
-                    'max_resource_attr': benchmark.get('max_resource_attr'),
-                    'seed': seed,
-                })
+                backend_kwargs.update(
+                    {
+                        "blackbox_name": blackbox_name,
+                        "dataset": params.get("dataset_name"),
+                        "surrogate": surrogate,
+                        "surrogate_kwargs": benchmark.get("surrogate_kwargs"),
+                        "config_space_surrogate": config_space_surrogate,
+                        "time_this_resource_attr": benchmark.get(
+                            "time_this_resource_attr"
+                        ),
+                        "max_resource_attr": benchmark.get("max_resource_attr"),
+                        "seed": seed,
+                    }
+                )
                 trial_backend = BlackboxRepositoryBackend(**backend_kwargs)
         else:
-            assert backend_name == 'sagemaker'
-            for k in ('instance_type',):
-                assert params.get(k) is not None, \
-                    f"For 'sagemaker' backend, --{k} is needed"
-            logger.info(f"Using 'sagemaker' back-end with entry_point = {benchmark['script']}")
-            script_path = Path(benchmark['script'])
+            assert backend_name == "sagemaker"
+            for k in ("instance_type",):
+                assert (
+                    params.get(k) is not None
+                ), f"For 'sagemaker' backend, --{k} is needed"
+            logger.info(
+                f"Using 'sagemaker' back-end with entry_point = {benchmark['script']}"
+            )
+            script_path = Path(benchmark["script"])
             sm_estimator = sagemaker_estimator_factory(
                 entry_point=script_path.name,
-                instance_type=params['instance_type'],
-                framework=params.get('framework'),
-                role=params.get('sagemaker_execution_role'),
+                instance_type=params["instance_type"],
+                framework=params.get("framework"),
+                role=params.get("sagemaker_execution_role"),
                 dependencies=[str(repository_root_path() / "benchmarking/")],
-                framework_version=params.get('framework_version'),
-                pytorch_version=params.get('pytorch_version'),
+                framework_version=params.get("framework_version"),
+                pytorch_version=params.get("pytorch_version"),
                 source_dir=str(script_path.parent),
-                image_uri=params.get('image_uri'),
-                disable_profiler=not params['enable_sagemaker_profiler'],
+                image_uri=params.get("image_uri"),
+                disable_profiler=not params["enable_sagemaker_profiler"],
             )
             trial_backend = SageMakerBackend(
                 sm_estimator=sm_estimator,
-                metrics_names=[benchmark['metric']],
-                s3_path=s3_path)
+                metrics_names=[benchmark["metric"]],
+                s3_path=s3_path,
+            )
 
         # Stopping criterion
-        num_trials = params.get('num_trials')
-        scheduler_timeout = params.get('scheduler_timeout')
-        assert not (num_trials is None and scheduler_timeout is None), \
-            "One of --num_trials, --scheduler_timeout must be given"
+        num_trials = params.get("num_trials")
+        scheduler_timeout = params.get("scheduler_timeout")
+        assert not (
+            num_trials is None and scheduler_timeout is None
+        ), "One of --num_trials, --scheduler_timeout must be given"
         stop_criterion = StoppingCriterion(
-            max_wallclock_time=scheduler_timeout,
-            max_num_trials_completed=num_trials)
-        if params['no_tuner_logging']:
+            max_wallclock_time=scheduler_timeout, max_num_trials_completed=num_trials
+        )
+        if params["no_tuner_logging"]:
             # If the tuner does not log anything, we also do not have to
             # compute the status report. This is achieved by setting the
             # update interval large enough
-            print_update_interval = 18000 if scheduler_timeout is None \
-                else scheduler_timeout + 100
-            params['print_update_interval'] = max(
-                params['print_update_interval'], print_update_interval)
+            print_update_interval = (
+                18000 if scheduler_timeout is None else scheduler_timeout + 100
+            )
+            params["print_update_interval"] = max(
+                params["print_update_interval"], print_update_interval
+            )
 
         # Put together meta-data. Here, we could also do more ...
-        metadata = {
-            k: v for k, v in params.items() if v is not None}
-        for k in ('metric', 'mode', 'resource_attr', 'elapsed_time_attr'):
+        metadata = {k: v for k, v in params.items() if v is not None}
+        for k in ("metric", "mode", "resource_attr", "elapsed_time_attr"):
             if k in benchmark:
                 metadata[k] = benchmark[k]
         tuner_name = experiment_name
@@ -357,33 +386,36 @@ if __name__ == '__main__':
 
             repo = git.Repo(search_parent_directories=True)
             sha = repo.head.object.hexsha
-            metadata['git_hash'] = sha
+            metadata["git_hash"] = sha
             o = repo.remote()
             urls = list(o.urls)
-            metadata['git_urls'] = urls
+            metadata["git_urls"] = urls
         except Exception:
             pass
 
-        tuner_sleep_time = 0 if backend_name == 'simulated' \
-            else params['tuner_sleep_time']
+        tuner_sleep_time = (
+            0 if backend_name == "simulated" else params["tuner_sleep_time"]
+        )
         # These callbacks also store surrogate model parameters (only for
         # schedulers which support this)
-        callbacks = [SimulatorAndModelParamsCallback()] \
-            if backend_name == 'simulated' \
+        callbacks = (
+            [SimulatorAndModelParamsCallback()]
+            if backend_name == "simulated"
             else [StoreResultsAndModelParamsCallback()]
+        )
 
         local_tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=myscheduler,
             stop_criterion=stop_criterion,
-            n_workers=params['num_workers'],
+            n_workers=params["num_workers"],
             sleep_time=tuner_sleep_time,
-            results_update_interval=params['results_update_interval'],
+            results_update_interval=params["results_update_interval"],
             metadata=metadata,
             tuner_name=tuner_name,
-            max_failures=params['max_failures'],
+            max_failures=params["max_failures"],
             asynchronous_scheduling=True,
-            print_update_interval=params['print_update_interval'],
+            print_update_interval=params["print_update_interval"],
             callbacks=callbacks,
         )
         last_tuner_name = local_tuner.name
@@ -391,30 +423,28 @@ if __name__ == '__main__':
             first_tuner_name = copy.copy(last_tuner_name)
             is_first_iteration = False
 
-        if params['local_tuner']:
+        if params["local_tuner"]:
             # Tuning experiment is run locally
-            if params['no_tuner_logging']:
-                logging.getLogger('syne_tune.tuner').setLevel(
-                    logging.ERROR)
+            if params["no_tuner_logging"]:
+                logging.getLogger("syne_tune.tuner").setLevel(logging.ERROR)
             local_tuner.run()
         else:
-            if backend_name != 'sagemaker':
+            if backend_name != "sagemaker":
                 # Local backend: Configure SageMaker estimator to what the
                 # benchmark needs
-                instance_type = params['instance_type']
+                instance_type = params["instance_type"]
             else:
                 # Instance type for tuning, can be different from
                 # instance type for workers
-                instance_type = params['tuner_instance_type']
+                instance_type = params["tuner_instance_type"]
             estimator_kwargs = {
-                'disable_profiler': not params['enable_sagemaker_profiler']}
-            if scheduler_timeout is not None \
-                    and scheduler_timeout > 12 * 60 * 60:
+                "disable_profiler": not params["enable_sagemaker_profiler"]
+            }
+            if scheduler_timeout is not None and scheduler_timeout > 12 * 60 * 60:
                 # Make sure that the SageMaker training job running the tuning
                 # loop is not stopped before `scheduler_timeout`
-                estimator_kwargs['max_run'] = int(1.01 * scheduler_timeout)
-            log_level = logging.DEBUG if params['debug_log_level'] \
-                else logging.INFO
+                estimator_kwargs["max_run"] = int(1.01 * scheduler_timeout)
+            log_level = logging.DEBUG if params["debug_log_level"] else logging.INFO
             root_path = repository_root_path()
             dependencies = [str(root_path / "benchmarking")]
             tuner = RemoteLauncher(
@@ -423,7 +453,7 @@ if __name__ == '__main__':
                 instance_type=instance_type,
                 log_level=log_level,
                 s3_path=s3_path,
-                no_tuner_logging=params['no_tuner_logging'],
+                no_tuner_logging=params["no_tuner_logging"],
                 **estimator_kwargs,
             )
             tuner.run(wait=False)

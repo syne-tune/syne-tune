@@ -13,13 +13,17 @@ from syne_tune.optimizer.baselines import ASHA
 import syne_tune.config_space as sp
 from syne_tune import Tuner, StoppingCriterion
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     logging.getLogger().setLevel(logging.DEBUG)
     np.random.seed(0)
     max_steps = 100
     trial_backend = LocalBackend(
-        entry_point=Path(__file__).parent / "training_scripts" / "rl_cartpole" / "train_cartpole.py")
+        entry_point=Path(__file__).parent
+        / "training_scripts"
+        / "rl_cartpole"
+        / "train_cartpole.py"
+    )
 
     scheduler = ASHA(
         config_space={
@@ -30,7 +34,7 @@ if __name__ == '__main__':
         mode="max",
         max_t=100,
         resource_attr="training_iter",
-        search_options={'debug_log': False},
+        search_options={"debug_log": False},
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=60)

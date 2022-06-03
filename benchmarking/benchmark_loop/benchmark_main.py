@@ -5,19 +5,19 @@ from argparse import ArgumentParser
 from tqdm import tqdm
 
 from benchmarking.benchmark_loop.baselines import methods
-from benchmarking.benchmark_loop.benchmark_definitions import \
-    benchmark_definitions
+from benchmarking.benchmark_loop.benchmark_definitions import benchmark_definitions
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 
-from syne_tune.backend.simulator_backend.simulator_callback import \
-    SimulatorCallback
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune import StoppingCriterion, Tuner
 from coolname import generate_slug
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--experiment_tag", type=str, required=False, default=generate_slug(2))
+    parser.add_argument(
+        "--experiment_tag", type=str, required=False, default=generate_slug(2)
+    )
     parser.add_argument("--num_seeds", type=int, required=False, default=2)
     parser.add_argument("--method", type=str, required=False)
     parser.add_argument("--benchmark", type=str, required=False)
@@ -25,20 +25,30 @@ if __name__ == '__main__':
     experiment_tag = args.experiment_tag
     num_seeds = args.num_seeds
     method_names = [args.method] if args.method is not None else list(methods.keys())
-    benchmark_names = [args.benchmark] if args.benchmark is not None else list(benchmark_definitions.keys())
+    benchmark_names = (
+        [args.benchmark]
+        if args.benchmark is not None
+        else list(benchmark_definitions.keys())
+    )
 
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
-    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(logging.WARNING)
+    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
+        logging.WARNING
+    )
 
-    combinations = list(itertools.product(method_names, range(num_seeds), benchmark_names))
+    combinations = list(
+        itertools.product(method_names, range(num_seeds), benchmark_names)
+    )
 
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
 
-        print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
+        print(
+            f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
+        )
 
         trial_backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
@@ -58,7 +68,9 @@ if __name__ == '__main__':
             resource_attr=resource_attr,
         )
 
-        stop_criterion = StoppingCriterion(max_wallclock_time=benchmark.max_wallclock_time)
+        stop_criterion = StoppingCriterion(
+            max_wallclock_time=benchmark.max_wallclock_time
+        )
 
         tuner = Tuner(
             trial_backend=trial_backend,
@@ -69,12 +81,14 @@ if __name__ == '__main__':
             callbacks=[SimulatorCallback()],
             results_update_interval=600,
             print_update_interval=600,
-            tuner_name=f"{experiment_tag}-{method}-{seed}-{benchmark_name}".replace("_", "-"),
+            tuner_name=f"{experiment_tag}-{method}-{seed}-{benchmark_name}".replace(
+                "_", "-"
+            ),
             metadata={
                 "seed": seed,
                 "algorithm": method,
                 "tag": experiment_tag,
-                "benchmark": benchmark_name
-            }
+                "benchmark": benchmark_name,
+            },
         )
         tuner.run()

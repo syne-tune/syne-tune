@@ -33,16 +33,24 @@ class RUSHDecider:
 
     def __init__(self, num_threshold_candidates: int, mode: str):
         if num_threshold_candidates <= 0:
-            logger.warning("No threshold candidates provided. 'rush_stopping' will behave exactly like 'stopping'.")
+            logger.warning(
+                "No threshold candidates provided. 'rush_stopping' will behave exactly like 'stopping'."
+            )
         self._num_threshold_candidates = num_threshold_candidates
         self._mode = mode
-        self._thresholds = dict()  # thresholds at different resource levels that must be met
+        self._thresholds = (
+            dict()
+        )  # thresholds at different resource levels that must be met
 
-    def task_continues(self, task_continues: bool, trial_id: str, metric_value: float, resource: int) -> bool:
+    def task_continues(
+        self, task_continues: bool, trial_id: str, metric_value: float, resource: int
+    ) -> bool:
         if not task_continues:
             return False
         if self._is_in_points_to_evaluate(trial_id):
-            self._thresholds[resource] = self._return_better(self._thresholds.get(resource), metric_value)
+            self._thresholds[resource] = self._return_better(
+                self._thresholds.get(resource), metric_value
+            )
             return True
         return self._meets_threshold(metric_value, resource)
 
@@ -50,43 +58,57 @@ class RUSHDecider:
         return int(trial_id) < self._num_threshold_candidates
 
     def _return_better(self, val1: Optional[float], val2: Optional[float]) -> float:
-        if self._mode == 'min':
-            better_val = min(float('inf') if val1 is None else val1,
-                             float('inf') if val2 is None else val2)
+        if self._mode == "min":
+            better_val = min(
+                float("inf") if val1 is None else val1,
+                float("inf") if val2 is None else val2,
+            )
         else:
-            better_val = max(float('-inf') if val1 is None else val1,
-                             float('-inf') if val2 is None else val2)
+            better_val = max(
+                float("-inf") if val1 is None else val1,
+                float("-inf") if val2 is None else val2,
+            )
         return better_val
 
     def _meets_threshold(self, metric_value: float, resource: int) -> bool:
-        return self._return_better(self._thresholds.get(resource), metric_value) == metric_value
+        return (
+            self._return_better(self._thresholds.get(resource), metric_value)
+            == metric_value
+        )
 
 
 class RUSHStoppingRungSystem(StoppingRungSystem):
-
     def __init__(self, num_threshold_candidates: int, **kwargs):
         super().__init__(**kwargs)
         self._decider = RUSHDecider(num_threshold_candidates, self._mode)
 
     def _task_continues(
-            self, metric_value: float, recorded: dict,
-            prom_quant: float, trial_id: str, resource: int) -> bool:
+        self,
+        metric_value: float,
+        recorded: dict,
+        prom_quant: float,
+        trial_id: str,
+        resource: int,
+    ) -> bool:
         task_continues = super()._task_continues(
-            metric_value, recorded, prom_quant, trial_id, resource)
+            metric_value, recorded, prom_quant, trial_id, resource
+        )
         return self._decider.task_continues(
-            task_continues, trial_id, metric_value, resource)
+            task_continues, trial_id, metric_value, resource
+        )
 
 
 class RUSHPromotionRungSystem(PromotionRungSystem):
-
     def __init__(self, num_threshold_candidates: int, **kwargs):
         super().__init__(**kwargs)
         self._decider = RUSHDecider(num_threshold_candidates, self._mode)
 
     def _is_promotable_trial(
-            self, trial_id: str, metric_value: float, is_paused: bool,
-            resource: int) -> bool:
+        self, trial_id: str, metric_value: float, is_paused: bool, resource: int
+    ) -> bool:
         task_continues = super()._is_promotable_trial(
-            trial_id, metric_value, is_paused, resource)
+            trial_id, metric_value, is_paused, resource
+        )
         return self._decider.task_continues(
-            task_continues, trial_id, metric_value, resource)
+            task_continues, trial_id, metric_value, resource
+        )

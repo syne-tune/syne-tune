@@ -14,18 +14,20 @@ import autograd.numpy as anp
 from autograd.tracer import getval
 from abc import ABC, abstractmethod
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import INITIAL_MEAN_VALUE
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution \
-    import Normal
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon \
-    import Block
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
-    import IdentityScalarEncoding, encode_unwrap_parameter, register_parameter
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    INITIAL_MEAN_VALUE,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution import (
+    Normal,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon import Block
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
+    IdentityScalarEncoding,
+    encode_unwrap_parameter,
+    register_parameter,
+)
 
-__all__ = ['MeanFunction',
-           'ScalarMeanFunction',
-           'ZeroMeanFunction']
+__all__ = ["MeanFunction", "ScalarMeanFunction", "ZeroMeanFunction"]
 
 
 class MeanFunction(Block, ABC):
@@ -34,6 +36,7 @@ class MeanFunction(Block, ABC):
 
     Note: KernelFunction also inherits from this interface.
     """
+
     def __init__(self, **kwargs):
         Block.__init__(self, **kwargs)
 
@@ -47,7 +50,7 @@ class MeanFunction(Block, ABC):
         :return: List [(param_internal, encoding)]
         """
         pass
-    
+
     @abstractmethod
     def get_params(self):
         """
@@ -71,19 +74,22 @@ class ScalarMeanFunction(MeanFunction):
 
     :param initial_mean_value: A scalar to initialize the value of the mean
     """
-    def __init__(self, initial_mean_value = INITIAL_MEAN_VALUE, **kwargs):
+
+    def __init__(self, initial_mean_value=INITIAL_MEAN_VALUE, **kwargs):
         super().__init__(**kwargs)
 
         # Even though we do not apply specific transformation to the mean value
         # we use an encoding to handle in a consistent way the box constraints
         # of Gluon parameters (like bandwidths or residual noise variance)
-        
+
         self.encoding = IdentityScalarEncoding(
-            init_val=initial_mean_value, regularizer=Normal(0.0, 1.0))
+            init_val=initial_mean_value, regularizer=Normal(0.0, 1.0)
+        )
 
         with self.name_scope():
             self.mean_value_internal = register_parameter(
-                self.params, 'mean_value', self.encoding)
+                self.params, "mean_value", self.encoding
+            )
 
     def forward(self, X):
         """
@@ -94,25 +100,23 @@ class ScalarMeanFunction(MeanFunction):
         :param X: input data of size (n,d) for which we want to compute the
             mean (here, only useful to extract the right dimension)
         """
-        mean_value = encode_unwrap_parameter(
-            self.mean_value_internal, self.encoding)
+        mean_value = encode_unwrap_parameter(self.mean_value_internal, self.encoding)
         return anp.multiply(anp.ones((getval(X.shape[0]), 1)), mean_value)
 
     def param_encoding_pairs(self):
         return [(self.mean_value_internal, self.encoding)]
-        
+
     def get_mean_value(self):
-        return encode_unwrap_parameter(
-            self.mean_value_internal, self.encoding)[0]
+        return encode_unwrap_parameter(self.mean_value_internal, self.encoding)[0]
 
     def set_mean_value(self, mean_value):
         self.encoding.set(self.mean_value_internal, mean_value)
-    
+
     def get_params(self):
-        return {'mean_value': self.get_mean_value()}
+        return {"mean_value": self.get_mean_value()}
 
     def set_params(self, param_dict):
-        self.set_mean_value(param_dict['mean_value'])
+        self.set_mean_value(param_dict["mean_value"])
 
 
 class ZeroMeanFunction(MeanFunction):
@@ -124,9 +128,9 @@ class ZeroMeanFunction(MeanFunction):
 
     def param_encoding_pairs(self):
         return []
-     
+
     def get_params(self):
         return dict()
-        
+
     def set_params(self, param_dict):
         pass

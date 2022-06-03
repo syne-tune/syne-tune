@@ -14,26 +14,36 @@ from typing import Dict, Optional, Callable, Union
 import logging
 import copy
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import SurrogateModel, SurrogateOutputModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt \
-    import SkipOptimizationPredicate, NeverSkipPredicate
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
-    import DebugLogPrinter
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration, PendingEvaluation, TrialEvaluations, \
-    dictionarize_objective, INTERNAL_METRIC_NAME
-from syne_tune.optimizer.schedulers.utils.simple_profiler \
-    import SimpleProfiler
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    SurrogateModel,
+    SurrogateOutputModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
+    SkipOptimizationPredicate,
+    NeverSkipPredicate,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
+    DebugLogPrinter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+    PendingEvaluation,
+    TrialEvaluations,
+    dictionarize_objective,
+    INTERNAL_METRIC_NAME,
+)
+from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
 
 def _assert_same_keys(dict1, dict2):
-    assert set(dict1.keys()) == set(dict2.keys()), \
-        f'{list(dict1.keys())} and {list(dict2.keys())} need to be the same keys. '
+    assert set(dict1.keys()) == set(
+        dict2.keys()
+    ), f"{list(dict1.keys())} and {list(dict2.keys())} need to be the same keys. "
 
 
 class TransformerModelFactory(object):
@@ -43,6 +53,7 @@ class TransformerModelFactory(object):
     :class:`SurrogateModel` instances.
 
     """
+
     def get_params(self) -> Dict:
         """
         :return: Current tunable model parameters
@@ -82,9 +93,13 @@ class TransformerModelFactory(object):
 
 # Convenience types allowing for multi-output HPO. These are used for methods that work both in the standard case
 # of a single output model and in the multi-output case
-TransformerOutputModelFactory = Union[TransformerModelFactory, Dict[str, TransformerModelFactory]]
+TransformerOutputModelFactory = Union[
+    TransformerModelFactory, Dict[str, TransformerModelFactory]
+]
 
-SkipOptimizationOutputPredicate = Union[SkipOptimizationPredicate, Dict[str, SkipOptimizationPredicate]]
+SkipOptimizationOutputPredicate = Union[
+    SkipOptimizationPredicate, Dict[str, SkipOptimizationPredicate]
+]
 
 
 class ModelStateTransformer(object):
@@ -113,31 +128,38 @@ class ModelStateTransformer(object):
     output metric are updated independently.
 
     """
+
     def __init__(
-            self, model_factory: TransformerOutputModelFactory,
-            init_state: TuningJobState,
-            skip_optimization: Optional[SkipOptimizationOutputPredicate] = None):
+        self,
+        model_factory: TransformerOutputModelFactory,
+        init_state: TuningJobState,
+        skip_optimization: Optional[SkipOptimizationOutputPredicate] = None,
+    ):
         self._use_single_model = False
         if isinstance(model_factory, TransformerModelFactory):
             self._use_single_model = True
         if not self._use_single_model:
-            assert isinstance(model_factory, Dict), f'{model_factory} is not an instance of TransformerModelFactory. ' \
-                                                    f'It is assumed that we are in the multi-output case and that it ' \
-                                                    f'must be a Dict. No other types are supported. '
+            assert isinstance(model_factory, Dict), (
+                f"{model_factory} is not an instance of TransformerModelFactory. "
+                f"It is assumed that we are in the multi-output case and that it "
+                f"must be a Dict. No other types are supported. "
+            )
             _assert_same_keys(model_factory, skip_optimization)
             # Default: Always refit model parameters for each output model
             if skip_optimization is None:
                 skip_optimization = {
                     output_name: NeverSkipPredicate()
-                    for output_name in model_factory.keys()}
+                    for output_name in model_factory.keys()
+                }
             else:
-                assert isinstance(skip_optimization, Dict), \
-                    f'{skip_optimization} must be a Dict, consistently ' \
-                    f'with {model_factory}.'
+                assert isinstance(skip_optimization, Dict), (
+                    f"{skip_optimization} must be a Dict, consistently "
+                    f"with {model_factory}."
+                )
                 skip_optimization = {
                     output_name: skip_optimization[output_name]
-                        if skip_optimization.get(output_name) is not None
-                        else NeverSkipPredicate()
+                    if skip_optimization.get(output_name) is not None
+                    else NeverSkipPredicate()
                     for output_name in model_factory.keys()
                 }
             # debug_log is shared by all output models
@@ -159,8 +181,7 @@ class ModelStateTransformer(object):
         self._model: Optional[SurrogateOutputModel] = None
         # Observed data for which model parameters were re-fit most
         # recently, separately for each model
-        self._num_evaluations = {
-            output_name: 0 for output_name in model_factory.keys()}
+        self._num_evaluations = {output_name: 0 for output_name in model_factory.keys()}
 
     @property
     def state(self) -> TuningJobState:
@@ -194,13 +215,15 @@ class ModelStateTransformer(object):
                  to SurrogateModel instances for current state (shared across models).
         """
         if self._model is None:
-            skip_optimization = kwargs.get('skip_optimization')
+            skip_optimization = kwargs.get("skip_optimization")
             self._compute_model(skip_optimization=skip_optimization)
         return self._unwrap_from_dict(self._model)
 
     def get_params(self):
-        params = {output_name: output_model.get_params()
-                  for output_name, output_model in self._model_factory.items()}
+        params = {
+            output_name: output_model.get_params()
+            for output_name, output_model in self._model_factory.items()
+        }
         return self._unwrap_from_dict(params)
 
     def set_params(self, param_dict):
@@ -211,8 +234,11 @@ class ModelStateTransformer(object):
             self._model_factory[output_name].set_params(param_dict[output_name])
 
     def append_trial(
-            self, trial_id: str, config: Optional[Configuration] = None,
-            resource: Optional[int] = None):
+        self,
+        trial_id: str,
+        config: Optional[Configuration] = None,
+        resource: Optional[int] = None,
+    ):
         """
         Appends new pending evaluation to the state.
 
@@ -227,7 +253,8 @@ class ModelStateTransformer(object):
         self._state.append_pending(trial_id, config=config, resource=resource)
 
     def drop_pending_evaluation(
-            self, trial_id: str, resource: Optional[int] = None) -> bool:
+        self, trial_id: str, resource: Optional[int] = None
+    ) -> bool:
         """
         Drop pending evaluation from state. If it is not listed as pending,
         nothing is done
@@ -240,8 +267,8 @@ class ModelStateTransformer(object):
         return self._state.remove_pending(trial_id, resource)
 
     def remove_observed_case(
-            self, trial_id: str,
-            metric_name: str = INTERNAL_METRIC_NAME, key: str = None):
+        self, trial_id: str, metric_name: str = INTERNAL_METRIC_NAME, key: str = None
+    ):
         """
         Removes specific observation from the state.
 
@@ -251,24 +278,26 @@ class ModelStateTransformer(object):
 
         """
         pos = self._state._find_labeled(trial_id)
-        assert pos != -1, \
-            f"Trial trial_id = {trial_id} has no observations"
+        assert pos != -1, f"Trial trial_id = {trial_id} has no observations"
         metrics = self._state.trials_evaluations[pos].metrics
-        assert metric_name in metrics, \
-            f"state.trials_evaluations entry for trial_id = {trial_id} " +\
-            f"does not contain metric {metric_name}"
+        assert metric_name in metrics, (
+            f"state.trials_evaluations entry for trial_id = {trial_id} "
+            + f"does not contain metric {metric_name}"
+        )
         if key is None:
             del metrics[metric_name]
         else:
             metric_vals = metrics[metric_name]
-            assert isinstance(metric_vals, dict) and key in metric_vals, \
-                f"state.trials_evaluations entry for trial_id = {trial_id} " + \
-                f"and metric {metric_name} does not contain case for " +\
-                f"key {key}"
+            assert isinstance(metric_vals, dict) and key in metric_vals, (
+                f"state.trials_evaluations entry for trial_id = {trial_id} "
+                + f"and metric {metric_name} does not contain case for "
+                + f"key {key}"
+            )
             del metric_vals[key]
 
-    def label_trial(self, data: TrialEvaluations,
-                    config: Optional[Configuration] = None):
+    def label_trial(
+        self, data: TrialEvaluations, config: Optional[Configuration] = None
+    ):
         """
         Adds observed data for a trial. If it has observations in the state
         already, `data.metrics` are appended. Otherwise, a new entry is
@@ -286,11 +315,11 @@ class ModelStateTransformer(object):
         if metric_vals is not None:
             resource_attr_name = self._state.hp_ranges.name_last_pos
             if resource_attr_name is not None:
-                assert isinstance(metric_vals, dict), \
-                    f"Metric {INTERNAL_METRIC_NAME} must be dict-valued"
+                assert isinstance(
+                    metric_vals, dict
+                ), f"Metric {INTERNAL_METRIC_NAME} must be dict-valued"
                 for resource in metric_vals.keys():
-                    self.drop_pending_evaluation(
-                        trial_id, resource=int(resource))
+                    self.drop_pending_evaluation(trial_id, resource=int(resource))
             else:
                 self.drop_pending_evaluation(trial_id)
         # Assign / append new labels
@@ -303,15 +332,17 @@ class ModelStateTransformer(object):
         self._model = None  # Invalidate
 
     def filter_pending_evaluations(
-            self, filter_pred: Callable[[PendingEvaluation], bool]):
+        self, filter_pred: Callable[[PendingEvaluation], bool]
+    ):
         """
         Filters state.pending_evaluations with filter_pred.
 
         :param filter_pred Filtering predicate
 
         """
-        new_pending_evaluations = list(filter(
-            filter_pred, self._state.pending_evaluations))
+        new_pending_evaluations = list(
+            filter(filter_pred, self._state.pending_evaluations)
+        )
         if len(new_pending_evaluations) != len(self._state.pending_evaluations):
             self._model = None  # Invalidate
             del self._state.pending_evaluations[:]
@@ -325,14 +356,19 @@ class ModelStateTransformer(object):
     def _compute_model(self, skip_optimization=None):
         if skip_optimization is None:
             skip_optimization = dict()
-            for output_name, output_skip_optimization in self._skip_optimization.items():
+            for (
+                output_name,
+                output_skip_optimization,
+            ) in self._skip_optimization.items():
                 skip_optimization[output_name] = output_skip_optimization(self._state)
         elif self._use_single_model:
             skip_optimization = dictionarize_objective(skip_optimization)
         if self._debug_log is not None:
             for output_name, skip_opt in skip_optimization.items():
                 if skip_opt:
-                    logger.info(f"Skipping the refitting of model parameters for {output_name}")
+                    logger.info(
+                        f"Skipping the refitting of model parameters for {output_name}"
+                    )
 
         _assert_same_keys(skip_optimization, self._model_factory)
         output_models = dict()
@@ -347,10 +383,12 @@ class ModelStateTransformer(object):
                     if self._debug_log is not None:
                         logger.info(
                             f"Skipping the refitting of model parameters for {output_name}, "
-                            f"since the labeled data did not change since the last recent fit")
+                            f"since the labeled data did not change since the last recent fit"
+                        )
                 else:
                     # Model will be refitted: Update
                     self._num_evaluations[output_name] = num_evaluations
             output_models[output_name] = self._model_factory[output_name].model(
-                state=self._state, fit_params=fit_params)
+                state=self._state, fit_params=fit_params
+            )
         self._model = output_models

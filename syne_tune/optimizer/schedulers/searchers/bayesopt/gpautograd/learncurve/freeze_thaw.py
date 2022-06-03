@@ -17,19 +17,29 @@ import autograd.numpy as anp
 from autograd.scipy.linalg import solve_triangular
 from numpy.random import RandomState
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.exponential_decay \
-    import ExponentialDecayResourcesKernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base \
-    import KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
-    import MeanFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.custom_op \
-    import cholesky_factorization
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
-    import _flatvec, _colvec, _rowvec, _squared_norm, _inner_product, \
-    predict_posterior_marginals
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl \
-    import EPS
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.exponential_decay import (
+    ExponentialDecayResourcesKernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    MeanFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.custom_op import (
+    cholesky_factorization,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm import (
+    _flatvec,
+    _colvec,
+    _rowvec,
+    _squared_norm,
+    _inner_product,
+    predict_posterior_marginals,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
+    EPS,
+)
 
 
 class ZeroKernel(KernelFunction):
@@ -38,6 +48,7 @@ class ZeroKernel(KernelFunction):
     return matrices or vectors, but zero scalars.
 
     """
+
     def __init__(self, dimension: int, **kwargs):
         super().__init__(dimension, **kwargs)
 
@@ -87,12 +98,14 @@ class ExponentialDecayBaseKernelFunction(KernelFunction):
     [0, 1].
 
     """
+
     def __init__(
-            self, r_max: int, r_min: int = 1, normalize_inputs: bool = False,
-            **kwargs):
+        self, r_max: int, r_min: int = 1, normalize_inputs: bool = False, **kwargs
+    ):
         super().__init__(dimension=1, **kwargs)
         self.kernel = ExponentialDecayResourcesKernelFunction(
-            kernel_x=ZeroKernel(0), mean_x=ZeroMean(), delta_fixed_value=0.0)
+            kernel_x=ZeroKernel(0), mean_x=ZeroMean(), delta_fixed_value=0.0
+        )
         assert r_max > r_min
         self.r_min = r_min
         self.r_max = r_max
@@ -145,19 +158,17 @@ def logdet_cholfact_cov_resource(likelihood: Dict) -> float:
     :param likelihood: Result of `resource_kernel_likelihood_computations`
     :return: log(det(Lbar))
     """
-    lfact_all = likelihood['lfact_all']
-    ydims = likelihood['ydims']
+    lfact_all = likelihood["lfact_all"]
+    ydims = likelihood["ydims"]
     dim = max(ydims)
     log_diag = anp.log(anp.diag(lfact_all))
     # Weights:
     #   w_j = sum_i I[ydims[i] > j], j = 0, 1, ...
-    weights = anp.sum(
-        _colvec(anp.array(ydims)) > _rowvec(anp.arange(dim)), axis=0)
+    weights = anp.sum(_colvec(anp.array(ydims)) > _rowvec(anp.arange(dim)), axis=0)
     return _inner_product(log_diag[:dim], weights)
 
 
-def resource_kernel_likelihood_precomputations(
-        targets: List[np.ndarray]) -> Dict:
+def resource_kernel_likelihood_precomputations(targets: List[np.ndarray]) -> Dict:
     """
     Precomputations required by `resource_kernel_likelihood_computations`.
 
@@ -176,9 +187,12 @@ def resource_kernel_likelihood_precomputations(
     """
     ydims = [y.shape[0] for y in targets]
     ydim_max = ydims[0]
-    num_configs = list(np.sum(
-        np.array(ydims).reshape((-1, 1)) > np.arange(ydim_max).reshape((1, -1)),
-        axis=0).reshape((-1,)))
+    num_configs = list(
+        np.sum(
+            np.array(ydims).reshape((-1, 1)) > np.arange(ydim_max).reshape((1, -1)),
+            axis=0,
+        ).reshape((-1,))
+    )
     assert num_configs[0] == len(targets), (num_configs, len(targets))
     assert num_configs[-1] > 0, num_configs
     total_size = sum(num_configs)
@@ -192,17 +206,17 @@ def resource_kernel_likelihood_precomputations(
         yflat_rows.extend([y[pos].reshape((1, -1)) for y in targets[:num]])
     yflat = np.vstack(yflat_rows)
     assert yflat.shape[0] == total_size
-    return {
-        'ydims': ydims,
-        'num_configs': num_configs,
-        'yflat': yflat}
+    return {"ydims": ydims, "num_configs": num_configs, "yflat": yflat}
 
 
 # TODO: This code is complex. If it does not run faster than
 # `resource_kernel_likelihood_slow_computations`, remove it.
 def resource_kernel_likelihood_computations(
-        precomputed: Dict, res_kernel: ExponentialDecayBaseKernelFunction,
-        noise_variance, skip_c_d: bool = False) -> Dict:
+    precomputed: Dict,
+    res_kernel: ExponentialDecayBaseKernelFunction,
+    noise_variance,
+    skip_c_d: bool = False,
+) -> Dict:
     """
     Given `precomputed` from `resource_kernel_likelihood_precomputations` and
     resource kernel function `res_kernel`, compute quantities required for
@@ -229,26 +243,25 @@ def resource_kernel_likelihood_computations(
     :return: Quantities required for inference and learning criterion
 
     """
-    num_configs = precomputed['num_configs']
+    num_configs = precomputed["num_configs"]
     num_all_configs = num_configs[0]
     r_min, r_max = res_kernel.r_min, res_kernel.r_max
     num_res = r_max + 1 - r_min
     assert num_all_configs > 0, "targets must not be empty"
     assert num_res > 0, f"r_min = {r_min} must be <= r_max = {r_max}"
-    num_fantasy_samples = precomputed['yflat'].shape[1]
+    num_fantasy_samples = precomputed["yflat"].shape[1]
     compute_wtw = num_fantasy_samples == 1
 
     # Compute Cholesky factor for largest target vector size, or for full size
-    ydims = precomputed['ydims']
+    ydims = precomputed["ydims"]
     rvals = _colvec(anp.arange(r_min, r_min + num_res))
     means_all = _flatvec(res_kernel.mean_function(rvals))
-    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(
-        anp.ones(num_res))
+    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(anp.ones(num_res))
     # TODO: Do we need AddJitterOp here?
     lfact_all = cholesky_factorization(amat)  # L (Cholesky factor)
 
     # Loop over ydim
-    yflat = precomputed['yflat']
+    yflat = precomputed["yflat"]
     off = num_all_configs
     ilscal = 1.0 / lfact_all[0, 0]
     vvec = anp.array([ilscal]).reshape((1, 1))
@@ -267,26 +280,23 @@ def resource_kernel_likelihood_computations(
             # These parts are done:
             pos = num * num_fantasy_samples
             wdone = wmat[:, pos:]
-            wtv_part = anp.reshape(
-                anp.matmul(vvec, wdone), (-1, num_fantasy_samples))
+            wtv_part = anp.reshape(anp.matmul(vvec, wdone), (-1, num_fantasy_samples))
             wtv_lst.append(wtv_part)
             if compute_wtw:
                 wtw_lst.append(_flatvec(anp.sum(anp.square(wdone), axis=0)))
             wmat = wmat[:, :pos]
             num_prev = num
         # Update W matrix
-        rhs = _rowvec(yflat[off:(off + num), :] - means_all[ydim])
+        rhs = _rowvec(yflat[off : (off + num), :] - means_all[ydim])
         off += num
         lvec = _rowvec(lfact_all[ydim, :ydim])
         ilscal = 1.0 / lfact_all[ydim, ydim]
         w_new = (rhs - anp.matmul(lvec, wmat)) * ilscal
         wmat = anp.concatenate((wmat, w_new), axis=0)
         # Update v vector (row vector)
-        v_new = anp.array(
-            [(1.0 - _inner_product(lvec, vvec)) * ilscal]).reshape((1, 1))
+        v_new = anp.array([(1.0 - _inner_product(lvec, vvec)) * ilscal]).reshape((1, 1))
         vvec = anp.concatenate((vvec, v_new), axis=1)
-    wtv_part = anp.reshape(
-        anp.matmul(vvec, wmat), (-1, num_fantasy_samples))
+    wtv_part = anp.reshape(anp.matmul(vvec, wmat), (-1, num_fantasy_samples))
     wtv_lst.append(wtv_part)
     wtv_all = anp.concatenate(tuple(reversed(wtv_lst)), axis=0)
     if compute_wtw:
@@ -296,26 +306,29 @@ def resource_kernel_likelihood_computations(
     vtv_all = anp.array([vtv_for_ydim[ydim - 1] for ydim in ydims])
     # Compile results
     result = {
-        'num_data': sum(ydims),
-        'vtv': vtv_all,
-        'wtv': wtv_all,
-        'lfact_all': lfact_all,
-        'means_all': means_all,
-        'ydims': ydims}
+        "num_data": sum(ydims),
+        "vtv": vtv_all,
+        "wtv": wtv_all,
+        "lfact_all": lfact_all,
+        "means_all": means_all,
+        "ydims": ydims,
+    }
     if compute_wtw:
-        result['wtw'] = wtw_all
+        result["wtw"] = wtw_all
     if not skip_c_d:
-        result['c'] = anp.zeros(num_all_configs)
-        result['d'] = anp.zeros(num_all_configs)
+        result["c"] = anp.zeros(num_all_configs)
+        result["d"] = anp.zeros(num_all_configs)
     return result
 
 
 # TODO: It is not clear whether this code is slower, and it is certainly
 # simpler.
 def resource_kernel_likelihood_slow_computations(
-        targets: List[np.ndarray],
-        res_kernel: ExponentialDecayBaseKernelFunction, noise_variance,
-        skip_c_d: bool = False) -> Dict:
+    targets: List[np.ndarray],
+    res_kernel: ExponentialDecayBaseKernelFunction,
+    noise_variance,
+    skip_c_d: bool = False,
+) -> Dict:
     """
     Naive implementation of `resource_kernel_likelihood_computations`, which
     does not require precomputations, but is somewhat slower. Here, results are
@@ -332,8 +345,7 @@ def resource_kernel_likelihood_slow_computations(
     ydims = [y.shape[0] for y in targets]
     rvals = _colvec(anp.arange(r_min, r_min + num_res))
     means_all = _flatvec(res_kernel.mean_function(rvals))
-    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(
-        anp.ones(num_res))
+    amat = res_kernel(rvals, rvals) / noise_variance + anp.diag(anp.ones(num_res))
     # TODO: Do we need AddJitterOp here?
     lfact_all = cholesky_factorization(amat)  # L (Cholesky factor)
     # Outer loop over configurations
@@ -342,8 +354,7 @@ def resource_kernel_likelihood_slow_computations(
     wtw_lst = []
     num_data = 0
     for i, (ymat, ydim) in enumerate(zip(targets, ydims)):
-        assert 0 < ydim <= num_res,\
-            f"len(y[{i}]) = {ydim}, num_res = {num_res}"
+        assert 0 < ydim <= num_res, f"len(y[{i}]) = {ydim}, num_res = {num_res}"
         num_data += ydim
         lfact = lfact_all[:ydim, :ydim]
         rhs = anp.ones((ydim, 1))
@@ -357,23 +368,29 @@ def resource_kernel_likelihood_slow_computations(
             wtw_lst.append(_squared_norm(wmat))
     # Compile results
     result = {
-        'num_data': num_data,
-        'vtv': anp.array(vtv_lst),
-        'wtv': anp.vstack(wtv_lst),
-        'lfact_all': lfact_all,
-        'means_all': means_all,
-        'ydims': ydims}
+        "num_data": num_data,
+        "vtv": anp.array(vtv_lst),
+        "wtv": anp.vstack(wtv_lst),
+        "lfact_all": lfact_all,
+        "means_all": means_all,
+        "ydims": ydims,
+    }
     if compute_wtw:
-        result['wtw'] = anp.array(wtw_lst)
+        result["wtw"] = anp.array(wtw_lst)
     if not skip_c_d:
-        result['c'] = anp.zeros(num_configs)
-        result['d'] = anp.zeros(num_configs)
+        result["c"] = anp.zeros(num_configs)
+        result["d"] = anp.zeros(num_configs)
     return result
 
 
 def predict_posterior_marginals_extended(
-        poster_state: Dict, mean, kernel, test_features,
-        resources: List[int], res_kernel: ExponentialDecayBaseKernelFunction):
+    poster_state: Dict,
+    mean,
+    kernel,
+    test_features,
+    resources: List[int],
+    res_kernel: ExponentialDecayBaseKernelFunction,
+):
     """
     These are posterior marginals on f_r = h + g_r variables, where
     (x, r) are zipped from `test_features`, `resources`.
@@ -391,12 +408,13 @@ def predict_posterior_marginals_extended(
 
     """
     num_test = test_features.shape[0]
-    assert len(resources) == num_test, \
-        f"test_features.shape[0] = {num_test} != {len(resources)} " +\
-        "= len(resources)"
+    assert len(resources) == num_test, (
+        f"test_features.shape[0] = {num_test} != {len(resources)} " + "= len(resources)"
+    )
     # Predictive marginals over h
     h_means, h_variances = predict_posterior_marginals(
-        poster_state, mean, kernel, test_features)
+        poster_state, mean, kernel, test_features
+    )
     # Convert into predictive marginals over f_r
     rvals = _colvec(anp.array(resources))
     g_means = _colvec(res_kernel.mean_function(rvals))
@@ -407,10 +425,18 @@ def predict_posterior_marginals_extended(
 
 
 def sample_posterior_joint(
-        poster_state: Dict, mean, kernel, feature, targets: np.ndarray,
-        res_kernel: ExponentialDecayBaseKernelFunction, noise_variance,
-        lfact_all, means_all, random_state: RandomState,
-        num_samples: int = 1) -> Dict:
+    poster_state: Dict,
+    mean,
+    kernel,
+    feature,
+    targets: np.ndarray,
+    res_kernel: ExponentialDecayBaseKernelFunction,
+    noise_variance,
+    lfact_all,
+    means_all,
+    random_state: RandomState,
+    num_samples: int = 1,
+) -> Dict:
     """
     Given `poster_state` for some data plus one additional configuration
     with data (`feature`, `targets`), draw joint samples of unobserved
@@ -441,22 +467,28 @@ def sample_posterior_joint(
     targets = _colvec(targets, _np=np)
     ydim = targets.size
     assert ydim < num_res, f"len(targets) = {ydim} must be < {num_res}"
-    assert lfact_all.shape == (num_res, num_res), \
-        f"lfact_all.shape = {lfact_all.shape}, must be {(num_res, num_res)}"
-    assert means_all.size == num_res, \
-        f"means_all.size = {means_all.size}, must be {num_res}"
+    assert lfact_all.shape == (
+        num_res,
+        num_res,
+    ), f"lfact_all.shape = {lfact_all.shape}, must be {(num_res, num_res)}"
+    assert (
+        means_all.size == num_res
+    ), f"means_all.size = {means_all.size}, must be {num_res}"
 
     # Posterior mean and variance of h for additional config
     post_mean, post_variance = predict_posterior_marginals(
-        poster_state, mean, kernel, _rowvec(feature))
+        poster_state, mean, kernel, _rowvec(feature)
+    )
     post_mean = post_mean[0]
     post_variance = post_variance[0]
     # Draw samples from joint distribution
     epsmat = random_state.normal(size=(num_res, num_samples))
-    joint_samples = anp.matmul(lfact_all, epsmat) * anp.sqrt(noise_variance) +\
-        anp.reshape(means_all, (-1, 1))
-    hvec = random_state.normal(
-        size=(1, num_samples)) * anp.sqrt(post_variance) + post_mean
+    joint_samples = anp.matmul(lfact_all, epsmat) * anp.sqrt(
+        noise_variance
+    ) + anp.reshape(means_all, (-1, 1))
+    hvec = (
+        random_state.normal(size=(1, num_samples)) * anp.sqrt(post_variance) + post_mean
+    )
     joint_samples = joint_samples + hvec
     if ydim > 0:
         # There are observed targets, so have to transform the joint sample
@@ -467,17 +499,15 @@ def sample_posterior_joint(
         vvec = solve_triangular(lfact, rhs, lower=True)  # v
         vtv = _squared_norm(vvec)  # alpha
         # w_hat - w
-        w_delta = solve_triangular(
-            lfact, targets - targets_samp, lower=True)
+        w_delta = solve_triangular(lfact, targets - targets_samp, lower=True)
         kappa = post_variance / noise_variance
         fact = kappa / (vtv * kappa + 1.0)
         # rho_hat - rho
         rho_delta = anp.matmul(_rowvec(vvec), w_delta) * fact
         tmpmat = w_delta - vvec * rho_delta
         lfact_pq = lfact_all[ydim:, :ydim]  # L_{P, Q}
-        ysamples = joint_samples[ydim:, :] + anp.matmul(lfact_pq, tmpmat) + \
-                   rho_delta
+        ysamples = joint_samples[ydim:, :] + anp.matmul(lfact_pq, tmpmat) + rho_delta
     else:
         # Nothing to condition on
         ysamples = joint_samples
-    return {'y': ysamples}
+    return {"y": ysamples}

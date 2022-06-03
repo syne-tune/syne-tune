@@ -26,10 +26,11 @@ class SynchronousHyperbandRungSystem(object):
     used in :class:`SynchronousHyperbandBracketManager`.
 
     """
+
     @staticmethod
     def geometric(
-            min_resource: int, max_resource: int,
-            reduction_factor: float, num_brackets: int) -> RungSystemsPerBracket:
+        min_resource: int, max_resource: int, reduction_factor: float, num_brackets: int
+    ) -> RungSystemsPerBracket:
         """
         This is the geometric progression setup from the original papers on
         successive halving and Hyperband.
@@ -48,30 +49,39 @@ class SynchronousHyperbandRungSystem(object):
         :return: Rung system
         """
         SynchronousHyperbandRungSystem._assert_positive_int(
-            min_resource, 'min_resource')
+            min_resource, "min_resource"
+        )
         SynchronousHyperbandRungSystem._assert_positive_int(
-            max_resource, 'max_resource')
+            max_resource, "max_resource"
+        )
         assert min_resource < max_resource
-        assert reduction_factor >= 2, \
-            f"reduction_factor = {reduction_factor} must be >= 2"
+        assert (
+            reduction_factor >= 2
+        ), f"reduction_factor = {reduction_factor} must be >= 2"
         SynchronousHyperbandRungSystem._assert_positive_int(
-            num_brackets, 'num_brackets')
-        s_max = int(np.ceil(
-            (np.log(max_resource) - np.log(min_resource)) /
-            np.log(reduction_factor)))
-        msg_prefix = f"min_resource = {min_resource}, max_resource = " +\
-                     f"{max_resource}, reduction_factor = {reduction_factor}"
+            num_brackets, "num_brackets"
+        )
+        s_max = int(
+            np.ceil(
+                (np.log(max_resource) - np.log(min_resource)) / np.log(reduction_factor)
+            )
+        )
+        msg_prefix = (
+            f"min_resource = {min_resource}, max_resource = "
+            + f"{max_resource}, reduction_factor = {reduction_factor}"
+        )
         if s_max <= 0:
             logger.warning(
-                msg_prefix +
-                ": supports only one bracket with a single rung level of "
-                "size 1. Is that really what you want?")
+                msg_prefix + ": supports only one bracket with a single rung level of "
+                "size 1. Is that really what you want?"
+            )
             return [[(1, max_resource)]]
         if num_brackets > s_max + 1:
             logger.warning(
-                msg_prefix +
-                f": does not support num_brackets = {num_brackets}, but at "
-                f"most {s_max + 1}. I am switching to the latter one.")
+                msg_prefix
+                + f": does not support num_brackets = {num_brackets}, but at "
+                f"most {s_max + 1}. I am switching to the latter one."
+            )
             num_brackets = s_max + 1
         rung_systems = []
         for bracket in range(num_brackets):
@@ -79,20 +89,22 @@ class SynchronousHyperbandRungSystem(object):
             r_num_m1 = s_max - bracket
             pre_fact = (s_max + 1) / (r_num_m1 + 1)
             for rung in range(r_num_m1):
-                resource = int(round(
-                    min_resource * np.power(
-                        reduction_factor, rung + bracket)))
-                rsize = int(np.ceil(
-                    pre_fact * np.power(reduction_factor, r_num_m1 - rung)))
+                resource = int(
+                    round(min_resource * np.power(reduction_factor, rung + bracket))
+                )
+                rsize = int(
+                    np.ceil(pre_fact * np.power(reduction_factor, r_num_m1 - rung))
+                )
                 rungs.append((rsize, resource))
             rungs.append((int(np.ceil(pre_fact)), max_resource))
             rung_systems.append(rungs)
-        parts = [f"Bracket {i}: rungs = {rungs}" for i, rungs in enumerate(rung_systems)]
-        logger.info('\n'.join(parts))
+        parts = [
+            f"Bracket {i}: rungs = {rungs}" for i, rungs in enumerate(rung_systems)
+        ]
+        logger.info("\n".join(parts))
 
         return rung_systems
 
     @staticmethod
     def _assert_positive_int(x: int, name: str):
-        assert round(x) == x and x >= 1, \
-            f"{name} = {x} must be a positive integer"
+        assert round(x) == x and x >= 1, f"{name} = {x} must be a positive integer"

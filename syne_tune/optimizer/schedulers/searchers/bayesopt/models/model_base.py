@@ -14,12 +14,15 @@ from typing import List, Optional
 import numpy as np
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import SurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import ConfigurationFilter
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    SurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    ConfigurationFilter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +32,13 @@ class BaseSurrogateModel(SurrogateModel):
     Base class for (most) SurrogateModel implementations, provides common code
 
     """
+
     def __init__(
-            self, state: TuningJobState, active_metric: str = None,
-            filter_observed_data: Optional[ConfigurationFilter] = None):
+        self,
+        state: TuningJobState,
+        active_metric: str = None,
+        filter_observed_data: Optional[ConfigurationFilter] = None,
+    ):
         super().__init__(state, active_metric)
         self._current_best = None
         self._filter_observed_data = filter_observed_data
@@ -51,13 +58,14 @@ class BaseSurrogateModel(SurrogateModel):
         candidates, _ = self.state.observed_data_for_metric(self.active_metric)
         candidates += self.state.pending_configurations()
         candidates = self._current_best_filter_candidates(candidates)
-        assert len(candidates) > 0, \
-            "Cannot predict means at current candidates with no candidates at all"
+        assert (
+            len(candidates) > 0
+        ), "Cannot predict means at current candidates with no candidates at all"
         inputs = self.hp_ranges_for_prediction().to_ndarray_matrix(candidates)
         all_means = []
         # Loop over MCMC samples (if any)
         for prediction in self.predict(inputs):
-            means = prediction['mean']
+            means = prediction["mean"]
             if means.ndim == 1:  # In case of no fantasizing
                 means = means.reshape((-1, 1))
             all_means.append(means)
@@ -79,5 +87,6 @@ class BaseSurrogateModel(SurrogateModel):
         if self._filter_observed_data is None:
             return candidates  # Default: No filtering
         else:
-            return [config for config in candidates
-                    if self._filter_observed_data(config)]
+            return [
+                config for config in candidates if self._filter_observed_data(config)
+            ]

@@ -16,18 +16,23 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional, List, Tuple
 
 from syne_tune.config_space import Domain, is_log_space, Categorical
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
-    import DebugLogPrinter
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
-    import make_hyperparameter_ranges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
-    import ExclusionList
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
+    DebugLogPrinter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+    make_hyperparameter_ranges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    ExclusionList,
+)
 
-__all__ = ['BaseSearcher',
-           'SearcherWithRandomSeed',
-           'RandomSearcher',
-           'impute_points_to_evaluate',
-           'extract_random_seed']
+__all__ = [
+    "BaseSearcher",
+    "SearcherWithRandomSeed",
+    "RandomSearcher",
+    "impute_points_to_evaluate",
+    "extract_random_seed",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -45,13 +50,11 @@ def _impute_default_config(default_config, config_space):
                     if not is_log_space(hp_range):
                         midpoint = 0.5 * (upper + lower)
                     else:
-                        midpoint = np.exp(0.5 * (
-                                np.log(upper) + np.log(lower)))
+                        midpoint = np.exp(0.5 * (np.log(upper) + np.log(lower)))
                     # Casting may involve rounding to nearest value in
                     # a finite range
                     midpoint = hp_range.cast(midpoint)
-                    midpoint = np.clip(
-                        midpoint, hp_range.lower, hp_range.upper)
+                    midpoint = np.clip(midpoint, hp_range.lower, hp_range.upper)
                     new_config[name] = midpoint
             else:
                 # Check validity
@@ -59,13 +62,15 @@ def _impute_default_config(default_config, config_space):
                 # the closest one in the range
                 val = hp_range.cast(default_config[name])
                 if isinstance(hp_range, Categorical):
-                    assert val in hp_range.categories, \
-                        f"default_config[{name}] = {val} is not in " +\
-                        f"categories = {hp_range.categories}"
+                    assert val in hp_range.categories, (
+                        f"default_config[{name}] = {val} is not in "
+                        + f"categories = {hp_range.categories}"
+                    )
                 else:
-                    assert hp_range.lower <= val <= hp_range.upper, \
-                        f"default_config[{name}] = {val} is not in " +\
-                        f"[{hp_range.lower}, {hp_range.upper}]"
+                    assert hp_range.lower <= val <= hp_range.upper, (
+                        f"default_config[{name}] = {val} is not in "
+                        + f"[{hp_range.lower}, {hp_range.upper}]"
+                    )
                 new_config[name] = val
     return new_config
 
@@ -79,8 +84,8 @@ def _sorted_keys(config_space: Dict) -> List[str]:
 
 
 def impute_points_to_evaluate(
-        points_to_evaluate: Optional[List[Dict]],
-        config_space: Dict) -> List[Dict]:
+    points_to_evaluate: Optional[List[Dict]], config_space: Dict
+) -> List[Dict]:
     """
     Transforms `points_to_evaluate` argument to `BaseSearcher`. Each config in
     the list can be partially specified, or even be an empty dict. For each
@@ -128,13 +133,14 @@ class BaseSearcher(ABC):
         determined by the midpoint heuristic. If [] (empty list), no initial
         configurations are specified.
     """
-    def __init__(
-            self, config_space, metric, points_to_evaluate=None):
+
+    def __init__(self, config_space, metric, points_to_evaluate=None):
         self.config_space = config_space
         assert metric is not None, "Argument 'metric' is required"
         self._metric = metric
         self._points_to_evaluate = impute_points_to_evaluate(
-            points_to_evaluate, config_space)
+            points_to_evaluate, config_space
+        )
 
     def configure_scheduler(self, scheduler):
         """
@@ -180,8 +186,7 @@ class BaseSearcher(ABC):
         """
         pass
 
-    def on_trial_result(
-            self, trial_id: str, config: Dict, result: Dict, update: bool):
+    def on_trial_result(self, trial_id: str, config: Dict, result: Dict, update: bool):
         """Inform searcher about result
 
         The scheduler passes every result. If `update` is True, the searcher
@@ -211,8 +216,8 @@ class BaseSearcher(ABC):
         pass
 
     def register_pending(
-            self, trial_id: str, config: Optional[Dict] = None,
-            milestone=None):
+        self, trial_id: str, config: Optional[Dict] = None, milestone=None
+    ):
         """
         Signals to searcher that evaluation for trial has started, but not
         yet finished, which allows model-based searchers to register this
@@ -276,7 +281,7 @@ class BaseSearcher(ABC):
 
         :return: Pickle-able mutable state of searcher
         """
-        return {'points_to_evaluate': self._points_to_evaluate}
+        return {"points_to_evaluate": self._points_to_evaluate}
 
     @abstractmethod
     def clone_from_state(self, state: dict):
@@ -295,7 +300,7 @@ class BaseSearcher(ABC):
         pass
 
     def _restore_from_state(self, state: dict):
-        self._points_to_evaluate = state['points_to_evaluate'].copy()
+        self._points_to_evaluate = state["points_to_evaluate"].copy()
 
     @property
     def debug_log(self):
@@ -309,11 +314,11 @@ class BaseSearcher(ABC):
 
 
 def extract_random_seed(kwargs: dict) -> (int, dict):
-    key = 'random_seed_generator'
+    key = "random_seed_generator"
     if kwargs.get(key) is not None:
         random_seed = kwargs[key]()
     else:
-        key = 'random_seed'
+        key = "random_seed"
         if kwargs.get(key) is not None:
             random_seed = kwargs[key]
         else:
@@ -341,22 +346,21 @@ class SearcherWithRandomSeed(BaseSearcher):
         This is used if `random_seed_generator` is not given.
 
     """
-    def __init__(
-            self, config_space, metric, points_to_evaluate=None, **kwargs):
+
+    def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
         super().__init__(
-            config_space, metric=metric, points_to_evaluate=points_to_evaluate)
+            config_space, metric=metric, points_to_evaluate=points_to_evaluate
+        )
         random_seed, _ = extract_random_seed(kwargs)
         self.random_state = np.random.RandomState(random_seed)
 
     def get_state(self) -> dict:
-        state = dict(
-            super().get_state(),
-            random_state=self.random_state.get_state())
+        state = dict(super().get_state(), random_state=self.random_state.get_state())
         return state
 
     def _restore_from_state(self, state: dict):
         super()._restore_from_state(state)
-        self.random_state.set_state(state['random_state'])
+        self.random_state.set_state(state["random_state"])
 
 
 class RandomSearcher(SearcherWithRandomSeed):
@@ -369,16 +373,16 @@ class RandomSearcher(SearcherWithRandomSeed):
         configs are chosen when, and which metric values are obtained.
 
     """
+
     MAX_RETRIES = 100
 
     def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
-        super().__init__(
-            config_space, metric, points_to_evaluate, **kwargs)
+        super().__init__(config_space, metric, points_to_evaluate, **kwargs)
         self._hp_ranges = make_hyperparameter_ranges(config_space)
-        self._resource_attr = kwargs.get('resource_attr')
+        self._resource_attr = kwargs.get("resource_attr")
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)
         # Debug log printing (switched on by default)
-        debug_log = kwargs.get('debug_log', True)
+        debug_log = kwargs.get("debug_log", True)
         if isinstance(debug_log, bool):
             if debug_log:
                 self._debug_log = DebugLogPrinter()
@@ -402,8 +406,7 @@ class RandomSearcher(SearcherWithRandomSeed):
                 Scheduler the searcher is used with.
 
         """
-        from syne_tune.optimizer.schedulers.hyperband import \
-            HyperbandScheduler
+        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
         super().configure_scheduler(scheduler)
         # If the scheduler is Hyperband, we want to know the resource
@@ -421,9 +424,9 @@ class RandomSearcher(SearcherWithRandomSeed):
         A new configuration that is valid, or None if no new config can be
         suggested.
         """
-        trial_id = kwargs.get('trial_id')
+        trial_id = kwargs.get("trial_id")
         if self._debug_log is not None:
-            self._debug_log.start_get_config('random', trial_id=trial_id)
+            self._debug_log.start_get_config("random", trial_id=trial_id)
         new_config = self._next_initial_config()
         if new_config is None:
             if not self._excl_list.config_space_exhausted():
@@ -440,8 +443,10 @@ class RandomSearcher(SearcherWithRandomSeed):
                 # All get_config debug log info is only written here
                 self._debug_log.write_block()
         else:
-            msg = "Failed to sample a configuration not already chosen " + \
-                  f"before. Exclusion list has size {len(self._excl_list)}."
+            msg = (
+                "Failed to sample a configuration not already chosen "
+                + f"before. Exclusion list has size {len(self._excl_list)}."
+            )
             cs_size = self._excl_list.configspace_size
             if cs_size is not None:
                 msg += f" Configuration space has size {cs_size}."
@@ -454,13 +459,14 @@ class RandomSearcher(SearcherWithRandomSeed):
             if self._resource_attr is not None:
                 # For HyperbandScheduler, also add the resource attribute
                 resource = int(result[self._resource_attr])
-                trial_id = trial_id + ':{}'.format(resource)
+                trial_id = trial_id + ":{}".format(resource)
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
     def clone_from_state(self, state: dict):
         new_searcher = RandomSearcher(
-            self.config_space, metric=self._metric, debug_log=self._debug_log)
+            self.config_space, metric=self._metric, debug_log=self._debug_log
+        )
         new_searcher._resource_attr = self._resource_attr
         new_searcher._restore_from_state(state)
         return new_searcher

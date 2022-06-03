@@ -28,7 +28,9 @@ class DeterministicBackend(TrialBackend):
         self.trialid_to_results = {}
         self.timestamp = 0
 
-    def generate_event(self, trial_id: int, metrics: List[Dict], status: Optional[str] = None):
+    def generate_event(
+        self, trial_id: int, metrics: List[Dict], status: Optional[str] = None
+    ):
         for m in metrics:
             m[ST_WORKER_TIMESTAMP] = self.timestamp
             self.timestamp += 1
@@ -73,21 +75,23 @@ def test_dummybackend():
     trial_ids = [3, 7]
     # check that the dummy backend behaves as expected, when we call status 2 observations are created
     backend = DeterministicBackend()
-    backend.generate_event(trial_id=3, metrics=[{'metric': 6}])
-    backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
+    backend.generate_event(trial_id=3, metrics=[{"metric": 6}])
+    backend.generate_event(trial_id=7, metrics=[{"metric": 14}])
     metrics = [trial.metrics for trial in backend._all_trial_results(trial_ids)]
-    assert metrics == [[{'metric': 6, ST_WORKER_TIMESTAMP: 0}], [{'metric': 14, ST_WORKER_TIMESTAMP: 1}]]
-
-    backend.generate_event(trial_id=3, metrics=[{'metric': 6}])
-    backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
-    metrics = [trial.metrics for trial in backend._all_trial_results(trial_ids)]
-    assert metrics == [[
-        {'metric': 6, ST_WORKER_TIMESTAMP: 0},
-        {'metric': 6, ST_WORKER_TIMESTAMP: 2}
-    ], [
-        {'metric': 14, ST_WORKER_TIMESTAMP: 1},
-        {'metric': 14, ST_WORKER_TIMESTAMP: 3}
+    assert metrics == [
+        [{"metric": 6, ST_WORKER_TIMESTAMP: 0}],
+        [{"metric": 14, ST_WORKER_TIMESTAMP: 1}],
     ]
+
+    backend.generate_event(trial_id=3, metrics=[{"metric": 6}])
+    backend.generate_event(trial_id=7, metrics=[{"metric": 14}])
+    metrics = [trial.metrics for trial in backend._all_trial_results(trial_ids)]
+    assert metrics == [
+        [{"metric": 6, ST_WORKER_TIMESTAMP: 0}, {"metric": 6, ST_WORKER_TIMESTAMP: 2}],
+        [
+            {"metric": 14, ST_WORKER_TIMESTAMP: 1},
+            {"metric": 14, ST_WORKER_TIMESTAMP: 3},
+        ],
     ]
 
 
@@ -100,38 +104,38 @@ def test_fetch_results_metrics():
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == []
 
-    backend.generate_event(trial_id=3, metrics=[{'metric': 6, ST_WORKER_TIMESTAMP: 0}])
-    backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
+    backend.generate_event(trial_id=3, metrics=[{"metric": 6, ST_WORKER_TIMESTAMP: 0}])
+    backend.generate_event(trial_id=7, metrics=[{"metric": 14}])
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == [
-        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 0}),
-        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 1})
+        (3, {"metric": 6, ST_WORKER_TIMESTAMP: 0}),
+        (7, {"metric": 14, ST_WORKER_TIMESTAMP: 1}),
     ]
 
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == []
 
-    backend.generate_event(trial_id=3, metrics=[{'metric': 6}])
-    backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
+    backend.generate_event(trial_id=3, metrics=[{"metric": 6}])
+    backend.generate_event(trial_id=7, metrics=[{"metric": 14}])
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == [
-        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 2}),
-        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 3})
+        (3, {"metric": 6, ST_WORKER_TIMESTAMP: 2}),
+        (7, {"metric": 14, ST_WORKER_TIMESTAMP: 3}),
     ]
 
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == []
 
     for i in range(2):
-        backend.generate_event(trial_id=3, metrics=[{'metric': 6}])
-        backend.generate_event(trial_id=7, metrics=[{'metric': 14}])
+        backend.generate_event(trial_id=3, metrics=[{"metric": 6}])
+        backend.generate_event(trial_id=7, metrics=[{"metric": 14}])
 
     _, metrics = backend.fetch_status_results(trial_ids)
     assert metrics == [
-        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 4}),
-        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 5}),
-        (3, {'metric': 6, ST_WORKER_TIMESTAMP: 6}),
-        (7, {'metric': 14, ST_WORKER_TIMESTAMP: 7})
+        (3, {"metric": 6, ST_WORKER_TIMESTAMP: 4}),
+        (7, {"metric": 14, ST_WORKER_TIMESTAMP: 5}),
+        (3, {"metric": 6, ST_WORKER_TIMESTAMP: 6}),
+        (7, {"metric": 14, ST_WORKER_TIMESTAMP: 7}),
     ]
 
     _, metrics = backend.fetch_status_results(trial_ids)
@@ -140,7 +144,9 @@ def test_fetch_results_metrics():
 
 def get_status_metrics(backend, trial_ids):
     trial_status_dict, new_metrics = backend.fetch_status_results(trial_ids)
-    trial_statuses = {trial_id: status for (trial_id, (_, status)) in trial_status_dict.items()}
+    trial_statuses = {
+        trial_id: status for (trial_id, (_, status)) in trial_status_dict.items()
+    }
     return trial_statuses, new_metrics
 
 
@@ -149,11 +155,18 @@ def test_fetch_results_status():
     trial_ids = [3, 7]
     backend = DeterministicBackend()
 
-    backend.generate_event(trial_id=3, metrics=[{'metric': 6}], status=Status.in_progress)
-    backend.generate_event(trial_id=7, metrics=[{'metric': 14}], status=Status.in_progress)
+    backend.generate_event(
+        trial_id=3, metrics=[{"metric": 6}], status=Status.in_progress
+    )
+    backend.generate_event(
+        trial_id=7, metrics=[{"metric": 14}], status=Status.in_progress
+    )
 
     trial_statuses, metrics = get_status_metrics(backend, trial_ids)
-    assert metrics == [(3, {'metric': 6, 'st_worker_timestamp': 0}), (7, {'metric': 14, 'st_worker_timestamp': 1})]
+    assert metrics == [
+        (3, {"metric": 6, "st_worker_timestamp": 0}),
+        (7, {"metric": 14, "st_worker_timestamp": 1}),
+    ]
     assert trial_statuses == {3: Status.in_progress, 7: Status.in_progress}
 
     # check that status gets updated to failed
@@ -164,12 +177,17 @@ def test_fetch_results_status():
     assert trial_statuses == {3: Status.in_progress, 7: Status.failed}
 
     # check that in case the trial completed but metrics are still to be seen, the status is in_progresss
-    backend.generate_event(trial_id=3, metrics=[{'metric': 6}, {'metric': 6}], status=Status.completed)
+    backend.generate_event(
+        trial_id=3, metrics=[{"metric": 6}, {"metric": 6}], status=Status.completed
+    )
     #     v
     # 6 6 6
     trial_statuses, metrics = get_status_metrics(backend, trial_ids)
 
-    assert metrics == [(3, {'metric': 6, 'st_worker_timestamp': 2}), (3, {'metric': 6, 'st_worker_timestamp': 3})]
+    assert metrics == [
+        (3, {"metric": 6, "st_worker_timestamp": 2}),
+        (3, {"metric": 6, "st_worker_timestamp": 3}),
+    ]
     assert trial_statuses == {3: Status.completed, 7: Status.failed}
 
     #       v

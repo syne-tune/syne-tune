@@ -22,7 +22,7 @@ from syne_tune.config_space import uniform
 from syne_tune import StoppingCriterion, Tuner
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
@@ -35,11 +35,14 @@ if __name__ == '__main__':
     }
 
     entry_point = str(
-        Path(__file__).parent / "training_scripts" / "constrained_hpo"
-        / "train_constrained_example.py")
+        Path(__file__).parent
+        / "training_scripts"
+        / "constrained_hpo"
+        / "train_constrained_example.py"
+    )
     mode = "max"
     metric = "objective"
-    constraint_attr = 'my_constraint_metric'
+    constraint_attr = "my_constraint_metric"
 
     # Local back-end
     trial_backend = LocalBackend(entry_point=entry_point)
@@ -48,16 +51,17 @@ if __name__ == '__main__':
     #   max_x f(x)   s.t. c(x) <= 0
     # Here, `metric` represents f(x), `constraint_attr` represents c(x).
     search_options = {
-        'num_init_random': n_workers,
-        'constraint_attr': constraint_attr,
+        "num_init_random": n_workers,
+        "constraint_attr": constraint_attr,
     }
     scheduler = FIFOScheduler(
         config_space,
-        searcher='bayesopt_constrained',
+        searcher="bayesopt_constrained",
         search_options=search_options,
         mode=mode,
         metric=metric,
-        random_seed=random_seed)
+        random_seed=random_seed,
+    )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=30)
     tuner = Tuner(

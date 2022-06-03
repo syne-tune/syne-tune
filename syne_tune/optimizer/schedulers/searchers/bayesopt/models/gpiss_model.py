@@ -14,40 +14,54 @@ from typing import Dict, List, Optional
 import numpy as np
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
-    import TransformerModelFactory
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base \
-    import BaseSurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext \
-    import ExtendedConfiguration
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.gpiss_model \
-    import GaussianProcessLearningCurveModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm \
-    import prepare_data, prepare_data_with_pending
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.posterior_state \
-    import GaussProcAdditivePosteriorState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import SurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
-    ConfigurationFilter, FantasizedPendingEvaluation
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
-    import DebugLogPrinter
-from syne_tune.optimizer.schedulers.utils.simple_profiler \
-    import SimpleProfiler
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
+    TransformerModelFactory,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
+    BaseSurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
+    ExtendedConfiguration,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.gpiss_model import (
+    GaussianProcessLearningCurveModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm import (
+    prepare_data,
+    prepare_data_with_pending,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.posterior_state import (
+    GaussProcAdditivePosteriorState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    SurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    ConfigurationFilter,
+    FantasizedPendingEvaluation,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
+    DebugLogPrinter,
+)
+from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
 
 class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
     def __init__(
-            self, state: TuningJobState,
-            gpmodel: GaussianProcessLearningCurveModel,
-            fantasy_samples: List[FantasizedPendingEvaluation],
-            active_metric: str,
-            filter_observed_data: Optional[ConfigurationFilter] = None,
-            normalize_mean: float = 0.0, normalize_std: float = 1.0):
+        self,
+        state: TuningJobState,
+        gpmodel: GaussianProcessLearningCurveModel,
+        fantasy_samples: List[FantasizedPendingEvaluation],
+        active_metric: str,
+        filter_observed_data: Optional[ConfigurationFilter] = None,
+        normalize_mean: float = 0.0,
+        normalize_std: float = 1.0,
+    ):
         """
         Gaussian Process additive surrogate model, where model parameters are
         fit by marginal likelihood maximization.
@@ -84,33 +98,37 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
         :return: Predictive means, stddevs
         """
         predictions_list = []
-        for post_mean, post_variance in self._gpmodel.predict(
-                inputs):
-            assert post_mean.shape[0] == inputs.shape[0], \
-                (post_mean.shape, inputs.shape)
-            assert post_variance.shape == (inputs.shape[0],), \
-                (post_variance.shape, inputs.shape)
+        for post_mean, post_variance in self._gpmodel.predict(inputs):
+            assert post_mean.shape[0] == inputs.shape[0], (
+                post_mean.shape,
+                inputs.shape,
+            )
+            assert post_variance.shape == (inputs.shape[0],), (
+                post_variance.shape,
+                inputs.shape,
+            )
             # Undo normalization applied to targets
             mean_denorm = post_mean * self.std + self.mean
             std_denorm = np.sqrt(post_variance) * self.std
-            predictions_list.append(
-                {'mean': mean_denorm, 'std': std_denorm})
+            predictions_list.append({"mean": mean_denorm, "std": std_denorm})
         return predictions_list
 
     def backward_gradient(
-            self, input: np.ndarray,
-            head_gradients: List[Dict[str, np.ndarray]]) -> List[np.ndarray]:
+        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
+    ) -> List[np.ndarray]:
         poster_states = self.posterior_states
-        assert poster_states is not None, \
-            "Cannot run backward_gradient without a posterior state"
-        assert len(poster_states) == len(head_gradients), \
-            "len(posterior_states) = {} != {} = len(head_gradients)".format(
-                len(poster_states), len(head_gradients))
+        assert (
+            poster_states is not None
+        ), "Cannot run backward_gradient without a posterior state"
+        assert len(poster_states) == len(
+            head_gradients
+        ), "len(posterior_states) = {} != {} = len(head_gradients)".format(
+            len(poster_states), len(head_gradients)
+        )
         return [
-            poster_state.backward_gradient(
-                input, head_gradient, self.mean, self.std)
-            for poster_state, head_gradient in zip(
-                poster_states, head_gradients)]
+            poster_state.backward_gradient(input, head_gradient, self.mean, self.std)
+            for poster_state, head_gradient in zip(poster_states, head_gradients)
+        ]
 
     def does_mcmc(self):
         return False
@@ -122,14 +140,16 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
 
 class GaussProcAdditiveModelFactory(TransformerModelFactory):
     def __init__(
-            self, gpmodel: GaussianProcessLearningCurveModel,
-            num_fantasy_samples: int,
-            active_metric: str,
-            config_space_ext: ExtendedConfiguration,
-            normalize_targets: bool = False,
-            profiler: Optional[SimpleProfiler] = None,
-            debug_log: Optional[DebugLogPrinter] = None,
-            filter_observed_data: Optional[ConfigurationFilter] = None):
+        self,
+        gpmodel: GaussianProcessLearningCurveModel,
+        num_fantasy_samples: int,
+        active_metric: str,
+        config_space_ext: ExtendedConfiguration,
+        normalize_targets: bool = False,
+        profiler: Optional[SimpleProfiler] = None,
+        debug_log: Optional[DebugLogPrinter] = None,
+        filter_observed_data: Optional[ConfigurationFilter] = None,
+    ):
         """
         If `num_fantasy_samples > 0`, we draw this many fantasy targets
         independently, while each sample is dependent over all pending
@@ -149,10 +169,12 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         self._gpmodel = gpmodel
         self.active_metric = active_metric
         r_min, r_max = config_space_ext.resource_attr_range
-        assert 0 < r_min < r_max, \
-            f"r_min = {r_min}, r_max = {r_max}: Need 0 < r_min < r_max"
-        assert num_fantasy_samples >= 0, \
-            f"num_fantasy_samples = {num_fantasy_samples}, must be non-negative int"
+        assert (
+            0 < r_min < r_max
+        ), f"r_min = {r_min}, r_max = {r_max}: Need 0 < r_min < r_max"
+        assert (
+            num_fantasy_samples >= 0
+        ), f"num_fantasy_samples = {num_fantasy_samples}, must be non-negative int"
         self.num_fantasy_samples = num_fantasy_samples
         self._config_space_ext = config_space_ext
         self._debug_log = debug_log
@@ -175,19 +197,22 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         self._gpmodel.set_params(param_dict)
 
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
-        assert state.num_observed_cases(self.active_metric) > 0, \
-            "Cannot compute posterior: state has no labeled datapoints " +\
-            f"for metric {self.active_metric}"
+        assert state.num_observed_cases(self.active_metric) > 0, (
+            "Cannot compute posterior: state has no labeled datapoints "
+            + f"for metric {self.active_metric}"
+        )
         if self._debug_log is not None:
             self._debug_log.set_state(state)
-        do_fantasizing = \
-            state.pending_evaluations and self.num_fantasy_samples > 0
+        do_fantasizing = state.pending_evaluations and self.num_fantasy_samples > 0
 
         # [1] Fit model and compute posterior state, ignoring pending evals
         data = prepare_data(
-            state, self._config_space_ext, self.active_metric,
+            state,
+            self._config_space_ext,
+            self.active_metric,
             normalize_targets=self.normalize_targets,
-            do_fantasizing=False)
+            do_fantasizing=False,
+        )
         if fit_params:
             logger.info(f"Fitting surrogate model for {self.active_metric}")
             self._gpmodel.fit(data, profiler=self._profiler)
@@ -199,8 +224,9 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             self._debug_log.set_model_params(self.get_params())
         if self.normalize_targets:
             extra_kwargs = {
-                'normalize_mean': data['mean_targets'],
-                'normalize_std': data['std_targets']}
+                "normalize_mean": data["mean_targets"],
+                "normalize_std": data["std_targets"],
+            }
         else:
             extra_kwargs = dict()
 
@@ -217,7 +243,8 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
                 config_space_ext=self._config_space_ext,
                 active_metric=self.active_metric,
                 normalize_targets=self.normalize_targets,
-                do_fantasizing=True)
+                do_fantasizing=True,
+            )
             self._gpmodel.recompute_states(data)
         else:
             fantasy_samples = []
@@ -227,11 +254,13 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             gpmodel=self._gpmodel,
             fantasy_samples=fantasy_samples,
             active_metric=self.active_metric,
-            filter_observed_data=self._filter_observed_data, **extra_kwargs)
+            filter_observed_data=self._filter_observed_data,
+            **extra_kwargs,
+        )
 
     def model_for_fantasy_samples(
-            self, state: TuningJobState,
-            fantasy_samples: List[FantasizedPendingEvaluation]) -> SurrogateModel:
+        self, state: TuningJobState, fantasy_samples: List[FantasizedPendingEvaluation]
+    ) -> SurrogateModel:
         """
         Same as `model` with `fit_params=False`, but `fantasy_samples` are
         passed in, rather than sampled here.
@@ -241,9 +270,10 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         :return: See `model`
 
         """
-        assert state.num_observed_cases(self.active_metric) > 0, \
-            "Cannot compute posterior: state has no labeled datapoints " +\
-            f"for metric {self.active_metric}"
+        assert state.num_observed_cases(self.active_metric) > 0, (
+            "Cannot compute posterior: state has no labeled datapoints "
+            + f"for metric {self.active_metric}"
+        )
         assert state.pending_evaluations and self.num_fantasy_samples > 0
 
         # Recompute posterior state with fantasy samples
@@ -252,19 +282,22 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             config_for_trial=state.config_for_trial,
             trials_evaluations=state.trials_evaluations,
             failed_trials=state.failed_trials,
-            pending_evaluations=fantasy_samples)
+            pending_evaluations=fantasy_samples,
+        )
         # Recompute posterior state with fantasy samples
         data = prepare_data(
             state=state_with_fantasies,
             config_space_ext=self._config_space_ext,
             active_metric=self.active_metric,
             normalize_targets=self.normalize_targets,
-            do_fantasizing=True)
+            do_fantasizing=True,
+        )
         self._gpmodel.recompute_states(data)
         if self.normalize_targets:
             extra_kwargs = {
-                'normalize_mean': data['mean_targets'],
-                'normalize_std': data['std_targets']}
+                "normalize_mean": data["mean_targets"],
+                "normalize_std": data["std_targets"],
+            }
         else:
             extra_kwargs = dict()
 
@@ -273,10 +306,11 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             gpmodel=self._gpmodel,
             fantasy_samples=fantasy_samples,
             active_metric=self.active_metric,
-            filter_observed_data=self._filter_observed_data, **extra_kwargs)
+            filter_observed_data=self._filter_observed_data,
+            **extra_kwargs,
+        )
 
-    def _draw_fantasy_values(
-            self, state: TuningJobState) -> TuningJobState:
+    def _draw_fantasy_values(self, state: TuningJobState) -> TuningJobState:
         """
         Note: Fantasized target values are not de-normalized, because they
         are used internally only (see `prepare_data` with
@@ -294,8 +328,9 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             state=state,
             config_space_ext=self._config_space_ext,
             active_metric=self.active_metric,
-            normalize_targets=self.normalize_targets)
-        if not data_nopending['configs']:
+            normalize_targets=self.normalize_targets,
+        )
+        if not data_nopending["configs"]:
             # It can happen that all trials with observed data also have
             # pending evaluations. This is possible only at the very start,
             # as long as no trial has been stopped or paused.
@@ -304,14 +339,14 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             # `data_nopending` gets one entry. It is not possible to compute
             # a posterior state without any data, so handling this case
             # correctly would be very tedious).
-            assert data_pending['configs'], \
-                "State is empty, cannot do posterior inference:\n" +\
-                str(state)
-            names = ('configs', 'targets', 'trial_ids')
+            assert data_pending[
+                "configs"
+            ], "State is empty, cannot do posterior inference:\n" + str(state)
+            names = ("configs", "targets", "trial_ids")
             elem = {k: data_pending[k].pop(0) for k in names}
             for k, v in elem.items():
                 data_nopending[k] = [v]
-            k = 'features'
+            k = "features"
             all_features = data_pending[k]
             data_nopending[k] = all_features[0].reshape((1, -1))
             data_pending[k] = all_features[1:, :]
@@ -319,7 +354,8 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
                 "All trials currently have pending evaluations. In order to "
                 "sample fantasy targets, I'll remove pending evaluations "
                 f"from trial_id {elem['trial_ids']} (which has "
-                f"{elem['targets'].size} observations)")
+                f"{elem['targets'].size} observations)"
+            )
         # Start with posterior state, conditioned on data from trials without
         # pending evaluations
         self._gpmodel.recompute_states(data_nopending)
@@ -332,8 +368,10 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         all_fantasy_targets = []
         for sample_it in range(self.num_fantasy_samples):
             fantasy_targets, _ = poster_state_nopending.sample_and_update_for_pending(
-                data_pending, sample_all_nonobserved=False,
-                random_state=self._gpmodel.random_state)
+                data_pending,
+                sample_all_nonobserved=False,
+                random_state=self._gpmodel.random_state,
+            )
             for pos, fantasies in enumerate(fantasy_targets):
                 if sample_it == 0:
                     all_fantasy_targets.append([fantasies])
@@ -343,8 +381,8 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         r_min = self._config_space_ext.resource_attr_range[0]
         pending_evaluations_with_fantasies = []
         for trial_id, targets, fantasies in zip(
-                data_pending['trial_ids'], data_pending['targets'],
-                all_fantasy_targets):
+            data_pending["trial_ids"], data_pending["targets"], all_fantasy_targets
+        ):
             n_observed = targets.size
             n_pending = fantasies[0].size
             start = r_min + n_observed
@@ -356,11 +394,14 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
                     FantasizedPendingEvaluation(
                         trial_id=trial_id,
                         fantasies={self.active_metric: fantasy},
-                        resource=resource))
+                        resource=resource,
+                    )
+                )
         # Return new state, with `pending_evaluations` replaced
         return TuningJobState(
             hp_ranges=state.hp_ranges,
             config_for_trial=state.config_for_trial,
             trials_evaluations=state.trials_evaluations,
             failed_trials=state.failed_trials,
-            pending_evaluations=pending_evaluations_with_fantasies)
+            pending_evaluations=pending_evaluations_with_fantasies,
+        )

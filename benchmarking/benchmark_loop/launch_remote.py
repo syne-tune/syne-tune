@@ -9,9 +9,11 @@ import syne_tune
 import benchmarking
 from syne_tune.util import s3_experiment_path
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--experiment_tag", type=str, required=False, default=generate_slug(2))
+    parser.add_argument(
+        "--experiment_tag", type=str, required=False, default=generate_slug(2)
+    )
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
     print(experiment_tag)
@@ -23,10 +25,10 @@ if __name__ == '__main__':
         instance_type="ml.c5.4xlarge",
         instance_count=1,
         py_version="py38",
-        framework_version='1.10.0',
+        framework_version="1.10.0",
         role=get_execution_role(),
         dependencies=syne_tune.__path__ + benchmarking.__path__,
         disable_profiler=True,
-        hyperparameters={"experiment_tag": experiment_tag, 'num_seeds': 30},
+        hyperparameters={"experiment_tag": experiment_tag, "num_seeds": 30},
     )
     est.fit(job_name=experiment_tag)

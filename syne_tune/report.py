@@ -21,8 +21,14 @@ from typing import List, Dict
 from time import time, perf_counter
 from dataclasses import dataclass
 
-from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_WORKER_TIME, \
-    ST_WORKER_COST, ST_WORKER_TIMESTAMP, ST_WORKER_ITER
+from syne_tune.constants import (
+    ST_INSTANCE_TYPE,
+    ST_INSTANCE_COUNT,
+    ST_WORKER_TIME,
+    ST_WORKER_COST,
+    ST_WORKER_TIMESTAMP,
+    ST_WORKER_ITER,
+)
 
 # this is required so that metrics are written
 from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfos
@@ -51,13 +57,21 @@ class Reporter:
             #  information.
             if self.add_cost:
                 # add instance_type and instance count so that cost can be computed easily
-                self.instance_type = os.getenv(f"SM_HP_{ST_INSTANCE_TYPE.upper()}", None)
-                self.instance_count = literal_eval(os.getenv(f"SM_HP_{ST_INSTANCE_COUNT.upper()}", "1"))
-                logger.info(f"detected instance-type/instance-count to {self.instance_type}/{self.instance_count}")
+                self.instance_type = os.getenv(
+                    f"SM_HP_{ST_INSTANCE_TYPE.upper()}", None
+                )
+                self.instance_count = literal_eval(
+                    os.getenv(f"SM_HP_{ST_INSTANCE_COUNT.upper()}", "1")
+                )
+                logger.info(
+                    f"detected instance-type/instance-count to {self.instance_type}/{self.instance_count}"
+                )
                 if self.instance_type is not None:
                     instance_infos = InstanceInfos()
                     if self.instance_type in instance_infos.instances:
-                        cost_per_hour = instance_infos(instance_type=self.instance_type).cost_per_hour
+                        cost_per_hour = instance_infos(
+                            instance_type=self.instance_type
+                        ).cost_per_hour
                         self.dollar_cost = cost_per_hour * self.instance_count / 3600
 
     def __call__(self, **kw) -> None:
@@ -73,13 +87,14 @@ class Reporter:
         reserved namespace for Syne Tune internals.
         """
         for key in kw.keys():
-            assert not key.startswith("st_"), \
-                "The metric prefix 'st_' is used by Syne Tune internals, " \
+            assert not key.startswith("st_"), (
+                "The metric prefix 'st_' is used by Syne Tune internals, "
                 "please use a metric name that does not start with 'st_'."
+            )
 
         kw[ST_WORKER_TIMESTAMP] = time()
         if self.add_time:
-            seconds_spent = (perf_counter() - self.start)
+            seconds_spent = perf_counter() - self.start
             kw[ST_WORKER_TIME] = seconds_spent
             # second cost will only be there if we were able to properly detect the instance-type and instance-count
             # from the environment
@@ -102,6 +117,7 @@ def _serialize_report_dict(report_dict: Dict) -> str:
     if the dictionary values are not JSON-serializable
     """
     try:
+
         def np_encoder(object):
             if isinstance(object, np.generic):
                 return object.item()

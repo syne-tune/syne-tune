@@ -17,14 +17,14 @@ class PopulationElement:
 
 class RegularizedEvolution(SearcherWithRandomSeed):
     def __init__(
-            self,
-            config_space,
-            metric: str,
-            mode: str = 'min',
-            population_size: int = 100,
-            sample_size: int = 10,
-            points_to_evaluate: Optional[List[Dict]] = None,
-            **kwargs
+        self,
+        config_space,
+        metric: str,
+        mode: str = "min",
+        population_size: int = 100,
+        sample_size: int = 10,
+        points_to_evaluate: Optional[List[Dict]] = None,
+        **kwargs,
     ):
         """
         Implements the regularized evolution algorithm proposed by Real et al. The original implementation only
@@ -56,7 +56,9 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             Seed for the random number generation. If set to None, use random seed.
         """
 
-        super(RegularizedEvolution, self).__init__(config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs)
+        super(RegularizedEvolution, self).__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
         self.mode = mode
         self.population_size = population_size
         self.sample_size = sample_size
@@ -71,8 +73,14 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         for sample_try in range(self.num_sample_try):
             if child_config == config:
                 # sample a random hyperparameter to mutate
-                hps = [(k, v) for k, v in self.config_space.items() if isinstance(v, Domain) and len(v) > 1]
-                assert len(hps) >= 0, "all hyperparameters only have a single value, cannot perform mutations."
+                hps = [
+                    (k, v)
+                    for k, v in self.config_space.items()
+                    if isinstance(v, Domain) and len(v) > 1
+                ]
+                assert (
+                    len(hps) >= 0
+                ), "all hyperparameters only have a single value, cannot perform mutations."
                 hp_name, hp = hps[self.random_state.randint(len(hps))]
 
                 # mutate the value by sampling
@@ -80,16 +88,18 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             else:
                 break
         if sample_try == self.num_sample_try:
-            logging.INFO(f"Did not manage to sample a different configuration with {self.num_sample_try}, "
-                         f"sampling at random")
+            logging.INFO(
+                f"Did not manage to sample a different configuration with {self.num_sample_try}, "
+                f"sampling at random"
+            )
             return self.sample_random_config()
 
         return child_config
 
     def sample_random_config(self) -> Dict:
         return {
-          k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
-          for k, v in self.config_space.items()
+            k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
+            for k, v in self.config_space.items()
         }
 
     def get_config(self, **kwargs):
@@ -102,7 +112,9 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         if len(self.population) < self.population_size:
             config = self.sample_random_config()
         else:
-            candidates = self.random_state.choice(list(self.population), size=self.sample_size)
+            candidates = self.random_state.choice(
+                list(self.population), size=self.sample_size
+            )
             parent = min(candidates, key=lambda i: i.score)
 
             config = self.mutate_config(parent.config)
@@ -113,7 +125,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
 
         score = result[self._metric]
 
-        if self.mode == 'max':
+        if self.mode == "max":
             score *= -1
 
         # Add element to the population
@@ -127,8 +139,9 @@ class RegularizedEvolution(SearcherWithRandomSeed):
     def configure_scheduler(self, scheduler):
         from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
-        assert isinstance(scheduler, FIFOScheduler), \
-            "This searcher requires FIFOScheduler scheduler"
+        assert isinstance(
+            scheduler, FIFOScheduler
+        ), "This searcher requires FIFOScheduler scheduler"
         super().configure_scheduler(scheduler)
 
     def clone_from_state(self, state: dict):

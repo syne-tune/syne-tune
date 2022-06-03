@@ -32,7 +32,7 @@ def get_num_gpus() -> int:
     if _num_gpus is None:
         try:
             cmd = "nvidia-smi --list-gpus"
-            with open("std.out", 'w') as stdout:
+            with open("std.out", "w") as stdout:
                 proc = subprocess.Popen(cmd.split(" "), shell=False, stdout=stdout)
             max_trials = 0
             while proc.poll() is None and max_trials < 100:
@@ -42,12 +42,14 @@ def get_num_gpus() -> int:
             if proc.poll() is None:
                 raise ValueError("nvidia-smi timed out after 10 secs.")
 
-            with open("std.out", 'r') as stdout:
+            with open("std.out", "r") as stdout:
                 _num_gpus = len(stdout.readlines())
             return _num_gpus
 
         except (OSError, FileNotFoundError):
-            logging.info("Error launching /usr/bin/nvidia-smi, no GPU could be detected.")
+            logging.info(
+                "Error launching /usr/bin/nvidia-smi, no GPU could be detected."
+            )
             _num_gpus = 0
             return 0
     else:

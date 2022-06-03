@@ -34,41 +34,48 @@ def statistical_disparity(model, X, Y, groups):
     """
     fY = model.predict(X)
     sp = [0, 0]
-    sp[0] = float(len([1 for idx, fy in enumerate(fY) if fy == 1 and groups[idx] == 0])) / len(
-        [1 for idx, fy in enumerate(fY) if groups[idx] == 0])
-    sp[1] = float(len([1 for idx, fy in enumerate(fY) if fy == 1 and groups[idx] == 1])) / len(
-        [1 for idx, fy in enumerate(fY) if groups[idx] == 1])
+    sp[0] = float(
+        len([1 for idx, fy in enumerate(fY) if fy == 1 and groups[idx] == 0])
+    ) / len([1 for idx, fy in enumerate(fY) if groups[idx] == 0])
+    sp[1] = float(
+        len([1 for idx, fy in enumerate(fY) if fy == 1 and groups[idx] == 1])
+    ) / len([1 for idx, fy in enumerate(fY) if groups[idx] == 1])
     return abs(sp[0] - sp[1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
 
     p = ArgumentParser()
-    p.add_argument('--max_depth', default=10, type=int)
-    p.add_argument('--min_samples_split', default=0.5, type=float)
-    p.add_argument('--criterion', type=str, default='gini')
-    p.add_argument('--data_path', type=str, default='../notebooks/fairhpo_data.pickle')
-    p.add_argument('--fairness_threshold', default=0.01, type=float)
-    p.add_argument('--seed', default=10, type=int)
+    p.add_argument("--max_depth", default=10, type=int)
+    p.add_argument("--min_samples_split", default=0.5, type=float)
+    p.add_argument("--criterion", type=str, default="gini")
+    p.add_argument("--data_path", type=str, default="../notebooks/fairhpo_data.pickle")
+    p.add_argument("--fairness_threshold", default=0.01, type=float)
+    p.add_argument("--seed", default=10, type=int)
     args, _ = p.parse_known_args()
 
     random.seed(args.seed)
     np.random.seed(args.seed)
-    with open(args.data_path, 'rb') as handle:
+    with open(args.data_path, "rb") as handle:
         data_dict = pkl.load(handle)
 
-    classifier = RandomForestClassifier(max_depth=args.max_depth,
-                                        min_samples_split=args.min_samples_split,
-                                        criterion=args.criterion)
-    classifier.fit(data_dict['X_train'], data_dict['Y_train'])
+    classifier = RandomForestClassifier(
+        max_depth=args.max_depth,
+        min_samples_split=args.min_samples_split,
+        criterion=args.criterion,
+    )
+    classifier.fit(data_dict["X_train"], data_dict["Y_train"])
     dsp_foreign_worker = statistical_disparity(
-        classifier, data_dict['X_test'], data_dict['Y_test'], data_dict['is_foreign'])
-    y_pred = classifier.predict(data_dict['X_test'])
-    accuracy = accuracy_score(y_pred, data_dict['Y_test'])
+        classifier, data_dict["X_test"], data_dict["Y_test"], data_dict["is_foreign"]
+    )
+    y_pred = classifier.predict(data_dict["X_test"])
+    accuracy = accuracy_score(y_pred, data_dict["Y_test"])
     objective_value = accuracy
-    constraint_value = dsp_foreign_worker - args.fairness_threshold  # If DSP < fairness threshold,
+    constraint_value = (
+        dsp_foreign_worker - args.fairness_threshold
+    )  # If DSP < fairness threshold,
     # then we consider the model fair
     report(objective=objective_value, my_constraint_metric=constraint_value)

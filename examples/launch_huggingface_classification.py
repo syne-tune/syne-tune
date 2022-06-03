@@ -24,12 +24,14 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_ro
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 
-from benchmarking.definitions.definition_distilbert_on_imdb import \
-    distilbert_imdb_benchmark, distilbert_imdb_default_params
+from benchmarking.definitions.definition_distilbert_on_imdb import (
+    distilbert_imdb_benchmark,
+    distilbert_imdb_default_params,
+)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    
+
     # We pick the DistilBERT on IMDB benchmark
     # The 'benchmark' dict contains arguments needed by scheduler and
     # searcher (e.g., 'mode', 'metric'), along with suggested default values
@@ -38,20 +40,20 @@ if __name__ == '__main__':
     n_workers = 4
     default_params = distilbert_imdb_default_params()
     benchmark = distilbert_imdb_benchmark(default_params)
-    mode = benchmark['mode']
-    metric = benchmark['metric']
-    config_space = benchmark['config_space']
+    mode = benchmark["mode"]
+    metric = benchmark["metric"]
+    config_space = benchmark["config_space"]
 
     # Define Hugging Face SageMaker estimator
     root = Path(syne_tune.__path__[0]).parent
     huggingface_estimator = HuggingFace(
-        entry_point=benchmark['script'],
-        base_job_name='hpo-transformer',
-        instance_type=default_params['instance_type'],
+        entry_point=benchmark["script"],
+        base_job_name="hpo-transformer",
+        instance_type=default_params["instance_type"],
         instance_count=1,
-        transformers_version='4.4',
-        pytorch_version='1.6',
-        py_version='py36',
+        transformers_version="4.4",
+        pytorch_version="1.6",
+        py_version="py36",
         role=get_execution_role(),
         dependencies=[root / "benchmarking"],
     )
@@ -64,10 +66,7 @@ if __name__ == '__main__':
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space,
-        mode=mode,
-        metric=metric,
-        random_seed=random_seed
+        config_space, mode=mode, metric=metric, random_seed=random_seed
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=3600)

@@ -16,25 +16,36 @@ from dataclasses import dataclass
 import numpy as np
 import itertools
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer \
-    import ModelStateTransformer
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import NextCandidatesAlgorithm, CandidateGenerator, ScoringFunction, \
-    LocalOptimizer, SurrogateModel
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components \
-    import LBFGSOptimizeAcquisition
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
-    import generate_unique_candidates, ExclusionList
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log \
-    import DebugLogPrinter
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector \
-    import DuplicateDetector
-from syne_tune.optimizer.schedulers.utils.simple_profiler \
-    import SimpleProfiler
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
+    ModelStateTransformer,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    NextCandidatesAlgorithm,
+    CandidateGenerator,
+    ScoringFunction,
+    LocalOptimizer,
+    SurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
+    LBFGSOptimizeAcquisition,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    generate_unique_candidates,
+    ExclusionList,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
+    DebugLogPrinter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector import (
+    DuplicateDetector,
+)
+from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +135,9 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             num_inner_candidates = self.num_requested_candidates
         next_trial_id = None
         if num_outer_iterations > 1:
-            assert self.pending_candidate_state_transformer, \
-                "Need pending_candidate_state_transformer for greedy batch selection"
+            assert (
+                self.pending_candidate_state_transformer
+            ), "Need pending_candidate_state_transformer for greedy batch selection"
             # For greedy batch selection, we need to assign new trial_id's to
             # configs included into the batch, in order to update the state
             # maintained in `pending_candidate_state_transformer`.
@@ -135,7 +147,9 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             # It guarantees that `str(next_trial_id + i)` is not equal to an
             # existing trial_id for all i >= 0.
             next_trial_id = 0
-            for trial_id in self.pending_candidate_state_transformer.state.config_for_trial.keys():
+            for (
+                trial_id
+            ) in self.pending_candidate_state_transformer.state.config_for_trial.keys():
                 try:
                     next_trial_id = max(next_trial_id, int(trial_id))
                 except ValueError:
@@ -148,19 +162,25 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             if just_added:
                 if self.exclusion_candidates.config_space_exhausted():
                     logger.warning(
-                        "All entries of finite config space (size " +
-                        f"{self.exclusion_candidates.configspace_size}) have been selected. Returning " +
-                        f"{len(candidates)} configs instead of {self.num_requested_candidates}")
+                        "All entries of finite config space (size "
+                        + f"{self.exclusion_candidates.configspace_size}) have been selected. Returning "
+                        + f"{len(candidates)} configs instead of {self.num_requested_candidates}"
+                    )
                     break
                 just_added = False
-            if self.num_initial_candidates_for_batch is not None \
-                    and self.greedy_batch_selection and outer_iter > 0:
+            if (
+                self.num_initial_candidates_for_batch is not None
+                and self.greedy_batch_selection
+                and outer_iter > 0
+            ):
                 num_initial_candidates = self.num_initial_candidates_for_batch
             else:
                 num_initial_candidates = self.num_initial_candidates
             inner_candidates = self._get_next_candidates(
-                num_inner_candidates, model=model,
-                num_initial_candidates=num_initial_candidates)
+                num_inner_candidates,
+                model=model,
+                num_initial_candidates=num_initial_candidates,
+            )
             candidates.extend(inner_candidates)
             if outer_iter < num_outer_iterations - 1 and len(inner_candidates) > 0:
                 just_added = True
@@ -172,94 +192,117 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                 # batch selection
                 for candidate in inner_candidates:
                     self.pending_candidate_state_transformer.append_trial(
-                        trial_id=str(next_trial_id), config=candidate)
+                        trial_id=str(next_trial_id), config=candidate
+                    )
                     next_trial_id += 1
                 model = self.pending_candidate_state_transformer.model(
-                    skip_optimization=True)
-            if len(inner_candidates) < num_inner_candidates and \
-                    len(candidates) < self.num_requested_candidates:
+                    skip_optimization=True
+                )
+            if (
+                len(inner_candidates) < num_inner_candidates
+                and len(candidates) < self.num_requested_candidates
+            ):
                 logger.warning(
-                    "All entries of finite config space (size " +
-                    f"{self.exclusion_candidates.configspace_size}) have been selected. Returning " +
-                    f"{len(candidates)} configs instead of {self.num_requested_candidates}")
+                    "All entries of finite config space (size "
+                    + f"{self.exclusion_candidates.configspace_size}) have been selected. Returning "
+                    + f"{len(candidates)} configs instead of {self.num_requested_candidates}"
+                )
                 break
 
         return candidates
 
     def _get_next_candidates(
-            self, num_candidates: int, model: Optional[SurrogateModel],
-            num_initial_candidates: Optional[int] = None):
+        self,
+        num_candidates: int,
+        model: Optional[SurrogateModel],
+        num_initial_candidates: Optional[int] = None,
+    ):
         if num_initial_candidates is None:
             num_initial_candidates = self.num_initial_candidates
         # generate a random candidates among which to pick the ones to be
         # locally optimized
         logger.info(
             f"BayesOpt Algorithm: Generating {num_initial_candidates} "
-            "initial candidates.")
+            "initial candidates."
+        )
         if self.profiler is not None:
-            self.profiler.push_prefix('nextcand')
-            self.profiler.start('all')
-            self.profiler.start('genrandom')
+            self.profiler.push_prefix("nextcand")
+            self.profiler.start("all")
+            self.profiler.start("genrandom")
         if self.sample_unique_candidates:
             # This can be expensive, depending on what type Candidate is
             initial_candidates = generate_unique_candidates(
                 self.initial_candidates_generator,
-                num_initial_candidates, self.exclusion_candidates)
+                num_initial_candidates,
+                self.exclusion_candidates,
+            )
         else:
             # Will not return candidates in `exclusion_candidates`, but there
             # can be duplicates
-            initial_candidates = \
+            initial_candidates = (
                 self.initial_candidates_generator.generate_candidates_en_bulk(
-                    num_initial_candidates,
-                    exclusion_list=self.exclusion_candidates)
+                    num_initial_candidates, exclusion_list=self.exclusion_candidates
+                )
+            )
         if self.profiler is not None:
-            self.profiler.stop('genrandom')
-            self.profiler.start('scoring')
+            self.profiler.stop("genrandom")
+            self.profiler.start("scoring")
         logger.info("BayesOpt Algorithm: Scoring (and reordering) candidates.")
         if self.debug_log is not None:
             candidates_and_scores = _order_candidates(
-                initial_candidates, self.initial_candidates_scorer,
-                model=model, with_scores=True)
+                initial_candidates,
+                self.initial_candidates_scorer,
+                model=model,
+                with_scores=True,
+            )
             initial_candidates = [cand for score, cand in candidates_and_scores]
             config = initial_candidates[0]
             top_scores = np.array([x for x, _ in candidates_and_scores[:5]])
             self.debug_log.set_init_config(config, top_scores)
         else:
             initial_candidates = _order_candidates(
-                initial_candidates, self.initial_candidates_scorer,
-                model=model)
+                initial_candidates, self.initial_candidates_scorer, model=model
+            )
         if self.profiler is not None:
-            self.profiler.stop('scoring')
-            self.profiler.start('localsearch')
+            self.profiler.stop("scoring")
+            self.profiler.start("localsearch")
         candidates_with_optimization = _lazily_locally_optimize(
-            initial_candidates, self.local_optimizer,
-            hp_ranges=self.exclusion_candidates.hp_ranges, model=model)
+            initial_candidates,
+            self.local_optimizer,
+            hp_ranges=self.exclusion_candidates.hp_ranges,
+            model=model,
+        )
         logger.info("BayesOpt Algorithm: Selecting final set of candidates.")
-        if self.debug_log is not None and \
-                isinstance(self.local_optimizer, LBFGSOptimizeAcquisition):
+        if self.debug_log is not None and isinstance(
+            self.local_optimizer, LBFGSOptimizeAcquisition
+        ):
             # We would like to get num_evaluations from the first run (usually
             # the only one). This requires peeking at the first entry of the
             # iterator
             peek = candidates_with_optimization.__next__()
-            self.debug_log.set_num_evaluations(
-                self.local_optimizer.num_evaluations)
+            self.debug_log.set_num_evaluations(self.local_optimizer.num_evaluations)
             candidates_with_optimization = itertools.chain(
-                [peek], candidates_with_optimization)
+                [peek], candidates_with_optimization
+            )
         candidates = _pick_from_locally_optimized(
-            candidates_with_optimization, self.exclusion_candidates,
-            num_candidates, self.duplicate_detector)
+            candidates_with_optimization,
+            self.exclusion_candidates,
+            num_candidates,
+            self.duplicate_detector,
+        )
         if self.profiler is not None:
-            self.profiler.stop('localsearch')
-            self.profiler.stop('all')
+            self.profiler.stop("localsearch")
+            self.profiler.stop("all")
             self.profiler.pop_prefix()  # nextcand
         return candidates
 
 
 def _order_candidates(
-        candidates: List[Configuration],
-        scoring_function: ScoringFunction,
-        model: Optional[SurrogateModel],
-        with_scores: bool = False):
+    candidates: List[Configuration],
+    scoring_function: ScoringFunction,
+    model: Optional[SurrogateModel],
+    with_scores: bool = False,
+):
     if len(candidates) == 0:
         return []
     # scored in batch as this can be more efficient
@@ -272,9 +315,11 @@ def _order_candidates(
 
 
 def _lazily_locally_optimize(
-        candidates: List[Configuration],
-        local_optimizer: LocalOptimizer, hp_ranges: HyperparameterRanges,
-        model: Optional[SurrogateModel]) -> Iterator[Tuple[Configuration, Configuration]]:
+    candidates: List[Configuration],
+    local_optimizer: LocalOptimizer,
+    hp_ranges: HyperparameterRanges,
+    model: Optional[SurrogateModel],
+) -> Iterator[Tuple[Configuration, Configuration]]:
     """
     Due to local deduplication we do not know in advance how many candidates
     we have to locally optimize, hence this helper to create a lazy generator
@@ -293,21 +338,24 @@ def _lazily_locally_optimize(
 # arise if sample_unique_candidates == False.
 # This does not work if duplicate_detector is DuplicateDetectorNoDetection.
 def _pick_from_locally_optimized(
-        candidates_with_optimization: Iterator[Tuple[Configuration, Configuration]],
-        exclusion_candidates: ExclusionList,
-        num_candidates: int,
-        duplicate_detector: DuplicateDetector) -> List[Configuration]:
+    candidates_with_optimization: Iterator[Tuple[Configuration, Configuration]],
+    exclusion_candidates: ExclusionList,
+    num_candidates: int,
+    duplicate_detector: DuplicateDetector,
+) -> List[Configuration]:
     updated_excludelist = exclusion_candidates.copy()
     result = []
     for original_candidate, optimized_candidate in candidates_with_optimization:
         insert_candidate = None
         optimized_is_duplicate = duplicate_detector.contains(
-            updated_excludelist, optimized_candidate)
+            updated_excludelist, optimized_candidate
+        )
         if optimized_is_duplicate:
             # in the unlikely case that the optimized candidate ended at a
             # place that caused a duplicate we try to return the original instead
             original_also_duplicate = duplicate_detector.contains(
-                updated_excludelist, original_candidate)
+                updated_excludelist, original_candidate
+            )
             if not original_also_duplicate:
                 insert_candidate = original_candidate
         else:

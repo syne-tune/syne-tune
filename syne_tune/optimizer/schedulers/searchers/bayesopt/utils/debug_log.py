@@ -14,14 +14,17 @@ from typing import List
 import logging
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration, INTERNAL_METRIC_NAME
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+    INTERNAL_METRIC_NAME,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['DebugLogPrinter']
+__all__ = ["DebugLogPrinter"]
 
 
 def _param_dict_to_str(params: dict) -> str:
@@ -31,7 +34,7 @@ def _param_dict_to_str(params: dict) -> str:
             parts.append(f"{name}: {param:.4e}")
         else:
             parts.append(f"{name}: {param}")
-    return '{' + ', '.join(parts) + '}'
+    return "{" + ", ".join(parts) + "}"
 
 
 class DebugLogPrinter(object):
@@ -42,6 +45,7 @@ class DebugLogPrinter(object):
     `get_config`.
 
     """
+
     def __init__(self):
         self._reset()
 
@@ -51,20 +55,22 @@ class DebugLogPrinter(object):
         self.block_info = dict()
 
     def start_get_config(self, gc_type, trial_id: str):
-        assert gc_type in {'random', 'BO'}
+        assert gc_type in {"random", "BO"}
         assert trial_id is not None
-        assert self.get_config_type is None, \
-            "Block for get_config of type '{}' is currently open".format(
-                self.get_config_type)
+        assert (
+            self.get_config_type is None
+        ), "Block for get_config of type '{}' is currently open".format(
+            self.get_config_type
+        )
         self.get_config_trial_id = trial_id
         self.get_config_type = gc_type
         logger.debug(f"Starting get_config[{gc_type}] for trial_id {trial_id}")
 
     def set_final_config(self, config: Configuration):
         assert self.get_config_type is not None, "No block open right now"
-        entries = ['{}: {}'.format(k, v) for k, v in config.items()]
-        msg = '\n'.join(entries)
-        self.block_info['final_config'] = msg
+        entries = ["{}: {}".format(k, v) for k, v in config.items()]
+        msg = "\n".join(entries)
+        self.block_info["final_config"] = msg
 
     def _observed_trial_ids(self, state: TuningJobState) -> List[str]:
         trial_ids = []
@@ -74,12 +80,12 @@ class DebugLogPrinter(object):
             if metric_entry is not None:
                 if isinstance(metric_entry, dict):
                     for resource in metric_entry.keys():
-                        trial_ids.append(trial_id + ':' + resource)
+                        trial_ids.append(trial_id + ":" + resource)
                 else:
                     trial_ids.append(trial_id)
         return trial_ids
 
-    def _pending_trial_ids(self, state: TuningJobState) ->List[str]:
+    def _pending_trial_ids(self, state: TuningJobState) -> List[str]:
         trial_ids = []
         for ev in state.pending_evaluations:
             trial_id = ev.trial_id
@@ -91,81 +97,82 @@ class DebugLogPrinter(object):
         return trial_ids
 
     def set_state(self, state: TuningJobState):
-        assert self.get_config_type == 'BO', "Need to be in 'BO' block"
-        labeled_str = ', '.join(self._observed_trial_ids(state))
-        msg = 'Labeled: ' + labeled_str
+        assert self.get_config_type == "BO", "Need to be in 'BO' block"
+        labeled_str = ", ".join(self._observed_trial_ids(state))
+        msg = "Labeled: " + labeled_str
         if state.pending_evaluations:
-            pending_str = ', '.join(self._pending_trial_ids(state))
-            msg += '. Pending: ' + pending_str
-        self.block_info['state'] = msg
+            pending_str = ", ".join(self._pending_trial_ids(state))
+            msg += ". Pending: " + pending_str
+        self.block_info["state"] = msg
 
     def set_targets(self, targets: np.ndarray):
-        assert self.get_config_type == 'BO', "Need to be in 'BO' block"
-        msg = 'Targets: ' + str(targets.reshape((-1,)))
-        self.block_info['targets'] = msg
+        assert self.get_config_type == "BO", "Need to be in 'BO' block"
+        msg = "Targets: " + str(targets.reshape((-1,)))
+        self.block_info["targets"] = msg
 
     def set_model_params(self, params: dict):
-        assert self.get_config_type == 'BO', "Need to be in 'BO' block"
-        msg = 'Model params: ' + _param_dict_to_str(params)
-        self.block_info['params'] = msg
+        assert self.get_config_type == "BO", "Need to be in 'BO' block"
+        msg = "Model params: " + _param_dict_to_str(params)
+        self.block_info["params"] = msg
 
     def set_fantasies(self, fantasies: np.ndarray):
-        assert self.get_config_type == 'BO', "Need to be in 'BO' block"
-        msg = 'Fantasized targets:\n' + str(fantasies)
-        self.block_info['fantasies'] = msg
+        assert self.get_config_type == "BO", "Need to be in 'BO' block"
+        msg = "Fantasized targets:\n" + str(fantasies)
+        self.block_info["fantasies"] = msg
 
-    def set_init_config(
-            self, config: Configuration, top_scores: np.ndarray = None):
-        assert self.get_config_type == 'BO', "Need to be in 'BO' block"
-        entries = ['{}: {}'.format(k, v) for k, v in config.items()]
-        msg = "Started BO from (top scorer):\n" + '\n'.join(entries)
+    def set_init_config(self, config: Configuration, top_scores: np.ndarray = None):
+        assert self.get_config_type == "BO", "Need to be in 'BO' block"
+        entries = ["{}: {}".format(k, v) for k, v in config.items()]
+        msg = "Started BO from (top scorer):\n" + "\n".join(entries)
         if top_scores is not None:
-            msg += ("\nTop score values: " + str(top_scores.reshape((-1,))))
-        self.block_info['start_config'] = msg
+            msg += "\nTop score values: " + str(top_scores.reshape((-1,)))
+        self.block_info["start_config"] = msg
 
     def set_num_evaluations(self, num_evals: int):
-        assert self.get_config_type == 'BO', "Need to be in 'BO' block"
-        self.block_info['num_evals'] = num_evals
+        assert self.get_config_type == "BO", "Need to be in 'BO' block"
+        self.block_info["num_evals"] = num_evals
 
     def append_extra(self, extra: str):
-        if 'extra' in self.block_info:
-            self.block_info['extra'] = '\n'.join(
-                [self.block_info['extra'], extra])
+        if "extra" in self.block_info:
+            self.block_info["extra"] = "\n".join([self.block_info["extra"], extra])
         else:
-            self.block_info['extra'] = extra
+            self.block_info["extra"] = extra
 
     def write_block(self):
         assert self.get_config_type is not None, "No block open right now"
         info = self.block_info
         trial_id = self.get_config_trial_id
-        if 'num_evals' in info:
-            parts = ['[{}: {}] ({} evaluations)'.format(
-                trial_id, self.get_config_type, info['num_evals'])]
+        if "num_evals" in info:
+            parts = [
+                "[{}: {}] ({} evaluations)".format(
+                    trial_id, self.get_config_type, info["num_evals"]
+                )
+            ]
         else:
-            parts = ['[{}: {}]'.format(trial_id, self.get_config_type)]
-        parts.append(info['final_config'])
+            parts = ["[{}: {}]".format(trial_id, self.get_config_type)]
+        parts.append(info["final_config"])
         debug_parts = []  # Parts for logger.debug
-        if self.get_config_type == 'BO':
-            if 'start_config' in info:
-                debug_parts.append(info['start_config'])
+        if self.get_config_type == "BO":
+            if "start_config" in info:
+                debug_parts.append(info["start_config"])
             # The following 3 should be present!
-            for name in ('state', 'targets', 'params'):
+            for name in ("state", "targets", "params"):
                 v = info.get(name)
                 if v is not None:
-                    if name == 'targets':
+                    if name == "targets":
                         debug_parts.append(v)
                     else:
                         parts.append(v)
                 else:
                     logger.info(
-                        "debug_log.write_block: '{}' part is missing!".format(
-                            name))
-            if 'fantasies' in info:
-                debug_parts.append(info['fantasies'])
-        if 'extra' in info:
-            debug_parts.append(info['extra'])
-        msg = '\n'.join(parts)
+                        "debug_log.write_block: '{}' part is missing!".format(name)
+                    )
+            if "fantasies" in info:
+                debug_parts.append(info["fantasies"])
+        if "extra" in info:
+            debug_parts.append(info["extra"])
+        msg = "\n".join(parts)
         logger.info(msg)
-        msg = '\n'.join(debug_parts)
+        msg = "\n".join(debug_parts)
         logger.debug(msg)
         self._reset()

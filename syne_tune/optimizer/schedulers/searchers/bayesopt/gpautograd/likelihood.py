@@ -12,21 +12,31 @@
 # permissions and limitations under the License.
 import autograd.numpy as anp
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import INITIAL_NOISE_VARIANCE, NOISE_VARIANCE_LOWER_BOUND, \
-    NOISE_VARIANCE_UPPER_BOUND, DEFAULT_ENCODING
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution \
-    import Gamma
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon \
-    import Block
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers \
-    import encode_unwrap_parameter, register_parameter, create_encoding
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
-    import KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean \
-    import ScalarMeanFunction, MeanFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state \
-    import GaussProcPosteriorState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    INITIAL_NOISE_VARIANCE,
+    NOISE_VARIANCE_LOWER_BOUND,
+    NOISE_VARIANCE_UPPER_BOUND,
+    DEFAULT_ENCODING,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.distribution import (
+    Gamma,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon import Block
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
+    encode_unwrap_parameter,
+    register_parameter,
+    create_encoding,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    ScalarMeanFunction,
+    MeanFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
+    GaussProcPosteriorState,
+)
 
 
 class MarginalLikelihood(Block):
@@ -41,9 +51,15 @@ class MarginalLikelihood(Block):
     :param initial_noise_variance: A scalar to initialize the value of the
         residual noise variance
     """
+
     def __init__(
-            self, kernel: KernelFunction, mean: MeanFunction = None,
-            initial_noise_variance=None, encoding_type=None, **kwargs):
+        self,
+        kernel: KernelFunction,
+        mean: MeanFunction = None,
+        initial_noise_variance=None,
+        encoding_type=None,
+        **kwargs
+    ):
         super(MarginalLikelihood, self).__init__(**kwargs)
         if mean is None:
             mean = ScalarMeanFunction()
@@ -52,21 +68,27 @@ class MarginalLikelihood(Block):
         if encoding_type is None:
             encoding_type = DEFAULT_ENCODING
         self.encoding = create_encoding(
-             encoding_type, initial_noise_variance, NOISE_VARIANCE_LOWER_BOUND,
-             NOISE_VARIANCE_UPPER_BOUND, 1, Gamma(mean=0.1, alpha=0.1))
+            encoding_type,
+            initial_noise_variance,
+            NOISE_VARIANCE_LOWER_BOUND,
+            NOISE_VARIANCE_UPPER_BOUND,
+            1,
+            Gamma(mean=0.1, alpha=0.1),
+        )
         self.mean = mean
         self.kernel = kernel
         with self.name_scope():
             self.noise_variance_internal = register_parameter(
-                self.params, 'noise_variance', self.encoding)
+                self.params, "noise_variance", self.encoding
+            )
 
     def _noise_variance(self):
-        return encode_unwrap_parameter(
-            self.noise_variance_internal, self.encoding)
+        return encode_unwrap_parameter(self.noise_variance_internal, self.encoding)
 
     def get_posterior_state(self, features, targets):
         return GaussProcPosteriorState(
-            features, targets, self.mean, self.kernel, self._noise_variance())
+            features, targets, self.mean, self.kernel, self._noise_variance()
+        )
 
     def forward(self, features, targets):
         """
@@ -82,10 +104,12 @@ class MarginalLikelihood(Block):
         """
         Return a list of tuples with the Gluon parameters of the likelihood and their respective encodings
         """
-        own_param_encoding_pairs = [
-            (self.noise_variance_internal, self.encoding)]
-        return own_param_encoding_pairs + self.mean.param_encoding_pairs() + \
-               self.kernel.param_encoding_pairs()
+        own_param_encoding_pairs = [(self.noise_variance_internal, self.encoding)]
+        return (
+            own_param_encoding_pairs
+            + self.mean.param_encoding_pairs()
+            + self.kernel.param_encoding_pairs()
+        )
 
     def box_constraints_internal(self):
         """
@@ -93,8 +117,9 @@ class MarginalLikelihood(Block):
         """
         all_box_constraints = {}
         for param, encoding in self.param_encoding_pairs():
-            assert encoding is not None,\
-                "encoding of param {} should not be None".format(param.name)
+            assert (
+                encoding is not None
+            ), "encoding of param {} should not be None".format(param.name)
             all_box_constraints.update(encoding.box_constraints_internal(param))
         return all_box_constraints
 
@@ -104,19 +129,18 @@ class MarginalLikelihood(Block):
 
     def set_noise_variance(self, val):
         self.encoding.set(self.noise_variance_internal, val)
-        
+
     def get_params(self):
-        result = {'noise_variance': self.get_noise_variance()}
-        for pref, func in [('kernel_', self.kernel), ('mean_', self.mean)]:
-            result.update({
-                (pref + k): v for k, v in func.get_params().items()})
+        result = {"noise_variance": self.get_noise_variance()}
+        for pref, func in [("kernel_", self.kernel), ("mean_", self.mean)]:
+            result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
-    
+
     def set_params(self, param_dict):
-        for pref, func in [('kernel_', self.kernel), ('mean_', self.mean)]:
+        for pref, func in [("kernel_", self.kernel), ("mean_", self.mean)]:
             len_pref = len(pref)
             stripped_dict = {
-                k[len_pref:]: v for k, v in param_dict.items()
-                if k.startswith(pref)}
+                k[len_pref:]: v for k, v in param_dict.items() if k.startswith(pref)
+            }
             func.set_params(stripped_dict)
-        self.set_noise_variance(param_dict['noise_variance'])
+        self.set_noise_variance(param_dict["noise_variance"])

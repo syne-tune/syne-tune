@@ -14,8 +14,13 @@ import logging
 from pathlib import Path
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
-    ASHA, MOBSTER
+from syne_tune.optimizer.baselines import (
+    RandomSearch,
+    BayesianOptimization,
+    ASHA,
+    MOBSTER,
+)
+
 # from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
 # from syne_tune.optimizer.schedulers.synchronous import \
 #    SynchronousGeometricHyperbandScheduler  # noqa: F401
@@ -24,7 +29,7 @@ from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, \
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
@@ -34,18 +39,40 @@ if __name__ == '__main__':
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
-        "height": randint(-100, 100)
+        "height": randint(-100, 100),
     }
-    entry_point = Path(__file__).parent / "training_scripts" / "height_example" / "train_height.py"
+    entry_point = (
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
     mode = "min"
     metric = "mean_loss"
 
     schedulers = [
         RandomSearch(config_space, metric=metric, mode=mode),
         # example of setting additional kwargs arguments
-        BayesianOptimization(config_space, metric=metric, mode=mode, search_options={'num_init_random': n_workers + 2}),
-        ASHA(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode),
-        MOBSTER(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode),
+        BayesianOptimization(
+            config_space,
+            metric=metric,
+            mode=mode,
+            search_options={"num_init_random": n_workers + 2},
+        ),
+        ASHA(
+            config_space,
+            metric=metric,
+            resource_attr="epoch",
+            max_t=max_steps,
+            mode=mode,
+        ),
+        MOBSTER(
+            config_space,
+            metric=metric,
+            resource_attr="epoch",
+            max_t=max_steps,
+            mode=mode,
+        ),
         # Commented as needs extra libraries or to save CI testing time. Since we are testing those baselines
         # in our baseline, we keep the uncommented list of schedulers to a small number.
         # PASHA(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode),
@@ -65,7 +92,6 @@ if __name__ == '__main__':
         #     searcher=BotorchSearcher(config_space=config_space, metric=metric, mode='min'),
         #     metric=metric
         # ),
-
     ]
 
     for scheduler in schedulers:
@@ -73,7 +99,9 @@ if __name__ == '__main__':
 
         trial_backend = LocalBackend(entry_point=str(entry_point))
 
-        stop_criterion = StoppingCriterion(max_wallclock_time=5, min_metric_value={"mean_loss": -6.0})
+        stop_criterion = StoppingCriterion(
+            max_wallclock_time=5, min_metric_value={"mean_loss": -6.0}
+        )
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,

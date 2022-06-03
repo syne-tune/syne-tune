@@ -39,17 +39,17 @@ def save_checkpoint(checkpoint_path: Path, content: dict):
         json.dump(content, f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--trial_id', type=int, required=True)
-    parser.add_argument('--value1', type=int, required=True)
-    parser.add_argument('--value2', type=int, required=True)
+    parser.add_argument("--trial_id", type=int, required=True)
+    parser.add_argument("--value1", type=int, required=True)
+    parser.add_argument("--value2", type=int, required=True)
 
     # convention the path where to serialize and deserialize is given as checkpoint-dir
-    parser.add_argument(f'--{ST_CHECKPOINT_DIR}', type=str, default="./")
+    parser.add_argument(f"--{ST_CHECKPOINT_DIR}", type=str, default="./")
 
     args, _ = parser.parse_known_args()
 
@@ -58,41 +58,44 @@ if __name__ == '__main__':
 
     # Try to load checkpoint (may not be present)
     checkpoint1_path = Path(getattr(args, ST_CHECKPOINT_DIR)) / "checkpoint1.json"
-    checkpoint2_path = Path(getattr(args, ST_CHECKPOINT_DIR)) / "subdir" / "checkpoint2.json"
+    checkpoint2_path = (
+        Path(getattr(args, ST_CHECKPOINT_DIR)) / "subdir" / "checkpoint2.json"
+    )
     old_checkpoint1 = load_checkpoint(checkpoint1_path)
     old_checkpoint2 = dict()
     if old_checkpoint1:
         root.info(f"Loaded checkpoint {checkpoint1_path}:\n{old_checkpoint1}")
         old_checkpoint2 = load_checkpoint(checkpoint2_path)
         if not old_checkpoint2:
-            error_msg = f"Found checkpoint at {checkpoint1_path}, but not at {checkpoint2_path}"
+            error_msg = (
+                f"Found checkpoint at {checkpoint1_path}, but not at {checkpoint2_path}"
+            )
         else:
             root.info(f"Loaded checkpoint {checkpoint2_path}:\n{old_checkpoint2}")
 
     if error_msg is None:
         # Write new checkpoints
         checkpoint1 = {
-            'trial_id': args.trial_id,
-            'value1': args.value1,
+            "trial_id": args.trial_id,
+            "value1": args.value1,
         }
         for k, v in old_checkpoint1.items():
-            checkpoint1['parent_' + k] = v
+            checkpoint1["parent_" + k] = v
         save_checkpoint(checkpoint1_path, checkpoint1)
         root.info(f"Wrote checkpoint {checkpoint1_path}:\n{checkpoint1}")
         checkpoint2 = {
-            'trial_id': args.trial_id,
-            'value2': args.value2,
+            "trial_id": args.trial_id,
+            "value2": args.value2,
         }
         for k, v in old_checkpoint2.items():
-            checkpoint2['parent_' + k] = v
+            checkpoint2["parent_" + k] = v
         save_checkpoint(checkpoint2_path, checkpoint2)
         root.info(f"Wrote checkpoint {checkpoint2_path}:\n{checkpoint2}")
-        result = dict(
-            trial_id=args.trial_id,
-            value1=args.value1,
-            value2=args.value2)
-        for old_cp, prefix in [(old_checkpoint1, 'parent1_'),
-                               (old_checkpoint2, 'parent2_')]:
+        result = dict(trial_id=args.trial_id, value1=args.value1, value2=args.value2)
+        for old_cp, prefix in [
+            (old_checkpoint1, "parent1_"),
+            (old_checkpoint2, "parent2_"),
+        ]:
             for k, v in old_cp.items():
                 result[prefix + k] = v
         root.info(f"Report back:\n{result}")

@@ -15,54 +15,57 @@ Example for running the simulator back-end on a tabulated benchmark
 """
 import logging
 
-from benchmarking.definitions.definition_nasbench201 import \
-    nasbench201_default_params, nasbench201_benchmark
+from benchmarking.definitions.definition_nasbench201 import (
+    nasbench201_default_params,
+    nasbench201_benchmark,
+)
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
-from syne_tune.backend.simulator_backend.simulator_callback import \
-    SimulatorCallback
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
     n_workers = 4
-    default_params = nasbench201_default_params({'backend': 'simulated'})
+    default_params = nasbench201_default_params({"backend": "simulated"})
     benchmark = nasbench201_benchmark(default_params)
     # Benchmark must be tabulated to support simulation:
-    assert benchmark.get('supports_simulated', False)
-    mode = benchmark['mode']
-    metric = benchmark['metric']
-    blackbox_name = benchmark.get('blackbox_name')
+    assert benchmark.get("supports_simulated", False)
+    mode = benchmark["mode"]
+    metric = benchmark["metric"]
+    blackbox_name = benchmark.get("blackbox_name")
     # NASBench201 is a blackbox from the repository
     assert blackbox_name is not None
-    dataset_name = 'cifar100'
+    dataset_name = "cifar100"
 
     # If you don't like the default config_space, change it here. But let
     # us use the default
-    config_space = benchmark['config_space']
+    config_space = benchmark["config_space"]
 
     # Simulator back-end specialized to tabulated blackboxes
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
-        elapsed_time_attr=benchmark['elapsed_time_attr'],
-        time_this_resource_attr=benchmark.get('time_this_resource_attr'),
-        dataset=dataset_name)
+        elapsed_time_attr=benchmark["elapsed_time_attr"],
+        time_this_resource_attr=benchmark.get("time_this_resource_attr"),
+        dataset=dataset_name,
+    )
 
-    searcher = 'random'
+    searcher = "random"
     # Hyperband (or successive halving) scheduler of the stopping type.
     scheduler = HyperbandScheduler(
         config_space,
         searcher=searcher,
-        max_t=default_params['max_resource_level'],
-        grace_period=default_params['grace_period'],
-        reduction_factor=default_params['reduction_factor'],
-        resource_attr=benchmark['resource_attr'],
+        max_t=default_params["max_resource_level"],
+        grace_period=default_params["grace_period"],
+        reduction_factor=default_params["reduction_factor"],
+        resource_attr=benchmark["resource_attr"],
         mode=mode,
         metric=metric,
-        random_seed=random_seed)
+        random_seed=random_seed,
+    )
     # Make scheduler aware of time_keeper
     scheduler.set_time_keeper(trial_backend.time_keeper)
 

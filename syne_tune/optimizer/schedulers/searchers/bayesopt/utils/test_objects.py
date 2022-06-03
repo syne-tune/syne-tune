@@ -19,67 +19,83 @@ Object definitions that are used for testing.
 from typing import Iterator, Tuple, Dict, List, Optional, Union
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Hyperparameter, Configuration, dictionarize_objective
-from syne_tune.config_space import Categorical, loguniform, randint, \
-    choice, uniform
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges \
-    import HyperparameterRanges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory \
-    import make_hyperparameter_ranges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import \
-    TrialEvaluations, PendingEvaluation
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import MCMCConfig, OptimizationConfig
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression \
-    import GaussianProcessRegression
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc \
-    import GPRegressionMCMC
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel \
-    import Matern52, KernelFunction
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping \
-    import WarpedKernel, Warping
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes \
-    import CandidateGenerator
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common \
-    import ExclusionList
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Hyperparameter,
+    Configuration,
+    dictionarize_objective,
+)
+from syne_tune.config_space import Categorical, loguniform, randint, choice, uniform
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+    make_hyperparameter_ranges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    TrialEvaluations,
+    PendingEvaluation,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    MCMCConfig,
+    OptimizationConfig,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression import (
+    GaussianProcessRegression,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc import (
+    GPRegressionMCMC,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
+    Matern52,
+    KernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import (
+    WarpedKernel,
+    Warping,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    CandidateGenerator,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    ExclusionList,
+)
 
 
-def build_kernel(state: TuningJobState,
-                 do_warping: bool = False) -> KernelFunction:
+def build_kernel(state: TuningJobState, do_warping: bool = False) -> KernelFunction:
     dims, warping_ranges = dimensionality_and_warping_ranges(state.hp_ranges)
     kernel = Matern52(dims, ARD=True)
     if do_warping:
-        return WarpedKernel(
-            kernel=kernel, warping=Warping(dims, warping_ranges))
+        return WarpedKernel(kernel=kernel, warping=Warping(dims, warping_ranges))
     else:
         return kernel
 
 
 def default_gpmodel(
-        state: TuningJobState, random_seed: int,
-        optimization_config: OptimizationConfig) -> GaussianProcessRegression:
+    state: TuningJobState, random_seed: int, optimization_config: OptimizationConfig
+) -> GaussianProcessRegression:
     return GaussianProcessRegression(
         kernel=build_kernel(state),
         optimization_config=optimization_config,
-        random_seed=random_seed
+        random_seed=random_seed,
     )
 
 
 def default_gpmodel_mcmc(
-        state: TuningJobState, random_seed: int,
-        mcmc_config: MCMCConfig) -> GPRegressionMCMC:
+    state: TuningJobState, random_seed: int, mcmc_config: MCMCConfig
+) -> GPRegressionMCMC:
     return GPRegressionMCMC(
         build_kernel=lambda: build_kernel(state),
         mcmc_config=mcmc_config,
-        random_seed=random_seed
+        random_seed=random_seed,
     )
 
 
-def dimensionality_and_warping_ranges(hp_ranges: HyperparameterRanges) -> \
-        Tuple[int, Dict[int, Tuple[float, float]]]:
+def dimensionality_and_warping_ranges(
+    hp_ranges: HyperparameterRanges,
+) -> Tuple[int, Dict[int, Tuple[float, float]]]:
     lower_config = dict()
     upper_config = dict()
     for name, hp_range in hp_ranges.config_space.items():
@@ -114,15 +130,18 @@ def dimensionality_and_warping_ranges(hp_ranges: HyperparameterRanges) -> \
 
 class RepeatedCandidateGenerator(CandidateGenerator):
     """Generates candidates from a fixed set. Used to test the deduplication logic."""
+
     def __init__(self, n_unique_candidates: int):
         self.config_space = {
-            'a': uniform(0, n_unique_candidates),
-            'b': randint(0, n_unique_candidates),
-            'c': choice([f"value_{i}" for i in range(n_unique_candidates)])}
+            "a": uniform(0, n_unique_candidates),
+            "b": randint(0, n_unique_candidates),
+            "c": choice([f"value_{i}" for i in range(n_unique_candidates)]),
+        }
         self.hp_ranges = make_hyperparameter_ranges(self.config_space)
         self.all_unique_candidates = [
-            {'a': 1.0*j, 'b': j, 'c': f"value_{j}"}
-            for j in range(n_unique_candidates)]
+            {"a": 1.0 * j, "b": j, "c": f"value_{j}"}
+            for j in range(n_unique_candidates)
+        ]
 
     def generate_candidates(self) -> Iterator[Configuration]:
         i = 0
@@ -138,7 +157,7 @@ class RepeatedCandidateGenerator(CandidateGenerator):
 class Quadratic3d:
     def __init__(self, local_minima, active_metric, metric_names):
         # local_minima: point where local_minima is located
-        self.local_minima = np.array(local_minima).astype('float')
+        self.local_minima = np.array(local_minima).astype("float")
         self.local_minima[0] = np.log10(self.local_minima[0])
         self.active_metric = active_metric
         self.metric_names = metric_names
@@ -146,9 +165,10 @@ class Quadratic3d:
     @property
     def search_space(self):
         config_space = {
-            'x': loguniform(1.0, 100.0),
-            'y': randint(0, 2),
-            'z': choice(['0.0', '1.0', '2.0'])}
+            "x": loguniform(1.0, 100.0),
+            "y": randint(0, 2),
+            "z": choice(["0.0", "1.0", "2.0"]),
+        }
         return make_hyperparameter_ranges(config_space)
 
     @property
@@ -161,8 +181,9 @@ class Quadratic3d:
         return dictionarize_objective(np.sum((self.local_minima - p) ** 2))
 
 
-def tuples_to_configs(config_tpls: List[Tuple[Hyperparameter, ...]],
-                      hp_ranges: HyperparameterRanges) -> List[Configuration]:
+def tuples_to_configs(
+    config_tpls: List[Tuple[Hyperparameter, ...]], hp_ranges: HyperparameterRanges
+) -> List[Configuration]:
     """
     Many unit tests write configs as tuples.
 
@@ -171,8 +192,8 @@ def tuples_to_configs(config_tpls: List[Tuple[Hyperparameter, ...]],
 
 
 def create_exclusion_set(
-        candidates_tpl, hp_ranges: HyperparameterRanges,
-        is_dict: bool = False) -> ExclusionList:
+    candidates_tpl, hp_ranges: HyperparameterRanges, is_dict: bool = False
+) -> ExclusionList:
     """
     Creates exclusion list from set of tuples.
 
@@ -180,12 +201,14 @@ def create_exclusion_set(
     if not is_dict:
         candidates_tpl = tuples_to_configs(candidates_tpl, hp_ranges)
     config_for_trial = {
-        str(trial_id): config for trial_id, config in enumerate(candidates_tpl)}
+        str(trial_id): config for trial_id, config in enumerate(candidates_tpl)
+    }
     state = TuningJobState(
         hp_ranges=hp_ranges,
         config_for_trial=config_for_trial,
         trials_evaluations=[],
-        failed_trials=[str(x) for x in range(len(candidates_tpl))])
+        failed_trials=[str(x) for x in range(len(candidates_tpl))],
+    )
     return ExclusionList(state)
 
 
@@ -193,10 +216,12 @@ TupleOrDict = Union[tuple, dict]
 
 
 def create_tuning_job_state(
-        hp_ranges: HyperparameterRanges, cand_tuples: List[TupleOrDict],
-        metrics: List[Dict],
-        pending_tuples: Optional[List[TupleOrDict]] = None,
-        failed_tuples: Optional[List[TupleOrDict]] = None) -> TuningJobState:
+    hp_ranges: HyperparameterRanges,
+    cand_tuples: List[TupleOrDict],
+    metrics: List[Dict],
+    pending_tuples: Optional[List[TupleOrDict]] = None,
+    failed_tuples: Optional[List[TupleOrDict]] = None,
+) -> TuningJobState:
     """
     Builds `TuningJobState` from basics, where configs are given as tuples or
     as dicts.
@@ -208,8 +233,10 @@ def create_tuning_job_state(
         configs = tuples_to_configs(cand_tuples, hp_ranges)
     else:
         configs = cand_tuples
-    trials_evaluations = [TrialEvaluations(trial_id=str(trial_id), metrics=y)
-                          for trial_id, y in enumerate(metrics)]
+    trials_evaluations = [
+        TrialEvaluations(trial_id=str(trial_id), metrics=y)
+        for trial_id, y in enumerate(metrics)
+    ]
     pending_evaluations = None
     if pending_tuples is not None:
         sz = len(configs)
@@ -219,8 +246,10 @@ def create_tuning_job_state(
         else:
             extra_configs = pending_tuples
         configs.extend(extra_configs)
-        pending_evaluations = [PendingEvaluation(trial_id=str(trial_id))
-                               for trial_id in range(sz, sz + extra)]
+        pending_evaluations = [
+            PendingEvaluation(trial_id=str(trial_id))
+            for trial_id in range(sz, sz + extra)
+        ]
     failed_trials = None
     if failed_tuples is not None:
         sz = len(configs)
@@ -233,10 +262,12 @@ def create_tuning_job_state(
         failed_trials = [str(x) for x in range(sz, sz + extra)]
 
     config_for_trial = {
-        str(trial_id): config for trial_id, config in enumerate(configs)}
+        str(trial_id): config for trial_id, config in enumerate(configs)
+    }
     return TuningJobState(
         hp_ranges=hp_ranges,
         config_for_trial=config_for_trial,
         trials_evaluations=trials_evaluations,
         failed_trials=failed_trials,
-        pending_evaluations=pending_evaluations)
+        pending_evaluations=pending_evaluations,
+    )

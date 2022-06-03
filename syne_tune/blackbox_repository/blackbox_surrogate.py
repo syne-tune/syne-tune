@@ -22,17 +22,16 @@ class Columns(BaseEstimator, TransformerMixin):
 
 
 class BlackboxSurrogate(Blackbox):
-
     def __init__(
-            self,
-            X: pd.DataFrame,
-            y: pd.DataFrame,
-            configuration_space: Dict,
-            fidelity_space: Optional[Dict] = None,
-            fidelity_values: Optional[np.array] = None,
-            surrogate=None,
-            max_fit_samples: Optional[int] = None,
-            name: Optional[str] = None,
+        self,
+        X: pd.DataFrame,
+        y: pd.DataFrame,
+        configuration_space: Dict,
+        fidelity_space: Optional[Dict] = None,
+        fidelity_values: Optional[np.array] = None,
+        surrogate=None,
+        max_fit_samples: Optional[int] = None,
+        name: Optional[str] = None,
     ):
         """
         Fits a blackbox surrogates that can be evaluated anywhere, which can be useful for supporting
@@ -60,9 +59,13 @@ class BlackboxSurrogate(Blackbox):
         )
         assert len(X) == len(y)
         # todo other types of assert with configuration_space, objective_names, ...
-        self.surrogate = surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
+        self.surrogate = (
+            surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
+        )
         self.max_fit_samples = max_fit_samples
-        self.fit_surrogate(X=X, y=y, surrogate=surrogate, max_samples=self.max_fit_samples)
+        self.fit_surrogate(
+            X=X, y=y, surrogate=surrogate, max_samples=self.max_fit_samples
+        )
         self.name = name
         self._fidelity_values = fidelity_values
 
@@ -93,57 +96,70 @@ class BlackboxSurrogate(Blackbox):
         # the surrogate model
         features_union = []
         if len(categorical) > 0:
-            features_union.append(('categorical', make_pipeline(
-                Columns(names=categorical), OneHotEncoder(sparse=False, handle_unknown='ignore'))))
+            features_union.append(
+                (
+                    "categorical",
+                    make_pipeline(
+                        Columns(names=categorical),
+                        OneHotEncoder(sparse=False, handle_unknown="ignore"),
+                    ),
+                )
+            )
         if len(numeric) > 0:
-            features_union.append(('numeric', make_pipeline(Columns(names=numeric), StandardScaler())))
+            features_union.append(
+                ("numeric", make_pipeline(Columns(names=numeric), StandardScaler()))
+            )
 
-        return Pipeline([
-            ("features", FeatureUnion(features_union)),
-            ('standard scaler', StandardScaler(with_mean=False)),
-            ('model', model)
-        ])
+        return Pipeline(
+            [
+                ("features", FeatureUnion(features_union)),
+                ("standard scaler", StandardScaler(with_mean=False)),
+                ("model", model),
+            ]
+        )
 
-    def fit_surrogate(self, X, y, surrogate=None, max_samples: Optional[int] = None) -> Blackbox:
+    def fit_surrogate(
+        self, X, y, surrogate=None, max_samples: Optional[int] = None
+    ) -> Blackbox:
         """
         Fits a surrogate model to a blackbox.
         :param surrogate: fits the model and apply the model transformation when evaluating a
         blackbox configuration. Possible example: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator
         obeying Scikit-learn API.
         """
-        self.surrogate = surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
+        self.surrogate = (
+            surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
+        )
 
         self.surrogate_pipeline = self.make_model_pipeline(
             configuration_space=self.configuration_space,
             fidelity_space=self.fidelity_space,
-            model=surrogate
+            model=surrogate,
         )
         # todo would be nicer to have this in the feature pipeline
         if max_samples is not None and max_samples < len(X):
             random_indices = np.random.permutation(len(X))[:max_samples]
             self.surrogate_pipeline.fit(
-                X=X.loc[random_indices],
-                y=y.loc[random_indices]
+                X=X.loc[random_indices], y=y.loc[random_indices]
             )
         else:
-            self.surrogate_pipeline.fit(
-                X=X,
-                y=y
-            )
+            self.surrogate_pipeline.fit(X=X, y=y)
         return self
 
     def _objective_function(
-            self,
-            configuration: Dict,
-            fidelity: Optional[Dict] = None,
-            seed: Optional[int] = None
+        self,
+        configuration: Dict,
+        fidelity: Optional[Dict] = None,
+        seed: Optional[int] = None,
     ) -> Dict[str, float]:
         surrogate_input = configuration.copy()
         if fidelity is not None or self.fidelity_values is None:
             if fidelity is not None:
                 surrogate_input.update(fidelity)
             # use the surrogate model for prediction
-            prediction = self.surrogate_pipeline.predict(pd.DataFrame([surrogate_input]))
+            prediction = self.surrogate_pipeline.predict(
+                pd.DataFrame([surrogate_input])
+            )
 
             # converts the returned nd-array with shape (1, num_metrics) to the list of objectives values
             prediction = prediction.reshape(-1).tolist()
@@ -154,16 +170,17 @@ class BlackboxSurrogate(Blackbox):
             # when no fidelity is given and a fidelity space exists, we return all fidelities
             # we construct a input dataframe with all fidelity for the configuration given to call the transformer
             # at once which is more efficient due to vectorization
-            surrogate_input_df = pd.DataFrame([surrogate_input] * len(self.fidelity_values))
-            surrogate_input_df[next(iter(self.fidelity_space.keys()))] = self.fidelity_values
+            surrogate_input_df = pd.DataFrame(
+                [surrogate_input] * len(self.fidelity_values)
+            )
+            surrogate_input_df[
+                next(iter(self.fidelity_space.keys()))
+            ] = self.fidelity_values
             objectives_values = self.surrogate_pipeline.predict(surrogate_input_df)
             return objectives_values
 
 
-def add_surrogate(
-        blackbox: Blackbox,
-        surrogate=None,
-        configuration_space=None):
+def add_surrogate(blackbox: Blackbox, surrogate=None, configuration_space=None):
     """
     Fits a blackbox surrogates that can be evaluated anywhere, which can be useful
     for supporting interpolation/extrapolation.

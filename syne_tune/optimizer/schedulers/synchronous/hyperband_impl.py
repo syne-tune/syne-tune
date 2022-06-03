@@ -13,29 +13,33 @@
 from typing import Dict
 
 from syne_tune.optimizer.scheduler import TrialScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband import \
-    SynchronousHyperbandScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system \
-    import SynchronousHyperbandRungSystem
-from syne_tune.optimizer.schedulers.searchers.utils.default_arguments \
-    import check_and_merge_defaults, Integer, Float, filter_by_key
+from syne_tune.optimizer.schedulers.synchronous.hyperband import (
+    SynchronousHyperbandScheduler,
+)
+from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system import (
+    SynchronousHyperbandRungSystem,
+)
+from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
+    check_and_merge_defaults,
+    Integer,
+    Float,
+    filter_by_key,
+)
 
 
-_ARGUMENT_KEYS = {
-    'grace_period', 'max_resource_level', 'reduction_factor',
-    'brackets'}
+_ARGUMENT_KEYS = {"grace_period", "max_resource_level", "reduction_factor", "brackets"}
 
 _DEFAULT_OPTIONS = {
-    'grace_period': 1,
-    'reduction_factor': 3,
-    'brackets': 1,
+    "grace_period": 1,
+    "reduction_factor": 3,
+    "brackets": 1,
 }
 
 _CONSTRAINTS = {
-    'grace_period': Integer(1, None),
-    'max_resource_level': Integer(1, None),
-    'reduction_factor': Float(2, None),
-    'brackets': Integer(1, None),
+    "grace_period": Integer(1, None),
+    "max_resource_level": Integer(1, None),
+    "reduction_factor": Float(2, None),
+    "brackets": Integer(1, None),
 }
 
 
@@ -62,26 +66,29 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
         halving. Is capped to the largest number of supported brackets.
 
     """
+
     def __init__(self, config_space: Dict, **kwargs):
         TrialScheduler.__init__(self, config_space)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
-            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS,
-            dict_name='scheduler_options')
-        self.grace_period = kwargs['grace_period']
-        self.reduction_factor = kwargs['reduction_factor']
-        num_brackets = kwargs['brackets']
+            kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
+        )
+        self.grace_period = kwargs["grace_period"]
+        self.reduction_factor = kwargs["reduction_factor"]
+        num_brackets = kwargs["brackets"]
         max_resource_level = self._infer_max_resource_level(
-            kwargs.get('max_resource_level'), kwargs.get('max_resource_attr'))
-        assert max_resource_level is not None, \
-            "The maximum resource level must be specified, either as " +\
-            "explicit argument 'max_resource_level', or as entry in " +\
-            "'config_space', with name 'max_resource_attr'"
+            kwargs.get("max_resource_level"), kwargs.get("max_resource_attr")
+        )
+        assert max_resource_level is not None, (
+            "The maximum resource level must be specified, either as "
+            + "explicit argument 'max_resource_level', or as entry in "
+            + "'config_space', with name 'max_resource_attr'"
+        )
         self.max_resource_level = max_resource_level
         bracket_rungs = SynchronousHyperbandRungSystem.geometric(
             min_resource=self.grace_period,
             max_resource=max_resource_level,
             reduction_factor=self.reduction_factor,
-            num_brackets=num_brackets)
-        self._create_internal(
-            bracket_rungs, **filter_by_key(kwargs, _ARGUMENT_KEYS))
+            num_brackets=num_brackets,
+        )
+        self._create_internal(bracket_rungs, **filter_by_key(kwargs, _ARGUMENT_KEYS))

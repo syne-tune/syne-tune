@@ -11,14 +11,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__all__ = ['parse_bool']
+__all__ = ["parse_bool"]
 
 
 def parse_bool(val: str) -> bool:
     val = val.upper()
-    if val == 'TRUE':
+    if val == "TRUE":
         return True
     else:
-        assert val == 'FALSE', \
-            f"val = '{val}' is not a boolean value"
+        assert val == "FALSE", f"val = '{val}' is not a boolean value"
         return False

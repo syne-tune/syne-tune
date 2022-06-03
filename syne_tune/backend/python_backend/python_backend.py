@@ -21,11 +21,11 @@ def file_md5(filename: str) -> str:
 
 class PythonBackend(LocalBackend):
     def __init__(
-            self,
-            tune_function: Callable,
-            config_space: Dict[str, object],
-            rotate_gpus: bool = True,
-            delete_checkpoints: bool = False
+        self,
+        tune_function: Callable,
+        config_space: Dict[str, object],
+        rotate_gpus: bool = True,
+        delete_checkpoints: bool = False,
     ):
         """
         A backend that supports the tuning of Python functions (if you rather want to tune an endpoint script such as
@@ -76,10 +76,16 @@ class PythonBackend(LocalBackend):
         self.tune_function = types.FunctionType(tune_function.__code__, {})
         self.tune_function_path = self.local_path / "tune_function"
 
-    def set_path(self, results_root: Optional[str] = None, tuner_name: Optional[str] = None):
-        super(PythonBackend, self).set_path(results_root=results_root, tuner_name=tuner_name)
+    def set_path(
+        self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
+    ):
+        super(PythonBackend, self).set_path(
+            results_root=results_root, tuner_name=tuner_name
+        )
         if self.local_path.exists():
-            logging.error(f"path {self.local_path} already exists, make sure you have a unique tuner name.")
+            logging.error(
+                f"path {self.local_path} already exists, make sure you have a unique tuner name."
+            )
         self.tune_function_path = self.local_path / "tune_function"
 
     def _schedule(self, trial_id: int, config: Dict):
@@ -89,7 +95,9 @@ class PythonBackend(LocalBackend):
         config["tune_function_root"] = str(self.tune_function_path)
         # to detect if the serialized function is the same as the one passed by the user, we pass the md5 to the
         # endpoint script. The hash is checked before executing the function.
-        config["tune_function_hash"] = file_md5(self.tune_function_path / "tune_function.dill")
+        config["tune_function_hash"] = file_md5(
+            self.tune_function_path / "tune_function.dill"
+        )
         super(PythonBackend, self)._schedule(trial_id=trial_id, config=config)
 
     def save_tune_function(self, tune_function):
@@ -97,4 +105,10 @@ class PythonBackend(LocalBackend):
         with open(self.tune_function_path / "tune_function.dill", "wb") as file:
             dill.dump(tune_function, file)
         with open(self.tune_function_path / "configspace.json", "w") as file:
-            json.dump({k: to_dict(v) if isinstance(v, Domain) else v for k, v in self.config_space.items()}, file)
+            json.dump(
+                {
+                    k: to_dict(v) if isinstance(v, Domain) else v
+                    for k, v in self.config_space.items()
+                },
+                file,
+            )

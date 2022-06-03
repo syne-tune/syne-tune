@@ -16,10 +16,12 @@ from autograd.builtins import isinstance
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants \
-    import DATA_TYPE
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state \
-    import GaussProcPosteriorState
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
+    DATA_TYPE,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
+    GaussProcPosteriorState,
+)
 
 
 class GaussianProcessModel(ABC):
@@ -51,7 +53,7 @@ class GaussianProcessModel(ABC):
         :param u: some np.ndarray
         """
         assert isinstance(u, anp.ndarray)
-        
+
         if u.ndim == 1:
             u = anp.reshape(u, (-1, 1))
         if u.dtype != DATA_TYPE:
@@ -63,9 +65,10 @@ class GaussianProcessModel(ABC):
     def _check_features_targets(features, targets):
         features = GaussianProcessModel._check_and_format_input(features)
         targets = GaussianProcessModel._check_and_format_input(targets)
-        assert features.shape[0] == targets.shape[0], \
-            f"features and targets should have the same number of points " +\
-            f"(received {features.shape[0]} and {targets.shape[0]})"
+        assert features.shape[0] == targets.shape[0], (
+            f"features and targets should have the same number of points "
+            + f"(received {features.shape[0]} and {targets.shape[0]})"
+        )
         return features, targets
 
     def predict(self, features_test):
@@ -77,7 +80,7 @@ class GaussianProcessModel(ABC):
         :return: posterior_means, posterior_variances
         """
         features_test = self._assert_check_xtest(features_test)
-        
+
         predictions = []
         for state in self.states:
             post_means, post_vars = state.predict(features_test)
@@ -88,21 +91,20 @@ class GaussianProcessModel(ABC):
         return predictions
 
     def _assert_check_xtest(self, features_test):
-        assert self.states is not None, \
-            "Posterior state does not exist (run 'fit')"
+        assert self.states is not None, "Posterior state does not exist (run 'fit')"
         features_test = self._check_and_format_input(features_test)
-        assert features_test.shape[1] == self.states[0].num_features,\
-            f"features_test and features should have the same number of " + \
-            f"columns (received {features_test.shape[1]}, expected " + \
-            f"{self.states[0].num_features})"
+        assert features_test.shape[1] == self.states[0].num_features, (
+            f"features_test and features should have the same number of "
+            + f"columns (received {features_test.shape[1]}, expected "
+            + f"{self.states[0].num_features})"
+        )
         return features_test
 
     def multiple_targets(self):
         """
         :return: Posterior state based on multiple (fantasized) target
         """
-        assert self.states is not None, \
-            "Posterior state does not exist (run 'fit')"
+        assert self.states is not None, "Posterior state does not exist (run 'fit')"
         return self.states[0].num_fantasies > 1
 
     def sample_marginals(self, features_test, num_samples=1):
@@ -122,8 +124,10 @@ class GaussianProcessModel(ABC):
         features_test = self._assert_check_xtest(features_test)
         samples_list = [
             state.sample_marginals(
-                features_test, num_samples, random_state=self._random_state)
-            for state in self.states]
+                features_test, num_samples, random_state=self._random_state
+            )
+            for state in self.states
+        ]
         return _concatenate_samples(samples_list)
 
     def sample_joint(self, features_test, num_samples=1):
@@ -140,8 +144,10 @@ class GaussianProcessModel(ABC):
         features_test = self._assert_check_xtest(features_test)
         samples_list = [
             state.sample_joint(
-                features_test, num_samples, random_state=self._random_state)
-            for state in self.states]
+                features_test, num_samples, random_state=self._random_state
+            )
+            for state in self.states
+        ]
         return _concatenate_samples(samples_list)
 
 

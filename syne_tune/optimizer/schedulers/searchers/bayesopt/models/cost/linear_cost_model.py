@@ -16,22 +16,28 @@ import numpy as np
 from sklearn.linear_model import RidgeCV
 from enum import IntEnum
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model \
-    import CostModel, CostValue
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import Configuration
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state \
-    import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common \
-    import INTERNAL_COST_NAME
-from syne_tune.optimizer.schedulers.searchers.searcher import \
-    impute_points_to_evaluate
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model import (
+    CostModel,
+    CostValue,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    Configuration,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    INTERNAL_COST_NAME,
+)
+from syne_tune.optimizer.schedulers.searchers.searcher import impute_points_to_evaluate
 
-__all__ = ['LinearCostModel',
-           'MLPLinearCostModel',
-           'FixedLayersMLPCostModel',
-           'NASBench201LinearCostModel',
-           'BiasOnlyLinearCostModel']
+__all__ = [
+    "LinearCostModel",
+    "MLPLinearCostModel",
+    "FixedLayersMLPCostModel",
+    "NASBench201LinearCostModel",
+    "BiasOnlyLinearCostModel",
+]
 
 
 class LinearCostModel(CostModel):
@@ -47,6 +53,7 @@ class LinearCostModel(CostModel):
     regularization constant is set by LOO cross-validation.
 
     """
+
     def __init__(self):
         self.weights0 = None
         self.weights1 = None
@@ -56,8 +63,9 @@ class LinearCostModel(CostModel):
         return INTERNAL_COST_NAME
 
     @abstractmethod
-    def feature_matrices(self, candidates: List[Configuration]) -> \
-            (np.ndarray, np.ndarray):
+    def feature_matrices(
+        self, candidates: List[Configuration]
+    ) -> (np.ndarray, np.ndarray):
         """
         Has to be supplied by subclasses
 
@@ -68,45 +76,53 @@ class LinearCostModel(CostModel):
 
     def update(self, state: TuningJobState):
         # Compile feature matrix and targets for linear regression problem
-        configs = [state.config_for_trial[ev.trial_id]
-                   for ev in state.trials_evaluations]
+        configs = [
+            state.config_for_trial[ev.trial_id] for ev in state.trials_evaluations
+        ]
         features0, features1 = self.feature_matrices(configs)
         dim0 = features0.shape[1]
         feature_parts = []
         cost_parts = []
         for feature0, feature1, ev in zip(
-                features0, features1, state.trials_evaluations):
+            features0, features1, state.trials_evaluations
+        ):
             metric_vals = ev.metrics.get(self.cost_metric_name)
             if metric_vals is not None:
                 assert isinstance(metric_vals, dict)
                 resource_values, cost_values = zip(*metric_vals.items())
-                resource_values = np.array(
-                    resource_values, dtype=np.float64).reshape((-1, 1))
-                feature0 = feature0.astype(
-                    np.float64, copy=False).reshape((1, -1))
-                feature1 = feature1.astype(
-                    np.float64, copy=False).reshape((1, -1))
-                feature_parts.append(np.concatenate((
-                    np.broadcast_to(feature0, (resource_values.size,
-                                               feature0.size)),
-                    resource_values * feature1), axis=1))
-                cost_parts.append(np.array(
-                    cost_values, dtype=np.float64).reshape((-1, 1)))
+                resource_values = np.array(resource_values, dtype=np.float64).reshape(
+                    (-1, 1)
+                )
+                feature0 = feature0.astype(np.float64, copy=False).reshape((1, -1))
+                feature1 = feature1.astype(np.float64, copy=False).reshape((1, -1))
+                feature_parts.append(
+                    np.concatenate(
+                        (
+                            np.broadcast_to(
+                                feature0, (resource_values.size, feature0.size)
+                            ),
+                            resource_values * feature1,
+                        ),
+                        axis=1,
+                    )
+                )
+                cost_parts.append(
+                    np.array(cost_values, dtype=np.float64).reshape((-1, 1))
+                )
         features = np.vstack(feature_parts)
         targets = np.vstack(cost_parts).reshape((-1,))
         assert features.shape[0] == targets.size
         assert features.shape[1] == dim0 + features1.shape[1]
         # Fit with RidgeCV, where alpha is selected by LOO cross-validation
-        predictor = RidgeCV(
-            alphas = np.exp(np.arange(-4, 5)),
-            fit_intercept=False).fit(features, targets)
+        predictor = RidgeCV(alphas=np.exp(np.arange(-4, 5)), fit_intercept=False).fit(
+            features, targets
+        )
         self.weights0 = predictor.coef_[:dim0].reshape((-1, 1))
         self.weights1 = predictor.coef_[dim0:].reshape((-1, 1))
         self.alpha = predictor.alpha_
 
     def sample_joint(self, candidates: List[Configuration]) -> List[CostValue]:
-        assert self.weights0 is not None, \
-            "Must call 'update' before 'sample_joint'"
+        assert self.weights0 is not None, "Must call 'update' before 'sample_joint'"
         features0, features1 = self.feature_matrices(candidates)
         c0_vals = np.matmul(features0, self.weights0).reshape((-1,))
         c1_vals = np.matmul(features1, self.weights1).reshape((-1,))
@@ -118,11 +134,13 @@ class BiasOnlyLinearCostModel(LinearCostModel):
     Simple baseline: features0(x) = [1], features1(x) = [1]
 
     """
+
     def __init__(self):
         super().__init__()
 
-    def feature_matrices(self, candidates: List[Configuration]) -> \
-            (np.ndarray, np.ndarray):
+    def feature_matrices(
+        self, candidates: List[Configuration]
+    ) -> (np.ndarray, np.ndarray):
         one_feats = np.ones((len(candidates), 1))
         return one_feats, one_feats
 
@@ -132,15 +150,19 @@ class MLPLinearCostModel(LinearCostModel):
     Deterministic linear cost model for multi-layer perceptron.
 
     """
+
     def __init__(
-            self, num_inputs: int, num_outputs: int,
-            num_hidden_layers: Callable[[dict], int],
-            hidden_layer_width: Callable[[dict, int], int],
-            batch_size: Callable[[dict], int],
-            bs_exponent: Optional[float] = None,
-            extra_mlp: bool = False,
-            c0_mlp_feature: bool = False,
-            expected_hidden_layer_width: Optional[Callable[[int], float]] = None):
+        self,
+        num_inputs: int,
+        num_outputs: int,
+        num_hidden_layers: Callable[[dict], int],
+        hidden_layer_width: Callable[[dict, int], int],
+        batch_size: Callable[[dict], int],
+        bs_exponent: Optional[float] = None,
+        extra_mlp: bool = False,
+        c0_mlp_feature: bool = False,
+        expected_hidden_layer_width: Optional[Callable[[int], float]] = None,
+    ):
         """
         If config is a HP configuration, num_hidden_layers(config) is the
         number of hidden layers, hidden_layer_width(config, layer) is the
@@ -181,8 +203,9 @@ class MLPLinearCostModel(LinearCostModel):
         self.c0_mlp_feature = c0_mlp_feature
         self.expected_hidden_layer_width = expected_hidden_layer_width
 
-    def feature_matrices(self, candidates: List[Configuration]) -> \
-            (np.ndarray, np.ndarray):
+    def feature_matrices(
+        self, candidates: List[Configuration]
+    ) -> (np.ndarray, np.ndarray):
         features1_1 = []
         features1_2 = []
         for config in candidates:
@@ -207,28 +230,29 @@ class MLPLinearCostModel(LinearCostModel):
 
     def _mlp_feature(self, config: Configuration) -> float:
         layers = range(self.num_hidden_layers(config))
-        width_list = [self.hidden_layer_width(config, layer)
-                      for layer in layers]
+        width_list = [self.hidden_layer_width(config, layer) for layer in layers]
         if self.expected_hidden_layer_width is None:
             norm_const = 1
         else:
             norm_const = self._sum_of_prod(
-                [self.expected_hidden_layer_width(layer) for layer in layers])
+                [self.expected_hidden_layer_width(layer) for layer in layers]
+            )
         return self._sum_of_prod(width_list) / norm_const
 
     def _sum_of_prod(self, lst):
-        return sum(x * y for x, y in zip(
-            [self.num_inputs] + lst, lst + [self.num_outputs]))
+        return sum(
+            x * y for x, y in zip([self.num_inputs] + lst, lst + [self.num_outputs])
+        )
 
     def _mlp_feature2(self, config: Configuration) -> float:
         layers = range(self.num_hidden_layers(config))
-        width_list = [self.hidden_layer_width(config, layer)
-                      for layer in layers]
+        width_list = [self.hidden_layer_width(config, layer) for layer in layers]
         if self.expected_hidden_layer_width is None:
             norm_const = 1
         else:
             norm_const = sum(
-                self.expected_hidden_layer_width(layer) for layer in layers)
+                self.expected_hidden_layer_width(layer) for layer in layers
+            )
         return sum(width_list) / norm_const
 
 
@@ -237,14 +261,19 @@ class FixedLayersMLPCostModel(MLPLinearCostModel):
     Linear cost model for MLP with num_hidden_layers hidden layers.
 
     """
+
     def __init__(
-            self, num_inputs: int, num_outputs: int,
-            num_units_keys: List[str] = None,
-            bs_exponent: Optional[float] = None, extra_mlp: bool = False,
-            c0_mlp_feature: bool = False,
-            expected_hidden_layer_width: Optional[Callable[[int], float]] = None):
+        self,
+        num_inputs: int,
+        num_outputs: int,
+        num_units_keys: List[str] = None,
+        bs_exponent: Optional[float] = None,
+        extra_mlp: bool = False,
+        c0_mlp_feature: bool = False,
+        expected_hidden_layer_width: Optional[Callable[[int], float]] = None,
+    ):
         if num_units_keys is None:
-            num_units_keys = ['n_units_1', 'n_units_2']
+            num_units_keys = ["n_units_1", "n_units_2"]
         num_hidden_layers = len(num_units_keys)
 
         def hidden_layer_width(config, layer):
@@ -255,14 +284,15 @@ class FixedLayersMLPCostModel(MLPLinearCostModel):
             num_outputs=num_outputs,
             num_hidden_layers=lambda config: num_hidden_layers,
             hidden_layer_width=hidden_layer_width,
-            batch_size=lambda config: int(config['batch_size']),
-            bs_exponent=bs_exponent, extra_mlp=extra_mlp,
+            batch_size=lambda config: int(config["batch_size"]),
+            bs_exponent=bs_exponent,
+            extra_mlp=extra_mlp,
             c0_mlp_feature=c0_mlp_feature,
-            expected_hidden_layer_width=expected_hidden_layer_width)
+            expected_hidden_layer_width=expected_hidden_layer_width,
+        )
 
     @staticmethod
-    def get_expected_hidden_layer_width(
-            config_space: Dict, num_units_keys: List[str]):
+    def get_expected_hidden_layer_width(config_space: Dict, num_units_keys: List[str]):
         """
         Constructs expected_hidden_layer_width function from the training
         evaluation function.
@@ -293,6 +323,7 @@ class NASBench201LinearCostModel(LinearCostModel):
         node3 = x3(node0) + x4(node1) + x5(node2)
 
     """
+
     class Op(IntEnum):
         SKIP_CONNECT = 0
         NONE = 1
@@ -301,9 +332,12 @@ class NASBench201LinearCostModel(LinearCostModel):
         AVG_POOL_3x3 = 4
 
     def __init__(
-            self, config_keys: Tuple[str, ...],
-            map_config_values: Dict[str, int], conv_separate_features: bool,
-            count_sum: bool):
+        self,
+        config_keys: Tuple[str, ...],
+        map_config_values: Dict[str, int],
+        conv_separate_features: bool,
+        count_sum: bool,
+    ):
         """
         `config_keys` contains attribute names of x0, ..., x5 in a config, in
         this ordering. `map_config_values` maps values in the config (for
@@ -325,11 +359,11 @@ class NASBench201LinearCostModel(LinearCostModel):
         self.count_sum = count_sum
 
     def _translate(self, config: Configuration) -> List[int]:
-        return [self._map_config_values[config[name]]
-                for name in self._config_keys]
+        return [self._map_config_values[config[name]] for name in self._config_keys]
 
-    def feature_matrices(self, candidates: List[Configuration]) -> \
-            (np.ndarray, np.ndarray):
+    def feature_matrices(
+        self, candidates: List[Configuration]
+    ) -> (np.ndarray, np.ndarray):
         features1_1 = []
         features1_2 = []
         features1_3 = []  # If conv_separate_features
@@ -346,21 +380,34 @@ class NASBench201LinearCostModel(LinearCostModel):
             if operators[1] == none_val and operators[2] == none_val:
                 operators[5] = none_val
             n_conv1, n_conv3, n_apool = map(
-                sum, zip(*((x == NASBench201LinearCostModel.Op.NOR_CONV_1x1,
+                sum,
+                zip(
+                    *(
+                        (
+                            x == NASBench201LinearCostModel.Op.NOR_CONV_1x1,
                             x == NASBench201LinearCostModel.Op.NOR_CONV_3x3,
-                            x == NASBench201LinearCostModel.Op.AVG_POOL_3x3)
-                           for x in operators)))
-            features1_1.append((5/6) * n_apool)
+                            x == NASBench201LinearCostModel.Op.AVG_POOL_3x3,
+                        )
+                        for x in operators
+                    )
+                ),
+            )
+            features1_1.append((5 / 6) * n_apool)
             if self.conv_separate_features:
-                features1_2.append((5/6) * n_conv1)
-                features1_3.append((5/6) * n_conv3)
+                features1_2.append((5 / 6) * n_conv1)
+                features1_3.append((5 / 6) * n_conv3)
             else:
                 features1_2.append((n_conv1 + 9 * n_conv3) / 12)
             if self.count_sum:
-                features1_4.append((25 / 76) * (
-                    (operators[1] != none_val) * (operators[2] != none_val) +
-                    (operators[3] != none_val) + (operators[4] != none_val) +
-                    (operators[5] != none_val)))
+                features1_4.append(
+                    (25 / 76)
+                    * (
+                        (operators[1] != none_val) * (operators[2] != none_val)
+                        + (operators[3] != none_val)
+                        + (operators[4] != none_val)
+                        + (operators[5] != none_val)
+                    )
+                )
 
         ones_vec = np.ones((len(features1_1), 1))
         features1_1 = np.array(features1_1).reshape((-1, 1))

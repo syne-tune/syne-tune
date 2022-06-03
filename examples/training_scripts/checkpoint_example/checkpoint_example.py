@@ -34,17 +34,17 @@ def save_checkpoint(checkpoint_path: Path, epoch: int, value: float):
         json.dump({"last_epoch": epoch, "last_value": value}, f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num-epochs', type=int, required=True)
-    parser.add_argument('--multiplier', type=float, default=1)
-    parser.add_argument('--sleep-time', type=float, default=0.1)
+    parser.add_argument("--num-epochs", type=int, required=True)
+    parser.add_argument("--multiplier", type=float, default=1)
+    parser.add_argument("--sleep-time", type=float, default=0.1)
 
     # convention the path where to serialize and deserialize is given as st_checkpoint_dir
-    parser.add_argument('--st_checkpoint_dir', type=str)
+    parser.add_argument("--st_checkpoint_dir", type=str)
 
     args, _ = parser.parse_known_args()
 

@@ -14,7 +14,7 @@ import numpy as np
 
 
 class DifferentialevolutionOptimizer:
-    def __init__(self, f, lower, upper, fevals, strategy='best1', bin=1):
+    def __init__(self, f, lower, upper, fevals, strategy="best1", bin=1):
 
         self.f = f
 
@@ -30,7 +30,7 @@ class DifferentialevolutionOptimizer:
 
         self.de_pop = []
         self.fitness = []
-        self.fbest = np.float('inf')
+        self.fbest = np.float("inf")
         self.idxbest = 1
         self.strategy = strategy
         self.bin = bin
@@ -69,7 +69,9 @@ class DifferentialevolutionOptimizer:
         if self.strategy == "currenttobest1":
             idxs = [idx for idx in range(self.popsize) if idx != j]
             r1, r2 = self.de_pop[np.random.choice(idxs, 2, replace=False)]
-            temp = current_idv + self.mut * (best_idv - current_idv) + self.mut * (r1 - r2)
+            temp = (
+                current_idv + self.mut * (best_idv - current_idv) + self.mut * (r1 - r2)
+            )
             vi = np.clip(temp, self.lower_bound, self.upper_bound)
 
         if self.strategy == "randtobest1":
@@ -90,8 +92,7 @@ class DifferentialevolutionOptimizer:
             i = 0
             ui = []
             fill_point = np.random.randint(0, self.dimensions)
-            while (i < self.dimensions and
-                   np.random.rand(0, 1) < self.crossp):
+            while i < self.dimensions and np.random.rand(0, 1) < self.crossp:
                 ui[fill_point] = vi[fill_point]
                 fill_point = (fill_point + 1) % self.dimensions
                 i += 1

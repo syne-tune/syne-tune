@@ -8,7 +8,7 @@ import pickle
 import gzip
 
 
-class Benchmark():
+class Benchmark:
     """API for TabularBench."""
 
     def __init__(self, data_dir, cache=False, cache_dir="cached/"):
@@ -42,7 +42,9 @@ class Benchmark():
             raise ValueError("Dataset name not found.")
 
         if config_id not in self.data[dataset_name].keys():
-            raise ValueError("Config nr %s not found for dataset %s." % (config_id, dataset_name))
+            raise ValueError(
+                "Config nr %s not found for dataset %s." % (config_id, dataset_name)
+            )
 
         if tag in self.data[dataset_name][config_id]["log"].keys():
             return self.data[dataset_name][config_id]["log"][tag]
@@ -56,7 +58,10 @@ class Benchmark():
         if tag == "config":
             return self.data[dataset_name][config_id]["config"]
 
-        raise ValueError("Tag %s not found for config %s for dataset %s" % (tag, config_id, dataset_name))
+        raise ValueError(
+            "Tag %s not found for config %s for dataset %s"
+            % (tag, config_id, dataset_name)
+        )
 
     def query_best(self, dataset_name, tag, criterion, position=0):
         """Query the n-th best run. "Best" here means achieving the largest value at any epoch/step,
@@ -69,7 +74,9 @@ class Benchmark():
         """
         performances = []
         for config_id in self.data[dataset_name].keys():
-            performances.append((config_id, max(self.query(dataset_name, criterion, config_id))))
+            performances.append(
+                (config_id, max(self.query(dataset_name, criterion, config_id)))
+            )
 
         performances.sort(key=lambda x: x[1] * 1000, reverse=True)
         desired_position = performances[position][0]
@@ -112,8 +119,17 @@ class Benchmark():
             raise ValueError("Dataset name not found.")
         return self.data[dataset_name][config_id]["config"]
 
-    def plot_by_name(self, dataset_names, x_col, y_col, n_configs=10, show_best=False, xscale='linear', yscale='linear',
-                     criterion=None):
+    def plot_by_name(
+        self,
+        dataset_names,
+        x_col,
+        y_col,
+        n_configs=10,
+        show_best=False,
+        xscale="linear",
+        yscale="linear",
+        criterion=None,
+    ):
         """Plot multiple datasets and multiple runs.
 
         Keyword arguments:
@@ -131,10 +147,14 @@ class Benchmark():
         if isinstance(dataset_names, str):
             dataset_names = [dataset_names]
         if not isinstance(dataset_names, (list, np.ndarray)):
-            raise ValueError("Please specify a dataset name or a list list of dataset names.")
+            raise ValueError(
+                "Please specify a dataset name or a list list of dataset names."
+            )
 
         n_rows = len(dataset_names)
-        fig, axes = plt.subplots(n_rows, 1, sharex=False, sharey=False, figsize=(10, 7 * n_rows))
+        fig, axes = plt.subplots(
+            n_rows, 1, sharex=False, sharey=False, figsize=(10, 7 * n_rows)
+        )
 
         if criterion is None:
             criterion = y_col
@@ -145,46 +165,58 @@ class Benchmark():
             for ind in range(n_configs):
                 try:
                     if ind == 0:
-                        instances = int(self.query(dataset_names[ind_ax], "instances", 0))
+                        instances = int(
+                            self.query(dataset_names[ind_ax], "instances", 0)
+                        )
                         classes = int(self.query(dataset_names[ind_ax], "classes", 0))
                         features = int(self.query(dataset_names[ind_ax], "features", 0))
 
                     if show_best:
-                        x = self.query_best(dataset_names[ind_ax], x_col, criterion, ind)
-                        y = self.query_best(dataset_names[ind_ax], y_col, criterion, ind)
+                        x = self.query_best(
+                            dataset_names[ind_ax], x_col, criterion, ind
+                        )
+                        y = self.query_best(
+                            dataset_names[ind_ax], y_col, criterion, ind
+                        )
                     else:
                         x = self.query(dataset_names[ind_ax], x_col, ind + 1)
                         y = self.query(dataset_names[ind_ax], y_col, ind + 1)
 
-                    ax.plot(x, y, 'p-')
+                    ax.plot(x, y, "p-")
                     ax.set_xscale(xscale)
                     ax.set_yscale(yscale)
                     ax.set(xlabel="step", ylabel=y_col)
-                    title_str = ", ".join([dataset_names[ind_ax],
-                                           "features: " + str(features),
-                                           "classes: " + str(classes),
-                                           "instances: " + str(instances)])
+                    title_str = ", ".join(
+                        [
+                            dataset_names[ind_ax],
+                            "features: " + str(features),
+                            "classes: " + str(classes),
+                            "instances: " + str(instances),
+                        ]
+                    )
                     ax.title.set_text(title_str)
                 except ValueError:
-                    print("Run %i not found for dataset %s" % (ind, dataset_names[ind_ax]))
+                    print(
+                        "Run %i not found for dataset %s" % (ind, dataset_names[ind_ax])
+                    )
                 except Exception as e:
                     raise e
 
     def _cache_data(self, data, cache_file):
         os.makedirs(self.cache_dir, exist_ok=True)
-        with gzip.open(cache_file, 'wb') as f:
+        with gzip.open(cache_file, "wb") as f:
             pickle.dump(data, f)
 
     def _read_cached_data(self, cache_file):
-        with gzip.open(cache_file, 'rb') as f:
+        with gzip.open(cache_file, "rb") as f:
             data = pickle.load(f)
         return data
 
     def _read_file_string(self, path):
         """Reads a large json string from path. Python file handler has issues with large files so it has to be chunked."""
         # Shoutout to https://stackoverflow.com/questions/48122798/oserror-errno-22-invalid-argument-when-reading-a-huge-file
-        file_str = ''
-        with open(path, 'r') as f:
+        file_str = ""
+        with open(path, "r") as f:
             while True:
                 block = f.read(64 * (1 << 20))  # Read 64 MB at a time
                 if not block:  # Reached EOF
@@ -194,7 +226,9 @@ class Benchmark():
 
     def _read_data(self, path):
         """Reads cached data if available. If not, reads json and caches the data as .pkl.gz"""
-        cache_file = os.path.join(self.cache_dir, os.path.basename(self.data_dir).replace(".json", ".pkl.gz"))
+        cache_file = os.path.join(
+            self.cache_dir, os.path.basename(self.data_dir).replace(".json", ".pkl.gz")
+        )
         if os.path.exists(cache_file) and self.cache:
             print("==> Found cached data, loading...")
             data = self._read_cached_data(cache_file)
