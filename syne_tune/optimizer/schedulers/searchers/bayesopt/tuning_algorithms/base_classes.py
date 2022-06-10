@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
 from typing import (
     List,
     Iterator,
@@ -65,15 +64,14 @@ class NextCandidatesAlgorithm:
         raise NotImplemented("Abstract method")
 
 
-class CandidateGenerator(ABC):
+class CandidateGenerator(object):
     """
     Class to generate candidates from which to start the local minimization, typically random candidate
     or some form of more uniformly spaced variation, such as latin hypercube or sobol sequence
     """
 
-    @abstractmethod
     def generate_candidates(self) -> Iterator[Configuration]:
-        pass
+        raise NotImplementedError
 
     def generate_candidates_en_bulk(
         self, num_cands: int, exclusion_list=None
@@ -87,7 +85,7 @@ class CandidateGenerator(ABC):
         raise NotImplementedError()
 
 
-class SurrogateModel(ABC):
+class SurrogateModel(object):
     def __init__(self, state: TuningJobState, active_metric: str = None):
         self.state = state
         if active_metric is None:
@@ -108,7 +106,6 @@ class SurrogateModel(ABC):
         """
         return {"mean", "std"}
 
-    @abstractmethod
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         """
         Given (n, d) matrix of encoded input points, returns signals which are
@@ -124,7 +121,8 @@ class SurrogateModel(ABC):
         hyperparameters are averaged over by MCMC, the returned list has one
         entry per MCMC sample.
         """
-        pass
+        raise NotImplementedError
+
 
     def hp_ranges_for_prediction(self) -> HyperparameterRanges:
         return self.state.hp_ranges
@@ -140,7 +138,6 @@ class SurrogateModel(ABC):
             self.hp_ranges_for_prediction().to_ndarray_matrix(candidates)
         )
 
-    @abstractmethod
     def current_best(self) -> List[np.ndarray]:
         """
         Returns the so-called incumbent, to be used in acquisition functions
@@ -158,9 +155,9 @@ class SurrogateModel(ABC):
 
         :return: Incumbent
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
+
     def backward_gradient(
         self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> List[np.ndarray]:
@@ -180,7 +177,8 @@ class SurrogateModel(ABC):
         :param head_gradients: See above
         :return: Gradient nabla_x f (several if MCMC is used)
         """
-        pass
+        raise NotImplementedError
+
 
 
 # Useful type that allows for a dictionary mapping each output name to a SurrogateModel.
@@ -190,7 +188,7 @@ class SurrogateModel(ABC):
 SurrogateOutputModel = Union[SurrogateModel, Dict[str, SurrogateModel]]
 
 
-class ScoringFunction(ABC):
+class ScoringFunction(object):
     """
     Class to score candidates, typically combine an acquisition function with
     potentially Thompson sampling
@@ -198,7 +196,6 @@ class ScoringFunction(ABC):
     NOTE: it will be minimized, i.e. lower is better
     """
 
-    @abstractmethod
     def score(
         self,
         candidates: Iterable[Configuration],
@@ -209,7 +206,8 @@ class ScoringFunction(ABC):
 
         lower is better
         """
-        pass
+        raise NotImplementedError
+
 
 
 class AcquisitionFunction(ScoringFunction):
@@ -219,7 +217,6 @@ class AcquisitionFunction(ScoringFunction):
             active_metric = INTERNAL_METRIC_NAME
         self.active_metric = active_metric
 
-    @abstractmethod
     def compute_acq(
         self, inputs: np.ndarray, model: Optional[SurrogateOutputModel] = None
     ) -> np.ndarray:
@@ -230,9 +227,8 @@ class AcquisitionFunction(ScoringFunction):
         :param model: If given, overrides self.model
         :return: Acquisition function values, shape (n,)
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def compute_acq_with_gradient(
         self, input: np.ndarray, model: Optional[SurrogateOutputModel] = None
     ) -> Tuple[float, np.ndarray]:
@@ -244,7 +240,7 @@ class AcquisitionFunction(ScoringFunction):
         :param model: If given, overrides self.model
         :return: f(x), nabla_x f
         """
-        pass
+        raise NotImplementedError
 
     def score(
         self,
@@ -276,7 +272,7 @@ def unwrap_acquisition_class_and_kwargs(
         return acquisition_class, dict()
 
 
-class LocalOptimizer(ABC):
+class LocalOptimizer(object):
     """
     Class that tries to find a local candidate with a better score, typically
     using a local optimization method such as L-BFGS. It would normally
@@ -306,7 +302,6 @@ class LocalOptimizer(ABC):
             self.active_metric = active_metric
         self.acquisition_class = acquisition_class
 
-    @abstractmethod
     def optimize(
         self, candidate: Configuration, model: Optional[SurrogateOutputModel] = None
     ) -> Configuration:
@@ -318,4 +313,5 @@ class LocalOptimizer(ABC):
         :param model: See above
         :return: Configuration found by local optimization
         """
-        pass
+        raise NotImplementedError
+

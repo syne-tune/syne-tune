@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
 from typing import List
 from dataclasses import dataclass
 
@@ -39,7 +38,7 @@ class CostValue:
     c1: float
 
 
-class CostModel(ABC):
+class CostModel(object):
     """
     Interface for (temporal) cost model in the context of multi-fidelity HPO.
     We assume there are configurations x and resource levels r (for example,
@@ -58,15 +57,13 @@ class CostModel(ABC):
     """
 
     @property
-    @abstractmethod
     def cost_metric_name(self) -> str:
         """
         :return: Name of metric in TrialEvaluations of cases in
             TuningJobState
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def update(self, state: TuningJobState):
         """
         Update inner representation in order to be ready to return cost value
@@ -81,7 +78,7 @@ class CostModel(ABC):
 
         :param state: Current dataset (only trials_evaluations is used)
         """
-        pass
+        raise NotImplementedError
 
     def resample(self):
         """
@@ -95,7 +92,6 @@ class CostModel(ABC):
         """
         pass
 
-    @abstractmethod
     def sample_joint(self, candidates: List[Configuration]) -> List[CostValue]:
         """
         Draws cost values (c_0(x), c_1(x)) for candidates (non-extended).
@@ -112,7 +108,7 @@ class CostModel(ABC):
         :param candidates: Non-extended configs
         :return: List of (c_0(x), c_1(x))
         """
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def event_time(

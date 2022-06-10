@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import autograd.numpy as anp
 from autograd.tracer import getval
-from abc import abstractmethod
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
     INITIAL_COVARIANCE_SCALE,
@@ -61,22 +60,20 @@ class KernelFunction(MeanFunction):
         """
         return self._dimension
 
-    @abstractmethod
     def diagonal(self, X):
         """
         :param X: Input data, shape (n, d)
         :return: Diagonal of K(X, X), shape (n,)
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def diagonal_depends_on_X(self):
         """
         For stationary kernels, diagonal does not depend on X
 
         :return: Does diagonal(X) depend on X?
         """
-        pass
+        raise NotImplementedError
 
     def _check_input_shape(self, X):
         return anp.reshape(X, (getval(X.shape[0]), self._dimension))

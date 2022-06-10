@@ -15,7 +15,6 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from scipy.optimize import brentq
 from scipy.interpolate import UnivariateSpline
-from abc import abstractmethod
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model import (
     CostModel,
@@ -52,7 +51,6 @@ class NonLinearCostModel(CostModel):
     def cost_metric_name(self) -> str:
         return INTERNAL_COST_NAME
 
-    @abstractmethod
     def transform_dataset(
         self, dataset: List[Tuple[Configuration, float]], num_data0: int, res_min: int
     ) -> dict:
@@ -65,10 +63,9 @@ class NonLinearCostModel(CostModel):
         :param res_min:
         :return: Used as kwargs in fit_regressor
         """
-        pass
+        raise NotImplementedError
 
     @staticmethod
-    @abstractmethod
     def fit_regressor(b0: float, **kwargs):
         """
         Given value for b0, fits regressor to dataset specified via kwargs
@@ -79,15 +76,14 @@ class NonLinearCostModel(CostModel):
         :param kwargs:
         :return: fval, model
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def predict_c1_values(self, candidates: List[Configuration]):
         """
         :param candidates: Test configs
         :return: Corresponding c1 values
         """
-        pass
+        raise NotImplementedError
 
     def update(self, state: TuningJobState):
         self.hp_ranges = state.hp_ranges  # Needed in transform_dataset

@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import logging
 import numpy as np
-from abc import ABC, abstractmethod
 from typing import Dict, Optional, List, Tuple
 
 from syne_tune.config_space import Domain, is_log_space, Categorical
@@ -114,7 +113,7 @@ def impute_points_to_evaluate(
     return result
 
 
-class BaseSearcher(ABC):
+class BaseSearcher(object):
     """Base Searcher (virtual class to inherit from if you are creating a custom Searcher).
 
     Parameters
@@ -166,7 +165,6 @@ class BaseSearcher(ABC):
         else:
             return None  # No more initial configs
 
-    @abstractmethod
     def get_config(self, **kwargs):
         """Function to sample a new configuration
 
@@ -184,7 +182,7 @@ class BaseSearcher(ABC):
             than once, and all configs in the (finite) search space are
             exhausted.
         """
-        pass
+        raise NotImplementedError
 
     def on_trial_result(self, trial_id: str, config: Dict, result: Dict, update: bool):
         """Inform searcher about result
@@ -205,7 +203,6 @@ class BaseSearcher(ABC):
         if update:
             self._update(trial_id, config, result)
 
-    @abstractmethod
     def _update(self, trial_id: str, config: Dict, result: Dict):
         """Update surrogate model with result
 
@@ -213,7 +210,7 @@ class BaseSearcher(ABC):
         :param config:
         :param result:
         """
-        pass
+        raise NotImplementedError
 
     def register_pending(
         self, trial_id: str, config: Optional[Dict] = None, milestone=None
@@ -283,7 +280,6 @@ class BaseSearcher(ABC):
         """
         return {"points_to_evaluate": self._points_to_evaluate}
 
-    @abstractmethod
     def clone_from_state(self, state: dict):
         """
         Together with get_state, this is needed in order to store and
@@ -297,7 +293,7 @@ class BaseSearcher(ABC):
         :param state: See above
         :return: New searcher object
         """
-        pass
+        raise NotImplementedError
 
     def _restore_from_state(self, state: dict):
         self._points_to_evaluate = state["points_to_evaluate"].copy()

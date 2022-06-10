@@ -10,8 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
-
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     Configuration,
 )
@@ -20,12 +18,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
 )
 
 
-class DuplicateDetector(ABC):
-    @abstractmethod
+class DuplicateDetector(object):
     def contains(
         self, existing_candidates: ExclusionList, new_candidate: Configuration
     ) -> bool:
-        pass
+        raise NotImplementedError
 
 
 class DuplicateDetectorNoDetection(DuplicateDetector):

@@ -10,20 +10,17 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
 import numpy as np
 
 from syne_tune.config_space import Domain, is_log_space, is_reverse_log_space
 
 
-class Scaling(ABC):
-    @abstractmethod
+class Scaling(object):
     def to_internal(self, value: float) -> float:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def from_internal(self, value: float) -> float:
-        pass
+        raise NotImplementedError
 
     def __repr__(self):
         return "{}()".format(self.__class__.__name__)

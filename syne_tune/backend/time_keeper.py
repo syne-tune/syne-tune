@@ -10,12 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
 import time
 from datetime import datetime
 
 
-class TimeKeeper(ABC):
+class TimeKeeper(object):
     """
     To be used by tuner, backend, and scheduler to measure time differences
     and wait for a specified amount of time. By centralizing this
@@ -25,35 +24,31 @@ class TimeKeeper(ABC):
 
     """
 
-    @abstractmethod
     def start_of_time(self):
         """
         Called at the start of the experiment. Can be called multiple times
         if several experiments are run in sequence.
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def time(self) -> float:
         """
         :return: Time elapsed since the start of the experiment
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def time_stamp(self) -> datetime:
         """
         :return: Timestamp (datetime) corresponding to `time()`
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def advance(self, step: float):
         """
         Advance time by `step`. For real time, this means we sleep for
         `step`.
         """
-        pass
+        raise NotImplementedError
 
 
 class RealTimeKeeper(TimeKeeper):

@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
-from abc import ABC, abstractmethod
 from typing import Dict, Tuple, Optional, Set, List
 from dataclasses import dataclass
 import itertools
@@ -49,7 +48,7 @@ class HeadWithGradient:
     gradient: SamplePredictionsPerOutput
 
 
-class CurrentBestProvider(ABC):
+class CurrentBestProvider(object):
     """
     Helper class for :class:`MeanStdAcquisitionFunction`.
     The `current_best` values required in `compute_acq` and
@@ -59,9 +58,8 @@ class CurrentBestProvider(ABC):
 
     """
 
-    @abstractmethod
     def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
-        pass
+        raise NotImplementedError
 
 
 class NoneCurrentBestProvider(CurrentBestProvider):
@@ -87,7 +85,7 @@ class ActiveMetricCurrentBestProvider(CurrentBestProvider):
         return self._active_metric_current_best[pos]
 
 
-class MeanStdAcquisitionFunction(AcquisitionFunction, ABC):
+class MeanStdAcquisitionFunction(AcquisitionFunction):
     """
     Base class for standard acquisition functions which depend on predictive
     mean and stddev. Subclasses have to implement the head and its derivatives
@@ -321,14 +319,12 @@ class MeanStdAcquisitionFunction(AcquisitionFunction, ABC):
         predictions = output_to_predictions[metric]
         return predictions["mean"], predictions["std"]
 
-    @abstractmethod
     def _head_needs_current_best(self) -> bool:
         """
         :return: Is the current_best argument in _compute_head needed?
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def _compute_head(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
@@ -346,9 +342,8 @@ class MeanStdAcquisitionFunction(AcquisitionFunction, ABC):
         :return: h(predictions, current_best), shape (n,)
 
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def _compute_head_and_gradient(
         self,
         output_to_predictions: SamplePredictionsPerOutput,
@@ -367,4 +362,5 @@ class MeanStdAcquisitionFunction(AcquisitionFunction, ABC):
             shape as the corresponding predictions
 
         """
-        pass
+        raise NotImplementedError
+

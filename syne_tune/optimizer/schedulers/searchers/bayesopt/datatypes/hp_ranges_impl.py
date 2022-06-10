@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
 from typing import Tuple, Dict, List, Any, Optional, Union
 import numpy as np
 
@@ -34,7 +33,7 @@ __all__ = ["HyperparameterRangesImpl"]
 EPS = 1e-8
 
 
-class HyperparameterRange(ABC):
+class HyperparameterRange(object):
     def __init__(self, name: str):
         self._name = name
 
@@ -42,20 +41,17 @@ class HyperparameterRange(ABC):
     def name(self) -> str:
         return self._name
 
-    @abstractmethod
     def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def from_ndarray(self, cand_ndarray: np.ndarray) -> Hyperparameter:
-        pass
+        raise NotImplementedError
 
     def ndarray_size(self) -> int:
         return 1
 
-    @abstractmethod
     def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
-        pass
+        raise NotImplementedError
 
 
 def scale_from_zero_one(

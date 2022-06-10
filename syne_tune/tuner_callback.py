@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC
 from time import perf_counter
 from typing import Dict, List, Tuple
 import copy
@@ -23,7 +22,7 @@ from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TI
 from syne_tune.util import RegularCallback
 
 
-class TunerCallback(ABC):
+class TunerCallback(object):
     def on_tuning_start(self, tuner):
         pass
 
