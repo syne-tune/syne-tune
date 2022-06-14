@@ -106,7 +106,7 @@ if __name__ == "__main__":
         f"aws s3 sync s3://{sagemaker.Session().default_bucket()}/{SYNE_TUNE_FOLDER}/{experiment_tag}/ ~/syne-tune/"
     )
     experiment_filter = lambda exp: exp.metadata.get("tag") == experiment_tag
-    name_filter = lambda path: experiment_tag in path
+    name_filter = lambda path: str(experiment_tag) in str(path)
     df = load_experiments_df(name_filter, experiment_filter)
     benchmarks = df.benchmark.unique()
 
