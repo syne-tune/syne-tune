@@ -104,6 +104,10 @@ _CONSTRAINTS = {
 }
 
 
+def is_continue_decision(trial_decision: str) -> bool:
+    return trial_decision == SchedulerDecision.CONTINUE
+
+
 class HyperbandScheduler(FIFOScheduler):
     r"""Implements different variants of asynchronous Hyperband
 
@@ -426,9 +430,7 @@ class HyperbandScheduler(FIFOScheduler):
         self.searcher_data = kwargs["searcher_data"]
         self._register_pending_myopic = kwargs["register_pending_myopic"]
         # _active_trials:
-        # Maintains a snapshot of currently active tasks (running or paused),
-        # needed by several features (for example, searcher_data ==
-        # 'rungs_and_last', or for providing a snapshot to the searcher).
+        # Maintains information for all tasks (running, paused, or stopped).
         # Maps trial_id to dict, with fields:
         # - config
         # - time_stamp: Time when task was started, or when last recent
@@ -440,9 +442,9 @@ class HyperbandScheduler(FIFOScheduler):
         # - bracket: Bracket number
         # - keep_case: Boolean flag. Relevant only if searcher_data ==
         #   'rungs_and_last'. See _run_reporter
-        # - running: Is the trial running? Otherwise, it is paused. Note we
-        #   keep paused trials in _active_trials, updating the entry when a
-        #   trial is resumed. Allows to retrieve config
+        # - trial_decision: Status of trial (running, paused, stopped),
+        #   in terms of `SchedulerDecision`. We keep paused and stopped trials
+        #   in there, so we can access their configs.
         # - largest_update_resource: Largest resource level for which the
         #       searcher was updated, or None
         self._active_trials = dict()
@@ -540,7 +542,7 @@ class HyperbandScheduler(FIFOScheduler):
             "bracket": kwargs["bracket"],
             "reported_result": None,
             "keep_case": False,
-            "running": True,
+            "trial_decision": SchedulerDecision.CONTINUE,
             "largest_update_resource": None,
         }
 
@@ -582,15 +584,15 @@ class HyperbandScheduler(FIFOScheduler):
                 trial_id in self._active_trials
             ), f"Paused trial {trial_id} must be in _active_trials"
             record = self._active_trials[trial_id]
-            assert not record[
-                "running"
-            ], f"Paused trial {trial_id} marked as running in _active_trials"
+            assert not is_continue_decision(record["trial_decision"]), (
+                f"Paused trial {trial_id} marked as running in _active_trials"
+            )
             record.update(
                 {
                     "time_stamp": self._elapsed_time(),
                     "reported_result": None,
                     "keep_case": False,
-                    "running": True,
+                    "trial_decision": SchedulerDecision.CONTINUE,
                 }
             )
             # Register pending evaluation(s) with searcher
@@ -627,7 +629,8 @@ class HyperbandScheduler(FIFOScheduler):
         all_running = not self.terminator._rung_system_per_bracket
         tasks = dict()
         for k, v in self._active_trials.items():
-            if v["running"] and (all_running or v["bracket"] == bracket_id):
+            if is_continue_decision(v["trial_decision"]) and (
+                    all_running or v["bracket"] == bracket_id):
                 reported_result = v["reported_result"]
                 level = (
                     0
@@ -644,7 +647,7 @@ class HyperbandScheduler(FIFOScheduler):
                     }
         return tasks
 
-    def _cleanup_trial(self, trial_id: str):
+    def _cleanup_trial(self, trial_id: str, trial_decision: str):
         """
         Called for trials which are stopped or paused. The trial is still kept
         in the records.
@@ -654,11 +657,12 @@ class HyperbandScheduler(FIFOScheduler):
         self.terminator.on_task_remove(trial_id)
         if trial_id in self._active_trials:
             # We do not remove stopped trials
-            self._active_trials[trial_id]["running"] = False
+            self._active_trials[trial_id]["trial_decision"] = trial_decision
 
     def on_trial_error(self, trial: Trial):
         super().on_trial_error(trial)
-        self._cleanup_trial(str(trial.trial_id))
+        self._cleanup_trial(
+            str(trial.trial_id), trial_decision=SchedulerDecision.STOP)
 
     def _update_searcher_internal(self, trial_id: str, config: Dict, result: Dict):
         if self.searcher_data == "rungs_and_last":
@@ -765,20 +769,11 @@ class HyperbandScheduler(FIFOScheduler):
             # by the scheduler. The report is sent to the searcher, but with
             # update=False. This means that the report is registered, but cannot
             # influence any decisions.
-            if trial_id not in self._active_trials:
-                # Trial not in self._active_trials anymore, so must have been
-                # stopped
-                trial_decision = SchedulerDecision.STOP
+            trial_decision = self._active_trials[trial_id]["trial_decision"]
+            if trial_decision != SchedulerDecision.CONTINUE:
                 logger.warning(
-                    f"trial_id {trial_id}: Was STOPPED, but receives another "
-                    f"report {result}\nThis report is ignored"
-                )
-            elif not self._active_trials[trial_id]["running"]:
-                # Trial must have been paused before
-                trial_decision = SchedulerDecision.PAUSE
-                logger.warning(
-                    f"trial_id {trial_id}: Was PAUSED, but receives another "
-                    f"report {result}\nThis report is ignored"
+                    f"trial_id {trial_id}: {trial_decision}, but receives "
+                    f"another report {result}\nThis report is ignored"
                 )
             else:
                 task_info = self.terminator.on_task_report(trial_id, result)
@@ -857,7 +852,7 @@ class HyperbandScheduler(FIFOScheduler):
                     else:
                         trial_decision = SchedulerDecision.PAUSE
                         act_str = "Pausing"
-                    self._cleanup_trial(trial_id)
+                    self._cleanup_trial(trial_id, trial_decision=trial_decision)
                 if debug_log is not None:
                     if not task_continues:
                         logger.info(
@@ -886,7 +881,8 @@ class HyperbandScheduler(FIFOScheduler):
         return trial_decision
 
     def on_trial_remove(self, trial: Trial):
-        self._cleanup_trial(str(trial.trial_id))
+        self._cleanup_trial(
+            str(trial.trial_id), trial_decision=SchedulerDecision.PAUSE)
 
     def on_trial_complete(self, trial: Trial, result: Dict):
         # Check whether searcher was already updated based on `result`
@@ -900,15 +896,8 @@ class HyperbandScheduler(FIFOScheduler):
                 super().on_trial_complete(trial, result)
         # Remove pending evaluations, in case there are still some
         self.searcher.cleanup_pending(trial_id)
-        self._cleanup_trial(trial_id)
-
-    def _get_paused_trials(self) -> Dict:
-        rem_keys = {"config", "bracket", "running"}
-        return {
-            k: {k2: v[k2] for k2 in rem_keys}
-            for k, v in self._active_trials.items()
-            if not v["running"]
-        }
+        self._cleanup_trial(
+            trial_id, trial_decision=SchedulerDecision.STOP)
 
 
 def _sample_bracket(num_brackets, rung_levels, random_state):

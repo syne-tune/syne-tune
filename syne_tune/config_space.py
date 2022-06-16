@@ -983,6 +983,16 @@ def is_reverse_log_space(domain: Domain) -> bool:
     )
 
 
+def is_uniform_space(domain: Domain) -> bool:
+    if isinstance(domain, FiniteRange):
+        return not domain.log_scale
+    else:
+        sampler = domain.get_sampler()
+        return isinstance(sampler, Float._Uniform) or isinstance(
+            sampler, Integer._Uniform
+        )
+
+
 def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):
     """
     Use this to prepare argument parser in endpoint script, for the
