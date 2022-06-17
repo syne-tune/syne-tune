@@ -46,7 +46,7 @@ def _assert_same_keys(dict1, dict2):
     ), f"{list(dict1.keys())} and {list(dict2.keys())} need to be the same keys. "
 
 
-class TransformerModelFactory(object):
+class TransformerModelFactory:
     """
     Interface for model factories used in :class:`ModelStateTransformer`. A model
     factory provides access to tunable model parameters, and `model` creates
@@ -102,7 +102,7 @@ SkipOptimizationOutputPredicate = Union[
 ]
 
 
-class ModelStateTransformer(object):
+class ModelStateTransformer:
     """
     This class maintains the :class:`TuningJobState` alongside an HPO
     experiment, and manages the reaction to changes of this state.

@@ -42,7 +42,7 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 logger = logging.getLogger(__name__)
 
 
-class GaussianProcessLearningCurveModel(object):
+class GaussianProcessLearningCurveModel:
     """
     Represents joint Gaussian model of learning curves over a number of
     configurations. The model has an additive form:

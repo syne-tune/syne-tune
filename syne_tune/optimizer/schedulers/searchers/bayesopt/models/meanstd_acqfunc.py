@@ -48,7 +48,7 @@ class HeadWithGradient:
     gradient: SamplePredictionsPerOutput
 
 
-class CurrentBestProvider(object):
+class CurrentBestProvider:
     """
     Helper class for :class:`MeanStdAcquisitionFunction`.
     The `current_best` values required in `compute_acq` and

@@ -15,7 +15,7 @@ import numpy as np
 from syne_tune.config_space import Domain, is_log_space, is_reverse_log_space
 
 
-class Scaling(object):
+class Scaling:
     def to_internal(self, value: float) -> float:
         raise NotImplementedError
 

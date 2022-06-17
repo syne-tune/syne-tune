@@ -34,7 +34,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_util
 )
 
 
-class GaussProcPosteriorState(object):
+class GaussProcPosteriorState:
     """
     Represent posterior state for Gaussian process regression model.
     Note that members are immutable. If the posterior state is to be

@@ -26,7 +26,7 @@ class ProfilingBlock:
     durations: Dict[str, List[float]]
 
 
-class SimpleProfiler(object):
+class SimpleProfiler:
     """
     Useful to profile time of recurring computations, for example
     `get_config` calls in searchers.

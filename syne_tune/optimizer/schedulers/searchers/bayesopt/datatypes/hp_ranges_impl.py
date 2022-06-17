@@ -33,7 +33,7 @@ __all__ = ["HyperparameterRangesImpl"]
 EPS = 1e-8
 
 
-class HyperparameterRange(object):
+class HyperparameterRange:
     def __init__(self, name: str):
         self._name = name
 

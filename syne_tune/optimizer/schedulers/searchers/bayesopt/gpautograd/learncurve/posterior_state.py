@@ -69,7 +69,7 @@ __all__ = [
 ]
 
 
-class GaussProcAdditivePosteriorState(object):
+class GaussProcAdditivePosteriorState:
     """
     Represent posterior state for joint Gaussian model of learning curves over
     a number of configurations. The (additive) model is the sum of a Gaussian

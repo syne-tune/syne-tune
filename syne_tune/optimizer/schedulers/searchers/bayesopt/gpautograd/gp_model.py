@@ -23,7 +23,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_stat
 )
 
 
-class GaussianProcessModel(object):
+class GaussianProcessModel:
     def __init__(self, random_seed=None):
         if random_seed is None:
             random_seed = 31415927

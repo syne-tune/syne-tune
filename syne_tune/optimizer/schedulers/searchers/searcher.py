@@ -113,7 +113,7 @@ def impute_points_to_evaluate(
     return result
 
 
-class BaseSearcher(object):
+class BaseSearcher:
     """Base Searcher (virtual class to inherit from if you are creating a custom Searcher).
 
     Parameters

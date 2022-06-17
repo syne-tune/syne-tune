@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
 )
 
 
-class DuplicateDetector(object):
+class DuplicateDetector:
     def contains(
         self, existing_candidates: ExclusionList, new_candidate: Configuration
     ) -> bool:

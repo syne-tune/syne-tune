@@ -82,7 +82,7 @@ def register_parameter(params, name, encoding, shape=(1,), dtype=DATA_TYPE):
     )
 
 
-class ScalarEncodingBase(object):
+class ScalarEncodingBase:
     """
     ScalarEncodingBase
     ==================
@@ -328,7 +328,7 @@ class PositiveScalarEncoding(ScalarEncodingBase):
         return arg + anp.log1p(-anp.exp(-arg))
 
 
-class init_Constant(object):
+class init_Constant:
     def __init__(self, val):
         self.val = val
 

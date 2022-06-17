@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 )
 
 
-class SkipOptimizationPredicate(object):
+class SkipOptimizationPredicate:
     """
     Interface for skip_optimization predicate in
     :class:`ModelStateTransformer`.

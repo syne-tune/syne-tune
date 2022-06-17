@@ -36,7 +36,7 @@ N_STARTS = 5
 STARTING_POINT_RANDOMIZATION_STD = 1.0
 
 
-class ParamVecDictConverter(object):
+class ParamVecDictConverter:
     def __init__(self, param_dict: dict):
         self.param_dict = param_dict
         self.names = sorted(

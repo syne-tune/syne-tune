@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants impo
 __all__ = ["Distribution", "Gamma", "Uniform", "Normal", "LogNormal", "Horseshoe"]
 
 
-class Distribution(object):
+class Distribution:
     def negative_log_density(self, x):
         """
         Negative log density. lower and upper limits are ignored.

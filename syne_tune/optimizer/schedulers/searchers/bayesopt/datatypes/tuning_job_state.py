@@ -24,7 +24,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges impor
 )
 
 
-class TuningJobState(object):
+class TuningJobState:
     """
     Collects all data determining the state of a tuning experiment. Trials
     are indexed by `trial_id`. The configurations associated with trials are

@@ -66,7 +66,7 @@ def download_data(root):
             urllib.request.urlretrieve(DATASET_PATH + fname, fh)
 
 
-class Dictionary(object):
+class Dictionary:
     def __init__(self):
         self.word2idx = {}
         self.idx2word = []
@@ -81,7 +81,7 @@ class Dictionary(object):
         return len(self.idx2word)
 
 
-class Corpus(object):
+class Corpus:
     def __init__(self, root):
         self.dictionary = Dictionary()
         # Make sure files are present locally

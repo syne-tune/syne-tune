@@ -33,7 +33,7 @@ def _filter_constant_hyperparameters(config_space: Dict) -> Dict:
     return {k: v for k, v in config_space.items() if k in nonconst_keys}
 
 
-class HyperparameterRanges(object):
+class HyperparameterRanges:
     def __init__(
         self,
         config_space: Dict,

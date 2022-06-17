@@ -38,7 +38,7 @@ class CostValue:
     c1: float
 
 
-class CostModel(object):
+class CostModel:
     """
     Interface for (temporal) cost model in the context of multi-fidelity HPO.
     We assume there are configurations x and resource levels r (for example,

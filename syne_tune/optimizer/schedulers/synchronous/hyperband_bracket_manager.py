@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system import (
 )
 
 
-class SynchronousHyperbandBracketManager(object):
+class SynchronousHyperbandBracketManager:
     """
     Maintains all currently active brackets, relays requests for another job
     and report of result to one of the brackets.

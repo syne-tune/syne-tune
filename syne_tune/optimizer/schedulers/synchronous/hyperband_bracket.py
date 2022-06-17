@@ -30,7 +30,7 @@ class SlotInRung:
     metric_val: Optional[float]  # Metric value (None if not yet occupied)
 
 
-class SynchronousHyperbandBracket(object):
+class SynchronousHyperbandBracket:
     """
     Represents a bracket in synchronous Hyperband.
 

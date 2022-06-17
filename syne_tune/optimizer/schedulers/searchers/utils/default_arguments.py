@@ -17,7 +17,7 @@ import numbers
 logger = logging.getLogger(__name__)
 
 
-class CheckType(object):
+class CheckType:
     def assert_valid(self, key: str, value):
         pass
 

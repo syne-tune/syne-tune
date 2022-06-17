@@ -64,7 +64,7 @@ class NextCandidatesAlgorithm:
         raise NotImplemented("Abstract method")
 
 
-class CandidateGenerator(object):
+class CandidateGenerator:
     """
     Class to generate candidates from which to start the local minimization, typically random candidate
     or some form of more uniformly spaced variation, such as latin hypercube or sobol sequence
@@ -85,7 +85,7 @@ class CandidateGenerator(object):
         raise NotImplementedError()
 
 
-class SurrogateModel(object):
+class SurrogateModel:
     def __init__(self, state: TuningJobState, active_metric: str = None):
         self.state = state
         if active_metric is None:
@@ -188,7 +188,7 @@ class SurrogateModel(object):
 SurrogateOutputModel = Union[SurrogateModel, Dict[str, SurrogateModel]]
 
 
-class ScoringFunction(object):
+class ScoringFunction:
     """
     Class to score candidates, typically combine an acquisition function with
     potentially Thompson sampling
@@ -272,7 +272,7 @@ def unwrap_acquisition_class_and_kwargs(
         return acquisition_class, dict()
 
 
-class LocalOptimizer(object):
+class LocalOptimizer:
     """
     Class that tries to find a local candidate with a better score, typically
     using a local optimization method such as L-BFGS. It would normally

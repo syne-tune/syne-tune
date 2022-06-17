@@ -89,7 +89,7 @@ class TrialEvaluations:
         return True
 
 
-class PendingEvaluation(object):
+class PendingEvaluation:
     """
     Maintains information for pending candidates (i.e. candidates which have
     been queried for labeling, but target feedback has not yet been obtained.

@@ -33,7 +33,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
 )
 
 
-class ThreeHumpCamel(object):
+class ThreeHumpCamel:
     @property
     def search_space(self):
         return [{"min": -5.0, "max": 5.0}, {"min": -5.0, "max": 5.0}]
@@ -50,7 +50,7 @@ def branin_function(x1, x2, r=6):
     )
 
 
-class Branin(object):
+class Branin:
     @property
     def search_space(self):
         return [{"min": -5.0, "max": 10.0}, {"min": 0.0, "max": 15.0}]
@@ -67,7 +67,7 @@ class BraninWithR(Branin):
         return branin_function(x1, x2, r=self.r)
 
 
-class Ackley(object):
+class Ackley:
     @property
     def search_space(self):
         const = 32.768
@@ -84,7 +84,7 @@ class Ackley(object):
         )
 
 
-class SimpleQuadratic(object):
+class SimpleQuadratic:
     @property
     def search_space(self):
         return [{"min": 0.0, "max": 1.0}, {"min": 0.0, "max": 1.0}]
