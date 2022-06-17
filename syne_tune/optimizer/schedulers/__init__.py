@@ -16,11 +16,17 @@ __all__ = [
     "HyperbandScheduler",
     "MedianStoppingRule",
     "PopulationBasedTraining",
-    "RayTuneScheduler",
 ]
 
+import logging
+
+from syne_tune.try_import import try_import_raytune_message
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
 from syne_tune.optimizer.schedulers.pbt import PopulationBasedTraining
-from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+try:
+    from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler  # noqa: F401
+    __all__.append("RayTuneScheduler")
+except ImportError:
+    logging.info(try_import_raytune_message())
