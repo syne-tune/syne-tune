@@ -14,7 +14,7 @@ import time
 from datetime import datetime
 
 
-class TimeKeeper(object):
+class TimeKeeper:
     """
     To be used by tuner, backend, and scheduler to measure time differences
     and wait for a specified amount of time. By centralizing this

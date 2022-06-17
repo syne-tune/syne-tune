@@ -22,7 +22,7 @@ from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TI
 from syne_tune.util import RegularCallback
 
 
-class TunerCallback(object):
+class TunerCallback:
     def on_tuning_start(self, tuner):
         pass
 
