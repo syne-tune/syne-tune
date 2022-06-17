@@ -16,6 +16,7 @@ import logging
 from syne_tune.try_import import try_import_gpsearchers_message
 from syne_tune.optimizer.schedulers.searchers.searcher import *  # noqa: F401
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import *  # noqa: F401
+
 try:
     from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import *  # noqa: F401
     from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import *  # noqa: F401

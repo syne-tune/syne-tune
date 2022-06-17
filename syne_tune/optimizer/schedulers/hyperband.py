@@ -584,9 +584,9 @@ class HyperbandScheduler(FIFOScheduler):
                 trial_id in self._active_trials
             ), f"Paused trial {trial_id} must be in _active_trials"
             record = self._active_trials[trial_id]
-            assert not is_continue_decision(record["trial_decision"]), (
-                f"Paused trial {trial_id} marked as running in _active_trials"
-            )
+            assert not is_continue_decision(
+                record["trial_decision"]
+            ), f"Paused trial {trial_id} marked as running in _active_trials"
             record.update(
                 {
                     "time_stamp": self._elapsed_time(),
@@ -630,7 +630,8 @@ class HyperbandScheduler(FIFOScheduler):
         tasks = dict()
         for k, v in self._active_trials.items():
             if is_continue_decision(v["trial_decision"]) and (
-                    all_running or v["bracket"] == bracket_id):
+                all_running or v["bracket"] == bracket_id
+            ):
                 reported_result = v["reported_result"]
                 level = (
                     0
@@ -661,8 +662,7 @@ class HyperbandScheduler(FIFOScheduler):
 
     def on_trial_error(self, trial: Trial):
         super().on_trial_error(trial)
-        self._cleanup_trial(
-            str(trial.trial_id), trial_decision=SchedulerDecision.STOP)
+        self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.STOP)
 
     def _update_searcher_internal(self, trial_id: str, config: Dict, result: Dict):
         if self.searcher_data == "rungs_and_last":
@@ -881,8 +881,7 @@ class HyperbandScheduler(FIFOScheduler):
         return trial_decision
 
     def on_trial_remove(self, trial: Trial):
-        self._cleanup_trial(
-            str(trial.trial_id), trial_decision=SchedulerDecision.PAUSE)
+        self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.PAUSE)
 
     def on_trial_complete(self, trial: Trial, result: Dict):
         # Check whether searcher was already updated based on `result`
@@ -896,8 +895,7 @@ class HyperbandScheduler(FIFOScheduler):
                 super().on_trial_complete(trial, result)
         # Remove pending evaluations, in case there are still some
         self.searcher.cleanup_pending(trial_id)
-        self._cleanup_trial(
-            trial_id, trial_decision=SchedulerDecision.STOP)
+        self._cleanup_trial(trial_id, trial_decision=SchedulerDecision.STOP)
 
 
 def _sample_bracket(num_brackets, rung_levels, random_state):

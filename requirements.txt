@@ -8,4 +8,5 @@ PyYaml
 pandas
 ujson
 
+# only needed for python version lower than 3.8
 typing_extensions

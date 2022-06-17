@@ -81,9 +81,9 @@ def searcher_factory(searcher_name, **kwargs):
             searcher_cls = MultiFidelityBore
     else:
         gp_searchers = {"bayesopt", "bayesopt_constrained", "bayesopt_cost"}
-        assert searcher_name in gp_searchers, (
-            f"searcher '{searcher_name}' is not supported"
-        )
+        assert (
+            searcher_name in gp_searchers
+        ), f"searcher '{searcher_name}' is not supported"
         try:
             from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (
                 GPFIFOSearcher,

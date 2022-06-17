@@ -14,7 +14,11 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Optional, List
-from typing_extensions import Literal
+
+try:
+    from typing_extensions import Literal
+except ImportError:
+    from typing import Literal
 
 
 from syne_tune.constants import ST_WORKER_COST
