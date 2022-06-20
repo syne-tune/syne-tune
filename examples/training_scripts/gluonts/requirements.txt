@@ -1,1 +1,1 @@
-gluonts==0.8.1
+gluonts==0.9.5
