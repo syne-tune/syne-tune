@@ -38,6 +38,12 @@ def try_import_raytune_message() -> str:
         tag="raytune"
     )
 
+def try_import_backend_message(backend_type: str) -> str:
+    return (
+        f"{backend_type} is not imported"
+        + " since dependencies are missing. You can install them with\n"
+        + "   pip install 'syne-tune[extra]'"
+    )
 
 def _try_import_message(
         message_text: str,
