@@ -52,7 +52,7 @@ def shape_is_known(shape):
     return True
 
 
-class Parameter(object):
+class Parameter:
     """A Container holding parameters (weights) of Blocks.
     :py:class:`Parameter` holds a copy of the parameter on each :py:class:`Context` after
     it is initialized with ``Parameter.initialize(...)``. If :py:attr:`grad_req` is
@@ -459,7 +459,7 @@ class Parameter(object):
         self._grad = [i.astype(dtype) for i in self._grad]
 
 
-class ParameterDict(object):
+class ParameterDict:
     """A dictionary managing a set of parameters.
     Parameters
     ----------
@@ -645,7 +645,7 @@ class ParameterDict(object):
             setattr(i, name, value)
 
 
-class NameManager(object):
+class NameManager:
     """NameManager to do automatic naming.
     Developers can also inherit from this class to change naming behavior.
     """
@@ -719,7 +719,7 @@ class Prefix(NameManager):
 NameManager._current.value = NameManager()
 
 
-class _BlockScope(object):
+class _BlockScope:
     """Scope for collecting child `Block` s."""
 
     _current = threading.local()
@@ -773,7 +773,7 @@ class _BlockScope(object):
         _BlockScope._current.value = self._old_scope
 
 
-class Block(object):
+class Block:
     """Base class for all neural network layers and models. Your models should
     subclass this class.
     :py:class:`Block` can be nested recursively in a tree structure. You can create and

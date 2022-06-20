@@ -13,7 +13,7 @@
 import numpy as np
 
 
-class RandomSeedGenerator(object):
+class RandomSeedGenerator:
     def __init__(self, master_seed: int):
         self._random_state = np.random.RandomState(master_seed)
 

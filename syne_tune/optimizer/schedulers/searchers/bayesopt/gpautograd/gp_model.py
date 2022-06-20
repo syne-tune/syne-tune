@@ -13,7 +13,6 @@
 import numpy as np
 import autograd.numpy as anp
 from autograd.builtins import isinstance
-from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
@@ -24,26 +23,23 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_stat
 )
 
 
-class GaussianProcessModel(ABC):
+class GaussianProcessModel:
     def __init__(self, random_seed=None):
         if random_seed is None:
             random_seed = 31415927
         self._random_state = np.random.RandomState(random_seed)
 
     @property
-    @abstractmethod
     def states(self) -> Optional[List[GaussProcPosteriorState]]:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def fit(self, features: anp.array, targets: anp.array):
         """Train GP on the data and set a list of posterior states to be used by predict function"""
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def recompute_states(self, features: anp.array, targets: anp.array):
         """Fixing GP hyperparameters and recompute the list of posterior states based on features and targets"""
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def _check_and_format_input(u):

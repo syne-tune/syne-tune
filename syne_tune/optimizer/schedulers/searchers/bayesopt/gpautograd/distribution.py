@@ -13,7 +13,6 @@
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 import numbers
-from abc import ABC, abstractmethod
 from scipy.special import gammaln
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
@@ -23,15 +22,14 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants impo
 __all__ = ["Distribution", "Gamma", "Uniform", "Normal", "LogNormal", "Horseshoe"]
 
 
-class Distribution(ABC):
-    @abstractmethod
+class Distribution:
     def negative_log_density(self, x):
         """
         Negative log density. lower and upper limits are ignored.
         If x is not a scalar, the distribution is i.i.d. over all
         entries.
         """
-        pass
+        raise NotImplementedError
 
 
 class Gamma(Distribution):

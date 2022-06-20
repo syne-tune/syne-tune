@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 RungSystemsPerBracket = List[List[Tuple[int, int]]]
 
 
-class SynchronousHyperbandRungSystem(object):
+class SynchronousHyperbandRungSystem:
     """
     Collects factory methods for `RungSystemsPerBracket` rung systems to be
     used in :class:`SynchronousHyperbandBracketManager`.

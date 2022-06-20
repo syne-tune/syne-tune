@@ -34,7 +34,7 @@ def quantile_cutoff(values, prom_quant, mode):
     return np.quantile(values, q)
 
 
-class RungSystem(object):
+class RungSystem:
     """
     Terminology: trials emit results at certain resource levels (e.g.,
     epoch numbers). Some resource levels are rung levels, this is where

@@ -24,7 +24,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 RESOURCE_ATTR_PREFIX = "RESOURCE_ATTR_"
 
 
-class ExtendedConfiguration(object):
+class ExtendedConfiguration:
     """
     This class facilitates handling extended configs, which consist of a normal
     config and a resource attribute.

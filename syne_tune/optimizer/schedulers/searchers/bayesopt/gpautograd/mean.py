@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import autograd.numpy as anp
 from autograd.tracer import getval
-from abc import ABC, abstractmethod
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
     INITIAL_MEAN_VALUE,
@@ -30,7 +29,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_h
 __all__ = ["MeanFunction", "ScalarMeanFunction", "ZeroMeanFunction"]
 
 
-class MeanFunction(Block, ABC):
+class MeanFunction(Block):
     """
     Mean function, parameterizing a surrogate model together with a kernel function.
 
@@ -40,7 +39,6 @@ class MeanFunction(Block, ABC):
     def __init__(self, **kwargs):
         Block.__init__(self, **kwargs)
 
-    @abstractmethod
     def param_encoding_pairs(self):
         """
         Returns list of tuples
@@ -49,22 +47,20 @@ class MeanFunction(Block, ABC):
 
         :return: List [(param_internal, encoding)]
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def get_params(self):
         """
         :return: Dictionary with hyperparameter values
         """
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def set_params(self, param_dict):
         """
         :param param_dict: Dictionary with new hyperparameter values
         :return:
         """
-        pass
+        raise NotImplementedError
 
 
 class ScalarMeanFunction(MeanFunction):

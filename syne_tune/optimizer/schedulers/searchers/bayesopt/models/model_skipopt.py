@@ -10,8 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import ABC, abstractmethod
-
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
@@ -20,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 )
 
 
-class SkipOptimizationPredicate(ABC):
+class SkipOptimizationPredicate:
     """
     Interface for skip_optimization predicate in
     :class:`ModelStateTransformer`.
@@ -33,13 +31,12 @@ class SkipOptimizationPredicate(ABC):
         """
         pass
 
-    @abstractmethod
     def __call__(self, state: TuningJobState) -> bool:
         """
         :param state: Current TuningJobState
         :return: Skip hyperparameter optimization?
         """
-        pass
+        raise NotImplementedError
 
 
 class NeverSkipPredicate(SkipOptimizationPredicate):

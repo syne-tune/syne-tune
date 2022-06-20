@@ -88,7 +88,7 @@ class TrialSuggestion:
         return res
 
 
-class TrialScheduler(object):
+class TrialScheduler:
     """
     Schedulers maintain and drive the logic of an experiment, making decisions
     which configs to evaluate in new trials, and which trials to stop early.

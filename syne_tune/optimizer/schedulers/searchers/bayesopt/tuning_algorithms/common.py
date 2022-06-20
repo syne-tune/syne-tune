@@ -89,7 +89,7 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
             return configs
 
 
-class ExclusionList(object):
+class ExclusionList:
     """
     Maintains exclusion list of configs, to avoid choosing configs several
     times.

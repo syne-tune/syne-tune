@@ -957,7 +957,7 @@ def _get_rung_levels(rung_levels, grace_period, reduction_factor, max_t):
     return rung_levels
 
 
-class HyperbandBracketManager(object):
+class HyperbandBracketManager:
     """Hyperband Manager
 
     Maintains rung level systems for range of brackets. Differences depending

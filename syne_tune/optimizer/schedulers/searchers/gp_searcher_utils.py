@@ -153,7 +153,7 @@ def decode_state_from_old_encoding(
     )
 
 
-class ResourceForAcquisitionMap(object):
+class ResourceForAcquisitionMap:
     """
     In order to use a standard acquisition function (like expected improvement)
     for multi-fidelity HPO, we need to decide at which `r_acq` we would like

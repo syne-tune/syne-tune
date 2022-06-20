@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from abc import abstractmethod
 from typing import List, Callable, Optional, Dict, Tuple
 import numpy as np
 from sklearn.linear_model import RidgeCV
@@ -62,7 +61,6 @@ class LinearCostModel(CostModel):
     def cost_metric_name(self) -> str:
         return INTERNAL_COST_NAME
 
-    @abstractmethod
     def feature_matrices(
         self, candidates: List[Configuration]
     ) -> (np.ndarray, np.ndarray):
@@ -72,7 +70,7 @@ class LinearCostModel(CostModel):
         :param candidates: List of n candidate configs (non-extended)
         :return: Feature matrices features0 (n, dim0), features1 (n, dim1)
         """
-        pass
+        raise NotImplementedError
 
     def update(self, state: TuningJobState):
         # Compile feature matrix and targets for linear regression problem

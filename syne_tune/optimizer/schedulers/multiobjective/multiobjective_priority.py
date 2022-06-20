@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.multiobjective.non_dominated_priority import
 )
 
 
-class MOPriority(object):
+class MOPriority:
     def __init__(self, metrics: Optional[List[str]] = None):
         """
         :param metrics: name of the objectives, optional if not passed anonymous names are created when seeing the

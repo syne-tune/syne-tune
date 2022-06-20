@@ -37,7 +37,7 @@ def _param_dict_to_str(params: dict) -> str:
     return "{" + ", ".join(parts) + "}"
 
 
-class DebugLogPrinter(object):
+class DebugLogPrinter:
     """
     Supports a concise debug log.
     In particular, information about `get_config` is displayed in a single

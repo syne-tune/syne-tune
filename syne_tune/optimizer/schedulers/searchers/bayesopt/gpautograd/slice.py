@@ -22,7 +22,7 @@ MAX_STEP_OUT = 200
 MAX_STEP_LOOP = 200
 
 
-class SliceSampler(object):
+class SliceSampler:
     def __init__(
         self,
         log_density: Callable[[np.ndarray], float],

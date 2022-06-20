@@ -69,7 +69,7 @@ class OnTrialResultEvent(Event):
 EventHeapType = List[Tuple[float, int, Event]]
 
 
-class SimulatorState(object):
+class SimulatorState:
     """
     Maintains the state of the simulator, in particular the event heap.
 
