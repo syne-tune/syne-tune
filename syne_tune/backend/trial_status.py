@@ -16,7 +16,6 @@ from datetime import datetime
 from typing import Dict, Optional, List
 from typing_extensions import Literal
 
-import pandas as pd
 
 from syne_tune.constants import ST_WORKER_COST
 
@@ -80,9 +79,3 @@ class TrialResult(Trial):
             return self.metrics[-1].get(ST_WORKER_COST, None)
         else:
             return None
-
-    def metrics_df(self) -> pd.DataFrame:
-        if len(self.metrics) == 0:
-            return pd.DataFrame()
-        else:
-            return pd.DataFrame(data=self.metrics)
