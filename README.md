@@ -185,6 +185,23 @@ Do you want to know more? Here are a number of tutorials.
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
+## Citing Syne Tune
+
+If you use Syne Tune in a scientific publication, please cite the following paper:
+
+Salinas et al. ["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning 2022
+
+Bibtex entry:
+
+@inproceedings{
+salinas2022syne,
+title={Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research},
+author={David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
+booktitle={First Conference on Automated Machine Learning (Main Track)},
+year={2022},
+url={https://openreview.net/forum?id=BVeGJ-THIg9}
+}
+
 ## License
 
 This project is licensed under the Apache-2.0 License.
