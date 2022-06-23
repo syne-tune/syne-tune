@@ -123,7 +123,6 @@ class SurrogateModel:
         """
         raise NotImplementedError
 
-
     def hp_ranges_for_prediction(self) -> HyperparameterRanges:
         return self.state.hp_ranges
 
@@ -157,7 +156,6 @@ class SurrogateModel:
         """
         raise NotImplementedError
 
-
     def backward_gradient(
         self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> List[np.ndarray]:
@@ -178,7 +176,6 @@ class SurrogateModel:
         :return: Gradient nabla_x f (several if MCMC is used)
         """
         raise NotImplementedError
-
 
 
 # Useful type that allows for a dictionary mapping each output name to a SurrogateModel.
@@ -207,7 +204,6 @@ class ScoringFunction:
         lower is better
         """
         raise NotImplementedError
-
 
 
 class AcquisitionFunction(ScoringFunction):
@@ -314,4 +310,3 @@ class LocalOptimizer:
         :return: Configuration found by local optimization
         """
         raise NotImplementedError
-

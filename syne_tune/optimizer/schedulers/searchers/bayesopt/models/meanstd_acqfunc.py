@@ -363,4 +363,3 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
         """
         raise NotImplementedError
-

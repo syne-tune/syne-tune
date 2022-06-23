@@ -18,6 +18,7 @@ from syne_tune.optimizer.baselines import (
     RandomSearch,
     ASHA,
 )
+
 # from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
 # from syne_tune.optimizer.schedulers.synchronous import \
 #    SynchronousGeometricHyperbandScheduler  # noqa: F401
@@ -80,6 +81,7 @@ if __name__ == "__main__":
     ]
     try:
         from syne_tune.optimizer.baselines import BayesianOptimization
+
         # example of setting additional kwargs arguments
         schedulers.append(
             BayesianOptimization(
@@ -90,6 +92,7 @@ if __name__ == "__main__":
             )
         )
         from syne_tune.optimizer.baselines import MOBSTER
+
         schedulers.append(
             MOBSTER(
                 config_space,
