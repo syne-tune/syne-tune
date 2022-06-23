@@ -160,7 +160,7 @@ tree ~/syne-tune/train-height-2022-01-12-11-08-40-971/
 └── tuner.dill
 ```
 
-When running tuning remotely with the remote launcher, only `metadata.json`, `results.csv.zip` and `tuner.dill` 
+When running tuning remotely with the remote launcher, only `config.json`, `metadata.json`, `results.csv.zip` and `tuner.dill` 
 are synced with S3 unless `store_logs_localbackend` in which case the trial logs and informations are also persisted.
 
 ### <a name="plotting-tuning"></a> How can I plot the results of a tuning?
