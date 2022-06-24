@@ -403,6 +403,14 @@ class Tuner:
             tuner_serialized_path = Path(folder) / "tuner.dill"
         with open(tuner_serialized_path, "wb") as f:
             logger.debug(f"saving tuner in {tuner_serialized_path}")
+
+            # We need to delete the TensorboardCallback before we serialize the Tuner, to avoid runtime errors because
+            # of the MultiProcessing Queues of TensorboardX
+            for callback in self.callbacks:
+                from syne_tune.tuner_callback import TensorboardCallback
+                if isinstance(callback, TensorboardCallback):
+                    self.callbacks.remove(callback)
+
             dill.dump(self, f)
             # ugly hack to reinitialize the session, we could remove it by having kwargs/args of SagemakerFramework
             # plus the class (for instance PyTorch)

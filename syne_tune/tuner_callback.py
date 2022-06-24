@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import os
 from time import perf_counter
 from typing import Dict, List, Tuple
 import copy
@@ -145,3 +146,90 @@ class StoreResultsCallback(TunerCallback):
         # store the results in case some results were not committed yet (since they are saved every
         # `results_update_interval` seconds)
         self.store_results()
+
+
+class TensorboardCallback(TunerCallback):
+    def __init__(
+            self,
+
+            metric_to_optimize: 'str',
+            mode: 'str',
+            output_metrics: List[str] = [],
+    ):
+        """
+        Simple callback that logs different statistics such that we can visualize them with Tensorboard.
+
+        :param metric_to_optimize: The metric that we aim to optimize. We report the cumulative optimum over time. This
+        should be the same metric that we pass to the scheduler / searcher.
+        :param mode: Defines whether we minimize ('min') or maximize ('max'). Should be the same what we
+        pass to scheduler / searcher.
+        :param output_metrics: All other metrics that we want to log. Make sure that these metrics
+         are reported correctly in the train function to Syne Tune via the report(...) function.
+        """
+        self.results = []
+
+        self.output_metrics = output_metrics
+        self.mode = mode
+        self.metric = metric_to_optimize
+
+        self.curr_best_value = None
+        self.curr_best_config = None
+
+        self._start_time_stamp = None
+        self.writer = None
+        self._iter = None
+        self.trial_ids = set()
+
+    def _set_time_fields(self, result: Dict):
+        """
+        Note that we only add wallclock time to the result if this has not
+        already been done (by the back-end)
+        """
+        if self._start_time_stamp is not None and ST_TUNER_TIME not in result:
+            result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp
+
+    def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+
+        self._set_time_fields(result)
+
+        new_result = result[self.metric]
+
+        if self.mode == 'max':
+            new_result *= -1
+
+        if self.curr_best_value is None or self.curr_best_value > new_result:
+            self.curr_best_value = new_result
+            self.curr_best_config = trial.config
+            self.writer.add_scalar(self.metric, result[self.metric], self._iter)
+
+        else:
+            opt = self.curr_best_value
+            if self.mode == 'max':
+                opt *= -1
+            self.writer.add_scalar(self.metric, opt, self._iter)
+
+        for key, value in self.curr_best_config.items():
+            self.writer.add_scalar(f'optimal_{key}', value, self._iter)
+
+        for metric in self.output_metrics:
+            self.writer.add_scalar(metric, result[metric], self._iter)
+
+        self.writer.add_scalar('runtime', result[ST_TUNER_TIME], self._iter)
+
+        self.trial_ids.add(trial.trial_id)
+        self.writer.add_scalar('num_trial', len(self.trial_ids),
+                               self._iter, display_name='total number of trials')
+
+        self._iter += 1
+
+    def on_tuning_start(self, tuner):
+
+        output_path = os.path.join(tuner.tuner_path, 'tensorboard_output')
+        from tensorboardX import SummaryWriter
+        self.writer = SummaryWriter(output_path)
+        self._iter = 0
+        self._start_time_stamp = perf_counter()
+
+    def on_tuning_end(self):
+        self.writer.close()
+        self.writer = None
