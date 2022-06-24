@@ -55,9 +55,9 @@ means, a basic component of many HPO algorithms. The following domains are curre
   Entries in `categories` should ideally be of type `str`, but types `int` and
   `float` are also allowed (the latter can lead to errors due to round-off).
 * `ordinal(categories)`: Variant of `choice` for which the order of entries in
-  `categories` matters. As long as random sampling is considered on its own,
-  this type is equivalent to `choice`. But for methods which use encodings (for
-  example Bayesian optimization), the encodings of nearby values are closer.
+  `categories` matters. Essentially, we use `randint(0, len(categories) - 1)`
+  internally on the positions in `categories`. For methods like Bayesian
+  optimization, nearby elements in the list have closer encodings.
 * `finrange(lower, upper, size)`: Can be used as finite analogue of `uniform`.
   Uniform from the finite range `lower, ..., upper` of size `size`, where
   entries are equally spaced. For example, `finrange(0.5, 1.5, 3)` means
