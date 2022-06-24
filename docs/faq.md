@@ -2,6 +2,7 @@
 
 ## Table of contents
 
+* [What are the different installations options supported?](#installations)
 * [How can I run on AWS and SageMaker?](#running-on-sagemaker)
 * [What are the metrics reported by default when calling the `Reporter`?](#reporter-metrics)
 * [How can I utilize multiple GPUs?](#multiple-gpus)
@@ -23,6 +24,42 @@
 * [How can I benchmark experiments from the command line?](#benchmark-cli)
 * [What different schedulers do you support? What are the main differences between them?](#schedulers-supported)
 * [How do I define the search space?](#search-space) 
+
+### <a name="installations"></a> What are the different installations options supported?
+
+
+To install Syne Tune with minimal dependencies from pip, you can simply do:
+
+```bash
+pip install 'syne-tune[core]'
+```
+
+If you want in addition to install our own Gaussian process based optimizers, Ray Tune or Bore optimizer, 
+you can run `pip install 'syne-tune[X]'` where `X` can be 
+* `gpsearchers`: For built-in Gaussian process based optimizers
+* `raytune`: For Ray Tune optimizers
+* `benchmarks`: For installing all dependencies required to run all benchmarks
+* `extra`: For installing all the above
+* `bore`: For Bore optimizer
+* `kde`: For KDE optimizer
+
+For instance, `pip install 'syne-tune[gpsearchers]'` will install Syne Tune along with many built-in Gaussian process 
+optimizers.
+
+To install the latest version from git, run the following:
+
+```bash
+pip install git+https://github.com/awslabs/syne-tune.git
+```
+
+For local development, we recommend to use the following setup which will enable you to easily test your changes: 
+
+```bash
+pip install --upgrade pip
+git clone https://github.com/awslabs/syne-tune.git
+cd syne-tune
+pip install -e '.[extra]'
+```
 
 
 ### <a name="running-on-sagemaker"></a> How can I run on AWS and SageMaker?
