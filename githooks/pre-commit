@@ -1,5 +1,6 @@
 #!/bin/sh
-black .
+# runs black only on all python files committed in git
+git ls-files | grep "\.py$" |  xargs black
 
 if [ $? -ne 0 ]; then
  echo "Black should pass before commit! Run 'pip install .[extra,dev]' if you do not have it installed locally."
