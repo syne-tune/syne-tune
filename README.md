@@ -8,12 +8,13 @@
 ![Alt Text](docs/synetune.gif)
 
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) with the following key features:
-* wide coverage of HPO optimizers including more than 20 optimizer methods supporting asynchronous optimization with multiple workers including:
+* wide coverage (>20) of different HPO methods for asynchronous optimization with multiple workers, including:
   * advanced multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER)
-  * transfer-learning optimizers that gets better and better performance when used repeatedly
-  * multi-objective optimizers that can tune multiple objectives (such as accuracy and latency)
-* ability to run HPO in different environments (locally, AWS, simulations) with one line code change
-* out-of-the-box benchmarks available for several domains with efficient simulations that allows to get results in seconds
+  * transfer-learning optimizers that achieve better and better performance when used repeatedly
+  * multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency)
+* ability to run HPO in different environments (locally, AWS, simulation) by changing one line of code
+* out-of-the-box benchmarks available for several domains with efficient simulations that allows to get results in 
+seconds while preserving the real dynamics of asynchronous HPO
 
 ## Installing
 
