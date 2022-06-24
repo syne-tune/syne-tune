@@ -10,11 +10,13 @@ from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import RandomSearch
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     config_space = {"x": randint(0, 10)}
     tuner = Tuner(
         scheduler=RandomSearch(config_space=config_space, metric="error"),
-        trial_backend=LocalBackend(entry_point=str(Path(__file__).parent / "training_script.py")),
+        trial_backend=LocalBackend(
+            entry_point=str(Path(__file__).parent / "training_script.py")
+        ),
         stop_criterion=StoppingCriterion(max_wallclock_time=20),
         n_workers=2,
     )
