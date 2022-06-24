@@ -44,16 +44,20 @@ means, a basic component of many HPO algorithms. The following domains are curre
 * `uniform(lower, upper)`: Real-valued uniform in `[lower, upper]`
 * `loguniform(lower, upper)`: Real-valued log-uniform in
   `[lower, upper]`. More precisely, the value is `exp(x)`, where `x` is drawn
-  uniformly in `[log(lower), log(upper)]`
+  uniformly in `[log(lower), log(upper)]`.
 * `randint(lower, upper)`: Integer uniform in `lower, ..., upper`.
   The value range includes both `lower` and `upper` (difference to Python range
-  convention)
+  convention).
 * `lograndint(lower, upper)`: Integer log-uniform in
   `lower, ..., upper`. More precisely, the value is `int(round(exp(x)))`, where
-  `x` is drawn uniformly in `[log(lower - 0.5), log(upper + 0.5)]`
+  `x` is drawn uniformly in `[log(lower - 0.5), log(upper + 0.5)]`.
 * `choice(categories)`: Uniform from the finite list `categories` of values.
   Entries in `categories` should ideally be of type `str`, but types `int` and
-  `float` are also allowed (the latter can lead to errors due to round-off)
+  `float` are also allowed (the latter can lead to errors due to round-off).
+* `ordinal(categories)`: Variant of `choice` for which the order of entries in
+  `categories` matters. Essentially, we use `randint(0, len(categories) - 1)`
+  internally on the positions in `categories`. For methods like Bayesian
+  optimization, nearby elements in the list have closer encodings.
 * `finrange(lower, upper, size)`: Can be used as finite analogue of `uniform`.
   Uniform from the finite range `lower, ..., upper` of size `size`, where
   entries are equally spaced. For example, `finrange(0.5, 1.5, 3)` means
@@ -105,6 +109,9 @@ provide some recommendations.
   insist on a finite range (in some cases, this may be the better choice) for
   a numerical parameter, make use of `finrange` or `logfinrange` instead of
   `choice`, as alternatives to `uniform` and `loguniform` respectively.
+* **Explore `ordinal` as alternative to `choice`.** Ordinal parameters are
+  encoded by a single int value, which is more economical in Bayesian
+  optimization.
 * **Use a log transform** for parameters which may vary over several orders of
   magnitude. Examples are learning rates or regularization constants.
 

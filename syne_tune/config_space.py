@@ -583,6 +583,28 @@ class Categorical(Domain):
         )
 
 
+class Ordinal(Categorical):
+    """
+    Represents an ordered set. As far as random sampling is concerned, this
+    type is equivalent to :class:`Categorical`, but when used in methods
+    that require encodings (or distances), nearby values have closer
+    encodings.
+    """
+
+    def __init__(self, categories: Sequence):
+        super().__init__(categories)
+
+    def __repr__(self):
+        return f"ordinal({self.categories})"
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, Ordinal)
+            and super(Ordinal, self).__eq__(other)
+            and self.categories == other.categories
+        )
+
+
 class Function(Domain):
     class _CallSampler(BaseSampler):
         def sample(
@@ -677,7 +699,6 @@ class FiniteRange(Domain):
     Represents a finite range `[lower, ..., upper]` with `size` values
     equally spaced in linear or log domain.
     If `cast_int`, the value type is int (rounding after the transform).
-
     """
 
     def __init__(
@@ -864,6 +885,11 @@ def choice(categories: List):
 
     """
     return Categorical(categories).uniform()
+
+
+def ordinal(categories: List):
+    """Sample an ordinal value."""
+    return Ordinal(categories).uniform()
 
 
 def randint(lower: int, upper: int):

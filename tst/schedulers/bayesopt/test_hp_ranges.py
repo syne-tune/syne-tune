@@ -26,6 +26,7 @@ from syne_tune.config_space import (
     finrange,
     logfinrange,
     reverseloguniform,
+    ordinal,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
     make_hyperparameter_ranges,
@@ -109,6 +110,24 @@ def test_categorical_to_and_from_ndarray(choices, external_hp, internal_ndarray)
     assert hp_ranges.from_ndarray(config_enc) == config
 
 
+@pytest.mark.parametrize(
+    "choices,external_hp,internal_ndarray",
+    [
+        (["a", "b"], "a", [0.25]),
+        (["a", "b"], "b", [0.75]),
+        (["a", "b", "c"], "b", [0.5]),
+        (["a", "b", "c"], "c", [2.5 / 3]),
+        (["a", "b", "c", "d"], "c", [2.5 / 4]),
+    ],
+)
+def test_ordinal_to_and_from_ndarray(choices, external_hp, internal_ndarray):
+    hp_ranges = make_hyperparameter_ranges({"a": ordinal(choices)})
+    config = hp_ranges.tuple_to_config((external_hp,))
+    config_enc = np.array(internal_ndarray)
+    assert_allclose(hp_ranges.to_ndarray(config), config_enc)
+    assert hp_ranges.from_ndarray(config_enc) == config
+
+
 # Going to internal representation and back should give back the original value
 @pytest.mark.parametrize(
     "lower,upper,domain",
@@ -180,6 +199,7 @@ def test_distribution_of_random_candidates():
             "3": randint(1, 1000),
             "4": lograndint(1, 1000),
             "5": choice(["a", "b", "c"]),
+            "6": ordinal(["a", "b", "c"]),
         }
     )
     num_random_candidates = 600
@@ -197,7 +217,7 @@ def test_distribution_of_random_candidates():
             else:
                 assert_almost_equal(hp, hp_converted_back)
 
-    hps0, hps1, hps2, hps3, hps4, hps5 = zip(
+    hps0, hps1, hps2, hps3, hps4, hps5, hps6 = zip(
         *[hp_ranges.config_to_tuple(x) for x in random_candidates]
     )
     assert 200 < np.percentile(hps0, 25) < 300
@@ -206,7 +226,7 @@ def test_distribution_of_random_candidates():
 
     # same bounds as the previous but log scaling
     assert 3 < np.percentile(hps1, 25) < 10
-    assert 20 < np.percentile(hps1, 50) < 40
+    assert 20 < np.percentile(hps1, 50) < 50
     assert 100 < np.percentile(hps1, 75) < 250
 
     # reverse log
@@ -224,12 +244,12 @@ def test_distribution_of_random_candidates():
     assert 20 < np.percentile(hps4, 50) < 40
     assert 100 < np.percentile(hps4, 75) < 250
 
-    counter = Counter(hps5)
-    assert len(counter) == 3
-
-    assert 150 < counter["a"] < 250  # should be about 200
-    assert 150 < counter["b"] < 250  # should be about 200
-    assert 150 < counter["c"] < 250  # should be about 200
+    for hps in [hps5, hps6]:
+        counter = Counter(hps)
+        assert len(counter) == 3
+        assert 150 < counter["a"] < 250  # should be about 200
+        assert 150 < counter["b"] < 250  # should be about 200
+        assert 150 < counter["c"] < 250  # should be about 200
 
 
 def _int_encode(val, lower, upper):

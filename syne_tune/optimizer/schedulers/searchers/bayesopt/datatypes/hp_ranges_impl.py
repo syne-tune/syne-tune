@@ -13,7 +13,7 @@
 from typing import Tuple, Dict, List, Any, Optional, Union
 import numpy as np
 
-from syne_tune.config_space import Domain, FiniteRange, Categorical
+from syne_tune.config_space import Domain, FiniteRange, Categorical, Ordinal
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     Hyperparameter,
     Configuration,
@@ -479,6 +479,35 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
         return self._range_int.get_ndarray_bounds()
 
 
+class HyperparameterRangeOrdinal(HyperparameterRangeCategorical):
+    def __init__(self, name: str, choices: Tuple[Any, ...]):
+        super().__init__(name, choices)
+        self._range_int = HyperparameterRangeInteger(
+            name=name + "_INTERNAL",
+            lower_bound=0,
+            upper_bound=self.num_choices - 1,
+            scaling=LinearScaling(),
+        )
+
+    def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
+        self._assert_value_type(hp)
+        assert hp in self.choices, "{} not in {}".format(hp, self)
+        idx = self.choices.index(hp)
+        return self._range_int.to_ndarray(idx)
+
+    def from_ndarray(self, cand_ndarray: np.ndarray) -> Hyperparameter:
+        assert len(cand_ndarray) == 1
+        return self.choices[self._range_int.from_ndarray(cand_ndarray)]
+
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        return self._range_int.get_ndarray_bounds()
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, HyperparameterRangeOrdinal):
+            return self.name == other.name and self.choices == other.choices
+        return False
+
+
 class HyperparameterRangesImpl(HyperparameterRanges):
     """
     Basic implementation of :class:`HyperparameterRanges`.
@@ -505,19 +534,27 @@ class HyperparameterRangesImpl(HyperparameterRanges):
             assert isinstance(hp_range, Domain)
             tp = hp_range.value_type
             if isinstance(hp_range, Categorical):
-                if name in self.active_config_space:
-                    active_choices = tuple(self.active_config_space[name].categories)
+                kwargs = dict()
+                is_in_active = name in self.active_config_space
+                if isinstance(hp_range, Ordinal):
+                    assert (
+                        not is_in_active
+                    ), f"Parameter '{name}' of type Ordinal cannot be used in active_config_space"
+                    _cls = HyperparameterRangeOrdinal
                 else:
-                    active_choices = None
-                if len(hp_range.categories) == 2:
-                    _cls = HyperparameterRangeCategoricalBinary
-                else:
-                    _cls = HyperparameterRangeCategoricalNonBinary
+                    if is_in_active:
+                        kwargs["active_choices"] = tuple(
+                            self.active_config_space[name].categories
+                        )
+                    if len(hp_range.categories) == 2:
+                        _cls = HyperparameterRangeCategoricalBinary
+                    else:
+                        _cls = HyperparameterRangeCategoricalNonBinary
                 hp_ranges.append(
                     _cls(
                         name,
                         choices=tuple(hp_range.categories),
-                        active_choices=active_choices,
+                        **kwargs,
                     )
                 )
             else:
