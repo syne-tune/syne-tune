@@ -282,9 +282,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         )
         self.bracket_manager.on_result((bracket_id, result_failed))
 
-    def _on_trial_result(
-        self, trial: Trial, result: Dict, call_searcher: bool = True
-    ) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict) -> str:
         trial_id = trial.trial_id
         if trial_id in self._trial_to_pending_slot:
             bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]
@@ -315,7 +313,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                 del self._trial_to_pending_slot[trial_id]
                 # Trial should be paused
                 trial_decision = SchedulerDecision.PAUSE
-            if call_searcher and resource > prev_level:
+            if resource > prev_level:
                 # If the training script does not implement checkpointing, each
                 # trial starts from scratch. In this case, the condition
                 # `resource > prev_level` ensures that the searcher does not
@@ -335,9 +333,6 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             )
 
         return trial_decision
-
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
-        return self._on_trial_result(trial, result, call_searcher=True)
 
     def on_trial_error(self, trial: Trial):
         """

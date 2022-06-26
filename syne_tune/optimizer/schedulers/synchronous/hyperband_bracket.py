@@ -20,7 +20,6 @@ from dataclasses import dataclass
 class SlotInRung:
     """
     Used to communicate slot positions and content for them
-
     """
 
     rung_index: int  # 0 is lowest rung
@@ -30,9 +29,9 @@ class SlotInRung:
     metric_val: Optional[float]  # Metric value (None if not yet occupied)
 
 
-class SynchronousHyperbandBracket:
+class SynchronousBracket:
     """
-    Represents a bracket in synchronous Hyperband.
+    Base class for a single bracket in synchronous Hyperband algorithms.
 
     A bracket consists of a list of rungs. Each rung consists of a number of
     slots and a resource level (called rung level). The larger the rung level,
@@ -41,30 +40,17 @@ class SynchronousHyperbandBracket:
     A slot is occupied (by a metric value), free, or pending. A pending slot
     has already been returned by `next_free_slot`. Slots
     in the lowest rung (smallest rung level, largest size) are filled first.
-    When a rung is fully occupied, slots for the next rung are assigned with
-    the trial_id's having the best metric values. At any point in time, only
-    slots in the lowest not fully occupied rung can be filled.
-
+    At any point in time, only slots in the lowest not fully occupied rung
+    can be filled. If there are no free slots in the current rung, but there
+    are pending ones, the bracket is blocked, and another bracket needs to
+    be worked on.
     """
 
-    def __init__(self, rungs: List[Tuple[int, int]], mode: str):
-        """
-        :param rungs: List of `(rung_size, level)`, where `level` is rung
-            (resource) level, `rung_size` is rung size (number of slots).
-            All entries must be positive int's. The list must be increasing
-            in the first and decreasing in the second component
-        :param mode: Criterion is minimized ('min') or maximized ('max')
-        """
-        self.assert_check_rungs(rungs)
+    def __init__(self, mode: str):
         assert mode in {"min", "max"}
-        # Represents rung levels by (rung, level), where rung is a list of
-        # (trial_id, metric_val) tuples for rungs <= self._current_rung.
-        # For rungs > self._current_rung, the tuple is (rung_size, level).
-        size, level = rungs[0]
-        self._rungs = [([(None, None)] * size, level)] + rungs[1:]
         self._mode = mode
-        self.current_rung = 0
         self._first_free_pos = 0
+        self.current_rung = 0
 
     @staticmethod
     def _is_increasing(lst: List[int]) -> bool:
@@ -91,16 +77,17 @@ class SynchronousHyperbandBracket:
             [-x for x in sizes]
         ), f"Rung sizes {sizes} are not decreasing"
 
+    @property
+    def num_rungs(self) -> int:
+        raise NotImplementedError
+
     def is_bracket_complete(self) -> bool:
         return self.current_rung >= self.num_rungs
 
-    @property
-    def num_rungs(self) -> int:
-        return len(self._rungs)
-
-    @staticmethod
-    def _trial_ids(rung: List[Tuple[int, float]]) -> List[int]:
-        return [x[0] for x in rung]
+    def _current_rung_and_level(
+        self,
+    ) -> (List[Tuple[Optional[int], Optional[float]]], int):
+        raise NotImplementedError
 
     def num_pending_slots(self) -> int:
         """
@@ -109,13 +96,13 @@ class SynchronousHyperbandBracket:
         """
         if self.is_bracket_complete():
             return 0
-        rung, _ = self._rungs[self.current_rung]
+        rung, _ = self._current_rung_and_level()
         return sum(x[1] is None for x in rung[: self._first_free_pos])
 
     def next_free_slot(self) -> Optional[SlotInRung]:
         if self.is_bracket_complete():
             return None
-        rung, milestone = self._rungs[self.current_rung]
+        rung, milestone = self._current_rung_and_level()
         pos = self._first_free_pos
         if pos >= len(rung):
             return None
@@ -133,8 +120,7 @@ class SynchronousHyperbandBracket:
         """
         Provides result for slot previously requested by `next_free_slot`.
         Here, `result.metric` is written to the slot in order to make it
-        occupied. Also, `result.trial_id` is written there if the current
-        value is None (happens in the lowest rung).
+        occupied. Also, `result.trial_id` is written there.
 
         :param result: See above
         :return: Has the rung been completely occupied with this result?
@@ -146,11 +132,10 @@ class SynchronousHyperbandBracket:
         assert (
             0 <= pos < self._first_free_pos
         ), f"slot_index must be in [0, {self._first_free_pos}):\n" + str(result)
-        rung, milestone = self._rungs[self.current_rung]
+        rung, milestone = self._current_rung_and_level()
         assert result.level == milestone, (result, milestone)
         trial_id, metric_val = rung[pos]
-        if trial_id is not None:
-            assert result.trial_id == trial_id, (result, trial_id)
+        self._assert_on_result_trial_id(result, trial_id)
         assert (
             metric_val is None
         ), f"Slot at {pos} already has metric_val = {metric_val}:\n" + str(result)
@@ -158,10 +143,8 @@ class SynchronousHyperbandBracket:
             result
         )
         rung[pos] = (result.trial_id, result.metric_val)
-        return self._promote_trials_if_rung_complete()
-
-    def _promote_trials_if_rung_complete(self) -> bool:
-        rung, _ = self._rungs[self.current_rung]
+        # Check whether rung is complete. If so, move to next one and trigger
+        # promotions (optional)
         is_complete = (
             self._first_free_pos >= len(rung) and self.num_pending_slots() == 0
         )
@@ -169,23 +152,77 @@ class SynchronousHyperbandBracket:
             self.current_rung += 1
             self._first_free_pos = 0
             if not self.is_bracket_complete():
-                pos = self.current_rung
-                new_len, milestone = self._rungs[pos]
-                # Failed trials insert NaN's
-                rung_valid = [x for x in rung if not np.isnan(x[1])]
-                num_valid = len(rung_valid)
-                if num_valid >= new_len:
-                    top_list = sorted(
-                        rung_valid, key=itemgetter(1), reverse=self._mode == "max"
-                    )[:new_len]
-                else:
-                    # Not enough valid entries to fill the new rung (this is
-                    # very unlikely to happen). In this case, some failed trials
-                    # are still promoted to the next rung.
-                    rung_invalid = [x for x in rung if np.isnan(x[1])]
-                    top_list = rung_valid + rung_invalid[: (new_len - num_valid)]
-                # Set metric_val entries to None, since this distinguishes
-                # between a pending and occupied slot
-                top_list = [(x[0], None) for x in top_list]
-                self._rungs[pos] = (top_list, milestone)
+                self._promote_trials_at_rung_complete()
         return is_complete
+
+    def _assert_on_result_trial_id(self, result: SlotInRung, trial_id: int):
+        pass
+
+    def _promote_trials_at_rung_complete(self):
+        raise NotImplementedError
+
+
+class SynchronousHyperbandBracket(SynchronousBracket):
+    """
+    Represents a bracket in standard synchronous Hyperband.
+
+    When a rung is fully occupied, slots for the next rung are assigned with
+    the trial_id's having the best metric values. At any point in time, only
+    slots in the lowest not fully occupied rung can be filled.
+    """
+
+    def __init__(self, rungs: List[Tuple[int, int]], mode: str):
+        """
+        :param rungs: List of `(rung_size, level)`, where `level` is rung
+            (resource) level, `rung_size` is rung size (number of slots).
+            All entries must be positive int's. The list must be increasing
+            in the first and decreasing in the second component
+        :param mode: Criterion is minimized ('min') or maximized ('max')
+        """
+        self.assert_check_rungs(rungs)
+        super().__init__(mode)
+        # Represents rung levels by (rung, level), where rung is a list of
+        # (trial_id, metric_val) tuples for rungs <= self._current_rung.
+        # For rungs > self._current_rung, the tuple is (rung_size, level).
+        size, level = rungs[0]
+        self._rungs = [([(None, None)] * size, level)] + rungs[1:]
+
+    @property
+    def num_rungs(self) -> int:
+        return len(self._rungs)
+
+    def _current_rung_and_level(
+        self,
+    ) -> (List[Tuple[Optional[int], Optional[float]]], int):
+        return self._rungs[self.current_rung]
+
+    def _assert_on_result_trial_id(self, result: SlotInRung, trial_id: int):
+        if trial_id is not None:
+            assert result.trial_id == trial_id, (result, trial_id)
+
+    def _promote_trials_at_rung_complete(self):
+        pos = self.current_rung
+        new_len, milestone = self._rungs[pos]
+        previous_rung, _ = self._rungs[pos - 1]
+        top_list = get_top_list(rung=previous_rung, new_len=new_len, mode=self._mode)
+        # Set metric_val entries to None, since this distinguishes
+        # between a pending and occupied slot
+        top_list = [(trial_id, None) for trial_id in top_list]
+        self._rungs[pos] = (top_list, milestone)
+
+
+def get_top_list(rung: List[Tuple[int, float]], new_len: int, mode: str) -> List[int]:
+    # Failed trials insert NaN's
+    rung_valid = [x for x in rung if not np.isnan(x[1])]
+    num_valid = len(rung_valid)
+    if num_valid >= new_len:
+        top_list = sorted(rung_valid, key=itemgetter(1), reverse=mode == "max")[
+            :new_len
+        ]
+    else:
+        # Not enough valid entries to fill the new rung (this is
+        # very unlikely to happen). In this case, some failed trials
+        # are still promoted to the next rung.
+        rung_invalid = [x for x in rung if np.isnan(x[1])]
+        top_list = rung_valid + rung_invalid[: (new_len - num_valid)]
+    return [x[0] for x in top_list]

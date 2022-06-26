@@ -160,10 +160,9 @@ class SimulatorBackend(LocalBackend):
     ) -> Trial:
         # Overwritten to record the correct `creation_time`
         trial_id = self.new_trial_id()
-        if checkpoint_trial_id is not None:
-            self.copy_checkpoint(
-                src_trial_id=checkpoint_trial_id, tgt_trial_id=trial_id
-            )
+        assert (
+            checkpoint_trial_id is None
+        ), "start_trial with checkpoint_trial_id != None is not supported"
         self.trial_ids.append(trial_id)
         self._schedule(trial_id=trial_id, config=config)
         now = self._time_keeper.time_stamp()
