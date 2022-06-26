@@ -12,9 +12,10 @@ This package provides state-of-the-art distributed hyperparameter optimizers (HP
   * advanced multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER)
   * transfer-learning optimizers that achieve better and better performance when used repeatedly
   * multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency)
-* ability to run HPO in different environments (locally, AWS, simulation) by changing one line of code
-* out-of-the-box benchmarks available for several domains with efficient simulations that allows to get results in 
-seconds while preserving the real dynamics of asynchronous HPO
+* you can run HPO in different environments (locally, AWS, simulation) by changing one line of code
+* out-of-the-box tabulated benchmarks available for several domains with efficient simulations that allows you 
+  to get results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any
+  number of workers
 
 ## Installing
 
