@@ -12,9 +12,10 @@ This package provides state-of-the-art distributed hyperparameter optimizers (HP
   * advanced multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER)
   * transfer-learning optimizers that achieve better and better performance when used repeatedly
   * multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency)
-* ability to run HPO in different environments (locally, AWS, simulation) by changing one line of code
-* out-of-the-box benchmarks available for several domains with efficient simulations that allows to get results in 
-seconds while preserving the real dynamics of asynchronous HPO
+* you can run HPO in different environments (locally, AWS, simulation) by changing one line of code
+* out-of-the-box tabulated benchmarks available for several domains with efficient simulations that allows you 
+  to get results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any
+  number of workers
 
 ## Installing
 
@@ -134,27 +135,28 @@ employs an easy-to-use benchmark convention
 
 You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalities. 
 
-* [How can I run on AWS and SageMaker?](docs/faq.md)
-* [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md)
-* [How can I utilize multiple GPUs?](docs/faq.md)
-* [What is the default mode when performing optimization?](docs/faq.md)
-* [How are trials evaluated when evaluating trials on a local machine?](docs/faq.md)
-* [What does the the output of the tuning contain?](docs/faq.md)
-* [How can I enable trial checkpointing?](docs/faq.md)
-* [Which schedulers make use of checkpointing?](docs/faq.md)
-* [Is the tuner checkpointed?](docs/faq.md)
-* [Where can I find the output of my trials?](docs/faq.md)
-* [Where can I find the output of the tuning?](docs/faq.md)
-* [How can I plot the results of a tuning?](docs/faq.md)
-* [How can I specify additional tuning metadata?](docs/faq.md)
-* [How do I append additional information to the results which are stored?](docs/faq.md) 
-* [I don’t want to wait, how can I launch the tuning on a remote machine?](docs/faq.md)
-* [How can I run many experiments in parallel?](docs/faq.md)
-* [How can I access results after tuning remotely?](docs/faq.md)
-* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](docs/faq.md)
-* [How can I benchmark experiments from the command line?](docs/faq.md)
-* [What different schedulers do you support? What are the main differences between them?](docs/faq.md)
-* [How do I define the search space?](docs/faq.md) 
+* [What are the different installations options supported?](docs/faq.md#installations)
+* [How can I run on AWS and SageMaker?](docs/faq.md#running-on-sagemaker)
+* [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md#reporter-metrics)
+* [How can I utilize multiple GPUs?](docs/faq.md#multiple-gpus)
+* [What is the default mode when performing optimization?](docs/faq.md#default-mode)
+* [How are trials evaluated on a local machine?](docs/faq.md#trial-execution)
+* [What does the output of the tuning contain?](docs/faq.md#tuning-output)
+* [Where can I find the output of the tuning?](docs/faq.md#tuning-output-location)
+* [How can I enable trial checkpointing?](docs/faq.md#trial-checkpointing)
+* [Which schedulers make use of checkpointing?](docs/faq.md#schedulers-checkpointing)
+* [Is the tuner checkpointed?](docs/faq.md#tuner-checkpointing)
+* [Where can I find the output of my trials?](docs/faq.md#trial-output)
+* [How can I plot the results of a tuning?](docs/faq.md#plotting-tuning)
+* [How can I specify additional tuning metadata?](docs/faq.md#additional-metadata)
+* [How do I append additional information to the results which are stored?](docs/faq.md#logging-additional-information) 
+* [I don’t want to wait, how can I launch the tuning on a remote machine?](docs/faq.md#remote-tuning)
+* [How can I run many experiments in parallel?](docs/faq.md#experiment-parallel)
+* [How can I access results after tuning remotely?](docs/faq.md#results-remote-tuning)
+* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](docs/faq.md#dependencies-remote)
+* [How can I benchmark experiments from the command line?](docs/faq.md#benchmark-cli)
+* [What different schedulers do you support? What are the main differences between them?](docs/faq.md#schedulers-supported)
+* [How do I define the search space?](docs/faq.md#search-space) 
 
 Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](docs/tutorials/basics/README.md)
