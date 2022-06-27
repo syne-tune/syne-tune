@@ -10,6 +10,18 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+
+"""
+Example showing how to visualize the HPO process of Syne Tune with Tensorboard. Results will be stored
+in ~/syne-tune/EXPERIMENT-TAG/tensoboard_output. To start tensorboard, execute in a separate shell:
+
+>  tensorboard --logdir  /~/syne-tune/EXPERIMENT-TAG/tensorboard_output
+
+Open the displayed URL in the browser.
+
+Note that, to use this functionality you need to install tensorboardX: pip install tensorboardX
+"""
+
 import logging
 from pathlib import Path
 
@@ -53,7 +65,7 @@ if __name__ == '__main__':
         n_workers=n_workers,
         stop_criterion=stop_criterion,
         results_update_interval=5,
-        callbacks=[TensorboardCallback(metric_to_optimize=metric, mode=mode)],
+        callbacks=[TensorboardCallback(target_metric=metric, mode=mode)],
         tuner_name="tensorboardx-demo",
         metadata={'description': 'just an example'},
     )

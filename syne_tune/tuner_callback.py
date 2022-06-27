@@ -12,8 +12,9 @@
 # permissions and limitations under the License.
 import os
 from time import perf_counter
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import copy
+import logging
 
 from syne_tune.backend.trial_status import Trial
 
@@ -21,6 +22,8 @@ import pandas as pd
 
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TIME
 from syne_tune.util import RegularCallback
+
+logger = logging.getLogger(__name__)
 
 
 class TunerCallback:
@@ -149,28 +152,25 @@ class StoreResultsCallback(TunerCallback):
 
 
 class TensorboardCallback(TunerCallback):
+
     def __init__(
             self,
-
-            metric_to_optimize: 'str',
-            mode: 'str',
-            output_metrics: List[str] = [],
+            ignore_metrics: Optional[List[str]] = None,
+            target_metric: Optional[str] = None,
+            mode: Optional[str] = 'min'
     ):
         """
-        Simple callback that logs different statistics such that we can visualize them with Tensorboard.
+        Simple callback that logs metric reported in the train function such that we can visualize with Tensorboard.
 
-        :param metric_to_optimize: The metric that we aim to optimize. We report the cumulative optimum over time. This
-        should be the same metric that we pass to the scheduler / searcher.
-        :param mode: Defines whether we minimize ('min') or maximize ('max'). Should be the same what we
-        pass to scheduler / searcher.
-        :param output_metrics: All other metrics that we want to log. Make sure that these metrics
-         are reported correctly in the train function to Syne Tune via the report(...) function.
+        :param ignore_metrics: Defines which metrics should be ignored. If None, all metrics are reported
+         to Tensorboard.
+        :param target_metric: Defines the metric we aim to optimize. If this argument is set, we report
+        the cumulative optimum of this metric as well as the optimal hyperparameters we have found so far.
+        :param mode: Determined whether we maximize ('max') or minimize ('min') the target metric.
         """
         self.results = []
 
-        self.output_metrics = output_metrics
-        self.mode = mode
-        self.metric = metric_to_optimize
+        self.ignore_metrics = ignore_metrics
 
         self.curr_best_value = None
         self.curr_best_config = None
@@ -178,7 +178,11 @@ class TensorboardCallback(TunerCallback):
         self._start_time_stamp = None
         self.writer = None
         self._iter = None
+        self._mode = mode
+        self._target_metric = target_metric
         self.trial_ids = set()
+
+        self.metric_sign = -1 if mode == 'max' else 1
 
     def _set_time_fields(self, result: Dict):
         """
@@ -192,32 +196,34 @@ class TensorboardCallback(TunerCallback):
 
         self._set_time_fields(result)
 
-        new_result = result[self.metric]
+        if self._target_metric is not None:
 
-        if self.mode == 'max':
-            new_result *= -1
+            assert self._target_metric in result,  f"{self._target_metric} was not reported back to Syne tune"
+            new_result = self.metric_sign * result[self._target_metric]
 
-        if self.curr_best_value is None or self.curr_best_value > new_result:
-            self.curr_best_value = new_result
-            self.curr_best_config = trial.config
-            self.writer.add_scalar(self.metric, result[self.metric], self._iter)
+            if self.curr_best_value is None or self.curr_best_value > new_result:
+                self.curr_best_value = new_result
+                self.curr_best_config = trial.config
+                self.writer.add_scalar(self._target_metric, result[self._target_metric], self._iter)
 
-        else:
-            opt = self.curr_best_value
-            if self.mode == 'max':
-                opt *= -1
-            self.writer.add_scalar(self.metric, opt, self._iter)
+            else:
+                opt = self.metric_sign * self.curr_best_value
+                self.writer.add_scalar(self._target_metric, opt, self._iter)
 
-        for key, value in self.curr_best_config.items():
-            self.writer.add_scalar(f'optimal_{key}', value, self._iter)
+            for key, value in self.curr_best_config.items():
+                self.writer.add_scalar(f'optimal_{key}', value, self._iter)
 
-        for metric in self.output_metrics:
-            self.writer.add_scalar(metric, result[metric], self._iter)
+        for metric in result:
+            if self.ignore_metrics is not None and metric not in self.ignore_metrics:
+                self.writer.add_scalar(metric, result[metric], self._iter)
+
+        for key, value in trial.config.items():
+            self.writer.add_scalar(key, value, self._iter)
 
         self.writer.add_scalar('runtime', result[ST_TUNER_TIME], self._iter)
 
         self.trial_ids.add(trial.trial_id)
-        self.writer.add_scalar('num_trial', len(self.trial_ids),
+        self.writer.add_scalar('number_of_trials', len(self.trial_ids),
                                self._iter, display_name='total number of trials')
 
         self._iter += 1
@@ -225,11 +231,20 @@ class TensorboardCallback(TunerCallback):
     def on_tuning_start(self, tuner):
 
         output_path = os.path.join(tuner.tuner_path, 'tensorboard_output')
-        from tensorboardX import SummaryWriter
+
+        try:
+            from tensorboardX import SummaryWriter
+        except ImportError:
+            logger.error('TensoboardX is not installed. You can install it via: pip install tensorboardX')
         self.writer = SummaryWriter(output_path)
         self._iter = 0
         self._start_time_stamp = perf_counter()
 
     def on_tuning_end(self):
         self.writer.close()
-        self.writer = None
+
+    def __getstate__(self):
+        # To avoid runtime errors because of the MultiProcessing Queues of TensorboardX,
+        # we don't serialize the callback
+        return None
+

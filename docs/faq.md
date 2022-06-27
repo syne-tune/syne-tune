@@ -23,6 +23,7 @@
 * [How can I benchmark experiments from the command line?](#benchmark-cli)
 * [What different schedulers do you support? What are the main differences between them?](#schedulers-supported)
 * [How do I define the search space?](#search-space) 
+* [How can I visualize the progress of my tuning experiment with Tensorboard?](#tensorboard) 
 
 
 ### <a name="running-on-sagemaker"></a> How can I run on AWS and SageMaker?
@@ -271,3 +272,28 @@ Most of those methods can be accessed with short names by from [baselines.py](ht
 While the training script defines the function to be optimized, some care needs to be taken to define the search space for the hyperparameter optimization problem. This being a global optimization problem without gradients easily available, it is most important to reduce the number of parameters. Some advice is given in https://github.com/awslabs/syne-tune/blob/main/docs/search_space.md.
 
 A powerful approach is to run experiments in parallel. Namely, split your hyperparameters into groups A, B, such that HPO over B is tractable. Draw a set of N configurations from A at random, then start N HPO experiments in parallel, where in each of them the search space is over B only, while the parameters in A are fixed. Syne Tune supports massively parallel experimentation (see https://github.com/awslabs/syne-tune/blob/main/docs/command_line.md#launching-many-experiments).
+
+### <a name="tensorboard"></a> How can I visualize the progress of my tuning experiment with Tensorboard?
+
+To visualize the progress of Syne Tune in [Tensorboard](https://www.tensorflow.org/tensorboard), you can pass the `TensorboardCallback` to the `Tuner` object:
+
+```
+tuner = Tuner(
+    ...
+    callbacks=[TensorboardCallback()],
+)
+```
+Note that, you need to install [TensorboardX](https://github.com/lanpa/tensorboardX) to use this callback. You can install it by:
+```
+pip install tensorboardX
+```
+This will log all metrics that are reported in your training script via the report(...) function. Now, to open Tensorboard, run:
+
+```
+tensorboard --logdir ~/syne-tune/{tuner-name}/tensorboard_output
+```
+
+If we you want to plot the cumulative optimum of the metric you want to optimize, you can pass the `target_metric` argument to TensorboardCallback. This will also report the best found hyperparameter configuration over time.
+
+
+
