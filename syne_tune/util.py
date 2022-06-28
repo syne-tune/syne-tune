@@ -23,7 +23,7 @@ from time import perf_counter
 from contextlib import contextmanager
 
 
-from syne_tune.constants import SYNE_TUNE_FOLDER
+from syne_tune.constants import SYNE_TUNE_FOLDER, SYNE_TUNE_ENV_FOLDER
 
 
 class RegularCallback:
@@ -48,14 +48,13 @@ def experiment_path(
     tuner_name: Optional[str] = None, local_path: Optional[str] = None
 ) -> Path:
     f"""
+    Return the path of an experiment which is used both by the Tuner and to collect results of experiments.
     :param tuner_name: name of a tuning experiment
-    :param local_path: local path where results should be saved when running
-        locally outside of Sagemaker, if not specified, then
-        `~/{SYNE_TUNE_FOLDER}/` is used.
-    :return: path where to write logs and results for Syne Tune tuner.
-
-    On Sagemaker, results are written under "/opt/ml/checkpoints/" so that files are persisted
-    continuously by Sagemaker.
+    :param local_path: local path where results should be saved when running locally outside of Sagemaker.
+    If not specified, then the environment variable `"SYNETUNE_FOLDER"` is used if defined otherwise
+    `~/syne-tune/` is used. Defining the enviroment variable `"SYNETUNE_FOLDER"` allows to override the default path.
+    :return: path where to write logs and results for Syne Tune tuner. On Sagemaker, results are written
+    under "/opt/ml/checkpoints/" so that files are persisted continuously by Sagemaker.
     """
     is_sagemaker = "SM_MODEL_DIR" in os.environ
     if is_sagemaker:
@@ -68,7 +67,10 @@ def experiment_path(
     else:
         # means we are running on a local machine, we store results in a local path
         if local_path is None:
-            local_path = Path(f"~/{SYNE_TUNE_FOLDER}").expanduser()
+            if SYNE_TUNE_ENV_FOLDER in os.environ:
+                local_path = Path(os.environ[SYNE_TUNE_ENV_FOLDER]).expanduser()
+            else:
+                local_path = Path(f"~/{SYNE_TUNE_FOLDER}").expanduser()
         else:
             local_path = Path(local_path)
         if tuner_name is not None:
