@@ -13,7 +13,7 @@
 
 """
 Example showing how to visualize the HPO process of Syne Tune with Tensorboard. Results will be stored
-in ~/syne-tune/EXPERIMENT-TAG/tensoboard_output. To start tensorboard, execute in a separate shell:
+in ~/syne-tune/{tuner_name}/tensoboard_output. To start tensorboard, execute in a separate shell:
 
 >  tensorboard --logdir  /~/syne-tune/EXPERIMENT-TAG/tensorboard_output
 
