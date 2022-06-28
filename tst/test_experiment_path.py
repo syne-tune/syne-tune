@@ -4,7 +4,7 @@ from typing import Dict
 
 import pytest
 
-from syne_tune.constants import SYNE_TUNE_FOLDER, SYNE_TUNE_ENV_FOLDER
+from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER, SYNE_TUNE_ENV_FOLDER
 from syne_tune.util import experiment_path
 
 
@@ -24,13 +24,13 @@ from syne_tune.util import experiment_path
             "my-tuner",
             None,
             {},
-            str(Path(f"~/{SYNE_TUNE_FOLDER}").expanduser() / "my-tuner"),
+            str(Path(f"~/{SYNE_TUNE_DEFAULT_FOLDER}").expanduser() / "my-tuner"),
         ),
         (
             "my-tuner",
             None,
             {},
-            str(Path(f"~/{SYNE_TUNE_FOLDER}/my-tuner").expanduser()),
+            str(Path(f"~/{SYNE_TUNE_DEFAULT_FOLDER}/my-tuner").expanduser()),
         ),
         (
             "my-tuner",

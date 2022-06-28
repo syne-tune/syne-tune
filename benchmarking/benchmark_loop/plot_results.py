@@ -19,7 +19,7 @@ import sagemaker
 from matplotlib import cm
 import numpy as np
 
-from syne_tune.constants import ST_TUNER_TIME, SYNE_TUNE_FOLDER
+from syne_tune.constants import ST_TUNER_TIME, SYNE_TUNE_DEFAULT_FOLDER
 from syne_tune.experiments import load_experiments_df
 import matplotlib.pyplot as plt
 
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
     print(
         f"In case you ran experiments remotely, we assume that you pulled your results by running in a terminal: \n"
-        f"aws s3 sync s3://{sagemaker.Session().default_bucket()}/{SYNE_TUNE_FOLDER}/{experiment_tag}/ ~/syne-tune/"
+        f"aws s3 sync s3://{sagemaker.Session().default_bucket()}/{SYNE_TUNE_DEFAULT_FOLDER}/{experiment_tag}/ ~/syne-tune/"
     )
     experiment_filter = lambda exp: exp.metadata.get("tag") == experiment_tag
     name_filter = lambda path: str(experiment_tag) in str(path)

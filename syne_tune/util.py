@@ -23,7 +23,7 @@ from time import perf_counter
 from contextlib import contextmanager
 
 
-from syne_tune.constants import SYNE_TUNE_FOLDER, SYNE_TUNE_ENV_FOLDER
+from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER, SYNE_TUNE_ENV_FOLDER
 
 
 class RegularCallback:
@@ -70,7 +70,7 @@ def experiment_path(
             if SYNE_TUNE_ENV_FOLDER in os.environ:
                 local_path = Path(os.environ[SYNE_TUNE_ENV_FOLDER]).expanduser()
             else:
-                local_path = Path(f"~/{SYNE_TUNE_FOLDER}").expanduser()
+                local_path = Path(f"~/{SYNE_TUNE_DEFAULT_FOLDER}").expanduser()
         else:
             local_path = Path(local_path)
         if tuner_name is not None:
@@ -94,7 +94,7 @@ def s3_experiment_path(
     """
     if s3_bucket is None:
         s3_bucket = sagemaker.Session().default_bucket()
-    s3_path = f"s3://{s3_bucket}/{SYNE_TUNE_FOLDER}"
+    s3_path = f"s3://{s3_bucket}/{SYNE_TUNE_DEFAULT_FOLDER}"
     for part in (experiment_name, tuner_name):
         if part is not None:
             s3_path += "/" + part
