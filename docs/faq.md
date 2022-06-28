@@ -117,10 +117,30 @@ account for the capacity of the machine where the trials are executed.
 
 ### <a name="tuning-output-location"></a> Where can I find the output of the tuning?
 
-When running locally, the output of the tuning is saved under `~/syne-tune/{tuner-name}/`. 
-When running remotely, by default the tuning output is synced regularly to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/`.
+When running locally, the output of the tuning is saved under `~/syne-tune/{tuner-name}/` by default. 
+When running remotely on SageMaker, the output of the tuning is saved under `/opt/ml/checkpoints/` by default and
+the tuning output is synced regularly to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/`.
+
 If you run remote tuning via the CLI, the tuning output is synced to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-name}/{tuner-name}/`, where `experiment-name` is the prefix of `tuner-name` without the datetime extension (in the example above, `experiment-name = 'train-height'`).
 
+
+### <a name="tuning-output-location"></a> How can I change the default output folder where tuning results are stored?
+
+To change the path where tuning results are written, you can set the environment variable `SYNETUNE_FOLDER` to the 
+folder that you want.
+
+For instance, the following runs a tuning where results tuning files are written under `~/new-syne-tune-folder`: 
+
+```bash
+export SYNETUNE_FOLDER="~/new-syne-tune-folder"
+python examples/launch_height_baselines.py
+```
+
+You can also do the following for instance to permanently change the output folder of Syne Tune:
+
+```bash
+echo 'export SYNETUNE_FOLDER="~/new-syne-tune-folder"' >> ~/.bashrc && source ~/.bashrc
+```
 
 ### <a name="tuning-output"></a> What does the output of the tuning contain?
 

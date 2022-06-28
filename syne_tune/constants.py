@@ -15,7 +15,8 @@ Collects constants to be shared between core code and tuning scripts or
 benchmarks.
 """
 
-SYNE_TUNE_FOLDER = "syne-tune"
+SYNE_TUNE_ENV_FOLDER = "SYNETUNE_FOLDER"  # environment variable that allows to overides default library folder
+SYNE_TUNE_DEFAULT_FOLDER = "syne-tune"  # name of default library folder used if the env variable is not defined
 
 ST_TUNER_CREATION_TIMESTAMP = "st_tuner_creation_timestamp"
 ST_TUNER_START_TIMESTAMP = "st_tuner_start_timestamp"
