@@ -155,7 +155,7 @@ class TensorboardCallback(TunerCallback):
 
     def __init__(
             self,
-            ignore_metrics: Optional[List[str]] = [],
+            ignore_metrics: Optional[List[str]] = None,
             target_metric: Optional[str] = None,
             mode: Optional[str] = 'min'
     ):
@@ -170,7 +170,10 @@ class TensorboardCallback(TunerCallback):
         """
         self.results = []
 
-        self.ignore_metrics = ignore_metrics
+        if ignore_metrics is None:
+            self.ignore_metrics = []
+        else:
+            self.ignore_metrics = ignore_metrics
 
         self.curr_best_value = None
         self.curr_best_config = None
