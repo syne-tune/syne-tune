@@ -10,9 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import os
 from time import perf_counter
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import copy
+import logging
 
 from syne_tune.backend.trial_status import Trial
 
@@ -20,6 +22,8 @@ import pandas as pd
 
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TIME
 from syne_tune.util import RegularCallback
+
+logger = logging.getLogger(__name__)
 
 
 class TunerCallback:
@@ -145,3 +149,149 @@ class StoreResultsCallback(TunerCallback):
         # store the results in case some results were not committed yet (since they are saved every
         # `results_update_interval` seconds)
         self.store_results()
+
+
+class TensorboardCallback(TunerCallback):
+    def __init__(
+        self,
+        ignore_metrics: Optional[List[str]] = None,
+        target_metric: Optional[str] = None,
+        mode: Optional[str] = "min",
+    ):
+        """
+        Simple callback that logs metric reported in the train function such that we can visualize with Tensorboard.
+
+        :param ignore_metrics: Defines which metrics should be ignored. If None, all metrics are reported
+         to Tensorboard.
+        :param target_metric: Defines the metric we aim to optimize. If this argument is set, we report
+        the cumulative optimum of this metric as well as the optimal hyperparameters we have found so far.
+        :param mode: Determined whether we maximize ('max') or minimize ('min') the target metric.
+        """
+        self.results = []
+
+        if ignore_metrics is None:
+            self.ignore_metrics = []
+        else:
+            self.ignore_metrics = ignore_metrics
+
+        self.curr_best_value = None
+        self.curr_best_config = None
+
+        self.start_time_stamp = None
+        self.writer = None
+        self.iter = None
+        self.mode = mode
+        self.target_metric = target_metric
+        self.trial_ids = set()
+
+        self.metric_sign = -1 if mode == "max" else 1
+
+    def _set_time_fields(self, result: Dict):
+        """
+        Note that we only add wallclock time to the result if this has not
+        already been done (by the back-end)
+        """
+        if self.start_time_stamp is not None and ST_TUNER_TIME not in result:
+            result[ST_TUNER_TIME] = perf_counter() - self.start_time_stamp
+
+    def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+
+        self._set_time_fields(result)
+
+        if self.target_metric is not None:
+
+            assert (
+                self.target_metric in result
+            ), f"{self.target_metric} was not reported back to Syne tune"
+            new_result = self.metric_sign * result[self.target_metric]
+
+            if self.curr_best_value is None or self.curr_best_value > new_result:
+                self.curr_best_value = new_result
+                self.curr_best_config = trial.config
+                self.writer.add_scalar(
+                    self.target_metric, result[self.target_metric], self.iter
+                )
+
+            else:
+                opt = self.metric_sign * self.curr_best_value
+                self.writer.add_scalar(self.target_metric, opt, self.iter)
+
+            for key, value in self.curr_best_config.items():
+                self.writer.add_scalar(f"optimal_{key}", value, self.iter)
+
+        for metric in result:
+            if metric not in self.ignore_metrics:
+                self.writer.add_scalar(metric, result[metric], self.iter)
+
+        for key, value in trial.config.items():
+            self.writer.add_scalar(key, value, self.iter)
+
+        self.writer.add_scalar("runtime", result[ST_TUNER_TIME], self.iter)
+
+        self.trial_ids.add(trial.trial_id)
+        self.writer.add_scalar(
+            "number_of_trials",
+            len(self.trial_ids),
+            self.iter,
+            display_name="total number of trials",
+        )
+
+        self.iter += 1
+
+    def on_tuning_start(self, tuner):
+
+        self.output_path = os.path.join(tuner.tuner_path, "tensorboard_output")
+
+        try:
+            from tensorboardX import SummaryWriter
+        except ImportError:
+            logger.error(
+                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
+            )
+        self.writer = SummaryWriter(self.output_path)
+        self.iter = 0
+        self.start_time_stamp = perf_counter()
+
+    def on_tuning_end(self):
+        self.writer.close()
+
+    def __getstate__(self):
+        state = {
+            "results": self.results,
+            "ignore_metrics": self.ignore_metrics,
+            "curr_best_value": self.curr_best_value,
+            "curr_best_config": self.curr_best_config,
+            "start_time_stamp": self.start_time_stamp,
+            "iter": self.iter,
+            "mode": self.mode,
+            "target_metric": self.target_metric,
+            "trial_ids": self.trial_ids,
+            "metric_sign": self.metric_sign,
+            "output_path": self.output_path,
+        }
+        return state
+
+    def __setstate__(self, state):
+        super().__init__(
+            ignore_metrics=state["ignore_metrics"],
+            target_metric=state["target_metric"],
+            mode=state["mode"],
+        )
+        self.results = state["results"]
+        self.curr_best_value = state["curr_best_value"]
+        self.curr_best_config = state["curr_best_config"]
+        self.start_time_stamp = state["start_time_stamp"]
+        self.iter = state["iter"]
+
+        self.trial_ids = state["trial_ids"]
+        self.metric_sign = state["metric_sign"]
+        self.output_path = state["output_path"]
+
+        try:
+            from tensorboardX import SummaryWriter
+        except ImportError:
+            logger.error(
+                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
+            )
+
+        self.writer = SummaryWriter(self.output_path)
