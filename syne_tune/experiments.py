@@ -49,19 +49,20 @@ class ExperimentResult:
 
         metric = self.metric_names()[0]
         df = self.results
-        df = df.sort_values(ST_TUNER_TIME)
-        x = df.loc[:, ST_TUNER_TIME]
-        y = (
-            df.loc[:, metric].cummax()
-            if self.metric_mode() == "max"
-            else df.loc[:, metric].cummin()
-        )
-        plt.plot(x, y, **plt_kwargs)
-        plt.xlabel("wallclock time")
-        plt.ylabel(metric)
-        plt.title(self.entrypoint_name() + " " + self.name)
-        plt.legend()
-        plt.show()
+        if df is not None and len(df) > 0:
+            df = df.sort_values(ST_TUNER_TIME)
+            x = df.loc[:, ST_TUNER_TIME]
+            y = (
+                df.loc[:, metric].cummax()
+                if self.metric_mode() == "max"
+                else df.loc[:, metric].cummin()
+            )
+            plt.plot(x, y, **plt_kwargs)
+            plt.xlabel("wallclock time")
+            plt.ylabel(metric)
+            plt.title(self.entrypoint_name() + " " + self.name)
+            plt.legend()
+            plt.show()
 
     def metric_mode(self) -> str:
         return self.metadata["metric_mode"]

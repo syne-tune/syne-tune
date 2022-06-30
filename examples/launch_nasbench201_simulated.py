@@ -66,8 +66,6 @@ if __name__ == "__main__":
         metric=metric,
         random_seed=random_seed,
     )
-    # Make scheduler aware of time_keeper
-    scheduler.set_time_keeper(trial_backend.time_keeper)
 
     max_wallclock_time = 600
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
