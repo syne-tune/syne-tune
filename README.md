@@ -157,6 +157,7 @@ You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalit
 * [How can I benchmark experiments from the command line?](docs/faq.md#benchmark-cli)
 * [What different schedulers do you support? What are the main differences between them?](docs/faq.md#schedulers-supported)
 * [How do I define the search space?](docs/faq.md#search-space) 
+* [How can I visualize the progress of my tuning experiment with Tensorboard?](docs/faq.md#tensorboard) 
 
 Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](docs/tutorials/basics/README.md)
