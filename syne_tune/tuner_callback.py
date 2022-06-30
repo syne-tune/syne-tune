@@ -152,12 +152,11 @@ class StoreResultsCallback(TunerCallback):
 
 
 class TensorboardCallback(TunerCallback):
-
     def __init__(
-            self,
-            ignore_metrics: Optional[List[str]] = None,
-            target_metric: Optional[str] = None,
-            mode: Optional[str] = 'min'
+        self,
+        ignore_metrics: Optional[List[str]] = None,
+        target_metric: Optional[str] = None,
+        mode: Optional[str] = "min",
     ):
         """
         Simple callback that logs metric reported in the train function such that we can visualize with Tensorboard.
@@ -185,7 +184,7 @@ class TensorboardCallback(TunerCallback):
         self.target_metric = target_metric
         self.trial_ids = set()
 
-        self.metric_sign = -1 if mode == 'max' else 1
+        self.metric_sign = -1 if mode == "max" else 1
 
     def _set_time_fields(self, result: Dict):
         """
@@ -201,20 +200,24 @@ class TensorboardCallback(TunerCallback):
 
         if self.target_metric is not None:
 
-            assert self.target_metric in result,  f"{self.target_metric} was not reported back to Syne tune"
+            assert (
+                self.target_metric in result
+            ), f"{self.target_metric} was not reported back to Syne tune"
             new_result = self.metric_sign * result[self.target_metric]
 
             if self.curr_best_value is None or self.curr_best_value > new_result:
                 self.curr_best_value = new_result
                 self.curr_best_config = trial.config
-                self.writer.add_scalar(self.target_metric, result[self.target_metric], self.iter)
+                self.writer.add_scalar(
+                    self.target_metric, result[self.target_metric], self.iter
+                )
 
             else:
                 opt = self.metric_sign * self.curr_best_value
                 self.writer.add_scalar(self.target_metric, opt, self.iter)
 
             for key, value in self.curr_best_config.items():
-                self.writer.add_scalar(f'optimal_{key}', value, self.iter)
+                self.writer.add_scalar(f"optimal_{key}", value, self.iter)
 
         for metric in result:
             if metric not in self.ignore_metrics:
@@ -223,22 +226,28 @@ class TensorboardCallback(TunerCallback):
         for key, value in trial.config.items():
             self.writer.add_scalar(key, value, self.iter)
 
-        self.writer.add_scalar('runtime', result[ST_TUNER_TIME], self.iter)
+        self.writer.add_scalar("runtime", result[ST_TUNER_TIME], self.iter)
 
         self.trial_ids.add(trial.trial_id)
-        self.writer.add_scalar('number_of_trials', len(self.trial_ids),
-                               self.iter, display_name='total number of trials')
+        self.writer.add_scalar(
+            "number_of_trials",
+            len(self.trial_ids),
+            self.iter,
+            display_name="total number of trials",
+        )
 
         self.iter += 1
 
     def on_tuning_start(self, tuner):
 
-        self.output_path = os.path.join(tuner.tuner_path, 'tensorboard_output')
+        self.output_path = os.path.join(tuner.tuner_path, "tensorboard_output")
 
         try:
             from tensorboardX import SummaryWriter
         except ImportError:
-            logger.error('TensoboardX is not installed. You can install it via: pip install tensorboardX')
+            logger.error(
+                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
+            )
         self.writer = SummaryWriter(self.output_path)
         self.iter = 0
         self.start_time_stamp = perf_counter()
@@ -258,7 +267,7 @@ class TensorboardCallback(TunerCallback):
             "target_metric": self.target_metric,
             "trial_ids": self.trial_ids,
             "metric_sign": self.metric_sign,
-            'output_path': self.output_path
+            "output_path": self.output_path,
         }
         return state
 
@@ -281,6 +290,8 @@ class TensorboardCallback(TunerCallback):
         try:
             from tensorboardX import SummaryWriter
         except ImportError:
-            logger.error('TensoboardX is not installed. You can install it via: pip install tensorboardX')
+            logger.error(
+                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
+            )
 
         self.writer = SummaryWriter(self.output_path)

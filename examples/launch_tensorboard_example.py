@@ -31,7 +31,7 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from syne_tune.tuner_callback import TensorboardCallback
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
 
     random_seed = 31415927
@@ -41,11 +41,14 @@ if __name__ == '__main__':
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
-        "height": randint(-100, 100)
+        "height": randint(-100, 100),
     }
     entry_point = str(
-        Path(__file__).parent / "training_scripts" / "height_example" /
-        "train_height.py")
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
     mode = "min"
     metric = "mean_loss"
 
@@ -53,10 +56,8 @@ if __name__ == '__main__':
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space,
-        mode=mode,
-        metric=metric,
-        random_seed=random_seed)
+        config_space, mode=mode, metric=metric, random_seed=random_seed
+    )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         results_update_interval=5,
         callbacks=[TensorboardCallback(target_metric=metric, mode=mode)],
         tuner_name="tensorboardx-demo",
-        metadata={'description': 'just an example'},
+        metadata={"description": "just an example"},
     )
 
     tuner.run()
