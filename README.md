@@ -1,42 +1,31 @@
-# Syne Tune
+# Syne Tune: Large-Scale and Reproducible Hyperparameter Optimization
 
 [![Release](https://img.shields.io/badge/release-0.2-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![Python Version](https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
 
-This package provides state-of-the-art distributed hyperparameter optimizers (HPO) where trials 
- can be evaluated with several trial backend options (local backend to evaluate trials locally;
-SageMaker to evaluate trials as separate SageMaker training jobs; a simulation backend to quickly benchmark parallel 
-asynchronous schedulers).
+![Alt Text](docs/synetune.gif)
+
+This package provides state-of-the-art distributed hyperparameter optimizers (HPO) with the following key features:
+* wide coverage (>20) of different HPO methods for asynchronous optimization with multiple workers, including:
+  * advanced multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER)
+  * transfer-learning optimizers that achieve better and better performance when used repeatedly
+  * multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency)
+* you can run HPO in different environments (locally, AWS, simulation) by changing one line of code
+* out-of-the-box tabulated benchmarks available for several domains with efficient simulations that allows you 
+  to get results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any
+  number of workers
 
 ## Installing
 
 To install Syne Tune from pip, you can simply do:
 
 ```bash
-pip install 'syne-tune'
+pip install 'syne-tune[extra]'
 ```
 
-This will install a bare-bone version. If you want in addition to install our own Gaussian process based optimizers, Ray Tune or Bore optimizer, 
-you can run `pip install 'syne-tune[X]'` where `X` can be 
-* `gpsearchers`: For built-in Gaussian process based optimizers
-* `raytune`: For Ray Tune optimizers
-* `benchmarks`: For installing all dependencies required to run all benchmarks
-* `extra`: For installing all the above
-* `bore`: For Bore optimizer
-* `kde`: For KDE optimizer
-
-For instance, `pip install 'syne-tune[gpsearchers]'` will install Syne Tune along with many built-in Gaussian process 
-optimizers.
-
-To install the latest version from git, run the following:
-
-```bash
-pip install git+https://github.com/awslabs/syne-tune.git
-```
-
-For local development, we recommend to use the following setup which will enable you to easily test your changes: 
+or to get the latest version from git: 
 
 ```bash
 pip install --upgrade pip
@@ -45,13 +34,7 @@ cd syne-tune
 pip install -e '.[extra]'
 ```
 
-To run unit tests, simply run `pytest` in the root of this repository.
-
-To run all tests whose name begins with `test_async_scheduler`, you can use the following
-```bash
-pytest -k test_async_scheduler
-```
-
+You can see the FAQ [What are the different installations options supported?](docs/faq.md) for more install options.
 
 ## Getting started
 
@@ -152,27 +135,28 @@ employs an easy-to-use benchmark convention
 
 You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalities. 
 
-* [How can I run on AWS and SageMaker?](docs/faq.md)
-* [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md)
-* [How can I utilize multiple GPUs?](docs/faq.md)
-* [What is the default mode when performing optimization?](docs/faq.md)
-* [How are trials evaluated when evaluating trials on a local machine?](docs/faq.md)
-* [What does the the output of the tuning contain?](docs/faq.md)
-* [How can I enable trial checkpointing?](docs/faq.md)
-* [Which schedulers make use of checkpointing?](docs/faq.md)
-* [Is the tuner checkpointed?](docs/faq.md)
-* [Where can I find the output of my trials?](docs/faq.md)
-* [Where can I find the output of the tuning?](docs/faq.md)
-* [How can I plot the results of a tuning?](docs/faq.md)
-* [How can I specify additional tuning metadata?](docs/faq.md)
-* [How do I append additional information to the results which are stored?](docs/faq.md) 
-* [I don’t want to wait, how can I launch the tuning on a remote machine?](docs/faq.md)
-* [How can I run many experiments in parallel?](docs/faq.md)
-* [How can I access results after tuning remotely?](docs/faq.md)
-* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](docs/faq.md)
-* [How can I benchmark experiments from the command line?](docs/faq.md)
-* [What different schedulers do you support? What are the main differences between them?](docs/faq.md)
-* [How do I define the search space?](docs/faq.md) 
+* [What are the different installations options supported?](docs/faq.md#installations)
+* [How can I run on AWS and SageMaker?](docs/faq.md#running-on-sagemaker)
+* [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md#reporter-metrics)
+* [How can I utilize multiple GPUs?](docs/faq.md#multiple-gpus)
+* [What is the default mode when performing optimization?](docs/faq.md#default-mode)
+* [How are trials evaluated on a local machine?](docs/faq.md#trial-execution)
+* [What does the output of the tuning contain?](docs/faq.md#tuning-output)
+* [Where can I find the output of the tuning?](docs/faq.md#tuning-output-location)
+* [How can I enable trial checkpointing?](docs/faq.md#trial-checkpointing)
+* [Which schedulers make use of checkpointing?](docs/faq.md#schedulers-checkpointing)
+* [Is the tuner checkpointed?](docs/faq.md#tuner-checkpointing)
+* [Where can I find the output of my trials?](docs/faq.md#trial-output)
+* [How can I plot the results of a tuning?](docs/faq.md#plotting-tuning)
+* [How can I specify additional tuning metadata?](docs/faq.md#additional-metadata)
+* [How do I append additional information to the results which are stored?](docs/faq.md#logging-additional-information) 
+* [I don’t want to wait, how can I launch the tuning on a remote machine?](docs/faq.md#remote-tuning)
+* [How can I run many experiments in parallel?](docs/faq.md#experiment-parallel)
+* [How can I access results after tuning remotely?](docs/faq.md#results-remote-tuning)
+* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](docs/faq.md#dependencies-remote)
+* [How can I benchmark experiments from the command line?](docs/faq.md#benchmark-cli)
+* [What different schedulers do you support? What are the main differences between them?](docs/faq.md#schedulers-supported)
+* [How do I define the search space?](docs/faq.md#search-space) 
 
 Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](docs/tutorials/basics/README.md)
@@ -189,18 +173,19 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 If you use Syne Tune in a scientific publication, please cite the following paper:
 
-Salinas et al. ["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning 2022
+["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning 2022
 
-Bibtex entry:
 
+```bibtex
 @inproceedings{
-salinas2022syne,
-title={Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research},
-author={David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
-booktitle={First Conference on Automated Machine Learning (Main Track)},
-year={2022},
-url={https://openreview.net/forum?id=BVeGJ-THIg9}
+  salinas2022syne,
+  title={Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research},
+  author={David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
+  booktitle={First Conference on Automated Machine Learning (Main Track)},
+  year={2022},
+  url={https://openreview.net/forum?id=BVeGJ-THIg9}
 }
+```
 
 ## License
 
