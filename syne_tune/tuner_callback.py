@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import numbers
 import os
 from time import perf_counter
 from typing import Dict, List, Tuple, Optional
@@ -195,7 +196,7 @@ class TensorboardCallback(TunerCallback):
             result[ST_TUNER_TIME] = perf_counter() - self.start_time_stamp
 
     def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
-
+        walltime = result[ST_TUNER_TIME]
         self._set_time_fields(result)
 
         if self.target_metric is not None:
@@ -209,30 +210,37 @@ class TensorboardCallback(TunerCallback):
                 self.curr_best_value = new_result
                 self.curr_best_config = trial.config
                 self.writer.add_scalar(
-                    self.target_metric, result[self.target_metric], self.iter
+                    self.target_metric, result[self.target_metric], self.iter, walltime
                 )
 
             else:
                 opt = self.metric_sign * self.curr_best_value
-                self.writer.add_scalar(self.target_metric, opt, self.iter)
+                self.writer.add_scalar(self.target_metric, opt, self.iter, walltime)
 
             for key, value in self.curr_best_config.items():
-                self.writer.add_scalar(f"optimal_{key}", value, self.iter)
+                if isinstance(value, numbers.Number):
+                    self.writer.add_scalar(f"optimal_{key}", value, self.iter, walltime)
+                else:
+                    self.writer.add_text(f"optimal_{key}", str(value), self.iter, walltime)
 
         for metric in result:
             if metric not in self.ignore_metrics:
-                self.writer.add_scalar(metric, result[metric], self.iter)
+                self.writer.add_scalar(metric, result[metric], self.iter, walltime)
 
         for key, value in trial.config.items():
-            self.writer.add_scalar(key, value, self.iter)
+            if isinstance(value, numbers.Number):
+                self.writer.add_scalar(key, value, self.iter, walltime)
+            else:
+                self.writer.add_text(key, str(value), self.iter, walltime)
 
-        self.writer.add_scalar("runtime", result[ST_TUNER_TIME], self.iter)
+        self.writer.add_scalar("runtime", result[ST_TUNER_TIME], self.iter, walltime)
 
         self.trial_ids.add(trial.trial_id)
         self.writer.add_scalar(
             "number_of_trials",
             len(self.trial_ids),
             self.iter,
+            walltime=walltime,
             display_name="total number of trials",
         )
 
@@ -251,9 +259,13 @@ class TensorboardCallback(TunerCallback):
         self.writer = SummaryWriter(self.output_path)
         self.iter = 0
         self.start_time_stamp = perf_counter()
+        logger.info(f"Logging tensorboard information at {self.output_path}, to visualize results, run\n"
+                    f"tensorboard --logdir {self.output_path}")
 
     def on_tuning_end(self):
         self.writer.close()
+        logger.info(f"Tensorboard information has been logged at {self.output_path}, to visualize results, run\n"
+                    f"tensorboard --logdir {self.output_path}")
 
     def __getstate__(self):
         state = {
