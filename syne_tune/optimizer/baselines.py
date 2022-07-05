@@ -15,6 +15,11 @@ from syne_tune.optimizer.schedulers.synchronous import (
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
+import numpy as np
+
+from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
+    QuantileBasedSurrogateSearcher,
+)
 
 
 class RandomSearch(FIFOScheduler):
@@ -266,6 +271,50 @@ class ZeroShotTransfer(FIFOScheduler):
         )
 
 
+class ASHACTS(HyperbandScheduler):
+    def __init__(
+        self,
+        config_space: Dict,
+        metric: str,
+        resource_attr: str,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        mode: str = "min",
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        """
+        Runs ASHA where the searcher is done with the transfer-learning method:
+        A Quantile-based Approach for Hyperparameter Transfer Learning.
+        David Salinas, Huibin Shen, Valerio Perrone. ICML 2020.
+        This is the Copula Thompson Sampling approach described in the paper where a surrogate is fitted on the
+        transfer learning data to predict mean/variance of configuration performance given a hyperparameter.
+        The surrogate is then sampled from and the best configurations are returned as next candidate to evaluate.
+        :param config_space:
+        :param metric:
+        :param resource_attr:
+        :param transfer_learning_evaluations:
+        :param mode:
+        :param random_seed:
+        :param kwargs:
+        """
+        super(ASHACTS, self).__init__(
+            config_space=config_space,
+            searcher=QuantileBasedSurrogateSearcher(
+                mode=mode,
+                config_space=config_space,
+                metric=metric,
+                transfer_learning_evaluations=transfer_learning_evaluations,
+                random_seed=random_seed
+                if random_seed
+                else np.random.randint(0, 2**32),
+            ),
+            mode=mode,
+            metric=metric,
+            resource_attr=resource_attr,
+            **kwargs,
+        )
+
+
 # dictionary that allows to also list baselines who don't need a wrapper class such as PBT.
 baselines_dict = {
     "Random Search": RandomSearch,
@@ -281,4 +330,6 @@ baselines_dict = {
     "SyncBOHB": SyncBOHB,
     "SyncMOBSTER": SyncMOBSTER,
     "ConstrainedBayesianOptimization": ConstrainedBayesianOptimization,
+    "ZeroShotTransfer": ZeroShotTransfer,
+    "ASHACTS": ASHACTS,
 }

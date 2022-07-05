@@ -63,10 +63,10 @@ class Reporter:
                 self.instance_count = literal_eval(
                     os.getenv(f"SM_HP_{ST_INSTANCE_COUNT.upper()}", "1")
                 )
-                logger.info(
-                    f"detected instance-type/instance-count to {self.instance_type}/{self.instance_count}"
-                )
                 if self.instance_type is not None:
+                    logger.info(
+                        f"detected instance-type/instance-count to {self.instance_type}/{self.instance_count}"
+                    )
                     instance_infos = InstanceInfos()
                     if self.instance_type in instance_infos.instances:
                         cost_per_hour = instance_infos(
