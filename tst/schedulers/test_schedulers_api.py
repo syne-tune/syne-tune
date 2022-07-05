@@ -11,7 +11,7 @@ import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.baselines import (  # noqa: F401
     RandomSearch,
     BayesianOptimization,
     ASHA,
