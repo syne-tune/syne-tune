@@ -1,6 +1,6 @@
 # Syne Tune: Large-Scale and Reproducible Hyperparameter Optimization
 
-[![Release](https://img.shields.io/badge/release-0.2-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![Release](https://img.shields.io/badge/release-0.3-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![Python Version](https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
@@ -22,7 +22,7 @@ This package provides state-of-the-art distributed hyperparameter optimizers (HP
 To install Syne Tune from pip, you can simply do:
 
 ```bash
-pip install 'syne-tune[extra]'
+pip install 'syne-tune[extra]==0.3.0'
 ```
 
 or to get the latest version from git: 
