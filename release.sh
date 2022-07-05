@@ -18,8 +18,8 @@ if [ "$#" -ne 1 ]; then
 fi
 
 version=$1
-version_file=syne_tune/version.py
-echo \"$version\" > "$version_file"
+version_file=syne_tune/version
+echo $version > "$version_file"
 
 python setup.py sdist bdist_wheel
 
@@ -28,6 +28,7 @@ git commit -am "Release $version"
 git tag v$version
 git push --set-upstream origin $version
 
+python -c "import syne_tune; print(syne_tune.__version__)"
 # requires a test Pypi and a Pypi account
 # checks upload on testpypi first
 # twine upload --verbose --repository-url https://test.pypi.org/legacy/ dist/*

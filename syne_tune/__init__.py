@@ -22,8 +22,8 @@ except ImportError:
 
 
 def read_version():
-    with open(Path(__file__).parent / "version.py", "r") as f:
-        return f.readline().replace('"', "")
+    with open(Path(__file__).parent / "version", "r") as f:
+        return f.readline().strip().replace('"', "")
 
 
 __version__ = read_version()
