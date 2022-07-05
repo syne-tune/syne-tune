@@ -88,7 +88,11 @@ class SimulatorCallback(StoreResultsCallback):
 
     def on_tuning_start(self, tuner: "Tuner"):
         super(SimulatorCallback, self).on_tuning_start(tuner=tuner)
-
+        if tuner.sleep_time != 0:
+            logger.warning(
+                "Setting sleep time of tuner to 0 as it is required for simulations."
+            )
+            tuner.sleep_time = 0
         backend = tuner.trial_backend
         assert isinstance(
             backend, SimulatorBackend

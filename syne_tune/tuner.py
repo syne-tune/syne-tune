@@ -215,7 +215,8 @@ class Tuner:
 
                 for callback in self.callbacks:
                     callback.on_loop_end()
-
+        except Exception as e:
+            logger.error(str(e))
         finally:
             # graceful termination block called when the tuner reached its stop condition, when an error happened or
             # when the job got interrupted (can happen in spot-instances or when sending a SIGINT signal with ctrl+C).

@@ -221,7 +221,9 @@ class TensorboardCallback(TunerCallback):
                 if isinstance(value, numbers.Number):
                     self.writer.add_scalar(f"optimal_{key}", value, self.iter, walltime)
                 else:
-                    self.writer.add_text(f"optimal_{key}", str(value), self.iter, walltime)
+                    self.writer.add_text(
+                        f"optimal_{key}", str(value), self.iter, walltime
+                    )
 
         for metric in result:
             if metric not in self.ignore_metrics:
@@ -259,13 +261,17 @@ class TensorboardCallback(TunerCallback):
         self.writer = SummaryWriter(self.output_path)
         self.iter = 0
         self.start_time_stamp = perf_counter()
-        logger.info(f"Logging tensorboard information at {self.output_path}, to visualize results, run\n"
-                    f"tensorboard --logdir {self.output_path}")
+        logger.info(
+            f"Logging tensorboard information at {self.output_path}, to visualize results, run\n"
+            f"tensorboard --logdir {self.output_path}"
+        )
 
     def on_tuning_end(self):
         self.writer.close()
-        logger.info(f"Tensorboard information has been logged at {self.output_path}, to visualize results, run\n"
-                    f"tensorboard --logdir {self.output_path}")
+        logger.info(
+            f"Tensorboard information has been logged at {self.output_path}, to visualize results, run\n"
+            f"tensorboard --logdir {self.output_path}"
+        )
 
     def __getstate__(self):
         state = {

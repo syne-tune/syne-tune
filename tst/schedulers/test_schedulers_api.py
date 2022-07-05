@@ -11,7 +11,7 @@ import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import (
+from syne_tune.optimizer.baselines import (  # noqa: F401
     RandomSearch,
     BayesianOptimization,
     ASHA,
@@ -21,6 +21,7 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     SyncMOBSTER,
     ZeroShotTransfer,
+    ASHACTS,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
@@ -256,6 +257,14 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             transfer_learning_evaluations=transfer_learning_evaluations,
             use_surrogates=True,
         ),
+        # Commented out for now as takes ~4s to run
+        # ASHACTS(
+        #     config_space=config_space,
+        #     metric=metric1,
+        #     transfer_learning_evaluations=transfer_learning_evaluations,
+        #     max_t=max_t,
+        #     resource_attr=resource_attr,
+        # ),
         FIFOScheduler(
             config_space,
             searcher=BotorchSearcher(
