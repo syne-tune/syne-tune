@@ -53,6 +53,7 @@ class Tuner:
         max_failures: int = 1,
         tuner_name: Optional[str] = None,
         asynchronous_scheduling: bool = True,
+        stop_immediately_when_stopping_criterion_met: bool = True,
         callbacks: Optional[List[TunerCallback]] = None,
         metadata: Optional[Dict] = None,
         suffix_tuner_name: bool = True,
@@ -76,6 +77,8 @@ class Tuner:
         :param asynchronous_scheduling: whether to use asynchronous scheduling when scheduling new trials. If `True`,
         trials are scheduled as soon as a worker is available, if `False`, the tuner waits that all trials are finished
          before scheduling a new batch.
+        :param stop_immediately_when_stopping_criterion_met: how to deal with running trials when stopping criterion is
+        met. If `True`, all trials are terminated, if `False`, the tuner waits that all trials are finished.
         :param callbacks: called when events happens in the tuning loop such as when a result is seen, by default
         a callback that stores results every `results_update_interval` is used.
         :param metadata: dictionary of user-metadata that will be persistend in {tuner_path}/metadata.json, in addition
@@ -91,6 +94,7 @@ class Tuner:
         self.results_update_interval = results_update_interval
         self.stop_criterion = stop_criterion
         self.asynchronous_scheduling = asynchronous_scheduling
+        self.stop_immediately_when_stopping_criterion_met = stop_immediately_when_stopping_criterion_met
         self.metadata = self._enrich_metadata(metadata)
 
         self.max_failures = max_failures
@@ -162,8 +166,9 @@ class Tuner:
             running_trials_ids = set()
 
             config_space_exhausted = False
+            stop_condition_reached = self._stop_condition()
 
-            while not self._stop_condition():
+            while not stop_condition_reached:
                 for callback in self.callbacks:
                     callback.on_loop_start()
 
@@ -188,14 +193,21 @@ class Tuner:
                 done_trials_statuses.update(new_done_trial_statuses)
                 running_trials_ids.difference_update(new_done_trial_statuses.keys())
 
-                if config_space_exhausted:
+                if config_space_exhausted or \
+                        self.stop_immediately_when_stopping_criterion_met and stop_condition_reached:
                     # if the search space is exhausted, we loop until the running trials are done or until the
                     # stop condition is reached
                     if len(running_trials_ids) > 0:
-                        logger.debug(
-                            f"Configuration space exhausted, waiting for completion of running trials "
-                            f"{running_trials_ids}"
-                        )
+                        if config_space_exhausted:
+                            logger.debug(
+                                f"Configuration space exhausted, waiting for completion of running trials "
+                                f"{running_trials_ids}"
+                            )
+                        else:
+                            logger.debug(
+                                f"Stopping criterion reached, waiting for completion of running trials "
+                                f"{running_trials_ids}"
+                            )
                         self._sleep()
                     else:
                         break
@@ -215,6 +227,8 @@ class Tuner:
 
                 for callback in self.callbacks:
                     callback.on_loop_end()
+
+                stop_condition_reached = self._stop_condition()
         except Exception as e:
             logger.error(str(e))
         finally:
