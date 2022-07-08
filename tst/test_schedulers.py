@@ -20,7 +20,7 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import (
 )
 from syne_tune import Tuner
 from syne_tune import StoppingCriterion
-from syne_tune.config_space import randint
+from syne_tune.config_space import randint, choice
 from syne_tune.util import script_checkpoint_example_path
 from tst.util_test import temporary_local_backend
 
@@ -28,7 +28,7 @@ from tst.util_test import temporary_local_backend
 _async_parameterizations = list(
     itertools.product(
         ["fifo", "hyperband_stopping", "hyperband_promotion"],
-        ["random", "bayesopt"],
+        ["random", "bayesopt", "grid"],
         ["min", "max"],
     )
 )
@@ -46,6 +46,10 @@ def test_async_scheduler(scheduler, searcher, mode):
         "height": randint(-100, 100),
         "sleep_time": 0.001,
     }
+    # GridSearcher only support Categorical parameters
+    if searcher == "grid":
+        config_space["width"] = choice([1, 2, 3, 4, 5])
+        config_space["height"] = choice([-3, -2, -1, 0, 1, 2, 3])
 
     entry_point = str(script_checkpoint_example_path())
     metric = "mean_loss"
@@ -92,7 +96,7 @@ def test_async_scheduler(scheduler, searcher, mode):
 
 
 _sync_parameterizations = list(
-    itertools.product(["random", "bayesopt"], ["min", "max"])
+    itertools.product(["random", "bayesopt", "grid"], ["min", "max"])
 )
 
 
@@ -108,6 +112,10 @@ def test_sync_scheduler(searcher, mode):
         "height": randint(-100, 100),
         "sleep_time": 0.001,
     }
+    # GridSearcher only support Categorical parameters
+    if searcher == "grid":
+        config_space["width"] = choice([1, 2, 3, 4, 5])
+        config_space["height"] = choice([-3, -2, -1, 0, 1, 2, 3])
 
     entry_point = str(script_checkpoint_example_path())
     metric = "mean_loss"

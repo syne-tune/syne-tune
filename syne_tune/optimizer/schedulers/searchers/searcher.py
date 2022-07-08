@@ -475,10 +475,10 @@ class RandomSearcher(SearcherWithRandomSeed):
 
 
 class GridSearcher(BaseSearcher):
-    """Searcher which generate all the configurations on search space grids
+    """Searcher which generate all the configurations from search space grid
     defined by config_space and suggest the next one to try.
     It will first suggest those specified in points_to_evalutate,
-    then the rest of the configurations on the grids
+    then the rest of the configurations on the grid
 
     Note: GridSearcher does not support `debug_log` anymore.
     Instead, using `logging.debug` which is the python standard way of logging
@@ -487,7 +487,7 @@ class GridSearcher(BaseSearcher):
     Parameters
     ----------
     config_space : Dict
-        The configuration space that defines search space grids. It contains
+        The configuration space that defines search space grid. It contains
         the full specification of the Hyperparameters, and the configurations
         generated is the combinations of these Hyperparameters.
     metric : str
@@ -497,7 +497,7 @@ class GridSearcher(BaseSearcher):
         Each config in the list can be partially specified,
         or even be an empty dict.
         Each specified hyperparameter must be within the config space. That is,
-        all the configurations in this list should be on the search space grids.
+        all the configurations in this list should be on the search space grid.
         For each hyperparameter not specified, the default value is determined
         using a midpoint heuristic.
         If None (default), this is mapped to [dict()], a single default config
@@ -614,3 +614,7 @@ class GridSearcher(BaseSearcher):
     def _restore_from_state(self, state: dict):
         super()._restore_from_state(state)
         self._excl_list = state["excl_list"].copy()
+
+    def _update(self, trial_id: str, config: Dict, result: Dict):
+        # GridSearcher does not contains a surrogate model, just return.
+        return

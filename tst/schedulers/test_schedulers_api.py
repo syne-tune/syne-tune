@@ -11,7 +11,8 @@ import numpy as np
 
 from examples.launch_height_standalone_scheduler import SimpleScheduler
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import (  # noqa: F401
+from syne_tune.optimizer.baselines import (
+    GridSearch,
     RandomSearch,
     BayesianOptimization,
     ASHA,
@@ -48,6 +49,13 @@ config_space = {
     "steps": 100,
     "x": randint(0, 20),
     "y": uniform(0, 1),
+    "z": choice(["a", "b", "c"]),
+}
+
+categorical_config_space = {
+    "steps": 100,
+    "x": choice(["0", "1", "2"]),
+    "y": choice([0, 1, 2]),
     "z": choice(["a", "b", "c"]),
 }
 
@@ -119,6 +127,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
         FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
         FIFOScheduler(config_space, searcher="bore", metric=metric1, mode=mode),
+        FIFOScheduler(categorical_config_space, searcher="grid", metric=metric1, mode=mode),
         HyperbandScheduler(
             config_space,
             searcher="random",
@@ -174,6 +183,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         ),
         SimpleScheduler(config_space=config_space, metric=metric1, mode=mode),
         RandomSearch(config_space=config_space, metric=metric1, mode=mode),
+        GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
         BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
         REA(
             config_space=config_space,
