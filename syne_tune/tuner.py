@@ -94,7 +94,9 @@ class Tuner:
         self.results_update_interval = results_update_interval
         self.stop_criterion = stop_criterion
         self.asynchronous_scheduling = asynchronous_scheduling
-        self.stop_immediately_when_stopping_criterion_met = stop_immediately_when_stopping_criterion_met
+        self.stop_immediately_when_stopping_criterion_met = (
+            stop_immediately_when_stopping_criterion_met
+        )
         self.metadata = self._enrich_metadata(metadata)
 
         self.max_failures = max_failures
@@ -193,8 +195,11 @@ class Tuner:
                 done_trials_statuses.update(new_done_trial_statuses)
                 running_trials_ids.difference_update(new_done_trial_statuses.keys())
 
-                if config_space_exhausted or \
-                        self.stop_immediately_when_stopping_criterion_met and stop_condition_reached:
+                if (
+                    config_space_exhausted
+                    or self.stop_immediately_when_stopping_criterion_met
+                    and stop_condition_reached
+                ):
                     # if the search space is exhausted, we loop until the running trials are done or until the
                     # stop condition is reached
                     if len(running_trials_ids) > 0:
