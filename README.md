@@ -36,6 +36,8 @@ pip install -e '.[extra]'
 
 You can see the FAQ [What are the different installations options supported?](docs/faq.md) for more install options.
 
+See our [change log](CHANGELOG.md) to see what changed in the latest version. 
+
 ## Getting started
 
 To enable tuning, you have to report metrics from a training script so that they can be communicated later to Syne Tune,
