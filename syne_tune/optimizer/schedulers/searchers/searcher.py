@@ -564,6 +564,22 @@ class GridSearcher(BaseSearcher):
 
         return new_config
 
+    def get_batch_configs(self, batch_size: int, **kwargs):
+        """
+        Asks for a batch of `batch_size` configurations to be suggested. This
+        is roughly equivalent to calling `get_config` `batch_size` times,
+
+        If less than `batch_size` configs are returned, the search space
+        has been exhausted.
+        """
+        assert round(batch_size) == batch_size and batch_size >= 1
+        configs = []
+        for _ in range(batch_size):
+            config = self.get_config(**kwargs)
+            if config is not None:
+                configs.append(config)
+        return configs
+
     def _validate_config_space(self, config_space: Dict):
         # GridSearcher now only support Categorical parameters
         for hp_range in config_space.values():

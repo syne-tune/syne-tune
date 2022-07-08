@@ -71,6 +71,30 @@ def test_non_shuffle():
         assert config == all_candidates_on_grid[i]
 
 
+def test_get_batch_configs():
+    config_space = {
+        "char_attr": choice(["a", "b"]),
+        "int_attr": choice([1, 2]),
+    }
+    all_candidates_on_grid = [
+        {"char_attr": "a", "int_attr": 1},
+        {"char_attr": "a", "int_attr": 2},
+        {"char_attr": "b", "int_attr": 1},
+        {"char_attr": "b", "int_attr": 2},
+    ]
+    for batch_size in range(1, len(all_candidates_on_grid) + 1):
+        searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
+        assert (
+            searcher.get_batch_configs(batch_size)
+            == all_candidates_on_grid[:batch_size]
+        )
+
+    # If `batch_size` is larger than search space, only returns the remaining candidate
+    TOO_LARGE_BATCH_SIZE = 100
+    searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
+    assert searcher.get_batch_configs(TOO_LARGE_BATCH_SIZE) == all_candidates_on_grid
+
+
 def test_store_and_restore_state():
     config_space = {
         "char_attr": choice(["a", "b"]),
