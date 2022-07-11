@@ -126,3 +126,6 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
 
     def on_trial_result(self, *args, **kwargs) -> str:
         return self.scheduler.on_trial_result(*args, **kwargs)
+
+    def metric_mode(self) -> str:
+        return self.scheduler.metric_mode()

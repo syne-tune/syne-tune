@@ -55,6 +55,7 @@ metric1 = "objective1"
 metric2 = "objective2"
 resource_attr = "step"
 max_t = 10
+mode = "max"
 
 
 def make_ray_skopt():
@@ -62,7 +63,7 @@ def make_ray_skopt():
 
     ray_searcher = SkOptSearch()
     ray_searcher.set_search_properties(
-        mode="min",
+        mode=mode,
         metric=metric1,
         config=RayTuneScheduler.convert_config_space(config_space),
     )
@@ -114,16 +115,17 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
 @pytest.mark.parametrize(
     "scheduler",
     [
-        FIFOScheduler(config_space, searcher="random", metric=metric1),
-        FIFOScheduler(config_space, searcher="bayesopt", metric=metric1),
-        FIFOScheduler(config_space, searcher="kde", metric=metric1),
-        FIFOScheduler(config_space, searcher="bore", metric=metric1),
+        FIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
+        FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
+        FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
+        FIFOScheduler(config_space, searcher="bore", metric=metric1, mode=mode),
         HyperbandScheduler(
             config_space,
             searcher="random",
             resource_attr=resource_attr,
             max_t=max_t,
             metric=metric1,
+            mode=mode,
         ),
         HyperbandScheduler(
             config_space,
@@ -131,6 +133,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             resource_attr=resource_attr,
             max_t=max_t,
             metric=metric1,
+            mode=mode,
         ),
         HyperbandScheduler(
             config_space,
@@ -138,6 +141,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             resource_attr=resource_attr,
             max_t=max_t,
             metric=metric1,
+            mode=mode,
         ),
         HyperbandScheduler(
             config_space,
@@ -146,43 +150,51 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             max_t=max_t,
             resource_attr=resource_attr,
             metric=metric1,
+            mode=mode,
         ),
         PopulationBasedTraining(
             config_space=config_space,
             metric=metric1,
             resource_attr=resource_attr,
             max_t=max_t,
+            mode=mode,
         ),
         RayTuneScheduler(
             config_space=config_space,
             ray_scheduler=AsyncHyperBandScheduler(
-                max_t=max_t, time_attr=resource_attr, mode="min", metric=metric1
+                max_t=max_t, time_attr=resource_attr, mode=mode, metric=metric1
             ),
         ),
         RayTuneScheduler(
             config_space=config_space,
             ray_scheduler=AsyncHyperBandScheduler(
-                max_t=max_t, time_attr=resource_attr, mode="min", metric=metric1
+                max_t=max_t, time_attr=resource_attr, mode=mode, metric=metric1
             ),
             ray_searcher=make_ray_skopt(),
         ),
-        SimpleScheduler(config_space=config_space, metric=metric1),
-        RandomSearch(config_space=config_space, metric=metric1),
-        BayesianOptimization(config_space=config_space, metric=metric1),
+        SimpleScheduler(config_space=config_space, metric=metric1, mode=mode),
+        RandomSearch(config_space=config_space, metric=metric1, mode=mode),
+        BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
         REA(
-            config_space=config_space, metric=metric1, population_size=1, sample_size=2
+            config_space=config_space,
+            metric=metric1,
+            population_size=1,
+            sample_size=2,
+            mode=mode,
         ),
         ASHA(
             config_space=config_space,
             metric=metric1,
             resource_attr=resource_attr,
             max_t=max_t,
+            mode=mode,
         ),
         MOBSTER(
             config_space=config_space,
             metric=metric1,
             resource_attr=resource_attr,
             max_t=max_t,
+            mode=mode,
         ),
         # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
         # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
@@ -190,9 +202,12 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             config_space=config_space,
             time_attr=resource_attr,
             metrics=[metric1, metric2],
+            mode=mode,
         ),
         MedianStoppingRule(
-            scheduler=FIFOScheduler(config_space, searcher="random", metric=metric1),
+            scheduler=FIFOScheduler(
+                config_space, searcher="random", metric=metric1, mode=mode
+            ),
             resource_attr=resource_attr,
             metric=metric1,
         ),
@@ -203,26 +218,26 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
                 metric=metric,
                 mode=mode,
             ),
-            mode="min",
+            mode=mode,
             config_space=config_space,
             metric=metric1,
             transfer_learning_evaluations=transfer_learning_evaluations,
         ),
         FIFOScheduler(
             searcher=QuantileBasedSurrogateSearcher(
-                mode="min",
+                mode=mode,
                 config_space=config_space,
                 metric=metric1,
                 transfer_learning_evaluations=transfer_learning_evaluations,
             ),
-            mode="min",
+            mode=mode,
             config_space=config_space,
             metric=metric1,
         ),
         RUSHScheduler(
             resource_attr=resource_attr,
             max_t=max_t,
-            mode="min",
+            mode=mode,
             config_space=config_space,
             metric=metric1,
             transfer_learning_evaluations=make_transfer_learning_evaluations(),
@@ -234,6 +249,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             max_resource_level=max_t,
             max_resource_attr="steps",
             brackets=3,
+            mode=mode,
         ),
         SyncMOBSTER(
             config_space=config_space,
@@ -242,6 +258,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             max_resource_level=max_t,
             max_resource_attr="steps",
             brackets=3,
+            mode=mode,
         ),
         SyncBOHB(
             config_space=config_space,
@@ -250,12 +267,14 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             max_resource_level=max_t,
             max_resource_attr="steps",
             brackets=3,
+            mode=mode,
         ),
         ZeroShotTransfer(
             config_space=config_space,
             metric=metric1,
             transfer_learning_evaluations=transfer_learning_evaluations,
             use_surrogates=True,
+            mode=mode,
         ),
         # Commented out for now as takes ~4s to run
         # ASHACTS(
@@ -268,9 +287,10 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         FIFOScheduler(
             config_space,
             searcher=BotorchSearcher(
-                config_space=config_space, metric=metric1, mode="min"
+                config_space=config_space, metric=metric1, mode=mode
             ),
             metric=metric1,
+            mode=mode,
         ),
     ],
 )
@@ -281,7 +301,7 @@ def test_async_schedulers_api(scheduler):
         assert scheduler.metric_names() == [metric1, metric2]
     else:
         assert scheduler.metric_names() == [metric1]
-    assert scheduler.metric_mode() == "min"
+    assert scheduler.metric_mode() == mode
 
     # checks suggestions are properly formatted
     trials = []
