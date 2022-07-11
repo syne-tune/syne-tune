@@ -15,7 +15,7 @@ import numpy as np
 from random import shuffle
 from typing import Dict, Optional, List, Tuple
 
-from syne_tune.config_space import Domain, is_log_space, Categorical
+from syne_tune.config_space import Domain, config_space_size, is_log_space, Categorical
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
@@ -475,14 +475,11 @@ class RandomSearcher(SearcherWithRandomSeed):
 
 
 class GridSearcher(BaseSearcher):
-    """Searcher which generate all the configurations from search space grid
-    defined by config_space and suggest the next one to try.
-    It will first suggest those specified in points_to_evalutate,
-    then the rest of the configurations on the grid
+    """Searcher that samples configurations from a equally spaced grid over config_space.
+    It first evaluates configurations defined in points_to_evaluate and then
+    continues with the remaining points from the grid"
 
-    Note: GridSearcher does not support `debug_log` anymore.
-    Instead, using `logging.debug` which is the python standard way of logging
-    debug information.
+    Note: GridSearcher only support Categorical hyperparameters for now
 
     Parameters
     ----------
@@ -490,6 +487,7 @@ class GridSearcher(BaseSearcher):
         The configuration space that defines search space grid. It contains
         the full specification of the Hyperparameters, and the configurations
         generated is the combinations of these Hyperparameters.
+        The specified hyperparameter must be Categorical for now.
     metric : str
         Name of metric passed to update.
     points_to_evaluate : List[Dict] or None
@@ -506,24 +504,32 @@ class GridSearcher(BaseSearcher):
     shuffle_config : bool
         If True (default), the order of configurations suggested after those
         specified in points_to_evalutate is shuffled. Otherwised, the order
-        will follow the Cartesian product of the configurations.
+        will follow the Cartesian product of the configurations, and the
+        hyperparameter specified first in the config space will be explore
+        first. For example (shuffle_config is False):
+        config_space = {'hp1': [1,2,3], 'hp2': [4,5], 'hp3': [6,7]}
+        order: (1, 4, 6), (2, 4, 6), (3, 4, 6), (1, 5, 6), (2, 5, 6), (3, 5, 6),
+            (1, 4, 7), (2, 4, 7), (3, 4, 7), (1, 5, 7), (2, 5, 7), (3, 5, 7)
     """
 
-    def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
+    def __init__(
+        self,
+        config_space,
+        metric,
+        points_to_evaluate=None,
+        shuffle_config=True,
+        **kwargs,
+    ):
         super().__init__(config_space, metric, points_to_evaluate)
         self._validate_config_space(config_space)
         self._hp_ranges = make_hyperparameter_ranges(config_space)
-        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
-        shuffle_config = kwargs.get("shuffle_config", True)
         if not isinstance(shuffle_config, bool):
             shuffle_config = True
         self._shuffle_config = shuffle_config
-        self._remain_candidates_on_grid = self._generate_all_candidates_on_grid(
-            config_space
-        )
+        self._remaining_candidates = self._generate_remaining_candidates()
 
     def get_config(self, **kwargs):
-        """Sample a new configuration from search space grid defined by config_space.
+        """Select the next configuration from the grid.
         This is done without replacement, so previously returned configs are
         not suggested again.
 
@@ -534,30 +540,21 @@ class GridSearcher(BaseSearcher):
         """
         new_config = self._next_initial_config()
         if new_config is None:
-            while True:
-                _config = self._next_candidate_on_grid()
-                if _config is None:
-                    # If searcher returns no config at all, the
-                    # search space is exhausted
-                    break
-                if not self._excl_list.contains(_config):
-                    new_config = _config
-                    break
+            new_config = self._next_candidate_on_grid()
 
         if new_config is not None:
-            # Add config to exclusion list so that it won't be suggested again
-            self._excl_list.add(new_config)
-
             # Write debug log for the the config
-            trial_id = kwargs.get("trial_id")
             entries = ["{}: {}".format(k, v) for k, v in new_config.items()]
             msg = "\n".join(entries)
-            logger.debug("get_config[grid] for trial_id {}\n {}".format(trial_id, msg))
+            trial_id = kwargs.get("trial_id")
+            if trial_id is not None:
+                msg = "get_config[grid] for trial_id {}\n".format(trial_id) + msg
+            else:
+                msg = "get_config[grid]: \n".format(trial_id) + msg
+            logger.debug(msg)
         else:
-            msg = "All the configuration has already been chosen. Exclusion list has size {}.".format(
-                len(self._excl_list)
-            )
-            cs_size = self._excl_list.configspace_size
+            msg = "All the configurations has already been evaluated."
+            cs_size = config_space_size(self.config_space)
             if cs_size is not None:
                 msg += " Configuration space has size".format(cs_size)
             logger.warning(msg)
@@ -581,16 +578,27 @@ class GridSearcher(BaseSearcher):
         return configs
 
     def _validate_config_space(self, config_space: Dict):
-        # GridSearcher now only support Categorical parameters
+        # GridSearcher only supports Categorical hyperparameters for now
         for hp_range in config_space.values():
             if isinstance(hp_range, Domain):
                 assert isinstance(hp_range, Categorical)
 
-    def _generate_all_candidates_on_grid(self, config_space: Dict) -> List[Dict]:
-        # Get hp values that is specified as Domain
+    def _generate_remaining_candidates(self) -> List[Dict]:
+        excl_list = ExclusionList.empty_list(self._hp_ranges)
+        for candidate in self._points_to_evaluate:
+            excl_list.add(candidate)
+        remaining_candidates = []
+        for candidate in self._generate_all_candidates_on_grid():
+            if not excl_list.contains(candidate):
+                remaining_candidates.append(candidate)
+                excl_list.add(candidate)
+        return remaining_candidates
+
+    def _generate_all_candidates_on_grid(self) -> List[Dict]:
+        # Get hp values that are specified as Domain
         hp_keys = []
         hp_values = []
-        for key, hp_range in config_space.items():
+        for key, hp_range in reversed(self.config_space.items()):
             if isinstance(hp_range, Domain):
                 hp_keys.append(key)
                 hp_values.append(hp_range.categories)
@@ -605,16 +613,16 @@ class GridSearcher(BaseSearcher):
         return all_candidates_on_grid
 
     def _next_candidate_on_grid(self) -> Optional[Dict]:
-        if self._remain_candidates_on_grid:
-            return self._remain_candidates_on_grid.pop(0)
+        if self._remaining_candidates:
+            return self._remaining_candidates.pop(0)
         else:
-            # No more candidate
+            # No more candidates
             return None
 
     def get_state(self) -> dict:
         state = dict(
             super().get_state(),
-            excl_list=self._excl_list,
+            remaining_candidates=self._remaining_candidates,
         )
         return state
 
@@ -629,7 +637,7 @@ class GridSearcher(BaseSearcher):
 
     def _restore_from_state(self, state: dict):
         super()._restore_from_state(state)
-        self._excl_list = state["excl_list"].copy()
+        self._remaining_candidates = state["remaining_candidates"].copy()
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
         # GridSearcher does not contains a surrogate model, just return.

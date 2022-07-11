@@ -15,22 +15,16 @@ from random import shuffle
 from syne_tune.optimizer.schedulers.searchers.searcher import GridSearcher
 from syne_tune.config_space import choice
 
-
-def test_generate_all_candidates_on_grid():
-    config_space = {
-        "char_attr": choice(["a", "b"]),
-        "int_attr": choice([1, 2]),
-    }
-    all_candidates_on_grid = [
-        {"char_attr": "a", "int_attr": 1},
-        {"char_attr": "a", "int_attr": 2},
-        {"char_attr": "b", "int_attr": 1},
-        {"char_attr": "b", "int_attr": 2},
-    ]
-    searcher = GridSearcher(config_space, metric="accuracy")
-    generate_result = searcher._remain_candidates_on_grid
-    for i in range(len(all_candidates_on_grid)):
-        assert generate_result[i] in all_candidates_on_grid
+config_space = {
+    "char_attr": choice(["a", "b"]),
+    "int_attr": choice([1, 2]),
+}
+all_candidates_on_grid = [
+    {"char_attr": "a", "int_attr": 1},
+    {"char_attr": "b", "int_attr": 1},
+    {"char_attr": "a", "int_attr": 2},
+    {"char_attr": "b", "int_attr": 2},
+]
 
 
 def test_get_config():
@@ -54,17 +48,14 @@ def test_get_config():
         assert config is None
 
 
+def test_generate_all_candidates_on_grid():
+    searcher = GridSearcher(config_space, metric="accuracy", points_to_evaluate=[])
+    generate_result = searcher._remaining_candidates
+    for i in range(len(all_candidates_on_grid)):
+        assert generate_result[i] in all_candidates_on_grid
+
+
 def test_non_shuffle():
-    config_space = {
-        "char_attr": choice(["a", "b"]),
-        "int_attr": choice([1, 2]),
-    }
-    all_candidates_on_grid = [
-        {"char_attr": "a", "int_attr": 1},
-        {"char_attr": "a", "int_attr": 2},
-        {"char_attr": "b", "int_attr": 1},
-        {"char_attr": "b", "int_attr": 2},
-    ]
     searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
     for i in range(len(all_candidates_on_grid)):
         config = searcher.get_config(trial_id=i)
@@ -72,16 +63,6 @@ def test_non_shuffle():
 
 
 def test_get_batch_configs():
-    config_space = {
-        "char_attr": choice(["a", "b"]),
-        "int_attr": choice([1, 2]),
-    }
-    all_candidates_on_grid = [
-        {"char_attr": "a", "int_attr": 1},
-        {"char_attr": "a", "int_attr": 2},
-        {"char_attr": "b", "int_attr": 1},
-        {"char_attr": "b", "int_attr": 2},
-    ]
     for batch_size in range(1, len(all_candidates_on_grid) + 1):
         searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
         assert (
@@ -95,18 +76,10 @@ def test_get_batch_configs():
     assert searcher.get_batch_configs(TOO_LARGE_BATCH_SIZE) == all_candidates_on_grid
 
 
-def test_store_and_restore_state():
-    config_space = {
-        "char_attr": choice(["a", "b"]),
-        "int_attr": choice([1, 2]),
-    }
-    all_candidates_on_grid = [
-        {"char_attr": "a", "int_attr": 1},
-        {"char_attr": "a", "int_attr": 2},
-        {"char_attr": "b", "int_attr": 1},
-        {"char_attr": "b", "int_attr": 2},
-    ]
-    searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
+def test_store_and_restore_state_without_initial_config():
+    searcher = GridSearcher(
+        config_space, metric="accuracy", point_to_evaluate=[], shuffle_config=False
+    )
     previous_config = searcher.get_config(trial_id=0)
     state = searcher.get_state()
     new_searcher = searcher.clone_from_state(state)
@@ -114,3 +87,23 @@ def test_store_and_restore_state():
     for i in range(1, len(all_candidates_on_grid)):
         new_config = new_searcher.get_config(trail_id=i)
         assert new_config == all_candidates_on_grid[i]
+
+
+def test_store_and_restore_state_with_initial_config():
+    inital_config = [
+        {"char_attr": "a", "int_attr": 1},
+        {"char_attr": "b", "int_attr": 2},
+    ]
+    searcher = GridSearcher(
+        config_space,
+        metric="accuracy",
+        points_to_evaluate=inital_config,
+        shuffle_config=False,
+    )
+    previous_config = searcher.get_config(trial_id=0)
+    state = searcher.get_state()
+    new_searcher = searcher.clone_from_state(state)
+    assert previous_config == all_candidates_on_grid[0]
+    for idx in [3, 1, 2]:
+        new_config = new_searcher.get_config(trail_id=idx)
+        assert new_config == all_candidates_on_grid[idx]
