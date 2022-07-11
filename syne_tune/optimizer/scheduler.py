@@ -230,4 +230,7 @@ class TrialScheduler:
         """
         :return: 'min' if target metric is minimized, otherwise 'max', 'min' is the default in all schedulers.
         """
-        return "min"
+        if hasattr(self, "mode"):
+            return self.mode
+        else:
+            raise NotImplementedError()

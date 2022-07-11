@@ -31,9 +31,10 @@ from syne_tune.config_space import randint
 
 
 class SimpleScheduler(TrialScheduler):
-    def __init__(self, config_space: Dict, metric: str):
+    def __init__(self, config_space: Dict, metric: str, mode: Optional[str] = None):
         super(SimpleScheduler, self).__init__(config_space=config_space)
         self.metric = metric
+        self.mode = mode if mode is not None else "min"
         self.sorted_results = []
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
@@ -56,6 +57,9 @@ class SimpleScheduler(TrialScheduler):
         index = np.searchsorted(self.sorted_results, new_metric)
         self.sorted_results = np.insert(self.sorted_results, index, new_metric)
         normalized_rank = index / float(len(self.sorted_results))
+
+        if self.mode == "max":
+            normalized_rank = 1 - normalized_rank
 
         if normalized_rank < 0.8:
             return SchedulerDecision.CONTINUE

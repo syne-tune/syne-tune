@@ -105,3 +105,6 @@ class MedianStoppingRule(TrialScheduler):
 
     def metric_names(self) -> List[str]:
         return self.scheduler.metric_names()
+
+    def metric_mode(self) -> str:
+        return self.scheduler.metric_mode()
