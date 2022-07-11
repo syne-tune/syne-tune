@@ -420,9 +420,6 @@ class RandomSearcher(SearcherWithRandomSeed):
         A new configuration that is valid, or None if no new config can be
         suggested.
         """
-        trial_id = kwargs.get("trial_id")
-        if self._debug_log is not None:
-            self._debug_log.start_get_config("random", trial_id=trial_id)
         new_config = self._next_initial_config()
         if new_config is None:
             if not self._excl_list.config_space_exhausted():
@@ -435,6 +432,8 @@ class RandomSearcher(SearcherWithRandomSeed):
         if new_config is not None:
             self._excl_list.add(new_config)  # Should not be suggested again
             if self._debug_log is not None:
+                trial_id = kwargs.get("trial_id")
+                self._debug_log.start_get_config("random", trial_id=trial_id)
                 self._debug_log.set_final_config(new_config)
                 # All get_config debug log info is only written here
                 self._debug_log.write_block()
