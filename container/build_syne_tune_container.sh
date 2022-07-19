@@ -9,6 +9,7 @@ rm -rf ./source && mkdir ./source
 cat ../requirements.txt >> ./source/requirements.txt
 cat ../requirements-gpsearchers.txt >> ./source/requirements.txt
 cat ../requirements-ray.txt >> ./source/requirements.txt
+cat ../requirements-bore.txt >> ./source/requirements.txt
 
 echo "installing the following dependencies in the docker image"
 echo `cat ./source/requirements.txt`
