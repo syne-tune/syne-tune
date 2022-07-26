@@ -598,7 +598,7 @@ class GridSearcher(BaseSearcher):
         # Get hp values that are specified as Domain
         hp_keys = []
         hp_values = []
-        for key, hp_range in reversed(self.config_space.items()):
+        for key, hp_range in reversed(list(self.config_space.items())):
             if isinstance(hp_range, Domain):
                 hp_keys.append(key)
                 hp_values.append(hp_range.categories)

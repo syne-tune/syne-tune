@@ -22,7 +22,7 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     SyncMOBSTER,
     ZeroShotTransfer,
-    ASHACTS,
+    # ASHACTS,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
@@ -127,7 +127,9 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
         FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
         FIFOScheduler(config_space, searcher="bore", metric=metric1, mode=mode),
-        FIFOScheduler(categorical_config_space, searcher="grid", metric=metric1, mode=mode),
+        FIFOScheduler(
+            categorical_config_space, searcher="grid", metric=metric1, mode=mode
+        ),
         HyperbandScheduler(
             config_space,
             searcher="random",

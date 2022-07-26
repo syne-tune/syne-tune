@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-from random import shuffle
 from syne_tune.optimizer.schedulers.searchers.searcher import GridSearcher
 from syne_tune.config_space import choice
 
