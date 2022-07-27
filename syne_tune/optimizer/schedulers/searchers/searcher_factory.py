@@ -17,7 +17,10 @@ from syne_tune.try_import import (
     try_import_kde_message,
     try_import_bore_message,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher import RandomSearcher
+from syne_tune.optimizer.schedulers.searchers.searcher import (
+    RandomSearcher,
+    GridSearcher,
+)
 
 __all__ = ["searcher_factory"]
 
@@ -47,6 +50,8 @@ def searcher_factory(searcher_name, **kwargs):
     model = kwargs.get("model", "gp_multitask")
     if searcher_name == "random":
         searcher_cls = RandomSearcher
+    elif searcher_name == "grid":
+        searcher_cls = GridSearcher
     elif searcher_name == "kde":
         try:
             from syne_tune.optimizer.schedulers.searchers.kde_searcher import (

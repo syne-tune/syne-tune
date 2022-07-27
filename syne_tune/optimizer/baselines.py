@@ -32,6 +32,16 @@ class RandomSearch(FIFOScheduler):
         )
 
 
+class GridSearch(FIFOScheduler):
+    def __init__(self, config_space: Dict, metric: str, **kwargs):
+        super(GridSearch, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher="grid",
+            **kwargs,
+        )
+
+
 class BayesianOptimization(FIFOScheduler):
     def __init__(self, config_space: Dict, metric: str, **kwargs):
         super(BayesianOptimization, self).__init__(
@@ -318,6 +328,7 @@ class ASHACTS(HyperbandScheduler):
 # dictionary that allows to also list baselines who don't need a wrapper class such as PBT.
 baselines_dict = {
     "Random Search": RandomSearch,
+    "Grid Search": GridSearch,
     "Bayesian Optimization": BayesianOptimization,
     "ASHA": ASHA,
     "MOBSTER": MOBSTER,
