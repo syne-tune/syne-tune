@@ -15,7 +15,7 @@ from typing import List, Optional, Dict
 import logging
 import numpy as np
 
-from syne_tune.blackbox_repository import load, add_surrogate
+from syne_tune.blackbox_repository import load_blackbox, add_surrogate
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.utils import metrics_for_configuration
@@ -31,7 +31,6 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
     def __init__(
         self,
         elapsed_time_attr: str,
-        time_this_resource_attr: Optional[str] = None,
         max_resource_attr: Optional[str] = None,
         seed: Optional[int] = None,
         **simulatorbackend_kwargs,
@@ -47,15 +46,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         evaluation. For example, if resource (or fidelity) equates to epochs
         trained, this would be the time from start of training until the end
         of the epoch. If the blackbox contains this information in a column,
-        `elapsed_time_attr` should be its key, and `time_this_resource_attr`
-        should be ignored.
-
-        Some blackboxes only maintain the time required for the current resource,
-        counting from the one before. In the example, this would be the time
-        spent for the current epoch only. In this case, specify the
-        corresponding column name in `time_this_resource_attr`. The corresponding
-        values of `elapsed_time_attr` will then be generated as cumulative sums
-        and appended to results when passing them to the simulator back-end.
+        `elapsed_time_attr` should be its key.
 
         ATTENTION: If the blackbox maintains cumulative time (elapsed_time),
         this is different from what :class:`SimulatorBackend` requires for
@@ -77,7 +68,6 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         same trial. This is important for pause and resume scheduling.
 
         :param elapsed_time_attr: See above
-        :param time_this_resource_attr: See above
         :param max_resource_attr: See above
         :param seed: See above
         """
@@ -87,7 +77,6 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
             elapsed_time_attr=elapsed_time_attr,
             **simulatorbackend_kwargs,
         )
-        self._time_this_resource_attr = time_this_resource_attr
         self._max_resource_attr = max_resource_attr
         self.simulatorbackend_kwargs = simulatorbackend_kwargs
         self._seed = seed
@@ -141,12 +130,6 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
 
         # Fetch all results for this trial from the table
         all_results = self.config_objectives(config, seed=seed)
-        # Compute and append `elapsed_time_attr` if not provided
-        if self._time_this_resource_attr is not None:
-            cumulative_sum = 0
-            for result in all_results:
-                cumulative_sum += result[self._time_this_resource_attr]
-                result[self.elapsed_time_attr] = cumulative_sum
 
         status = Status.completed
         num_already_before = self._last_metric_seen_index[trial_id]
@@ -218,7 +201,6 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self,
         blackbox_name: str,
         elapsed_time_attr: str,
-        time_this_resource_attr: Optional[str] = None,
         max_resource_attr: Optional[str] = None,
         seed: Optional[int] = None,
         dataset: Optional[str] = None,
@@ -234,8 +216,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         `blackbox_repository/README.md`.
 
         :param blackbox_name: name of a blackbox, should have been registered in blackbox repository.
-        :param elapsed_time_attr:
-        :param time_this_resource_attr:
+        :param elapsed_time_attr: name of the column containing cumulative time
         :param max_resource_attr:
         :param dataset: Selects different versions of the blackbox
         :param surrogate: optionally, a model that is fitted to predict objectives given any configuration.
@@ -257,7 +238,6 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         ), "config_space_surrogate only together with surrogate"
         super().__init__(
             elapsed_time_attr=elapsed_time_attr,
-            time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
             seed=seed,
             **simulatorbackend_kwargs,
@@ -283,14 +263,14 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
     def blackbox(self) -> Blackbox:
         if self._blackbox is None:
             if self.dataset is None:
-                self._blackbox = load(self.blackbox_name)
+                self._blackbox = load_blackbox(self.blackbox_name)
                 # TODO: This could fail earlier
                 assert not isinstance(self._blackbox, dict), (
                     f"blackbox_name = '{self.blackbox_name}' maps to a dict, "
                     + "dataset argument must be given"
                 )
             else:
-                self._blackbox = load(self.blackbox_name)[self.dataset]
+                self._blackbox = load_blackbox(self.blackbox_name)[self.dataset]
             if self._surrogate is not None:
                 surrogate = make_surrogate(
                     surrogate=self._surrogate, surrogate_kwargs=self._surrogate_kwargs
@@ -308,7 +288,6 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         # its raw data does not need to be saved.
         state = {
             "elapsed_time_attr": self.elapsed_time_attr,
-            "time_this_resource_attr": self._time_this_resource_attr,
             "max_resource_attr": self._max_resource_attr,
             "seed": self._seed,
             "seed_for_trial": self._seed_for_trial,
@@ -327,7 +306,6 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
     def __setstate__(self, state):
         super().__init__(
             elapsed_time_attr=state["elapsed_time_attr"],
-            time_this_resource_attr=state["time_this_resource_attr"],
             max_resource_attr=state["max_resource_attr"],
             seed=state["seed"],
             **state["simulatorbackend_kwargs"],
@@ -351,7 +329,6 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
         self,
         blackbox: Blackbox,
         elapsed_time_attr: str,
-        time_this_resource_attr: Optional[str] = None,
         max_resource_attr: Optional[str] = None,
         seed: Optional[int] = None,
         **simulatorbackend_kwargs,
@@ -362,12 +339,10 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
         :param blackbox: blackbox to be used for simulation, see `examples/launch_simulated_benchmark.py` for an example
             on how to use.
         :param elapsed_time_attr:
-        :param time_this_resource_attr:
         :param max_resource_attr:
         """
         super().__init__(
             elapsed_time_attr=elapsed_time_attr,
-            time_this_resource_attr=time_this_resource_attr,
             max_resource_attr=max_resource_attr,
             seed=seed,
             **simulatorbackend_kwargs,

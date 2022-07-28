@@ -10,7 +10,6 @@ class BenchmarkDefinition:
     mode: str
     blackbox_name: str
     dataset_name: str
-    time_this_resource_attr: str = None
 
 
 def fcnet_benchmark(dataset_name):
@@ -30,7 +29,6 @@ def nas201_benchmark(dataset_name):
         max_wallclock_time=3600 * 4,
         n_workers=4,
         elapsed_time_attr="metric_elapsed_time",
-        time_this_resource_attr="metric_runtime",
         metric="metric_valid_error",
         mode="min",
         blackbox_name="nasbench201",

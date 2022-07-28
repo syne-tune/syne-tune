@@ -7,32 +7,26 @@ recorded, in addition blackbox can be used to simulate asynchronous HPO experime
 ## Loading an existing blackbox
 
 A blackbox dataset can be loaded by specifying its name and the dataset that needs to be obtained:
-````python
-from blackbox_repository import load
-blackbox = load("nasbench201")["cifar100"]
-````
+```python
+from syne_tune.blackbox_repository import load_blackbox
+blackbox = load_blackbox("nasbench201")["cifar100"]
+```
 
 
 The blackbox can then be called to obtain recorded evaluations:
-````python
-from blackbox_repository import load
-blackbox = load("nasbench201")["cifar100"]
+```python
+from syne_tune.blackbox_repository import load_blackbox
+blackbox = load_blackbox("nasbench201")["cifar100"]
 config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
 print(blackbox(config, fidelity={'epochs': 10}))
 # {'metric_error': 0.7501,
 # 'metric_runtime': 231.6001,
 # 'metric_eval_runtime': 23.16001}
-````
+```
 
 If the dataset is not found locally, it is regenerated and saved to S3 into Sagemaker bucket.
 
 See [examples/launch_simulated_benchmark.py](../../examples/launch_simulated_benchmark.py) for examples.
-
-## Adding a new dataset
-
-To add a new dataset of tabular evaluations, you need to 
-1) write a function able to regenerate it (see fcnet_import.py for an example)
-2) add your generate in `recipes.py` in `generate_blackbox_recipe`.
 
 ## Simulating an HPO
 

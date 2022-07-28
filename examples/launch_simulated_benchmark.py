@@ -4,7 +4,7 @@ import pandas as pd
 import syne_tune.config_space as sp
 
 from syne_tune.blackbox_repository import (
-    load,
+    load_blackbox,
     add_surrogate,
     BlackboxRepositoryBackend,
     UserBlackboxBackend,
@@ -87,17 +87,12 @@ if __name__ == "__main__":
 
     ## example of loading nasbench201 and then simulating tuning
     blackbox_name, dataset, metric = "nasbench201", "cifar100", "metric_valid_error"
-    # Note: The nasbench201 blackbox does not have an `elapsed_time_attr`,
-    # but only a `time_this_resource_attr`. The former is appended as the
-    # cumulative sum of the latter in the backend implementation.
-    time_this_resource_attr = "metric_runtime"
     elapsed_time_attr = "metric_elapsed_time"
-    blackbox = load(blackbox_name)[dataset]
+    blackbox = load_blackbox(blackbox_name)[dataset]
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         dataset=dataset,
         elapsed_time_attr=elapsed_time_attr,
-        time_this_resource_attr=time_this_resource_attr,
     )
     simulate_benchmark(blackbox=blackbox, trial_backend=trial_backend, metric=metric)
 

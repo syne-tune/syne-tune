@@ -198,7 +198,9 @@ class BlackboxTabular(Blackbox):
         return f"tabular blackbox: {stats_str}"
 
 
-def serialize(bb_dict: Dict[str, BlackboxTabular], path: str):
+def serialize(
+    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+):
     # check all blackboxes share the same search space and have evaluated the same hyperparameters
     # pick an arbitrary blackbox
     bb_first = next(iter(bb_dict.values()))
@@ -239,12 +241,16 @@ def serialize(bb_dict: Dict[str, BlackboxTabular], path: str):
     with open(path / "fidelities_values.npy", "wb") as f:
         np.save(f, bb_first.fidelity_values, allow_pickle=False)
 
-    serialize_metadata(
-        path=path,
-        metadata={
+    metadata = metadata.copy() if metadata else {}
+    metadata.update(
+        {
             "objectives_names": bb_first.objectives_names,
             "task_names": list(bb_dict.keys()),
-        },
+        }
+    )
+    serialize_metadata(
+        path=path,
+        metadata=metadata,
     )
 
 

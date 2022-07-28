@@ -6,7 +6,7 @@ import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
-from syne_tune.blackbox_repository import load
+from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
@@ -38,7 +38,7 @@ def get_transfer_learning_evaluations(
     :param n_evals: maximum number of evaluations to be returned
     :return:
     """
-    task_to_evaluations = load(blackbox_name)
+    task_to_evaluations = load_blackbox(blackbox_name)
 
     # todo retrieve right metric
     metric_index = 0
@@ -145,7 +145,6 @@ if __name__ == "__main__":
 
         backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
-            time_this_resource_attr=benchmark.time_this_resource_attr,
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
             surrogate=benchmark.surrogate,

@@ -49,7 +49,6 @@ if __name__ == "__main__":
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         elapsed_time_attr=benchmark["elapsed_time_attr"],
-        time_this_resource_attr=benchmark.get("time_this_resource_attr"),
         dataset=dataset_name,
     )
 

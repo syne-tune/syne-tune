@@ -6,6 +6,14 @@ import numpy as np
 import logging
 
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from syne_tune.blackbox_repository.conversion_scripts.BlackboxRecipe import (
+    BlackboxRecipe,
+)
+from syne_tune.blackbox_repository.conversion_scripts.scripts import (
+    metric_elapsed_time,
+    default_metric,
+    resource_attr,
+)
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 
 from syne_tune.config_space import randint, choice
@@ -65,6 +73,7 @@ def convert_dataset(data, dataset):
         "valid_error",
         "train_error",
         "runtime",
+        "elapsed_time",
         "latency",
         "flops",
         "params",
@@ -131,6 +140,7 @@ def convert_dataset(data, dataset):
     save_objective_values_helper("valid_error", impute(ve))
     save_objective_values_helper("train_error", impute(te))
     save_objective_values_helper("runtime", impute(rt))
+    save_objective_values_helper("elapsed_time", np.cumsum(impute(rt), axis=-1))
 
     latency = np.array(
         [
@@ -185,70 +195,79 @@ def convert_dataset(data, dataset):
     )
 
 
-# TODO: Try to save dummy file to S3 at start, to fail fast if the user
-# has no write access
-def generate_nasbench201(s3_root: Optional[str] = None):
-    logger.info(
-        "\nGenerating NASBench201 blackbox from sources and persisting to S3:\n"
-        "This takes quite some time, a substantial amount of memory, and about "
-        "1.8 GB of local disk space.\n"
-        "If this procedure fails, please re-run it on a machine with sufficient resources"
-    )
-    file_name = repository_path / "NATS-tss-v1_0-3ffb9.pickle.pbz2"
-    if not file_name.exists():
-        logger.info(f"did not find {file_name}, downloading")
-        with catchtime("downloading compressed file"):
-            import requests
+class NASBench201Recipe(BlackboxRecipe):
+    def __init__(self):
+        super(NASBench201Recipe, self).__init__(
+            name="nasbench201",
+            cite_reference="NAS-Bench-201: Extending the scope of reproducible neural architecture search. "
+            "Dong, X. and Yang, Y. 2020.",
+        )
 
-            def download_file_from_google_drive(id, destination):
-                URL = "https://docs.google.com/uc?export=download"
+    def _generate_on_disk(self):
+        logger.info(
+            "\nGenerating NASBench201 blackbox from sources and persisting to S3:\n"
+            "This takes quite some time, a substantial amount of memory, and about "
+            "1.8 GB of local disk space.\n"
+            "If this procedure fails, please re-run it on a machine with sufficient resources"
+        )
+        file_name = repository_path / "NATS-tss-v1_0-3ffb9.pickle.pbz2"
+        if not file_name.exists():
+            logger.info(f"did not find {file_name}, downloading")
+            with catchtime("downloading compressed file"):
+                import requests
 
-                session = requests.Session()
+                def download_file_from_google_drive(id, destination):
+                    URL = "https://docs.google.com/uc?export=download"
 
-                params = {"id": id, "confirm": True}
-                response = session.get(URL, params=params, stream=True)
+                    session = requests.Session()
 
-                save_response_content(response, destination)
+                    params = {"id": id, "confirm": True}
+                    response = session.get(URL, params=params, stream=True)
 
-            def save_response_content(response, destination):
-                CHUNK_SIZE = 32768
+                    save_response_content(response, destination)
 
-                with open(destination, "wb") as f:
-                    for chunk in response.iter_content(CHUNK_SIZE):
-                        if chunk:  # filter out keep-alive new chunks
-                            f.write(chunk)
+                def save_response_content(response, destination):
+                    CHUNK_SIZE = 32768
 
-            download_file_from_google_drive(
-                "1vzyK0UVH2D3fTpa1_dSWnp1gvGpAxRul", file_name
+                    with open(destination, "wb") as f:
+                        for chunk in response.iter_content(CHUNK_SIZE):
+                            if chunk:  # filter out keep-alive new chunks
+                                f.write(chunk)
+
+                download_file_from_google_drive(
+                    "1vzyK0UVH2D3fTpa1_dSWnp1gvGpAxRul", file_name
+                )
+        else:
+            logger.info(f"found {file_name} locally, will use that one")
+
+        with catchtime("uncompressing and loading"):
+            f = bz2.BZ2File(file_name, "rb")
+            data = pickle.load(f)
+
+        bb_dict = {}
+        for dataset in ["cifar10", "cifar100", "ImageNet16-120"]:
+            with catchtime(f"converting {dataset}"):
+                bb_dict[dataset] = convert_dataset(data, dataset)
+
+        with catchtime("saving to disk"):
+            serialize(
+                bb_dict=bb_dict,
+                path=repository_path / BLACKBOX_NAME,
+                metadata={
+                    metric_elapsed_time: "elapsed_time",
+                    default_metric: METRIC_VALID_ERROR,
+                    resource_attr: RESOURCE_ATTR,
+                },
             )
-    else:
-        logger.info(f"found {file_name} locally, will use that one")
-
-    with catchtime("uncompressing and loading"):
-        f = bz2.BZ2File(file_name, "rb")
-        data = pickle.load(f)
-
-    bb_dict = {}
-    for dataset in ["cifar10", "cifar100", "ImageNet16-120"]:
-        with catchtime(f"converting {dataset}"):
-            bb_dict[dataset] = convert_dataset(data, dataset)
-
-    with catchtime("saving to disk"):
-        serialize(bb_dict=bb_dict, path=repository_path / BLACKBOX_NAME)
-
-    with catchtime("uploading to S3"):
-        from syne_tune.blackbox_repository.conversion_scripts.utils import upload
-
-        upload(BLACKBOX_NAME, s3_root=s3_root)
 
 
 if __name__ == "__main__":
-    generate_nasbench201()
+    NASBench201Recipe().generate()
 
     # plot one learning-curve for sanity-check
-    from syne_tune.blackbox_repository import load
+    from syne_tune.blackbox_repository import load_blackbox
 
-    bb_dict = load(BLACKBOX_NAME)
+    bb_dict = load_blackbox(BLACKBOX_NAME)
 
     b = bb_dict["cifar10"]
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}

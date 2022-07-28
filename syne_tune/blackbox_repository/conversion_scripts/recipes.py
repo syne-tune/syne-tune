@@ -1,21 +1,24 @@
+from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
+    DeepARRecipe,
+    XGBoostRecipe,
+)
 from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench import (
-    generate_lcbench,
+    LCBenchRecipe,
 )
 from syne_tune.blackbox_repository.conversion_scripts.scripts.nasbench201_import import (
-    generate_nasbench201,
+    NASBench201Recipe,
 )
 from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
-    generate_fcnet,
-)
-from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
-    generate_deepar,
-    generate_xgboost,
+    FCNETRecipe,
 )
 
-generate_blackbox_recipe = {
-    "icml-deepar": generate_deepar,
-    "icml-xgboost": generate_xgboost,
-    "nasbench201": generate_nasbench201,
-    "fcnet": generate_fcnet,
-    "lcbench": generate_lcbench,
-}
+# add a blackbox recipe here to expose it in Syne Tune
+recipes = [
+    DeepARRecipe(),
+    XGBoostRecipe(),
+    NASBench201Recipe(),
+    FCNETRecipe(),
+    LCBenchRecipe(),
+]
+
+generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}

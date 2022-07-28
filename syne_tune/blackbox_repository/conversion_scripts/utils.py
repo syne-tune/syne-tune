@@ -24,7 +24,7 @@ def s3_blackbox_folder(s3_root: Optional[str] = None):
 repository_path = Path("~/.blackbox-repository/").expanduser()
 
 
-def upload(name: str, s3_root: Optional[str] = None):
+def upload_blackbox(name: str, s3_root: Optional[str] = None):
     """
     Uploads a blackbox locally present in repository_path to S3.
     :param name: folder must be available in repository_path/name

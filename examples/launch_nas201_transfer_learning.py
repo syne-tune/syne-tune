@@ -1,6 +1,6 @@
 from typing import Dict
 
-from syne_tune.blackbox_repository import load, BlackboxRepositoryBackend
+from syne_tune.blackbox_repository import load_blackbox, BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.schedulers import FIFOScheduler
@@ -14,7 +14,7 @@ from syne_tune import StoppingCriterion, Tuner
 def load_transfer_learning_evaluations(
     blackbox_name: str, test_task: str, metric: str
 ) -> Dict[str, TransferLearningTaskEvaluations]:
-    bb_dict = load(blackbox_name)
+    bb_dict = load_blackbox(blackbox_name)
     metric_index = [
         i
         for i, name in enumerate(bb_dict[test_task].objectives_names)
@@ -39,10 +39,9 @@ if __name__ == "__main__":
     blackbox_name = "nasbench201"
     test_task = "cifar100"
     elapsed_time_attr = "metric_elapsed_time"
-    time_this_resource_attr = "metric_runtime"
     metric = "metric_valid_error"
 
-    bb_dict = load(blackbox_name)
+    bb_dict = load_blackbox(blackbox_name)
     transfer_learning_evaluations = load_transfer_learning_evaluations(
         blackbox_name, test_task, metric
     )
@@ -67,7 +66,6 @@ if __name__ == "__main__":
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         elapsed_time_attr=elapsed_time_attr,
-        time_this_resource_attr=time_this_resource_attr,
         dataset=test_task,
     )
 

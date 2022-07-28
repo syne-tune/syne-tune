@@ -1,11 +1,18 @@
 import zipfile
 import urllib
-from typing import Optional
 
 import pandas as pd
 import numpy as np
 
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from syne_tune.blackbox_repository.conversion_scripts.BlackboxRecipe import (
+    BlackboxRecipe,
+)
+from syne_tune.blackbox_repository.conversion_scripts.scripts import (
+    metric_elapsed_time,
+    default_metric,
+    resource_attr,
+)
 from syne_tune.config_space import randint, lograndint, uniform, loguniform
 from syne_tune.util import catchtime
 from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.api import (
@@ -65,31 +72,41 @@ def convert_task(bench, dataset_name):
     )
 
 
-def generate_lcbench(s3_root: Optional[str] = None):
-    blackbox_name = BLACKBOX_NAME
-    data_file = repository_path / "data_2k_lw.zip"
-    if not data_file.exists():
-        src = "https://figshare.com/ndownloader/files/21188598"
-        print(f"did not find {data_file}, downloading {src}")
-        urllib.request.urlretrieve(src, data_file)
+class LCBenchRecipe(BlackboxRecipe):
+    def __init__(self):
+        super(LCBenchRecipe, self).__init__(
+            name=BLACKBOX_NAME,
+            cite_reference="Auto-PyTorch: Multi-Fidelity MetaLearning for Efficient and Robust AutoDL. "
+            "Lucas Zimmer, Marius Lindauer, Frank Hutter. 2020.",
+        )
 
-    with zipfile.ZipFile(data_file, "r") as zip_ref:
-        zip_ref.extractall(repository_path)
+    def _generate_on_disk(self):
+        data_file = repository_path / "data_2k_lw.zip"
+        if not data_file.exists():
+            src = "https://figshare.com/ndownloader/files/21188598"
+            print(f"did not find {data_file}, downloading {src}")
+            urllib.request.urlretrieve(src, data_file)
 
-    with catchtime("converting"):
-        bench = Benchmark(str(repository_path / "data_2k_lw.json"), cache=False)
-        bb_dict = {
-            task: convert_task(bench, task) for task in bench.get_dataset_names()
-        }
+        with zipfile.ZipFile(data_file, "r") as zip_ref:
+            zip_ref.extractall(repository_path)
 
-    with catchtime("saving to disk"):
-        serialize(bb_dict=bb_dict, path=repository_path / blackbox_name)
+        with catchtime("converting"):
+            bench = Benchmark(str(repository_path / "data_2k_lw.json"), cache=False)
+            bb_dict = {
+                task: convert_task(bench, task) for task in bench.get_dataset_names()
+            }
 
-    with catchtime("uploading to s3"):
-        from syne_tune.blackbox_repository.conversion_scripts.utils import upload
-
-        upload(blackbox_name, s3_root=s3_root)
+        with catchtime("saving to disk"):
+            serialize(
+                bb_dict=bb_dict,
+                path=repository_path / self.name,
+                metadata={
+                    metric_elapsed_time: METRIC_ELAPSED_TIME,
+                    default_metric: METRIC_ACCURACY,
+                    resource_attr: RESOURCE_ATTR,
+                },
+            )
 
 
 if __name__ == "__main__":
-    generate_lcbench()
+    LCBenchRecipe().generate()

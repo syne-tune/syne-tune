@@ -26,7 +26,7 @@ from benchmarking.definitions.definition_nasbench201 import (
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from syne_tune.blackbox_repository import load
+from syne_tune.blackbox_repository import load_blackbox
 import random
 import pandas as pd
 import numpy as np
@@ -75,7 +75,6 @@ def run_experiment(
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         elapsed_time_attr=benchmark["elapsed_time_attr"],
-        time_this_resource_attr=benchmark.get("time_this_resource_attr"),
         dataset=dataset_name,
         seed=nb201_random_seed,
     )
@@ -333,7 +332,7 @@ if __name__ == "__main__":
     # Initial pre-processing:
 
     # Load NASBench201 benchmark so that we can analyse the performance of various approaches
-    bb_dict = load("nasbench201")
+    bb_dict = load_blackbox("nasbench201")
     df_dict = {}
 
     for seed in nb201_random_seeds:
