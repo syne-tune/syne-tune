@@ -4,18 +4,13 @@ Convert evaluations from
  David Salinas Huibin Shen Valerio Perrone
  http://proceedings.mlr.press/v119/salinas20a/salinas20a.pdf
 """
-import logging
-from typing import Optional
 import pandas as pd
 import numpy as np
 from syne_tune.blackbox_repository.blackbox_offline import serialize, BlackboxOffline
 from syne_tune.blackbox_repository.conversion_scripts.BlackboxRecipe import (
     BlackboxRecipe,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import (
-    repository_path,
-    upload_blackbox,
-)
+from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 import syne_tune.config_space as sp
 
 

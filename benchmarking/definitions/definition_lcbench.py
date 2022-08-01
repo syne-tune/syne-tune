@@ -13,7 +13,6 @@
 from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench import (
     METRIC_ELAPSED_TIME,
     METRIC_ACCURACY,
-    RESOURCE_ATTR,
     BLACKBOX_NAME,
     MAX_RESOURCE_LEVEL,
     CONFIGURATION_SPACE,

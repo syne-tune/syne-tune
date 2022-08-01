@@ -1,4 +1,3 @@
-from typing import Optional
 import bz2
 import pickle
 import pandas as pd
