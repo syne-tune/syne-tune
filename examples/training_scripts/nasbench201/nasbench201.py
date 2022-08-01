@@ -88,7 +88,9 @@ def objective(config):
         if not dont_sleep:
             if epoch == resume_from + 1:
                 # Subtract startup overhead of loading the table
-                time_this_epoch = max(elapsed_time - prev_elapsed_time - startup_overhead, 0.0)
+                time_this_epoch = max(
+                    elapsed_time - prev_elapsed_time - startup_overhead, 0.0
+                )
             time.sleep(time_this_epoch)
 
         report_dict = {
