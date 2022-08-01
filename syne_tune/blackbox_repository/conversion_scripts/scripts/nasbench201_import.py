@@ -184,6 +184,7 @@ def convert_dataset(data, dataset):
     # Sanity checks:
     assert objective_names[0] == METRIC_VALID_ERROR
     assert objective_names[2] == METRIC_TIME_THIS_RESOURCE
+    assert objective_names[3] == "elapsed_time"
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=configuration_space,

@@ -28,7 +28,6 @@ from benchmarking.utils import (
 from syne_tune.blackbox_repository.conversion_scripts.scripts.nasbench201_import import (
     CONFIG_KEYS,
     METRIC_VALID_ERROR,
-    METRIC_TIME_THIS_RESOURCE,
     RESOURCE_ATTR,
     BLACKBOX_NAME,
 )
@@ -80,12 +79,10 @@ def objective(config):
     resume_from = resume_from_checkpointed_model(config, load_model_fn)
 
     # Loop over epochs
-    elapsed_time = 0
     for epoch in range(resume_from + 1, config["epochs"] + 1):
         metrics_this_epoch = all_metrics[epoch - 1]
-        time_this_epoch = metrics_this_epoch[METRIC_TIME_THIS_RESOURCE]
+        elapsed_time = metrics_this_epoch[METRIC_ELAPSED_TIME]
         valid_error = metrics_this_epoch[METRIC_VALID_ERROR]
-        elapsed_time += time_this_epoch
 
         if not dont_sleep:
             if epoch == resume_from + 1:
