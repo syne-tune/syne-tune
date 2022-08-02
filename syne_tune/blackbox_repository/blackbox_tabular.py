@@ -82,7 +82,7 @@ class BlackboxTabular(Blackbox):
         assert len(fidelity_space) == 1, "only support single fidelity for now"
         assert (
             max(self._fidelity_values) <= list(fidelity_space.values())[0].upper
-        ), f"{max(self._fidelity_values)}, {fidelity_space.get_hyperparameters()[0].upper}"
+        ), f"{max(self._fidelity_values)}, {max(next(iter(fidelity_space.values())).upper)}"
         assert len(hyperparameters) == len(
             hyperparameters.drop_duplicates()
         ), "some hps are duplicated, use a seed column"

@@ -13,6 +13,7 @@
 import json
 import logging
 import time
+import traceback
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Optional, Dict, Set
@@ -233,7 +234,7 @@ class Tuner:
 
                 stop_condition_reached = self._stop_condition()
         except Exception as e:
-            logger.error(str(e))
+            traceback.print_exc()
         finally:
             # graceful termination block called when the tuner reached its stop condition, when an error happened or
             # when the job got interrupted (can happen in spot-instances or when sending a SIGINT signal with ctrl+C).

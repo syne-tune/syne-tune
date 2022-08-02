@@ -146,7 +146,7 @@ def check_and_merge_defaults(
                     )
                     result_dict[kd] = vd
     if log_msg:
-        logger.info(log_msg.rstrip("\n"))
+        logger.debug(log_msg.rstrip("\n"))
     # Check constraints
     if constraints:
         for key, value in result_options.items():

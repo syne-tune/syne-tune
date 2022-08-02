@@ -381,7 +381,7 @@ class RandomSearcher(SearcherWithRandomSeed):
         self._resource_attr = kwargs.get("resource_attr")
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)
         # Debug log printing (switched on by default)
-        debug_log = kwargs.get("debug_log", True)
+        debug_log = kwargs.get("debug_log", False)
         if isinstance(debug_log, bool):
             if debug_log:
                 self._debug_log = DebugLogPrinter()
