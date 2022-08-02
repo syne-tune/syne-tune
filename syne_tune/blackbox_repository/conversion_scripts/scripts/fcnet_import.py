@@ -14,7 +14,7 @@ import ast
 import h5py
 
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
-from syne_tune.blackbox_repository.conversion_scripts.BlackboxRecipe import (
+from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
 )
 from syne_tune.blackbox_repository.conversion_scripts.scripts import (

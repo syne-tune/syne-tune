@@ -359,7 +359,7 @@ If you want to plot the cumulative optimum of the metric you want to optimize, y
 To add a new dataset of tabular evaluations, you need to 
 1) write a blackbox recipe able to regenerate it by extending
 [`BlackboxRecipe`](https://github.com/awslabs/syne-tune/blob/main/syne_tune/blackbox_repository/conversion_scripts/BlackboxRecipe.py). 
-You will need in particular to provide the name of the blackbox, the reference so that users are prompted to cite the appropriated paper and a code 
+You need in particular to provide the name of the blackbox, the reference so that users are prompted to cite the appropriated paper and a code 
  that can generate it from scratch, see 
 [`lcbench.py`](https://github.com/awslabs/syne_tune/blackbox_repository/conversion_scripts/scripts/lcbench/lcbench.py) 
 for an example.

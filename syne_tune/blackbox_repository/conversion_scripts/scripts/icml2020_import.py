@@ -7,7 +7,7 @@ Convert evaluations from
 import pandas as pd
 import numpy as np
 from syne_tune.blackbox_repository.blackbox_offline import serialize, BlackboxOffline
-from syne_tune.blackbox_repository.conversion_scripts.BlackboxRecipe import (
+from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
