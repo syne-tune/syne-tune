@@ -8,18 +8,24 @@ import urllib
 import tarfile
 
 from pathlib import Path
-from typing import Optional
 import pandas as pd
 import numpy as np
 import ast
 import h5py
 
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
+from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
+    BlackboxRecipe,
+)
+from syne_tune.blackbox_repository.conversion_scripts.scripts import (
+    metric_elapsed_time,
+    default_metric,
+    resource_attr,
+)
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 
 from syne_tune.util import catchtime
 from syne_tune.config_space import choice, logfinrange, finrange, randint
-
 
 BLACKBOX_NAME = "fcnet"
 
@@ -138,7 +144,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     )
 
 
-def generate_fcnet(s3_root: Optional[str] = None):
+def generate_fcnet():
     blackbox_name = BLACKBOX_NAME
     fcnet_file = repository_path / "fcnet_tabular_benchmarks.tar.gz"
     if not fcnet_file.exists():
@@ -166,20 +172,23 @@ def generate_fcnet(s3_root: Optional[str] = None):
             bb_dict[dataset] = convert_dataset(dataset_path=dataset_path)
 
     with catchtime("saving to disk"):
-        serialize(bb_dict=bb_dict, path=repository_path / blackbox_name)
-
-    with catchtime("uploading to s3"):
-        from syne_tune.blackbox_repository.conversion_scripts.utils import upload
-
-        upload(blackbox_name, s3_root=s3_root)
+        serialize(
+            bb_dict=bb_dict,
+            path=repository_path / blackbox_name,
+            metadata={
+                metric_elapsed_time: METRIC_ELAPSED_TIME,
+                default_metric: METRIC_VALID_LOSS,
+                resource_attr: RESOURCE_ATTR,
+            },
+        )
 
 
 def plot_learning_curves():
     import matplotlib.pyplot as plt
-    from syne_tune.blackbox_repository.repository import load
+    from syne_tune.blackbox_repository.repository import load_blackbox
 
     # plot one learning-curve for sanity-check
-    bb_dict = load(BLACKBOX_NAME)
+    bb_dict = load_blackbox(BLACKBOX_NAME)
 
     b = bb_dict["naval_propulsion"]
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}
@@ -191,7 +200,19 @@ def plot_learning_curves():
     plt.plot(errors)
 
 
+class FCNETRecipe(BlackboxRecipe):
+    def __init__(self):
+        super(FCNETRecipe, self).__init__(
+            name=BLACKBOX_NAME,
+            cite_reference="Tabular benchmarks for joint architecture and hyperparameter optimization. "
+            "Klein, A. and Hutter, F. 2019.",
+        )
+
+    def _generate_on_disk(self):
+        generate_fcnet()
+
+
 if __name__ == "__main__":
-    generate_fcnet()
+    FCNETRecipe().generate()
 
     # plot_learning_curves()

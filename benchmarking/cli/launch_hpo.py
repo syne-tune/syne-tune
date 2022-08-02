@@ -318,9 +318,6 @@ if __name__ == "__main__":
                         "surrogate": surrogate,
                         "surrogate_kwargs": benchmark.get("surrogate_kwargs"),
                         "config_space_surrogate": config_space_surrogate,
-                        "time_this_resource_attr": benchmark.get(
-                            "time_this_resource_attr"
-                        ),
                         "max_resource_attr": benchmark.get("max_resource_attr"),
                         "seed": seed,
                     }

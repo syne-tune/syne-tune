@@ -13,7 +13,6 @@
 from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench import (
     METRIC_ELAPSED_TIME,
     METRIC_ACCURACY,
-    RESOURCE_ATTR,
     BLACKBOX_NAME,
     MAX_RESOURCE_LEVEL,
     CONFIGURATION_SPACE,
@@ -73,11 +72,6 @@ def lcbench_default_params(params=None):
 
 
 def lcbench_benchmark(params):
-    """
-    The underlying tabulated blackbox does not have an `elapsed_time_attr`,
-    but only a `time_this_resource_attr`.
-
-    """
     config_space = dict(
         CONFIGURATION_SPACE,
         epochs=params["max_resource_level"],
@@ -87,7 +81,6 @@ def lcbench_benchmark(params):
         "script": None,
         "metric": METRIC_ACCURACY,
         "mode": "max",
-        "resource_attr": RESOURCE_ATTR,
         "elapsed_time_attr": METRIC_ELAPSED_TIME,
         "max_resource_attr": "epochs",
         "config_space": config_space,

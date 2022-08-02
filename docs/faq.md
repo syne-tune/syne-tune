@@ -25,9 +25,10 @@
 * [What different schedulers do you support? What are the main differences between them?](#schedulers-supported)
 * [How do I define the search space?](#search-space) 
 * [How can I visualize the progress of my tuning experiment with Tensorboard?](#tensorboard) 
+* [How can I add a new tabular or surrogate benchmark?](#add-blackbox)
+
 
 ### <a name="installations"></a> What are the different installations options supported?
-
 
 To install Syne Tune with minimal dependencies from pip, you can simply do:
 
@@ -350,4 +351,19 @@ This will log all metrics that are reported in your training script via the repo
 tensorboard --logdir ~/syne-tune/{tuner-name}/tensorboard_output
 ```
 
-If we you want to plot the cumulative optimum of the metric you want to optimize, you can pass the `target_metric` argument to TensorboardCallback. This will also report the best found hyperparameter configuration over time.
+If you want to plot the cumulative optimum of the metric you want to optimize, you can pass the `target_metric` argument to TensorboardCallback. This will also report the best found hyperparameter configuration over time.
+
+
+### <a name="add-blackbox"></a> [How can I add a new tabular or surrogate benchmark?
+
+To add a new dataset of tabular evaluations, you need to 
+1) write a blackbox recipe able to regenerate it by extending
+[`BlackboxRecipe`](https://github.com/awslabs/syne-tune/blob/main/syne_tune/blackbox_repository/conversion_scripts/BlackboxRecipe.py). 
+You need in particular to provide the name of the blackbox, the reference so that users are prompted to cite the appropriated paper and a code 
+ that can generate it from scratch, see 
+[`lcbench.py`](https://github.com/awslabs/syne_tune/blackbox_repository/conversion_scripts/scripts/lcbench/lcbench.py) 
+for an example.
+2) add your new recipe class in 
+[`recipes`](https://github.com/awslabs/syne-tune/blob/main/syne_tune/blackbox_repository/conversion_scripts/recipes.py) 
+to make it available in Syne Tune.
+

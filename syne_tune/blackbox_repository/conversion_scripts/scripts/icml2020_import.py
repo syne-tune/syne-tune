@@ -4,14 +4,13 @@ Convert evaluations from
  David Salinas Huibin Shen Valerio Perrone
  http://proceedings.mlr.press/v119/salinas20a/salinas20a.pdf
 """
-from typing import Optional
 import pandas as pd
 import numpy as np
 from syne_tune.blackbox_repository.blackbox_offline import serialize, BlackboxOffline
-from syne_tune.blackbox_repository.conversion_scripts.utils import (
-    repository_path,
-    upload,
+from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
+    BlackboxRecipe,
 )
+from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 import syne_tune.config_space as sp
 
 
@@ -113,16 +112,30 @@ def serialize_xgboost():
     )
 
 
-def generate_deepar(s3_root: Optional[str] = None):
-    serialize_deepar()
-    upload(name="icml-deepar", s3_root=s3_root)
+class XGBoostRecipe(BlackboxRecipe):
+    def __init__(self):
+        super(XGBoostRecipe, self).__init__(
+            name="icml-xgboost",
+            cite_reference="A quantile-based approach for hyperparameter transfer learning."
+            "Salinas, D., Shen, H., and Perrone, V. 2021.",
+        )
+
+    def _generate_on_disk(self):
+        serialize_xgboost()
 
 
-def generate_xgboost(s3_root: Optional[str] = None):
-    serialize_xgboost()
-    upload(name="icml-xgboost", s3_root=s3_root)
+class DeepARRecipe(BlackboxRecipe):
+    def __init__(self):
+        super(DeepARRecipe, self).__init__(
+            name="icml-deepar",
+            cite_reference="A quantile-based approach for hyperparameter transfer learning."
+            "Salinas, D., Shen, H., and Perrone, V. 2021.",
+        )
+
+    def _generate_on_disk(self):
+        serialize_deepar()
 
 
 if __name__ == "__main__":
-    generate_deepar()
-    generate_xgboost()
+    DeepARRecipe().generate()
+    XGBoostRecipe().generate()

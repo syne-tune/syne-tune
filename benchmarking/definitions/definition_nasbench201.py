@@ -14,7 +14,6 @@ from syne_tune.config_space import choice
 from syne_tune.blackbox_repository.conversion_scripts.scripts.nasbench201_import import (
     CONFIG_KEYS,
     METRIC_VALID_ERROR,
-    METRIC_TIME_THIS_RESOURCE,
     RESOURCE_ATTR,
     BLACKBOX_NAME,
 )
@@ -54,11 +53,6 @@ def nasbench201_default_params(params=None):
 
 
 def nasbench201_benchmark(params):
-    """
-    The underlying tabulated blackbox does not have an `elapsed_time_attr`,
-    but only a `time_this_resource_attr`.
-
-    """
     config_space = dict(
         _config_space,
         epochs=params["max_resource_level"],
@@ -77,7 +71,6 @@ def nasbench201_benchmark(params):
         "cost_model": _get_cost_model(params),
         "supports_simulated": True,
         "blackbox_name": BLACKBOX_NAME,
-        "time_this_resource_attr": METRIC_TIME_THIS_RESOURCE,
     }
 
 

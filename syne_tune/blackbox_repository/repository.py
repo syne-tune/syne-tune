@@ -15,7 +15,7 @@ from syne_tune.blackbox_repository.blackbox_tabular import (
 
 # where the blackbox repository is stored on s3
 from syne_tune.blackbox_repository.conversion_scripts.recipes import (
-    generate_blackbox_recipe,
+    generate_blackbox_recipes,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
@@ -27,17 +27,33 @@ def blackbox_list() -> List[str]:
     """
     :return: list of blackboxes available
     """
-    return list(generate_blackbox_recipe.keys())
+    return list(generate_blackbox_recipes.keys())
 
 
-def load(
+def load_blackbox(
     name: str,
     skip_if_present: bool = True,
     s3_root: Optional[str] = None,
     generate_if_not_found: bool = True,
 ) -> Union[Dict[str, Blackbox], Blackbox]:
     """
-    :param name: name of a blackbox present in the repository, see blackbox_list() to get list of available blackboxes
+    :param name: name of a blackbox present in the repository, see blackbox_list() to get list of available blackboxes.
+    Syne Tune currently provides the following blackboxes evaluations:
+    * "nasbench201": 15625 multi-fidelity configurations of computer vision architectures evaluated on 3 datasets.
+    NAS-Bench-201: Extending the scope of reproducible neural architecture search.
+    Dong, X. and Yang, Y. 2020.
+    * "fcnet": 62208 multi-fidelity configurations of MLP evaluated on 4 datasets.
+    Tabular benchmarks for joint architecture and hyperparameter optimization.
+    Klein, A. and Hutter, F. 2019.
+    * "lcbench": 2000 multi-fidelity Pytorch model configurations evaluated on many datasets.
+    Reference: Auto-PyTorch: Multi-Fidelity MetaLearning for Efficient and Robust AutoDL.
+    Lucas Zimmer, Marius Lindauer, Frank Hutter. 2020.
+    * "icml-deepar": 2420 single-fidelity configurations of DeepAR forecasting algorithm evaluated on 10 datasets.
+    A quantile-based approach for hyperparameter transfer learning.
+    Salinas, D., Shen, H., and Perrone, V. 2021.
+    * "icml-xgboost": 5O00 single-fidelity configurations of XGBoost evaluated on 9 datasets.
+    A quantile-based approach for hyperparameter transfer learning.
+    Salinas, D., Shen, H., and Perrone, V. 2021.
     :param skip_if_present: skip the download if the file locally exists
     :param s3_root: S3 root directory for blackbox repository. Defaults to
         S3 bucket name of SageMaker session
@@ -78,7 +94,7 @@ def load(
             logging.info(
                 "did not find blackbox files locally nor on S3, regenerating it locally and persisting it on S3."
             )
-            generate_blackbox_recipe[name](s3_root=s3_root)
+            generate_blackbox_recipes[name](s3_root=s3_root)
 
     if (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
@@ -94,5 +110,5 @@ if __name__ == "__main__":
     for bb in blackboxes:
         print(bb)
         # download an existing blackbox
-        blackbox = load(bb)
+        blackbox = load_blackbox(bb)
         print(blackbox)

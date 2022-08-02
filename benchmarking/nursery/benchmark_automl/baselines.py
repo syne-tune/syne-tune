@@ -198,7 +198,6 @@ if __name__ == "__main__":
         benchmark = benchmark_definitions[benchmark_name]
         backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
-            time_this_resource_attr=benchmark.time_this_resource_attr,
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
         )
