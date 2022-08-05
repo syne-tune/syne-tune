@@ -1,8 +1,19 @@
 #!/bin/sh
 # runs black only on all python files committed in git
+echo "Running black."
 git ls-files | grep "\.py$" |  xargs black
 
 if [ $? -ne 0 ]; then
  echo "Black should pass before commit! Run 'pip install .[extra,dev]' if you do not have it installed locally."
  exit 1
 fi
+
+
+echo "Adding license header."
+./license-add.sh
+
+if [ $? -ne 0 ]; then
+ echo "Could not add license header."
+ exit 1
+fi
+
