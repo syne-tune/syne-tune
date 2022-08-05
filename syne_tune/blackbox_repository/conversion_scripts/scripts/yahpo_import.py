@@ -38,38 +38,42 @@ from yahpo_gym.benchmark_set import BenchmarkSet
 from yahpo_gym.configuration import list_scenarios
 from yahpo_gym import local_config
 
-def download(blackbox: str, version:str):
+
+def download(blackbox: str, version: str):
     import urllib
+
     root = "https://github.com/slds-lmu/yahpo_data/archive/refs/tags/"
     target = repository_path / f"{blackbox}"
 
-    urllib.request.urlretrieve(
-        root + f"v{version}.zip", str(target)+".zip"
-    )
+    urllib.request.urlretrieve(root + f"v{version}.zip", str(target) + ".zip")
 
-    with zipfile.ZipFile(str(target)+".zip","r") as zip_ref:
+    with zipfile.ZipFile(str(target) + ".zip", "r") as zip_ref:
         zip_ref.extractall(target)
-    
+
     # FIXME: Remove zip?
     # os.remove(str(target)+".zip")
 
+
 class BlackBoxYAHPO(Blackbox):
     """
-        A wrapper that allows putting a 'YAHPO' BenchmarkInstance into a Blackbox.
+    A wrapper that allows putting a 'YAHPO' BenchmarkInstance into a Blackbox.
     """
+
     def __init__(self, benchmark):
         self.benchmark = benchmark
-        super(BlackBoxYAHPO, self).__init__( 
-            configuration_space = cs_to_synetune(self.benchmark.get_opt_space(drop_fidelity_params=True)),
-            fidelity_space = cs_to_synetune(self.benchmark.get_fidelity_space()),
-            objectives_names = self.benchmark.config.y_names
+        super(BlackBoxYAHPO, self).__init__(
+            configuration_space=cs_to_synetune(
+                self.benchmark.get_opt_space(drop_fidelity_params=True)
+            ),
+            fidelity_space=cs_to_synetune(self.benchmark.get_fidelity_space()),
+            objectives_names=self.benchmark.config.y_names,
         )
 
     def _objective_function(
         self,
         configuration: Dict,
         fidelity: Optional[Dict] = None,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
     ) -> Dict:
         if fidelity is not None:
             configuration.update(fidelity)
@@ -80,22 +84,24 @@ class BlackBoxYAHPO(Blackbox):
             "not passing a fidelity is possible if either the blackbox does not have a fidelity space
             or if it has a single fidelity in its fidelity space. In the latter case, all fidelities are returned in form
             of a tensor with shape (num_fidelities, num_objectives)."
-            This is used for efficiency (it is much faster to retrieve a full row in an array in term of read time).                        
+            This is used for efficiency (it is much faster to retrieve a full row in an array in term of read time).
             """
             # returns a tensor of shape (num_fidelities, num_objectives)
             num_fidelities = len(self.fidelity_values)
             num_objectives = len(self.objectives_names)
-            result = np.empty((num_fidelities, num_objectives))            
+            result = np.empty((num_fidelities, num_objectives))
             fidelity_name = next(iter(self.fidelity_space.keys()))
             configs = []
             for fidelity in self.fidelity_values:
                 config_with_fidelity = configuration.copy()
                 config_with_fidelity[fidelity_name] = fidelity
-                configs.append(config_with_fidelity)        
+                configs.append(config_with_fidelity)
             result_dicts = self.benchmark.objective_function(configs, seed=seed)
-                        
+
             for i, fidelity in enumerate(self.fidelity_values):
-                result[i] = [result_dicts[i][objective] for objective in self.objectives_names]
+                result[i] = [
+                    result_dicts[i][objective] for objective in self.objectives_names
+                ]
 
             return result
 
@@ -107,10 +113,12 @@ class BlackBoxYAHPO(Blackbox):
         self.benchmark.set_instance(instance)
         # Update the configspace with the fixed instance
         if self.config.instance_names is not None:
-            self.configuration_space[self.benchmark.config.instance_name] = cs.choice([instance])
+            self.configuration_space[self.benchmark.config.instance_name] = cs.choice(
+                [instance]
+            )
         return self
 
-    @ property
+    @property
     def instances(self) -> np.array:
         return self.benchmark.instances
 
@@ -124,11 +132,12 @@ class BlackBoxYAHPO(Blackbox):
         """Name of the time column"""
         return self.benchmark.config.runtime_name
 
+
 def cs_to_synetune(config_space):
     """
     Convert ConfigSpace.ConfigSpace to a synetune configspace.
 
-    This should probably either be improved or we could also dump the 'synetune-configspaces' in 'yahpo_data' 
+    This should probably either be improved or we could also dump the 'synetune-configspaces' in 'yahpo_data'
     like we did for R (paradox) configspaces.
     Currently this does not cover all possible hyperparameters I think.
     """
@@ -152,27 +161,29 @@ def cs_to_synetune(config_space):
                 vals += [cs.loguniform(a.lower, a.upper)]
             else:
                 vals += [cs.uniform(a.lower, a.upper)]
-        
+
     return dict(zip(keys, vals))
 
 
-def instantiate_yahpo(scenario:str):
-    
+def instantiate_yahpo(scenario: str):
+
     # If the string starts with "YAHPO-" get rid of it
     if "YAHPO-" in scenario:
         scenario = scenario[6:]
 
-    # FIXME: I can now create one scenario per instance but this is probably 
+    # FIXME: I can now create one scenario per instance but this is probably
     #        overkill since its just a copy of the same thing with a different constant set?
     return {
-        instance: BlackBoxYAHPO(BenchmarkSet(scenario, active_session=False)).set_instance(instance)
+        instance: BlackBoxYAHPO(
+            BenchmarkSet(scenario, active_session=False)
+        ).set_instance(instance)
         for instance in b.instances
     }
 
 
-def serialize_yahpo(scenario:str, version:str='1.0'):
+def serialize_yahpo(scenario: str, version: str = "1.0"):
     """
-        Serialize YAHPO (Metadata only for now)
+    Serialize YAHPO (Metadata only for now)
     """
     # Step 1: Download Metadata
     download(blackbox="YAHPO", version=version)
@@ -185,30 +196,24 @@ def serialize_yahpo(scenario:str, version:str='1.0'):
     # Check if instances can be instantiated
     insts = instantiate_yahpo(scenario)
 
-    # For now we only serialize metadata because everything else can be 
+    # For now we only serialize metadata because everything else can be
     # obtained from YAHPO.
     path = Path(repository_path / "YAHPO")
     path.mkdir(exist_ok=True)
     serialize_metadata(
-        path=path,
-        metadata={
-            "instances" : list(insts.keys()),
-            "data_path": data_path
-        }
+        path=path, metadata={"instances": list(insts.keys()), "data_path": data_path}
     )
     # FIXME: Do we need to serialize the ConfigSpace/ONNXSurrogate as well?
     # Might be required if the full benchmark should e.g. be distributed via S3?
 
 
-
-
 class YAHPORecipe(BlackboxRecipe):
-    def __init__(self, scenario:str):
+    def __init__(self, scenario: str):
         self.scenario = scenario
         super(YAHPORecipe, self).__init__(
             name=f"YAHPO-{name}",
             cite_reference="YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization"
-            "Pfisterer F., Schneider S., Moosbauer J., Binder M., Bischl B., 2022"
+            "Pfisterer F., Schneider S., Moosbauer J., Binder M., Bischl B., 2022",
         )
 
     def _generate_on_disk(self):
@@ -219,4 +224,4 @@ yahpo_scenarios = [list_scenarios()]
 
 
 if __name__ == "__main__":
-    YAHPORecipe('lcbench').generate()
+    YAHPORecipe("lcbench").generate()

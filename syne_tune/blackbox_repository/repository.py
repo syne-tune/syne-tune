@@ -14,8 +14,9 @@ from syne_tune.blackbox_repository.blackbox_tabular import (
 )
 
 from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-    instantiate_yahpo
+    instantiate_yahpo,
 )
+
 # where the blackbox repository is stored on s3
 from syne_tune.blackbox_repository.conversion_scripts.recipes import (
     generate_blackbox_recipes,

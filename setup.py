@@ -31,7 +31,7 @@ required_kde = load_requirements("requirements-kde.txt")
 required_blackbox_repository = load_requirements(
     "syne_tune/blackbox_repository/requirements.txt"
 )
-required_yahpo= load_requirements(
+required_yahpo = load_requirements(
     "syne_tune/blackbox_repository/conversion_scripts/scripts/requirements-yahpo.txt"
 )
 required_benchmarks = load_benchmark_requirements()

@@ -13,7 +13,8 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import impor
 )
 
 from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-    YAHPORecipe, yahpo_scenarios
+    YAHPORecipe,
+    yahpo_scenarios,
 )
 
 # add a blackbox recipe here to expose it in Syne Tune
