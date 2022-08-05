@@ -13,6 +13,9 @@ from syne_tune.blackbox_repository.blackbox_tabular import (
     deserialize as deserialize_tabular,
 )
 
+from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
+    instantiate_yahpo
+)
 # where the blackbox repository is stored on s3
 from syne_tune.blackbox_repository.conversion_scripts.recipes import (
     generate_blackbox_recipes,
@@ -96,6 +99,8 @@ def load_blackbox(
             )
             generate_blackbox_recipes[name](s3_root=s3_root)
 
+    if name == "YAHPO":
+        return instantiate_yahpo(tgt_folder)
     if (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
     else:
