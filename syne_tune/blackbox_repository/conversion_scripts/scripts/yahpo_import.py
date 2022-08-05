@@ -1,3 +1,14 @@
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+
 """
 Wrap Surrogates from 
 YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization
@@ -97,6 +108,11 @@ class BlackBoxYAHPO(Blackbox):
         # Update the configspace with the fixed instance
         if self.config.instance_names is not None:
             self.configuration_space[self.benchmark.config.instance_name] = cs.choice([instance])
+        return self
+
+    @ property
+    def instances(self) -> np.array:
+        return self.benchmark.instances
 
     @property
     def fidelity_values(self) -> np.array:
@@ -106,10 +122,7 @@ class BlackBoxYAHPO(Blackbox):
     @property
     def time_attribute(self) -> str:
         """Name of the time column"""
-        self.benchmark.config.runtime_name
-
-
-
+        return self.benchmark.config.runtime_name
 
 def cs_to_synetune(config_space):
     """
@@ -143,27 +156,34 @@ def cs_to_synetune(config_space):
     return dict(zip(keys, vals))
 
 
-def instantiate_yahpo(tgt_folder=None):
+def instantiate_yahpo(scenario:str):
+    
+    # If the string starts with "YAHPO-" get rid of it
+    if "YAHPO-" in scenario:
+        scenario = scenario[6:]
+
+    # FIXME: I can now create one scenario per instance but this is probably 
+    #        overkill since its just a copy of the same thing with a different constant set?
     return {
-        scenario: BlackBoxYAHPO(BenchmarkSet(scenario, active_session=False))
-        for scenario in [list_scenarios()]
+        instance: BlackBoxYAHPO(BenchmarkSet(scenario, active_session=False)).set_instance(instance)
+        for instance in b.instances
     }
 
 
-def serialize_yahpo(version='1.0'):
+def serialize_yahpo(scenario:str, version:str='1.0'):
     """
         Serialize YAHPO (Metadata only for now)
     """
     # Step 1: Download Metadata
-    download(blackbox = "YAHPO", version=version)
+    download(blackbox="YAHPO", version=version)
 
     # Step 2: Set path in the yahpo config
     data_path = repository_path / "YAHPO" / f"yahpo_data-{version}"
     local_config.init_config()
     local_config.set_data_path(data_path)
 
-    # Check if scenarios can be instantiated
-    scenarios = instantiate_yahpo(version=version)
+    # Check if instances can be instantiated
+    insts = instantiate_yahpo(scenario)
 
     # For now we only serialize metadata because everything else can be 
     # obtained from YAHPO.
@@ -172,7 +192,7 @@ def serialize_yahpo(version='1.0'):
     serialize_metadata(
         path=path,
         metadata={
-            "scenarios" : list(scenarios.keys()),
+            "instances" : list(insts.keys()),
             "data_path": data_path
         }
     )
@@ -180,19 +200,23 @@ def serialize_yahpo(version='1.0'):
     # Might be required if the full benchmark should e.g. be distributed via S3?
 
 
+
+
 class YAHPORecipe(BlackboxRecipe):
-    def __init__(self):
+    def __init__(self, scenario:str):
+        self.scenario = scenario
         super(YAHPORecipe, self).__init__(
-            name="YAHPO",
+            name=f"YAHPO-{name}",
             cite_reference="YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization"
             "Pfisterer F., Schneider S., Moosbauer J., Binder M., Bischl B., 2022"
         )
 
     def _generate_on_disk(self):
-        serialize_yahpo()
+        serialize_yahpo(self.scenario)
 
 
+yahpo_scenarios = [list_scenarios()]
 
 
 if __name__ == "__main__":
-    YAHPORecipe().generate()
+    YAHPORecipe('lcbench').generate()

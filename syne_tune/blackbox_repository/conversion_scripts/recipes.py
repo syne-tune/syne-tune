@@ -13,8 +13,9 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import impor
 )
 
 from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-    YAHPORecipe,
+    YAHPORecipe, yahpo_scenarios
 )
+
 # add a blackbox recipe here to expose it in Syne Tune
 recipes = [
     DeepARRecipe(),
@@ -22,7 +23,11 @@ recipes = [
     NASBench201Recipe(),
     FCNETRecipe(),
     LCBenchRecipe(),
-    YAHPORecipe(),
 ]
+
+# Append all yahpo scenarios
+for scn in yahpo_scenarios:
+    recipes.append(YAHPORecipe(scn))
+
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}

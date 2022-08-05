@@ -99,8 +99,8 @@ def load_blackbox(
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
 
-    if name == "YAHPO":
-        return instantiate_yahpo(tgt_folder)
+    if "YAHPO" in name:
+        return instantiate_yahpo(name)
     if (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
     else:
