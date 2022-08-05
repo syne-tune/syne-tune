@@ -4,7 +4,10 @@ import tarfile
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path, download_file
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+    download_file,
+)
 from syne_tune.config_space import loguniform, uniform
 from syne_tune.util import catchtime
 
@@ -29,7 +32,7 @@ DATA_TRANSFORM = {
     },
     "hps.opt_hparams.momentum": {
         "key": "one_minus_momentum",
-        "transform": lambda x: 1 - x
+        "transform": lambda x: 1 - x,
     },
 }
 
