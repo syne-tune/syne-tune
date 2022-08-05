@@ -1,3 +1,4 @@
+from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import PD1Recipe
 from syne_tune.blackbox_repository.conversion_scripts.scripts.icml2020_import import (
     DeepARRecipe,
     XGBoostRecipe,
@@ -19,6 +20,7 @@ recipes = [
     NASBench201Recipe(),
     FCNETRecipe(),
     LCBenchRecipe(),
+    PD1Recipe(),
 ]
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}

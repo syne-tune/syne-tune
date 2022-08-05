@@ -94,7 +94,7 @@ def load_blackbox(
             logging.info(
                 "did not find blackbox files locally nor on S3, regenerating it locally and persisting it on S3."
             )
-            generate_blackbox_recipes[name](s3_root=s3_root)
+            generate_blackbox_recipes[name].generate(s3_root=s3_root)
 
     if (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
