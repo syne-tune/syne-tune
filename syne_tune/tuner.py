@@ -13,7 +13,6 @@
 import json
 import logging
 import time
-import traceback
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Optional, Dict, Set
