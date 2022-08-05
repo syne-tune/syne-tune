@@ -234,7 +234,11 @@ class Tuner:
 
                 stop_condition_reached = self._stop_condition()
         except Exception as e:
-            traceback.print_exc()
+            logger.error(
+                "An error happened during the tuning, cleaning up ressources and logging final ressources "
+                "before throwing the exception."
+            )
+            raise e
         finally:
             # graceful termination block called when the tuner reached its stop condition, when an error happened or
             # when the job got interrupted (can happen in spot-instances or when sending a SIGINT signal with ctrl+C).
