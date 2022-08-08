@@ -168,7 +168,13 @@ class Tuner:
             config_space_exhausted = False
             stop_condition_reached = self._stop_condition()
 
-            while not stop_condition_reached:
+            while (
+                # we stop when either the stop condition is reached
+                not stop_condition_reached
+                # or when all trials are done if the wait_trial_completion is activated
+                or self.wait_trial_completion_when_stopping
+                and len(running_trials_ids) > 0
+            ):
                 for callback in self.callbacks:
                     callback.on_loop_start()
 
@@ -195,7 +201,7 @@ class Tuner:
 
                 if (
                     config_space_exhausted
-                    or not self.wait_trial_completion_when_stopping
+                    or self.wait_trial_completion_when_stopping
                     and stop_condition_reached
                 ):
                     # if the search space is exhausted, we loop until the running trials are done or until the
