@@ -53,7 +53,7 @@ class Tuner:
         max_failures: int = 1,
         tuner_name: Optional[str] = None,
         asynchronous_scheduling: bool = True,
-        wait_trial_completion_when_stopping: bool = True,
+        wait_trial_completion_when_stopping: bool = False,
         callbacks: Optional[List[TunerCallback]] = None,
         metadata: Optional[Dict] = None,
         suffix_tuner_name: bool = True,
