@@ -1,3 +1,17 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+
+
 import numpy as np
 import argparse
 import pickle
@@ -60,9 +74,7 @@ class Exploitation:
         if self.max_b < x[1]:
             self.max_b = x[1]
         self.average_b = float(self.sum_b/self.data_size)
-        #if self.data_size% 500 == 0:
-         #   print("data points:", self.data_size)
-        
+
         
     def predict(self, x):
         x1 = torch.tensor(x[0]).float().to(device)
@@ -80,7 +92,6 @@ class Exploitation:
         tot_loss = 0
         while True:
             batch_loss = 0
-           # np.random.shuffle(index)
             for idx in index:
                 x1 =self.x1_list[idx].to(device)
                 b = self.b_list[idx].to(device)
@@ -93,11 +104,8 @@ class Exploitation:
                 tot_loss += loss.item()
                 cnt += 1
                 if cnt >= 500:
-                    #print("Force Exploitation Net Loss", tot_loss / cnt)
-                    #print("batch_loss / length", batch_loss / length)
                     return tot_loss / cnt
             if batch_loss / length <= 1e-4:
-                #print("Exploitation Net Loss", batch_loss / length)
                 return batch_loss / length
 
     
