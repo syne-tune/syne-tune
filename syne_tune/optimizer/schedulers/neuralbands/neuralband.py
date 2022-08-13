@@ -67,9 +67,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_facto
 )
 from syne_tune.optimizer.schedulers.neuralbands.networks import Exploitation
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import NeuralbandSchedulerBase
 
 
-class NeuralbandScheduler(HyperbandScheduler):
+class NeuralbandScheduler(NeuralbandSchedulerBase):
     def __init__(self, config_space, gamma = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
         """
         NeuralBand is a neural-bandit-based HPO algorithm under multi-fedility setting, where a budget-aware neural network is
@@ -83,54 +84,14 @@ class NeuralbandScheduler(HyperbandScheduler):
         step_size: how many trials we train network once;
         max_while_loop: the maximal number of times we can draw a configuration from configuration space.
         """
-        super(NeuralbandScheduler, self).__init__(config_space, **kwargs)
-        self.kwargs = kwargs
-        
-        # to encode configuration
-        self.hp_ranges = make_hyperparameter_ranges(config_space = self.config_space)
-        self.input_dim = self.hp_ranges.ndarray_size
-           
-        # initialize neural network
-        self.net = Exploitation(dim = self.input_dim)
-        self.currnet_best_score = 1.0 
-        
+        super(NeuralbandScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.gamma = gamma
         self.nu = nu
         
-        self.train_step_size = step_size
         if self.mode == "min":
             self.max_while_loop = max_while_loop
         else:
             self.max_while_loop = 2         
-        
- 
-    def _initialize_searcher_new(self): 
-        searcher = self.kwargs["searcher"]     
-        search_options = self.kwargs.get("search_options")
-        if search_options is None:
-            search_options = dict()
-        else:
-            search_options = search_options.copy()
-        search_options.update(
-            {
-                "config_space": self.config_space.copy(),
-                "metric": self.metric,
-                "points_to_evaluate": self.kwargs.get("points_to_evaluate"),
-                "scheduler_mode": self.kwargs["mode"],
-                "mode": self.kwargs["mode"],
-                "random_seed_generator": self.random_seed_generator,
-            }
-        )
-        if self.max_t is not None:
-            search_options["max_epochs"] = self.max_t
-        # Subclasses may extend `search_options`
-        search_options = self._extend_search_options(search_options)
-        # Adjoin scheduler info to search_options, if not already done by
-        # subclass (via `_extend_search_options`)
-        if "scheduler" not in search_options:
-            search_options["scheduler"] = "fifo"
-        self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
-        self._searcher_initialized = True
         
         
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:

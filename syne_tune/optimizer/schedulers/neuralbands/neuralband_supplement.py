@@ -69,7 +69,13 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 class NeuralbandSchedulerBase(HyperbandScheduler):
     def __init__(self, config_space, step_size, max_while_loop,  **kwargs):
-        "Shared base schedular for UCB, TS, Epsilon-Greedy. Refer to NeuralbandScheduler."
+        """
+        Shared base schedular for Neuralband.
+        
+        hyper-parameters of NeuralBand:
+        step_size: how many trials we train network once;
+        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        """
         super(NeuralbandSchedulerBase, self).__init__(config_space, **kwargs)
         self.kwargs = kwargs
         
