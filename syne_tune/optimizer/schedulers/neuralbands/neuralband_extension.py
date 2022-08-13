@@ -69,6 +69,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 class NeuralbandSchedulerBase(HyperbandScheduler):
     def __init__(self, config_space, step_size, max_while_loop,  **kwargs):
+        "Shared base schedular for UCB, TS, Epsilon-Greedy. Refer to NeuralbandScheduler."
         super(NeuralbandSchedulerBase, self).__init__(config_space, **kwargs)
         self.kwargs = kwargs
         
@@ -271,9 +272,7 @@ class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
         in each trial.
         
         Hyper-parameters:
-        epsilon: the probability of making random selection;
-        step_size: how many trials we train network once;
-        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        epsilon: the probability of making random selection.
         """
         super(NeuralbandEGreedyScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.epsilon = epsilon
@@ -345,9 +344,7 @@ class NeuralbandTSScheduler(NeuralbandSchedulerBase):
 
         Hyper-parameters:
         lamdba: regularization term of gradient vector;
-        nu: control the aggressiveness exploration;
-        step_size: how many trials we train network once;
-        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        nu: control the aggressiveness exploration.
         """
         super(NeuralbandTSScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.lamdba = lamdba
@@ -425,9 +422,7 @@ class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
 
         Hyper-parameters:
         lamdba: regularization term of gradient vector;
-        nu: control the aggressiveness exploration;
-        step_size: how many trials we train network once;
-        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        nu: control the aggressiveness exploration.
         """
         super(NeuralbandUCBScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.lamdba = lamdba

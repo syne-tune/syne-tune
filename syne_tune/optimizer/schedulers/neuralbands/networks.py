@@ -44,7 +44,7 @@ class Exploitation:
     def __init__(self, dim, lr = 0.001, hidden=100):
         """ the budget-aware network of NeuralBand"""
         # dim: number of dimensions of configuration vector    
-        # lr: learning rate OF Adam
+        # lr: learning rate of Adam
         # hidden: width of neural network
         self.lr = lr
         self.func = NetworkExploitation(dim, hidden_size=hidden).to(device)
@@ -53,10 +53,10 @@ class Exploitation:
         self.x1_list = []
         # store all budgets
         self.b_list = []
-        # store all evluated score
+        # store all evaluated score
         self.reward_list = []
         
-        # number of paramters of neural network
+        # number of parameters of neural network
         self.total_param = sum(p.numel() for p in self.func.parameters() if p.requires_grad)
         # size of stored data
         self.data_size = 0
