@@ -10,8 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
-
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -82,7 +80,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
     Methods.HP: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
@@ -94,8 +91,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-
-    
     Methods.BOHB: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="kde",
@@ -107,8 +102,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
-    
     Methods.TPE: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
         searcher="kde",
@@ -117,9 +110,6 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    
-
-    
     Methods.GP: lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
@@ -128,8 +118,6 @@ methods = {
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
     ),
-    
-    
     Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
@@ -140,9 +128,8 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ), 
-
     Methods.NeuralBandSH: lambda method_arguments: NeuralbandScheduler(
-        gamma = 0.04,
+        gamma = 0.05,
         nu = 0.02,
         max_while_loop = 50,
         step_size = 5,
@@ -156,7 +143,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
     
     Methods.NeuralBandHB: lambda method_arguments: NeuralbandScheduler(
         gamma = 0.04,
@@ -173,10 +159,8 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
-    
     Methods.NeuralBand_UCB: lambda method_arguments: NeuralbandUCBScheduler(
-        gamma = 0.1,
+        lamdba = 0.1,
         nu = 0.001,
         max_while_loop = 50,
         step_size = 5,
@@ -190,9 +174,8 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
     Methods.NeuralBand_TS: lambda method_arguments: NeuralbandTSScheduler(
-        gamma = 0.1,
+        lamdba = 0.1,
         nu = 0.001,
         max_while_loop = 50,
         step_size = 5,
@@ -206,7 +189,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
     Methods.NeuralBandEpsilon: lambda method_arguments: NeuralbandEGreedyScheduler(
         epsilon = 0.1,
         max_while_loop = 1000,
@@ -221,8 +203,6 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
-    
 }    
 
 

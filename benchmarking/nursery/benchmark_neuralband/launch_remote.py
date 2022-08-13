@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -35,10 +34,8 @@ if __name__ == "__main__":
     )
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
-    #experiment_tag = "tttNtest5"
-    print("experiment_tag", experiment_tag)
     hash = random_string(4)
-    print(methods.keys())
+    num_seeds = 5
     for method in methods.keys():
         sm_args = dict(
             entry_point="benchmark_main.py",
@@ -51,13 +48,13 @@ if __name__ == "__main__":
             py_version="py38",
             framework_version="1.10.0",
             max_run=3600 * 72,
-            role= 'arn:aws:iam::036649622372:role/service-role/AmazonSageMakerServiceCatalogProductsUseRole',
+            role=get_execution_role(),
             dependencies=syne_tune.__path__ + benchmarking.__path__,
             disable_profiler=True,
         )
         
         if method == Methods.NeuralBandSH or method == Methods.NeuralBandHB or method == Methods.MOBSTER:
-            for seed in range(3):
+            for seed in range(num_seeds):
                 for benchm in benchmark_names:
                     print(f"{experiment_tag}-{method}-{benchm}-{seed}")
                     sm_args["hyperparameters"] = {
@@ -71,7 +68,7 @@ if __name__ == "__main__":
                     est.fit(job_name=f"{experiment_tag}-{method}-{benchm}-{seed}-{hash}", wait=False)
                     
         elif method == Methods.NeuralBand_UCB or method == Methods.NeuralBand_TS or method == Methods.NeuralBandEpsilon:
-            for seed in range(3):
+            for seed in range(num_seeds):
                 for benchm in benchmark_names:
                     print(f"{experiment_tag}-{method}-{benchm}-{seed}")
                     sm_args["hyperparameters"] = {
@@ -88,14 +85,14 @@ if __name__ == "__main__":
             print(f"{experiment_tag}-{method}")
             sm_args["hyperparameters"] = {
                 "experiment_tag": experiment_tag,
-                "num_seeds": 3,
+                "num_seeds": num_seeds,
                 "run_all_seed": 1,
                 "method": method,
             }
             est = PyTorch(**sm_args)
             est.fit(job_name=f"{experiment_tag}-{method}-{hash}", wait=False)
         else:
-            for seed in range(3):
+            for seed in range(num_seeds):
                 print(f"{experiment_tag}-{method}-{seed}")
                 sm_args["hyperparameters"] = {
                     "experiment_tag": experiment_tag,

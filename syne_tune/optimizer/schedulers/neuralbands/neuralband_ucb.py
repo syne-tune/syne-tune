@@ -14,10 +14,8 @@ import copy
 import logging
 import os
 from typing import Dict, Optional, List
-
 import numpy as np
 import torch
-
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
@@ -45,12 +43,10 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
-
 logger = logging.getLogger(__name__)
 
 def is_continue_decision(trial_decision: str) -> bool:
     return trial_decision == SchedulerDecision.CONTINUE
-
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandBracketManager, _ARGUMENT_KEYS, _CONSTRAINTS, _DEFAULT_OPTIONS
 from syne_tune.optimizer.scheduler import (
@@ -58,32 +54,32 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-
 from syne_tune.optimizer.schedulers.hyperband import _get_rung_levels, _is_positive_int, _sample_bracket
-
 from syne_tune.config_space import cast_config_values
-
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
      make_hyperparameter_ranges,
 )
-
 from syne_tune.optimizer.schedulers.neuralbands.networks import Exploitation
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 
-
-
 class NeuralbandUCBScheduler(HyperbandScheduler):
-
-    def __init__(self, config_space, gamma = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
-        # Before we can call the superclass constructor, we need to set a few
-        # members (see also `_extend_search_options`).
-        # To do this properly, we first check values and impute defaults for
-        # `kwargs`.
+    def __init__(self, config_space, lamdba = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
+        """
+        We combine Upper Confidence Bound with NeuralBand, where configuration selection criterion follows [1].
         
+        Reference: [1] Zhou, Dongruo, Lihong Li, and Quanquan Gu. "Neural contextual bandits with ucb-based 
+        exploration." International Conference on Machine Learning. PMLR, 2020.
+
+        Hyper-parameters:
+        lamdba: regularization term of gradient vector;
+        nu: control the aggressiveness exploration;
+        step_size: how many trials we train network once;
+        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        """
         super(NeuralbandUCBScheduler, self).__init__(config_space, **kwargs)
         self.kwargs = kwargs
 
@@ -94,25 +90,20 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
         self.net = Exploitation(dim = self.input_dim)
 
         self.currnet_best_score = 1.0 
-        self.gamma = gamma
-        self.lamdba = 0.1
+        self.lamdba = lamdba
         self.nu = nu
                 
-        # how many trails we train network once
-        if self.mode == "min":
-            self.train_step_size = step_size
-        else:
-            self.train_step_size = 2
+        # how many trials we train network once
+        self.train_step_size = step_size
         
         # maximal while loop limit
-        self.max_while_loop = max_while_loop        
+        self.max_while_loop = max_while_loop   
+        # graident vector
         self.U = self.lamdba * torch.ones((self.net.total_param,))
         
-
             
     def _initialize_searcher_new(self): 
         searcher = self.kwargs["searcher"]     
-        print("configurations run out and initialize the searcher", searcher)
         search_options = self.kwargs.get("search_options")
         if search_options is None:
             search_options = dict()
@@ -140,11 +131,7 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
         self._searcher_initialized = True
 
             
-    
-    
-        
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-                
         self._initialize_searcher()
         # If no time keeper was provided at construction, we use a local
         # one which is started here
@@ -162,19 +149,15 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
         extra_kwargs["elapsed_time"] = self._elapsed_time()
         trial_id = str(trial_id)
         
-        
-        # added code ----------- Ban ------------
+        # UCB selection criterion
         initial_budget = self.net.average_b
         while_loop_count = 0
         l_t_score = []
-
         while 1:
             config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
-                
             if config is not None:
                 config_encoding =  self.hp_ranges.to_ndarray(config)
                 predict_value = self.net.predict((config_encoding, initial_budget))
-                
                 self.net.func.zero_grad()
                 predict_value.backward(retain_graph=True)
                 g = torch.cat([p.grad.flatten().detach() for p in self.net.func.parameters()])
@@ -182,34 +165,25 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
                 predict_score =predict_value.item() + cb
                 l_t_score.append((config, predict_score))
                 while_loop_count += 1
-
                 if self.mode == "min":
-
                     if while_loop_count > self.max_while_loop:
                         l_t_score = sorted(l_t_score, key = lambda x: x[1])
                         config = l_t_score[0][0]
                         break
-                        
                 else:
-                    
                     if while_loop_count > self.max_while_loop:
                         l_t_score = sorted(l_t_score, key = lambda x: x[1], reverse=True)
                         config = l_t_score[0][0]
                         break
-                    
             else:
                 self._searcher_initialized = False
                 self._initialize_searcher_new()
                 config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
                 break
-                
-        #------------- Ban ----------------
-                
         if config is not None:
             config = cast_config_values(config, self.config_space)
             config = self._on_config_suggest(config, trial_id, **extra_kwargs)
             config = TrialSuggestion.start_suggestion(config)
-            
         return config    
 
 
@@ -226,8 +200,6 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
                     "from reporter"
                 )
         else:
-            
-            # added code
             # Time since start of experiment
             time_since_start = self._elapsed_time()
             do_update = False
@@ -258,21 +230,15 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
                     f"report {result}\nThis report is ignored"
                 )
             else:
-
-                # added code -------------- Ban ------------------
-
+                # update neural network
                 config = trial.config
                 config_encoding =  self.hp_ranges.to_ndarray(config)
                 hp_budget = 1
-
                 if "epoch" in result:
                     hp_budget = float(result["epoch"]/self.max_t) 
                 else:    
                     hp_budget = float(result["hp_epoch"]/self.max_t) 
-                
-                
                 test_loss = result[self.metric]
-
                 # update current best score
                 if self.mode == "min":
                     if test_loss < self.currnet_best_score:
@@ -280,16 +246,10 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
                 else:
                     if test_loss > self.currnet_best_score:
                         self.currnet_best_score = test_loss                 
-           
                 self.net.add_data((config_encoding, hp_budget), test_loss)
-                
                 # train network
                 if self.net.data_size % self.train_step_size ==0:
                     self.net.train()
-                
-                # ---------------- ban ------------------
-                
-                
                 
                 task_info = self.terminator.on_task_report(trial_id, result)
                 task_continues = task_info["task_continues"]
@@ -374,6 +334,3 @@ class NeuralbandUCBScheduler(HyperbandScheduler):
         log_msg += f"): decision = {trial_decision}"
         logger.debug(log_msg)
         return trial_decision
-
-
-        

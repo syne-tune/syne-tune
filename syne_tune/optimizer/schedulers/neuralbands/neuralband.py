@@ -58,56 +58,54 @@ from syne_tune.optimizer.scheduler import (
 )
 
 from syne_tune.optimizer.schedulers.hyperband import _get_rung_levels, _is_positive_int, _sample_bracket
-
 from syne_tune.config_space import cast_config_values
-
-
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
      make_hyperparameter_ranges,
 )
-
 from syne_tune.optimizer.schedulers.neuralbands.networks import Exploitation
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 
 class NeuralbandScheduler(HyperbandScheduler):
-
     def __init__(self, config_space, gamma = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
-        # Before we can call the superclass constructor, we need to set a few
-        # members (see also `_extend_search_options`).
-        # To do this properly, we first check values and impute defaults for
-        # `kwargs`.
+        """
+        NeuralBand is a neural-bandit-based HPO algorithm under multi-fedility setting, where a budget-aware neural network is
+        carefully designed and the feedback perturbation is utilized for efficient fidelity-aware exploration.  
+        NeuralBand uses a novel configuration selection criterion to actively choose configuration in each trial 
+        and incrementally exploits the knowledge of every past trial.
         
-        
+        hyper-parameters of NeuralBand:
+        gamma: control the aggressiveness of configuration selection criterion;
+        nu: control the aggressiveness of perturbing feedback for exploration;
+        step_size: how many trials we train network once;
+        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        """
         super(NeuralbandScheduler, self).__init__(config_space, **kwargs)
         self.kwargs = kwargs
         
-        # encoding
+        # to encode configuration
         self.hp_ranges = make_hyperparameter_ranges(config_space = self.config_space)
         self.input_dim = self.hp_ranges.ndarray_size
            
-        #neural network
+        # initialize neural network
         self.net = Exploitation(dim = self.input_dim)
-        self.net.brackets = kwargs["brackets"]
-        
         self.currnet_best_score = 1.0 
+        
         self.gamma = gamma
         self.nu = nu
+        
+        self.train_step_size = step_size
         if self.mode == "min":
-            self.train_step_size = step_size
+            self.max_while_loop = max_while_loop
         else:
-            self.train_step_size = 2
-                
-        # how many trails we train network once
-        self.max_while_loop = max_while_loop
+            self.max_while_loop = 2         
         
  
     def _initialize_searcher_new(self): 
         searcher = self.kwargs["searcher"]     
-        print("configurations run out and initialize the searcher", searcher)
         search_options = self.kwargs.get("search_options")
         if search_options is None:
             search_options = dict()
@@ -133,13 +131,9 @@ class NeuralbandScheduler(HyperbandScheduler):
             search_options["scheduler"] = "fifo"
         self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
         self._searcher_initialized = True
-
-
-             
-    
+        
         
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-                
         self._initialize_searcher()
         # If no time keeper was provided at construction, we use a local
         # one which is started here
@@ -157,60 +151,43 @@ class NeuralbandScheduler(HyperbandScheduler):
         extra_kwargs["elapsed_time"] = self._elapsed_time()
         trial_id = str(trial_id)
         
-        # added code ----------- Ban ------------
+        # active selection criterion
         initial_budget = self.net.max_b
         while_loop_count = 0
         l_t_score = []
         while 1:
             config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
-           
-            
             if config is not None:
                 config_encoding =  self.hp_ranges.to_ndarray(config)
                 predict_score = self.net.predict((config_encoding, initial_budget)).item()
                 l_t_score.append((config, predict_score))
-               
-     
                 if self.mode == "min":
-
                     if self.currnet_best_score - predict_score > self.gamma * self.currnet_best_score * (1.0 - initial_budget / self.max_t):
                         break
-                    
                     if while_loop_count > self.max_while_loop:
                         l_t_score = sorted(l_t_score, key = lambda x: x[1])
                         config = l_t_score[0][0]
                         break
-                        
                 else:
                     if predict_score*100.0 - self.currnet_best_score > self.gamma * (100.0 - self.currnet_best_score ) * (1.0 - initial_budget / self.max_t):
                         break
-                    
-                    if while_loop_count > (self.max_while_loop/20):
+                    if while_loop_count > self.max_while_loop:
                         l_t_score = sorted(l_t_score, key = lambda x: x[1], reverse=True)
                         config = l_t_score[0][0]
                         break
                 while_loop_count += 1      
-                
-                    
             else:
                 self._searcher_initialized = False
                 self._initialize_searcher_new()
                 config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
                 break
                 
-        #------------- Ban ----------------
         if config is not None:
             config = cast_config_values(config, self.config_space)
             config = self._on_config_suggest(config, trial_id, **extra_kwargs)
             config = TrialSuggestion.start_suggestion(config)
             
         return config    
-
-        
-
-    
-
-   
 
 
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
@@ -226,8 +203,6 @@ class NeuralbandScheduler(HyperbandScheduler):
                     "from reporter"
                 )
         else:
-            
-            # added code
             # Time since start of experiment
             time_since_start = self._elapsed_time()
             do_update = False
@@ -258,41 +233,29 @@ class NeuralbandScheduler(HyperbandScheduler):
                     f"report {result}\nThis report is ignored"
                 )
             else:
-
-                # added code -------------- Ban ------------------
-                
+                # perturb the feedback and train network
                 config = trial.config
                 config_encoding =  self.hp_ranges.to_ndarray(config)
                 if "epoch" in result:
                     hp_budget = float(result["epoch"]/self.max_t) 
                 else:    
                     hp_budget = float(result["hp_epoch"]/self.max_t) 
-                
-                
                 test_loss = result[self.metric]
-                
                 # update current best score
                 if self.mode == "min":
                     if test_loss < self.currnet_best_score:
                         self.currnet_best_score = test_loss
-                        #print("current_best_score:", self.currnet_best_score)
                     perturbed_loss = test_loss + np.random.normal(0, self.nu* self.currnet_best_score *(1 - hp_budget))
                 else:
                     if test_loss > self.currnet_best_score:
                         self.currnet_best_score = test_loss
-
                     perturbed_loss = (test_loss + np.random.normal(0, self.nu* (100.0- test_loss) *(1 - hp_budget)))/100.0
-                 
-
                 self.net.add_data((config_encoding, hp_budget), perturbed_loss )
                 
                 # train network
                 if self.net.data_size % self.train_step_size ==0:
                     predict_score = self.net.predict((config_encoding, hp_budget)).item()
                     self.net.train()
-
-                    
-                  # ---------------- ban ------------------
 
                 task_info = self.terminator.on_task_report(trial_id, result)
                 task_continues = task_info["task_continues"]
@@ -377,6 +340,3 @@ class NeuralbandScheduler(HyperbandScheduler):
         log_msg += f"): decision = {trial_decision}"
         logger.debug(log_msg)
         return trial_decision
-
-  
-              

@@ -10,8 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
-
 import numpy as np
 import argparse
 import pickle
@@ -23,16 +21,15 @@ import scipy as sp
 import torch.nn as nn
 import torch.optim as optim
 
-
 if torch.cuda.is_available():  
     dev = "cuda:0" 
 else:  
     dev = "cpu" 
 device = torch.device(dev)
 
-class Network_exploitation(nn.Module):
+class NetworkExploitation(nn.Module):
     def __init__(self, dim, hidden_size=100):
-        super(Network_exploitation, self).__init__()
+        super(NetworkExploitation, self).__init__()
         self.fc1 = nn.Linear(dim, hidden_size)
         self.activate = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size, hidden_size)
@@ -45,21 +42,30 @@ class Network_exploitation(nn.Module):
     
 class Exploitation:
     def __init__(self, dim, lr = 0.001, hidden=100):
-        '''dim: number of dimensions of input'''    
-        '''lr: learning rate'''
-        '''hidden: number of hidden nodes'''
-        
-        self.func = Network_exploitation(dim, hidden_size=hidden).to(device)
-        self.x1_list = []
-        self.b_list = []
-        self.reward = []
+        """ the budget-aware network of NeuralBand"""
+        # dim: number of dimensions of configuration vector    
+        # lr: learning rate OF Adam
+        # hidden: width of neural network
         self.lr = lr
-        self.brackets = 1
-        self.total_param = sum(p.numel() for p in self.func.parameters() if p.requires_grad)
+        self.func = NetworkExploitation(dim, hidden_size=hidden).to(device)
         
+        # store all configuration vectors
+        self.x1_list = []
+        # store all budgets
+        self.b_list = []
+        # store all evluated score
+        self.reward_list = []
+        
+        # number of paramters of neural network
+        self.total_param = sum(p.numel() for p in self.func.parameters() if p.requires_grad)
+        # size of stored data
         self.data_size = 0
+        
+        # sum of all budgets
         self.sum_b = 0.01
+        # average over all budgets
         self.average_b = 0.01
+        # the maximal budget occured so far
         self.max_b = 0.01
     
     
@@ -68,7 +74,7 @@ class Exploitation:
         b = torch.tensor(x[1]).float()
         self.x1_list.append(x1)
         self.b_list.append(b) 
-        self.reward.append(reward)
+        self.reward_list.append(reward)
         self.data_size +=1
         self.sum_b += x[1]
         if self.max_b < x[1]:
@@ -85,7 +91,7 @@ class Exploitation:
     
     def train(self):
         optimizer = optim.Adam(self.func.parameters(), lr=self.lr)
-        length = len(self.reward)    
+        length = len(self.reward_list)    
         index = np.arange(length)    
         np.random.shuffle(index)
         cnt = 0
@@ -95,7 +101,7 @@ class Exploitation:
             for idx in index:
                 x1 =self.x1_list[idx].to(device)
                 b = self.b_list[idx].to(device)
-                r = self.reward[idx]
+                r = self.reward_list[idx]
                 optimizer.zero_grad()
                 loss = (self.func(x1, b) - r)**2 
                 loss.backward()
@@ -107,8 +113,4 @@ class Exploitation:
                     return tot_loss / cnt
             if batch_loss / length <= 1e-4:
                 return batch_loss / length
-
-    
-    
-
-               
+              

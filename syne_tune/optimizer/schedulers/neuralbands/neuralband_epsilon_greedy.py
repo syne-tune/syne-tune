@@ -14,7 +14,6 @@ import copy
 import logging
 import os
 from typing import Dict, Optional, List
-
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
@@ -44,12 +43,10 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
-
 logger = logging.getLogger(__name__)
 
 def is_continue_decision(trial_decision: str) -> bool:
     return trial_decision == SchedulerDecision.CONTINUE
-
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandBracketManager, _ARGUMENT_KEYS, _CONSTRAINTS, _DEFAULT_OPTIONS
 from syne_tune.optimizer.scheduler import (
@@ -59,55 +56,47 @@ from syne_tune.optimizer.scheduler import (
 )
 
 from syne_tune.optimizer.schedulers.hyperband import _get_rung_levels, _is_positive_int, _sample_bracket
-
 from syne_tune.config_space import cast_config_values
-
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
      make_hyperparameter_ranges,
 )
-
 from syne_tune.optimizer.schedulers.neuralbands.networks import Exploitation
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 
-
 class NeuralbandEGreedyScheduler(HyperbandScheduler):
-
     def __init__(self, config_space, epsilon = 0.1, step_size = 30, max_while_loop = 100,  **kwargs):
-        # Before we can call the superclass constructor, we need to set a few
-        # members (see also `_extend_search_options`).
-        # To do this properly, we first check values and impute defaults for
-        # `kwargs`.
+        """
+        We combine the epsilon-greedy strategy with NeuralBand, where we randomly select configurations with 
+        probability epsilon or use the greedy strategy to select configurations with probability 1-epsilon
+        in each trial.
+        
+        Hyper-parameters:
+        epsilon: the probability of making random selection;
+        step_size: how many trials we train network once;
+        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        """
         super(NeuralbandEGreedyScheduler, self).__init__(config_space, **kwargs)
         self.kwargs = kwargs
         
-        # encoding
+        # to encode configuration
         self.hp_ranges = make_hyperparameter_ranges(config_space = self.config_space)
         self.input_dim = self.hp_ranges.ndarray_size
-        #print("--input dim--", self.input_dim)
-        
-   
-        #neural network
+
+        # initialize neural network
         self.net = Exploitation(dim = self.input_dim)        
         self.currnet_best_score = 1.0 
         self.epsilon = epsilon
                 
-        # how many trails we train network once
         self.train_step_size = step_size
-        
-        # maximal while loop limit
         self.max_while_loop = max_while_loop
         
         
-   
-
-            
     def _initialize_searcher_new(self): 
             searcher = self.kwargs["searcher"]     
-            print("configurations run out and initialize the searcher", searcher)
             search_options = self.kwargs.get("search_options")
             if search_options is None:
                 search_options = dict()
@@ -134,12 +123,8 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
             self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
             self._searcher_initialized = True
 
-            
-    
-    
-        
+                 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-                
         self._initialize_searcher()
         # If no time keeper was provided at construction, we use a local
         # one which is started here
@@ -156,9 +141,8 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
         # Ask searcher for config of new trial to start
         extra_kwargs["elapsed_time"] = self._elapsed_time()
         trial_id = str(trial_id)
-        
-        
-        # ----------- Ban ------------
+         
+        # epsilon greedy selection criterion
         initial_budget = self.net.average_b
         while_loop_count = 0
         l_t_score = []
@@ -168,40 +152,31 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
         else:
             while 1:
                 config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
-
                 if config is not None:
                     config_encoding =  self.hp_ranges.to_ndarray(config)
                     predict_score = self.net.predict((config_encoding, initial_budget)).item()
                     l_t_score.append((config, predict_score))
                     while_loop_count += 1
-
                     if self.mode == "min":
-
                         if while_loop_count > self.max_while_loop:
                             l_t_score = sorted(l_t_score, key = lambda x: x[1])
                             config = l_t_score[0][0]
                             break
-
                     else:
-
                         if while_loop_count > self.max_while_loop:
                             l_t_score = sorted(l_t_score, key = lambda x: x[1], reverse=True)
                             config = l_t_score[0][0]
                             break
-
                 else:
                     self._searcher_initialized = False
                     self._initialize_searcher_new()
                     config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
                     break
-                
-        #------------- Ban ----------------
-                
+                                
         if config is not None:
             config = cast_config_values(config, self.config_space)
             config = self._on_config_suggest(config, trial_id, **extra_kwargs)
             config = TrialSuggestion.start_suggestion(config)
-            
         return config    
 
         
@@ -218,7 +193,6 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
                     "from reporter"
                 )
         else:
-            
             # Time since start of experiment
             time_since_start = self._elapsed_time()
             do_update = False
@@ -249,20 +223,13 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
                     f"report {result}\nThis report is ignored"
                 )
             else:
-
-                #  -------------- Ban ------------------
-                
+                # update neural network
                 config = trial.config
                 config_encoding =  self.hp_ranges.to_ndarray(config)
-                hp_budget = 1
-                # normalize budget
-                #print(result)
                 if "epoch" in result:
                     hp_budget = float(result["epoch"]/self.max_t) 
                 else:    
                     hp_budget = float(result["hp_epoch"]/self.max_t) 
-                
-                
                 test_loss = result[self.metric]
 
                 # update current best score
@@ -272,16 +239,13 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
                 else:
                     if test_loss > self.currnet_best_score:
                         self.currnet_best_score = test_loss
-                 
-                # perturb loss
+
                 self.net.add_data((config_encoding, hp_budget), test_loss )
                 
                 # train network
                 if self.net.data_size % self.train_step_size ==0:
                     self.net.train()
                 
-                # ---------------- ban ------------------
-
                 task_info = self.terminator.on_task_report(trial_id, result)
                 task_continues = task_info["task_continues"]
                 milestone_reached = task_info["milestone_reached"]
@@ -365,4 +329,3 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
         log_msg += f"): decision = {trial_decision}"
         logger.debug(log_msg)
         return trial_decision
-

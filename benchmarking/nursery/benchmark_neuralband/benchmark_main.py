@@ -10,9 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
 from typing import Dict, Optional, List
-
 import numpy as np
 import itertools
 import logging
@@ -132,17 +130,11 @@ if __name__ == "__main__":
         seeds = [args.num_seeds]
 
     method_names = [args.method] if args.method is not None else list(methods.keys())
-
-    
     benchmark_names = (
         [args.benchmark]
         if args.benchmark is not None
         else list(benchmark_definitions.keys())
     )
-
-    #benchmark_names = ['fcnet-protein']
-
-    print(benchmark_names)
     logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
     logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
@@ -186,11 +178,8 @@ if __name__ == "__main__":
                 use_surrogates="lcbench" in benchmark_name,
             )
         )
-        print("benchmark.max_wallclock_time:", benchmark.max_wallclock_time)
-        print("max_num_evaluations", benchmark.max_num_evaluations)
         stop_criterion = StoppingCriterion(
             max_wallclock_time=benchmark.max_wallclock_time,
-            #max_num_evaluations=benchmark.max_num_evaluations,
         )
         tuner = Tuner(
             trial_backend=backend,
