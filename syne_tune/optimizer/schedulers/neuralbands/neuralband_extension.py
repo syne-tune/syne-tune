@@ -15,7 +15,7 @@ import logging
 import os
 from typing import Dict, Optional, List
 import numpy as np
-
+import torch
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
@@ -67,19 +67,9 @@ from syne_tune.optimizer.schedulers.neuralbands.networks import Exploitation
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 
-class NeuralbandEGreedyScheduler(HyperbandScheduler):
-    def __init__(self, config_space, epsilon = 0.1, step_size = 30, max_while_loop = 100,  **kwargs):
-        """
-        We combine the epsilon-greedy strategy with NeuralBand, where we randomly select configurations with 
-        probability epsilon or use the greedy strategy to select configurations with probability 1-epsilon
-        in each trial.
-        
-        Hyper-parameters:
-        epsilon: the probability of making random selection;
-        step_size: how many trials we train network once;
-        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
-        """
-        super(NeuralbandEGreedyScheduler, self).__init__(config_space, **kwargs)
+class NeuralbandSchedulerBase(HyperbandScheduler):
+    def __init__(self, config_space, step_size, max_while_loop,  **kwargs):
+        super(NeuralbandSchedulerBase, self).__init__(config_space, **kwargs)
         self.kwargs = kwargs
         
         # to encode configuration
@@ -88,9 +78,7 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
 
         # initialize neural network
         self.net = Exploitation(dim = self.input_dim)        
-        self.currnet_best_score = 1.0 
-        self.epsilon = epsilon
-                
+        self.currnet_best_score = 1.0                 
         self.train_step_size = step_size
         self.max_while_loop = max_while_loop
         
@@ -123,63 +111,7 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
             self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
             self._searcher_initialized = True
 
-                 
-    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        self._initialize_searcher()
-        # If no time keeper was provided at construction, we use a local
-        # one which is started here
-        if self.time_keeper is None:
-            self.time_keeper = RealTimeKeeper()
-            self.time_keeper.start_of_time()
-        # For pause/resume schedulers: Can a paused trial be promoted?
-        promote_trial_id, extra_kwargs = self._promote_trial()
-        if promote_trial_id is not None:
-            promote_trial_id = int(promote_trial_id)
-            return TrialSuggestion.resume_suggestion(
-                trial_id=promote_trial_id, config=extra_kwargs
-            )
-        # Ask searcher for config of new trial to start
-        extra_kwargs["elapsed_time"] = self._elapsed_time()
-        trial_id = str(trial_id)
-         
-        # epsilon greedy selection criterion
-        initial_budget = self.net.average_b
-        while_loop_count = 0
-        l_t_score = []
-        epsilon = np.random.binomial(1, self.epsilon)
-        if epsilon:
-            config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
-        else:
-            while 1:
-                config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
-                if config is not None:
-                    config_encoding =  self.hp_ranges.to_ndarray(config)
-                    predict_score = self.net.predict((config_encoding, initial_budget)).item()
-                    l_t_score.append((config, predict_score))
-                    while_loop_count += 1
-                    if self.mode == "min":
-                        if while_loop_count > self.max_while_loop:
-                            l_t_score = sorted(l_t_score, key = lambda x: x[1])
-                            config = l_t_score[0][0]
-                            break
-                    else:
-                        if while_loop_count > self.max_while_loop:
-                            l_t_score = sorted(l_t_score, key = lambda x: x[1], reverse=True)
-                            config = l_t_score[0][0]
-                            break
-                else:
-                    self._searcher_initialized = False
-                    self._initialize_searcher_new()
-                    config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
-                    break
-                                
-        if config is not None:
-            config = cast_config_values(config, self.config_space)
-            config = self._on_config_suggest(config, trial_id, **extra_kwargs)
-            config = TrialSuggestion.start_suggestion(config)
-        return config    
-
-        
+                    
     def on_trial_result(self, trial: Trial, result: Dict) -> str:
         self._check_result(result)
         trial_id = str(trial.trial_id)
@@ -329,3 +261,233 @@ class NeuralbandEGreedyScheduler(HyperbandScheduler):
         log_msg += f"): decision = {trial_decision}"
         logger.debug(log_msg)
         return trial_decision
+
+    
+class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
+    def __init__(self, config_space, epsilon = 0.1, step_size = 30, max_while_loop = 100,  **kwargs):
+        """
+        We combine the epsilon-greedy strategy with NeuralBand, where we randomly select configurations with 
+        probability epsilon or use the greedy strategy to select configurations with probability 1-epsilon
+        in each trial.
+        
+        Hyper-parameters:
+        epsilon: the probability of making random selection;
+        step_size: how many trials we train network once;
+        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        """
+        super(NeuralbandEGreedyScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
+        self.epsilon = epsilon
+
+
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+        self._initialize_searcher()
+        # If no time keeper was provided at construction, we use a local
+        # one which is started here
+        if self.time_keeper is None:
+            self.time_keeper = RealTimeKeeper()
+            self.time_keeper.start_of_time()
+        # For pause/resume schedulers: Can a paused trial be promoted?
+        promote_trial_id, extra_kwargs = self._promote_trial()
+        if promote_trial_id is not None:
+            promote_trial_id = int(promote_trial_id)
+            return TrialSuggestion.resume_suggestion(
+                trial_id=promote_trial_id, config=extra_kwargs
+            )
+        # Ask searcher for config of new trial to start
+        extra_kwargs["elapsed_time"] = self._elapsed_time()
+        trial_id = str(trial_id)
+         
+        # epsilon greedy selection criterion
+        initial_budget = self.net.average_b
+        while_loop_count = 0
+        l_t_score = []
+        epsilon = np.random.binomial(1, self.epsilon)
+        if epsilon:
+            config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
+        else:
+            while 1:
+                config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
+                if config is not None:
+                    config_encoding =  self.hp_ranges.to_ndarray(config)
+                    predict_score = self.net.predict((config_encoding, initial_budget)).item()
+                    l_t_score.append((config, predict_score))
+                    while_loop_count += 1
+                    if self.mode == "min":
+                        if while_loop_count > self.max_while_loop:
+                            l_t_score = sorted(l_t_score, key = lambda x: x[1])
+                            config = l_t_score[0][0]
+                            break
+                    else:
+                        if while_loop_count > self.max_while_loop:
+                            l_t_score = sorted(l_t_score, key = lambda x: x[1], reverse=True)
+                            config = l_t_score[0][0]
+                            break
+                else:
+                    self._searcher_initialized = False
+                    self._initialize_searcher_new()
+                    config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
+                    break
+                                
+        if config is not None:
+            config = cast_config_values(config, self.config_space)
+            config = self._on_config_suggest(config, trial_id, **extra_kwargs)
+            config = TrialSuggestion.start_suggestion(config)
+        return config    
+
+    
+class NeuralbandTSScheduler(NeuralbandSchedulerBase):
+    def __init__(self, config_space, lamdba = 0.1, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
+        """
+        We combine Thompson Sampling strategy with NeuralBand, where configuration selection criterion follows [1].
+        
+        Reference: [1] ZHANG, Weitong, et al. "Neural Thompson Sampling." International Conference on Learning 
+        Representations. 2020.
+
+        Hyper-parameters:
+        lamdba: regularization term of gradient vector;
+        nu: control the aggressiveness exploration;
+        step_size: how many trials we train network once;
+        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        """
+        super(NeuralbandTSScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
+        self.lamdba = lamdba
+        self.nu = nu
+        # graident vector
+        self.U = self.lamdba * torch.ones((self.net.total_param,))
+        
+            
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+        self._initialize_searcher()
+        # If no time keeper was provided at construction, we use a local
+        # one which is started here
+        if self.time_keeper is None:
+            self.time_keeper = RealTimeKeeper()
+            self.time_keeper.start_of_time()
+        # For pause/resume schedulers: Can a paused trial be promoted?
+        promote_trial_id, extra_kwargs = self._promote_trial()
+        if promote_trial_id is not None:
+            promote_trial_id = int(promote_trial_id)
+            return TrialSuggestion.resume_suggestion(
+                trial_id=promote_trial_id, config=extra_kwargs
+            )
+        # Ask searcher for config of new trial to start
+        extra_kwargs["elapsed_time"] = self._elapsed_time()
+        trial_id = str(trial_id)
+        
+        # TS selection criterion
+        initial_budget = self.net.average_b
+        while_loop_count = 0
+        l_t_score = []
+        while 1:
+            config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
+            if config is not None:
+                config_encoding =  self.hp_ranges.to_ndarray(config)
+                predict_value = self.net.predict((config_encoding, initial_budget))
+                self.net.func.zero_grad()
+                predict_value.backward(retain_graph=True)
+                g = torch.cat([p.grad.flatten().detach() for p in self.net.func.parameters()])
+                cb = torch.sqrt(torch.sum(self.lamdba * g * g / self.U)).item()* self.nu
+                mean_value  = torch.tensor(predict_value.item())
+                predict_score = torch.normal(mean= mean_value, std=cb).item()
+                l_t_score.append((config, predict_score))
+                if self.mode == "min":
+                    if while_loop_count > self.max_while_loop:
+                        l_t_score = sorted(l_t_score, key = lambda x: x[1])
+                        config = l_t_score[0][0]
+                        break
+                else:
+                    if while_loop_count > (self.max_while_loop/20):
+                        l_t_score = sorted(l_t_score, key = lambda x: x[1], reverse=True)
+                        config = l_t_score[0][0]
+                        break
+                while_loop_count += 1   
+            else:
+                self._searcher_initialized = False
+                self._initialize_searcher_new()
+                config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
+                break
+                                
+        if config is not None:
+            config = cast_config_values(config, self.config_space)
+            config = self._on_config_suggest(config, trial_id, **extra_kwargs)
+            config = TrialSuggestion.start_suggestion(config)
+        return config 
+    
+    
+    
+class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
+    def __init__(self, config_space, lamdba = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
+        """
+        We combine Upper Confidence Bound with NeuralBand, where configuration selection criterion follows [1].
+        
+        Reference: [1] Zhou, Dongruo, Lihong Li, and Quanquan Gu. "Neural contextual bandits with ucb-based 
+        exploration." International Conference on Machine Learning. PMLR, 2020.
+
+        Hyper-parameters:
+        lamdba: regularization term of gradient vector;
+        nu: control the aggressiveness exploration;
+        step_size: how many trials we train network once;
+        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        """
+        super(NeuralbandUCBScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
+        self.lamdba = lamdba
+        self.nu = nu
+        # graident vector
+        self.U = self.lamdba * torch.ones((self.net.total_param,))
+        
+            
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+        self._initialize_searcher()
+        # If no time keeper was provided at construction, we use a local
+        # one which is started here
+        if self.time_keeper is None:
+            self.time_keeper = RealTimeKeeper()
+            self.time_keeper.start_of_time()
+        # For pause/resume schedulers: Can a paused trial be promoted?
+        promote_trial_id, extra_kwargs = self._promote_trial()
+        if promote_trial_id is not None:
+            promote_trial_id = int(promote_trial_id)
+            return TrialSuggestion.resume_suggestion(
+                trial_id=promote_trial_id, config=extra_kwargs
+            )
+        # Ask searcher for config of new trial to start
+        extra_kwargs["elapsed_time"] = self._elapsed_time()
+        trial_id = str(trial_id)
+        
+        # UCB selection criterion
+        initial_budget = self.net.average_b
+        while_loop_count = 0
+        l_t_score = []
+        while 1:
+            config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
+            if config is not None:
+                config_encoding =  self.hp_ranges.to_ndarray(config)
+                predict_value = self.net.predict((config_encoding, initial_budget))
+                self.net.func.zero_grad()
+                predict_value.backward(retain_graph=True)
+                g = torch.cat([p.grad.flatten().detach() for p in self.net.func.parameters()])
+                cb = torch.sqrt(torch.sum(self.lamdba * g * g / self.U)).item()* self.nu
+                predict_score =predict_value.item() + cb
+                l_t_score.append((config, predict_score))
+                while_loop_count += 1
+                if self.mode == "min":
+                    if while_loop_count > self.max_while_loop:
+                        l_t_score = sorted(l_t_score, key = lambda x: x[1])
+                        config = l_t_score[0][0]
+                        break
+                else:
+                    if while_loop_count > self.max_while_loop:
+                        l_t_score = sorted(l_t_score, key = lambda x: x[1], reverse=True)
+                        config = l_t_score[0][0]
+                        break
+            else:
+                self._searcher_initialized = False
+                self._initialize_searcher_new()
+                config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
+                break
+        if config is not None:
+            config = cast_config_values(config, self.config_space)
+            config = self._on_config_suggest(config, trial_id, **extra_kwargs)
+            config = TrialSuggestion.start_suggestion(config)
+        return config    
+

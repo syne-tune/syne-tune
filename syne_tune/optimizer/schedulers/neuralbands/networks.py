@@ -113,4 +113,8 @@ class Exploitation:
                     return tot_loss / cnt
             if batch_loss / length <= 1e-4:
                 return batch_loss / length
-              
+
+    
+    
+
+               

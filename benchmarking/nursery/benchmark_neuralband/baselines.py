@@ -29,9 +29,9 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
     QuantileBasedSurrogateSearcher,
 )
 from syne_tune.optimizer.schedulers.neuralbands.neuralband import NeuralbandScheduler
-from syne_tune.optimizer.schedulers.neuralbands.neuralband_ucb import NeuralbandUCBScheduler
-from syne_tune.optimizer.schedulers.neuralbands.neuralband_ts import NeuralbandTSScheduler
-from syne_tune.optimizer.schedulers.neuralbands.neuralband_epsilon_greedy import NeuralbandEGreedyScheduler
+from syne_tune.optimizer.schedulers.neuralbands.neuralband_extension import NeuralbandUCBScheduler
+from syne_tune.optimizer.schedulers.neuralbands.neuralband_extension import NeuralbandTSScheduler
+from syne_tune.optimizer.schedulers.neuralbands.neuralband_extension import NeuralbandEGreedyScheduler
 
 
 @dataclass
