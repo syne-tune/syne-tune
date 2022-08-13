@@ -43,12 +43,10 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 
-
 logger = logging.getLogger(__name__)
 
 def is_continue_decision(trial_decision: str) -> bool:
     return trial_decision == SchedulerDecision.CONTINUE
-
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandBracketManager, _ARGUMENT_KEYS, _CONSTRAINTS
 from syne_tune.optimizer.scheduler import (
