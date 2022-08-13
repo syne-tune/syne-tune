@@ -53,7 +53,7 @@ class Exploitation:
         self.x1_list = []
         # store all budgets
         self.b_list = []
-        # store all evaluated score
+        # store all evaluated scores
         self.reward_list = []
         
         # number of parameters of neural network
