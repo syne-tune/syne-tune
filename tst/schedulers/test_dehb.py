@@ -19,7 +19,6 @@ from syne_tune.optimizer.schedulers.synchronous import (
     GeometricDifferentialEvolutionHyperbandScheduler,
     DifferentialEvolutionHyperbandScheduler,
 )
-from syne_tune.optimizer.scheduler import TrialSuggestion
 
 
 def _create_scheduler(
