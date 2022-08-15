@@ -28,7 +28,7 @@ else:
 device = torch.device(dev)
 
 class NetworkExploitation(nn.Module):
-    def __init__(self, dim, hidden_size=100):
+    def __init__(self, dim: int, hidden_size: int = 100):
         super(NetworkExploitation, self).__init__()
         self.fc1 = nn.Linear(dim, hidden_size)
         self.activate = nn.ReLU()
@@ -41,7 +41,7 @@ class NetworkExploitation(nn.Module):
     
     
 class Exploitation:
-    def __init__(self, dim, lr = 0.001, hidden=100):
+    def __init__(self, dim: int, lr: float = 0.001, hidden: int = 100):
         """ the budget-aware network of NeuralBand"""
         # dim: number of dimensions of configuration vector    
         # lr: learning rate of Adam
@@ -69,7 +69,7 @@ class Exploitation:
         self.max_b = 0.01
     
     
-    def add_data(self, x, reward):
+    def add_data(self, x: list, reward: float):
         x1 = torch.tensor(x[0]).float()
         b = torch.tensor(x[1]).float()
         self.x1_list.append(x1)
@@ -82,14 +82,14 @@ class Exploitation:
         self.average_b = float(self.sum_b/self.data_size)
 
         
-    def predict(self, x):
+    def predict(self, x: list) -> torch.Tensor:
         x1 = torch.tensor(x[0]).float().to(device)
         b = torch.tensor(x[1]).float().to(device)
         res = self.func(x1, b)
         return res
 
     
-    def train(self):
+    def train(self) -> float:
         optimizer = optim.Adam(self.func.parameters(), lr=self.lr)
         length = len(self.reward_list)    
         index = np.arange(length)    

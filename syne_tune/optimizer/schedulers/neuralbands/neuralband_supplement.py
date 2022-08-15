@@ -68,7 +68,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
 
 class NeuralbandSchedulerBase(HyperbandScheduler):
-    def __init__(self, config_space, step_size, max_while_loop,  **kwargs):
+    def __init__(self, config_space: Dict, step_size: int, max_while_loop: int,  **kwargs):
         """
         Shared base scheduler for NeuralBand.
         
@@ -273,7 +273,7 @@ class NeuralbandSchedulerBase(HyperbandScheduler):
 
     
 class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space, epsilon = 0.1, step_size = 30, max_while_loop = 100,  **kwargs):
+    def __init__(self, config_space: Dict, epsilon: float = 0.1, step_size: int = 30, max_while_loop: int = 100,  **kwargs):
         """
         We combine the epsilon-greedy strategy with NeuralBand, where, with probability epsilon, 
         we select configurations either randomly or, with probability 1 - epsilon, greedily by 
@@ -344,7 +344,7 @@ class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
 
     
 class NeuralbandTSScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space, lamdba = 0.1, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
+    def __init__(self, config_space: Dict, lamdba: float = 0.1, nu: float = 0.01, step_size: int = 30, max_while_loop: int = 100,  **kwargs):
         """
         We combine Thompson Sampling strategy with NeuralBand, where configurations are selected based on the 
         criterion described by [1].
@@ -425,7 +425,7 @@ class NeuralbandTSScheduler(NeuralbandSchedulerBase):
     
     
 class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space, lamdba = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
+    def __init__(self, config_space: Dict, lamdba: float = 0.01, nu: float = 0.01, step_size: int = 30, max_while_loop: int = 100,  **kwargs):
         """
         We combine Upper Confidence Bound with NeuralBand, where configurations are selected based on the 
         upper confidence bound criterion following [1].

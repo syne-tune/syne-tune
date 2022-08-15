@@ -69,7 +69,7 @@ from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import Neu
 
 
 class NeuralbandScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space, gamma = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
+    def __init__(self, config_space: Dict, gamma: float = 0.01, nu: float = 0.01, step_size: int = 30, max_while_loop: int = 100,  **kwargs):
         """
         NeuralBand is a neural-bandit based HPO algorithm for the multi-fidelity setting. It uses a budget-aware neural 
         network together with a feedback perturbation to efficiently explore the input space across fidelities.  
