@@ -18,7 +18,9 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion
 from syne_tune.config_space import cast_config_values
 from syne_tune.backend.time_keeper import RealTimeKeeper
-from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import NeuralbandSchedulerBase
+from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import (
+    NeuralbandSchedulerBase,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -29,8 +31,15 @@ def is_continue_decision(trial_decision: str) -> bool:
 
 
 class NeuralbandScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space: Dict, gamma: float = 0.01, nu: float = 0.01, step_size: int = 30,
-                 max_while_loop: int = 100, **kwargs):
+    def __init__(
+        self,
+        config_space: Dict,
+        gamma: float = 0.01,
+        nu: float = 0.01,
+        step_size: int = 30,
+        max_while_loop: int = 100,
+        **kwargs,
+    ):
         """
         NeuralBand is a neural-bandit based HPO algorithm for the multi-fidelity setting. It uses a budget-aware neural
         network together with a feedback perturbation to efficiently explore the input space across fidelities.
@@ -44,7 +53,9 @@ class NeuralbandScheduler(NeuralbandSchedulerBase):
         :param max_while_loop: Maximal number of times we can draw a configuration from configuration space
         :param kwargs:
         """
-        super(NeuralbandScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
+        super(NeuralbandScheduler, self).__init__(
+            config_space, step_size, max_while_loop, **kwargs
+        )
         self.gamma = gamma
         self.nu = nu
 
@@ -79,11 +90,17 @@ class NeuralbandScheduler(NeuralbandSchedulerBase):
             config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
             if config is not None:
                 config_encoding = self.hp_ranges.to_ndarray(config)
-                predict_score = self.net.predict((config_encoding, initial_budget)).item()
+                predict_score = self.net.predict(
+                    (config_encoding, initial_budget)
+                ).item()
                 l_t_score.append((config, predict_score))
                 if self.mode == "min":
-                    if self.currnet_best_score - predict_score > self.gamma * self.currnet_best_score * (
-                            1.0 - initial_budget / self.max_t):
+                    if (
+                        self.currnet_best_score - predict_score
+                        > self.gamma
+                        * self.currnet_best_score
+                        * (1.0 - initial_budget / self.max_t)
+                    ):
                         break
                     if while_loop_count > self.max_while_loop:
                         l_t_score = sorted(l_t_score, key=lambda x: x[1])
@@ -91,7 +108,8 @@ class NeuralbandScheduler(NeuralbandSchedulerBase):
                         break
                 else:
                     if predict_score * 100.0 - self.currnet_best_score > self.gamma * (
-                            100.0 - self.currnet_best_score) * (1.0 - initial_budget / self.max_t):
+                        100.0 - self.currnet_best_score
+                    ) * (1.0 - initial_budget / self.max_t):
                         break
                     if while_loop_count > self.max_while_loop:
                         l_t_score = sorted(l_t_score, key=lambda x: x[1], reverse=True)
@@ -129,9 +147,9 @@ class NeuralbandScheduler(NeuralbandSchedulerBase):
             do_update = False
             config = self._preprocess_config(trial.config)
             cost_and_promotion = (
-                    self._cost_attr is not None
-                    and self._cost_attr in result
-                    and self.does_pause_resume()
+                self._cost_attr is not None
+                and self._cost_attr in result
+                and self.does_pause_resume()
             )
             if cost_and_promotion:
                 # Trial may have paused/resumed before, so need to add cost
@@ -166,18 +184,25 @@ class NeuralbandScheduler(NeuralbandSchedulerBase):
                 if self.mode == "min":
                     if test_loss < self.currnet_best_score:
                         self.currnet_best_score = test_loss
-                    perturbed_loss = test_loss + np.random.normal(0,
-                                                                  self.nu * self.currnet_best_score * (1 - hp_budget))
+                    perturbed_loss = test_loss + np.random.normal(
+                        0, self.nu * self.currnet_best_score * (1 - hp_budget)
+                    )
                 else:
                     if test_loss > self.currnet_best_score:
                         self.currnet_best_score = test_loss
-                    perturbed_loss = (test_loss + np.random.normal(0, self.nu * (100.0 - test_loss) * (
-                                1 - hp_budget))) / 100.0
+                    perturbed_loss = (
+                        test_loss
+                        + np.random.normal(
+                            0, self.nu * (100.0 - test_loss) * (1 - hp_budget)
+                        )
+                    ) / 100.0
                 self.net.add_data((config_encoding, hp_budget), perturbed_loss)
 
                 # train network
                 if self.net.data_size % self.train_step_size == 0:
-                    predict_score = self.net.predict((config_encoding, hp_budget)).item()
+                    predict_score = self.net.predict(
+                        (config_encoding, hp_budget)
+                    ).item()
                     self.net.train()
 
                 task_info = self.terminator.on_task_report(trial_id, result)
@@ -219,9 +244,9 @@ class NeuralbandScheduler(NeuralbandSchedulerBase):
                     if largest_update_resource is None:
                         largest_update_resource = resource - 1
                     assert largest_update_resource <= resource, (
-                            f"Internal error (trial_id {trial_id}): "
-                            + f"on_trial_result called with resource = {resource}, "
-                            + f"but largest_update_resource = {largest_update_resource}"
+                        f"Internal error (trial_id {trial_id}): "
+                        + f"on_trial_result called with resource = {resource}, "
+                        + f"but largest_update_resource = {largest_update_resource}"
                     )
                     if resource == largest_update_resource:
                         do_update = False  # Do not update again

@@ -16,22 +16,14 @@ from typing import Dict, Optional
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from syne_tune.optimizer.baselines import ZeroShotTransfer
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
-from syne_tune.optimizer.schedulers.transfer_learning import RUSHScheduler
-from syne_tune.optimizer.schedulers.transfer_learning.bounding_box import BoundingBox
-from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
-    RegularizedEvolution,
-)
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    QuantileBasedSurrogateSearcher,
-)
 from syne_tune.optimizer.schedulers.neuralbands.neuralband import NeuralbandScheduler
-from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import NeuralbandUCBScheduler
-from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import NeuralbandTSScheduler
-from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import NeuralbandEGreedyScheduler
+from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import (
+    NeuralbandUCBScheduler,
+    NeuralbandTSScheduler,
+    NeuralbandEGreedyScheduler,
+)
 
 
 @dataclass
@@ -57,9 +49,8 @@ class Methods:
     NeuralBandSH = "NeuralBandSH"
     NeuralBandHB = "NeuralBandHB"
     NeuralBand_UCB = "NeuralBandUCB"
-    NeuralBand_TS =  "NeuralBandTS"
+    NeuralBand_TS = "NeuralBandTS"
     NeuralBandEpsilon = "NeuralBandEpsilon"
-
 
 
 methods = {
@@ -85,7 +76,7 @@ methods = {
         searcher="random",
         search_options={"debug_log": False},
         mode=method_arguments.mode,
-        brackets = 3,
+        brackets=3,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
@@ -96,7 +87,7 @@ methods = {
         searcher="kde",
         search_options={"debug_log": False, "min_bandwidth": 0.1},
         mode=method_arguments.mode,
-        brackets = 3,
+        brackets=3,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
@@ -127,13 +118,13 @@ methods = {
         max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
-    ), 
+    ),
     Methods.NeuralBandSH: lambda method_arguments: NeuralbandScheduler(
-        gamma = 0.05,
-        nu = 0.02,
-        max_while_loop = 50,
-        step_size = 5,
-        brackets = 1,
+        gamma=0.05,
+        nu=0.02,
+        max_while_loop=50,
+        step_size=5,
+        brackets=1,
         config_space=method_arguments.config_space,
         searcher="random",
         search_options={"debug_log": False},
@@ -143,13 +134,12 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-    
     Methods.NeuralBandHB: lambda method_arguments: NeuralbandScheduler(
-        gamma = 0.04,
-        nu = 0.02,
-        max_while_loop = 50,
-        step_size = 5,
-        brackets = 3,
+        gamma=0.04,
+        nu=0.02,
+        max_while_loop=50,
+        step_size=5,
+        brackets=3,
         config_space=method_arguments.config_space,
         searcher="random",
         search_options={"debug_log": False},
@@ -160,13 +150,13 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBand_UCB: lambda method_arguments: NeuralbandUCBScheduler(
-        lamdba = 0.1,
-        nu = 0.001,
-        max_while_loop = 50,
-        step_size = 5,
+        lamdba=0.1,
+        nu=0.001,
+        max_while_loop=50,
+        step_size=5,
         config_space=method_arguments.config_space,
         searcher="random",
-        brackets = 3,
+        brackets=3,
         search_options={"debug_log": False},
         mode=method_arguments.mode,
         metric=method_arguments.metric,
@@ -175,13 +165,13 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBand_TS: lambda method_arguments: NeuralbandTSScheduler(
-        lamdba = 0.1,
-        nu = 0.001,
-        max_while_loop = 50,
-        step_size = 5,
+        lamdba=0.1,
+        nu=0.001,
+        max_while_loop=50,
+        step_size=5,
         config_space=method_arguments.config_space,
         searcher="random",
-        brackets = 3,
+        brackets=3,
         search_options={"debug_log": False},
         mode=method_arguments.mode,
         metric=method_arguments.metric,
@@ -190,12 +180,12 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBandEpsilon: lambda method_arguments: NeuralbandEGreedyScheduler(
-        epsilon = 0.1,
-        max_while_loop = 1000,
-        step_size = 5,
+        epsilon=0.1,
+        max_while_loop=1000,
+        step_size=5,
         config_space=method_arguments.config_space,
         searcher="random",
-        brackets = 3,
+        brackets=3,
         search_options={"debug_log": False},
         mode=method_arguments.mode,
         metric=method_arguments.metric,
@@ -203,7 +193,7 @@ methods = {
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
-}    
+}
 
 
 if __name__ == "__main__":

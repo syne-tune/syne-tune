@@ -57,7 +57,9 @@ class Exploitation:
         self.reward_list = []
 
         # number of parameters of neural network
-        self.total_param = sum(p.numel() for p in self.func.parameters() if p.requires_grad)
+        self.total_param = sum(
+            p.numel() for p in self.func.parameters() if p.requires_grad
+        )
         # size of stored data
         self.data_size = 0
 

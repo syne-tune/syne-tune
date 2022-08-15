@@ -21,7 +21,9 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 from syne_tune.config_space import cast_config_values
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import make_hyperparameter_ranges
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+    make_hyperparameter_ranges,
+)
 from syne_tune.optimizer.schedulers.neuralbands.networks import Exploitation
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 
@@ -34,7 +36,9 @@ def is_continue_decision(trial_decision: str) -> bool:
 
 
 class NeuralbandSchedulerBase(HyperbandScheduler):
-    def __init__(self, config_space: Dict, step_size: int, max_while_loop: int, **kwargs):
+    def __init__(
+        self, config_space: Dict, step_size: int, max_while_loop: int, **kwargs
+    ):
         """
         Shared base scheduler for NeuralBand.
 
@@ -103,9 +107,9 @@ class NeuralbandSchedulerBase(HyperbandScheduler):
             do_update = False
             config = self._preprocess_config(trial.config)
             cost_and_promotion = (
-                    self._cost_attr is not None
-                    and self._cost_attr in result
-                    and self.does_pause_resume()
+                self._cost_attr is not None
+                and self._cost_attr in result
+                and self.does_pause_resume()
             )
             if cost_and_promotion:
                 # Trial may have paused/resumed before, so need to add cost
@@ -190,9 +194,9 @@ class NeuralbandSchedulerBase(HyperbandScheduler):
                     if largest_update_resource is None:
                         largest_update_resource = resource - 1
                     assert largest_update_resource <= resource, (
-                            f"Internal error (trial_id {trial_id}): "
-                            + f"on_trial_result called with resource = {resource}, "
-                            + f"but largest_update_resource = {largest_update_resource}"
+                        f"Internal error (trial_id {trial_id}): "
+                        + f"on_trial_result called with resource = {resource}, "
+                        + f"but largest_update_resource = {largest_update_resource}"
                     )
                     if resource == largest_update_resource:
                         do_update = False  # Do not update again
@@ -237,8 +241,14 @@ class NeuralbandSchedulerBase(HyperbandScheduler):
 
 
 class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space: Dict, epsilon: float = 0.1, step_size: int = 30, max_while_loop: int = 100,
-                 **kwargs):
+    def __init__(
+        self,
+        config_space: Dict,
+        epsilon: float = 0.1,
+        step_size: int = 30,
+        max_while_loop: int = 100,
+        **kwargs,
+    ):
         """
         We combine the epsilon-greedy strategy with NeuralBand, where, with probability epsilon,
         we select configurations either randomly or, with probability 1 - epsilon, greedily by
@@ -250,7 +260,9 @@ class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
         :param max_while_loop:
         :param kwargs:
         """
-        super(NeuralbandEGreedyScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
+        super(NeuralbandEGreedyScheduler, self).__init__(
+            config_space, step_size, max_while_loop, **kwargs
+        )
         self.epsilon = epsilon
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
@@ -283,7 +295,9 @@ class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
                 config = self.searcher.get_config(**extra_kwargs, trial_id=trial_id)
                 if config is not None:
                     config_encoding = self.hp_ranges.to_ndarray(config)
-                    predict_score = self.net.predict((config_encoding, initial_budget)).item()
+                    predict_score = self.net.predict(
+                        (config_encoding, initial_budget)
+                    ).item()
                     l_t_score.append((config, predict_score))
                     while_loop_count += 1
                     if self.mode == "min":
@@ -293,7 +307,9 @@ class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
                             break
                     else:
                         if while_loop_count > self.max_while_loop:
-                            l_t_score = sorted(l_t_score, key=lambda x: x[1], reverse=True)
+                            l_t_score = sorted(
+                                l_t_score, key=lambda x: x[1], reverse=True
+                            )
                             config = l_t_score[0][0]
                             break
                 else:
@@ -310,8 +326,15 @@ class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
 
 
 class NeuralbandTSScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space: Dict, lamdba: float = 0.1, nu: float = 0.01, step_size: int = 30,
-                 max_while_loop: int = 100, **kwargs):
+    def __init__(
+        self,
+        config_space: Dict,
+        lamdba: float = 0.1,
+        nu: float = 0.01,
+        step_size: int = 30,
+        max_while_loop: int = 100,
+        **kwargs,
+    ):
         """
         We combine Thompson Sampling strategy with NeuralBand, where configurations are selected based on the
         criterion described by [1].
@@ -326,7 +349,9 @@ class NeuralbandTSScheduler(NeuralbandSchedulerBase):
         :param max_while_loop:
         :param kwargs:
         """
-        super(NeuralbandTSScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
+        super(NeuralbandTSScheduler, self).__init__(
+            config_space, step_size, max_while_loop, **kwargs
+        )
         self.lamdba = lamdba
         self.nu = nu
         # graident vector
@@ -361,8 +386,12 @@ class NeuralbandTSScheduler(NeuralbandSchedulerBase):
                 predict_value = self.net.predict((config_encoding, initial_budget))
                 self.net.func.zero_grad()
                 predict_value.backward(retain_graph=True)
-                g = torch.cat([p.grad.flatten().detach() for p in self.net.func.parameters()])
-                cb = torch.sqrt(torch.sum(self.lamdba * g * g / self.U)).item() * self.nu
+                g = torch.cat(
+                    [p.grad.flatten().detach() for p in self.net.func.parameters()]
+                )
+                cb = (
+                    torch.sqrt(torch.sum(self.lamdba * g * g / self.U)).item() * self.nu
+                )
                 mean_value = torch.tensor(predict_value.item())
                 predict_score = torch.normal(mean=mean_value, std=cb).item()
                 l_t_score.append((config, predict_score))
@@ -391,8 +420,15 @@ class NeuralbandTSScheduler(NeuralbandSchedulerBase):
 
 
 class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
-    def __init__(self, config_space: Dict, lamdba: float = 0.01, nu: float = 0.01, step_size: int = 30,
-                 max_while_loop: int = 100, **kwargs):
+    def __init__(
+        self,
+        config_space: Dict,
+        lamdba: float = 0.01,
+        nu: float = 0.01,
+        step_size: int = 30,
+        max_while_loop: int = 100,
+        **kwargs,
+    ):
 
         """
         We combine Upper Confidence Bound with NeuralBand, where configurations are selected based on the 
@@ -409,7 +445,9 @@ class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
         :param kwargs: 
         """
 
-        super(NeuralbandUCBScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
+        super(NeuralbandUCBScheduler, self).__init__(
+            config_space, step_size, max_while_loop, **kwargs
+        )
         self.lamdba = lamdba
         self.nu = nu
         # graident vector
@@ -444,8 +482,12 @@ class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
                 predict_value = self.net.predict((config_encoding, initial_budget))
                 self.net.func.zero_grad()
                 predict_value.backward(retain_graph=True)
-                g = torch.cat([p.grad.flatten().detach() for p in self.net.func.parameters()])
-                cb = torch.sqrt(torch.sum(self.lamdba * g * g / self.U)).item() * self.nu
+                g = torch.cat(
+                    [p.grad.flatten().detach() for p in self.net.func.parameters()]
+                )
+                cb = (
+                    torch.sqrt(torch.sum(self.lamdba * g * g / self.U)).item() * self.nu
+                )
                 predict_score = predict_value.item() + cb
                 l_t_score.append((config, predict_score))
                 while_loop_count += 1
