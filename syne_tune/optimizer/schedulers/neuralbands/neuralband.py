@@ -10,48 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import copy
 import logging
-import os
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.hyperband_cost_promotion import (
-    CostPromotionRungSystem,
-)
-from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
-from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
-from syne_tune.optimizer.schedulers.hyperband_rush import (
-    RUSHPromotionRungSystem,
-    RUSHStoppingRungSystem,
-)
-from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
-from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
-    check_and_merge_defaults,
-    Integer,
-    Boolean,
-    Categorical,
-    filter_by_key,
-    String,
-    Dictionary,
-    Float,
-)
-
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
-
-
-from syne_tune.optimizer.schedulers.hyperband import HyperbandBracketManager, _ARGUMENT_KEYS, _CONSTRAINTS
-from syne_tune.optimizer.scheduler import TrialScheduler, SchedulerDecision, TrialSuggestion
-from syne_tune.optimizer.schedulers.hyperband import _get_rung_levels, _is_positive_int, _sample_bracket
+from syne_tune.optimizer.scheduler import SchedulerDecision, TrialSuggestion
 from syne_tune.config_space import cast_config_values
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import HyperparameterRanges
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import make_hyperparameter_ranges
-from syne_tune.optimizer.schedulers.neuralbands.networks import Exploitation
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+from syne_tune.backend.time_keeper import RealTimeKeeper
 from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import NeuralbandSchedulerBase
 
 
@@ -59,27 +25,24 @@ logger = logging.getLogger(__name__)
 
 
 def is_continue_decision(trial_decision: str) -> bool:
-    return trial_decision == SchedulerDecision.CONTINU
+    return trial_decision == SchedulerDecision.CONTINUE
 
 
 class NeuralbandScheduler(NeuralbandSchedulerBase):
     def __init__(self, config_space: Dict, gamma: float = 0.01, nu: float = 0.01, step_size: int = 30,
                  max_while_loop: int = 100, **kwargs):
         """
-        NeuralBand is a neural-bandit based HPO algorithm for the multi-fidelity setting. It uses a budget-aware neural 
-        network together with a feedback perturbation to efficiently explore the input space across fidelities.  
-        NeuralBand uses a novel configuration selection criterion to actively choose the configuration in each trial 
+        NeuralBand is a neural-bandit based HPO algorithm for the multi-fidelity setting. It uses a budget-aware neural
+        network together with a feedback perturbation to efficiently explore the input space across fidelities.
+        NeuralBand uses a novel configuration selection criterion to actively choose the configuration in each trial
         and incrementally exploits the knowledge of every past trial.
-        
-        hyper-parameters of NeuralBand:
-        gamma: float
-            Control aggressiveness of configuration selection criterion;
-        nu: float
-            Control aggressiveness of perturbing feedback for exploration;
-        step_size: int
-            How many trials we train network once;
-        max_while_loop: int 
-            Maximal number of times we can draw a configuration from configuration space.
+
+        :param config_space:
+        :param gamma: Control aggressiveness of configuration selection criterion
+        :param nu: Control aggressiveness of perturbing feedback for exploration
+        :param step_size: How many trials we train network once
+        :param max_while_loop: Maximal number of times we can draw a configuration from configuration space
+        :param kwargs:
         """
         super(NeuralbandScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.gamma = gamma
