@@ -23,8 +23,48 @@ import benchmarking
 from syne_tune.util import s3_experiment_path, random_string
 
 
-benchmark_names =  ['fcnet-protein', 'fcnet-naval', 'fcnet-parkinsons', 'fcnet-slice', 'nas201-cifar10', 'nas201-cifar100', 'nas201-ImageNet16-120', 'lcbench-APSFailure', 'lcbench-Amazon-employee-access', 'lcbench-Australian', 'lcbench-Fashion-MNIST', 'lcbench-KDDCup09-appetency', 'lcbench-MiniBooNE', 'lcbench-adult', 'lcbench-airlines', 'lcbench-albert', 'lcbench-bank-marketing', 'lcbench-car', 'lcbench-christine', 'lcbench-cnae-9', 'lcbench-connect-4', 'lcbench-covertype', 'lcbench-credit-g', 'lcbench-dionis', 'lcbench-fabert', 'lcbench-helena', 'lcbench-higgs', 'lcbench-jannis', 'lcbench-jasmine', 'lcbench-kc1', 'lcbench-kr-vs-kp', 'lcbench-mfeat-factors', 'lcbench-nomao', 'lcbench-numerai286', 'lcbench-phoneme', 'lcbench-segment', 'lcbench-shuttle', 'lcbench-sylvine', 'lcbench-vehicle', 'lcbench-volkert']
-
+benchmark_names = [
+    "fcnet-protein",
+    "fcnet-naval",
+    "fcnet-parkinsons",
+    "fcnet-slice",
+    "nas201-cifar10",
+    "nas201-cifar100",
+    "nas201-ImageNet16-120",
+    "lcbench-APSFailure",
+    "lcbench-Amazon-employee-access",
+    "lcbench-Australian",
+    "lcbench-Fashion-MNIST",
+    "lcbench-KDDCup09-appetency",
+    "lcbench-MiniBooNE",
+    "lcbench-adult",
+    "lcbench-airlines",
+    "lcbench-albert",
+    "lcbench-bank-marketing",
+    "lcbench-car",
+    "lcbench-christine",
+    "lcbench-cnae-9",
+    "lcbench-connect-4",
+    "lcbench-covertype",
+    "lcbench-credit-g",
+    "lcbench-dionis",
+    "lcbench-fabert",
+    "lcbench-helena",
+    "lcbench-higgs",
+    "lcbench-jannis",
+    "lcbench-jasmine",
+    "lcbench-kc1",
+    "lcbench-kr-vs-kp",
+    "lcbench-mfeat-factors",
+    "lcbench-nomao",
+    "lcbench-numerai286",
+    "lcbench-phoneme",
+    "lcbench-segment",
+    "lcbench-shuttle",
+    "lcbench-sylvine",
+    "lcbench-vehicle",
+    "lcbench-volkert",
+]
 
 
 if __name__ == "__main__":
@@ -52,36 +92,50 @@ if __name__ == "__main__":
             dependencies=syne_tune.__path__ + benchmarking.__path__,
             disable_profiler=True,
         )
-        
-        if method == Methods.NeuralBandSH or method == Methods.NeuralBandHB or method == Methods.MOBSTER:
-            for seed in range(num_seeds):
-                for benchm in benchmark_names:
-                    print(f"{experiment_tag}-{method}-{benchm}-{seed}")
-                    sm_args["hyperparameters"] = {
-                        "experiment_tag": experiment_tag,
-                        "num_seeds": seed,
-                        "run_all_seed": 0,
-                        "method": method,
-                        "benchmark": benchm,
-                    }
-                    est = PyTorch(**sm_args)
-                    est.fit(job_name=f"{experiment_tag}-{method}-{benchm}-{seed}-{hash}", wait=False)
-                    
-        elif method == Methods.NeuralBand_UCB or method == Methods.NeuralBand_TS or method == Methods.NeuralBandEpsilon:
-            for seed in range(num_seeds):
-                for benchm in benchmark_names:
-                    print(f"{experiment_tag}-{method}-{benchm}-{seed}")
-                    sm_args["hyperparameters"] = {
-                        "experiment_tag": experiment_tag,
-                        "num_seeds": seed,
-                        "run_all_seed": 0,
-                        "method": method,
-                        "benchmark": benchm,
-                    }
-                    est = PyTorch(**sm_args)
-                    est.fit(job_name=f"{experiment_tag}-{method}-{benchm}-{seed}-{hash}", wait=False)
 
-        elif method ==  Methods.RS:
+        if (
+            method == Methods.NeuralBandSH
+            or method == Methods.NeuralBandHB
+            or method == Methods.MOBSTER
+        ):
+            for seed in range(num_seeds):
+                for benchm in benchmark_names:
+                    print(f"{experiment_tag}-{method}-{benchm}-{seed}")
+                    sm_args["hyperparameters"] = {
+                        "experiment_tag": experiment_tag,
+                        "num_seeds": seed,
+                        "run_all_seed": 0,
+                        "method": method,
+                        "benchmark": benchm,
+                    }
+                    est = PyTorch(**sm_args)
+                    est.fit(
+                        job_name=f"{experiment_tag}-{method}-{benchm}-{seed}-{hash}",
+                        wait=False,
+                    )
+
+        elif (
+            method == Methods.NeuralBand_UCB
+            or method == Methods.NeuralBand_TS
+            or method == Methods.NeuralBandEpsilon
+        ):
+            for seed in range(num_seeds):
+                for benchm in benchmark_names:
+                    print(f"{experiment_tag}-{method}-{benchm}-{seed}")
+                    sm_args["hyperparameters"] = {
+                        "experiment_tag": experiment_tag,
+                        "num_seeds": seed,
+                        "run_all_seed": 0,
+                        "method": method,
+                        "benchmark": benchm,
+                    }
+                    est = PyTorch(**sm_args)
+                    est.fit(
+                        job_name=f"{experiment_tag}-{method}-{benchm}-{seed}-{hash}",
+                        wait=False,
+                    )
+
+        elif method == Methods.RS:
             print(f"{experiment_tag}-{method}")
             sm_args["hyperparameters"] = {
                 "experiment_tag": experiment_tag,
@@ -102,5 +156,3 @@ if __name__ == "__main__":
                 }
                 est = PyTorch(**sm_args)
                 est.fit(job_name=f"{experiment_tag}-{method}-{seed}-{hash}", wait=False)
-        
-            
