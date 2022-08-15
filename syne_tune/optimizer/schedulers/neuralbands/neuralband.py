@@ -71,16 +71,20 @@ from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import Neu
 class NeuralbandScheduler(NeuralbandSchedulerBase):
     def __init__(self, config_space, gamma = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
         """
-        NeuralBand is a neural-bandit-based HPO algorithm under multi-fedility setting, where a budget-aware neural network is
-        carefully designed and the feedback perturbation is utilized for efficient fidelity-aware exploration.  
-        NeuralBand uses a novel configuration selection criterion to actively choose configuration in each trial 
+        NeuralBand is a neural-bandit based HPO algorithm for the multi-fidelity setting. It uses a budget-aware neural 
+        network together with a feedback perturbation to efficiently explore the input space across fidelities.  
+        NeuralBand uses a novel configuration selection criterion to actively choose the configuration in each trial 
         and incrementally exploits the knowledge of every past trial.
         
         hyper-parameters of NeuralBand:
-        gamma: control the aggressiveness of configuration selection criterion;
-        nu: control the aggressiveness of perturbing feedback for exploration;
-        step_size: how many trials we train network once;
-        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        gamma: float
+            Control aggressiveness of configuration selection criterion;
+        nu: float
+            Control aggressiveness of perturbing feedback for exploration;
+        step_size: int
+            How many trials we train network once;
+        max_while_loop: int 
+            Maximal number of times we can draw a configuration from configuration space.
         """
         super(NeuralbandScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.gamma = gamma

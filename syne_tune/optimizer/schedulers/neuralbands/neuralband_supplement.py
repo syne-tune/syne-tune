@@ -70,11 +70,13 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 class NeuralbandSchedulerBase(HyperbandScheduler):
     def __init__(self, config_space, step_size, max_while_loop,  **kwargs):
         """
-        Shared base schedular for Neuralband.
+        Shared base scheduler for NeuralBand.
         
         hyper-parameters of NeuralBand:
-        step_size: how many trials we train network once;
-        max_while_loop: the maximal number of times we can draw a configuration from configuration space.
+        step_size: int
+            How many trials we train the network once;
+        max_while_loop: int
+            Maximal number of times we can draw a configuration from configuration space.
         """
         super(NeuralbandSchedulerBase, self).__init__(config_space, **kwargs)
         self.kwargs = kwargs
@@ -273,12 +275,13 @@ class NeuralbandSchedulerBase(HyperbandScheduler):
 class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
     def __init__(self, config_space, epsilon = 0.1, step_size = 30, max_while_loop = 100,  **kwargs):
         """
-        We combine the epsilon-greedy strategy with NeuralBand, where we randomly select configurations with 
-        probability epsilon or use the greedy strategy to select configurations with probability 1-epsilon
-        in each trial.
+        We combine the epsilon-greedy strategy with NeuralBand, where, with probability epsilon, 
+        we select configurations either randomly or, with probability 1 - epsilon, greedily by 
+        maximizing the acquisition function in each trial.
         
         Hyper-parameters:
-        epsilon: the probability of making random selection.
+        epsilon: float 
+            Probability of making random selections.
         """
         super(NeuralbandEGreedyScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.epsilon = epsilon
@@ -343,14 +346,17 @@ class NeuralbandEGreedyScheduler(NeuralbandSchedulerBase):
 class NeuralbandTSScheduler(NeuralbandSchedulerBase):
     def __init__(self, config_space, lamdba = 0.1, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
         """
-        We combine Thompson Sampling strategy with NeuralBand, where configuration selection criterion follows [1].
+        We combine Thompson Sampling strategy with NeuralBand, where configurations are selected based on the 
+        criterion described by [1].
         
         Reference: [1] ZHANG, Weitong, et al. "Neural Thompson Sampling." International Conference on Learning 
         Representations. 2020.
 
         Hyper-parameters:
-        lamdba: regularization term of gradient vector;
-        nu: control the aggressiveness exploration.
+        lamdba: float
+            Regularization term of gradient vector;
+        nu: float
+            Control aggressiveness of exploration.
         """
         super(NeuralbandTSScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.lamdba = lamdba
@@ -421,14 +427,17 @@ class NeuralbandTSScheduler(NeuralbandSchedulerBase):
 class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
     def __init__(self, config_space, lamdba = 0.01, nu = 0.01, step_size = 30, max_while_loop = 100,  **kwargs):
         """
-        We combine Upper Confidence Bound with NeuralBand, where configuration selection criterion follows [1].
+        We combine Upper Confidence Bound with NeuralBand, where configurations are selected based on the 
+        upper confidence bound criterion following [1].
         
         Reference: [1] Zhou, Dongruo, Lihong Li, and Quanquan Gu. "Neural contextual bandits with ucb-based 
         exploration." International Conference on Machine Learning. PMLR, 2020.
 
         Hyper-parameters:
-        lamdba: regularization term of gradient vector;
-        nu: control the aggressiveness exploration.
+        lamdba: float
+            Regularization term of gradient vector;
+        nu: float 
+            Control aggressiveness of exploration.
         """
         super(NeuralbandUCBScheduler, self).__init__(config_space, step_size, max_while_loop, **kwargs)
         self.lamdba = lamdba
