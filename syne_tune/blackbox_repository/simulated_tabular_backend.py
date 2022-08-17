@@ -42,15 +42,25 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         an example on how to use.
 
         In each result reported to the simulator back-end, the value for key
-        `elapsed_time_attr` must be the time since since the start of the
+        `elapsed_time_attr` must be the time since the start of the
         evaluation. For example, if resource (or fidelity) equates to epochs
         trained, this would be the time from start of training until the end
         of the epoch. If the blackbox contains this information in a column,
         `elapsed_time_attr` should be its key.
 
+        If this backend is used with pause-and-resume multi-fidelity
+        scheduling, it needs to track at which resource level each trial is
+        paused. Namely, once a trial is resumed, all results for resources
+        smaller or equal to that level are ignored, which simulates the
+        situation that training is resumed from a checkpoint. This feature
+        relies on `result` to be passed to `pause_trial`. If this is not
+        done, the backend cannot know from which resource level to resume
+        a trial, so it starts the trial from scratch (which is equivalent to
+        no checkpointing).
+
         ATTENTION: If the blackbox maintains cumulative time (elapsed_time),
         this is different from what :class:`SimulatorBackend` requires for
-        `elapsed_time_attr`, if a pause and resume scheduler is used.
+        `elapsed_time_attr`, if a pause-and-resume scheduler is used.
         Namely, the back-end requires the time since the start of the last recent
         resume. This conversion is done here internally in
         `_run_job_and_collect_results`, which is called for each resume. This
@@ -81,6 +91,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         self.simulatorbackend_kwargs = simulatorbackend_kwargs
         self._seed = seed
         self._seed_for_trial = dict()
+        self._resource_paused_for_trial = dict()
 
     @property
     def blackbox(self) -> Blackbox:
@@ -89,6 +100,18 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
     @property
     def resource_attr(self):
         return next(iter(self.blackbox.fidelity_space.keys()))
+
+    def _pause_trial(self, trial_id: int, result: Optional[dict]):
+        """
+        From `result`, we obtain the resource level at which the trial is
+        paused by the scheduler. This is required in order to properly
+        resume the trial in `_run_job_and_collect_results`.
+        """
+        super()._pause_trial(trial_id, result)
+        resource_attr = self.resource_attr
+        if result is not None and resource_attr in result:
+            resource = int(result[resource_attr])
+            self._resource_paused_for_trial[trial_id] = resource
 
     def config_objectives(self, config: dict, seed: int) -> List[dict]:
         if self._max_resource_attr is not None and self._max_resource_attr in config:
@@ -132,17 +155,17 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         all_results = self.config_objectives(config, seed=seed)
 
         status = Status.completed
-        num_already_before = self._last_metric_seen_index[trial_id]
-        if num_already_before > 0:
-            assert num_already_before <= len(all_results), (
-                f"Found {len(all_results)} total results, but have already "
-                + f"processed {num_already_before} before!"
-            )
-            results = all_results[num_already_before:]
-            # Correct `elapsed_time_attr` values
-            elapsed_time_offset = all_results[num_already_before - 1][
-                self.elapsed_time_attr
-            ]
+        resource_paused = self._resource_paused_for_trial.get(trial_id)
+        if resource_paused is not None:
+            resource_attr = self.resource_attr
+            elapsed_time_offset = 0
+            results = []
+            for result in all_results:
+                resource = int(result[resource_attr])
+                if resource > resource_paused:
+                    results.append(result)
+                elif resource == resource_paused:
+                    elapsed_time_offset = result[self.elapsed_time_attr]
             for result in results:
                 result[self.elapsed_time_attr] -= elapsed_time_offset
         else:

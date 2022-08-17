@@ -240,7 +240,7 @@ class Tuner:
                 stop_condition_reached = self._stop_condition()
         except Exception as e:
             logger.error(
-                "An error happened during the tuning, cleaning up ressources and logging final ressources "
+                "An error happened during the tuning, cleaning up resources and logging final resources "
                 "before throwing the exception."
             )
             raise e
@@ -362,7 +362,7 @@ class Tuner:
 
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
         """
-        Schedules new tasks if ressources are available or sleep.
+        Schedules new tasks if resources are available or sleep.
         :param running_trials_ids: set if trial-ids currently running, gets updated if new trials are scheduled.
         """
         running_trials_threshold = self.n_workers if self.asynchronous_scheduling else 1
@@ -483,14 +483,14 @@ class Tuner:
                         # we override the status immediately, this avoids calling the backend status another time to
                         # update after the change which may be expensive
                         status = Status.stopped
-                        self.trial_backend.stop_trial(trial_id)
+                        self.trial_backend.stop_trial(trial_id=trial_id, result=result)
                     self.scheduler.on_trial_remove(trial=trial)
                     done_trials[trial_id] = (trial, status)
                     self.trials_scheduler_stopped.add(trial_id)
 
                 elif decision == SchedulerDecision.PAUSE:
                     status = Status.paused
-                    self.trial_backend.pause_trial(trial_id)
+                    self.trial_backend.pause_trial(trial_id=trial_id, result=result)
                     self.scheduler.on_trial_remove(trial=trial)
                     done_trials[trial_id] = (trial, status)
 

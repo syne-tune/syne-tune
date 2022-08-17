@@ -137,12 +137,12 @@ if __name__ == "__main__":
         else list(benchmark_definitions.keys())
     )
 
-    # logging.getLogger().setLevel(logging.INFO)
-    logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
-    logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
-    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
-        logging.WARNING
-    )
+    logging.getLogger().setLevel(logging.INFO)
+    # logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
+    # logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
+    # logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
+    #     logging.WARNING
+    # )
 
     combinations = list(itertools.product(method_names, seeds, benchmark_names))
 
