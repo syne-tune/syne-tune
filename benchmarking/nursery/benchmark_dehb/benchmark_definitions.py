@@ -24,7 +24,6 @@ class BenchmarkDefinition:
     blackbox_name: str
     dataset_name: str
     max_resource_attr: str
-    time_this_resource_attr: Optional[str] = None
     max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
     datasets: Optional[List[str]] = None
@@ -62,7 +61,6 @@ def nas201_benchmark(dataset_name):
         max_wallclock_time=NAS201_MAX_WALLCLOCK_TIME[dataset_name],
         n_workers=NAS201_N_WORKERS[dataset_name],
         elapsed_time_attr="metric_elapsed_time",
-        time_this_resource_attr="metric_runtime",
         metric="metric_valid_error",
         mode="min",
         blackbox_name="nasbench201",

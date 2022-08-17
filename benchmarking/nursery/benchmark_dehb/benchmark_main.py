@@ -104,7 +104,6 @@ if __name__ == "__main__":
         max_resource_attr = benchmark.max_resource_attr
         backend = BlackboxRepositoryBackend(
             elapsed_time_attr=benchmark.elapsed_time_attr,
-            time_this_resource_attr=benchmark.time_this_resource_attr,
             max_resource_attr=max_resource_attr,
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
