@@ -97,21 +97,21 @@ def test_async_scheduler(scheduler, searcher, mode):
 
 
 _sync_parameterizations = [
-    ["hb", "random", "min"],
-    ["hb", "random", "max"],
-    ["hb", "bayesopt", "min"],
-    ["hb", "bayesopt", "max"],
-    ["hb", "grid", "min"],
-    ["hb", "grid", "max"],
-    ["dehb", "random", "min"],
-    ["dehb", "random_encoded", "max"],
-    ["dehb", "random", "min"],
-    ["dehb", "random_encoded", "max"],
+    [SynchronousGeometricHyperbandScheduler, "random", "min"],
+    [SynchronousGeometricHyperbandScheduler, "random", "max"],
+    [SynchronousGeometricHyperbandScheduler, "bayesopt", "min"],
+    [SynchronousGeometricHyperbandScheduler, "bayesopt", "max"],
+    [SynchronousGeometricHyperbandScheduler, "grid", "min"],
+    [SynchronousGeometricHyperbandScheduler, "grid", "max"],
+    [GeometricDifferentialEvolutionHyperbandScheduler, "random", "min"],
+    [GeometricDifferentialEvolutionHyperbandScheduler, "random_encoded", "max"],
+    [GeometricDifferentialEvolutionHyperbandScheduler, "random", "min"],
+    [GeometricDifferentialEvolutionHyperbandScheduler, "random_encoded", "max"],
 ]
 
 
-@pytest.mark.parametrize("scheduler, searcher, mode", _sync_parameterizations)
-def test_sync_scheduler(scheduler, searcher, mode):
+@pytest.mark.parametrize("scheduler_cls, searcher, mode", _sync_parameterizations)
+def test_sync_scheduler(scheduler_cls, searcher, mode):
     max_steps = 5
     num_workers = 2
     random_seed = 382378624
@@ -143,14 +143,7 @@ def test_sync_scheduler(scheduler, searcher, mode):
         max_resource_attr="steps",
         random_seed=random_seed,
     )
-    if scheduler == "hb":
-        myscheduler = SynchronousGeometricHyperbandScheduler(
-            config_space, **scheduler_kwargs
-        )
-    else:
-        myscheduler = GeometricDifferentialEvolutionHyperbandScheduler(
-            config_space, **scheduler_kwargs
-        )
+    myscheduler = scheduler_cls(config_space, **scheduler_kwargs)
 
     stop_criterion = StoppingCriterion(max_wallclock_time=0.2)
     tuner = Tuner(

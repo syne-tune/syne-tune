@@ -105,11 +105,6 @@ class SynchronousHyperbandRungSystem:
                 rungs.append((rsize, resource))
             rungs.append((int(np.ceil(pre_fact)), max_resource))
             rung_systems.append(rungs)
-        # parts = [
-        #     f"Bracket {i}: rungs = {rungs}" for i, rungs in enumerate(rung_systems)
-        # ]
-        # logger.info("\n".join(parts))
-
         return rung_systems
 
     @staticmethod
