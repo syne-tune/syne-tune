@@ -82,7 +82,7 @@ if __name__ == "__main__":
                 tuner_name="height-tuning",
                 stop_criterion=StoppingCriterion(max_wallclock_time=600),
             ),
-            # Extra arguments describing the ressource of the remote tuning instance and whether we want to wait
+            # Extra arguments describing the resource of the remote tuning instance and whether we want to wait
             # the tuning to finish. The instance-type where the tuning job runs can be different than the
             # instance-type used for evaluating the training jobs.
             instance_type="ml.m5.large",

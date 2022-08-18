@@ -201,11 +201,11 @@ class SageMakerBackend(TrialBackend):
         logger.info(f"scheduled {jobname} for trial-id {trial_id}")
         self.job_id_mapping[trial_id] = jobname
 
-    def _pause_trial(self, trial_id: int):
+    def _pause_trial(self, trial_id: int, result: Optional[dict]):
         self._stop_trial_job(trial_id)
         self.paused_jobs.add(trial_id)
 
-    def _stop_trial(self, trial_id: int):
+    def _stop_trial(self, trial_id: int, result: Optional[dict]):
         training_job_name = self.job_id_mapping[trial_id]
         logger.info(f"stopping {trial_id} ({training_job_name})")
         self._stop_trial_job(trial_id)

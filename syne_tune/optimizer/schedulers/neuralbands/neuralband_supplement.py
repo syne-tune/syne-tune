@@ -431,18 +431,18 @@ class NeuralbandUCBScheduler(NeuralbandSchedulerBase):
     ):
 
         """
-        We combine Upper Confidence Bound with NeuralBand, where configurations are selected based on the 
+        We combine Upper Confidence Bound with NeuralBand, where configurations are selected based on the
         upper confidence bound criterion following [1].
-        
-        Reference: [1] Zhou, Dongruo, Lihong Li, and Quanquan Gu. "Neural contextual bandits with ucb-based 
-        exploration." International Conference on Machine Learning. PMLR, 2020. 
-        
-        :param config_space: 
+
+        Reference: [1] Zhou, Dongruo, Lihong Li, and Quanquan Gu. "Neural contextual bandits with ucb-based
+        exploration." International Conference on Machine Learning. PMLR, 2020.
+
+        :param config_space:
         :param lamdba: Regularization term of gradient vector
-        :param nu: Control aggressiveness of exploration 
-        :param step_size: 
-        :param max_while_loop: 
-        :param kwargs: 
+        :param nu: Control aggressiveness of exploration
+        :param step_size:
+        :param max_while_loop:
+        :param kwargs:
         """
 
         super(NeuralbandUCBScheduler, self).__init__(

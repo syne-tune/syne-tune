@@ -217,12 +217,11 @@ class SimulatorBackend(LocalBackend):
                 self._simulator_state.remove_events(trial_id)
             elif isinstance(event, OnTrialResultEvent):
                 result = copy.copy(event.result)
-                epoch = result.get("epoch")  # DEBUG
                 self._debug_message(
                     "OnTrialResultEvent",
                     time=time_event,
                     trial_id=trial_id,
-                    epoch=epoch,
+                    epoch=result.get("epoch"),
                 )
                 # Append timestamps to `result`. This is done here, but not in
                 # the other back-ends, for which timestamps are only added when
@@ -241,9 +240,6 @@ class SimulatorBackend(LocalBackend):
                         status=Status.in_progress,
                         training_end_time=None,
                     )
-                # Counts the total number of results obtained for a trial_id,
-                # even if resumed multiple times
-                self._last_metric_seen_index[trial_id] += 1
             else:
                 raise TypeError(f"Event at time {time_event} of unknown type: {event}")
             next_event = self._simulator_state.next_until(time_now)
@@ -277,6 +273,7 @@ class SimulatorBackend(LocalBackend):
                     time=time_result,
                     trial_id=trial_id,
                     pushed=True,
+                    epoch=result.get("epoch"),
                 )
                 deb_it += 1
         time_complete = (
@@ -303,8 +300,8 @@ class SimulatorBackend(LocalBackend):
         for trial_id in trial_ids:
             result_list = self._next_results_to_fetch.get(trial_id)
             if result_list is not None:
-                for result in result_list:
-                    results.append((trial_id, result))
+                results.extend((trial_id, result) for result in result_list)
+                self._last_metric_seen_index[trial_id] += len(result_list)
                 del self._next_results_to_fetch[trial_id]
         if self._next_results_to_fetch:
             warn_msg = [
@@ -322,6 +319,7 @@ class SimulatorBackend(LocalBackend):
                     ]
                     msg_line += f"resources = {resources}"
                 warn_msg.append(msg_line)
+                self._last_metric_seen_index[trial_id] += len(result_list)
             logger.warning("\n".join(warn_msg))
             self._next_results_to_fetch = dict()
 
@@ -383,13 +381,13 @@ class SimulatorBackend(LocalBackend):
                 results.append(trial_result)
         return results
 
-    def _pause_trial(self, trial_id: int):
+    def _pause_trial(self, trial_id: int, result: Optional[dict]):
         self._stop_or_pause_trial(trial_id, status=Status.paused)
 
     def _resume_trial(self, trial_id: int):
         pass
 
-    def _stop_trial(self, trial_id: int):
+    def _stop_trial(self, trial_id: int, result: Optional[dict]):
         self._stop_or_pause_trial(trial_id, status=Status.stopped)
 
     def _stop_or_pause_trial(self, trial_id: int, status: str):

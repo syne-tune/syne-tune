@@ -42,7 +42,7 @@ class TrialBackend:
         self._last_metric_seen_index = defaultdict(lambda: 0)
 
     def start_trial(
-        self, config: Dict, checkpoint_trial_id: Optional[int] = None
+        self, config: dict, checkpoint_trial_id: Optional[int] = None
     ) -> TrialResult:
         """
         :param config: program arguments of `script`
@@ -86,16 +86,6 @@ class TrialBackend:
         """
         raise NotImplementedError()
 
-    def delete_checkpoint(self, trial_id: int):
-        """
-        Removes checkpoint folder for a trial, if it exists. Otherwise, nothing
-        is done.
-
-        :param trial_id:
-        :return:
-        """
-        raise NotImplementedError()
-
     def resume_trial(self, trial_id: int, new_config: Optional[dict] = None):
         """
         :param trial_id: id of the trial to be resumed
@@ -122,51 +112,50 @@ class TrialBackend:
         """
         raise NotImplementedError()
 
-    def pause_trial(self, trial_id: int):
+    def pause_trial(self, trial_id: int, result: Optional[dict] = None):
         """
         Checks that the operation is valid and call backend internal implementation to actually pause the trial.
         If the status is queried after this function, it should be `paused`.
-        :param trial_id:
-        :return:
+
+        :param trial_id: ID of trial to pause
+        :param result: Result dict based on which scheduler decided to pause the
+            trial
         """
         # todo assert trial_id is valid
         # todo assert trial_id has not been stopped or paused before
-        self._pause_trial(trial_id=trial_id)
+        self._pause_trial(trial_id=trial_id, result=result)
 
-    def _pause_trial(self, trial_id: int):
+    def _pause_trial(self, trial_id: int, result: Optional[dict]):
         """
         Backend specific operation that pauses the trial.
-        :param trial_id:
-        :return:
         """
         raise NotImplementedError()
 
-    def stop_trial(self, trial_id: int):
+    def stop_trial(self, trial_id: int, result: Optional[dict] = None):
         """
         Checks that the operation is valid and call backend internal implementation to actually stop the trial.
         If the status is queried after this function, it should be `stopped`.
-        :param trial_id:
-        :return:
+        :param trial_id: ID of trial to stop
+        :param result: Result dict based on which scheduler decided to stop the
+            trial
         """
         # todo assert trial_id is valid
         # todo assert trial_id has not been stopped or paused before
-        self._stop_trial(trial_id=trial_id)
+        self._stop_trial(trial_id=trial_id, result=result)
         if self.delete_checkpoints:
             logger.info(f"Removing checkpoints for trial_id = {trial_id}")
             self.delete_checkpoint(trial_id=trial_id)  # checkpoint not needed anymore
 
-    def _stop_trial(self, trial_id: int):
+    def _stop_trial(self, trial_id: int, result: Optional[dict]):
         """
         Backend specific operation that stops the trial.
-        :param trial_id:
-        :return:
         """
         raise NotImplementedError()
 
     def new_trial_id(self) -> int:
         return len(self.trial_ids)
 
-    def _schedule(self, trial_id: int, config: Dict):
+    def _schedule(self, trial_id: int, config: dict):
         raise NotImplementedError()
 
     def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
@@ -179,7 +168,7 @@ class TrialBackend:
 
     def fetch_status_results(
         self, trial_ids: List[int]
-    ) -> Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, Dict]]]:
+    ) -> Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, dict]]]:
         """
         :param trial_ids: trials whose information should be fetch.
         :return: A tuple containing 1) a dictionary from trial-id to Trial and status information 2) list of
@@ -189,7 +178,8 @@ class TrialBackend:
         all_trial_results = self._all_trial_results(trial_ids)
         results = []
         for trial_result in all_trial_results:
-            self._trial_dict[trial_result.trial_id] = trial_result
+            trial_id = trial_result.trial_id
+            self._trial_dict[trial_id] = trial_result
             if len(trial_result.metrics) > 0:
                 if trial_result.status in [
                     Status.paused,
@@ -200,23 +190,17 @@ class TrialBackend:
                     new_metrics = []
                 else:
                     # we return the list of all new metrics, which may be empty if no new metrics were generated.
-                    position_last_seen = self._last_metric_seen_index[
-                        trial_result.trial_id
-                    ]
+                    position_last_seen = self._last_metric_seen_index[trial_id]
                     new_metrics = trial_result.metrics[position_last_seen:]
-                    self._last_metric_seen_index[trial_result.trial_id] += len(
-                        new_metrics
-                    )
+                    self._last_metric_seen_index[trial_id] += len(new_metrics)
                     if (
                         self.delete_checkpoints
                         and trial_result.status == Status.completed
                     ):
-                        logger.info(
-                            f"Removing checkpoints for trial_id = {trial_result.trial_id}"
-                        )
-                        self.delete_checkpoint(trial_id=trial_result.trial_id)
+                        logger.info(f"Removing checkpoints for trial_id = {trial_id}")
+                        self.delete_checkpoint(trial_id=trial_id)
                 for new_metric in new_metrics:
-                    results.append((trial_result.trial_id, new_metric))
+                    results.append((trial_id, new_metric))
 
         trial_status_dict = {}
         for trial_id in trial_ids:

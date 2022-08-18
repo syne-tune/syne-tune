@@ -229,7 +229,7 @@ class LocalBackend(TrialBackend):
             res.append(trial_results)
         return res
 
-    def _pause_trial(self, trial_id: int):
+    def _pause_trial(self, trial_id: int, result: Optional[dict]):
         self._file_path(trial_id=trial_id, filename="pause").touch()
         self._kill_process(trial_id)
         self._deallocate_gpu(trial_id)
@@ -241,7 +241,7 @@ class LocalBackend(TrialBackend):
         except FileNotFoundError:
             logger.info(f"Pause lock file {str(pause_path)} not found")
 
-    def _stop_trial(self, trial_id: int):
+    def _stop_trial(self, trial_id: int, result: Optional[dict]):
         self._file_path(trial_id=trial_id, filename="stop").touch()
         self._kill_process(trial_id)
         self._deallocate_gpu(trial_id)
