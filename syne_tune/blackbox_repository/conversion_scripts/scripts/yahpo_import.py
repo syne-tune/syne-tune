@@ -162,6 +162,7 @@ def cs_to_synetune(config_space):
             else:
                 vals += [cs.uniform(a.lower, a.upper)]
 
+    # FIXME: This should also handle dependencies between hyperparameters.
     return dict(zip(keys, vals))
 
 

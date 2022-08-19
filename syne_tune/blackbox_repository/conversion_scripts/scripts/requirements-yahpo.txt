@@ -2,4 +2,4 @@ onnxruntime>=1.10.0
 pyyaml
 configspace
 pandas
-# - e "git+https://github.com/slds-lmu/yahpo_gym#egg=yahpo_gym&subdirectory=yahpo_gym"
+yahpo-gym
