@@ -11,11 +11,20 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__all__ = ["SynchronousHyperbandScheduler", "SynchronousGeometricHyperbandScheduler"]
+__all__ = [
+    "SynchronousHyperbandScheduler",
+    "SynchronousGeometricHyperbandScheduler",
+    "DifferentialEvolutionHyperbandScheduler",
+    "GeometricDifferentialEvolutionHyperbandScheduler",
+]
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband import (
     SynchronousHyperbandScheduler,
 )
+from syne_tune.optimizer.schedulers.synchronous.dehb import (
+    DifferentialEvolutionHyperbandScheduler,
+)
 from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import (
     SynchronousGeometricHyperbandScheduler,
+    GeometricDifferentialEvolutionHyperbandScheduler,
 )

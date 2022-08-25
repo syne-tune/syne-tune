@@ -1,0 +1,10 @@
+syne-tune[gpsearchers]
+tqdm
+numpy
+pandas
+fastparquet
+s3fs
+sklearn
+h5py # note: only needed for fcnet
+xgboost
+statsmodels
