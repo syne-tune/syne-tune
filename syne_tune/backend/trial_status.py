@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-# requires python 3.7
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Optional, List
@@ -19,7 +18,6 @@ try:
     from typing_extensions import Literal
 except ImportError:
     from typing import Literal
-
 
 from syne_tune.constants import ST_WORKER_COST
 

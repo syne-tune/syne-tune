@@ -10,12 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.report import Reporter
-from syne_tune.tuner import Tuner
-from syne_tune.read_version import read_version
-
-__all__ = ["StoppingCriterion", "Tuner", "Reporter"]
+from pathlib import Path
 
 
-__version__ = read_version()
+def read_version():
+    with open(Path(__file__).parent / "version", "r") as f:
+        return f.readline().strip().replace('"', "")
