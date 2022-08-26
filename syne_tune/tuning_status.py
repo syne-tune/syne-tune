@@ -15,12 +15,9 @@ import logging
 import time
 from collections import defaultdict, OrderedDict
 from typing import List, Dict, Tuple
-
-import pandas as pd
-
-from syne_tune.backend.trial_status import Status, Trial
 import numpy as np
 
+from syne_tune.backend.trial_status import Status, Trial
 from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
 
 
@@ -202,7 +199,9 @@ class TuningStatus:
         else:
             return 0.0
 
-    def get_dataframe(self) -> pd.DataFrame:
+    def get_dataframe(self):
+        import pandas as pd
+
         return pd.DataFrame(self.trial_rows.values())
 
     def __str__(self):
