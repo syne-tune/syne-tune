@@ -260,13 +260,6 @@ class TensorboardCallback(TunerCallback):
     def on_tuning_start(self, tuner):
 
         self.output_path = os.path.join(tuner.tuner_path, "tensorboard_output")
-
-        try:
-            from tensorboardX import SummaryWriter
-        except ImportError:
-            logger.error(
-                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
-            )
         self.writer = self._create_summary_writer()
         self.iter = 0
         self.start_time_stamp = perf_counter()
