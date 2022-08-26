@@ -12,25 +12,19 @@
 # permissions and limitations under the License.
 from typing import Optional, Dict
 import pandas as pd
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.pipeline import Pipeline, FeatureUnion, make_pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 
 from syne_tune.config_space import Categorical
 from syne_tune.blackbox_repository.blackbox import Blackbox
 
 
-class Columns(BaseEstimator, TransformerMixin):
-    def __init__(self, names=None):
-        self.names = names
+def _default_surrogate(surrogate):
+    if surrogate is not None:
+        return surrogate
+    else:
+        from sklearn.neighbors import KNeighborsRegressor
 
-    def fit(self, *args, **kwargs):
-        return self
-
-    def transform(self, X):
-        return X[self.names]
+        return KNeighborsRegressor(n_neighbors=1)
 
 
 class BlackboxSurrogate(Blackbox):
@@ -71,9 +65,7 @@ class BlackboxSurrogate(Blackbox):
         )
         assert len(X) == len(y)
         # todo other types of assert with configuration_space, objective_names, ...
-        self.surrogate = (
-            surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
-        )
+        self.surrogate = _default_surrogate(surrogate)
         self.max_fit_samples = max_fit_samples
         self.fit_surrogate(
             X=X, y=y, surrogate=surrogate, max_samples=self.max_fit_samples
@@ -87,6 +79,20 @@ class BlackboxSurrogate(Blackbox):
 
     @staticmethod
     def make_model_pipeline(configuration_space, fidelity_space, model):
+        from sklearn.pipeline import Pipeline, FeatureUnion, make_pipeline
+        from sklearn.preprocessing import OneHotEncoder, StandardScaler
+        from sklearn.base import BaseEstimator, TransformerMixin
+
+        class Columns(BaseEstimator, TransformerMixin):
+            def __init__(self, names=None):
+                self.names = names
+
+            def fit(self, *args, **kwargs):
+                return self
+
+            def transform(self, X):
+                return X[self.names]
+
         # gets hyperparameters types, categorical for CategoricalHyperparameter, numeric for everything else
         numeric = []
         categorical = []
@@ -139,9 +145,7 @@ class BlackboxSurrogate(Blackbox):
         blackbox configuration. Possible example: KNeighborsRegressor(n_neighbors=1), MLPRegressor() or any estimator
         obeying Scikit-learn API.
         """
-        self.surrogate = (
-            surrogate if surrogate is not None else KNeighborsRegressor(n_neighbors=1)
-        )
+        self.surrogate = _default_surrogate(surrogate)
 
         self.surrogate_pipeline = self.make_model_pipeline(
             configuration_space=self.configuration_space,
@@ -205,14 +209,13 @@ def add_surrogate(blackbox: Blackbox, surrogate=None, configuration_space=None):
         The model is fit on top of pipeline that applies basic feature-processing
         to convert rows in X to vectors. We use `config_space` to deduce the types
         of columns in X (categorical parameters are 1-hot encoded).
-    :param config_space: configuration space for the resulting blackbox surrogate.
+    :param configuration_space: configuration space for the resulting blackbox surrogate.
         The default is `blackbox.configuration_space`. But note that if `blackbox`
         is tabular, the domains in `blackbox.configuration_space` are typically
         categorical even for numerical parameters.
     :return: a blackbox where the output is obtained through the fitted surrogate
     """
-    if surrogate is None:
-        surrogate = KNeighborsRegressor(n_neighbors=1)
+    surrogate = _default_surrogate(surrogate)
     if configuration_space is None:
         configuration_space = blackbox.configuration_space
     X, y = blackbox.hyperparameter_objectives_values()

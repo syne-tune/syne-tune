@@ -16,10 +16,6 @@ from typing import Dict, Optional, List
 import copy
 import pytest
 
-from sagemaker.pytorch import PyTorch
-
-from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion, Trial
 from syne_tune.config_space import randint
 from syne_tune import StoppingCriterion, Tuner
@@ -64,6 +60,10 @@ class TestCopyCheckpointScheduler(TrialScheduler):
 
 @pytest.mark.skip("this test needs sagemaker and runs for >10 minutes")
 def test_copy_checkpoint_sagemaker_backend():
+    from sagemaker.pytorch import PyTorch
+    from syne_tune.backend import SageMakerBackend
+    from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+
     logging.getLogger().setLevel(logging.INFO)
     # Create SageMaker backend
     entry_point = Path(__file__).parent / "checkpoint_script.py"

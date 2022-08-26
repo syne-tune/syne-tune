@@ -11,14 +11,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-try:
-    __all__ = ["StoppingCriterion", "Tuner", "Reporter"]
-    from pathlib import Path
-    from syne_tune.stopping_criterion import StoppingCriterion
-    from syne_tune.report import Reporter
-    from syne_tune.tuner import Tuner
-except ImportError:
-    pass
+from pathlib import Path
+
+from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.report import Reporter
+from syne_tune.tuner import Tuner
+
+__all__ = ["StoppingCriterion", "Tuner", "Reporter"]
 
 
 def read_version():

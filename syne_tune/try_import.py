@@ -32,6 +32,19 @@ def try_import_raytune_message() -> str:
     )
 
 
+def try_import_benchmarks_message() -> str:
+    return _try_import_message(
+        "Gaussian process based searchers are not imported", tag="benchmarks"
+    )
+
+
+def try_import_blackbox_repository_message() -> str:
+    return _try_import_message(
+        "Gaussian process based searchers are not imported",
+        tag="blackbox-repository",
+    )
+
+
 def try_import_backend_message(backend_type: str) -> str:
     return (
         f"{backend_type} is not imported"

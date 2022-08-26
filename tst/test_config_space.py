@@ -30,67 +30,72 @@ from syne_tune.config_space import (
 
 
 def test_convert_config_space():
-    from ray.tune.sample import Float, Integer, Categorical
-    from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+    from syne_tune.try_import import try_import_raytune_message
 
-    config_space = {
-        "int": randint(1, 2),
-        "logint": lograndint(3, 4),
-        "float": uniform(5.5, 6.5),
-        "logfloat": loguniform(7.5, 8.5),
-        "categorical": choice(["a", "b", "c"]),
-        "normal": randn(2.0, 1.0),
-        "const_str": "constant",
-    }
+    try:
+        from ray.tune.sample import Float, Integer, Categorical
+        from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
 
-    ray_config_space = RayTuneScheduler.convert_config_space(config_space)
+        config_space = {
+            "int": randint(1, 2),
+            "logint": lograndint(3, 4),
+            "float": uniform(5.5, 6.5),
+            "logfloat": loguniform(7.5, 8.5),
+            "categorical": choice(["a", "b", "c"]),
+            "normal": randn(2.0, 1.0),
+            "const_str": "constant",
+        }
 
-    assert set(config_space.keys()) == set(ray_config_space.keys())
-    v = ray_config_space["int"]
-    # NOTE: In Ray Tune randint(lower, upper), upper is exclusive!
-    assert (
-        isinstance(v, Integer)
-        and isinstance(v.get_sampler(), Integer._Uniform)
-        and v.lower == 1
-        and v.upper == 3
-    )
-    v = ray_config_space["logint"]
-    assert (
-        isinstance(v, Integer)
-        and isinstance(v.get_sampler(), Integer._LogUniform)
-        and v.lower == 3
-        and v.upper == 5
-    )
-    v = ray_config_space["float"]
-    assert (
-        isinstance(v, Float)
-        and isinstance(v.get_sampler(), Float._Uniform)
-        and v.lower == 5.5
-        and v.upper == 6.5
-    )
-    v = ray_config_space["logfloat"]
-    assert (
-        isinstance(v, Float)
-        and isinstance(v.get_sampler(), Float._LogUniform)
-        and v.lower == 7.5
-        and v.upper == 8.5
-    )
-    v = ray_config_space["categorical"]
-    assert isinstance(v, Categorical) and set(v.categories) == set(
-        config_space["categorical"].categories
-    )
-    v = ray_config_space["normal"]
-    assert (
-        isinstance(v, Float)
-        and isinstance(v.get_sampler(), Float._Normal)
-        and v.sampler.mean == 2.0
-        and v.sampler.sd == 1.0
-    )
-    assert ray_config_space["const_str"] == config_space["const_str"]
+        ray_config_space = RayTuneScheduler.convert_config_space(config_space)
 
-    for v in config_space.values():
-        if hasattr(v, "sample"):
-            v.sample()
+        assert set(config_space.keys()) == set(ray_config_space.keys())
+        v = ray_config_space["int"]
+        # NOTE: In Ray Tune randint(lower, upper), upper is exclusive!
+        assert (
+            isinstance(v, Integer)
+            and isinstance(v.get_sampler(), Integer._Uniform)
+            and v.lower == 1
+            and v.upper == 3
+        )
+        v = ray_config_space["logint"]
+        assert (
+            isinstance(v, Integer)
+            and isinstance(v.get_sampler(), Integer._LogUniform)
+            and v.lower == 3
+            and v.upper == 5
+        )
+        v = ray_config_space["float"]
+        assert (
+            isinstance(v, Float)
+            and isinstance(v.get_sampler(), Float._Uniform)
+            and v.lower == 5.5
+            and v.upper == 6.5
+        )
+        v = ray_config_space["logfloat"]
+        assert (
+            isinstance(v, Float)
+            and isinstance(v.get_sampler(), Float._LogUniform)
+            and v.lower == 7.5
+            and v.upper == 8.5
+        )
+        v = ray_config_space["categorical"]
+        assert isinstance(v, Categorical) and set(v.categories) == set(
+            config_space["categorical"].categories
+        )
+        v = ray_config_space["normal"]
+        assert (
+            isinstance(v, Float)
+            and isinstance(v.get_sampler(), Float._Normal)
+            and v.sampler.mean == 2.0
+            and v.sampler.sd == 1.0
+        )
+        assert ray_config_space["const_str"] == config_space["const_str"]
+
+        for v in config_space.values():
+            if hasattr(v, "sample"):
+                v.sample()
+    except ImportError:
+        print(try_import_raytune_message())
 
 
 def test_serialization():

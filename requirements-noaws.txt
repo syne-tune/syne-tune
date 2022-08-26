@@ -1,0 +1,7 @@
+numpy>=1.16.0
+scipy>=1.3.3
+autograd>=1.3
+pandas
+dill
+# only needed for python version lower than 3.8
+typing_extensions

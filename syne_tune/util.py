@@ -18,7 +18,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-import sagemaker
 from time import perf_counter
 from contextlib import contextmanager
 
@@ -93,6 +92,8 @@ def s3_experiment_path(
     :return: S3 path
     """
     if s3_bucket is None:
+        import sagemaker
+
         s3_bucket = sagemaker.Session().default_bucket()
     s3_path = f"s3://{s3_bucket}/{SYNE_TUNE_DEFAULT_FOLDER}"
     for part in (experiment_name, tuner_name):

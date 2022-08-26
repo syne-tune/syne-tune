@@ -33,6 +33,7 @@ required_blackbox_repository = load_requirements(
 )
 required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
+required_noaws = load_requirements("requirements-noaws.txt")
 
 long_description = (Path(__file__).parent / "README.md").read_text()
 required_extra = (
@@ -64,6 +65,7 @@ setup(
         "gpsearchers": required_gpsearchers,
         "benchmarks": required_benchmarks,
         "blackbox-repository": required_blackbox_repository,
+        "noaws": required_noaws,
         "extra": required_extra,
     },
     install_requires=required_core,

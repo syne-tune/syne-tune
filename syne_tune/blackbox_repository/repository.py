@@ -14,9 +14,6 @@ import logging
 from pathlib import Path
 from typing import List, Union, Dict, Optional
 
-import s3fs as s3fs
-from botocore.exceptions import NoCredentialsError
-
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import (
     deserialize as deserialize_offline,
@@ -73,6 +70,9 @@ def load_blackbox(
         or on S3, should it be generated using its conversion script?
     :return: blackbox with the given name, download it if not present.
     """
+    import s3fs as s3fs
+    from botocore.exceptions import NoCredentialsError
+
     tgt_folder = Path(repository_path) / name
     if (
         tgt_folder.exists()

@@ -15,13 +15,8 @@ import logging
 from datetime import datetime
 from json.decoder import JSONDecodeError
 from typing import List, Dict, Callable, Optional
-
-import boto3
 import pandas as pd
-
 from dataclasses import dataclass
-
-from botocore.exceptions import ClientError
 
 from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
 from syne_tune import Tuner
@@ -112,6 +107,9 @@ def download_single_experiment(
     :param experiment_name: If given, this is used as first directory.
     :return:
     """
+    import boto3
+    from botocore.exceptions import ClientError
+
     s3_path = s3_experiment_path(
         s3_bucket=s3_bucket, tuner_name=tuner_name, experiment_name=experiment_name
     )

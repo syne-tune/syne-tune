@@ -183,26 +183,33 @@ def test_points_to_evaluate():
 
 
 def test_points_to_evaluate_raytune():
-    from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
-    from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
-    from syne_tune.optimizer.schedulers.searchers import impute_points_to_evaluate
+    from syne_tune.try_import import try_import_raytune_message
 
-    config_space, configs, testcases = _prepare_test(is_ray_tune=True)
-    # This is just to get hp_ranges, which is needed for comparisons below
-    _myscheduler = FIFOScheduler(
-        config_space, searcher="random", mode="min", metric="bogus"
-    )
-    _mysearcher: RandomSearcher = _myscheduler.searcher
-    hp_ranges = _mysearcher._hp_ranges
-    for tc_src, tc_trg in testcases:
-        err_msg = f"tc_src = {tc_src}\ntc_trg = {tc_trg}"
-        ray_scheduler = RT_FIFOScheduler()
-        ray_scheduler.set_search_properties(mode="min", metric="bogus")
-        scheduler = RayTuneScheduler(
-            config_space=config_space,
-            ray_scheduler=ray_scheduler,
-            points_to_evaluate=impute_points_to_evaluate(tc_src, config_space),
+    try:
+        from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
+        from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
+        from syne_tune.optimizer.schedulers.searchers import impute_points_to_evaluate
+
+        config_space, configs, testcases = _prepare_test(is_ray_tune=True)
+        # This is just to get hp_ranges, which is needed for comparisons below
+        _myscheduler = FIFOScheduler(
+            config_space, searcher="random", mode="min", metric="bogus"
         )
-        tc_cmp = [scheduler.suggest(trial_id=i).config for i in range(len(tc_trg))]
-        assert len(tc_trg) == len(tc_cmp), err_msg
-        assert np.allclose(*_prepare_for_compare(tc_trg, tc_cmp, hp_ranges)), err_msg
+        _mysearcher: RandomSearcher = _myscheduler.searcher
+        hp_ranges = _mysearcher._hp_ranges
+        for tc_src, tc_trg in testcases:
+            err_msg = f"tc_src = {tc_src}\ntc_trg = {tc_trg}"
+            ray_scheduler = RT_FIFOScheduler()
+            ray_scheduler.set_search_properties(mode="min", metric="bogus")
+            scheduler = RayTuneScheduler(
+                config_space=config_space,
+                ray_scheduler=ray_scheduler,
+                points_to_evaluate=impute_points_to_evaluate(tc_src, config_space),
+            )
+            tc_cmp = [scheduler.suggest(trial_id=i).config for i in range(len(tc_trg))]
+            assert len(tc_trg) == len(tc_cmp), err_msg
+            assert np.allclose(
+                *_prepare_for_compare(tc_trg, tc_cmp, hp_ranges)
+            ), err_msg
+    except ImportError:
+        print(try_import_raytune_message())

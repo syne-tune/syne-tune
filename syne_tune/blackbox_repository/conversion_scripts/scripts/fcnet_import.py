@@ -23,7 +23,6 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import ast
-import h5py
 
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
@@ -67,6 +66,8 @@ CONFIGURATION_SPACE = {
 
 
 def convert_dataset(dataset_path: Path, max_rows: int = None):
+    import h5py
+
     data = h5py.File(dataset_path, "r")
     keys = data.keys()
     if max_rows is not None:

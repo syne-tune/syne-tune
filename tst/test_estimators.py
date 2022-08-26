@@ -10,14 +10,25 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.cli.estimator_factory import sagemaker_estimator_factory
-from benchmarking.cli.benchmark_factory import benchmark_factory, supported_benchmarks
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 from syne_tune.util import repository_root_path
+from syne_tune.try_import import try_import_blackbox_repository_message
 
 
 def test_create_estimators():
     try:
+        from benchmarking.cli.benchmark_factory import (
+            benchmark_factory,
+            supported_benchmarks,
+        )
+    except ImportError:
+        print(try_import_blackbox_repository_message())
+        return
+    try:
+        from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+            get_execution_role,
+        )
+        from benchmarking.cli.estimator_factory import sagemaker_estimator_factory
+
         role = get_execution_role()
         for benchmark_name in supported_benchmarks():
             benchmark = benchmark_factory({"benchmark_name": benchmark_name})

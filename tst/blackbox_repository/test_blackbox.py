@@ -32,6 +32,7 @@ from syne_tune.blackbox_repository.blackbox_offline import (
 from syne_tune.blackbox_repository.blackbox_tabular import (
     serialize as serialize_tabular,
 )
+from syne_tune.try_import import try_import_blackbox_repository_message
 
 
 n = 10
@@ -138,19 +139,22 @@ def test_blackbox_seed():
 
 
 def test_blackbox_offline_serialization():
-    y = x1 * x2
-    data = np.stack([x1, x2, y]).T
-    df = pd.DataFrame(data=data, columns=["hp_x1", "hp_x2", "metric_rmse"])
+    try:
+        y = x1 * x2
+        data = np.stack([x1, x2, y]).T
+        df = pd.DataFrame(data=data, columns=["hp_x1", "hp_x2", "metric_rmse"])
 
-    blackbox = BlackboxOffline(df_evaluations=df, configuration_space=cs)
+        blackbox = BlackboxOffline(df_evaluations=df, configuration_space=cs)
 
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        print(f"serializing and deserializing blackbox in folder {tmpdirname}")
-        serialize_offline({"task": blackbox}, tmpdirname)
-        blackbox_deserialized = deserialize_offline(tmpdirname)["task"]
-        for u, v in zip(x1, x2):
-            res = blackbox_deserialized.objective_function({"hp_x1": u, "hp_x2": v})
-            assert res["metric_rmse"] == u * v
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            print(f"serializing and deserializing blackbox in folder {tmpdirname}")
+            serialize_offline({"task": blackbox}, tmpdirname)
+            blackbox_deserialized = deserialize_offline(tmpdirname)["task"]
+            for u, v in zip(x1, x2):
+                res = blackbox_deserialized.objective_function({"hp_x1": u, "hp_x2": v})
+                assert res["metric_rmse"] == u * v
+    except ImportError:
+        print(try_import_blackbox_repository_message())
 
 
 def test_blackbox_offline_fidelities():
@@ -187,57 +191,60 @@ def test_blackbox_offline_fidelities():
 
 
 def test_blackbox_tabular_serialization():
-    hyperparameters = pd.DataFrame(
-        data=np.stack([x1, x2]).T, columns=["hp_x1", "hp_x2"]
-    )
-    num_seeds = 1
-    num_fidelities = 2
-    num_objectives = 1
-
-    def make_dummy_blackbox():
-        objectives_evaluations = np.random.rand(
-            len(hyperparameters), num_seeds, num_fidelities, num_objectives
+    try:
+        hyperparameters = pd.DataFrame(
+            data=np.stack([x1, x2]).T, columns=["hp_x1", "hp_x2"]
         )
-        return BlackboxTabular(
-            hyperparameters=hyperparameters,
-            configuration_space=cs,
-            fidelity_space=cs_fidelity,
-            objectives_evaluations=objectives_evaluations,
-        )
+        num_seeds = 1
+        num_fidelities = 2
+        num_objectives = 1
 
-    bb_dict = {
-        "protein": make_dummy_blackbox(),
-        "slice": make_dummy_blackbox(),
-    }
-
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        print(f"serializing and deserializing blackbox in folder {tmpdirname}")
-        serialize_tabular(bb_dict, tmpdirname)
-        bb_dict2 = deserialize_tabular(tmpdirname)
-
-        print(
-            bb_dict2["slice"].objective_function(
-                {"hp_x1": x1[0], "hp_x2": x2[0]}, fidelity={"hp_epochs": 1}
+        def make_dummy_blackbox():
+            objectives_evaluations = np.random.rand(
+                len(hyperparameters), num_seeds, num_fidelities, num_objectives
             )
-        )
-
-        for key in bb_dict2.keys():
-            bb1 = bb_dict[key]
-            bb2 = bb_dict2[key]
-            # assert sp.equal(bb1.configuration_space, bb2.configuration_space)
-            # assert sp.equal(bb1.fidelity_space, bb2.fidelity_space)
-            assert np.all(bb1.fidelity_values == bb2.fidelity_values)
-            assert bb1.objectives_names == bb2.objectives_names
-            np.testing.assert_allclose(
-                bb1.objectives_evaluations.reshape(-1),
-                bb2.objectives_evaluations.reshape(-1),
+            return BlackboxTabular(
+                hyperparameters=hyperparameters,
+                configuration_space=cs,
+                fidelity_space=cs_fidelity,
+                objectives_evaluations=objectives_evaluations,
             )
 
-        # blackbox.serialize(tmpdirname)
-        # blackbox_deserialized = deserialize(tmpdirname)
-        # for u, v in zip(x1, x2):
-        #    res = blackbox_deserialized.objective_function({"hp_x1": u, "hp_x2": v})
-        #    assert res['metric_rmse'] == u * v
+        bb_dict = {
+            "protein": make_dummy_blackbox(),
+            "slice": make_dummy_blackbox(),
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            print(f"serializing and deserializing blackbox in folder {tmpdirname}")
+            serialize_tabular(bb_dict, tmpdirname)
+            bb_dict2 = deserialize_tabular(tmpdirname)
+
+            print(
+                bb_dict2["slice"].objective_function(
+                    {"hp_x1": x1[0], "hp_x2": x2[0]}, fidelity={"hp_epochs": 1}
+                )
+            )
+
+            for key in bb_dict2.keys():
+                bb1 = bb_dict[key]
+                bb2 = bb_dict2[key]
+                # assert sp.equal(bb1.configuration_space, bb2.configuration_space)
+                # assert sp.equal(bb1.fidelity_space, bb2.fidelity_space)
+                assert np.all(bb1.fidelity_values == bb2.fidelity_values)
+                assert bb1.objectives_names == bb2.objectives_names
+                np.testing.assert_allclose(
+                    bb1.objectives_evaluations.reshape(-1),
+                    bb2.objectives_evaluations.reshape(-1),
+                )
+
+            # blackbox.serialize(tmpdirname)
+            # blackbox_deserialized = deserialize(tmpdirname)
+            # for u, v in zip(x1, x2):
+            #    res = blackbox_deserialized.objective_function({"hp_x1": u, "hp_x2": v})
+            #    assert res['metric_rmse'] == u * v
+    except ImportError:
+        print(try_import_blackbox_repository_message())
 
 
 def test_blackbox_tabular():

@@ -16,14 +16,12 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 
-import s3fs
-import sagemaker
-from botocore.exceptions import NoCredentialsError
-
 
 @lru_cache(maxsize=1)
 def s3_blackbox_folder(s3_root: Optional[str] = None):
     if s3_root is None:
+        import sagemaker
+
         if "AWS_DEFAULT_REGION" not in os.environ:
             # avoids error "Must setup local AWS configuration with a region supported by SageMaker."
             # in case no region is explicitely configured
@@ -41,6 +39,9 @@ def upload_blackbox(name: str, s3_root: Optional[str] = None):
     Uploads a blackbox locally present in repository_path to S3.
     :param name: folder must be available in repository_path/name
     """
+    import s3fs
+    from botocore.exceptions import NoCredentialsError
+
     try:
         fs = s3fs.S3FileSystem()
         for src in Path(repository_path / name).glob("*"):
