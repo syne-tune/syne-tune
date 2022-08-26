@@ -17,12 +17,10 @@
 import logging
 from copy import copy
 from inspect import signature
-from math import isclose
+import math
 import sys
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import argparse
-
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +120,7 @@ class Sampler:
         domain: Domain,
         spec: Optional[Union[List[Dict], Dict]] = None,
         size: int = 1,
-        random_state: Optional[np.random.RandomState] = None,
+        random_state=None,
     ):
         raise NotImplementedError
 
@@ -143,7 +141,7 @@ class Uniform(Sampler):
         return isinstance(other, Uniform)
 
 
-EXP_ONE = np.exp(1.0)
+EXP_ONE = math.exp(1.0)
 
 
 class LogUniform(Sampler):
@@ -178,8 +176,8 @@ class Normal(Sampler):
     def __eq__(self, other) -> bool:
         return (
             isinstance(other, Normal)
-            and np.isclose(self.mean, other.mean)
-            and np.isclose(self.sd, other.sd)
+            and math.isclose(self.mean, other.mean)
+            and math.isclose(self.sd, other.sd)
         )
 
 
@@ -191,7 +189,7 @@ class Grid(Sampler):
         domain: Domain,
         spec: Optional[Union[List[Dict], Dict]] = None,
         size: int = 1,
-        random_state: Optional[np.random.RandomState] = None,
+        random_state=None,
     ):
         return RuntimeError("Do not call `sample()` on grid.")
 
@@ -206,6 +204,15 @@ def _sanitize_sample_result(items, domain: Domain):
         return domain.cast(items[0])
 
 
+def _default_random_state(random_state):
+    if random_state is not None:
+        return random_state
+    else:
+        import numpy as np
+
+        return np.random
+
+
 class Float(Domain):
     class _Uniform(Uniform):
         def sample(
@@ -213,12 +220,11 @@ class Float(Domain):
             domain: "Float",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
             assert domain.lower > float("-inf"), "Uniform needs a lower bound"
             assert domain.upper < float("inf"), "Uniform needs a upper bound"
-            if random_state is None:
-                random_state = np.random
+            random_state = _default_random_state(random_state)
             items = random_state.uniform(domain.lower, domain.upper, size=size)
             return _sanitize_sample_result(items, domain)
 
@@ -228,20 +234,21 @@ class Float(Domain):
             domain: "Float",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
+            from numpy import exp as np_exp
+
             assert domain.lower > 0, "LogUniform needs a lower bound greater than 0"
             assert (
                 0 < domain.upper < float("inf")
             ), "LogUniform needs a upper bound greater than 0"
             # Note: We don't use `self.base` here, because it does not make a
             # difference
-            logmin = np.log(domain.lower)
-            logmax = np.log(domain.upper)
-            if random_state is None:
-                random_state = np.random
+            logmin = math.log(domain.lower)
+            logmax = math.log(domain.upper)
+            random_state = _default_random_state(random_state)
             log_items = random_state.uniform(logmin, logmax, size=size)
-            items = np.exp(log_items)
+            items = np_exp(log_items)
             return _sanitize_sample_result(items, domain)
 
     # Transform is -log(1 - x)
@@ -251,15 +258,16 @@ class Float(Domain):
             domain: "Float",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
+            from numpy import expm1 as np_expm1
+
             assert 0 <= domain.lower <= domain.upper < 1
-            logmin = -np.log1p(-domain.lower)
-            logmax = -np.log1p(-domain.upper)
-            if random_state is None:
-                random_state = np.random
+            logmin = -math.log1p(-domain.lower)
+            logmax = -math.log1p(-domain.upper)
+            random_state = _default_random_state(random_state)
             log_items = random_state.uniform(logmin, logmax, size=size)
-            items = -np.expm1(-log_items)
+            items = -np_expm1(-log_items)
             return _sanitize_sample_result(items, domain)
 
     class _Normal(Normal):
@@ -268,7 +276,7 @@ class Float(Domain):
             domain: "Float",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
             assert not domain.lower or domain.lower == float(
                 "-inf"
@@ -276,8 +284,7 @@ class Float(Domain):
             assert not domain.upper or domain.upper == float(
                 "inf"
             ), "Normal sampling does not allow a upper value bound."
-            if random_state is None:
-                random_state = np.random
+            random_state = _default_random_state(random_state)
             items = random_state.normal(self.mean, self.sd, size=size)
             return _sanitize_sample_result(items, domain)
 
@@ -344,14 +351,14 @@ class Float(Domain):
         return new
 
     def quantized(self, q: float):
-        if self.lower > float("-inf") and not isclose(
+        if self.lower > float("-inf") and not math.isclose(
             self.lower / q, round(self.lower / q)
         ):
             raise ValueError(
                 f"Your lower variable bound {self.lower} is not divisible by "
                 f"quantization factor {q}."
             )
-        if self.upper < float("inf") and not isclose(
+        if self.upper < float("inf") and not math.isclose(
             self.upper / q, round(self.upper / q)
         ):
             raise ValueError(
@@ -383,8 +390,8 @@ class Float(Domain):
         return (
             isinstance(other, Float)
             and super(Float, self).__eq__(other)
-            and np.isclose(self.lower, other.lower)
-            and np.isclose(self.upper, other.upper)
+            and math.isclose(self.lower, other.lower)
+            and math.isclose(self.upper, other.upper)
         )
 
 
@@ -395,10 +402,9 @@ class Integer(Domain):
             domain: "Integer",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
-            if random_state is None:
-                random_state = np.random
+            random_state = _default_random_state(random_state)
             # Note: domain.upper is inclusive here, but exclusive in
             # `np.random.randint`.
             items = random_state.randint(domain.lower, domain.upper + 1, size=size)
@@ -410,21 +416,22 @@ class Integer(Domain):
             domain: "Integer",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
+            from numpy import exp as np_exp, round as np_round
+
             assert domain.lower > 0, "LogUniform needs a lower bound greater than 0"
             assert (
                 0 < domain.upper < float("inf")
             ), "LogUniform needs a upper bound greater than 0"
             # Note: We don't use `self.base` here, because it does not make a
             # difference
-            logmin = np.log(domain.lower)
-            logmax = np.log(domain.upper)
-            if random_state is None:
-                random_state = np.random
+            logmin = math.log(domain.lower)
+            logmax = math.log(domain.upper)
+            random_state = _default_random_state(random_state)
             log_items = random_state.uniform(logmin, logmax, size=size)
-            items = np.exp(log_items)
-            items = np.round(items).astype(int)
+            items = np_exp(log_items)
+            items = np_round(items).astype(int)
             return _sanitize_sample_result(items, domain)
 
     default_sampler_cls = _Uniform
@@ -498,10 +505,9 @@ class Categorical(Domain):
             domain: "Categorical",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
-            if random_state is None:
-                random_state = np.random
+            random_state = _default_random_state(random_state)
             categories = domain.categories
             items = [
                 categories[i] for i in random_state.choice(len(categories), size=size)
@@ -554,15 +560,17 @@ class Categorical(Domain):
     def cast(self, value):
         value = self.value_type(value)
         if value not in self.categories:
+            from numpy import array as np_array, abs as np_abs, argmin as np_argmin
+
             assert isinstance(
                 value, float
             ), f"value = {value} not contained in categories = {self.categories}"
             # For value type float, we do nearest neighbor matching, in order to
             # avoid meaningless mistakes due to round-off or conversions from
             # string and back
-            categ_arr = np.array(self.categories)
-            distances = np.abs(categ_arr - value)
-            minind = np.argmin(distances)
+            categ_arr = np_array(self.categories)
+            distances = np_abs(categ_arr - value)
+            minind = np_argmin(distances)
             assert distances[minind] < 0.01 * abs(
                 categ_arr[minind]
             ), f"value = {value} not contained or close to any in categories = {self.categories}"
@@ -612,7 +620,7 @@ class Function(Domain):
             domain: "Function",
             spec: Optional[Union[List[Dict], Dict]] = None,
             size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
+            random_state=None,
         ):
             if random_state is not None:
                 raise NotImplementedError()
@@ -678,11 +686,13 @@ class Quantized(Sampler):
         domain: Domain,
         spec: Optional[Union[List[Dict], Dict]] = None,
         size: int = 1,
-        random_state: Optional[np.random.RandomState] = None,
+        random_state=None,
     ):
+        from numpy import round as np_round, divide as np_divide, ndarray as np_ndarray
+
         values = self.sampler.sample(domain, spec, size, random_state)
-        quantized = np.round(np.divide(values, self.q)) * self.q
-        if not isinstance(quantized, np.ndarray):
+        quantized = np_round(np_divide(values, self.q)) * self.q
+        if not isinstance(quantized, np_ndarray):
             return domain.cast(quantized)
         return list(quantized)
 
@@ -723,8 +733,8 @@ class FiniteRange(Domain):
             self._lower_internal = lower
             self._step_internal = (upper - lower) / (size - 1) if size > 1 else 0
         else:
-            self._lower_internal = np.log(lower)
-            upper_internal = np.log(upper)
+            self._lower_internal = math.log(lower)
+            upper_internal = math.log(upper)
             self._step_internal = (
                 (upper_internal - self._lower_internal) / (size - 1) if size > 1 else 0
             )
@@ -735,12 +745,14 @@ class FiniteRange(Domain):
         return self._values
 
     def _map_from_int(self, x: int) -> Union[float, int]:
+        from numpy import clip as np_clip, rint as np_rint
+
         y = x * self._step_internal + self._lower_internal
         if self.log_scale:
-            y = np.exp(y)
-        res = float(np.clip(y, self.lower, self.upper))
+            y = math.exp(y)
+        res = float(np_clip(y, self.lower, self.upper))
         if self.cast_int:
-            res = int(np.rint(res))
+            res = int(np_rint(res))
         return res
 
     def __repr__(self):
@@ -755,12 +767,14 @@ class FiniteRange(Domain):
         if self._step_internal == 0:
             return 0
         else:
-            int_value = np.clip(value, self.lower, self.upper)
+            from numpy import clip as np_clip
+
+            int_value = np_clip(value, self.lower, self.upper)
             if self.log_scale:
-                int_value = np.log(int_value)
+                int_value = math.log(int_value)
             sz = len(self._uniform_int)
             return int(
-                np.clip(
+                np_clip(
                     round((int_value - self._lower_internal) / self._step_internal),
                     0,
                     sz - 1,
@@ -796,8 +810,8 @@ class FiniteRange(Domain):
     def __eq__(self, other) -> bool:
         return (
             isinstance(other, FiniteRange)
-            and np.isclose(self.lower, other.lower)
-            and np.isclose(self.upper, other.upper)
+            and math.isclose(self.lower, other.lower)
+            and math.isclose(self.upper, other.upper)
             and self.log_scale == other.log_scale
             and self.cast_int == other.cast_int
         )
