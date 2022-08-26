@@ -15,7 +15,6 @@ import logging
 import time
 from collections import defaultdict, OrderedDict
 from typing import List, Dict, Tuple
-import numpy as np
 
 from syne_tune.backend.trial_status import Status, Trial
 from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
@@ -36,6 +35,8 @@ class MetricsStatistics:
         self.is_numeric = {}
 
     def add(self, metrics: Dict):
+        from numpy import inf as np_inf
+
         for metric_name, current_metric in metrics.items():
             if metric_name in self.is_numeric:
                 if self.is_numeric[metric_name] != isinstance(
@@ -50,10 +51,10 @@ class MetricsStatistics:
                 )
                 if self.is_numeric[metric_name]:
                     self.min_metrics[metric_name] = min(
-                        self.min_metrics.get(metric_name, np.inf), current_metric
+                        self.min_metrics.get(metric_name, np_inf), current_metric
                     )
                     self.max_metrics[metric_name] = max(
-                        self.max_metrics.get(metric_name, -np.inf), current_metric
+                        self.max_metrics.get(metric_name, -np_inf), current_metric
                     )
                     self.sum_metrics[metric_name] = (
                         self.sum_metrics.get(metric_name, 0) + current_metric
@@ -237,6 +238,8 @@ def print_best_metric_found(
     :param mode:
     :return: trial-id and value of the best metric found
     """
+    from numpy import inf as np_inf
+
     if tuning_status.overall_metric_statistics.count == 0:
         return
     # only plot results of the best first metric for now in summary, plotting the optimal metrics for multiple
@@ -246,13 +249,13 @@ def print_best_metric_found(
     print(f"Resource summary (last result is reported):\n{str(tuning_status)}")
     if mode == "min":
         metric_per_trial = [
-            (trial_id, stats.min_metrics.get(metric_name, np.inf))
+            (trial_id, stats.min_metrics.get(metric_name, np_inf))
             for trial_id, stats in tuning_status.trial_metric_statistics.items()
         ]
         metric_per_trial = sorted(metric_per_trial, key=lambda x: x[1])
     else:
         metric_per_trial = [
-            (trial_id, stats.max_metrics.get(metric_name, -np.inf))
+            (trial_id, stats.max_metrics.get(metric_name, -np_inf))
             for trial_id, stats in tuning_status.trial_metric_statistics.items()
         ]
         metric_per_trial = sorted(metric_per_trial, key=lambda x: -x[1])

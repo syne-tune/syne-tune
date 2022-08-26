@@ -13,7 +13,6 @@
 import os
 import re
 import sys
-import numpy as np
 import json
 import logging
 from ast import literal_eval
@@ -116,6 +115,8 @@ def _serialize_report_dict(report_dict: Dict) -> str:
     :return: serialized string of the reported metrics, an exception is raised if the size is too large or
     if the dictionary values are not JSON-serializable
     """
+    import numpy as np
+
     try:
 
         def np_encoder(object):

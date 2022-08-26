@@ -17,8 +17,6 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Optional, Dict, Set
 
-import dill as dill
-
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import Status, Trial
 from syne_tune.config_space import to_dict, Domain
@@ -423,6 +421,8 @@ class Tuner:
                 raise ValueError(f"Trial - {trial_id} failed")
 
     def save(self, folder: Optional[str] = None):
+        import dill as dill
+
         if folder is None:
             tuner_serialized_path = self.tuner_path / "tuner.dill"
         else:
@@ -434,6 +434,8 @@ class Tuner:
 
     @staticmethod
     def load(tuner_path: Optional[str]):
+        import dill as dill
+
         with open(Path(tuner_path) / "tuner.dill", "rb") as f:
             tuner = dill.load(f)
             tuner.tuner_path = Path(experiment_path(tuner_name=tuner.name))
