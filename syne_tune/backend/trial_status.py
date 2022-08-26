@@ -14,11 +14,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Optional, List
 
-try:
-    from typing_extensions import Literal
-except ImportError:
-    from typing import Literal
-
 from syne_tune.constants import ST_WORKER_COST
 
 
@@ -50,6 +45,11 @@ class Trial:
 
 @dataclass
 class TrialResult(Trial):
+    try:
+        from typing_extensions import Literal
+    except ImportError:
+        from typing import Literal
+
     # Metrics recorded for each call of `report`. Each metric is a dictionary from metric name to value (
     # could be numeric or string, the only constrain is that it must be compatible with json).
     metrics: List[Dict[str, object]]
