@@ -267,3 +267,9 @@ class TrialBackend:
         :return:
         """
         pass
+
+    def on_tuner_save(self):
+        """
+        Called by :class:`Tuner` at the end of `save`
+        """
+        pass

@@ -23,7 +23,11 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import ast
-import h5py
+
+try:
+    import h5py
+except ImportError:
+    print("Cannot import h5py. Use 'pip install h5py'")
 
 from syne_tune.blackbox_repository.blackbox_tabular import serialize, BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (

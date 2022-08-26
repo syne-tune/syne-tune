@@ -19,8 +19,6 @@ from typing import List, Callable, Tuple, Optional, Dict, Set
 
 import dill as dill
 
-
-from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import Status, Trial
 from syne_tune.config_space import to_dict, Domain
@@ -432,10 +430,7 @@ class Tuner:
         with open(tuner_serialized_path, "wb") as f:
             logger.debug(f"saving tuner in {tuner_serialized_path}")
             dill.dump(self, f)
-            # ugly hack to reinitialize the session, we could remove it by having kwargs/args of SagemakerFramework
-            # plus the class (for instance PyTorch)
-            if isinstance(self.trial_backend, SageMakerBackend):
-                self.trial_backend.initialize_sagemaker_session()
+            self.trial_backend.on_tuner_save()  # callback
 
     @staticmethod
     def load(tuner_path: Optional[str]):

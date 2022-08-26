@@ -16,11 +16,9 @@ from time import perf_counter
 from typing import Dict, List, Tuple, Optional
 import copy
 import logging
-
-from syne_tune.backend.trial_status import Trial
-
 import pandas as pd
 
+from syne_tune.backend.trial_status import Trial
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TIME
 from syne_tune.util import RegularCallback
 
@@ -248,17 +246,19 @@ class TensorboardCallback(TunerCallback):
 
         self.iter += 1
 
-    def on_tuning_start(self, tuner):
-
-        self.output_path = os.path.join(tuner.tuner_path, "tensorboard_output")
-
+    def _create_summary_writer(self):
         try:
             from tensorboardX import SummaryWriter
         except ImportError:
             logger.error(
                 "TensoboardX is not installed. You can install it via: pip install tensorboardX"
             )
-        self.writer = SummaryWriter(self.output_path)
+            raise
+        return SummaryWriter(self.output_path)
+
+    def on_tuning_start(self, tuner):
+        self.output_path = os.path.join(tuner.tuner_path, "tensorboard_output")
+        self.writer = self._create_summary_writer()
         self.iter = 0
         self.start_time_stamp = perf_counter()
         logger.info(
@@ -304,12 +304,4 @@ class TensorboardCallback(TunerCallback):
         self.trial_ids = state["trial_ids"]
         self.metric_sign = state["metric_sign"]
         self.output_path = state["output_path"]
-
-        try:
-            from tensorboardX import SummaryWriter
-        except ImportError:
-            logger.error(
-                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
-            )
-
-        self.writer = SummaryWriter(self.output_path)
+        self.writer = self._create_summary_writer()

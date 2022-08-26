@@ -11,6 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Optional
+import numpy as np
+import logging
 
 from syne_tune.optimizer.schedulers import (
     FIFOScheduler,
@@ -28,10 +30,9 @@ from syne_tune.optimizer.schedulers.synchronous import (
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
-import numpy as np
-
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    QuantileBasedSurrogateSearcher,
+from syne_tune.try_import import (
+    try_import_blackbox_repository_message,
+    try_import_bore_message,
 )
 
 
@@ -222,7 +223,11 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
 class BORE(FIFOScheduler):
     def __init__(self, config_space: Dict, metric: str, mode: str, **kwargs):
-        from syne_tune.optimizer.schedulers.searchers.bore import Bore
+        try:
+            from syne_tune.optimizer.schedulers.searchers.bore import Bore
+        except ImportError:
+            logging.info(try_import_bore_message())
+            raise
 
         super(BORE, self).__init__(
             config_space=config_space,
@@ -298,7 +303,11 @@ class ZeroShotTransfer(FIFOScheduler):
         generate a set of configurations and will impute their performance using surrogate models.
         :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
         """
-        from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
+        try:
+            from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
 
         super(ZeroShotTransfer, self).__init__(
             config_space=config_space,
@@ -343,6 +352,14 @@ class ASHACTS(HyperbandScheduler):
         :param random_seed:
         :param kwargs:
         """
+        try:
+            from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
+                QuantileBasedSurrogateSearcher,
+            )
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
+
         super(ASHACTS, self).__init__(
             config_space=config_space,
             searcher=QuantileBasedSurrogateSearcher(

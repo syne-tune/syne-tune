@@ -15,12 +15,10 @@ import logging
 import time
 from collections import defaultdict, OrderedDict
 from typing import List, Dict, Tuple
-
 import pandas as pd
+from numpy import inf as np_inf
 
 from syne_tune.backend.trial_status import Status, Trial
-import numpy as np
-
 from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
 
 
@@ -53,10 +51,10 @@ class MetricsStatistics:
                 )
                 if self.is_numeric[metric_name]:
                     self.min_metrics[metric_name] = min(
-                        self.min_metrics.get(metric_name, np.inf), current_metric
+                        self.min_metrics.get(metric_name, np_inf), current_metric
                     )
                     self.max_metrics[metric_name] = max(
-                        self.max_metrics.get(metric_name, -np.inf), current_metric
+                        self.max_metrics.get(metric_name, -np_inf), current_metric
                     )
                     self.sum_metrics[metric_name] = (
                         self.sum_metrics.get(metric_name, 0) + current_metric
@@ -247,13 +245,13 @@ def print_best_metric_found(
     print(f"Resource summary (last result is reported):\n{str(tuning_status)}")
     if mode == "min":
         metric_per_trial = [
-            (trial_id, stats.min_metrics.get(metric_name, np.inf))
+            (trial_id, stats.min_metrics.get(metric_name, np_inf))
             for trial_id, stats in tuning_status.trial_metric_statistics.items()
         ]
         metric_per_trial = sorted(metric_per_trial, key=lambda x: x[1])
     else:
         metric_per_trial = [
-            (trial_id, stats.max_metrics.get(metric_name, -np.inf))
+            (trial_id, stats.max_metrics.get(metric_name, -np_inf))
             for trial_id, stats in tuning_status.trial_metric_statistics.items()
         ]
         metric_per_trial = sorted(metric_per_trial, key=lambda x: -x[1])
