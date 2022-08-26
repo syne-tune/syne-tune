@@ -29,9 +29,6 @@ from syne_tune.constants import (
     ST_WORKER_ITER,
 )
 
-# this is required so that metrics are written
-from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfos
-
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
@@ -63,6 +60,10 @@ class Reporter:
                     os.getenv(f"SM_HP_{ST_INSTANCE_COUNT.upper()}", "1")
                 )
                 if self.instance_type is not None:
+                    from syne_tune.backend.sagemaker_backend.instance_info import (
+                        InstanceInfos,
+                    )
+
                     logger.info(
                         f"detected instance-type/instance-count to {self.instance_type}/{self.instance_count}"
                     )
