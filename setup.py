@@ -1,4 +1,4 @@
-from syne_tune.read_version import read_version
+from syne_tune import read_version
 from setuptools import setup, find_packages
 from pathlib import Path
 
