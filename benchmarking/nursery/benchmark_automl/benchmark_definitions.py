@@ -23,6 +23,7 @@ class BenchmarkDefinition:
     mode: str
     blackbox_name: str
     dataset_name: str
+    max_resource_attr: str
     max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
     datasets: Optional[List[str]] = None
@@ -37,18 +38,34 @@ def fcnet_benchmark(dataset_name):
         mode="min",
         blackbox_name="fcnet",
         dataset_name=dataset_name,
+        max_resource_attr="epochs",
     )
+
+
+NAS201_MAX_WALLCLOCK_TIME = {
+    "cifar10": 5 * 3600,
+    "cifar100": 6 * 3600,
+    "ImageNet16-120": 8 * 3600,
+}
+
+
+NAS201_N_WORKERS = {
+    "cifar10": 4,
+    "cifar100": 4,
+    "ImageNet16-120": 8,
+}
 
 
 def nas201_benchmark(dataset_name):
     return BenchmarkDefinition(
-        max_wallclock_time=3600 * 6,
-        n_workers=4,
+        max_wallclock_time=NAS201_MAX_WALLCLOCK_TIME[dataset_name],
+        n_workers=NAS201_N_WORKERS[dataset_name],
         elapsed_time_attr="metric_elapsed_time",
         metric="metric_valid_error",
         mode="min",
         blackbox_name="nasbench201",
         dataset_name=dataset_name,
+        max_resource_attr="epochs",
     )
 
 
@@ -64,6 +81,7 @@ def lcbench_benchmark(dataset_name, datasets):
         surrogate="KNeighborsRegressor",
         max_num_evaluations=4000,
         datasets=datasets,
+        max_resource_attr="epochs",
     )
 
 
