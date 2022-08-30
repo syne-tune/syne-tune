@@ -42,9 +42,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext impo
     ExtendedConfiguration,
 )
 from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
-    EPS,
-)
 
 
 def _prepare_data_internal(
@@ -888,25 +885,6 @@ def sample_posterior_joint(
         fsamples = np.concatenate(tuple(reversed(f_rows)), axis=0)
         ysamples = np.concatenate(tuple(reversed(y_rows)), axis=0)
     return {"f": fsamples, "y": ysamples}
-
-
-def decode_features(features_ext, resource_attr_range: Tuple[int, int]):
-    """
-    Given matrix of features from extended configs, corresponding to
-    `ExtendedConfiguration`, split into feature matrix from normal
-    configs and resource values.
-
-    :param features_ext: Matrix of features from extended configs
-    :param resource_attr_range: (r_min, r_max)
-    :return: (features, resources)
-    """
-    r_min, r_max = resource_attr_range
-    features = features_ext[:, :-1]
-    resources_encoded = _flatvec(features_ext[:, -1])
-    lower = r_min - 0.5 + EPS
-    width = r_max - r_min + 1 - 2 * EPS
-    resources = anp.clip(anp.round(resources_encoded * width + lower), r_min, r_max)
-    return features, [int(r) for r in resources]
 
 
 def issm_likelihood_slow_computations(

@@ -32,7 +32,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import 
     KernelFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
-    MarginalLikelihood,
+    GaussianProcessMarginalLikelihood,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     ScalarMeanFunction,
@@ -43,6 +43,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.slice import (
     SliceSampler,
 )
+from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 
 class GPRegressionMCMC(GaussianProcessModel):
@@ -69,12 +70,13 @@ class GPRegressionMCMC(GaussianProcessModel):
     def number_samples(self) -> int:
         return self.mcmc_config.n_samples
 
-    def fit(self, features, targets, **kwargs):
-        features, targets = self._check_features_targets(features, targets)
+    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+        features, targets = self._check_features_targets(
+            features=data["features"], targets=data["targets"]
+        )
         assert (
             targets.shape[1] == 1
         ), "targets cannot be a matrix if parameters are to be fit"
-        crit_args = [features, targets]
 
         mean_function = self.likelihood.mean
         if isinstance(mean_function, ScalarMeanFunction):
@@ -88,7 +90,7 @@ class GPRegressionMCMC(GaussianProcessModel):
             # Decode and write into Gluon parameters
             _set_gp_hps(hp_values, self.likelihood)
             neg_log = add_regularizer_to_criterion(
-                criterion=self.likelihood, crit_args=crit_args
+                criterion=self.likelihood, crit_args=[data]
             )
             return -neg_log
 
@@ -107,13 +109,15 @@ class GPRegressionMCMC(GaussianProcessModel):
         )
         self._states = self._create_posterior_states(self.samples, features, targets)
 
-    def recompute_states(self, features, targets, **kwargs):
+    def recompute_states(self, data: dict):
         """
         Supports fantasizing, in that targets can be a matrix. Then,
         ycols = targets.shape[1] must be a multiple of self.number_samples.
 
         """
-        features, targets = self._check_features_targets(features, targets)
+        features, targets = self._check_features_targets(
+            features=data["features"], targets=data["targets"]
+        )
         ycols = targets.shape[1]
         if ycols > 1:
             assert ycols % self.number_samples == 0, (
@@ -155,18 +159,18 @@ class GPRegressionMCMC(GaussianProcessModel):
             _set_gp_hps(sample, likelihood)
             targets_part = targets[:, offset : (offset + ycols)]
             state = GaussProcPosteriorState(
-                features,
-                targets_part,
-                likelihood.mean,
-                likelihood.kernel,
-                likelihood.get_noise_variance(as_ndarray=True),
+                features=features,
+                targets=targets_part,
+                mean=likelihood.mean,
+                kernel=likelihood.kernel,
+                noise_variance=likelihood.get_noise_variance(as_ndarray=True),
             )
             states.append(state)
             offset += num_fantasy_samples
         return states
 
 
-def _get_gp_hps(likelihood: MarginalLikelihood) -> anp.ndarray:
+def _get_gp_hps(likelihood: GaussianProcessMarginalLikelihood) -> anp.ndarray:
     """Get GP hyper-parameters as numpy array for a given likelihood object."""
     hp_values = []
     for param_int, encoding in likelihood.param_encoding_pairs():
@@ -174,7 +178,9 @@ def _get_gp_hps(likelihood: MarginalLikelihood) -> anp.ndarray:
     return anp.concatenate(hp_values)
 
 
-def _set_gp_hps(params_numpy: anp.ndarray, likelihood: MarginalLikelihood):
+def _set_gp_hps(
+    params_numpy: anp.ndarray, likelihood: GaussianProcessMarginalLikelihood
+):
     """Set GP hyper-parameters from numpy array for a given likelihood object."""
     pos = 0
     for param, encoding in likelihood.param_encoding_pairs():
@@ -190,11 +196,13 @@ def _set_gp_hps(params_numpy: anp.ndarray, likelihood: MarginalLikelihood):
         pos += dim
 
 
-def _create_likelihood(build_kernel, random_state: RandomState) -> MarginalLikelihood:
+def _create_likelihood(
+    build_kernel, random_state: RandomState
+) -> GaussianProcessMarginalLikelihood:
     """
     Create a MarginalLikelihood object with default initial GP hyperparameters.
     """
-    likelihood = MarginalLikelihood(
+    likelihood = GaussianProcessMarginalLikelihood(
         kernel=build_kernel(), mean=ScalarMeanFunction(), initial_noise_variance=None
     )
     # Note: The `init` parameter is a default sampler which is used only

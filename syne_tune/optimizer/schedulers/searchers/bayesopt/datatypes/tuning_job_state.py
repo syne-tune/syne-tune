@@ -39,7 +39,6 @@ class TuningJobState:
     `trials_evaluations[i].metrics[k][str(r)]` is the value for metric k
     and trial `trials_evaluations[i].trial_id` observed at resource level
     r.
-
     """
 
     def __init__(

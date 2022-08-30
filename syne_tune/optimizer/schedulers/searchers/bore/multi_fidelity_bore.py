@@ -15,13 +15,16 @@ import logging
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bore import Bore
+from syne_tune.optimizer.schedulers.searchers.bracket_searcher import (
+    DefaultHyperbandBracketSamplingSearcher,
+)
 
 __all__ = ["MultiFidelityBore"]
 
 logger = logging.getLogger(__name__)
 
 
-class MultiFidelityBore(Bore):
+class MultiFidelityBore(Bore, DefaultHyperbandBracketSamplingSearcher):
     """
     Adapts BORE (Tiao et al.) for the multi-fidelity Hyperband setting following Falkner et al. Once we collected enough
     data points on the smallest resource level, we fit a probabilistic classifier and sample from it until we have
@@ -96,6 +99,7 @@ class MultiFidelityBore(Bore):
             SynchronousHyperbandScheduler,
         )
 
+        super().configure_scheduler(scheduler)
         assert isinstance(scheduler, HyperbandScheduler) or isinstance(
             scheduler, SynchronousHyperbandScheduler
         ), (

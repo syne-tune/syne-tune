@@ -629,6 +629,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
             scheduler, FIFOScheduler
         ), "This searcher requires FIFOScheduler scheduler"
         super().configure_scheduler(scheduler)
+        # Allow model factory to depend on `scheduler` as well
+        model_factory = self.state_transformer.model_factory
+        model_factory.configure_scheduler(scheduler)
 
     def register_pending(
         self, trial_id: str, config: Optional[Dict] = None, milestone=None

@@ -13,8 +13,8 @@
 import copy
 import logging
 import os
-from typing import Dict, Optional, List
 from dataclasses import dataclass
+from typing import Optional, List
 
 import numpy as np
 
@@ -41,8 +41,15 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Dictionary,
     Float,
 )
+from syne_tune.optimizer.schedulers.searchers.bracket_searcher import (
+    SearcherWithDistributionOverBrackets,
+)
 
-__all__ = ["HyperbandScheduler", "HyperbandBracketManager"]
+__all__ = [
+    "HyperbandScheduler",
+    "HyperbandBracketManager",
+    "hyperband_rung_levels",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +256,7 @@ class HyperbandScheduler(FIFOScheduler):
     resource_attr : str
         Name of resource attribute in result's obtained via `on_trial_result`.
         Note: The type of resource must be int.
-    points_to_evaluate : List[Dict] or None
+    points_to_evaluate : List[dict] or None
         See :class:`FIFOScheduler`
     max_t : int
         See :class:`FIFOScheduler`. This is mandatory here. If not given, we
@@ -406,6 +413,7 @@ class HyperbandScheduler(FIFOScheduler):
         self._resource_attr = kwargs["resource_attr"]
         self._rung_system_kwargs = kwargs["rung_system_kwargs"]
         self._cost_attr = kwargs.get("cost_attr")
+        self._num_brackets = kwargs["brackets"]
         assert not (
             scheduler_type == "cost_promotion" and self._cost_attr is None
         ), "cost_attr must be given if type='cost_promotion'"
@@ -418,6 +426,10 @@ class HyperbandScheduler(FIFOScheduler):
             + "config_space['epochs'], config_space['max_t'], "
             + "config_space['max_epochs']"
         )
+        assert isinstance(self.searcher, SearcherWithDistributionOverBrackets), (
+            "searcher has to be of type SearcherWithDistributionOverBrackets, "
+            f"but has type = {type(self.searcher)}"
+        )
 
         # If rung_levels is given, grace_period and reduction_factor are ignored
         rung_levels = kwargs.get("rung_levels")
@@ -429,13 +441,12 @@ class HyperbandScheduler(FIFOScheduler):
                     f"{kwargs.get('grace_period')} and reduction_factor = "
                     f"{kwargs.get('reduction_factor')} are ignored!"
                 )
-        rung_levels = _get_rung_levels(
+        rung_levels = hyperband_rung_levels(
             rung_levels,
             grace_period=kwargs["grace_period"],
             reduction_factor=kwargs["reduction_factor"],
             max_t=self.max_t,
         )
-        brackets = kwargs["brackets"]
         do_snapshots = kwargs["do_snapshots"]
         assert (not do_snapshots) or (
             scheduler_type == "stopping"
@@ -449,11 +460,12 @@ class HyperbandScheduler(FIFOScheduler):
             self.mode,
             self.max_t,
             rung_levels,
-            brackets,
+            self._num_brackets,
             rung_system_per_bracket,
             cost_attr=self._total_cost_attr(),
             random_seed=self.random_seed_generator(),
             rung_system_kwargs=self._rung_system_kwargs,
+            scheduler=self,
         )
         self.do_snapshots = do_snapshots
         self.searcher_data = kwargs["searcher_data"]
@@ -487,7 +499,11 @@ class HyperbandScheduler(FIFOScheduler):
         """
         return self.scheduler_type != "stopping"
 
-    def _extend_search_options(self, search_options: Dict) -> Dict:
+    @property
+    def rung_levels(self) -> List[int]:
+        return self.terminator.rung_levels
+
+    def _extend_search_options(self, search_options: dict) -> dict:
         # Note: Needs self.scheduler_type to be set
         scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
@@ -508,7 +524,7 @@ class HyperbandScheduler(FIFOScheduler):
         else:
             return self._cost_attr
 
-    def _on_config_suggest(self, config: Dict, trial_id: str, **kwargs) -> Dict:
+    def _on_config_suggest(self, config: dict, trial_id: str, **kwargs) -> dict:
         """
         `kwargs` being used here:
         - elapsed_time: Time from start of experiment, set in
@@ -575,7 +591,7 @@ class HyperbandScheduler(FIFOScheduler):
     #   List of (rung_level, metric_dict), where metric_dict has entries
     #   task_id: metric_value. Note that entries are sorted in decreasing order
     #   w.r.t. rung_level.
-    def _promote_trial(self) -> (Optional[str], Optional[Dict]):
+    def _promote_trial(self) -> (Optional[str], Optional[dict]):
         trial_id, extra_kwargs = self.terminator.on_task_schedule()
         if trial_id is None:
             # No trial to be promoted
@@ -670,7 +686,7 @@ class HyperbandScheduler(FIFOScheduler):
         super().on_trial_error(trial)
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.STOP)
 
-    def _update_searcher_internal(self, trial_id: str, config: Dict, result: Dict):
+    def _update_searcher_internal(self, trial_id: str, config: dict, result: dict):
         if self.searcher_data == "rungs_and_last":
             # Remove last recently added result for this task. This is not
             # done if it fell on a rung level (i.e., `keep_case` is True)
@@ -680,7 +696,7 @@ class HyperbandScheduler(FIFOScheduler):
                 self.searcher.remove_case(trial_id, **rem_result)
 
     def _update_searcher(
-        self, trial_id: str, config: Dict, result: Dict, task_info: Dict
+        self, trial_id: str, config: dict, result: dict, task_info: dict
     ):
         """
         Updates searcher with `result` (depending on `searcher_data`), and
@@ -698,10 +714,13 @@ class HyperbandScheduler(FIFOScheduler):
         do_update = False
         pending_resources = []
         if self.searcher_data == "rungs":
-            if milestone_reached:
+            resource = result[self._resource_attr]
+            if resource in self.rung_levels or resource == self.max_t:
                 # Update searcher with intermediate result
+                # Note: This condition is weaker than `milestone_reached` if
+                # more than one bracket is used
                 do_update = True
-                if task_continues and next_milestone is not None:
+                if task_continues and milestone_reached and next_milestone is not None:
                     pending_resources = [next_milestone]
         elif not task_info.get("ignore_data", False):
             # All results are reported to the searcher, except if
@@ -730,7 +749,7 @@ class HyperbandScheduler(FIFOScheduler):
             )
         return do_update
 
-    def _check_result(self, result: Dict):
+    def _check_result(self, result: dict):
         super()._check_result(result)
         self._check_key_of_result(result, self._resource_attr)
         if self.scheduler_type == "cost_promotion":
@@ -742,7 +761,7 @@ class HyperbandScheduler(FIFOScheduler):
             + f"value {resource}, which is not permitted"
         )
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         self._check_result(result)
         trial_id = str(trial.trial_id)
         debug_log = self.searcher.debug_log
@@ -882,7 +901,7 @@ class HyperbandScheduler(FIFOScheduler):
     def on_trial_remove(self, trial: Trial):
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.PAUSE)
 
-    def on_trial_complete(self, trial: Trial, result: Dict):
+    def on_trial_complete(self, trial: Trial, result: dict):
         # Check whether searcher was already updated based on `result`
         trial_id = str(trial.trial_id)
         largest_update_resource = self._active_trials[trial_id].largest_update_resource
@@ -895,29 +914,11 @@ class HyperbandScheduler(FIFOScheduler):
         self._cleanup_trial(trial_id, trial_decision=SchedulerDecision.STOP)
 
 
-def _sample_bracket(num_brackets, rung_levels, random_state):
-    # Brackets are sampled in proportion to the number of configs started
-    # in synchronous Hyperband in each bracket
-    if num_brackets > 1:
-        smax_plus1 = len(rung_levels)
-        assert num_brackets <= smax_plus1
-        probs = np.array(
-            [
-                smax_plus1 / ((smax_plus1 - s) * rung_levels[s])
-                for s in range(num_brackets)
-            ]
-        )
-        normalized = probs / probs.sum()
-        return random_state.choice(num_brackets, p=normalized)
-    else:
-        return 0
-
-
 def _is_positive_int(x):
     return int(x) == x and x >= 1
 
 
-def _get_rung_levels(rung_levels, grace_period, reduction_factor, max_t):
+def hyperband_rung_levels(rung_levels, grace_period, reduction_factor, max_t):
     if rung_levels is not None:
         assert (
             isinstance(rung_levels, list) and len(rung_levels) > 1
@@ -985,9 +986,10 @@ class HyperbandBracketManager:
             Overrides entry in `rung_system_kwargs`
         random_seed : int
             Random seed for bracket sampling
-        rung_system_kwargs: dict
-            Dictionary of arguments passed to the rung system,
-
+        rung_system_kwargs : dict
+            Dictionary of arguments passed to the rung system
+        scheduler : HyperbandScheduler
+            The scheduler is needed in order to sample a bracket
     """
 
     def __init__(
@@ -1003,12 +1005,14 @@ class HyperbandBracketManager:
         cost_attr,
         random_seed,
         rung_system_kwargs,
+        scheduler,
     ):
         self._scheduler_type = scheduler_type
         self._resource_attr = resource_attr
         self._max_t = max_t
         self.rung_levels = copy.copy(rung_levels)
         self._rung_system_per_bracket = rung_system_per_bracket
+        self._scheduler = scheduler
         # Maps trial_id -> bracket_id
         self._task_info = dict()
         max_num_brackets = len(rung_levels)
@@ -1091,7 +1095,7 @@ class HyperbandBracketManager:
             milestones.insert(0, self._max_t)
         return milestones
 
-    def on_task_report(self, trial_id: str, result: Dict):
+    def on_task_report(self, trial_id: str, result: dict):
         """
         This method is called by the reporter thread whenever a new metric
         value is received. It returns a dictionary with all the information
@@ -1136,14 +1140,11 @@ class HyperbandBracketManager:
             rung_sys.on_task_remove(trial_id)
             del self._task_info[trial_id]
 
-    def _sample_bracket(self):
-        return _sample_bracket(
-            num_brackets=self.num_brackets,
-            rung_levels=self.rung_levels,
-            random_state=self.random_state,
-        )
+    def _sample_bracket(self) -> int:
+        distribution = self._scheduler.searcher.distribution_over_brackets()
+        return self.random_state.choice(a=distribution.size, p=distribution)
 
-    def on_task_schedule(self) -> (Optional[str], Dict):
+    def on_task_schedule(self) -> (Optional[str], dict):
         """
         Samples bracket for task to be scheduled. Check whether any paused
         trial in that bracket can be promoted. If so, its trial_id is

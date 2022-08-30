@@ -24,6 +24,9 @@ from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (
     GPFIFOSearcher,
     decode_state,
 )
+from syne_tune.optimizer.schedulers.searchers.bracket_searcher import (
+    DefaultHyperbandBracketSamplingSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
     ResourceForAcquisitionMap,
 )
@@ -40,7 +43,7 @@ logger = logging.getLogger(__name__)
 __all__ = ["GPMultiFidelitySearcher"]
 
 
-class GPMultiFidelitySearcher(GPFIFOSearcher):
+class GPMultiFidelitySearcher(GPFIFOSearcher, DefaultHyperbandBracketSamplingSearcher):
     """Gaussian process Bayesian optimization for Hyperband scheduler
 
     This searcher must be used with `HyperbandScheduler`. It provides a novel
@@ -102,7 +105,8 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         training time). Needed only by cost-aware searchers.
     model : str
         Selects surrogate model (learning curve model) to be used. Choices
-        are 'gp_multitask' (default), 'gp_issm', 'gp_expdecay'
+        are 'gp_multitask' (default), 'gp_independent', 'gp_issm',
+        'gp_expdecay'
     num_init_random : int
         See :class:`GPFIFOSearcher`
     num_init_candidates : int
@@ -146,7 +150,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         'exp-decay-combined' (exponential decay kernel, with delta in [0, 1]
         a hyperparameter).
     resource_acq : str
-        Only relevant for `model == 'gp_multitask'`.
+        Only relevant for `model in {'gp_multitask', 'gp_independent'}`
         Determines how the EI acquisition function is used (see above).
         Values: 'bohb', 'first'
     opt_skip_num_max_resource : bool
@@ -166,6 +170,9 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     --------
     GPFIFOSearcher
     """
+
+    def __init__(self, config_space, **kwargs):
+        super().__init__(config_space, **kwargs)
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -259,7 +266,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         :return:
         """
         if self.resource_for_acquisition is not None:
-            # Only have to do this for 'gp_multitask' model
+            # Only have to do this for 'gp_multitask' or 'gp_independent' model
             state = self.state_transformer.state
             # BO should only search over configs at resource level
             # target_resource

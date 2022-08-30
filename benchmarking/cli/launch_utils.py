@@ -431,11 +431,6 @@ def parse_args(allow_lists_as_values=True):
         **allow_list,
     )
     parser.add_argument(
-        "--searcher_use_old_code",
-        action="store_true",
-        help="DEBUG: Use old code for gp_issm, gp_expdecay",
-    )
-    parser.add_argument(
         "--searcher_no_fantasizing",
         action="store_true",
         help="Ignore pending evaluations, do not use fantasizing",
@@ -530,8 +525,6 @@ def parse_args(allow_lists_as_values=True):
         del params["epochs"]
     params["normalize_targets"] = not params["not_normalize_targets"]
     del params["not_normalize_targets"]
-    params["searcher_use_new_code"] = not params["searcher_use_old_code"]
-    del params["searcher_use_old_code"]
     return params
 
 
@@ -573,7 +566,6 @@ def make_searcher_and_scheduler(params) -> (dict, dict):
             ("issm_gamma_one", bool, False),
             ("exponent_cost", float, False),
             ("expdecay_normalize_inputs", bool, False),
-            ("use_new_code", bool, False),
             ("num_init_candidates_for_batch", int, False),
             ("no_fantasizing", bool, False),
         )

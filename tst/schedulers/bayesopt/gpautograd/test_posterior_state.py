@@ -56,13 +56,11 @@ def test_incremental_update():
         features = features_list[rep]
         targets = targets_list[rep]
         # Posterior state by incremental updating
-        train_features = features[0]
-        train_targets = targets[0]
-        model.fit(train_features, train_targets)
+        data = {"features": features[0], "targets": targets[0]}
+        model.fit(data)
         noise_variance_1 = model.likelihood.get_noise_variance()
         state_incr = IncrementalUpdateGPPosteriorState(
-            features=train_features,
-            targets=train_targets,
+            **data,
             mean=model.likelihood.mean,
             kernel=model.likelihood.kernel,
             noise_variance=model.likelihood.get_noise_variance(as_ndarray=True),

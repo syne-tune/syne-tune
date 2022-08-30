@@ -51,7 +51,6 @@ class TransformerModelFactory:
     Interface for model factories used in :class:`ModelStateTransformer`. A model
     factory provides access to tunable model parameters, and `model` creates
     :class:`SurrogateModel` instances.
-
     """
 
     def get_params(self) -> Dict:
@@ -89,6 +88,16 @@ class TransformerModelFactory:
     @property
     def profiler(self) -> Optional[SimpleProfiler]:
         return None
+
+    def configure_scheduler(self, scheduler):
+        """
+        Called by `configure_scheduler` of searchers which make use of a
+        `TransformerModelFactory`. Allows the factory to depend on parameters
+        of the scheduler.
+
+        :param scheduler: Scheduler object
+        """
+        pass
 
 
 # Convenience types allowing for multi-output HPO. These are used for methods that work both in the standard case

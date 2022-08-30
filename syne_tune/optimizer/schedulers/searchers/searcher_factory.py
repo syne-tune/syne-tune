@@ -21,6 +21,10 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (
     RandomSearcher,
     GridSearcher,
 )
+from syne_tune.optimizer.schedulers.searchers.bracket_searcher import (
+    RandomWithDefaultBracketSamplingSearcher,
+    GridWithDefaultBracketSamplingSearcher,
+)
 
 __all__ = ["searcher_factory"]
 
@@ -49,9 +53,15 @@ def searcher_factory(searcher_name, **kwargs):
     scheduler = kwargs.get("scheduler")
     model = kwargs.get("model", "gp_multitask")
     if searcher_name == "random":
-        searcher_cls = RandomSearcher
+        if scheduler.startswith("hyperband_"):
+            searcher_cls = RandomWithDefaultBracketSamplingSearcher
+        else:
+            searcher_cls = RandomSearcher
     elif searcher_name == "grid":
-        searcher_cls = GridSearcher
+        if scheduler.startswith("hyperband_"):
+            searcher_cls = GridWithDefaultBracketSamplingSearcher
+        else:
+            searcher_cls = GridSearcher
     elif searcher_name == "kde":
         try:
             from syne_tune.optimizer.schedulers.searchers.kde_searcher import (
@@ -85,7 +95,11 @@ def searcher_factory(searcher_name, **kwargs):
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = MultiFidelityBore
     else:
-        gp_searchers = {"bayesopt", "bayesopt_constrained", "bayesopt_cost"}
+        gp_searchers = {
+            "bayesopt",
+            "bayesopt_constrained",
+            "bayesopt_cost",
+        }
         assert (
             searcher_name in gp_searchers
         ), f"searcher '{searcher_name}' is not supported"

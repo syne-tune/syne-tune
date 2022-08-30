@@ -10,9 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict
+from typing import List, Dict
 import numpy as np
-import scipy.linalg as spl
 import copy
 
 from syne_tune.config_space import uniform
@@ -206,95 +205,3 @@ def assert_equal_candidates(candidates1, candidates2, hp_ranges, decimal=5):
 
 def assert_equal_randomstate(randomstate1, randomstate2):
     assert str(randomstate1.get_state()) == str(randomstate2.get_state())
-
-
-def compare_gpy_predict_posterior_marginals(
-    test_intermediates: dict, noise_variance_gpy: Optional[float] = None
-):
-    """
-    Compares all intermediates of cholesky_computations and
-    predict_posterior_marginals to using GPy and NumPy.
-
-    Currently, this is restricted:
-    - Kernel must be Matern52 with ARD
-    - Mean function must be constant 0
-
-    :param test_intermediates: Intermediates computed using our code
-    :param noise_variance_gpy: Overrides noise_variance in test_intermediates.
-        Use this if jitter was added during the posterior state computation.
-
-    """
-    import GPy
-
-    # Create GPy kernel and model
-    num_data = test_intermediates["features"].shape[0]
-    num_dims = test_intermediates["features"].shape[1]
-    lengthscales = [
-        1.0 / test_intermediates["inv_bw{}".format(i)] for i in range(num_dims)
-    ]
-    kernel = GPy.kern.Matern52(
-        num_dims,
-        variance=test_intermediates["covariance_scale"],
-        lengthscale=lengthscales,
-        ARD=True,
-    )
-    if noise_variance_gpy is None:
-        noise_variance_gpy = test_intermediates["noise_variance"]
-    model = GPy.models.GPRegression(
-        test_intermediates["features"],
-        test_intermediates["targets"].reshape((-1, 1)),
-        kernel=kernel,
-        noise_var=noise_variance_gpy,
-    )
-    # Compare intermediates step by step (cholesky_computations)
-    kernel_mat_gpy = kernel.K(test_intermediates["features"], X2=None)
-    np.testing.assert_almost_equal(
-        test_intermediates["kernel_mat"], kernel_mat_gpy, decimal=5
-    )
-    sys_mat_gpy = kernel_mat_gpy + np.diag(np.ones(num_data)) * noise_variance_gpy
-    np.testing.assert_almost_equal(
-        test_intermediates["sys_mat"], sys_mat_gpy, decimal=5
-    )
-    chol_fact_gpy = spl.cholesky(sys_mat_gpy, lower=True)
-    # Use test_intermediates['sys_mat'] instead:
-    # chol_fact_gpy = spl.cholesky(test_intermediates['sys_mat'], lower=True)
-    np.testing.assert_almost_equal(
-        test_intermediates["chol_fact"], chol_fact_gpy, decimal=4
-    )
-    # Mean function must be constant 0
-    centered_y = test_intermediates["targets"].reshape((-1, 1))
-    np.testing.assert_almost_equal(
-        test_intermediates["centered_y"], centered_y, decimal=9
-    )
-    pred_mat_gpy = spl.solve_triangular(chol_fact_gpy, centered_y, lower=True)
-    np.testing.assert_almost_equal(
-        test_intermediates["pred_mat"], pred_mat_gpy, decimal=3
-    )
-    # Compare intermediates step by step (predict_posterior_marginals)
-    k_tr_te_gpy = kernel.K(
-        test_intermediates["features"], X2=test_intermediates["test_features"]
-    )
-    np.testing.assert_almost_equal(
-        test_intermediates["k_tr_te"], k_tr_te_gpy, decimal=5
-    )
-    linv_k_tr_te_gpy = spl.solve_triangular(chol_fact_gpy, k_tr_te_gpy, lower=True)
-    np.testing.assert_almost_equal(
-        test_intermediates["linv_k_tr_te"], linv_k_tr_te_gpy, decimal=4
-    )
-    pred_means_gpy = np.dot(linv_k_tr_te_gpy.T, pred_mat_gpy)
-    np.testing.assert_almost_equal(
-        test_intermediates["pred_means"], pred_means_gpy, decimal=4
-    )
-    k_tr_diag_gpy = kernel.Kdiag(test_intermediates["test_features"]).reshape((-1,))
-    tvec_gpy = np.sum(np.square(linv_k_tr_te_gpy), axis=0).reshape((-1,))
-    pred_vars_gpy = k_tr_diag_gpy - tvec_gpy
-    np.testing.assert_almost_equal(
-        test_intermediates["pred_vars"], pred_vars_gpy, decimal=4
-    )
-    # Also test against GPy predict
-    pred_means_gpy2, pred_vars_gpy2 = model.predict(
-        test_intermediates["test_features"], include_likelihood=False
-    )
-    pred_vars_gpy2 = pred_vars_gpy2.reshape((-1,))
-    np.testing.assert_almost_equal(pred_means_gpy, pred_means_gpy2, decimal=3)
-    np.testing.assert_almost_equal(pred_vars_gpy, pred_vars_gpy2, decimal=3)

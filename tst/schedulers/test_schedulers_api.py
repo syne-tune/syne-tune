@@ -222,6 +222,14 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
             max_t=max_t,
             mode=mode,
         ),
+        MOBSTER(
+            config_space=config_space,
+            search_options={"model": "gp_independent"},
+            metric=metric1,
+            resource_attr=resource_attr,
+            max_t=max_t,
+            mode=mode,
+        ),
         # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
         # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
         MOASHA(

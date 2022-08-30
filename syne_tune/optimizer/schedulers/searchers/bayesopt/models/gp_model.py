@@ -29,14 +29,20 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression import (
     GaussianProcessRegression,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc import (
     GPRegressionMCMC,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.independent.gpind_model import (
+    IndependentGPPerResourceModel,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
-    GaussProcPosteriorState,
+    PosteriorState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     SurrogateModel,
@@ -49,7 +55,11 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 logger = logging.getLogger(__name__)
 
 
-GPModel = Union[GaussianProcessRegression, GPRegressionMCMC]
+GPModel = Union[
+    GaussianProcessRegression,
+    GPRegressionMCMC,
+    IndependentGPPerResourceModel,
+]
 
 
 class GaussProcSurrogateModel(BaseSurrogateModel):
@@ -57,7 +67,6 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     Gaussian process surrogate model, where model parameters are either fit by
     marginal likelihood maximization (`GaussianProcessRegression`), or
     integrated out by MCMC sampling (`GPRegressionMCMC`).
-
     """
 
     def __init__(
@@ -69,6 +78,7 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         normalize_mean: float = 0.0,
         normalize_std: float = 1.0,
         filter_observed_data: Optional[ConfigurationFilter] = None,
+        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
         """
         Both `state` and `gpmodel` are immutable. If parameters of the latter
@@ -87,13 +97,19 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         :param active_metric: Name of the metric to optimize.
         :param normalize_mean: Mean used to normalize targets
         :param normalize_std: Stddev used to normalize targets
-
         """
         super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
         self.mean = normalize_mean
         self.std = normalize_std
         self.fantasy_samples = fantasy_samples
+        self._hp_ranges_for_prediction = hp_ranges_for_prediction
+
+    def hp_ranges_for_prediction(self) -> HyperparameterRanges:
+        if self._hp_ranges_for_prediction is not None:
+            return self._hp_ranges_for_prediction
+        else:
+            return super().hp_ranges_for_prediction()
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         predictions_list = []
@@ -133,7 +149,7 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         return isinstance(self._gpmodel, GPRegressionMCMC)
 
     @property
-    def posterior_states(self) -> Optional[List[GaussProcPosteriorState]]:
+    def posterior_states(self) -> Optional[List[PosteriorState]]:
         return self._gpmodel.states
 
     def _current_best_filter_candidates(self, candidates):
@@ -214,6 +230,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
         no_fantasizing: bool = False,
+        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
         """
         We support pending evaluations via fantasizing. Note that state does
@@ -228,6 +245,8 @@ class GaussProcModelFactory(TransformerModelFactory):
             computing incumbent
         :param no_fantasizing: If True, pending evaluations in the state are
             simply ignored, fantasizing is not done (not recommended)
+        :param hp_ranges_for_prediction: If given, `GaussProcSurrogateModel`
+            should use this instead of `state.hp_ranges`
 
         """
         self._gpmodel = gpmodel
@@ -237,6 +256,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         self._profiler = profiler
         self._filter_observed_data = filter_observed_data
         self._no_fantasizing = no_fantasizing
+        self._hp_ranges_for_prediction = hp_ranges_for_prediction
         self._mean = None
         self._std = None
 
@@ -247,6 +267,10 @@ class GaussProcModelFactory(TransformerModelFactory):
     @property
     def profiler(self) -> Optional[SimpleProfiler]:
         return self._profiler
+
+    @property
+    def gpmodel(self) -> GPModel:
+        return self._gpmodel
 
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
         """
@@ -293,6 +317,7 @@ class GaussProcModelFactory(TransformerModelFactory):
             normalize_mean=self._mean,
             normalize_std=self._std,
             filter_observed_data=self._filter_observed_data,
+            hp_ranges_for_prediction=self._hp_ranges_for_prediction,
         )
 
     def _get_num_fantasy_samples(self) -> int:
@@ -311,7 +336,6 @@ class GaussProcModelFactory(TransformerModelFactory):
         If state.pending_evaluations are given, these must be
         FantasizedPendingEvaluations, i.e. the fantasy values must have been
         sampled.
-
         """
         assert state.num_observed_cases(self.active_metric) > 0, (
             "Cannot compute posterior: state has no labeled datapoints "
@@ -330,14 +354,15 @@ class GaussProcModelFactory(TransformerModelFactory):
         self._std = internal_candidate_evaluations.std
 
         fit_params = fit_params and (not state.pending_evaluations)
+        data = {"features": features, "targets": targets}
         if not fit_params:
             if self._debug_log is not None:
                 logger.info("Recomputing posterior state")
-            self._gpmodel.recompute_states(features, targets, profiler=profiler)
+            self._gpmodel.recompute_states(data)
         else:
             if self._debug_log is not None:
                 logger.info(f"Fitting surrogate model for {self.active_metric}")
-            self._gpmodel.fit(features, targets, profiler=profiler)
+            self._gpmodel.fit(data, profiler=profiler)
         if self._debug_log is not None:
             self._debug_log.set_model_params(self.get_params())
             if not state.pending_evaluations:
@@ -378,9 +403,9 @@ class GaussProcModelFactory(TransformerModelFactory):
                 if num_candidates > 1
                 else self._gpmodel.sample_marginals
             )
-            targets_new = sample_func(features_new, num_samples=num_samples).reshape(
-                (num_candidates, -1)
-            )
+            targets_new = sample_func(
+                features_test=features_new, num_samples=num_samples
+            ).reshape((num_candidates, -1))
             new_pending = [
                 FantasizedPendingEvaluation(
                     trial_id=ev.trial_id,
@@ -399,11 +424,28 @@ class GaussProcModelFactory(TransformerModelFactory):
             pending_evaluations=new_pending,
         )
 
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+
+        if isinstance(self._gpmodel, IndependentGPPerResourceModel):
+            assert isinstance(scheduler, HyperbandScheduler), (
+                "gpmodel of type IndependentGPPerResourceModel requires "
+                + "HyperbandScheduler scheduler"
+            )
+            # Likelihood of internal model still has to be created (depends on
+            # rung levels of scheduler). Note that `max_t` must be included
+            max_t = scheduler.max_t
+            if scheduler.rung_levels[-1] == max_t:
+                rung_levels = scheduler.rung_levels
+            else:
+                rung_levels = scheduler.rung_levels + [max_t]
+            self._gpmodel.create_likelihood(rung_levels)
+
 
 class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
     def __init__(
         self,
-        gpmodel: GaussianProcessRegression,
+        gpmodel: GPModel,
         num_fantasy_samples: int,
         active_metric: str = INTERNAL_METRIC_NAME,
         normalize_targets: bool = True,
@@ -411,6 +453,7 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
         no_fantasizing: bool = False,
+        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
         """
         We support pending evaluations via fantasizing. Note that state does
@@ -433,6 +476,7 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
             debug_log=debug_log,
             filter_observed_data=filter_observed_data,
             no_fantasizing=no_fantasizing,
+            hp_ranges_for_prediction=hp_ranges_for_prediction,
         )
         self.num_fantasy_samples = num_fantasy_samples
 

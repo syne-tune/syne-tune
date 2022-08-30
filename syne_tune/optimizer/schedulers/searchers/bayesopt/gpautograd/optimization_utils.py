@@ -15,10 +15,15 @@ from scipy import optimize
 from autograd import value_and_grad
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon import Parameter
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon import (
+    Parameter,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
     encode_unwrap_parameter,
     param_to_pretty_string,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
+    MarginalLikelihood,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,7 +89,6 @@ def _apply_lbfgs_internal(
     param_bounds,
     **kwargs
 ):
-
     # Run L-BFGS-B
     LBFGS_tol = kwargs.get("tol", default_LBFGS_tol)
     LBFGS_maxiter = kwargs.get("maxiter", default_LBFGS_maxiter)
@@ -298,7 +302,7 @@ def apply_lbfgs_with_multiple_starts(
     return ret_infos
 
 
-def add_regularizer_to_criterion(criterion, crit_args):
+def add_regularizer_to_criterion(criterion: MarginalLikelihood, crit_args: list):
     objective_nd = criterion(*crit_args)
     # Add neg log hyperpriors, whenever some are defined
     for param_int, encoding in criterion.param_encoding_pairs():
@@ -308,7 +312,9 @@ def add_regularizer_to_criterion(criterion, crit_args):
     return objective_nd
 
 
-def create_lbfgs_arguments(criterion, crit_args, verbose=False):
+def create_lbfgs_arguments(
+    criterion: MarginalLikelihood, crit_args: list, verbose: bool = False
+):
     """
     Creates SciPy optimizer objective and param_dict for criterion
     function.
