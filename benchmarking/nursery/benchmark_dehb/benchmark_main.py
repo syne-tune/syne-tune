@@ -15,5 +15,8 @@ from benchmarking.nursery.benchmark_automl.benchmark_main import main
 
 if __name__ == "__main__":
     from benchmarking.nursery.benchmark_dehb.baselines import methods
+    from benchmarking.nursery.benchmark_dehb.benchmark_definitions import (
+        benchmark_definitions,
+    )
 
-    main(methods)
+    main(methods, benchmark_definitions)

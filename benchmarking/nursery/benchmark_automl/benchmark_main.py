@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, List
+from typing import Optional, List
 
 import numpy as np
 import itertools
@@ -23,9 +23,6 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
 from benchmarking.nursery.benchmark_automl.baselines import MethodArguments
-from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
-    benchmark_definitions,
-)
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -40,7 +37,7 @@ def get_transfer_learning_evaluations(
     test_task: str,
     datasets: Optional[List[str]],
     n_evals: Optional[int] = None,
-) -> Dict:
+) -> dict:
     """
     :param blackbox_name:
     :param test_task: task where the performance would be tested, it is excluded from transfer-learning evaluations
@@ -94,7 +91,7 @@ def get_transfer_learning_evaluations(
     return transfer_learning_evaluations
 
 
-def parse_args(methods: dict):
+def parse_args(methods: dict, benchmark_definitions: dict):
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag",
@@ -143,8 +140,10 @@ def parse_args(methods: dict):
     return args, method_names, benchmark_names, seeds
 
 
-def main(methods: dict):
-    args, method_names, benchmark_names, seeds = parse_args(methods)
+def main(methods: dict, benchmark_definitions: dict):
+    args, method_names, benchmark_names, seeds = parse_args(
+        methods, benchmark_definitions
+    )
     experiment_tag = args.experiment_tag
 
     if args.verbose:
@@ -231,5 +230,8 @@ def main(methods: dict):
 
 if __name__ == "__main__":
     from benchmarking.nursery.benchmark_automl.baselines import methods
+    from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
+        benchmark_definitions,
+    )
 
-    main(methods)
+    main(methods, benchmark_definitions)
