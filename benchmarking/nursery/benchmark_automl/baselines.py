@@ -32,14 +32,17 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
 
 @dataclass
 class MethodArguments:
-    config_space: Dict
+    config_space: dict
     metric: str
     mode: str
     random_seed: int
-    max_t: int
     resource_attr: str
+    max_t: Optional[int] = None
+    max_resource_attr: Optional[str] = None
     transfer_learning_evaluations: Optional[Dict] = None
     use_surrogates: bool = False
+    num_brackets: Optional[int] = None
+    verbose: Optional[bool] = False
 
 
 class Methods:
@@ -58,6 +61,23 @@ class Methods:
     RUSH = "RUSH"
 
 
+def _max_resource_attr_or_max_t(
+    args: MethodArguments, max_t_name: str = "max_t"
+) -> dict:
+    if args.max_resource_attr is not None:
+        return {"max_resource_attr": args.max_resource_attr}
+    else:
+        assert args.max_t is not None
+        return {max_t_name: args.max_t}
+
+
+def search_options(args: MethodArguments) -> dict:
+    if args.verbose:
+        return dict()
+    else:
+        return {"debug_log": False}
+
+
 methods = {
     Methods.RS: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
@@ -69,12 +89,12 @@ methods = {
     Methods.ASHA: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
+        **_max_resource_attr_or_max_t(method_arguments),
     ),
     Methods.MSR: lambda method_arguments: MedianStoppingRule(
         scheduler=FIFOScheduler(
@@ -93,10 +113,10 @@ methods = {
             searcher="random",
             metric=metric,
             mode=mode,
-            search_options={"debug_log": False},
-            max_t=method_arguments.max_t,
+            search_options=search_options(method_arguments),
             resource_attr=method_arguments.resource_attr,
             random_seed=method_arguments.random_seed,
+            **_max_resource_attr_or_max_t(method_arguments),
         ),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
@@ -115,13 +135,13 @@ methods = {
         ),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
+        **_max_resource_attr_or_max_t(method_arguments),
     ),
     Methods.GP: lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
@@ -146,9 +166,9 @@ methods = {
         search_options={"debug_log": False, "min_bandwidth": 0.1},
         mode=method_arguments.mode,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
+        **_max_resource_attr_or_max_t(method_arguments),
     ),
     Methods.TPE: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
@@ -169,12 +189,12 @@ methods = {
     Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
+        **_max_resource_attr_or_max_t(method_arguments),
     ),
     Methods.ZERO_SHOT: lambda method_arguments: ZeroShotTransfer(
         config_space=method_arguments.config_space,
@@ -189,9 +209,9 @@ methods = {
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         transfer_learning_evaluations=method_arguments.transfer_learning_evaluations,
-        max_t=method_arguments.max_t,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
+        **_max_resource_attr_or_max_t(method_arguments),
     ),
 }
 

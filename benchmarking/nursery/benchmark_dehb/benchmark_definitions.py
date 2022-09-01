@@ -10,36 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from dataclasses import dataclass
-from typing import Optional, List
-
-
-@dataclass
-class BenchmarkDefinition:
-    max_wallclock_time: float
-    n_workers: int
-    elapsed_time_attr: str
-    metric: str
-    mode: str
-    blackbox_name: str
-    dataset_name: str
-    max_resource_attr: str
-    max_num_evaluations: Optional[int] = None
-    surrogate: Optional[str] = None
-    datasets: Optional[List[str]] = None
-
-
-def fcnet_benchmark(dataset_name):
-    return BenchmarkDefinition(
-        max_wallclock_time=1200,
-        n_workers=4,
-        elapsed_time_attr="metric_elapsed_time",
-        metric="metric_valid_loss",
-        mode="min",
-        blackbox_name="fcnet",
-        dataset_name=dataset_name,
-        max_resource_attr="epochs",
-    )
+from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
+    BenchmarkDefinition,
+    fcnet_benchmark,
+    lcbench_benchmark,
+)
 
 
 NAS201_MAX_WALLCLOCK_TIME = {
@@ -65,22 +40,6 @@ def nas201_benchmark(dataset_name):
         mode="min",
         blackbox_name="nasbench201",
         dataset_name=dataset_name,
-        max_resource_attr="epochs",
-    )
-
-
-def lcbench_benchmark(dataset_name, datasets):
-    return BenchmarkDefinition(
-        max_wallclock_time=7200,
-        n_workers=4,
-        elapsed_time_attr="time",
-        metric="val_accuracy",
-        mode="max",
-        blackbox_name="lcbench",
-        dataset_name=dataset_name,
-        surrogate="KNeighborsRegressor",
-        max_num_evaluations=4000,
-        datasets=datasets,
         max_resource_attr="epochs",
     )
 

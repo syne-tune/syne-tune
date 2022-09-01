@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from sagemaker.pytorch import PyTorch
 
-from benchmarking.nursery.benchmark_dehb.benchmark_main import parse_args
+from benchmarking.nursery.benchmark_automl.benchmark_main import parse_args
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )

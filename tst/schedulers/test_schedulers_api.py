@@ -44,7 +44,9 @@ from syne_tune.optimizer.schedulers import (
     PopulationBasedTraining,
     RayTuneScheduler,
 )
-from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher
+
+# FIXME: Resolve #324 and bring back in:
+# from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
@@ -308,14 +310,15 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         #     max_t=max_t,
         #     resource_attr=resource_attr,
         # ),
-        FIFOScheduler(
-            config_space,
-            searcher=BotorchSearcher(
-                config_space=config_space, metric=metric1, mode=mode
-            ),
-            metric=metric1,
-            mode=mode,
-        ),
+        # FIXME: Resolve #324 and bring back in:
+        # FIFOScheduler(
+        #     config_space,
+        #     searcher=BotorchSearcher(
+        #         config_space=config_space, metric=metric1, mode=mode
+        #     ),
+        #     metric=metric1,
+        #     mode=mode,
+        # ),
     ],
 )
 def test_async_schedulers_api(scheduler):
