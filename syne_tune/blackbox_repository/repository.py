@@ -14,8 +14,13 @@ import logging
 from pathlib import Path
 from typing import List, Union, Dict, Optional
 
-import s3fs as s3fs
-from botocore.exceptions import NoCredentialsError
+from syne_tune.try_import import try_import_aws_message
+
+try:
+    import s3fs as s3fs
+    from botocore.exceptions import NoCredentialsError
+except ImportError:
+    print(try_import_aws_message())
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import (

@@ -1,0 +1,4 @@
+boto3
+sagemaker>=2.32.0
+PyYaml
+ujson

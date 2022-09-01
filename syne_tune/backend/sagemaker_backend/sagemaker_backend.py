@@ -326,3 +326,7 @@ class SageMakerBackend(TrialBackend):
     ):
         # we use the tuner-name to set the checkpoint directory
         self.tuner_name = tuner_name
+
+    def on_tuner_save(self):
+        # Re-initialize the session after `Tuner` is serialized
+        self.initialize_sagemaker_session()

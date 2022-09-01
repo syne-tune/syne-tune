@@ -18,12 +18,16 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-import sagemaker
 from time import perf_counter
 from contextlib import contextmanager
 
-
 from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER, SYNE_TUNE_ENV_FOLDER
+from syne_tune.try_import import try_import_aws_message
+
+try:
+    import sagemaker
+except ImportError:
+    print(try_import_aws_message())
 
 
 class RegularCallback:

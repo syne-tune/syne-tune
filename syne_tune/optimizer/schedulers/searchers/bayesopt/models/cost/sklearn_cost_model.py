@@ -12,7 +12,17 @@
 # permissions and limitations under the License.
 from typing import List, Tuple, Callable
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+import logging
+from syne_tune.try_import import try_import_blackbox_repository_message
+
+try:
+    from sklearn.ensemble import (
+        RandomForestRegressor,
+        GradientBoostingRegressor,
+    )
+except ImportError:
+    logging.info(try_import_blackbox_repository_message())
+    raise
 from scipy.optimize import brentq
 from scipy.interpolate import UnivariateSpline
 

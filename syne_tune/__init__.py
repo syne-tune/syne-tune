@@ -10,15 +10,18 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from pathlib import Path
 
 try:
+    # The reason for conditional imports is that `read_version` is called
+    # by `setup.py` before any dependencies are installed
+    from syne_tune.stopping_criterion import StoppingCriterion  # noqa: F401
+    from syne_tune.report import Reporter  # noqa: F401
+    from syne_tune.tuner import Tuner  # noqa: F401
+
     __all__ = ["StoppingCriterion", "Tuner", "Reporter"]
-    from pathlib import Path
-    from syne_tune.stopping_criterion import StoppingCriterion
-    from syne_tune.report import Reporter
-    from syne_tune.tuner import Tuner
 except ImportError:
-    pass
+    __all__ = []
 
 
 def read_version():
