@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import List, Optional
 import logging
 import numpy as np
 
@@ -183,7 +183,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
 
 
 def make_surrogate(
-    surrogate: Optional[str] = None, surrogate_kwargs: Optional[Dict] = None
+    surrogate: Optional[str] = None, surrogate_kwargs: Optional[dict] = None
 ):
     """
     :param surrogate: optionally, a model that is fitted to predict objectives given any configuration.
@@ -215,7 +215,7 @@ def make_surrogate(
             f"only {list(surrogate_dict.keys())} are available"
         )
         if surrogate_kwargs is None:
-            surrogate_kwargs = {}
+            surrogate_kwargs = dict()
         return surrogate_dict[surrogate](**surrogate_kwargs)
 
 
@@ -228,8 +228,8 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         seed: Optional[int] = None,
         dataset: Optional[str] = None,
         surrogate: Optional[str] = None,
-        surrogate_kwargs: Optional[Dict] = None,
-        config_space_surrogate: Optional[Dict] = None,
+        surrogate_kwargs: Optional[dict] = None,
+        config_space_surrogate: Optional[dict] = None,
         **simulatorbackend_kwargs,
     ):
         """
