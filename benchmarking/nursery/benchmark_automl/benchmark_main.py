@@ -172,6 +172,7 @@ def main(methods: dict, benchmark_definitions: dict):
             blackbox_name=benchmark.blackbox_name,
             dataset=benchmark.dataset_name,
             surrogate=benchmark.surrogate,
+            surrogate_kwargs=benchmark.surrogate_kwargs,
         )
 
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))

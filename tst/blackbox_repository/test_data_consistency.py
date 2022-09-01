@@ -33,6 +33,7 @@ class BenchmarkDefinition:
     dataset_name: str
     max_resource_attr: str
     surrogate: Optional[str] = None
+    surrogate_kwargs: Optional[dict] = None
 
 
 def fcnet_benchmark(dataset_name):
@@ -65,6 +66,7 @@ def lcbench_benchmark(dataset_name):
         blackbox_name="lcbench",
         dataset_name=dataset_name,
         surrogate="KNeighborsRegressor",
+        surrogate_kwargs={"n_neighbors": 1},
         max_resource_attr="epochs",
     )
 
@@ -97,7 +99,7 @@ def create_blackbox(benchmark: BenchmarkDefinition):
     # See also :class:`BlackboxRepositoryBackend`
     blackbox = load_blackbox(benchmark.blackbox_name)[benchmark.dataset_name]
     if benchmark.surrogate is not None:
-        surrogate = make_surrogate(benchmark.surrogate)
+        surrogate = make_surrogate(benchmark.surrogate, benchmark.surrogate_kwargs)
         blackbox = add_surrogate(blackbox=blackbox, surrogate=surrogate)
     return blackbox
 
@@ -133,6 +135,7 @@ def _assert_no_extreme_deviations(elapsed_times: List[float], error_prefix: str)
     assert not error_msg, error_msg
 
 
+@pytest.mark.skip("Needs blackbox data files locally or on S3")
 @pytest.mark.parametrize("benchmark", benchmark_definitions.values())
 def test_elapsed_time_consistency(benchmark):
     num_configs = 20

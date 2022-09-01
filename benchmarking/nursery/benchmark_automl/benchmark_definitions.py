@@ -26,6 +26,7 @@ class BenchmarkDefinition:
     max_resource_attr: str
     max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
+    surrogate_kwargs: Optional[dict] = None
     datasets: Optional[List[str]] = None
 
 
@@ -65,6 +66,7 @@ def lcbench_benchmark(dataset_name, datasets):
         blackbox_name="lcbench",
         dataset_name=dataset_name,
         surrogate="KNeighborsRegressor",
+        surrogate_kwargs={"n_neighbors": 1},
         max_num_evaluations=4000,
         datasets=datasets,
         max_resource_attr="epochs",
