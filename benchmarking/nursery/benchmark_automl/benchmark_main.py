@@ -127,6 +127,7 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         help="verbose log output?",
     )
     args, _ = parser.parse_known_args()
+    args.verbose = bool(args.verbose)
     if args.run_all_seed == 1:
         seeds = list(range(args.num_seeds))
     else:

@@ -217,11 +217,16 @@ class SimulatorBackend(LocalBackend):
                 self._simulator_state.remove_events(trial_id)
             elif isinstance(event, OnTrialResultEvent):
                 result = copy.copy(event.result)
+                if self._debug_resource_attr:
+                    k = self._debug_resource_attr
+                    debug_kwargs = {k: result.get(k)}
+                else:
+                    debug_kwargs = dict()
                 self._debug_message(
                     "OnTrialResultEvent",
                     time=time_event,
                     trial_id=trial_id,
-                    epoch=result.get("epoch"),
+                    **debug_kwargs,
                 )
                 # Append timestamps to `result`. This is done here, but not in
                 # the other back-ends, for which timestamps are only added when
@@ -268,12 +273,17 @@ class SimulatorBackend(LocalBackend):
             time_final_result = max(time_final_result, _time_result)
             # DEBUG:
             if deb_it < 10:
+                if self._debug_resource_attr:
+                    k = self._debug_resource_attr
+                    debug_kwargs = {k: result.get(k)}
+                else:
+                    debug_kwargs = dict()
                 self._debug_message(
                     "OnTrialResultEvent",
                     time=time_result,
                     trial_id=trial_id,
                     pushed=True,
-                    epoch=result.get("epoch"),
+                    **debug_kwargs,
                 )
                 deb_it += 1
         time_complete = (
@@ -304,6 +314,8 @@ class SimulatorBackend(LocalBackend):
                 self._last_metric_seen_index[trial_id] += len(result_list)
                 del self._next_results_to_fetch[trial_id]
         if self._next_results_to_fetch:
+            # Note: This tends to happen regularly with fast-running
+            # benchmarks
             warn_msg = [
                 "The following trials reported results, but are not covered "
                 "by trial_ids. These results will be ignored:"
@@ -320,7 +332,7 @@ class SimulatorBackend(LocalBackend):
                     msg_line += f"resources = {resources}"
                 warn_msg.append(msg_line)
                 self._last_metric_seen_index[trial_id] += len(result_list)
-            logger.warning("\n".join(warn_msg))
+            logger.debug("\n".join(warn_msg))
             self._next_results_to_fetch = dict()
 
         if len(results) > 0 and ST_WORKER_TIMESTAMP in results[0]:
