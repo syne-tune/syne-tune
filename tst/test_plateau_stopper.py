@@ -10,13 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import pytest
-import itertools
-
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner
 from syne_tune.stopping_criterion import PlateauStopper
-from syne_tune.config_space import randint, choice
+from syne_tune.config_space import randint
 from syne_tune.util import script_height_example_path
 from tst.util_test import temporary_local_backend
 
