@@ -35,7 +35,7 @@ def test_plateau_scheduler():
 
     entry_point = str(script_height_example_path())
     metric = "mean_loss"
-    mode = 'min'
+    mode = "min"
 
     trial_backend = temporary_local_backend(entry_point=entry_point)
 
@@ -47,10 +47,16 @@ def test_plateau_scheduler():
         mode=mode,
         metric=metric,
         random_seed=random_seed,
-        points_to_evaluate=[{'width': 10, 'height': 0}, {'width': 7, 'height': 0}, {'width': 6, 'height': 0}]
+        points_to_evaluate=[
+            {"width": 10, "height": 0},
+            {"width": 7, "height": 0},
+            {"width": 6, "height": 0},
+        ],
     )
 
-    stop_criterion = PlateauStopper(metric=metric, mode=mode, std=0.1, top=2, patience=3)
+    stop_criterion = PlateauStopper(
+        metric=metric, mode=mode, std=0.1, top=2, patience=3
+    )
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=myscheduler,
