@@ -124,17 +124,14 @@ class StoppingCriterion:
 
 class PlateauStopper(object):
     """
-    Early stop the experiment when a metric plateaued across trials.
+    Stops the experiment when a metric plateaued for N consecutive trials
+    for more than the given amount of iterations specified in the patience parameter.
     This code is mostly copied from RayTune.
-
-    Stops the entire experiment when the metric has plateaued
-    for more than the given amount of iterations specified in
-    the patience parameter.
 
     :param metric: The metric to be monitored.
     :param std: The minimal standard deviation after which
              the tuning process has to stop.
-    :param top: The number of best models to consider.
+    :param num_trials: The number of consecutive trials
     :param mode: The mode to select the top results.
              Can either be "min" or "max".
     :param patience: Number of iterations to wait for
@@ -145,14 +142,14 @@ class PlateauStopper(object):
         self,
         metric: str,
         std: float = 0.001,
-        top: int = 10,
+        num_trials: int = 10,
         mode: str = "min",
         patience: int = 0,
     ):
         if mode not in ("min", "max"):
             raise ValueError("The mode parameter can only be either min or max.")
 
-        if not isinstance(top, int) or top <= 1:
+        if not isinstance(num_trials, int) or num_trials <= 1:
             raise ValueError(
                 "Top results to consider must be"
                 " a positive integer greater than one."
@@ -168,7 +165,7 @@ class PlateauStopper(object):
         self._patience = patience
         self._iterations = 0
         self._std = std
-        self._top = top
+        self._num_trials = num_trials
 
         if self._mode == "min":
             self.multiplier = 1
@@ -193,9 +190,9 @@ class PlateauStopper(object):
                     curr_best = y
                 trajectory.append(curr_best)
 
-        top_values = trajectory[-self._top :]
+        top_values = trajectory[-self._num_trials:]
         # If the current iteration has to stop
-        has_plateaued = len(top_values) == self._top and np.std(top_values) <= self._std
+        has_plateaued = len(top_values) == self._num_trials and np.std(top_values) <= self._std
         if has_plateaued:
             # we increment the total counter of iterations
             self._iterations += 1
