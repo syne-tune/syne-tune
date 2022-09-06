@@ -55,7 +55,7 @@ def test_plateau_scheduler_integration():
     )
 
     stop_criterion = PlateauStopper(
-        metric=metric, mode=mode, std=0.1, num_trials=2, patience=3
+        metric=metric, mode=mode, std=0.1, num_trials=3, patience=1
     )
     tuner = Tuner(
         trial_backend=trial_backend,
