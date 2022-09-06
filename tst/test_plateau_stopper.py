@@ -110,7 +110,6 @@ def test_plateau_stopper():
         ],
     )
 
-    stop_criterion(status)
     assert stop_criterion(status)
 
     trial5 = Trial(trial_id=5, config={"x": 10.0}, creation_time=None)
