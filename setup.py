@@ -31,6 +31,9 @@ required_kde = load_requirements("requirements-kde.txt")
 required_blackbox_repository = load_requirements(
     "syne_tune/blackbox_repository/requirements.txt"
 )
+required_yahpo = load_requirements(
+    "syne_tune/blackbox_repository/conversion_scripts/scripts/requirements-yahpo.txt"
+)
 required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
 required_aws = load_requirements("requirements-aws.txt")
@@ -45,6 +48,7 @@ required_extra = (
     + required_botorch
     + required_dev
     + required_aws
+    + required_yahpo
 )
 setup(
     name="syne_tune",
@@ -67,6 +71,7 @@ setup(
         "benchmarks": required_benchmarks,
         "blackbox-repository": required_blackbox_repository,
         "aws": required_aws,
+        "yahpo": required_yahpo,
         "extra": required_extra,
     },
     install_requires=required_core,

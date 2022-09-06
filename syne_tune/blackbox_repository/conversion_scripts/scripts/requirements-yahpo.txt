@@ -1,0 +1,5 @@
+onnxruntime>=1.10.0
+pyyaml
+configspace
+pandas
+yahpo-gym
