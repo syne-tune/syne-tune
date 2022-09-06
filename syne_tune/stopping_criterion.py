@@ -11,6 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
+import numpy as np
+
 from dataclasses import dataclass
 from typing import Optional, Dict
 
@@ -118,3 +120,88 @@ class StoppingCriterion:
                     )
                     return True
         return False
+
+
+class PlateauStopper(object):
+    """
+    Stops the experiment when a metric plateaued for N consecutive trials
+    for more than the given amount of iterations specified in the patience parameter.
+    This code is mostly copied from RayTune.
+
+    :param metric: The metric to be monitored.
+    :param std: The minimal standard deviation after which
+             the tuning process has to stop.
+    :param num_trials: The number of consecutive trials
+    :param mode: The mode to select the top results.
+             Can either be "min" or "max".
+    :param patience: Number of iterations to wait for
+             a change in the top models.
+    """
+
+    def __init__(
+        self,
+        metric: str,
+        std: float = 0.001,
+        num_trials: int = 10,
+        mode: str = "min",
+        patience: int = 0,
+    ):
+        if mode not in ("min", "max"):
+            raise ValueError("The mode parameter can only be either min or max.")
+
+        if not isinstance(num_trials, int) or num_trials <= 1:
+            raise ValueError(
+                "Top results to consider must be"
+                " a positive integer greater than one."
+            )
+        if not isinstance(patience, int) or patience < 0:
+            raise ValueError("Patience must be a strictly positive integer.")
+        if not isinstance(std, float) or std <= 0:
+            raise ValueError(
+                "The standard deviation must be a strictly positive float number."
+            )
+        self._mode = mode
+        self._metric = metric
+        self._patience = patience
+        self._iterations = 0
+        self._std = std
+        self._num_trials = num_trials
+
+        if self._mode == "min":
+            self.multiplier = 1
+        else:
+            self.multiplier = -1
+
+    def __call__(self, status: TuningStatus) -> bool:
+
+        """Return a boolean representing if the tuning has to stop."""
+
+        if status.num_trials_finished == 0:
+            return False
+
+        trials = status.trial_rows
+        trajectory = []
+        curr_best = None
+
+        for ti in trials.values():
+            if self._metric in ti:
+                y = self.multiplier * ti[self._metric]
+                if curr_best is None or y < curr_best:
+                    curr_best = y
+                trajectory.append(curr_best)
+
+        top_values = trajectory[-self._num_trials :]
+        # If the current iteration has to stop
+        has_plateaued = (
+            len(top_values) == self._num_trials and np.std(top_values) <= self._std
+        )
+        if has_plateaued:
+            # we increment the total counter of iterations
+            self._iterations += 1
+        else:
+            # otherwise we reset the counter
+            self._iterations = 0
+
+        # and then call the method that re-executes
+        # the checks, including the iterations.
+        return has_plateaued and self._iterations >= self._patience
