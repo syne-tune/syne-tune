@@ -71,10 +71,10 @@ def test_plateau_scheduler_integration():
 
 
 def test_plateau_stopper():
-    metric = 'loss'
+    metric = "loss"
 
     stop_criterion = PlateauStopper(
-        metric=metric, mode='min', std=0.1, num_trials=2, patience=1
+        metric=metric, mode="min", std=0.1, num_trials=2, patience=1
     )
 
     status = TuningStatus(metric_names=[metric])

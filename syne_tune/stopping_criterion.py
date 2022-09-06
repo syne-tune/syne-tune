@@ -190,9 +190,11 @@ class PlateauStopper(object):
                     curr_best = y
                 trajectory.append(curr_best)
 
-        top_values = trajectory[-self._num_trials:]
+        top_values = trajectory[-self._num_trials :]
         # If the current iteration has to stop
-        has_plateaued = len(top_values) == self._num_trials and np.std(top_values) <= self._std
+        has_plateaued = (
+            len(top_values) == self._num_trials and np.std(top_values) <= self._std
+        )
         if has_plateaued:
             # we increment the total counter of iterations
             self._iterations += 1
