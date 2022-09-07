@@ -148,9 +148,7 @@ def cs_to_synetune(config_space):
     """
     Convert ConfigSpace.ConfigSpace to a synetune configspace.
 
-    This should probably either be improved or we could also dump the 'synetune-configspaces' in 'yahpo_data'
-    like we did for R (paradox) configspaces.
-    Currently this does not cover all possible hyperparameters I think.
+    TODO cover all possible hyperparameters of ConfigSpace.ConfigSpace, right now we only convert the one we need.
     """
     hps = config_space.get_hyperparameters()
 
@@ -160,19 +158,22 @@ def cs_to_synetune(config_space):
         keys += [a.name]
         if isinstance(a, ConfigSpace.hyperparameters.CategoricalHyperparameter):
             vals += [cs.choice(a.choices)]
-        if isinstance(a, ConfigSpace.hyperparameters.Constant):
+        elif isinstance(a, ConfigSpace.hyperparameters.Constant):
             vals += [cs.choice([a.value])]
-        if isinstance(a, ConfigSpace.hyperparameters.UniformIntegerHyperparameter):
+        elif isinstance(a, ConfigSpace.hyperparameters.UniformIntegerHyperparameter):
             if a.log:
                 vals += [cs.lograndint(a.lower, a.upper)]
             else:
                 vals += [cs.randint(a.lower, a.upper)]
-        if isinstance(a, ConfigSpace.hyperparameters.UniformFloatHyperparameter):
+        elif isinstance(a, ConfigSpace.hyperparameters.UniformFloatHyperparameter):
             if a.log:
                 vals += [cs.loguniform(a.lower, a.upper)]
             else:
                 vals += [cs.uniform(a.lower, a.upper)]
-
+        else:
+            raise ValueError(
+                f"Hyperparameter {a.name} has type {type(a)} which is not supported in this converter."
+            )
     # FIXME: This should also handle dependencies between hyperparameters.
     return dict(zip(keys, vals))
 
@@ -187,8 +188,6 @@ def instantiate_yahpo(scenario: str):
     # Select a Benchmark, active_session False because the ONNX session can not be serialized.
     bench = benchmark_set.BenchmarkSet(scenario, active_session=False)
 
-    # FIXME: I can now create one scenario per instance but this is probably
-    #        overkill since its just a copy of the same thing with a different constant set?
     return {
         instance: BlackBoxYAHPO(
             BenchmarkSet(scenario, active_session=False, check=False)
