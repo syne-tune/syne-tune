@@ -19,7 +19,7 @@ import boto3
 from botocore.exceptions import ClientError
 import numpy as np
 
-from sagemaker import LocalSession, Session
+from sagemaker import LocalSession
 from sagemaker.estimator import Framework
 
 from syne_tune.backend.trial_backend import TrialBackend
@@ -35,6 +35,8 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     map_identifier_limited_length,
     s3_copy_files_recursively,
     s3_delete_files_recursively,
+    default_config,
+    default_sagemaker_session,
 )
 
 
@@ -53,7 +55,6 @@ class SageMakerBackend(TrialBackend):
     ):
         """
         :param sm_estimator: sagemaker estimator to be fitted
-        :param sm_client: sagemaker client, for instance obtained with `sm = boto3.client(service_name='sagemaker')`
         :param metrics_names: name of metrics passed to `report`, used to plot live curve in sagemaker (optional, only
         used for visualization purpose)
         :param s3_path: S3 base path used for checkpointing. The full path
@@ -100,7 +101,7 @@ class SageMakerBackend(TrialBackend):
 
     @property
     def sm_client(self):
-        return boto3.client(service_name="sagemaker")
+        return boto3.client(service_name="sagemaker", config=default_config())
 
     def add_metric_definitions_to_sagemaker_estimator(self, metrics_names: List[str]):
         # We add metric definitions corresponding to the metrics passed by `report` that the user wants to track
@@ -282,7 +283,9 @@ class SageMakerBackend(TrialBackend):
                 raise RuntimeError("Distributed Training in Local GPU is not supported")
             self.sm_estimator.sagemaker_session = LocalSession()
         else:
-            self.sm_estimator.sagemaker_session = Session()
+            # Use SageMaker boto3 client with default config. This is important
+            # to configure automatic retry options properly
+            self.sm_estimator.sagemaker_session = default_sagemaker_session()
 
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
         s3_source_path = self._checkpoint_s3_uri_for_trial(src_trial_id)

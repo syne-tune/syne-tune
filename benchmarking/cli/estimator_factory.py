@@ -16,7 +16,10 @@ from sagemaker.huggingface import HuggingFace
 from sagemaker.estimator import Framework
 
 from syne_tune.backend.sagemaker_backend.custom_framework import CustomFramework
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +44,7 @@ def sagemaker_estimator_factory(
         instance_type=instance_type,
         instance_count=instance_count,
         role=role,
+        sagemaker_session=default_sagemaker_session(),
     )
     if dependencies is not None:
         common_kwargs["dependencies"] = dependencies

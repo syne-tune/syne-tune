@@ -20,7 +20,10 @@ from sagemaker.huggingface import HuggingFace
 
 import syne_tune
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 
@@ -56,6 +59,7 @@ if __name__ == "__main__":
         py_version="py36",
         role=get_execution_role(),
         dependencies=[root / "benchmarking"],
+        sagemaker_session=default_sagemaker_session(),
     )
 
     # SageMaker backend

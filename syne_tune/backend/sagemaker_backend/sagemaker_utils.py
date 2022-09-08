@@ -24,6 +24,7 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from sagemaker.estimator import Framework
+from sagemaker import Session
 
 import syne_tune
 from syne_tune.backend.trial_status import TrialResult
@@ -36,6 +37,11 @@ logger = logging.getLogger(__name__)
 def default_config() -> Config:
     # a default config that avoid throttling
     return Config(retries={"max_attempts": 10, "mode": "standard"})
+
+
+def default_sagemaker_session():
+    sagemaker_client = boto3.client(service_name="sagemaker", config=default_config())
+    return Session(sagemaker_client=sagemaker_client)
 
 
 def get_log(jobname: str, log_client=None) -> List[str]:
