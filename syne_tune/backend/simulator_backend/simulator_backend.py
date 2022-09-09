@@ -217,12 +217,16 @@ class SimulatorBackend(LocalBackend):
                 self._simulator_state.remove_events(trial_id)
             elif isinstance(event, OnTrialResultEvent):
                 result = copy.copy(event.result)
-                epoch = result.get("epoch")  # DEBUG
+                if self._debug_resource_attr:
+                    k = self._debug_resource_attr
+                    debug_kwargs = {k: result.get(k)}
+                else:
+                    debug_kwargs = dict()
                 self._debug_message(
                     "OnTrialResultEvent",
                     time=time_event,
                     trial_id=trial_id,
-                    epoch=epoch,
+                    **debug_kwargs,
                 )
                 # Append timestamps to `result`. This is done here, but not in
                 # the other back-ends, for which timestamps are only added when
@@ -241,9 +245,6 @@ class SimulatorBackend(LocalBackend):
                         status=Status.in_progress,
                         training_end_time=None,
                     )
-                # Counts the total number of results obtained for a trial_id,
-                # even if resumed multiple times
-                self._last_metric_seen_index[trial_id] += 1
             else:
                 raise TypeError(f"Event at time {time_event} of unknown type: {event}")
             next_event = self._simulator_state.next_until(time_now)
@@ -272,11 +273,17 @@ class SimulatorBackend(LocalBackend):
             time_final_result = max(time_final_result, _time_result)
             # DEBUG:
             if deb_it < 10:
+                if self._debug_resource_attr:
+                    k = self._debug_resource_attr
+                    debug_kwargs = {k: result.get(k)}
+                else:
+                    debug_kwargs = dict()
                 self._debug_message(
                     "OnTrialResultEvent",
                     time=time_result,
                     trial_id=trial_id,
                     pushed=True,
+                    **debug_kwargs,
                 )
                 deb_it += 1
         time_complete = (
@@ -303,10 +310,12 @@ class SimulatorBackend(LocalBackend):
         for trial_id in trial_ids:
             result_list = self._next_results_to_fetch.get(trial_id)
             if result_list is not None:
-                for result in result_list:
-                    results.append((trial_id, result))
+                results.extend((trial_id, result) for result in result_list)
+                self._last_metric_seen_index[trial_id] += len(result_list)
                 del self._next_results_to_fetch[trial_id]
         if self._next_results_to_fetch:
+            # Note: This tends to happen regularly with fast-running
+            # benchmarks
             warn_msg = [
                 "The following trials reported results, but are not covered "
                 "by trial_ids. These results will be ignored:"
@@ -322,7 +331,8 @@ class SimulatorBackend(LocalBackend):
                     ]
                     msg_line += f"resources = {resources}"
                 warn_msg.append(msg_line)
-            logger.warning("\n".join(warn_msg))
+                self._last_metric_seen_index[trial_id] += len(result_list)
+            logger.debug("\n".join(warn_msg))
             self._next_results_to_fetch = dict()
 
         if len(results) > 0 and ST_WORKER_TIMESTAMP in results[0]:
@@ -383,13 +393,13 @@ class SimulatorBackend(LocalBackend):
                 results.append(trial_result)
         return results
 
-    def _pause_trial(self, trial_id: int):
+    def _pause_trial(self, trial_id: int, result: Optional[dict]):
         self._stop_or_pause_trial(trial_id, status=Status.paused)
 
     def _resume_trial(self, trial_id: int):
         pass
 
-    def _stop_trial(self, trial_id: int):
+    def _stop_trial(self, trial_id: int, result: Optional[dict]):
         self._stop_or_pause_trial(trial_id, status=Status.stopped)
 
     def _stop_or_pause_trial(self, trial_id: int, status: str):

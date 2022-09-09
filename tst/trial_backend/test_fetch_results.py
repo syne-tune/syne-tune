@@ -55,10 +55,10 @@ class DeterministicBackend(TrialBackend):
     def _resume_trial(self, trial_id: int):
         pass
 
-    def _pause_trial(self, trial_id: int):
+    def _pause_trial(self, trial_id: int, result: dict):
         pass
 
-    def _stop_trial(self, trial_id: int):
+    def _stop_trial(self, trial_id: int, result: dict):
         pass
 
     def _schedule(self, trial_id: int, config: Dict):

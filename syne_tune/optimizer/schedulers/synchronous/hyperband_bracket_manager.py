@@ -24,8 +24,8 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system import (
 
 class SynchronousHyperbandBracketManager:
     """
-    Maintains all currently active brackets, relays requests for another job
-    and report of result to one of the brackets.
+    Maintains all brackets, relays requests for another job and report of
+    result to one of the brackets.
 
     Each bracket contains a number of rungs, the largest one `max_num_rungs`.
     A bracket with k rungs has offset `max_num_rungs - k`. Hyperband cycles

@@ -11,6 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Optional
+import numpy as np
+import logging
 
 from syne_tune.optimizer.schedulers import (
     FIFOScheduler,
@@ -23,14 +25,14 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
 )
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
+    GeometricDifferentialEvolutionHyperbandScheduler,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
-import numpy as np
-
-from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    QuantileBasedSurrogateSearcher,
+from syne_tune.try_import import (
+    try_import_blackbox_repository_message,
+    try_import_bore_message,
 )
 
 
@@ -64,6 +66,11 @@ class BayesianOptimization(FIFOScheduler):
         )
 
 
+def _assert_max_resource_args(kwargs: dict, name: str = "max_t"):
+    need_one = {name, "max_resource_attr"}
+    assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
+
+
 class ASHA(HyperbandScheduler):
     def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
         """
@@ -72,8 +79,7 @@ class ASHA(HyperbandScheduler):
         :class:`HyperbandScheduler`.
 
         """
-        need_one = {"max_t", "max_resource_attr"}
-        assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
+        _assert_max_resource_args(kwargs)
         super(ASHA, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -91,8 +97,7 @@ class MOBSTER(HyperbandScheduler):
         :class:`HyperbandScheduler`.
 
         """
-        need_one = {"max_t", "max_resource_attr"}
-        assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
+        _assert_max_resource_args(kwargs)
         super(MOBSTER, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -109,8 +114,7 @@ class PASHA(HyperbandScheduler):
         latter is more useful, see also :class:`HyperbandScheduler`.
 
         """
-        need_one = {"max_t", "max_resource_attr"}
-        assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
+        _assert_max_resource_args(kwargs)
         super(PASHA, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -135,8 +139,7 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
         :class:`HyperbandScheduler`.
 
         """
-        need_one = {"max_resource_level", "max_resource_attr"}
-        assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
+        _assert_max_resource_args(kwargs, name="max_resource_level")
         super(SyncHyperband, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -160,12 +163,35 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
         :class:`HyperbandScheduler`.
 
         """
-        need_one = {"max_resource_level", "max_resource_attr"}
-        assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
+        _assert_max_resource_args(kwargs, name="max_resource_level")
         super(SyncBOHB, self).__init__(
             config_space=config_space,
             metric=metric,
             searcher="kde",
+            resource_attr=resource_attr,
+            **kwargs,
+        )
+
+
+class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
+    def __init__(
+        self,
+        config_space: Dict,
+        metric: str,
+        resource_attr: str,
+        **kwargs,
+    ):
+        """
+        One of `max_resource_level`, `max_resource_attr` needs to be in
+        `kwargs`. The latter is more useful, see also
+        :class:`HyperbandScheduler`.
+
+        """
+        _assert_max_resource_args(kwargs, name="max_resource_level")
+        super(DEHB, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher="random",
             resource_attr=resource_attr,
             **kwargs,
         )
@@ -185,8 +211,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
         :class:`HyperbandScheduler`.
 
         """
-        need_one = {"max_resource_level", "max_resource_attr"}
-        assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
+        _assert_max_resource_args(kwargs, name="max_resource_level")
         super(SyncMOBSTER, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -198,7 +223,11 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
 class BORE(FIFOScheduler):
     def __init__(self, config_space: Dict, metric: str, mode: str, **kwargs):
-        from syne_tune.optimizer.schedulers.searchers.bore import Bore
+        try:
+            from syne_tune.optimizer.schedulers.searchers.bore import Bore
+        except ImportError:
+            logging.info(try_import_bore_message())
+            raise
 
         super(BORE, self).__init__(
             config_space=config_space,
@@ -274,7 +303,11 @@ class ZeroShotTransfer(FIFOScheduler):
         generate a set of configurations and will impute their performance using surrogate models.
         :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
         """
-        from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
+        try:
+            from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
 
         super(ZeroShotTransfer, self).__init__(
             config_space=config_space,
@@ -319,6 +352,14 @@ class ASHACTS(HyperbandScheduler):
         :param random_seed:
         :param kwargs:
         """
+        try:
+            from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
+                QuantileBasedSurrogateSearcher,
+            )
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
+
         super(ASHACTS, self).__init__(
             config_space=config_space,
             searcher=QuantileBasedSurrogateSearcher(
@@ -351,6 +392,7 @@ baselines_dict = {
     "REA": REA,
     "SyncHyperband": SyncHyperband,
     "SyncBOHB": SyncBOHB,
+    "DEHB": DEHB,
     "SyncMOBSTER": SyncMOBSTER,
     "ConstrainedBayesianOptimization": ConstrainedBayesianOptimization,
     "ZeroShotTransfer": ZeroShotTransfer,

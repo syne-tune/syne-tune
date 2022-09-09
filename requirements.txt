@@ -1,12 +1,5 @@
-boto3
-sagemaker>=2.32.0
-dill
-
-# sagemaker local mode
 numpy>=1.16.0
-PyYaml
+dill
 pandas
-ujson
-
 # only needed for python version lower than 3.8
 typing_extensions

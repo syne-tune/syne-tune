@@ -19,8 +19,6 @@ from typing import List, Callable, Tuple, Optional, Dict, Set
 
 import dill as dill
 
-
-from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import Status, Trial
 from syne_tune.config_space import to_dict, Domain
@@ -53,7 +51,7 @@ class Tuner:
         max_failures: int = 1,
         tuner_name: Optional[str] = None,
         asynchronous_scheduling: bool = True,
-        wait_trial_completion_when_stopping: bool = True,
+        wait_trial_completion_when_stopping: bool = False,
         callbacks: Optional[List[TunerCallback]] = None,
         metadata: Optional[Dict] = None,
         suffix_tuner_name: bool = True,
@@ -168,7 +166,13 @@ class Tuner:
             config_space_exhausted = False
             stop_condition_reached = self._stop_condition()
 
-            while not stop_condition_reached:
+            while (
+                # we stop when either the stop condition is reached
+                not stop_condition_reached
+                # or when all trials are done if the wait_trial_completion is activated
+                or self.wait_trial_completion_when_stopping
+                and len(running_trials_ids) > 0
+            ):
                 for callback in self.callbacks:
                     callback.on_loop_start()
 
@@ -195,7 +199,7 @@ class Tuner:
 
                 if (
                     config_space_exhausted
-                    or not self.wait_trial_completion_when_stopping
+                    or self.wait_trial_completion_when_stopping
                     and stop_condition_reached
                 ):
                     # if the search space is exhausted, we loop until the running trials are done or until the
@@ -234,7 +238,7 @@ class Tuner:
                 stop_condition_reached = self._stop_condition()
         except Exception as e:
             logger.error(
-                "An error happened during the tuning, cleaning up ressources and logging final ressources "
+                "An error happened during the tuning, cleaning up resources and logging final resources "
                 "before throwing the exception."
             )
             raise e
@@ -356,7 +360,7 @@ class Tuner:
 
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
         """
-        Schedules new tasks if ressources are available or sleep.
+        Schedules new tasks if resources are available or sleep.
         :param running_trials_ids: set if trial-ids currently running, gets updated if new trials are scheduled.
         """
         running_trials_threshold = self.n_workers if self.asynchronous_scheduling else 1
@@ -426,10 +430,7 @@ class Tuner:
         with open(tuner_serialized_path, "wb") as f:
             logger.debug(f"saving tuner in {tuner_serialized_path}")
             dill.dump(self, f)
-            # ugly hack to reinitialize the session, we could remove it by having kwargs/args of SagemakerFramework
-            # plus the class (for instance PyTorch)
-            if isinstance(self.trial_backend, SageMakerBackend):
-                self.trial_backend.initialize_sagemaker_session()
+            self.trial_backend.on_tuner_save()  # callback
 
     @staticmethod
     def load(tuner_path: Optional[str]):
@@ -477,14 +478,14 @@ class Tuner:
                         # we override the status immediately, this avoids calling the backend status another time to
                         # update after the change which may be expensive
                         status = Status.stopped
-                        self.trial_backend.stop_trial(trial_id)
+                        self.trial_backend.stop_trial(trial_id=trial_id, result=result)
                     self.scheduler.on_trial_remove(trial=trial)
                     done_trials[trial_id] = (trial, status)
                     self.trials_scheduler_stopped.add(trial_id)
 
                 elif decision == SchedulerDecision.PAUSE:
                     status = Status.paused
-                    self.trial_backend.pause_trial(trial_id)
+                    self.trial_backend.pause_trial(trial_id=trial_id, result=result)
                     self.scheduler.on_trial_remove(trial=trial)
                     done_trials[trial_id] = (trial, status)
 

@@ -12,82 +12,31 @@
 # permissions and limitations under the License.
 import numpy as np
 
-import torch
-import torch.nn as nn
-
-from torch.utils.data import TensorDataset, DataLoader
+from sklearn.neural_network import MLPClassifier
 
 
 class MLP:
     def __init__(
         self,
-        n_inputs,
+        n_inputs: int,
         n_hidden: int = 32,
         epochs: int = 100,
         learning_rate: float = 1e-3,
-        train_from_scratch: bool = True,
         activation: str = "relu",
     ):
-
-        if activation == "relu":
-            self.act_func = nn.ReLU
-        elif activation == "elu":
-            self.act_func = nn.ELU
-        elif activation == "tanh":
-            self.act_func = nn.Tanh
-
         self.n_inputs = n_inputs
         self.n_hidden = n_hidden
         self.epochs = epochs
         self.learning_rate = learning_rate
-
-        self.train_from_scratch = train_from_scratch
-
-        self.model = self._init_network(
-            n_inputs=self.n_inputs, n_hidden=self.n_hidden, act_func=self.act_func
-        )
-
-    def _init_network(self, n_inputs, n_hidden, act_func):
-        return nn.Sequential(
-            nn.Linear(n_inputs, n_hidden),
-            act_func(),
-            nn.Linear(n_hidden, n_hidden),
-            act_func(),
-            nn.Linear(n_hidden, 1),
-            nn.Sigmoid(),
+        self.model = MLPClassifier(
+            activation=activation, hidden_layer_sizes=(n_hidden,)
         )
 
     def fit(self, X, y):
-
-        if self.train_from_scratch:
-            self.model = self._init_network(
-                n_inputs=self.n_inputs, n_hidden=self.n_hidden, act_func=self.act_func
-            )
-
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        loss_fn = nn.BCELoss()
-
-        tensor_x = torch.Tensor(X).float()
-        tensor_y = torch.Tensor(y[:, None]).float()
-
-        dataset = TensorDataset(tensor_x, tensor_y)
-        dataloader = DataLoader(dataset)
-
-        self.model.train()
-        for epoch in range(self.epochs):
-
-            for i, (images, labels) in enumerate(dataloader):
-                optimizer.zero_grad()
-
-                outputs = self.model(images)
-                loss = loss_fn(outputs, labels)
-                loss.backward()
-                optimizer.step()
+        self.model.fit(X, y)
 
     def predict_proba(self, X):
-        m = self.model(torch.tensor(X).float())
-        return m.detach().numpy()
+        return self.model.predict_proba(X)
 
     def predict(self, X):
-        l = np.round(self.predict_proba(X))
-        return l
+        return np.round(self.predict_proba(X))

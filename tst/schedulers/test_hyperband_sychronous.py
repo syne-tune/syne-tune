@@ -152,10 +152,6 @@ def _send_result(
     return next_trial_id
 
 
-# def test_hyperband_bracket_manager_create_bracket():
-# HIER
-
-
 # Runs Hyperband for some number of iterations, checking that no assertions
 # are raised
 def test_hyperband_bracket_manager_running():

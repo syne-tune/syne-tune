@@ -14,8 +14,13 @@ import logging
 from pathlib import Path
 from typing import List, Union, Dict, Optional
 
-import s3fs as s3fs
-from botocore.exceptions import NoCredentialsError
+from syne_tune.try_import import try_import_aws_message
+
+try:
+    import s3fs as s3fs
+    from botocore.exceptions import NoCredentialsError
+except ImportError:
+    print(try_import_aws_message())
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import (
@@ -23,6 +28,10 @@ from syne_tune.blackbox_repository.blackbox_offline import (
 )
 from syne_tune.blackbox_repository.blackbox_tabular import (
     deserialize as deserialize_tabular,
+)
+
+from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
+    instantiate_yahpo,
 )
 
 # where the blackbox repository is stored on s3
@@ -108,6 +117,8 @@ def load_blackbox(
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
 
+    if name.startswith("yahpo"):
+        return instantiate_yahpo(name)
     if (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
     else:

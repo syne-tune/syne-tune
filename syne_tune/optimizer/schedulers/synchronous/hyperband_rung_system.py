@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import numpy as np
 import logging
 
@@ -29,7 +29,10 @@ class SynchronousHyperbandRungSystem:
 
     @staticmethod
     def geometric(
-        min_resource: int, max_resource: int, reduction_factor: float, num_brackets: int
+        min_resource: int,
+        max_resource: int,
+        reduction_factor: float,
+        num_brackets: Optional[int] = None,
     ) -> RungSystemsPerBracket:
         """
         This is the geometric progression setup from the original papers on
@@ -45,7 +48,8 @@ class SynchronousHyperbandRungSystem:
         :param min_resource: Smallest resource level (positive int)
         :param max_resource: Largest resource level (positive int)
         :param reduction_factor: Approximate ratio between successive rung levels
-        :param num_brackets: Number of brackets
+        :param num_brackets: Number of brackets. If not given, the maximum number
+            of brackets is used. Pass 1 for successive halving
         :return: Rung system
         """
         SynchronousHyperbandRungSystem._assert_positive_int(
@@ -58,14 +62,17 @@ class SynchronousHyperbandRungSystem:
         assert (
             reduction_factor >= 2
         ), f"reduction_factor = {reduction_factor} must be >= 2"
-        SynchronousHyperbandRungSystem._assert_positive_int(
-            num_brackets, "num_brackets"
-        )
         s_max = int(
             np.ceil(
                 (np.log(max_resource) - np.log(min_resource)) / np.log(reduction_factor)
             )
         )
+        if num_brackets is not None:
+            SynchronousHyperbandRungSystem._assert_positive_int(
+                num_brackets, "num_brackets"
+            )
+        else:
+            num_brackets = s_max + 1  # Max number of brackets
         msg_prefix = (
             f"min_resource = {min_resource}, max_resource = "
             + f"{max_resource}, reduction_factor = {reduction_factor}"
@@ -98,11 +105,6 @@ class SynchronousHyperbandRungSystem:
                 rungs.append((rsize, resource))
             rungs.append((int(np.ceil(pre_fact)), max_resource))
             rung_systems.append(rungs)
-        parts = [
-            f"Bracket {i}: rungs = {rungs}" for i, rungs in enumerate(rung_systems)
-        ]
-        logger.info("\n".join(parts))
-
         return rung_systems
 
     @staticmethod

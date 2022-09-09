@@ -15,17 +15,19 @@ import logging
 from datetime import datetime
 from json.decoder import JSONDecodeError
 from typing import List, Dict, Callable, Optional
-
-import boto3
 import pandas as pd
-
 from dataclasses import dataclass
-
-from botocore.exceptions import ClientError
 
 from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
 from syne_tune import Tuner
 from syne_tune.util import experiment_path, s3_experiment_path
+from syne_tune.try_import import try_import_aws_message
+
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+except ImportError:
+    print(try_import_aws_message())
 
 
 @dataclass
@@ -60,7 +62,7 @@ class ExperimentResult:
             plt.plot(x, y, **plt_kwargs)
             plt.xlabel("wallclock time")
             plt.ylabel(metric)
-            plt.title(self.entrypoint_name() + " " + self.name)
+            plt.title(f"Best result over time {self.name}")
             plt.legend()
             plt.show()
 

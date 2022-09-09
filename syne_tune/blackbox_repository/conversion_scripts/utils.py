@@ -16,9 +16,14 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 
-import s3fs
-import sagemaker
-from botocore.exceptions import NoCredentialsError
+from syne_tune.try_import import try_import_aws_message
+
+try:
+    import s3fs
+    import sagemaker
+    from botocore.exceptions import NoCredentialsError
+except ImportError:
+    print(try_import_aws_message())
 
 
 @lru_cache(maxsize=1)
@@ -29,7 +34,6 @@ def s3_blackbox_folder(s3_root: Optional[str] = None):
             # in case no region is explicitely configured
             os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
         s3_root = sagemaker.Session().default_bucket()
-
     return f"{s3_root}/blackbox-repository"
 
 

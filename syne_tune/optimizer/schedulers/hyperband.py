@@ -14,6 +14,7 @@ import copy
 import logging
 import os
 from typing import Dict, Optional, List
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -106,6 +107,34 @@ _CONSTRAINTS = {
 
 def is_continue_decision(trial_decision: str) -> bool:
     return trial_decision == SchedulerDecision.CONTINUE
+
+
+@dataclass
+class TrialInformation:
+    """
+    The scheduler maintains information about all trials it has been dealing
+    with so far. `trial_decision` is the current status of the trial.
+    `keep_case` is relevant only if `searcher_data == 'rungs_and_last'`.
+    `largest_update_resource` is the largest resource level for which the
+    searcher was updated, or None.
+    `reported_result` caontains the last recent reported result, or None
+    (task was started, but did not report anything yet). Only contains
+    attributes `self.metric` and `self._resource_attr`.
+    """
+
+    config: dict
+    time_stamp: float
+    bracket: int
+    keep_case: bool
+    trial_decision: str
+    reported_result: Optional[dict] = None
+    largest_update_resource: Optional[int] = None
+
+    def restart(self, time_stamp: float):
+        self.time_stamp = time_stamp
+        self.reported_result = None
+        self.keep_case = False
+        self.trial_decision = SchedulerDecision.CONTINUE
 
 
 class HyperbandScheduler(FIFOScheduler):
@@ -431,22 +460,7 @@ class HyperbandScheduler(FIFOScheduler):
         self._register_pending_myopic = kwargs["register_pending_myopic"]
         # _active_trials:
         # Maintains information for all tasks (running, paused, or stopped).
-        # Maps trial_id to dict, with fields:
-        # - config
-        # - time_stamp: Time when task was started, or when last recent
-        #       result was reported
-        # - reported_result: Last recent reported result, or None (task was
-        #       started, but did not report anything yet.
-        #       Note: Only contains attributes self.metric and
-        #       self._resource_attr).
-        # - bracket: Bracket number
-        # - keep_case: Boolean flag. Relevant only if searcher_data ==
-        #   'rungs_and_last'. See _run_reporter
-        # - trial_decision: Status of trial (running, paused, stopped),
-        #   in terms of `SchedulerDecision`. We keep paused and stopped trials
-        #   in there, so we can access their configs.
-        # - largest_update_resource: Largest resource level for which the
-        #       searcher was updated, or None
+        # Maps trial_id to `TrialInformation`.
         self._active_trials = dict()
         # _cost_offset:
         # Is used for promotion-based (pause/resume) scheduling if the eval
@@ -536,15 +550,14 @@ class HyperbandScheduler(FIFOScheduler):
             # This needs its config to be modified accordingly.
             config[self.max_resource_attr] = kwargs["milestone"]
 
-        self._active_trials[trial_id] = {
-            "config": copy.copy(config),
-            "time_stamp": kwargs["elapsed_time"],
-            "bracket": kwargs["bracket"],
-            "reported_result": None,
-            "keep_case": False,
-            "trial_decision": SchedulerDecision.CONTINUE,
-            "largest_update_resource": None,
-        }
+        self._active_trials[trial_id] = TrialInformation(
+            config=copy.copy(config),
+            time_stamp=kwargs["elapsed_time"],
+            bracket=kwargs["bracket"],
+            keep_case=False,
+            trial_decision=SchedulerDecision.CONTINUE,
+            largest_update_resource=None,
+        )
 
         return config
 
@@ -585,16 +598,9 @@ class HyperbandScheduler(FIFOScheduler):
             ), f"Paused trial {trial_id} must be in _active_trials"
             record = self._active_trials[trial_id]
             assert not is_continue_decision(
-                record["trial_decision"]
+                record.trial_decision
             ), f"Paused trial {trial_id} marked as running in _active_trials"
-            record.update(
-                {
-                    "time_stamp": self._elapsed_time(),
-                    "reported_result": None,
-                    "keep_case": False,
-                    "trial_decision": SchedulerDecision.CONTINUE,
-                }
-            )
+            record.restart(time_stamp=self._elapsed_time())
             # Register pending evaluation(s) with searcher
             next_milestone = extra_kwargs["milestone"]
             resume_from = extra_kwargs["resume_from"]
@@ -616,7 +622,7 @@ class HyperbandScheduler(FIFOScheduler):
             if self.does_pause_resume() and self.max_resource_attr is not None:
                 # The promoted trial should only run until the next milestone.
                 # This needs its config to be modified accordingly
-                extra_kwargs = record["config"].copy()
+                extra_kwargs = record.config.copy()
                 extra_kwargs[self.max_resource_attr] = next_milestone
             else:
                 extra_kwargs = None
@@ -629,10 +635,10 @@ class HyperbandScheduler(FIFOScheduler):
         all_running = not self.terminator._rung_system_per_bracket
         tasks = dict()
         for k, v in self._active_trials.items():
-            if is_continue_decision(v["trial_decision"]) and (
-                all_running or v["bracket"] == bracket_id
+            if is_continue_decision(v.trial_decision) and (
+                all_running or v.bracket == bracket_id
             ):
-                reported_result = v["reported_result"]
+                reported_result = v.reported_result
                 level = (
                     0
                     if reported_result is None
@@ -642,8 +648,8 @@ class HyperbandScheduler(FIFOScheduler):
                 # reached self.max_t. These must not end up in the snapshot
                 if level < self.max_t:
                     tasks[k] = {
-                        "config": v["config"],
-                        "time": v["time_stamp"],
+                        "config": v.config,
+                        "time": v.time_stamp,
                         "level": level,
                     }
         return tasks
@@ -658,7 +664,7 @@ class HyperbandScheduler(FIFOScheduler):
         self.terminator.on_task_remove(trial_id)
         if trial_id in self._active_trials:
             # We do not remove stopped trials
-            self._active_trials[trial_id]["trial_decision"] = trial_decision
+            self._active_trials[trial_id].trial_decision = trial_decision
 
     def on_trial_error(self, trial: Trial):
         super().on_trial_error(trial)
@@ -669,8 +675,8 @@ class HyperbandScheduler(FIFOScheduler):
             # Remove last recently added result for this task. This is not
             # done if it fell on a rung level (i.e., `keep_case` is True)
             record = self._active_trials[trial_id]
-            if (record["reported_result"] is not None) and (not record["keep_case"]):
-                rem_result = record["reported_result"]
+            rem_result = record.reported_result
+            if (rem_result is not None) and (not record.keep_case):
                 self.searcher.remove_case(trial_id, **rem_result)
 
     def _update_searcher(
@@ -769,7 +775,8 @@ class HyperbandScheduler(FIFOScheduler):
             # by the scheduler. The report is sent to the searcher, but with
             # update=False. This means that the report is registered, but cannot
             # influence any decisions.
-            trial_decision = self._active_trials[trial_id]["trial_decision"]
+            record = self._active_trials[trial_id]
+            trial_decision = record.trial_decision
             if trial_decision != SchedulerDecision.CONTINUE:
                 logger.warning(
                     f"trial_id {trial_id}: {trial_decision}, but receives "
@@ -818,20 +825,14 @@ class HyperbandScheduler(FIFOScheduler):
                 # Otherwise, it is removed once _update_searcher is called for
                 # the next recent result.
                 resource = int(result[self._resource_attr])
-                self._active_trials[trial_id].update(
-                    {
-                        "time_stamp": time_since_start,
-                        "reported_result": {
-                            self.metric: result[self.metric],
-                            self._resource_attr: resource,
-                        },
-                        "keep_case": milestone_reached,
-                    }
-                )
+                record.time_stamp = time_since_start
+                record.reported_result = {
+                    self.metric: result[self.metric],
+                    self._resource_attr: resource,
+                }
+                record.keep_case = milestone_reached
                 if do_update:
-                    largest_update_resource = self._active_trials[trial_id][
-                        "largest_update_resource"
-                    ]
+                    largest_update_resource = record.largest_update_resource
                     if largest_update_resource is None:
                         largest_update_resource = resource - 1
                     assert largest_update_resource <= resource, (
@@ -842,9 +843,7 @@ class HyperbandScheduler(FIFOScheduler):
                     if resource == largest_update_resource:
                         do_update = False  # Do not update again
                     else:
-                        self._active_trials[trial_id][
-                            "largest_update_resource"
-                        ] = resource
+                        record.largest_update_resource = resource
                 if not task_continues:
                     if (not self.does_pause_resume()) or resource >= self.max_t:
                         trial_decision = SchedulerDecision.STOP
@@ -886,9 +885,7 @@ class HyperbandScheduler(FIFOScheduler):
     def on_trial_complete(self, trial: Trial, result: Dict):
         # Check whether searcher was already updated based on `result`
         trial_id = str(trial.trial_id)
-        largest_update_resource = self._active_trials[trial_id][
-            "largest_update_resource"
-        ]
+        largest_update_resource = self._active_trials[trial_id].largest_update_resource
         if largest_update_resource is not None:
             resource = int(result[self._resource_attr])
             if resource > largest_update_resource:

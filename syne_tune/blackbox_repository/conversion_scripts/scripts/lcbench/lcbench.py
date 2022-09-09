@@ -41,7 +41,7 @@ METRIC_ELAPSED_TIME = "time"
 
 RESOURCE_ATTR = "epoch"
 
-MAX_RESOURCE_LEVEL = 52
+MAX_RESOURCE_LEVEL = 50
 
 CONFIGURATION_SPACE = {
     "num_layers": randint(1, 5),
@@ -56,7 +56,6 @@ CONFIGURATION_SPACE = {
 
 def convert_task(bench, dataset_name):
     n_config = 2000
-    num_epochs = MAX_RESOURCE_LEVEL
     configs = [
         bench.query(dataset_name=dataset_name, tag="config", config_id=i)
         for i in range(n_config)
@@ -66,21 +65,43 @@ def convert_task(bench, dataset_name):
     hyperparameters = hyperparameters.loc[
         :, (hyperparameters != hyperparameters.iloc[0]).any()
     ]
-    objective_evaluations = np.zeros((n_config, 1, num_epochs, 2))
+    objectives = [
+        "Train/val_accuracy",
+        "Train/val_balanced_accuracy",
+        "Train/val_cross_entropy",
+        "Train/test_result",
+        "Train/test_balanced_accuracy",
+        "Train/test_cross_entropy",
+        "time",
+    ]
+    objective_evaluations = np.zeros((n_config, 1, MAX_RESOURCE_LEVEL, len(objectives)))
 
-    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=num_epochs)}
-    for j, tag in enumerate(["Train/val_accuracy", "time"]):
+    fidelity_space = {RESOURCE_ATTR: randint(lower=1, upper=MAX_RESOURCE_LEVEL)}
+    for j, tag in enumerate(objectives):
         for i in range(n_config):
-            objective_evaluations[i, 0, :, j] = bench.query(
+            # Drop first evaluation (before training) as well as last.
+            raw_objective_evaluations = bench.query(
                 dataset_name=dataset_name, tag=tag, config_id=i
             )
+            objective_evaluations[i, 0, :, j] = raw_objective_evaluations[1:-1]
+            if tag == "time":
+                # Remove time for scoring the model before training it
+                objective_evaluations[i, 0, :, j] -= raw_objective_evaluations[0]
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=CONFIGURATION_SPACE,
         fidelity_space=fidelity_space,
         objectives_evaluations=objective_evaluations,
-        fidelity_values=np.arange(1, num_epochs + 1),
-        objectives_names=[METRIC_ACCURACY, METRIC_ELAPSED_TIME],
+        fidelity_values=np.arange(1, MAX_RESOURCE_LEVEL + 1),
+        objectives_names=[
+            "val_accuracy",
+            "val_balanced_accuracy",
+            "val_cross_entropy",
+            "test_accuracy",
+            "test_balanced_accuracy",
+            "test_cross_entropy",
+            "time",
+        ],
     )
 
 

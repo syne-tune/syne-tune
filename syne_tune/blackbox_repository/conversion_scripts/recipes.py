@@ -24,6 +24,11 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import impor
     FCNETRecipe,
 )
 
+from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
+    YAHPORecipe,
+    yahpo_scenarios,
+)
+
 # add a blackbox recipe here to expose it in Syne Tune
 from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import (
     PD1Recipe,
@@ -37,5 +42,9 @@ recipes = [
     LCBenchRecipe(),
     PD1Recipe(),
 ]
+
+for scenario in yahpo_scenarios:
+    recipes.append(YAHPORecipe("yahpo-" + scenario))
+
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}
