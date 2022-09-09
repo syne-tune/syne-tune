@@ -25,7 +25,15 @@ from syne_tune.util import s3_experiment_path, random_string
 
 
 if __name__ == "__main__":
-    args, method_names, benchmark_names, _ = parse_args()
+    from benchmarking.nursery.benchmark_dehb.baselines import methods
+    from benchmarking.nursery.benchmark_dehb.benchmark_definitions import (
+        benchmark_definitions,
+    )
+
+    args, method_names, benchmark_names, _ = parse_args(
+        methods,
+        benchmark_definitions,
+    )
     if len(benchmark_names) == 1:
         benchmark_name = benchmark_names[0]
     else:
@@ -51,18 +59,23 @@ if __name__ == "__main__":
             disable_profiler=True,
         )
 
-        sm_args["hyperparameters"] = {
+        hyperparameters = {
             "experiment_tag": experiment_tag,
             "num_seeds": args.num_seeds,
             "method": method,
         }
         if benchmark_name is not None:
-            sm_args["hyperparameters"]["benchmark"] = benchmark_name
+            hyperparameters["benchmark"] = benchmark_name
+        if args.num_brackets is not None:
+            hyperparameters["num_brackets"] = args.num_brackets
+        if args.start_seed is not None:
+            hyperparameters["start_seed"] = args.start_seed
         print(
             f"{experiment_tag}-{method}\n"
-            f"hyperparameters = {sm_args['hyperparameters']}\n"
+            f"hyperparameters = {hyperparameters}\n"
             f"Results written to {checkpoint_s3_uri}"
         )
+        sm_args["hyperparameters"] = hyperparameters
         est = PyTorch(**sm_args)
         est.fit(job_name=f"{experiment_tag}-{method}-{suffix}", wait=False)
 

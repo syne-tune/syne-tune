@@ -37,6 +37,8 @@ class Methods:
     SYNCHB_ORD = "SYNCHB-ORD"
     DEHB_ORD = "DEHB-ORD"
     BOHB_ORD = "BOHB-ORD"
+    ASHA_STOP = "ASHA-STOP"
+    SYNCMOBSTER = "SYNCMOBSTER"
 
 
 def _convert_categorical_to_ordinal(args: MethodArguments) -> dict:
@@ -59,6 +61,7 @@ methods = {
         max_resource_attr=method_arguments.max_resource_attr,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
+        brackets=method_arguments.num_brackets,
     ),
     Methods.SYNCHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
         config_space=method_arguments.config_space,
@@ -129,6 +132,29 @@ methods = {
     Methods.BOHB_ORD: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
         config_space=_convert_categorical_to_ordinal(method_arguments),
         searcher="kde",
+        search_options=search_options(method_arguments),
+        mode=method_arguments.mode,
+        metric=method_arguments.metric,
+        max_resource_attr=method_arguments.max_resource_attr,
+        resource_attr=method_arguments.resource_attr,
+        random_seed=method_arguments.random_seed,
+        brackets=method_arguments.num_brackets,
+    ),
+    Methods.ASHA_STOP: lambda method_arguments: HyperbandScheduler(
+        config_space=method_arguments.config_space,
+        searcher="random",
+        type="stopping",
+        search_options=search_options(method_arguments),
+        mode=method_arguments.mode,
+        metric=method_arguments.metric,
+        max_resource_attr=method_arguments.max_resource_attr,
+        resource_attr=method_arguments.resource_attr,
+        random_seed=method_arguments.random_seed,
+        brackets=method_arguments.num_brackets,
+    ),
+    Methods.SYNCMOBSTER: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+        config_space=method_arguments.config_space,
+        searcher="bayesopt",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
