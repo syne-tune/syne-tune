@@ -33,6 +33,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         elapsed_time_attr: str,
         max_resource_attr: Optional[str] = None,
         seed: Optional[int] = None,
+        support_checkpointing: bool = True,
         **simulatorbackend_kwargs,
     ):
         """
@@ -56,7 +57,8 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         relies on `result` to be passed to `pause_trial`. If this is not
         done, the backend cannot know from which resource level to resume
         a trial, so it starts the trial from scratch (which is equivalent to
-        no checkpointing).
+        no checkpointing). The same happens if `support_checkpointing` is
+        False.
 
         ATTENTION: If the blackbox maintains cumulative time (elapsed_time),
         this is different from what :class:`SimulatorBackend` requires for
@@ -90,6 +92,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         self._max_resource_attr = max_resource_attr
         self.simulatorbackend_kwargs = simulatorbackend_kwargs
         self._seed = seed
+        self._support_checkpointing = support_checkpointing
         self._seed_for_trial = dict()
         self._resource_paused_for_trial = dict()
 
@@ -156,7 +159,11 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
 
         status = Status.completed
         resource_paused = self._resource_paused_for_trial.get(trial_id)
-        if resource_paused is not None:
+        if resource_paused is not None and self._support_checkpointing:
+            # If checkpointing is supported and trial has been paused, we
+            # can ignore results up until the paused level. Also, the
+            # elapsed_time field in later results needs to be corrected
+            # to not count the time for skipped results
             resource_attr = self.resource_attr
             elapsed_time_offset = 0
             results = []
@@ -169,14 +176,17 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
             for result in results:
                 result[self.elapsed_time_attr] -= elapsed_time_offset
         else:
+            # Use all results from the start
             results = all_results
 
-        # Makes sure that time is monotonically increasing which may not be the case due to numerical errors or due to
-        # the use of a surrogate
+        # Makes sure that time is monotonically increasing which may not be the
+        # case due to numerical errors or due to the use of a surrogate
+        et_attr = self.elapsed_time_attr
+        results[0][et_attr] = max(results[0][et_attr], 0.01)
         for i in range(1, len(results)):
-            results[i][self.elapsed_time_attr] = max(
-                results[i][self.elapsed_time_attr],
-                results[i - 1][self.elapsed_time_attr] + 0.001,
+            results[i][et_attr] = max(
+                results[i][et_attr],
+                results[i - 1][et_attr] + 0.01,
             )
 
         return status, results

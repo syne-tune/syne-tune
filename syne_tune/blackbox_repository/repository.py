@@ -14,7 +14,7 @@ import logging
 from pathlib import Path
 from typing import List, Union, Dict, Optional
 
-from syne_tune.try_import import try_import_aws_message
+from syne_tune.try_import import try_import_aws_message, try_import_yahpo_message
 
 try:
     import s3fs as s3fs
@@ -30,9 +30,12 @@ from syne_tune.blackbox_repository.blackbox_tabular import (
     deserialize as deserialize_tabular,
 )
 
-from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-    instantiate_yahpo,
-)
+try:
+    from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
+        instantiate_yahpo,
+    )
+except ImportError:
+    print(try_import_yahpo_message())
 
 # where the blackbox repository is stored on s3
 from syne_tune.blackbox_repository.conversion_scripts.recipes import (

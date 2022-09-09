@@ -106,7 +106,7 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         help="number of seeds to run",
     )
     parser.add_argument(
-        "--run_all_seed",
+        "--run_all_seeds",
         type=int,
         default=1,
         help="if 1 run all the seeds [0, `num_seeds`-1], otherwise run seed `num_seeds` only",
@@ -138,9 +138,17 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         default=0,
         help="first seed to run (if run_all_seed)",
     )
+    parser.add_argument(
+        "--support_checkpointing",
+        type=int,
+        default=1,
+        help="if 0, trials are started from scratch when resumed",
+    )
     args, _ = parser.parse_known_args()
     args.verbose = bool(args.verbose)
-    if args.run_all_seed == 1:
+    args.support_checkpointing = bool(args.support_checkpointing)
+    args.run_all_seeds = bool(args.run_all_seeds)
+    if args.run_all_seeds:
         seeds = list(range(args.start_seed, args.num_seeds))
     else:
         seeds = [args.num_seeds]
@@ -186,6 +194,7 @@ def main(methods: dict, benchmark_definitions: dict):
             dataset=benchmark.dataset_name,
             surrogate=benchmark.surrogate,
             surrogate_kwargs=benchmark.surrogate_kwargs,
+            support_checkpointing=args.support_checkpointing,
         )
 
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
