@@ -38,7 +38,6 @@ class Bore(SearcherWithRandomSeed):
         config_space: dict,
         metric: str,
         points_to_evaluate=None,
-        random_seed=None,
         mode: str = "max",
         gamma: float = 0.25,
         calibrate: bool = False,
