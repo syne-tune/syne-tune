@@ -19,7 +19,10 @@ from pathlib import Path
 from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
@@ -61,6 +64,7 @@ if __name__ == "__main__":
             max_run=10 * 60,
             framework_version="1.7.1",
             py_version="py3",
+            sagemaker_session=default_sagemaker_session(),
         ),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example

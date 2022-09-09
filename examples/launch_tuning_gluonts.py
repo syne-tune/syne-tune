@@ -22,7 +22,10 @@ import numpy as np
 from sagemaker.mxnet import MXNet
 
 from syne_tune.backend import LocalBackend, SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import loguniform, lograndint
@@ -64,13 +67,14 @@ if __name__ == "__main__":
                 framework_version="1.7",
                 py_version="py3",
                 base_job_name="hpo-gluonts",
+                sagemaker_session=default_sagemaker_session(),
             ),
             # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
             # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example
             metrics_names=[metric],
         )
     else:
-        # evaluate trials locally, replace with SagemakerBackend to evaluate trials on Sagemaker
+        # evaluate trials locally, replace with SageMakerBackend to evaluate trials on Sagemaker
         trial_backend = LocalBackend(entry_point=str(entry_point))
 
     # see examples to see other schedulers, mobster, Raytune, multiobjective, etc...

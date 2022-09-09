@@ -20,7 +20,10 @@ from pathlib import Path
 from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend import LocalBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune.backend import SageMakerBackend
@@ -63,6 +66,7 @@ if __name__ == "__main__":
                 framework_version="1.6",
                 py_version="py3",
                 base_job_name="hpo-height",
+                sagemaker_session=default_sagemaker_session(),
             ),
         )
     else:

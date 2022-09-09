@@ -268,7 +268,7 @@ If you run experiments with tabulated benchmarks using the `SimulatorBackend`, a
 
 ### <a name="remote-tuning"></a> I don’t want to wait, how can I launch the tuning on a remote machine?
 
-You can use the remote launcher to launch a tuning on a remote machine. The remote launcher supports both `LocalBackend` and `SagemakerBackend`. In the former case, multiple trials will be evaluated on the remote machine (one use-case being to use a beefy machine), in the latter case trials will be evaluated as separate SageMaker training jobs.
+You can use the remote launcher to launch a tuning on a remote machine. The remote launcher supports both `LocalBackend` and `SageMakerBackend`. In the former case, multiple trials will be evaluated on the remote machine (one use-case being to use a beefy machine), in the latter case trials will be evaluated as separate SageMaker training jobs.
 
 See for an example on how to run tuning with the remote launcher: [launch_height_sagemaker_remotely.py](https://github.com/awslabs/syne-tune/blob/main/examples/launch_height_sagemaker_remotely.py)
 

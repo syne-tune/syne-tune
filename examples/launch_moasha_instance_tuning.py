@@ -20,7 +20,10 @@ from sagemaker.huggingface import HuggingFace
 
 from syne_tune.backend.sagemaker_backend.instance_info import select_instance_type
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.remote.remote_launcher import RemoteLauncher
@@ -79,6 +82,7 @@ if __name__ == "__main__":
             max_run=3600,
             role=get_execution_role(),
             dependencies=[str(Path(__file__).parent.parent / "benchmarking")],
+            sagemaker_session=default_sagemaker_session(),
         ),
     )
 

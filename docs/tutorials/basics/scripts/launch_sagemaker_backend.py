@@ -28,7 +28,10 @@ from sagemaker.pytorch import PyTorch
 
 from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.util import repository_root_path
@@ -91,6 +94,7 @@ if __name__ == "__main__":
             framework_version="1.7.1",
             py_version="py3",
             disable_profiler=True,
+            sagemaker_session=default_sagemaker_session(),
         ),
         metrics_names=[metric],
     )

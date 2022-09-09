@@ -16,7 +16,10 @@ from argparse import ArgumentParser
 from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
@@ -80,6 +83,7 @@ if __name__ == "__main__":
             max_run=2 * args.max_wallclock_time,
             dependencies=[str(repository_root_path() / "benchmarking/")],
             disable_profiler=True,
+            sagemaker_session=default_sagemaker_session(),
         ),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example

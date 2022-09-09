@@ -16,7 +16,7 @@
 # import pytest
 # from sagemaker.pytorch import PyTorch
 #
-# from syne_tune.backend import SagemakerBackend
+# from syne_tune.backend import SageMakerBackend
 # from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
 # from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 # from syne_tune.remote.remote_launcher import RemoteLauncher
@@ -34,7 +34,7 @@
 #     role="dummy",
 # )
 #
-# backend = SagemakerBackend(sm_estimator=sm_estimator)
+# backend = SageMakerBackend(sm_estimator=sm_estimator)
 # remote_launcher = RemoteLauncher(
 #     tuner=Tuner(
 #         backend=backend,

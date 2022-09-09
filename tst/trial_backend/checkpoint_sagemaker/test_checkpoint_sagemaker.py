@@ -19,7 +19,10 @@ import pytest
 from sagemaker.pytorch import PyTorch
 
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    get_execution_role,
+    default_sagemaker_session,
+)
 from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion, Trial
 from syne_tune.config_space import randint
 from syne_tune import StoppingCriterion, Tuner
@@ -76,6 +79,7 @@ def test_copy_checkpoint_sagemaker_backend():
             max_run=10 * 60,
             framework_version="1.7.1",
             py_version="py3",
+            sagemaker_session=default_sagemaker_session(),
         )
     )
 
