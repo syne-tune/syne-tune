@@ -126,10 +126,22 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         default=0,
         help="verbose log output?",
     )
+    parser.add_argument(
+        "--num_brackets",
+        type=int,
+        required=False,
+        help="number of brackets",
+    )
+    parser.add_argument(
+        "--start_seed",
+        type=int,
+        default=0,
+        help="first seed to run (if run_all_seed)",
+    )
     args, _ = parser.parse_known_args()
     args.verbose = bool(args.verbose)
     if args.run_all_seed == 1:
-        seeds = list(range(args.num_seeds))
+        seeds = list(range(args.start_seed, args.num_seeds))
     else:
         seeds = [args.num_seeds]
     method_names = [args.method] if args.method is not None else list(methods.keys())
@@ -201,6 +213,7 @@ def main(methods: dict, benchmark_definitions: dict):
                     test_task=benchmark.dataset_name,
                     datasets=benchmark.datasets,
                 ),
+                num_brackets=args.num_brackets,
                 use_surrogates="lcbench" in benchmark_name,
                 **method_kwargs,
             )
@@ -210,6 +223,14 @@ def main(methods: dict, benchmark_definitions: dict):
             max_wallclock_time=benchmark.max_wallclock_time,
             max_num_evaluations=benchmark.max_num_evaluations,
         )
+        metadata = {
+            "seed": seed,
+            "algorithm": method,
+            "tag": experiment_tag,
+            "benchmark": benchmark_name,
+        }
+        if args.num_brackets is not None:
+            metadata["num_brackets"] = args.num_brackets
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,
@@ -220,12 +241,7 @@ def main(methods: dict, benchmark_definitions: dict):
             results_update_interval=600,
             print_update_interval=600,
             tuner_name=experiment_tag,
-            metadata={
-                "seed": seed,
-                "algorithm": method,
-                "tag": experiment_tag,
-                "benchmark": benchmark_name,
-            },
+            metadata=metadata,
         )
         tuner.run()
 
