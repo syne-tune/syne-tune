@@ -29,8 +29,7 @@ class MLP:
         self.epochs = epochs
         self.learning_rate = learning_rate
         self.model = MLPClassifier(
-            activation=activation,
-            hidden_layer_sizes=(n_hidden,)
+            activation=activation, hidden_layer_sizes=(n_hidden,)
         )
 
     def fit(self, X, y):
