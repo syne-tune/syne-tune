@@ -41,6 +41,7 @@ class Bore(SearcherWithRandomSeed):
         mode: str = "max",
         gamma: float = 0.25,
         calibrate: bool = False,
+        classifier: str = "xgboost",
         acq_optimizer: str = "rs",
         feval_acq: int = 500,
         random_prob: float = 0.0,
