@@ -67,7 +67,7 @@ _ARGUMENT_KEYS = {
     "rung_system_per_bracket",
     "rung_levels",
     "rung_system_kwargs",
-    "bracket_distribution"
+    "bracket_distribution",
 }
 
 _DEFAULT_OPTIONS = {
