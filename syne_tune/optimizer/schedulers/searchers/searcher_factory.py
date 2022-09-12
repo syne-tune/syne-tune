@@ -21,10 +21,6 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (
     RandomSearcher,
     GridSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.bracket_searcher import (
-    RandomWithDefaultBracketSamplingSearcher,
-    GridWithDefaultBracketSamplingSearcher,
-)
 
 __all__ = ["searcher_factory"]
 
@@ -53,15 +49,9 @@ def searcher_factory(searcher_name, **kwargs):
     scheduler = kwargs.get("scheduler")
     model = kwargs.get("model", "gp_multitask")
     if searcher_name == "random":
-        if scheduler.startswith("hyperband_"):
-            searcher_cls = RandomWithDefaultBracketSamplingSearcher
-        else:
-            searcher_cls = RandomSearcher
+        searcher_cls = RandomSearcher
     elif searcher_name == "grid":
-        if scheduler.startswith("hyperband_"):
-            searcher_cls = GridWithDefaultBracketSamplingSearcher
-        else:
-            searcher_cls = GridSearcher
+        searcher_cls = GridSearcher
     elif searcher_name == "kde":
         try:
             from syne_tune.optimizer.schedulers.searchers.kde_searcher import (

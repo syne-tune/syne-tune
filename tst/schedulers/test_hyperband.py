@@ -18,9 +18,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.searchers.bracket_searcher import (
-    RandomWithDefaultBracketSamplingSearcher,
-)
+from syne_tune.optimizer.schedulers.searchers import RandomSearcher
 
 
 def _make_result(epoch, metric):
@@ -31,7 +29,7 @@ def _new_trial(trial_id: int, config: dict):
     return Trial(trial_id=trial_id, config=config, creation_time=datetime.now())
 
 
-class MyRandomSearcher(RandomWithDefaultBracketSamplingSearcher):
+class MyRandomSearcher(RandomSearcher):
     def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
         super().__init__(config_space, metric, points_to_evaluate, **kwargs)
         self._pending_records = []

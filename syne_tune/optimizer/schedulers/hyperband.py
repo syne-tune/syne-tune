@@ -41,8 +41,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Dictionary,
     Float,
 )
-from syne_tune.optimizer.schedulers.searchers.bracket_searcher import (
-    SearcherWithDistributionOverBrackets,
+from syne_tune.optimizer.schedulers.searchers.bracket_distribution import (
+    DefaultHyperbandBracketDistribution,
 )
 
 __all__ = [
@@ -67,6 +67,7 @@ _ARGUMENT_KEYS = {
     "rung_system_per_bracket",
     "rung_levels",
     "rung_system_kwargs",
+    "bracket_distribution"
 }
 
 _DEFAULT_OPTIONS = {
@@ -394,6 +395,9 @@ class HyperbandScheduler(FIFOScheduler):
                 Used if `type in ['rush_promotion', 'rush_stopping']`. The first num_threshold_candidates in
                 points_to_evaluate enforce stricter requirements to the continuation of training tasks.
                 See :class:`RUSHScheduler`.
+    bracket_distribution : BracketDistribution
+        Helper object for distribution the bracket for a new trial is sampled
+        from. The default is :class:`DefaultHyperbandBracketDistribution`.
 
     See Also
     --------
@@ -417,6 +421,9 @@ class HyperbandScheduler(FIFOScheduler):
         assert not (
             scheduler_type == "cost_promotion" and self._cost_attr is None
         ), "cost_attr must be given if type='cost_promotion'"
+        self.bracket_distribution = kwargs.get("bracket_distribution")
+        if self.bracket_distribution is None:
+            self.bracket_distribution = DefaultHyperbandBracketDistribution()
         # Superclass constructor
         resume = kwargs["resume"]
         kwargs["resume"] = False  # Cannot be done in superclass
@@ -425,10 +432,6 @@ class HyperbandScheduler(FIFOScheduler):
             "Either max_t must be specified, or it has to be specified as "
             + "config_space['epochs'], config_space['max_t'], "
             + "config_space['max_epochs']"
-        )
-        assert isinstance(self.searcher, SearcherWithDistributionOverBrackets), (
-            "searcher has to be of type SearcherWithDistributionOverBrackets, "
-            f"but has type = {type(self.searcher)}"
         )
 
         # If rung_levels is given, grace_period and reduction_factor are ignored
@@ -502,6 +505,11 @@ class HyperbandScheduler(FIFOScheduler):
     @property
     def rung_levels(self) -> List[int]:
         return self.terminator.rung_levels
+
+    def _initialize_searcher(self):
+        if not self._searcher_initialized:
+            super()._initialize_searcher()
+            self.bracket_distribution.configure(self)
 
     def _extend_search_options(self, search_options: dict) -> dict:
         # Note: Needs self.scheduler_type to be set
@@ -1141,7 +1149,7 @@ class HyperbandBracketManager:
             del self._task_info[trial_id]
 
     def _sample_bracket(self) -> int:
-        distribution = self._scheduler.searcher.distribution_over_brackets()
+        distribution = self._scheduler.bracket_distribution()
         return self.random_state.choice(a=distribution.size, p=distribution)
 
     def on_task_schedule(self) -> (Optional[str], dict):
