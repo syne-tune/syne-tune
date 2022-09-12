@@ -160,9 +160,20 @@ class BlackboxTabular(Blackbox):
                 for seed_idx in range(objectives_evaluations.shape[1]):
                     for fidelity_idx in range(objectives_evaluations.shape[2]):
                         for objective_idx in range(objectives_evaluations.shape[3]):
-                            if np.isnan(objectives_evaluations[config_idx][seed_idx][fidelity_idx][objective_idx]):
-                                objectives_evaluations[config_idx][seed_idx][fidelity_idx][objective_idx] = \
-                                objectives_evaluations[config_idx][seed_idx][fidelity_idx - 1][objective_idx]
+                            if np.isnan(
+                                objectives_evaluations[config_idx][seed_idx][
+                                    fidelity_idx
+                                ][objective_idx]
+                            ):
+                                objectives_evaluations[config_idx][seed_idx][
+                                    fidelity_idx
+                                ][objective_idx] = objectives_evaluations[config_idx][
+                                    seed_idx
+                                ][
+                                    fidelity_idx - 1
+                                ][
+                                    objective_idx
+                                ]
             # Drop all hyperparameters with all nan objectives.
             nan_mask = np.isnan(objectives_evaluations).any((1, 2, 3))
             hyperparameters = hyperparameters[~nan_mask]
