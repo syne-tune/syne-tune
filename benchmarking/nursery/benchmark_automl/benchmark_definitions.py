@@ -73,6 +73,22 @@ def lcbench_benchmark(dataset_name, datasets):
     )
 
 
+def pd1_benchmark(dataset_name):
+    return BenchmarkDefinition(
+        max_wallclock_time=7200,
+        n_workers=4,
+        elapsed_time_attr="metric_elapsed_time",
+        metric="metric_valid_error_rate",
+        mode="min",
+        blackbox_name="pd1",
+        dataset_name=dataset_name,
+        surrogate="KNeighborsRegressor",
+        surrogate_kwargs={"n_neighbors": 1},
+        max_num_evaluations=4000,
+        max_resource_attr="epochs",
+    )
+
+
 benchmark_definitions = {
     "fcnet-protein": fcnet_benchmark("protein_structure"),
     "fcnet-naval": fcnet_benchmark("naval_propulsion"),
@@ -81,6 +97,7 @@ benchmark_definitions = {
     "nas201-cifar10": nas201_benchmark("cifar10"),
     "nas201-cifar100": nas201_benchmark("cifar100"),
     "nas201-ImageNet16-120": nas201_benchmark("ImageNet16-120"),
+    "mnist": pd1_benchmark("mnist_max_pooling_cnn_tanh_batch_size_256"),
 }
 
 # 5 most expensive lcbench datasets

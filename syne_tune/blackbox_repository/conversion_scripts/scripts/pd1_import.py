@@ -82,6 +82,7 @@ def convert_task(task_data):
     objective_names = [
         "metric_valid_error_rate",
         "metric_valid_ce_loss",
+        METRIC_ELAPSED_TIME,
         # "metric_train_error_rate",
         # "metric_train_ce_loss",
         # "metric_test_error_rate",
@@ -164,7 +165,9 @@ class PD1Recipe(BlackboxRecipe):
                     pd.read_json(fin, orient="records", lines=True, compression="gzip")
                 )
         df = pd.concat(data)
-        df["eval_time"].apply(lambda x: None if x is None else np.cumsum)
+        df["eval_time"] = df["eval_time"].apply(
+            lambda x: None if x is None else np.cumsum(x).tolist()
+        )
 
         tasks = df[
             ["dataset", "model", "hps.batch_size", "hps.activation_fn"]
