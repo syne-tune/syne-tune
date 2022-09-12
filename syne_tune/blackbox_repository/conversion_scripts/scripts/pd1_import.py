@@ -64,12 +64,8 @@ COLUMN_RENAMING = {
     "hps.lr_hparams.power": "lr_power",
     "hps.lr_hparams.decay_steps_factor": "lr_decay_steps_factor",
     "hps.opt_hparams.momentum": "one_minus_momentum",
-    "train/ce_loss": "metric_train_ce_loss",
     "valid/ce_loss": "metric_valid_ce_loss",
-    "test/ce_loss": "metric_test_ce_loss",
-    "train/error_rate": "metric_train_error_rate",
     "valid/error_rate": METRIC_VALID_ERROR,
-    "test/error_rate": "metric_test_error_rate",
     "epoch": "epoch",
     "eval_time": METRIC_ELAPSED_TIME,
     "global_step": RESOURCE_ATTR,
@@ -83,10 +79,6 @@ def convert_task(task_data):
         "metric_valid_error_rate",
         "metric_valid_ce_loss",
         METRIC_ELAPSED_TIME,
-        # "metric_train_error_rate",
-        # "metric_train_ce_loss",
-        # "metric_test_error_rate",
-        # "metric_test_ce_loss",
     ]
     available_objectives = [
         objective_name
@@ -102,8 +94,6 @@ def convert_task(task_data):
         "num_steps",
         task_data[available_objectives[0]].map(lambda x: 0 if x is None else len(x)),
     )
-    # global_step = task_data.iloc[task_data["num_steps"].idxmax()]["global_step"]
-    # epoch = task_data.iloc[task_data["num_steps"].idxmax()]["epoch"]
     learning_curve_length = task_data["num_steps"].max()
 
     def pad_with_nans(learning_curve, length):
