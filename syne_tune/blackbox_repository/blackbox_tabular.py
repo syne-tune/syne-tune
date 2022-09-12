@@ -45,7 +45,7 @@ class BlackboxTabular(Blackbox):
         :param objectives_evaluations: values of recorded objectives, must have shape
         (num_evals, num_seeds, num_fidelities, num_objectives)
         :param fidelity_values: values of the `num_fidelities` fidelities, default to [1, ..., `num_fidelities`]
-        :param objectives_names
+        :param objectives_names:
         """
         super(BlackboxTabular, self).__init__(
             configuration_space=configuration_space,
@@ -150,15 +150,33 @@ class BlackboxTabular(Blackbox):
         :return: X, y of shape (num_evals * num_seeds * num_fidelities, num_hps)
         and (num_evals * num_seeds * num_fidelities, num_objectives)
         """
+        objectives_evaluations = self.objectives_evaluations
+        hyperparameters = self.hyperparameters
+        if np.isnan(np.sum(objectives_evaluations)):
+            # Replace nan with previous value. Assumes that elapsed time is cumulative.
+            objectives_evaluations = objectives_evaluations.copy()
+            hyperparameters = hyperparameters.copy()
+            for config_idx in range(objectives_evaluations.shape[0]):
+                for seed_idx in range(objectives_evaluations.shape[1]):
+                    for fidelity_idx in range(objectives_evaluations.shape[2]):
+                        for objective_idx in range(objectives_evaluations.shape[3]):
+                            if np.isnan(objectives_evaluations[config_idx][seed_idx][fidelity_idx][objective_idx]):
+                                objectives_evaluations[config_idx][seed_idx][fidelity_idx][objective_idx] = \
+                                objectives_evaluations[config_idx][seed_idx][fidelity_idx - 1][objective_idx]
+            # Drop all hyperparameters with all nan objectives.
+            nan_mask = np.isnan(objectives_evaluations).any((1, 2, 3))
+            hyperparameters = hyperparameters[~nan_mask]
+            objectives_evaluations = objectives_evaluations[~nan_mask]
+
         Xs = []
         ys = []
         for fidelity_index, fidelity_value in enumerate(self.fidelity_values):
-            X = self.hyperparameters.copy()
+            X = hyperparameters.copy()
             X[list(self.fidelity_space.keys())[0]] = fidelity_value
             for seed in range(self.num_seeds):
                 Xs.append(X)
                 # (num_evals, num_objectives)
-                ys.append(self.objectives_evaluations[:, seed, fidelity_index, :])
+                ys.append(objectives_evaluations[:, seed, fidelity_index, :])
         X = pd.concat(Xs, ignore_index=True)
         y = pd.DataFrame(data=np.vstack(ys), columns=self.objectives_names)
         return X, y
