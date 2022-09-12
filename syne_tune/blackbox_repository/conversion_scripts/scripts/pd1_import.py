@@ -10,13 +10,17 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import json
 import logging
 import tarfile
+from pathlib import Path
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
 
-from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular, serialize
+from syne_tune import config_space
+from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
 )
@@ -28,6 +32,12 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     download_file,
+)
+from syne_tune.blackbox_repository.serialize import (
+    deserialize_configspace,
+    deserialize_metadata,
+    serialize_configspace,
+    serialize_metadata,
 )
 from syne_tune.config_space import loguniform, randint, uniform
 from syne_tune.util import catchtime
@@ -70,12 +80,12 @@ def convert_task(task_data):
     hyperparameters = task_data[list(CONFIGURATION_SPACE.keys())]
 
     objective_names = [
-        "metric_train_ce_loss",
-        "metric_valid_ce_loss",
-        "metric_test_ce_loss",
-        "metric_train_error_rate",
         "metric_valid_error_rate",
-        "metric_test_error_rate",
+        "metric_valid_ce_loss",
+        # "metric_train_error_rate",
+        # "metric_train_ce_loss",
+        # "metric_test_error_rate",
+        # "metric_test_ce_loss",
     ]
     available_objectives = [
         objective_name
@@ -129,22 +139,21 @@ class PD1Recipe(BlackboxRecipe):
             "Ghahramani Z. 2021.",
         )
 
-    def _generate_on_disk(self):
-        # Download data
+    def _download_data(self):
         file_name = repository_path / f"{BLACKBOX_NAME}.tar.gz"
         if not file_name.exists():
             logger.info(f"Did not find {file_name}. Starting download.")
             download_file(
                 "http://storage.googleapis.com/gresearch/pint/pd1.tar.gz", file_name
             )
-            with tarfile.open(file_name) as f:
-                f.extractall(path=repository_path)
         else:
             logger.info(f"Skip downloading since {file_name} is available locally.")
 
-        # Convert data
+    def _convert_data(self) -> Dict[str, BlackboxTabular]:
+        with tarfile.open(repository_path / f"{BLACKBOX_NAME}.tar.gz") as f:
+            f.extractall(path=repository_path)
         data = []
-        for matched in ["matched"]:  # , "unmatched"]: #TODO:
+        for matched in ["matched", "unmatched"]:
             path = (
                 repository_path
                 / BLACKBOX_NAME
@@ -162,7 +171,7 @@ class PD1Recipe(BlackboxRecipe):
         ].drop_duplicates()
         bb_dict = {}
         for _, task in tasks.iterrows():
-            task_name = "{}_{}{}_batch_size{}".format(
+            task_name = "{}_{}{}_batch_size_{}".format(
                 task["dataset"],
                 task["model"],
                 ""
@@ -177,15 +186,16 @@ class PD1Recipe(BlackboxRecipe):
             ]
             if task["hps.activation_fn"] is not None:
                 task_data = task_data[
-                    df["hps.activation_fn"] == task["hps.activation_fn"]
+                    task_data["hps.activation_fn"] == task["hps.activation_fn"]
                 ]
             task_data = task_data.reset_index()
             task_data = task_data[list(COLUMN_RENAMING)]
             task_data.columns = list(COLUMN_RENAMING.values())
             with catchtime(f"converting task {task_name}"):
                 bb_dict[task_name] = convert_task(task_data)
+        return bb_dict
 
-        # Save converted data
+    def _save_data(self, bb_dict: Dict[str, BlackboxTabular]) -> None:
         with catchtime("saving to disk"):
             serialize(
                 bb_dict=bb_dict,
@@ -196,3 +206,117 @@ class PD1Recipe(BlackboxRecipe):
                     resource_attr: RESOURCE_ATTR,
                 },
             )
+
+    def _generate_on_disk(self):
+        matched_file = (
+            repository_path / BLACKBOX_NAME / "pd1_matched_phase1_results.jsonl.gz"
+        )
+        unmatched_file = (
+            repository_path / BLACKBOX_NAME / "pd1_unmatched_phase1_results.jsonl.gz"
+        )
+        if matched_file.exists() and unmatched_file.exists():
+            return
+        self._download_data()
+        bb_dict = self._convert_data()
+        self._save_data(bb_dict)
+
+
+def serialize(
+    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+):
+    # check all blackboxes share the objectives
+    bb_first = next(iter(bb_dict.values()))
+    for bb in bb_dict.values():
+        assert bb.objectives_names == bb_first.objectives_names
+
+    path = Path(path)
+    path.mkdir(exist_ok=True)
+
+    serialize_configspace(
+        path=path,
+        configuration_space=bb_first.configuration_space,
+    )
+
+    for task, bb in bb_dict.items():
+        bb.hyperparameters.to_parquet(
+            path / f"{task}-hyperparameters.parquet",
+            index=False,
+            compression="gzip",
+            engine="fastparquet",
+        )
+
+        with open(path / f"{task}-fidelity_space.json", "w") as f:
+            json.dump(
+                {
+                    k: config_space.to_dict(v)
+                    for k, v in bb_dict[task].fidelity_space.items()
+                },
+                f,
+            )
+
+        with open(path / f"{task}-objectives_evaluations.npy", "wb") as f:
+            np.save(
+                f,
+                bb_dict[task].objectives_evaluations.astype(np.float32),
+                allow_pickle=False,
+            )
+
+        with open(path / f"{task}-fidelity_values.npy", "wb") as f:
+            np.save(f, bb_dict[task].fidelity_values, allow_pickle=False)
+
+    metadata = metadata.copy() if metadata else {}
+    metadata.update(
+        {
+            "objectives_names": bb_first.objectives_names,
+            "task_names": list(bb_dict.keys()),
+        }
+    )
+    serialize_metadata(
+        path=path,
+        metadata=metadata,
+    )
+
+
+def deserialize(path: str) -> Dict[str, BlackboxTabular]:
+    """
+    Deserialize blackboxes contained in a path that were saved with `serialize` above.
+    TODO: the API is currently dissonant with `serialize`, `deserialize` for BlackboxOffline as `serialize` is there a member.
+    A possible way to unify is to have serialize also be a free function for BlackboxOffline.
+    :param path: a path that contains blackboxes that were saved with `serialize`
+    :return: a dictionary from task name to blackbox
+    """
+    path = Path(path)
+    configuration_space, _ = deserialize_configspace(path)
+    metadata = deserialize_metadata(path)
+    objectives_names = metadata["objectives_names"]
+    task_names = metadata["task_names"]
+
+    bb_dict = {}
+    for task in task_names:
+        hyperparameters = pd.read_parquet(
+            Path(path) / f"{task}-hyperparameters.parquet", engine="fastparquet"
+        )
+        with open(path / f"{task}-fidelity_space.json", "r") as file:
+            fidelity_space = {
+                k: config_space.from_dict(v) for k, v in json.load(file).items()
+            }
+
+        with open(path / f"{task}-fidelity_values.npy", "rb") as f:
+            fidelity_values = np.load(f)
+
+        with open(path / f"{task}-objectives_evaluations.npy", "rb") as f:
+            objectives_evaluations = np.load(f)
+
+        bb_dict[task] = BlackboxTabular(
+            hyperparameters=hyperparameters,
+            configuration_space=configuration_space,
+            fidelity_space=fidelity_space,
+            objectives_evaluations=objectives_evaluations,
+            fidelity_values=fidelity_values,
+            objectives_names=objectives_names,
+        )
+    return bb_dict
+
+
+if __name__ == "__main__":
+    PD1Recipe().generate()
