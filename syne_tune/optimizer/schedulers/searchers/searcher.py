@@ -77,17 +77,17 @@ def _impute_default_config(default_config, config_space):
     return new_config
 
 
-def _to_tuple(config: Dict, keys: List) -> Tuple:
+def _to_tuple(config: dict, keys: List) -> Tuple:
     return tuple(config[k] for k in keys)
 
 
-def _sorted_keys(config_space: Dict) -> List[str]:
+def _sorted_keys(config_space: dict) -> List[str]:
     return sorted(k for k, v in config_space.items() if isinstance(v, Domain))
 
 
 def impute_points_to_evaluate(
-    points_to_evaluate: Optional[List[Dict]], config_space: Dict
-) -> List[Dict]:
+    points_to_evaluate: Optional[List[dict]], config_space: dict
+) -> List[dict]:
     """
     Transforms `points_to_evaluate` argument to `BaseSearcher`. Each config in
     the list can be partially specified, or even be an empty dict. For each
@@ -121,12 +121,12 @@ class BaseSearcher:
 
     Parameters
     ----------
-    config_space : Dict
+    config_space : dict
         The configuration space to sample from. It contains the full
         specification of the Hyperparameters with their priors
     metric : str
         Name of metric passed to update.
-    points_to_evaluate : List[Dict] or None
+    points_to_evaluate : List[dict] or None
         List of configurations to be evaluated initially (in that order).
         Each config in the list can be partially specified, or even be an
         empty dict. For each hyperparameter not specified, the default value
@@ -162,7 +162,7 @@ class BaseSearcher:
         if isinstance(scheduler, FIFOScheduler):
             self._metric = scheduler.metric
 
-    def _next_initial_config(self) -> Optional[Dict]:
+    def _next_initial_config(self) -> Optional[dict]:
         if self._points_to_evaluate:
             return self._points_to_evaluate.pop(0)
         else:
@@ -187,7 +187,7 @@ class BaseSearcher:
         """
         raise NotImplementedError
 
-    def on_trial_result(self, trial_id: str, config: Dict, result: Dict, update: bool):
+    def on_trial_result(self, trial_id: str, config: dict, result: dict, update: bool):
         """Inform searcher about result
 
         The scheduler passes every result. If `update` is True, the searcher
@@ -206,7 +206,7 @@ class BaseSearcher:
         if update:
             self._update(trial_id, config, result)
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         """Update surrogate model with result
 
         :param trial_id:
@@ -216,7 +216,7 @@ class BaseSearcher:
         raise NotImplementedError
 
     def register_pending(
-        self, trial_id: str, config: Optional[Dict] = None, milestone=None
+        self, trial_id: str, config: Optional[dict] = None, milestone=None
     ):
         """
         Signals to searcher that evaluation for trial has started, but not
@@ -451,7 +451,7 @@ class RandomSearcher(SearcherWithRandomSeed):
             logger.warning(msg)
         return new_config
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         if self._debug_log is not None:
             metric_val = result[self._metric]
             if self._resource_attr is not None:

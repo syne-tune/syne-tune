@@ -85,7 +85,11 @@ def searcher_factory(searcher_name, **kwargs):
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = MultiFidelityBore
     else:
-        gp_searchers = {"bayesopt", "bayesopt_constrained", "bayesopt_cost"}
+        gp_searchers = {
+            "bayesopt",
+            "bayesopt_constrained",
+            "bayesopt_cost",
+        }
         assert (
             searcher_name in gp_searchers
         ), f"searcher '{searcher_name}' is not supported"

@@ -96,6 +96,7 @@ class MultiFidelityBore(Bore):
             SynchronousHyperbandScheduler,
         )
 
+        super().configure_scheduler(scheduler)
         assert isinstance(scheduler, HyperbandScheduler) or isinstance(
             scheduler, SynchronousHyperbandScheduler
         ), (

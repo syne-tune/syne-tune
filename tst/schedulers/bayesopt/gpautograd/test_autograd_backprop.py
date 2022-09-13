@@ -21,7 +21,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     ScalarMeanFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
-    MarginalLikelihood,
+    GaussianProcessMarginalLikelihood,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_helpers import (
     encode_unwrap_parameter,
@@ -43,7 +43,9 @@ def _deep_copy_params(input_params):
     return output_params
 
 
-def negative_log_posterior(likelihood: MarginalLikelihood, X: anp.array, Y: anp.array):
+def negative_log_posterior(
+    likelihood: GaussianProcessMarginalLikelihood, X: anp.array, Y: anp.array
+):
     objective_nd = likelihood(X, Y)
     # Add neg log hyperpriors, whenever some are defined
     for param_int, encoding in likelihood.param_encoding_pairs():
@@ -66,7 +68,7 @@ def test_autograd_backprop(n, d, print_results):
     kernel = Matern52(dimension=d)
     mean = ScalarMeanFunction()
     initial_noise_variance = None
-    likelihood = MarginalLikelihood(
+    likelihood = GaussianProcessMarginalLikelihood(
         kernel=kernel, mean=mean, initial_noise_variance=initial_noise_variance
     )
     likelihood.initialize(force_reinit=True)

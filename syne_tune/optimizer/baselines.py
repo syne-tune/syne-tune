@@ -210,8 +210,15 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
         `kwargs`. The latter is more useful, see also
         :class:`HyperbandScheduler`.
 
+        The default surrogate model is "gp_independent", different to async
+        MOBSTER.
+
         """
         _assert_max_resource_args(kwargs, name="max_resource_level")
+        search_options = kwargs.get("search_options", dict())
+        if "model" not in search_options:
+            search_options["model"] = "gp_independent"
+        kwargs["search_options"] = search_options
         super(SyncMOBSTER, self).__init__(
             config_space=config_space,
             metric=metric,

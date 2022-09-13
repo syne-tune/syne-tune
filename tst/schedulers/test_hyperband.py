@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
-from syne_tune.optimizer.schedulers.searchers.searcher import RandomSearcher
+from syne_tune.optimizer.schedulers.searchers import RandomSearcher
 
 
 def _make_result(epoch, metric):
@@ -76,7 +76,6 @@ def test_register_pending():
         new_searcher = MyRandomSearcher(
             old_searcher.config_space, metric=old_searcher._metric
         )
-        new_searcher._resource_attr = scheduler._resource_attr
         scheduler.searcher = new_searcher
 
         # Start 4 trials (0, 1, 2, 3)

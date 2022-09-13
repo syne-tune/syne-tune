@@ -16,7 +16,6 @@ import time
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Optional, Dict, Set
-
 import dill as dill
 
 from syne_tune.backend.trial_backend import TrialBackend

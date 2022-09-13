@@ -16,6 +16,9 @@ import logging
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc import (
     GPRegressionMCMC,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+    HyperparameterRanges,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
     GaussProcModelFactory,
 )
@@ -40,6 +43,7 @@ class GaussProcMCMCModelFactory(GaussProcModelFactory):
         profiler: Optional[SimpleProfiler] = None,
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
+        hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
         """
         We support pending evaluations via fantasizing. Note that state does
@@ -62,6 +66,7 @@ class GaussProcMCMCModelFactory(GaussProcModelFactory):
             profiler=profiler,
             debug_log=debug_log,
             filter_observed_data=filter_observed_data,
+            hp_ranges_for_prediction=hp_ranges_for_prediction,
         )
 
     def get_params(self):

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Set, Dict, Optional
+from typing import Set, Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
@@ -43,6 +43,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import 
     KernelFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
+    MeanFunction,
     ScalarMeanFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.freeze_thaw import (
@@ -53,6 +54,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.mod
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.gpiss_model import (
     GaussianProcessLearningCurveModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.independent.gpind_model import (
+    IndependentGPPerResourceModel,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
     SkipNoMaxResourcePredicate,
@@ -128,7 +132,12 @@ def _create_base_gp_kernel(hp_ranges: HyperparameterRanges, **kwargs) -> KernelF
         # Transfer learning: Specific base kernel
         kernel = create_base_gp_kernel_for_warmstarting(hp_ranges, **kwargs)
     else:
-        kernel = Matern52(dimension=hp_ranges.ndarray_size, ARD=True)
+        has_covariance_scale = kwargs.get("has_covariance_scale", True)
+        kernel = Matern52(
+            dimension=hp_ranges.ndarray_size,
+            ARD=True,
+            has_covariance_scale=has_covariance_scale,
+        )
     return kernel
 
 
@@ -202,6 +211,45 @@ def _create_gp_standard_model(
     }
 
 
+def _create_gp_independent_model(
+    hp_ranges: HyperparameterRanges,
+    active_metric: Optional[str],
+    random_seed: int,
+    **kwargs,
+):
+    def mean_factory(resource: int) -> MeanFunction:
+        return ScalarMeanFunction()
+
+    result = _create_gp_common(hp_ranges, has_covariance_scale=False, **kwargs)
+    kernel = result["kernel"]
+    resource_attr_range = (1, kwargs["max_epochs"])
+    common_kwargs = dict(
+        kernel=kernel,
+        mean_factory=mean_factory,
+        resource_attr_range=resource_attr_range,
+        optimization_config=result["optimization_config"],
+        random_seed=random_seed,
+        fit_reset_params=not result["opt_warmstart"],
+        separate_noise_variances=kwargs["separate_noise_variances"],
+    )
+    gpmodel = IndependentGPPerResourceModel(**common_kwargs)
+    filter_observed_data = result["filter_observed_data"]
+    model_factory = GaussProcEmpiricalBayesModelFactory(
+        active_metric=active_metric,
+        gpmodel=gpmodel,
+        num_fantasy_samples=kwargs["num_fantasy_samples"],
+        normalize_targets=kwargs.get("normalize_targets", True),
+        profiler=result["profiler"],
+        debug_log=result["debug_log"],
+        filter_observed_data=filter_observed_data,
+        no_fantasizing=kwargs.get("no_fantasizing", False),
+    )
+    return {
+        "model_factory": model_factory,
+        "filter_observed_data": filter_observed_data,
+    }
+
+
 def _create_gp_additive_model(
     model: str,
     hp_ranges: HyperparameterRanges,
@@ -222,7 +270,6 @@ def _create_gp_additive_model(
             r_min=1,
             normalize_inputs=kwargs.get("expdecay_normalize_inputs", False),
         )
-    use_precomputations = kwargs.get("use_new_code", True)
     gpmodel = GaussianProcessLearningCurveModel(
         kernel=result["kernel"],
         res_model=res_model,
@@ -230,7 +277,6 @@ def _create_gp_additive_model(
         optimization_config=result["optimization_config"],
         random_seed=random_seed,
         fit_reset_params=not result["opt_warmstart"],
-        use_precomputations=use_precomputations,
     )
     filter_observed_data = result["filter_observed_data"]
     no_fantasizing = kwargs.get("no_fantasizing", False)
@@ -330,6 +376,15 @@ def _create_common_objects(model=None, **kwargs):
                 **_kwargs,
             )
         )
+    elif model == "gp_independent":
+        result.update(
+            _create_gp_independent_model(
+                hp_ranges=hp_ranges,
+                active_metric=INTERNAL_METRIC_NAME,
+                random_seed=random_seed,
+                **_kwargs,
+            )
+        )
     else:
         result.update(
             _create_gp_additive_model(
@@ -349,7 +404,7 @@ def _create_common_objects(model=None, **kwargs):
     return result
 
 
-def gp_fifo_searcher_factory(**kwargs) -> Dict:
+def gp_fifo_searcher_factory(**kwargs) -> dict:
     """
     Returns kwargs for `GPFIFOSearcher._create_internal`, based on kwargs
     equal to search_options passed to and extended by scheduler (see
@@ -377,7 +432,7 @@ def gp_fifo_searcher_factory(**kwargs) -> Dict:
     return dict(**result, acquisition_class=EIAcquisitionFunction)
 
 
-def gp_multifidelity_searcher_factory(**kwargs) -> Dict:
+def gp_multifidelity_searcher_factory(**kwargs) -> dict:
     """
     Returns kwargs for `GPMultiFidelitySearcher._create_internal`, based on
     kwargs equal to search_options passed to and extended by scheduler (see
@@ -408,14 +463,14 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict:
         resource_attr=kwargs["resource_attr"],
         acquisition_class=EIAcquisitionFunction,
     )
-    if kwargs["model"] == "gp_multitask":
+    if kwargs["model"] in {"gp_multitask", "gp_independent"}:
         kwargs_int["resource_for_acquisition"] = resource_for_acquisition_factory(
             kwargs, result["hp_ranges"]
         )
     return kwargs_int
 
 
-def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict:
+def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
     """
     Returns kwargs for `ConstrainedGPFIFOSearcher._create_internal`, based on kwargs
     equal to search_options passed to and extended by scheduler (see
@@ -466,7 +521,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict:
     )
 
 
-def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
+def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     """
     Returns kwargs for `CostAwareGPFIFOSearcher._create_internal`, based on
     kwargs equal to search_options passed to and extended by scheduler (see
@@ -521,7 +576,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict:
     )
 
 
-def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict:
+def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
     """
     Returns kwargs for `CostAwareGPFIFOSearcher._create_internal`, based on
     kwargs equal to search_options passed to and extended by scheduler (see
@@ -583,7 +638,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict:
     )
 
 
-def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict:
+def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> dict:
     """
     Returns kwargs for `CostAwareGPMultiFidelitySearcher._create_internal`,
     based on kwargs equal to search_options passed to and extended by
@@ -679,7 +734,7 @@ def _common_defaults(
         default_options["num_init_random"] = 6
         default_options["issm_gamma_one"] = False
         default_options["expdecay_normalize_inputs"] = False
-        default_options["use_new_code"] = True
+        default_options["separate_noise_variances"] = False
     if is_multi_output:
         default_options["initial_scoring"] = "acq_func"
         default_options["exponent_cost"] = 1.0
@@ -704,9 +759,8 @@ def _common_defaults(
     }
 
     if is_hyperband:
-        constraints["model"] = Categorical(
-            choices=("gp_multitask", "gp_issm", "gp_expdecay")
-        )
+        model_choices = ("gp_multitask", "gp_independent", "gp_issm", "gp_expdecay")
+        constraints["model"] = Categorical(choices=model_choices)
         constraints["opt_skip_num_max_resource"] = Boolean()
         constraints["gp_resource_kernel"] = Categorical(
             choices=SUPPORTED_RESOURCE_MODELS
@@ -716,7 +770,7 @@ def _common_defaults(
         )
         constraints["issm_gamma_one"] = Boolean()
         constraints["expdecay_normalize_inputs"] = Boolean()
-        constraints["use_new_code"] = Boolean()  # DEBUG
+        constraints["separate_noise_variances"] = Boolean()
     if is_multi_output:
         constraints["initial_scoring"] = Categorical(choices=tuple({"acq_func"}))
         constraints["exponent_cost"] = Float(0.0, 1.0)

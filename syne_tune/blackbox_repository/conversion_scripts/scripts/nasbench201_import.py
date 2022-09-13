@@ -39,6 +39,8 @@ CONFIG_KEYS = ("hp_x0", "hp_x1", "hp_x2", "hp_x3", "hp_x4", "hp_x5")
 
 METRIC_VALID_ERROR = "metric_valid_error"
 
+METRIC_ELAPSED_TIME = "metric_elapsed_time"
+
 # This is time required for the given epoch, not time elapsed
 # since start of training
 METRIC_TIME_THIS_RESOURCE = "metric_runtime"
@@ -196,7 +198,7 @@ def convert_dataset(data, dataset):
     # Sanity checks:
     assert objective_names[0] == METRIC_VALID_ERROR
     assert objective_names[2] == METRIC_TIME_THIS_RESOURCE
-    assert objective_names[3] == "metric_elapsed_time"
+    assert objective_names[3] == METRIC_ELAPSED_TIME
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=configuration_space,
@@ -266,7 +268,7 @@ class NASBench201Recipe(BlackboxRecipe):
                 bb_dict=bb_dict,
                 path=repository_path / BLACKBOX_NAME,
                 metadata={
-                    metric_elapsed_time: "metric_elapsed_time",
+                    metric_elapsed_time: METRIC_ELAPSED_TIME,
                     default_metric: METRIC_VALID_ERROR,
                     resource_attr: RESOURCE_ATTR,
                 },
