@@ -79,9 +79,6 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
                 noise_variance.keys()
             ), "mean, noise_variance must have the same keys"
         else:
-            assert isinstance(
-                noise_variance, np.ndarray
-            ), "noise_variance must be Dict[int, np.ndarray] or np.ndarray"
             _noise_variance = noise_variance
             noise_variance = {
                 resource: _noise_variance for resource in self.rung_levels

@@ -14,7 +14,9 @@ from typing import Dict, Optional, List
 import logging
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.kde_searcher import KernelDensityEstimator
+from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
+    KernelDensityEstimator,
+)
 
 __all__ = ["MultiFidelityKernelDensityEstimator"]
 

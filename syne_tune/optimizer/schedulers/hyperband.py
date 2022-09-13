@@ -67,7 +67,6 @@ _ARGUMENT_KEYS = {
     "rung_system_per_bracket",
     "rung_levels",
     "rung_system_kwargs",
-    "bracket_distribution",
 }
 
 _DEFAULT_OPTIONS = {
@@ -395,9 +394,6 @@ class HyperbandScheduler(FIFOScheduler):
                 Used if `type in ['rush_promotion', 'rush_stopping']`. The first num_threshold_candidates in
                 points_to_evaluate enforce stricter requirements to the continuation of training tasks.
                 See :class:`RUSHScheduler`.
-    bracket_distribution : BracketDistribution
-        Helper object for distribution the bracket for a new trial is sampled
-        from. The default is :class:`DefaultHyperbandBracketDistribution`.
 
     See Also
     --------
@@ -421,9 +417,8 @@ class HyperbandScheduler(FIFOScheduler):
         assert not (
             scheduler_type == "cost_promotion" and self._cost_attr is None
         ), "cost_attr must be given if type='cost_promotion'"
-        self.bracket_distribution = kwargs.get("bracket_distribution")
-        if self.bracket_distribution is None:
-            self.bracket_distribution = DefaultHyperbandBracketDistribution()
+        # Default: May be modified by searcher (via `configure_scheduler`)
+        self.bracket_distribution = DefaultHyperbandBracketDistribution()
         # Superclass constructor
         resume = kwargs["resume"]
         kwargs["resume"] = False  # Cannot be done in superclass
@@ -522,6 +517,8 @@ class HyperbandScheduler(FIFOScheduler):
         cost_attr = self._total_cost_attr()
         if cost_attr is not None:
             result["cost_attr"] = cost_attr
+        if "hypertune_distribution_num_samples" in result:
+            result["hypertune_distribution_num_brackets"] = self._num_brackets
         return result
 
     def _total_cost_attr(self) -> Optional[str]:
