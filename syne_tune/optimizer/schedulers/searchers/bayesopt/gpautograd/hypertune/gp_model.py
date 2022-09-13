@@ -43,9 +43,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     MeanFunction,
     ScalarMeanFunction,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
-    GaussProcPosteriorState,
-)
 from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 
