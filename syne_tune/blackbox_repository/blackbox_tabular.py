@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Tuple, Union
 import pandas as pd
 import numpy as np
 
@@ -145,6 +145,39 @@ class BlackboxTabular(Blackbox):
     def fidelity_values(self) -> np.array:
         return self._fidelity_values
 
+    def _impute_objectives_values(self) -> Tuple[pd.DataFrame, np.array]:
+        """Replaces nan values in objectives first previous non-nan value.
+
+        Time objective should be cumulative, otherwise each step will consume additional time.
+        """
+        # Replace nan with previous value. Assumes that elapsed time is cumulative.
+        objectives_evaluations = self.objectives_evaluations.copy()
+        hyperparameters = self.hyperparameters.copy()
+        num_configs, num_seeds, num_fidelities, num_objectives = objectives_evaluations.shape
+        for config_idx in range(num_configs):
+            for seed_idx in range(num_seeds):
+                for fidelity_idx in range(num_fidelities):
+                    for objective_idx in range(num_objectives):
+                        if np.isnan(
+                                objectives_evaluations[config_idx][seed_idx][
+                                    fidelity_idx
+                                ][objective_idx]
+                        ):
+                            objectives_evaluations[config_idx][seed_idx][
+                                fidelity_idx
+                            ][objective_idx] = objectives_evaluations[config_idx][
+                                seed_idx
+                            ][
+                                fidelity_idx - 1
+                                ][
+                                objective_idx
+                            ]
+        # Drop all hyperparameters with all nan objectives.
+        nan_mask = np.isnan(objectives_evaluations).any((1, 2, 3))
+        hyperparameters = hyperparameters[~nan_mask]
+        objectives_evaluations = objectives_evaluations[~nan_mask]
+        return hyperparameters, objectives_evaluations
+
     def hyperparameter_objectives_values(self):
         """
         :return: X, y of shape (num_evals * num_seeds * num_fidelities, num_hps)
@@ -153,31 +186,7 @@ class BlackboxTabular(Blackbox):
         objectives_evaluations = self.objectives_evaluations
         hyperparameters = self.hyperparameters
         if np.isnan(np.sum(objectives_evaluations)):
-            # Replace nan with previous value. Assumes that elapsed time is cumulative.
-            objectives_evaluations = objectives_evaluations.copy()
-            hyperparameters = hyperparameters.copy()
-            for config_idx in range(objectives_evaluations.shape[0]):
-                for seed_idx in range(objectives_evaluations.shape[1]):
-                    for fidelity_idx in range(objectives_evaluations.shape[2]):
-                        for objective_idx in range(objectives_evaluations.shape[3]):
-                            if np.isnan(
-                                objectives_evaluations[config_idx][seed_idx][
-                                    fidelity_idx
-                                ][objective_idx]
-                            ):
-                                objectives_evaluations[config_idx][seed_idx][
-                                    fidelity_idx
-                                ][objective_idx] = objectives_evaluations[config_idx][
-                                    seed_idx
-                                ][
-                                    fidelity_idx - 1
-                                ][
-                                    objective_idx
-                                ]
-            # Drop all hyperparameters with all nan objectives.
-            nan_mask = np.isnan(objectives_evaluations).any((1, 2, 3))
-            hyperparameters = hyperparameters[~nan_mask]
-            objectives_evaluations = objectives_evaluations[~nan_mask]
+            hyperparameters, objectives_evaluations = self._impute_objectives_values()
 
         Xs = []
         ys = []

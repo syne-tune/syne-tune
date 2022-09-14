@@ -164,12 +164,11 @@ class PD1Recipe(BlackboxRecipe):
         ].drop_duplicates()
         bb_dict = {}
         for _, task in tasks.iterrows():
+            activation_name = "" if task["hps.activation_fn"] is None else f"_{task['hps.activation_fn']}"
             task_name = "{}_{}{}_batch_size_{}".format(
                 task["dataset"],
                 task["model"],
-                ""
-                if task["hps.activation_fn"] is None
-                else f"_{task['hps.activation_fn']}",
+                activation_name,
                 task["hps.batch_size"],
             )
             task_data = df[
