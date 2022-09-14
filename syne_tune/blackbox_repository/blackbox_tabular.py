@@ -146,7 +146,7 @@ class BlackboxTabular(Blackbox):
         return self._fidelity_values
 
     def _impute_objectives_values(self) -> Tuple[pd.DataFrame, np.array]:
-        """Replaces nan values in objectives first previous non-nan value.
+        """Replaces nan values in objectives with first previous non-nan value.
 
         Time objective should be cumulative, otherwise each step will consume additional time.
         """
