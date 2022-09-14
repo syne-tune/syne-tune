@@ -30,12 +30,17 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import impor
 )
 
 # add a blackbox recipe here to expose it in Syne Tune
+from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import (
+    PD1Recipe,
+)
+
 recipes = [
     DeepARRecipe(),
     XGBoostRecipe(),
     NASBench201Recipe(),
     FCNETRecipe(),
     LCBenchRecipe(),
+    PD1Recipe(),
 ]
 
 for scenario in yahpo_scenarios:

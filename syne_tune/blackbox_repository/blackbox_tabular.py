@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Tuple, Union
 import pandas as pd
 import numpy as np
 
@@ -45,7 +45,7 @@ class BlackboxTabular(Blackbox):
         :param objectives_evaluations: values of recorded objectives, must have shape
         (num_evals, num_seeds, num_fidelities, num_objectives)
         :param fidelity_values: values of the `num_fidelities` fidelities, default to [1, ..., `num_fidelities`]
-        :param objectives_names
+        :param objectives_names:
         """
         super(BlackboxTabular, self).__init__(
             configuration_space=configuration_space,
@@ -145,20 +145,61 @@ class BlackboxTabular(Blackbox):
     def fidelity_values(self) -> np.array:
         return self._fidelity_values
 
+    def _impute_objectives_values(self) -> Tuple[pd.DataFrame, np.array]:
+        """Replaces nan values in objectives with first previous non-nan value.
+
+        Time objective should be cumulative, otherwise each step will consume additional time.
+        """
+        # Replace nan with previous value. Assumes that elapsed time is cumulative.
+        objectives_evaluations = self.objectives_evaluations.copy()
+        hyperparameters = self.hyperparameters.copy()
+        (
+            num_configs,
+            num_seeds,
+            num_fidelities,
+            num_objectives,
+        ) = objectives_evaluations.shape
+        for config_idx in range(num_configs):
+            for seed_idx in range(num_seeds):
+                for fidelity_idx in range(num_fidelities):
+                    for objective_idx in range(num_objectives):
+                        if np.isnan(
+                            objectives_evaluations[config_idx][seed_idx][fidelity_idx][
+                                objective_idx
+                            ]
+                        ):
+                            objectives_evaluations[config_idx][seed_idx][fidelity_idx][
+                                objective_idx
+                            ] = objectives_evaluations[config_idx][seed_idx][
+                                fidelity_idx - 1
+                            ][
+                                objective_idx
+                            ]
+        # Drop all hyperparameters with all nan objectives.
+        nan_mask = np.isnan(objectives_evaluations).any((1, 2, 3))
+        hyperparameters = hyperparameters[~nan_mask]
+        objectives_evaluations = objectives_evaluations[~nan_mask]
+        return hyperparameters, objectives_evaluations
+
     def hyperparameter_objectives_values(self):
         """
         :return: X, y of shape (num_evals * num_seeds * num_fidelities, num_hps)
         and (num_evals * num_seeds * num_fidelities, num_objectives)
         """
+        objectives_evaluations = self.objectives_evaluations
+        hyperparameters = self.hyperparameters
+        if np.isnan(np.sum(objectives_evaluations)):
+            hyperparameters, objectives_evaluations = self._impute_objectives_values()
+
         Xs = []
         ys = []
         for fidelity_index, fidelity_value in enumerate(self.fidelity_values):
-            X = self.hyperparameters.copy()
+            X = hyperparameters.copy()
             X[list(self.fidelity_space.keys())[0]] = fidelity_value
             for seed in range(self.num_seeds):
                 Xs.append(X)
                 # (num_evals, num_objectives)
-                ys.append(self.objectives_evaluations[:, seed, fidelity_index, :])
+                ys.append(objectives_evaluations[:, seed, fidelity_index, :])
         X = pd.concat(Xs, ignore_index=True)
         y = pd.DataFrame(data=np.vstack(ys), columns=self.objectives_names)
         return X, y

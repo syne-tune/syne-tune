@@ -29,6 +29,9 @@ from syne_tune.blackbox_repository.blackbox_offline import (
 from syne_tune.blackbox_repository.blackbox_tabular import (
     deserialize as deserialize_tabular,
 )
+from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import (
+    deserialize as deserialize_pd1,
+)
 
 from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
     instantiate_yahpo,
@@ -119,6 +122,8 @@ def load_blackbox(
 
     if name.startswith("yahpo"):
         return instantiate_yahpo(name)
+    if name.startswith("pd1"):
+        return deserialize_pd1(tgt_folder)
     if (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
     else:

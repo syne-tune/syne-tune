@@ -55,3 +55,14 @@ def upload_blackbox(name: str, s3_root: Optional[str] = None):
         logging.warning(
             "Unable to locate credentials. Blackbox won't be uploaded to S3."
         )
+
+
+def download_file(source: str, destination: str):
+    import shutil
+    import requests
+    from syne_tune.util import catchtime
+
+    with catchtime("Downloading file."):
+        with requests.get(source, stream=True) as r:
+            with open(destination, "wb") as f:
+                shutil.copyfileobj(r.raw, f)

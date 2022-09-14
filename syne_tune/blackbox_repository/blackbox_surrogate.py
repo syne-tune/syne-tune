@@ -199,7 +199,7 @@ def add_surrogate(blackbox: Blackbox, surrogate=None, configuration_space=None):
     """
     Fits a blackbox surrogates that can be evaluated anywhere, which can be useful
     for supporting interpolation/extrapolation.
-    :param blackbox: the blackbox must implement `hyperparame`ter_objectives_values`
+    :param blackbox: the blackbox must implement `hyperparameter_objectives_values`
         so that input/output are passed to estimate the model, see `BlackboxOffline`
         or `BlackboxTabular
     :param surrogate: the model that is fitted to predict objectives given any
