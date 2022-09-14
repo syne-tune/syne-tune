@@ -153,23 +153,26 @@ class BlackboxTabular(Blackbox):
         # Replace nan with previous value. Assumes that elapsed time is cumulative.
         objectives_evaluations = self.objectives_evaluations.copy()
         hyperparameters = self.hyperparameters.copy()
-        num_configs, num_seeds, num_fidelities, num_objectives = objectives_evaluations.shape
+        (
+            num_configs,
+            num_seeds,
+            num_fidelities,
+            num_objectives,
+        ) = objectives_evaluations.shape
         for config_idx in range(num_configs):
             for seed_idx in range(num_seeds):
                 for fidelity_idx in range(num_fidelities):
                     for objective_idx in range(num_objectives):
                         if np.isnan(
-                                objectives_evaluations[config_idx][seed_idx][
-                                    fidelity_idx
-                                ][objective_idx]
+                            objectives_evaluations[config_idx][seed_idx][fidelity_idx][
+                                objective_idx
+                            ]
                         ):
-                            objectives_evaluations[config_idx][seed_idx][
-                                fidelity_idx
-                            ][objective_idx] = objectives_evaluations[config_idx][
-                                seed_idx
-                            ][
+                            objectives_evaluations[config_idx][seed_idx][fidelity_idx][
+                                objective_idx
+                            ] = objectives_evaluations[config_idx][seed_idx][
                                 fidelity_idx - 1
-                                ][
+                            ][
                                 objective_idx
                             ]
         # Drop all hyperparameters with all nan objectives.
