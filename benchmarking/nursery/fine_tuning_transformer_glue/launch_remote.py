@@ -36,7 +36,6 @@ if __name__ == "__main__":
     # Useful if not all experiments could be started:
     skip_initial_experiments = 0
 
-    # [1]
     # Compare selecting the model to fixing it to a default choice:
     model_selection = [False, True]
     # Compare 4 different HPO algorithms (2 multi-fidelity):
@@ -51,7 +50,6 @@ if __name__ == "__main__":
     else:
         n_workers = 1
 
-    # [2]
     # Loop over all combinations and repetitions
     suffix = random_string(4)
     combinations = list(itertools.product(model_selection, optimizers, run_ids))
@@ -71,7 +69,6 @@ if __name__ == "__main__":
         # We use a different seed for each `run_id`
         seed = (random_seed_offset + run_id) % (2**32)
 
-        # [3]
         # Each experiment run is executed as SageMaker training job
         hyperparameters = {
             "run_id": run_id,

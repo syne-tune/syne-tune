@@ -109,7 +109,6 @@ if __name__ == "__main__":
     mode = TASK2METRICSMODE[dataset]["mode"]
     resource_attribute = "epoch"
 
-    # [1]
     # The configuration space contains all hyperparameters we would like to optimize,
     # and their search ranges.
     hyperparameter_space = {
@@ -137,7 +136,6 @@ if __name__ == "__main__":
 
     config_space = {**hyperparameter_space, **fixed_parameters}
 
-    # [2]
     # This is the default configuration provided by Hugging Face. It will always
     # be evaluated first
     default_configuration = {
@@ -146,7 +144,6 @@ if __name__ == "__main__":
         "warmup_ratio": 0.0,
     }
 
-    # [3]
     # Combine HPO with model selection:
     # Just another categorical hyperparameter
     if args.choose_model:
@@ -157,7 +154,6 @@ if __name__ == "__main__":
     # use the local backend, which runs on a single instance
     backend = LocalBackend(entry_point=entry_point)
 
-    # [4]
     # HPO algorithm
     # We can choose from these optimizers:
     schedulers = {
@@ -179,7 +175,6 @@ if __name__ == "__main__":
         scheduler_kwargs["max_resource_attr"] = "num_train_epochs"
     scheduler = schedulers[optimizer](config_space, **scheduler_kwargs)
 
-    # [5]
     # All parts come together in the tuner, which runs the experiment
     stop_criterion = StoppingCriterion(max_wallclock_time=args.max_runtime)
     tuner = Tuner(
