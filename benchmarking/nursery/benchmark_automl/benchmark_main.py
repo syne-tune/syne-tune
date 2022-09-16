@@ -108,6 +108,7 @@ def main(methods: dict, benchmark_definitions: dict):
             dataset=benchmark.dataset_name,
             surrogate=benchmark.surrogate,
             surrogate_kwargs=benchmark.surrogate_kwargs,
+            add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
         )
 
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))

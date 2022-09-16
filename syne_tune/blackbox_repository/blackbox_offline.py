@@ -15,7 +15,10 @@ from typing import Dict, List, Optional, Union
 
 import pandas as pd
 
-from syne_tune.blackbox_repository.blackbox import Blackbox
+from syne_tune.blackbox_repository.blackbox import (
+    Blackbox,
+    ObjectiveFunctionResult,
+)
 from syne_tune.blackbox_repository.serialize import (
     serialize_configspace,
     deserialize_configspace,
@@ -45,15 +48,15 @@ class BlackboxOffline(Blackbox):
         :param seed_col: optional, can be used when multiple seeds are recorded
         """
         if objectives_names is not None:
-            self.metric_cols = objectives_names
             for col in objectives_names:
                 assert (
                     col in df_evaluations.columns
                 ), f"column {col} from metric columns not found in dataframe"
         else:
-            self.metric_cols = [
+            objectives_names = [
                 col for col in df_evaluations.columns if col.startswith("metric_")
             ]
+        self.objectives_names = objectives_names
 
         super(BlackboxOffline, self).__init__(
             configuration_space=configuration_space,
@@ -80,12 +83,13 @@ class BlackboxOffline(Blackbox):
 
         self.df = df_evaluations.set_index(self.index_cols)
 
-    def hyperparameter_objectives_values(self):
+    def hyperparameter_objectives_values(self, predict_curves: bool = False):
+        assert not predict_curves, "predict_curves=True not supported"
         columns = self.index_cols
         if self.seed_col is not None:
             columns.remove(self.seed_col)
         X = self.df.reset_index().loc[:, columns]
-        y = self.df.loc[:, self.metric_cols]
+        y = self.df.loc[:, self.objectives_names]
         return X, y
 
     def _objective_function(
@@ -93,7 +97,7 @@ class BlackboxOffline(Blackbox):
         configuration: dict,
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> dict:
+    ) -> ObjectiveFunctionResult:
         """
         Return the dictionary of objectives for a configuration/fidelity/seed.
         :param configuration:
@@ -113,7 +117,7 @@ class BlackboxOffline(Blackbox):
         else:
             keys = self.index_cols
         output = self.df.xs(tuple(key_dict[col] for col in keys), level=keys).loc[
-            :, self.metric_cols
+            :, self.objectives_names
         ]
         if len(output) == 0:
             raise ValueError(
@@ -204,7 +208,7 @@ def deserialize(path: str) -> Union[Dict[str, BlackboxOffline], BlackboxOffline]
     ), f"configspace.json could not be found in {path}"
 
     metadata = deserialize_metadata(path)
-    metric_cols = metadata["objectives_names"]
+    objectives_names = metadata["objectives_names"]
     seed_col = metadata["seed_col"]
     cat_cols = metadata.get("categorical_cols")  # optional
     task_names = metadata.get("task_names")
@@ -226,7 +230,7 @@ def deserialize(path: str) -> Union[Dict[str, BlackboxOffline], BlackboxOffline]
             df_evaluations=df,
             configuration_space=configuration_space,
             fidelity_space=fidelity_space,
-            objectives_names=metric_cols,
+            objectives_names=objectives_names,
             seed_col=seed_col,
         )
         for task, df in df_tasks.items()

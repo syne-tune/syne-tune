@@ -129,12 +129,16 @@ def test_blackbox_tabular_surrogate():
     blackbox = add_surrogate(blackbox, surrogate=surrogate)
 
     for i, (u, v) in enumerate(zip(x1, x2)):
+        configuration = {"hp_x1": u, "hp_x2": v}
         for fidelity in range(num_fidelities):
             res = blackbox.objective_function(
-                configuration={"hp_x1": u, "hp_x2": v},
+                configuration=configuration,
                 fidelity={"hp_epoch": fidelity + 1},
             )
             print(list(res.values()), objectives_evaluations[i, 0, fidelity, :])
             assert np.allclose(
                 list(res.values()), objectives_evaluations[i, 0, fidelity, :]
             )
+        res = blackbox.objective_function(configuration)
+        assert res.shape == (num_fidelities, num_objectives)
+        assert np.allclose(np.ravel(res), np.ravel(objectives_evaluations[i, 0, :, :]))
