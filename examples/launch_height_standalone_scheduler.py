@@ -15,7 +15,7 @@ Example showing how to implement a new Scheduler.
 """
 import logging
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, List
 
 import numpy as np
 
@@ -31,7 +31,7 @@ from syne_tune.config_space import randint
 
 
 class SimpleScheduler(TrialScheduler):
-    def __init__(self, config_space: Dict, metric: str, mode: Optional[str] = None):
+    def __init__(self, config_space: dict, metric: str, mode: Optional[str] = None):
         super(SimpleScheduler, self).__init__(config_space=config_space)
         self.metric = metric
         self.mode = mode if mode is not None else "min"
@@ -46,7 +46,7 @@ class SimpleScheduler(TrialScheduler):
         }
         return TrialSuggestion.start_suggestion(config)
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         # Given a new result, we decide whether the trial should stop or continue.
         # In this case, we implement a naive strategy that stops if the result is worse than 80% of previous results.
         # This is a naive strategy as we do not account for the fact that trial improves with more steps.

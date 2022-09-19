@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
-from typing import Type, Optional, Dict, List
+from typing import Type, Optional, List
 import logging
 import copy
 import time
@@ -101,7 +101,7 @@ def create_initial_candidates_scorer(
     active_output: str = INTERNAL_METRIC_NAME,
 ) -> ScoringFunction:
     if initial_scoring == "thompson_indep":
-        if isinstance(model, Dict):
+        if isinstance(model, dict):
             assert active_output in model
             model = model[active_output]
         return IndependentThompsonSampling(model, random_state=random_state)
@@ -188,7 +188,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             deb_msg += "- initial_scoring = {}\n".format(self.initial_scoring)
             logger.info(deb_msg)
 
-    def _copy_kwargs_to_kwargs_int(self, kwargs_int: Dict, kwargs: Dict):
+    def _copy_kwargs_to_kwargs_int(self, kwargs_int: dict, kwargs: dict):
         # Extra arguments not parsed in factory
         for k in ("init_state", "local_minimizer_class", "cost_attr", "resource_attr"):
             kwargs_int[k] = kwargs.get(k)
@@ -206,10 +206,10 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         """
         return self._hp_ranges_in_state()
 
-    def _metric_val_update(self, crit_val: float, result: Dict) -> MetricValues:
+    def _metric_val_update(self, crit_val: float, result: dict) -> MetricValues:
         return crit_val
 
-    def on_trial_result(self, trial_id: str, config: Dict, result: Dict, update: bool):
+    def on_trial_result(self, trial_id: str, config: dict, result: dict, update: bool):
         # If both `cost_attr` and `resource_attr` are given, cost data (if
         # given) is written out from every `result`, independent of `update`
         cattr = self._cost_attr
@@ -229,13 +229,13 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         if update:
             self._update(trial_id, config, result)
 
-    def _trial_id_string(self, trial_id: str, result: Dict):
+    def _trial_id_string(self, trial_id: str, result: dict):
         """
         For multi-fidelity, we also want to output the resource level
         """
         return trial_id
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         metric_val = result[self._metric]
         if self.map_reward is not None:
             crit_val = self.map_reward(metric_val)
@@ -468,11 +468,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     Parameters
     ----------
-    config_space : Dict
+    config_space : dict
         Configuration space. Constant parameters are filtered out
     metric : str
         Name of metric reported by evaluation function.
-    points_to_evaluate: List[Dict] or None
+    points_to_evaluate: List[dict] or None
         List of configurations to be evaluated initially (in that order).
         Each config in the list can be partially specified, or even be an
         empty dict. For each hyperparameter not specified, the default value
@@ -567,7 +567,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         restricted to data from the active task.
     transfer_learning_active_task : str (optional)
         See `transfer_learning_task_attr`.
-    transfer_learning_active_config_space : Dict (optional)
+    transfer_learning_active_config_space : dict (optional)
         See `transfer_learning_task_attr`. If not given, `config_space` is the
         search space for the active task as well. This active config space need
         not contain the `transfer_learning_task_attr` parameter. In fact, this
@@ -634,7 +634,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         model_factory.configure_scheduler(scheduler)
 
     def register_pending(
-        self, trial_id: str, config: Optional[Dict] = None, milestone=None
+        self, trial_id: str, config: Optional[dict] = None, milestone=None
     ):
         """
         Registers trial as pending. This means the corresponding evaluation
@@ -821,7 +821,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         # future get_config calls)
         self.state_transformer.mark_trial_failed(trial_id)
 
-    def _new_searcher_kwargs_for_clone(self) -> Dict:
+    def _new_searcher_kwargs_for_clone(self) -> dict:
         """
         Helper method for `clone_from_state`. Args need to be extended
         by `model_factory`, `init_state`, `skip_optimization`, and others

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, Dict, List
+from typing import Optional, List
 import logging
 import numpy as np
 
@@ -136,7 +136,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     """
 
     def __init__(
-        self, config_space: Dict, bracket_rungs: RungSystemsPerBracket, **kwargs
+        self, config_space: dict, bracket_rungs: RungSystemsPerBracket, **kwargs
     ):
         super().__init__(config_space)
         self._create_internal(bracket_rungs, **kwargs)
@@ -180,7 +180,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                 "config_space": self.config_space.copy(),
                 "metric": self.metric,
                 "points_to_evaluate": kwargs.get("points_to_evaluate"),
-                "scheduler_mode": kwargs["mode"],
+                "mode": kwargs["mode"],
                 "random_seed_generator": self.random_seed_generator,
                 "resource_attr": self._resource_attr,
                 "scheduler": "hyperband_synchronous",
@@ -282,7 +282,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         )
         self.bracket_manager.on_result((bracket_id, result_failed))
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         trial_id = trial.trial_id
         if trial_id in self._trial_to_pending_slot:
             bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]

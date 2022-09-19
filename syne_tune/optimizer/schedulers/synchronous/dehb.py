@@ -265,7 +265,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
                     "config_space": self.config_space.copy(),
                     "metric": self.metric,
                     "points_to_evaluate": kwargs.get("points_to_evaluate"),
-                    "scheduler_mode": kwargs["mode"],
+                    "mode": kwargs["mode"],
                     "random_seed_generator": self.random_seed_generator,
                     "resource_attr": self._resource_attr,
                     "scheduler": "hyperband_synchronous",

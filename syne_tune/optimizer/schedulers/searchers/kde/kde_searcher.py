@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, List
+from typing import Optional, List
 import logging
 import numpy as np
 import statsmodels.api as sm
@@ -29,21 +29,24 @@ logger = logging.getLogger(__name__)
 
 class KernelDensityEstimator(SearcherWithRandomSeed):
     """
-    Fits two kernel density estimators (KDE) to model the density of the top N configurations as well as the density
-    of the configurations that are not among the top N, respectively. New configurations are sampled by optimizing
-    the ratio of these two densities. KDE as model for Bayesian optimization has been originally proposed
-    by Bergstra et al. Compared to their original implementation TPE, we use multi-variate instead of univariate KDE
-    as proposed by Falkner et al.
-    Code is based on the implementation by Falkner et al: https://github.com/automl/HpBandSter/tree/master/hpbandster
+    Fits two kernel density estimators (KDE) to model the density of the top N
+    configurations as well as the density of the configurations that are not
+    among the top N, respectively. New configurations are sampled by optimizing
+    the ratio of these two densities. KDE as model for Bayesian optimization has
+    been originally proposed by Bergstra et al. Compared to their original
+    implementation TPE, we use multi-variate instead of univariate KDE, as
+    proposed by Falkner et al.
+    Code is based on the implementation by Falkner et al:
+    https://github.com/automl/HpBandSter/tree/master/hpbandster
 
     Algorithms for Hyper-Parameter Optimization
     J. Bergstra and R. Bardenet and Y. Bengio and B. K{\'e}gl
-    Proceedings of the 24th International Conference on Advances in Neural Information Processing Systems
+    Proceedings of the 24th International Conference on Advances in Neural
+    Information Processing Systems
 
     BOHB: Robust and Efficient Hyperparameter Optimization at Scale
     S. Falkner and A. Klein and F. Hutter
     Proceedings of the 35th International Conference on Machine Learning
-
 
     Parameters
     ----------
@@ -53,28 +56,31 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         Name of metric to optimize, key in result's obtained via
         `on_trial_result`
     mode : str
-        Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
+        Mode to use for the metric given, can be 'min' or 'max'. Is obtained
+        scheduler in `configure_scheduler`
     random_seed_generator : RandomSeedGenerator (optional)
         If given, the random_seed for `random_state` is obtained from there,
         otherwise `random_seed` is used
     random_seed : int (optional)
         This is used if `random_seed_generator` is not given.
     num_min_data_points: int
-        Minimum number of data points that we use to fit the KDEs. If set to None than we set this to the number of
-        hyperparameters.
+        Minimum number of data points that we use to fit the KDEs. If set to None
+        than we set this to the number of hyperparameters.
     top_n_percent: int
-        Determines how many datapoints we use to fit the first KDE model for modeling the well
-        performing configurations.
+        Determines how many datapoints we use to fit the first KDE model for
+        modeling the well performing configurations.
     min_bandwidth: float
         The minimum bandwidth for the KDE models
     num_candidates: int
         Number of candidates that are sampled to optimize the acquisition function
     bandwidth_factor: int
-        We sample continuous hyperparameter from a truncated Normal. This factor is multiplied to the bandwidth to
-        define the standard deviation of this trunacted Normal.
+        We sample continuous hyperparameter from a truncated Normal. This factor
+        is multiplied to the bandwidth to define the standard deviation of this
+        trunacted Normal.
     random_fraction: float
-        Defines the fraction of configurations that are drawn uniformly at random instead of sampling from the model
-    points_to_evaluate: List[Dict] or None
+        Defines the fraction of configurations that are drawn uniformly at random
+        instead of sampling from the model
+    points_to_evaluate: List[dict] or None
         List of configurations to be evaluated initially (in that order).
         Each config in the list can be partially specified, or even be an
         empty dict. For each hyperparameter not specified, the default value
@@ -86,9 +92,9 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
-        points_to_evaluate: Optional[List[Dict]] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
         mode: str = "min",
         num_min_data_points: int = None,
         top_n_percent: int = 15,
@@ -234,14 +240,15 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             scheduler, FIFOScheduler
         ), "This searcher requires FIFOScheduler scheduler"
         super().configure_scheduler(scheduler)
+        self.mode = scheduler.mode
 
-    def to_objective(self, result: Dict):
+    def to_objective(self, result: dict):
         if self.mode == "min":
             return result[self._metric]
         elif self.mode == "max":
             return -result[self._metric]
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         self.X.append(self.to_feature(config=config))
         self.y.append(self.to_objective(result))
         if self._debug_log is not None:

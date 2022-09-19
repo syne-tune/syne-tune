@@ -52,7 +52,7 @@ class Tuner:
         asynchronous_scheduling: bool = True,
         wait_trial_completion_when_stopping: bool = False,
         callbacks: Optional[List[TunerCallback]] = None,
-        metadata: Optional[Dict] = None,
+        metadata: Optional[dict] = None,
         suffix_tuner_name: bool = True,
     ):
         """
@@ -279,7 +279,7 @@ class Tuner:
             callback.on_tuning_sleep(self.sleep_time)
 
     @staticmethod
-    def _set_metadata(metadata: Dict, name: str, value):
+    def _set_metadata(metadata: dict, name: str, value):
         if name in metadata:
             logger.warning(
                 f"Entry {name} in metadata is used, but will be overwritten:\n"
@@ -288,7 +288,7 @@ class Tuner:
             )
         metadata[name] = value
 
-    def _enrich_metadata(self, metadata: Dict):
+    def _enrich_metadata(self, metadata: dict):
         """
         :return: adds creation time stamp, metric names and mode, entrypoint and backend to the metadata.
         """
@@ -441,7 +441,7 @@ class Tuner:
     def _update_running_trials(
         self,
         trial_status_dict: Dict[int, Tuple[Trial, str]],
-        new_results: List[Tuple[int, Dict]],
+        new_results: List[Tuple[int, dict]],
         callbacks: List[TunerCallback],
     ) -> Dict[int, Tuple[Trial, str]]:
         """

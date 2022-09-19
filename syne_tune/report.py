@@ -110,7 +110,7 @@ def _report_logger(**kwargs):
     sys.stdout.flush()
 
 
-def _serialize_report_dict(report_dict: Dict) -> str:
+def _serialize_report_dict(report_dict: dict) -> str:
     """
     :param report_dict: a dictionary of metrics to be serialized
     :return: serialized string of the reported metrics, an exception is raised if the size is too large or

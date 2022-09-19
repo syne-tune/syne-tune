@@ -38,7 +38,7 @@ def _common_kwargs(config_space: Dict) -> Dict:
         "metric": "accuracy",
         "resource_attr": "epoch",
         "scheduler": "hyperband_stopping",
-        "scheduler_mode": "max",
+        "mode": "max",
         "debug_log": False,
         "normalize_targets": True,
     }

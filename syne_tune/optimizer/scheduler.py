@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Optional, Dict, List
+from typing import Optional, List
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -31,13 +31,14 @@ class TrialSuggestion:
     """Suggestion returned by a scheduler.
     :param spawn_new_trial_id: whether a new trial-id should be used.
     :param checkpoint_trial_id: the checkpoint of the trial-id that should be used.
-    If `spawn_new_trial_id` is False, then the trial `checkpoint_trial_id` is resumed with its previous checkpoint.
+        If `spawn_new_trial_id` is False, then the trial `checkpoint_trial_id` is
+        resumed with its previous checkpoint.
     :param config: the configuration that should be evaluated.
     """
 
     spawn_new_trial_id: bool = True
     checkpoint_trial_id: Optional[int] = None
-    config: Optional[Dict] = None
+    config: Optional[dict] = None
 
     def __post_init__(self):
         if self.spawn_new_trial_id:
@@ -51,13 +52,14 @@ class TrialSuggestion:
 
     @staticmethod
     def start_suggestion(
-        config: Dict, checkpoint_trial_id: Optional[int] = None
+        config: dict, checkpoint_trial_id: Optional[int] = None
     ) -> "TrialSuggestion":
         """
         :param config: configuration to use for the new trial.
-        :param checkpoint_trial_id: if given, then the checkpoint folder of the corresponding trial is used when
-        starting the new trial.
-        :return: a trial decision that consists in starting a new trial (which would receive a new trial-id).
+        :param checkpoint_trial_id: if given, then the checkpoint folder of the
+            corresponding trial is used when starting the new trial.
+        :return: a trial decision that consists in starting a new trial (which
+            would receive a new trial-id).
         """
         return TrialSuggestion(
             spawn_new_trial_id=True,
@@ -67,13 +69,14 @@ class TrialSuggestion:
 
     @staticmethod
     def resume_suggestion(
-        trial_id: int, config: Optional[Dict] = None
+        trial_id: int, config: Optional[dict] = None
     ) -> "TrialSuggestion":
         """
         :param trial_id:
         :param config:
-        :return: a trial decision that consists in resuming trial `trial-id` with `config` if provided or the previous
-        configuration used if not provided.
+        :return: a trial decision that consists in resuming trial `trial-id`
+            with `config` if provided or the previous configuration used if
+            not provided.
         """
         return TrialSuggestion(
             spawn_new_trial_id=False,
@@ -100,7 +103,7 @@ class TrialScheduler:
     searchers (see :class:`RayTuneScheduler`).
     """
 
-    def __init__(self, config_space: Dict):
+    def __init__(self, config_space: dict):
         self.config_space = config_space
         self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
 
@@ -144,7 +147,7 @@ class TrialScheduler:
                 )
         return ret_val
 
-    def _postprocess_config(self, config: Dict) -> Dict:
+    def _postprocess_config(self, config: dict) -> dict:
         """
         Post-processes a config as returned by a searcher. This involves:
         - Adding parameters which are constant, therefore do not feature
@@ -159,7 +162,7 @@ class TrialScheduler:
         new_config.update(cast_config_values(config, config_space=self.config_space))
         return new_config
 
-    def _preprocess_config(self, config: Dict) -> Dict:
+    def _preprocess_config(self, config: dict) -> dict:
         """
         Pre-processes a config before passing it to a searcher. This involves:
         - Removing parameters which are constant in the config space (these do
@@ -196,7 +199,7 @@ class TrialScheduler:
         """Notification for the error of trial."""
         pass
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         """Called on each intermediate result returned by a trial.
 
         At this point, the trial scheduler can make a decision by returning
@@ -209,7 +212,7 @@ class TrialScheduler:
         """
         return SchedulerDecision.CONTINUE
 
-    def on_trial_complete(self, trial: Trial, result: Dict):
+    def on_trial_complete(self, trial: Trial, result: dict):
         """Notification for the completion of trial."""
         pass
 

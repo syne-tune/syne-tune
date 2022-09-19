@@ -992,7 +992,7 @@ class HyperbandBracketManager:
         random_seed : int
             Random seed for bracket sampling
         rung_system_kwargs : dict
-            Dictionary of arguments passed to the rung system
+            dictionary of arguments passed to the rung system
         scheduler : HyperbandScheduler
             The scheduler is needed in order to sample a bracket
     """

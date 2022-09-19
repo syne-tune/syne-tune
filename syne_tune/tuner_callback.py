@@ -41,14 +41,14 @@ class TunerCallback:
     def on_fetch_status_results(
         self,
         trial_status_dict: Tuple[Dict[int, Tuple[Trial, str]]],
-        new_results: List[Tuple[int, Dict]],
+        new_results: List[Tuple[int, dict]],
     ):
         """
         Called with the results of `backend.fetch_status_results`.
         """
         pass
 
-    def on_trial_complete(self, trial: Trial, result: Dict):
+    def on_trial_complete(self, trial: Trial, result: dict):
         """
         Called when a trial completes.
         :param trial: trial that just completed.
@@ -57,7 +57,7 @@ class TunerCallback:
         """
         pass
 
-    def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
         """
         Called when a new result is observed.
         :param trial:
@@ -96,7 +96,7 @@ class StoreResultsCallback(TunerCallback):
         self.add_wallclock_time = add_wallclock_time
         self._start_time_stamp = None
 
-    def _set_time_fields(self, result: Dict):
+    def _set_time_fields(self, result: dict):
         """
         Note that we only add wallclock time to the result if this has not
         already been done (by the back-end)
@@ -104,7 +104,7 @@ class StoreResultsCallback(TunerCallback):
         if self._start_time_stamp is not None and ST_TUNER_TIME not in result:
             result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp
 
-    def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
         assert (
             self.save_results_at_frequency is not None
         ), "on_tuning_start must always be called before on_trial_result."
@@ -185,7 +185,7 @@ class TensorboardCallback(TunerCallback):
 
         self.metric_sign = -1 if mode == "max" else 1
 
-    def _set_time_fields(self, result: Dict):
+    def _set_time_fields(self, result: dict):
         """
         Note that we only add wallclock time to the result if this has not
         already been done (by the back-end)
@@ -193,7 +193,7 @@ class TensorboardCallback(TunerCallback):
         if self.start_time_stamp is not None and ST_TUNER_TIME not in result:
             result[ST_TUNER_TIME] = perf_counter() - self.start_time_stamp
 
-    def on_trial_result(self, trial: Trial, status: str, result: Dict, decision: str):
+    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
         walltime = result[ST_TUNER_TIME]
         self._set_time_fields(result)
 

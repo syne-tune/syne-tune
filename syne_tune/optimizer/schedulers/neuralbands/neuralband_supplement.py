@@ -73,7 +73,6 @@ class NeuralbandSchedulerBase(HyperbandScheduler):
                 "config_space": self.config_space.copy(),
                 "metric": self.metric,
                 "points_to_evaluate": self.kwargs.get("points_to_evaluate"),
-                "scheduler_mode": self.kwargs["mode"],
                 "mode": self.kwargs["mode"],
                 "random_seed_generator": self.random_seed_generator,
             }
