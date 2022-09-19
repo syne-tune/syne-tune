@@ -49,6 +49,13 @@ def try_import_blackbox_repository_message() -> str:
     )
 
 
+def try_import_yahpo_message() -> str:
+    return _try_import_message(
+        "Dependencies of YAHPO are not imported",
+        tag="yahpo",
+    )
+
+
 def try_import_backend_message(backend_type: str) -> str:
     return (
         f"{backend_type} is not imported"

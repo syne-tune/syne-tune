@@ -63,13 +63,13 @@ if __name__ == "__main__":
             "experiment_tag": experiment_tag,
             "num_seeds": args.num_seeds,
             "method": method,
+            "support_checkpointing": int(args.support_checkpointing),
+            "start_seed": args.start_seed,
         }
         if benchmark_name is not None:
             hyperparameters["benchmark"] = benchmark_name
         if args.num_brackets is not None:
             hyperparameters["num_brackets"] = args.num_brackets
-        if args.start_seed is not None:
-            hyperparameters["start_seed"] = args.start_seed
         print(
             f"{experiment_tag}-{method}\n"
             f"hyperparameters = {hyperparameters}\n"
