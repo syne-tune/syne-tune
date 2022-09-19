@@ -20,7 +20,12 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
-from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.baselines import (
+    ASHA,
+    RandomSearch,
+    BayesianOptimization,
+    MOBSTER,
+)
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from benchmarking.definitions.definition_resnet_cifar10 import (
@@ -53,6 +58,13 @@ if __name__ == "__main__":
         type=int,
         default=3 * 3600,
         help="maximum wallclock time of experiment",
+    )
+    parser.add_argument(
+        "--method",
+        type=str,
+        choices=["asha", "mobster", "rs", "bo"],
+        default="asha",
+        help="method to run",
     )
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
@@ -90,16 +102,30 @@ if __name__ == "__main__":
         metrics_names=[benchmark["metric"]],
     )
 
-    scheduler = ASHA(
-        benchmark["config_space"],
-        type="stopping",
+    common_kwargs = dict(
         search_options={"debug_log": True},
         metric=benchmark["metric"],
         mode=benchmark["mode"],
-        resource_attr=benchmark["resource_attr"],
         max_resource_attr=benchmark["max_resource_attr"],
         random_seed=args.seed,
     )
+    if args.method == "asha":
+        scheduler = ASHA(
+            benchmark["config_space"],
+            resource_attr=benchmark["resource_attr"],
+            **common_kwargs,
+        )
+    elif args.method == "mobster":
+        scheduler = MOBSTER(
+            benchmark["config_space"],
+            resource_attr=benchmark["resource_attr"],
+            **common_kwargs,
+        )
+    elif args.method == "rs":
+        scheduler = RandomSearch(benchmark["config_space"], **common_kwargs)
+    else:
+        assert args.method == "bo"
+        scheduler = BayesianOptimization(benchmark["config_space"], **common_kwargs)
 
     stop_criterion = StoppingCriterion(
         max_wallclock_time=args.max_wallclock_time,
@@ -113,7 +139,7 @@ if __name__ == "__main__":
         tuner_name=experiment_tag,
         metadata={
             "seed": args.seed,
-            "algorithm": "ASHA",
+            "algorithm": args.method,
             "type": "stopping",
             "tag": experiment_tag,
             "benchmark": "resnet_cifar10",
