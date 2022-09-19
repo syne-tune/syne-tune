@@ -57,6 +57,13 @@ if __name__ == "__main__":
         default=3 * 3600,
         help="maximum wallclock time of experiment",
     )
+    parser.add_argument(
+        "--method",
+        type=str,
+        choices=["asha", "mobster", "rs", "bo"],
+        default="asha",
+        help="method to run",
+    )
     args, _ = parser.parse_known_args()
     experiment_tag = args.experiment_tag
     suffix = random_string(4)
@@ -89,6 +96,7 @@ if __name__ == "__main__":
             "seed": seed,
             "n_workers": args.n_workers,
             "max_wallclock_time": args.max_wallclock_time,
+            "method": args.method,
         }
         print(
             f"{experiment_tag}-{seed}\n"
