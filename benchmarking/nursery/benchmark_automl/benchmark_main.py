@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Callable
 
 import numpy as np
 import itertools
@@ -91,7 +91,9 @@ def get_transfer_learning_evaluations(
     return transfer_learning_evaluations
 
 
-def parse_args(methods: dict, benchmark_definitions: dict):
+def parse_args(
+    methods: dict, benchmark_definitions: dict, extra_args: Optional[List[dict]] = None
+):
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag",
@@ -134,23 +136,14 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         help="verbose log output?",
     )
     parser.add_argument(
-        "--num_brackets",
-        type=int,
-        required=False,
-        help="number of brackets",
-    )
-    parser.add_argument(
-        "--num_samples",
-        type=int,
-        default=50,
-        help="Number of samples for Hyper-Tune distribution",
-    )
-    parser.add_argument(
         "--support_checkpointing",
         type=int,
         default=1,
         help="if 0, trials are started from scratch when resumed",
     )
+    if extra_args is not None:
+        for kwargs in extra_args:
+            parser.add_argument(**kwargs)
     args, _ = parser.parse_known_args()
     args.verbose = bool(args.verbose)
     args.support_checkpointing = bool(args.support_checkpointing)
@@ -168,9 +161,14 @@ def parse_args(methods: dict, benchmark_definitions: dict):
     return args, method_names, benchmark_names, seeds
 
 
-def main(methods: dict, benchmark_definitions: dict):
+def main(
+    methods: dict,
+    benchmark_definitions: dict,
+    extra_args: Optional[List[dict]] = None,
+    map_extra_args: Optional[Callable] = None,
+):
     args, method_names, benchmark_names, seeds = parse_args(
-        methods, benchmark_definitions
+        methods, benchmark_definitions, extra_args
     )
     experiment_tag = args.experiment_tag
 
@@ -216,6 +214,10 @@ def main(methods: dict, benchmark_definitions: dict):
             config_space = backend.blackbox.configuration_space
             method_kwargs = {"max_t": max_resource_level}
 
+        if extra_args is not None:
+            assert map_extra_args is not None
+            extra_args = map_extra_args(args)
+            method_kwargs.update(extra_args)
         scheduler = methods[method](
             MethodArguments(
                 config_space=config_space,
@@ -229,9 +231,7 @@ def main(methods: dict, benchmark_definitions: dict):
                     test_task=benchmark.dataset_name,
                     datasets=benchmark.datasets,
                 ),
-                num_brackets=args.num_brackets,
                 use_surrogates="lcbench" in benchmark_name,
-                num_samples=args.num_samples,
                 **method_kwargs,
             )
         )
@@ -247,8 +247,8 @@ def main(methods: dict, benchmark_definitions: dict):
             "benchmark": benchmark_name,
             "num_samples": args.num_samples,
         }
-        if args.num_brackets is not None:
-            metadata["num_brackets"] = args.num_brackets
+        if extra_args is not None:
+            metadata.update(extra_args)
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,

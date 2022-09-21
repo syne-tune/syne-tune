@@ -73,10 +73,7 @@ def _max_resource_attr_or_max_t(
 
 
 def search_options(args: MethodArguments) -> dict:
-    if args.verbose:
-        return {"debug_log": True}
-    else:
-        return {"debug_log": False}
+    return {"debug_log": args.verbose}
 
 
 methods = {
