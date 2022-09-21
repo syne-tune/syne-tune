@@ -24,15 +24,18 @@ import benchmarking
 from syne_tune.util import s3_experiment_path, random_string
 
 
+def _is_expensive_method(method: str) -> bool:
+    return method == "SYNCMOBSTER"
+
+
 if __name__ == "__main__":
     from benchmarking.nursery.benchmark_dehb.baselines import methods
     from benchmarking.nursery.benchmark_dehb.benchmark_definitions import (
         benchmark_definitions,
     )
 
-    args, method_names, benchmark_names, _ = parse_args(
-        methods,
-        benchmark_definitions,
+    args, method_names, benchmark_names, seeds = parse_args(
+        methods, benchmark_definitions
     )
     if len(benchmark_names) == 1:
         benchmark_name = benchmark_names[0]
@@ -40,10 +43,17 @@ if __name__ == "__main__":
         benchmark_name = None
     experiment_tag = args.experiment_tag
     suffix = random_string(4)
-
-    for method in tqdm(method_names):
+    combinations = []
+    for method in method_names:
+        seed_range = seeds if _is_expensive_method(method) else [None]
+        combinations.extend([(method, seed) for seed in seed_range])
+    for method, seed in tqdm(combinations):
+        if seed is not None:
+            tuner_name = f"{method}-{seed}"
+        else:
+            tuner_name = method
         checkpoint_s3_uri = s3_experiment_path(
-            tuner_name=method, experiment_name=experiment_tag
+            tuner_name=tuner_name, experiment_name=experiment_tag
         )
         sm_args = dict(
             entry_point="benchmark_main.py",
@@ -61,23 +71,27 @@ if __name__ == "__main__":
 
         hyperparameters = {
             "experiment_tag": experiment_tag,
-            "num_seeds": args.num_seeds,
             "method": method,
             "support_checkpointing": int(args.support_checkpointing),
             "start_seed": args.start_seed,
+            "num_brackets": args.num_brackets,
         }
+        if seed is not None:
+            hyperparameters["num_seeds"] = seed
+            hyperparameters["run_all_seed"] = 0
+        else:
+            hyperparameters["num_seeds"] = args.num_seeds
+            hyperparameters["start_seed"] = args.start_seed
         if benchmark_name is not None:
             hyperparameters["benchmark"] = benchmark_name
-        if args.num_brackets is not None:
-            hyperparameters["num_brackets"] = args.num_brackets
+        sm_args["hyperparameters"] = hyperparameters
         print(
-            f"{experiment_tag}-{method}\n"
+            f"{experiment_tag}-{tuner_name}\n"
             f"hyperparameters = {hyperparameters}\n"
             f"Results written to {checkpoint_s3_uri}"
         )
-        sm_args["hyperparameters"] = hyperparameters
         est = PyTorch(**sm_args)
-        est.fit(job_name=f"{experiment_tag}-{method}-{suffix}", wait=False)
+        est.fit(job_name=f"{experiment_tag}-{tuner_name}-{suffix}", wait=False)
 
     print(
         "\nLaunched all requested experiments. Once everything is done, use this "

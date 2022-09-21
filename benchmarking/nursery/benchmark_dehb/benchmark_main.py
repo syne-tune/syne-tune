@@ -19,4 +19,25 @@ if __name__ == "__main__":
         benchmark_definitions,
     )
 
-    main(methods, benchmark_definitions)
+    extra_args = [
+        dict(
+            name="--num_brackets",
+            type=int,
+            required=False,
+            help="number of brackets",
+        ),
+        # TODO: Move to benchmark_hypertune once this is in!
+        # dict(
+        #     "--num_samples",
+        #     type=int,
+        #     default=50,
+        #     help="Number of samples for Hyper-Tune distribution",
+        # ),
+    ]
+
+    def map_extra_args(args) -> dict:
+        return dict(
+            num_brackets=args.num_brackets,
+        )
+
+    main(methods, benchmark_definitions, extra_args, map_extra_args)
