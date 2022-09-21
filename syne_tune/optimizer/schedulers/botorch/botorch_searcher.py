@@ -28,7 +28,7 @@ from gpytorch.utils.errors import NotPSDError
 import syne_tune.config_space as cs
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
 

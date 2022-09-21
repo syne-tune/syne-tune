@@ -21,7 +21,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     Configuration,
     ConfigurationFilter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (

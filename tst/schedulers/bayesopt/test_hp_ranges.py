@@ -28,10 +28,10 @@ from syne_tune.config_space import (
     reverseloguniform,
     ordinal,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_impl import (
     HyperparameterRangesImpl,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (

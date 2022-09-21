@@ -39,7 +39,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.iss
     _flatvec,
     _colvec,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_impl import (
     decode_extended_features,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm import (

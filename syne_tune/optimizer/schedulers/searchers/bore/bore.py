@@ -22,7 +22,7 @@ from sklearn.calibration import CalibratedClassifierCV
 from typing import Dict
 
 from syne_tune.optimizer.schedulers.searchers.searcher import SearcherWithRandomSeed
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
 from syne_tune.optimizer.schedulers.searchers.bore.de import (
