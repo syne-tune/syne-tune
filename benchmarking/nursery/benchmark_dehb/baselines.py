@@ -10,7 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.nursery.benchmark_automl.baselines import (
+from benchmarking.commons.baselines import (
+    convert_categorical_to_ordinal,
     MethodArguments,
     search_options,
 )
@@ -21,10 +22,6 @@ from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
-)
-from syne_tune.config_space import (
-    Categorical,
-    ordinal,
 )
 
 
@@ -39,15 +36,6 @@ class Methods:
     BOHB_ORD = "BOHB-ORD"
     ASHA_STOP = "ASHA-STOP"
     SYNCMOBSTER = "SYNCMOBSTER"
-
-
-def _convert_categorical_to_ordinal(args: MethodArguments) -> dict:
-    return {
-        name: (
-            ordinal(domain.categories) if isinstance(domain, Categorical) else domain
-        )
-        for name, domain in args.config_space.items()
-    }
 
 
 methods = {
@@ -97,7 +85,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.ASHA_ORD: lambda method_arguments: HyperbandScheduler(
-        config_space=_convert_categorical_to_ordinal(method_arguments),
+        config_space=convert_categorical_to_ordinal(method_arguments),
         searcher="random",
         type="promotion",
         search_options=search_options(method_arguments),
@@ -108,7 +96,7 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.SYNCHB_ORD: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=_convert_categorical_to_ordinal(method_arguments),
+        config_space=convert_categorical_to_ordinal(method_arguments),
         searcher="random",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -119,7 +107,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.DEHB_ORD: lambda method_arguments: GeometricDifferentialEvolutionHyperbandScheduler(
-        config_space=_convert_categorical_to_ordinal(method_arguments),
+        config_space=convert_categorical_to_ordinal(method_arguments),
         searcher="random_encoded",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -130,7 +118,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.BOHB_ORD: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=_convert_categorical_to_ordinal(method_arguments),
+        config_space=convert_categorical_to_ordinal(method_arguments),
         searcher="kde",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,

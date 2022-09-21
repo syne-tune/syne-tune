@@ -10,9 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from dataclasses import dataclass
-from typing import Dict, Optional
-
+from benchmarking.commons.baselines import MethodArguments, search_options
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
@@ -28,22 +26,6 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
     QuantileBasedSurrogateSearcher,
 )
-
-
-@dataclass
-class MethodArguments:
-    config_space: dict
-    metric: str
-    mode: str
-    random_seed: int
-    resource_attr: str
-    max_t: Optional[int] = None
-    max_resource_attr: Optional[str] = None
-    transfer_learning_evaluations: Optional[Dict] = None
-    use_surrogates: bool = False
-    num_brackets: Optional[int] = None
-    verbose: Optional[bool] = False
-    num_samples: int = 50
 
 
 class Methods:
@@ -70,10 +52,6 @@ def _max_resource_attr_or_max_t(
     else:
         assert args.max_t is not None
         return {max_t_name: args.max_t}
-
-
-def search_options(args: MethodArguments) -> dict:
-    return {"debug_log": args.verbose}
 
 
 methods = {
