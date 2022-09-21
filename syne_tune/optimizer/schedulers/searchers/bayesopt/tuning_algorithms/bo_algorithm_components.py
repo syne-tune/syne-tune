@@ -24,9 +24,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     AcquisitionClassAndArgs,
     unwrap_acquisition_class_and_kwargs,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )

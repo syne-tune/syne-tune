@@ -20,9 +20,11 @@ from typing import Iterator, Tuple, Dict, List, Optional, Union
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    dictionarize_objective,
+)
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Hyperparameter,
     Configuration,
-    dictionarize_objective,
 )
 from syne_tune.config_space import Categorical, loguniform, randint, choice, uniform
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (

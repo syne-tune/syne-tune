@@ -25,9 +25,9 @@ from typing import (
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
     INTERNAL_METRIC_NAME,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )

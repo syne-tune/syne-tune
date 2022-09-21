@@ -40,9 +40,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     SurrogateModel,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    ConfigurationFilter,
     FantasizedPendingEvaluation,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )

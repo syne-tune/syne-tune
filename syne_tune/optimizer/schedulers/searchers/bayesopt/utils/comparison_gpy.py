@@ -17,10 +17,10 @@ import copy
 from syne_tune.config_space import uniform
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     TrialEvaluations,
-    Configuration,
     dictionarize_objective,
     INTERNAL_METRIC_NAME,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )

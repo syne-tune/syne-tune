@@ -28,8 +28,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
 from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
-    ConfigurationFilter,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import ConfigurationFilter
 
 logger = logging.getLogger(__name__)
 

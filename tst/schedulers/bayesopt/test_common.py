@@ -14,9 +14,9 @@ from typing import List, Set, Tuple
 import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
     dictionarize_objective,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )

@@ -16,7 +16,7 @@
 import pytest
 from numpy.testing import assert_almost_equal
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.scaling import (
+from syne_tune.optimizer.schedulers.searchers.utils.scaling import (
     LinearScaling,
     LogScaling,
     ReverseLogScaling,

@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Configuration,
     ConfigurationFilter,
 )

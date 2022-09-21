@@ -24,8 +24,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     FantasizedPendingEvaluation,
     INTERNAL_METRIC_NAME,
-    ConfigurationFilter,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import ConfigurationFilter
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )

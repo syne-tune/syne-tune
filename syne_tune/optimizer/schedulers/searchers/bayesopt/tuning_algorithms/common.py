@@ -17,7 +17,7 @@ import logging
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     CandidateGenerator,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Configuration,
     ConfigurationFilter,
 )

@@ -20,7 +20,7 @@ from syne_tune.config_space import (
     config_to_match_string,
     is_reverse_log_space,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Hyperparameter,
     Configuration,
 )

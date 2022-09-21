@@ -36,11 +36,13 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     TrialEvaluations,
-    Configuration,
     MetricValues,
     dictionarize_objective,
     INTERNAL_METRIC_NAME,
     INTERNAL_COST_NAME,
+)
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
+    Configuration,
     ConfigurationFilter,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
