@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from pathlib import Path
+
 from benchmarking.commons.launch_remote import launch_remote
 from benchmarking.commons.benchmark_definitions import benchmark_definitions
 
@@ -27,6 +29,12 @@ if __name__ == "__main__":
     def _is_expensive_method(method: str) -> bool:
         return method == Methods.SYNCMOBSTER
 
+    entry_point = Path(__file__).parent / "benchmark_main.py"
     launch_remote(
-        methods, benchmark_definitions, extra_args, map_extra_args, _is_expensive_method
+        entry_point=entry_point,
+        methods=methods,
+        benchmark_definitions=benchmark_definitions,
+        extra_args=extra_args,
+        map_extra_args=map_extra_args,
+        is_expensive_method=_is_expensive_method,
     )

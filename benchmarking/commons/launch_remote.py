@@ -26,6 +26,7 @@ from syne_tune.util import s3_experiment_path, random_string
 
 
 def launch_remote(
+    entry_point: Path,
     methods: dict,
     benchmark_definitions: dict,
     extra_args: Optional[List[dict]] = None,
@@ -59,8 +60,8 @@ def launch_remote(
             tuner_name=tuner_name, experiment_name=experiment_tag
         )
         sm_args = dict(
-            entry_point="benchmark_main.py",
-            source_dir=str(Path(__file__).parent),
+            entry_point=entry_point.name,
+            source_dir=str(entry_point.parent),
             checkpoint_s3_uri=checkpoint_s3_uri,
             instance_type="ml.c5.4xlarge",
             instance_count=1,
@@ -77,7 +78,9 @@ def launch_remote(
             "method": method,
             "support_checkpointing": int(args.support_checkpointing),
         }
-        hyperparameters.update(map_extra_args(args))
+        if extra_args is not None:
+            assert map_extra_args is not None
+            hyperparameters.update(map_extra_args(args))
         if seed is not None:
             hyperparameters["num_seeds"] = seed
             hyperparameters["run_all_seed"] = 0

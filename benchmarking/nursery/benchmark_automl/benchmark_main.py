@@ -14,7 +14,7 @@ from benchmarking.commons.benchmark_main import main
 
 
 if __name__ == "__main__":
-    from benchmarking.nursery.benchmark_automl.baselines import methods, Methods
+    from benchmarking.nursery.benchmark_automl.baselines import methods
     from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
         benchmark_definitions,
     )

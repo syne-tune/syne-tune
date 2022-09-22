@@ -17,7 +17,11 @@ import itertools
 import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
-from coolname import generate_slug
+
+try:
+    from coolname import generate_slug
+except ImportError:
+    print("coolname is not installed, will not be used")
 
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
@@ -94,11 +98,15 @@ def get_transfer_learning_evaluations(
 def parse_args(
     methods: dict, benchmark_definitions: dict, extra_args: Optional[List[dict]] = None
 ):
+    try:
+        default_experiment_tag = generate_slug(2)
+    except Exception:
+        default_experiment_tag = "syne_tune_experiment"
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag",
         type=str,
-        default=generate_slug(2),
+        default=default_experiment_tag,
     )
     parser.add_argument(
         "--num_seeds",
@@ -141,7 +149,8 @@ def parse_args(
     )
     if extra_args is not None:
         for kwargs in extra_args:
-            parser.add_argument(**kwargs)
+            name = kwargs.pop("name")
+            parser.add_argument(name, **kwargs)
     args, _ = parser.parse_known_args()
     args.verbose = bool(args.verbose)
     args.support_checkpointing = bool(args.support_checkpointing)
@@ -243,7 +252,6 @@ def main(
             "algorithm": method,
             "tag": experiment_tag,
             "benchmark": benchmark_name,
-            "num_samples": args.num_samples,
         }
         if extra_args is not None:
             metadata.update(extra_args)
