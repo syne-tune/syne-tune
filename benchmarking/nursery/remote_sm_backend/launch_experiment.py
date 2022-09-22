@@ -136,6 +136,7 @@ if __name__ == "__main__":
         stop_criterion=stop_criterion,
         n_workers=args.n_workers,
         sleep_time=5.0,
+        max_failures=3,
         tuner_name=experiment_tag,
         metadata={
             "seed": args.seed,

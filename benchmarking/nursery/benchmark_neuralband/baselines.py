@@ -10,9 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from dataclasses import dataclass
-from typing import Dict, Optional
-
+from benchmarking.commons.baselines import MethodArguments, search_options
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
@@ -24,18 +22,6 @@ from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import (
     NeuralbandTSScheduler,
     NeuralbandEGreedyScheduler,
 )
-
-
-@dataclass
-class MethodArguments:
-    config_space: Dict
-    metric: str
-    mode: str
-    random_seed: int
-    max_t: int
-    resource_attr: str
-    transfer_learning_evaluations: Optional[Dict] = None
-    use_surrogates: bool = False
 
 
 class Methods:
@@ -57,6 +43,7 @@ methods = {
     Methods.RS: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
+        search_options=search_options(method_arguments),
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
@@ -64,39 +51,39 @@ methods = {
     Methods.ASHA: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
+        max_resource_attr=method_arguments.max_resource_attr,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
     Methods.HP: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="random",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
-        brackets=3,
+        brackets=method_arguments.num_brackets,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
+        max_resource_attr=method_arguments.max_resource_attr,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
     Methods.BOHB: lambda method_arguments: HyperbandScheduler(
         config_space=method_arguments.config_space,
         searcher="kde",
-        search_options={"debug_log": False, "min_bandwidth": 0.1},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
-        brackets=3,
+        brackets=method_arguments.num_brackets,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
+        max_resource_attr=method_arguments.max_resource_attr,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
     Methods.TPE: lambda method_arguments: FIFOScheduler(
         config_space=method_arguments.config_space,
         searcher="kde",
-        search_options={"debug_log": False, "min_bandwidth": 0.1},
+        search_options=search_options(method_arguments),
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
@@ -104,7 +91,7 @@ methods = {
     Methods.GP: lambda method_arguments: FIFOScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         metric=method_arguments.metric,
         mode=method_arguments.mode,
         random_seed=method_arguments.random_seed,
@@ -112,22 +99,23 @@ methods = {
     Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
         method_arguments.config_space,
         searcher="bayesopt",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
+        brackets=method_arguments.num_brackets,
+        max_resource_attr=method_arguments.max_resource_attr,
         resource_attr=method_arguments.resource_attr,
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBandSH: lambda method_arguments: NeuralbandScheduler(
+        config_space=method_arguments.config_space,
         gamma=0.05,
         nu=0.02,
         max_while_loop=50,
         step_size=5,
-        brackets=1,
-        config_space=method_arguments.config_space,
+        brackets=method_arguments.num_brackets,
         searcher="random",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
@@ -135,14 +123,14 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBandHB: lambda method_arguments: NeuralbandScheduler(
+        config_space=method_arguments.config_space,
         gamma=0.04,
         nu=0.02,
         max_while_loop=50,
         step_size=5,
-        brackets=3,
-        config_space=method_arguments.config_space,
+        brackets=method_arguments.num_brackets,
         searcher="random",
-        search_options={"debug_log": False},
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
@@ -150,14 +138,14 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBand_UCB: lambda method_arguments: NeuralbandUCBScheduler(
+        config_space=method_arguments.config_space,
         lamdba=0.1,
         nu=0.001,
         max_while_loop=50,
         step_size=5,
-        config_space=method_arguments.config_space,
         searcher="random",
-        brackets=3,
-        search_options={"debug_log": False},
+        brackets=method_arguments.num_brackets,
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
@@ -165,14 +153,14 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBand_TS: lambda method_arguments: NeuralbandTSScheduler(
+        config_space=method_arguments.config_space,
         lamdba=0.1,
         nu=0.001,
         max_while_loop=50,
         step_size=5,
-        config_space=method_arguments.config_space,
         searcher="random",
-        brackets=3,
-        search_options={"debug_log": False},
+        brackets=method_arguments.num_brackets,
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
@@ -180,13 +168,13 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBandEpsilon: lambda method_arguments: NeuralbandEGreedyScheduler(
+        config_space=method_arguments.config_space,
         epsilon=0.1,
         max_while_loop=1000,
         step_size=5,
-        config_space=method_arguments.config_space,
         searcher="random",
-        brackets=3,
-        search_options={"debug_log": False},
+        brackets=method_arguments.num_brackets,
+        search_options=search_options(method_arguments),
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_t=method_arguments.max_t,
