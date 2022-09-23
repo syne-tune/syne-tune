@@ -10,35 +10,108 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Optional, List, Callable
+
 import numpy as np
 import itertools
 import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
+try:
+    from coolname import generate_slug
+except ImportError:
+    print("coolname is not installed, will not be used")
+
+from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from benchmarking.commons.benchmark_main import get_transfer_learning_evaluations
 from benchmarking.nursery.benchmark_automl.baselines import MethodArguments
-
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.optimizer.schedulers.transfer_learning import (
+    TransferLearningTaskEvaluations,
+)
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
 
-def parse_args(methods: dict, benchmark_definitions: dict):
+def get_transfer_learning_evaluations(
+    blackbox_name: str,
+    test_task: str,
+    datasets: Optional[List[str]],
+    n_evals: Optional[int] = None,
+) -> dict:
+    """
+    :param blackbox_name:
+    :param test_task: task where the performance would be tested, it is excluded from transfer-learning evaluations
+    :param datasets: subset of datasets to consider, only evaluations from those datasets are provided to
+    transfer-learning methods. If none, all datasets are used.
+    :param n_evals: maximum number of evaluations to be returned
+    :return:
+    """
+    task_to_evaluations = load_blackbox(blackbox_name)
+
+    # todo retrieve right metric
+    metric_index = 0
+    transfer_learning_evaluations = {
+        task: TransferLearningTaskEvaluations(
+            configuration_space=bb.configuration_space,
+            hyperparameters=bb.hyperparameters,
+            objectives_evaluations=bb.objectives_evaluations[
+                ..., metric_index : metric_index + 1
+            ],
+            objectives_names=[bb.objectives_names[metric_index]],
+        )
+        for task, bb in task_to_evaluations.items()
+        if task != test_task and (datasets is None or task in datasets)
+    }
+
+    if n_evals is not None:
+        # subsample n_evals / n_tasks of observations on each tasks
+        def subsample(
+            transfer_evaluations: TransferLearningTaskEvaluations, n: int
+        ) -> TransferLearningTaskEvaluations:
+            random_indices = np.random.permutation(
+                len(transfer_evaluations.hyperparameters)
+            )[:n]
+            return TransferLearningTaskEvaluations(
+                configuration_space=transfer_evaluations.configuration_space,
+                hyperparameters=transfer_evaluations.hyperparameters.loc[
+                    random_indices
+                ].reset_index(drop=True),
+                objectives_evaluations=transfer_evaluations.objectives_evaluations[
+                    random_indices
+                ],
+                objectives_names=transfer_evaluations.objectives_names,
+            )
+
+        n = n_evals // len(transfer_learning_evaluations)
+        transfer_learning_evaluations = {
+            task: subsample(transfer_evaluations, n)
+            for task, transfer_evaluations in transfer_learning_evaluations.items()
+        }
+
+    return transfer_learning_evaluations
+
+
+def parse_args(
+    methods: dict, benchmark_definitions: dict, extra_args: Optional[List[dict]] = None
+):
+    try:
+        default_experiment_tag = generate_slug(2)
+    except Exception:
+        default_experiment_tag = "syne_tune_experiment"
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag",
         type=str,
-        required=True,
+        default=default_experiment_tag,
     )
     parser.add_argument(
         "--num_seeds",
         type=int,
-        required=False,
-        default=3,
+        default=30,
         help="number of seeds to run",
     )
     parser.add_argument(
@@ -50,7 +123,6 @@ def parse_args(methods: dict, benchmark_definitions: dict):
     parser.add_argument(
         "--start_seed",
         type=int,
-        required=False,
         default=0,
         help="first seed to run (if `run_all_seed` == 1)",
     )
@@ -63,7 +135,25 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         required=False,
         help="a benchmark to run from benchmark_definitions.py",
     )
+    parser.add_argument(
+        "--verbose",
+        type=int,
+        default=0,
+        help="verbose log output?",
+    )
+    parser.add_argument(
+        "--support_checkpointing",
+        type=int,
+        default=1,
+        help="if 0, trials are started from scratch when resumed",
+    )
+    if extra_args is not None:
+        for kwargs in extra_args:
+            name = kwargs.pop("name")
+            parser.add_argument(name, **kwargs)
     args, _ = parser.parse_known_args()
+    args.verbose = bool(args.verbose)
+    args.support_checkpointing = bool(args.support_checkpointing)
     args.run_all_seeds = bool(args.run_all_seeds)
     if args.run_all_seeds:
         seeds = list(range(args.start_seed, args.num_seeds))
@@ -78,17 +168,25 @@ def parse_args(methods: dict, benchmark_definitions: dict):
     return args, method_names, benchmark_names, seeds
 
 
-def main(methods: dict, benchmark_definitions: dict):
+def main(
+    methods: dict,
+    benchmark_definitions: dict,
+    extra_args: Optional[List[dict]] = None,
+    map_extra_args: Optional[Callable] = None,
+):
     args, method_names, benchmark_names, seeds = parse_args(
-        methods, benchmark_definitions
+        methods, benchmark_definitions, extra_args
     )
     experiment_tag = args.experiment_tag
 
-    logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
-    logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
-    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
-        logging.WARNING
-    )
+    if args.verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    else:
+        logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
+        logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
+        logging.getLogger(
+            "syne_tune.backend.simulator_backend.simulator_backend"
+        ).setLevel(logging.WARNING)
 
     combinations = list(itertools.product(method_names, seeds, benchmark_names))
     print(combinations)
@@ -108,6 +206,7 @@ def main(methods: dict, benchmark_definitions: dict):
             dataset=benchmark.dataset_name,
             surrogate=benchmark.surrogate,
             surrogate_kwargs=benchmark.surrogate_kwargs,
+            support_checkpointing=args.support_checkpointing,
         )
 
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
@@ -122,6 +221,10 @@ def main(methods: dict, benchmark_definitions: dict):
             config_space = backend.blackbox.configuration_space
             method_kwargs = {"max_t": max_resource_level}
 
+        if extra_args is not None:
+            assert map_extra_args is not None
+            extra_args = map_extra_args(args)
+            method_kwargs.update(extra_args)
         scheduler = methods[method](
             MethodArguments(
                 config_space=config_space,
@@ -129,6 +232,7 @@ def main(methods: dict, benchmark_definitions: dict):
                 mode=benchmark.mode,
                 random_seed=seed,
                 resource_attr=resource_attr,
+                verbose=args.verbose,
                 transfer_learning_evaluations=get_transfer_learning_evaluations(
                     blackbox_name=benchmark.blackbox_name,
                     test_task=benchmark.dataset_name,
@@ -149,6 +253,8 @@ def main(methods: dict, benchmark_definitions: dict):
             "tag": experiment_tag,
             "benchmark": benchmark_name,
         }
+        if extra_args is not None:
+            metadata.update(extra_args)
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,
@@ -162,12 +268,3 @@ def main(methods: dict, benchmark_definitions: dict):
             metadata=metadata,
         )
         tuner.run()
-
-
-if __name__ == "__main__":
-    from benchmarking.nursery.benchmark_automl.baselines import methods
-    from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
-        benchmark_definitions,
-    )
-
-    main(methods, benchmark_definitions)

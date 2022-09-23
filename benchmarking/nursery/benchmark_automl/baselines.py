@@ -41,9 +41,6 @@ class MethodArguments:
     max_resource_attr: Optional[str] = None
     transfer_learning_evaluations: Optional[Dict] = None
     use_surrogates: bool = False
-    num_brackets: Optional[int] = None
-    verbose: Optional[bool] = False
-    num_samples: int = 50
 
 
 class Methods:
@@ -73,7 +70,7 @@ def _max_resource_attr_or_max_t(
 
 
 def search_options(args: MethodArguments) -> dict:
-    return {"debug_log": args.verbose}
+    return {"debug_log": False}
 
 
 methods = {
