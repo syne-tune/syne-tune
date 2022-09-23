@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 
 class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     """
-    Adapts the KernelDensityEstimator to the multi-fidelity setting as proposed by Falkner et al such that we can use
-    it with Hyperband. Following Falkner et al, we fit the KDE only on the highest resource level where we
-    have at least num_min_data_points.
-    Code is based on the implementation by Falkner et al: https://github.com/automl/HpBandSter/tree/master/hpbandster
+    Adapts the KernelDensityEstimator to the multi-fidelity setting as proposed
+    by Falkner et al such that we can use it with Hyperband. Following Falkner
+    et al, we fit the KDE only on the highest resource level where we have at
+    least num_min_data_points. Code is based on the implementation by Falkner
+    et al: https://github.com/automl/HpBandSter/tree/master/hpbandster
 
     BOHB: Robust and Efficient Hyperparameter Optimization at Scale
     S. Falkner and A. Klein and F. Hutter
     Proceedings of the 35th International Conference on Machine Learning
-
 
     Parameters
     ----------
@@ -50,20 +50,22 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     mode : str
         Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
     num_min_data_points: int
-        Minimum number of data points that we use to fit the KDEs. If set to None than we set this to the number of
-        hyperparameters.
+        Minimum number of data points that we use to fit the KDEs. If set to None
+        than we set this to the number of hyperparameters.
     top_n_percent: int
-        Determines how many datapoints we use use to fit the first KDE model for modeling the well
-        performing configurations.
+        Determines how many datapoints we use use to fit the first KDE model for
+        modeling the well performing configurations.
     min_bandwidth: float
         The minimum bandwidth for the KDE models
     num_candidates: int
         Number of candidates that are sampled to optimize the acquisition function
     bandwidth_factor: int
-        We sample continuous hyperparameter from a truncated Normal. This factor is multiplied to the bandwidth to
-        define the standard deviation of this trunacted Normal.
+        We sample continuous hyperparameter from a truncated Normal. This factor is
+        multiplied to the bandwidth to define the standard deviation of this
+        trunacted Normal.
     random_fraction: float
-        Defines the fraction of configurations that are drawn uniformly at random instead of sampling from the model
+        Defines the fraction of configurations that are drawn uniformly at random
+        instead of sampling from the model
     points_to_evaluate: List[Dict] or None
         List of configurations to be evaluated initially (in that order).
         Each config in the list can be partially specified, or even be an
@@ -86,7 +88,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         num_candidates: int = 64,
         bandwidth_factor: int = 3,
         random_fraction: float = 0.33,
-        resource_attr: str = "epoch",
+        resource_attr: Optional[str] = None,
         **kwargs
     ):
         super().__init__(
@@ -117,6 +119,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             "This searcher requires HyperbandScheduler or "
             + "SynchronousHyperbandScheduler scheduler"
         )
+        self.resource_attr = scheduler._resource_attr
 
     def train_kde(self, train_data, train_targets):
 

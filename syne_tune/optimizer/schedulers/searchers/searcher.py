@@ -13,7 +13,7 @@
 import logging
 import numpy as np
 from random import shuffle
-from typing import Dict, Optional, List, Tuple
+from typing import Optional, List, Tuple
 
 from syne_tune.config_space import Domain, config_space_size, is_log_space, Categorical
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
@@ -232,7 +232,7 @@ class BaseSearcher:
         pass
 
     def remove_case(self, trial_id: str, **kwargs):
-        """Remove data case previously appended by update
+        """Remove data case previously appended by `_update`
 
         For searchers which maintain the dataset of all cases (reports) passed
         to update, this method allows to remove one case from the dataset.
@@ -267,7 +267,7 @@ class BaseSearcher:
 
     def model_parameters(self):
         """
-        :return: Dictionary with current model (hyper)parameter values if
+        :return: dictionary with current model (hyper)parameter values if
             this is supported; otherwise empty
         """
         return dict()
@@ -483,14 +483,14 @@ class GridSearcher(BaseSearcher):
 
     Parameters
     ----------
-    config_space : Dict
+    config_space : dict
         The configuration space that defines search space grid. It contains
         the full specification of the Hyperparameters, and the configurations
         generated is the combinations of these Hyperparameters.
         The specified hyperparameter must be Categorical for now.
     metric : str
         Name of metric passed to update.
-    points_to_evaluate : List[Dict] or None
+    points_to_evaluate : List[dict] or None
         List of configurations to be evaluated initially (in that order).
         Each config in the list can be partially specified,
         or even be an empty dict.
@@ -564,7 +564,7 @@ class GridSearcher(BaseSearcher):
     def get_batch_configs(self, batch_size: int, **kwargs):
         """
         Asks for a batch of `batch_size` configurations to be suggested. This
-        is roughly equivalent to calling `get_config` `batch_size` times,
+        is roughly equivalent to calling `get_config` `batch_size` times.
 
         If less than `batch_size` configs are returned, the search space
         has been exhausted.
@@ -577,13 +577,13 @@ class GridSearcher(BaseSearcher):
                 configs.append(config)
         return configs
 
-    def _validate_config_space(self, config_space: Dict):
+    def _validate_config_space(self, config_space: dict):
         # GridSearcher only supports Categorical hyperparameters for now
         for hp_range in config_space.values():
             if isinstance(hp_range, Domain):
                 assert isinstance(hp_range, Categorical)
 
-    def _generate_remaining_candidates(self) -> List[Dict]:
+    def _generate_remaining_candidates(self) -> List[dict]:
         excl_list = ExclusionList.empty_list(self._hp_ranges)
         for candidate in self._points_to_evaluate:
             excl_list.add(candidate)
@@ -594,7 +594,7 @@ class GridSearcher(BaseSearcher):
                 excl_list.add(candidate)
         return remaining_candidates
 
-    def _generate_all_candidates_on_grid(self) -> List[Dict]:
+    def _generate_all_candidates_on_grid(self) -> List[dict]:
         # Get hp values that are specified as Domain
         hp_keys = []
         hp_values = []
@@ -612,7 +612,7 @@ class GridSearcher(BaseSearcher):
             all_candidates_on_grid.append(dict(zip(hp_keys, values)))
         return all_candidates_on_grid
 
-    def _next_candidate_on_grid(self) -> Optional[Dict]:
+    def _next_candidate_on_grid(self) -> Optional[dict]:
         if self._remaining_candidates:
             return self._remaining_candidates.pop(0)
         else:
@@ -639,6 +639,6 @@ class GridSearcher(BaseSearcher):
         super()._restore_from_state(state)
         self._remaining_candidates = state["remaining_candidates"].copy()
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         # GridSearcher does not contains a surrogate model, just return.
         return
