@@ -37,7 +37,7 @@ from syne_tune.try_import import (
 
 
 class RandomSearch(FIFOScheduler):
-    def __init__(self, config_space: Dict, metric: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, **kwargs):
         super(RandomSearch, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -47,7 +47,7 @@ class RandomSearch(FIFOScheduler):
 
 
 class GridSearch(FIFOScheduler):
-    def __init__(self, config_space: Dict, metric: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, **kwargs):
         super(GridSearch, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -57,7 +57,7 @@ class GridSearch(FIFOScheduler):
 
 
 class BayesianOptimization(FIFOScheduler):
-    def __init__(self, config_space: Dict, metric: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, **kwargs):
         super(BayesianOptimization, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -73,7 +73,7 @@ def _assert_need_one(kwargs: dict, need_one: Optional[set] = None):
 
 
 class ASHA(HyperbandScheduler):
-    def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
         """
         One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
         `type='promotion'`, the latter is more useful, see also
@@ -91,7 +91,7 @@ class ASHA(HyperbandScheduler):
 
 
 class MOBSTER(HyperbandScheduler):
-    def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
         """
         One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
         `type='promotion'`, the latter is more useful, see also
@@ -114,7 +114,7 @@ class MOBSTER(HyperbandScheduler):
 
 
 class PASHA(HyperbandScheduler):
-    def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
         """
         One of `max_t`, `max_resource_attr` needs to be in `kwargs`. The
         latter is more useful, see also :class:`HyperbandScheduler`.
@@ -133,7 +133,7 @@ class PASHA(HyperbandScheduler):
 class SyncHyperband(SynchronousGeometricHyperbandScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -157,7 +157,7 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
 class SyncBOHB(SynchronousGeometricHyperbandScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -181,7 +181,7 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
 class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -205,7 +205,7 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
 class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -234,7 +234,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
 
 class BORE(FIFOScheduler):
-    def __init__(self, config_space: Dict, metric: str, mode: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, mode: str, **kwargs):
         try:
             from syne_tune.optimizer.schedulers.searchers.bore import Bore
         except ImportError:
@@ -253,7 +253,7 @@ class BORE(FIFOScheduler):
 class REA(FIFOScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         population_size: int = 100,
         sample_size: int = 10,
@@ -274,7 +274,7 @@ class REA(FIFOScheduler):
 
 
 class ConstrainedBayesianOptimization(FIFOScheduler):
-    def __init__(self, config_space: Dict, metric: str, constraint_attr: str, **kwargs):
+    def __init__(self, config_space: dict, metric: str, constraint_attr: str, **kwargs):
         search_options = kwargs.get("search_options", dict())
         kwargs["search_options"] = dict(search_options, constraint_attr=constraint_attr)
         super(ConstrainedBayesianOptimization, self).__init__(
@@ -288,7 +288,7 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
 class ZeroShotTransfer(FIFOScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         metric: str,
         mode: str = "min",
@@ -341,7 +341,7 @@ class ZeroShotTransfer(FIFOScheduler):
 class ASHACTS(HyperbandScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         resource_attr: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],

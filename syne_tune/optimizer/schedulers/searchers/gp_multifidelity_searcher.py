@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional
+from typing import Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
@@ -74,11 +74,11 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     Parameters
     ----------
-    config_space : Dict
+    config_space : dict
         Configuration space. Constant parameters are filtered out
     metric : str
         Name of reward attribute reported by evaluation function
-    points_to_evaluate: List[Dict] or None
+    points_to_evaluate: List[dict] or None
         List of configurations to be evaluated initially (in that order).
         Each config in the list can be partially specified, or even be an
         empty dict. For each hyperparameter not specified, the default value
@@ -215,18 +215,18 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         resource = int(result[self._resource_attr])
         return self.config_space_ext.get(config, resource)
 
-    def _metric_val_update(self, crit_val: float, result: Dict) -> MetricValues:
+    def _metric_val_update(self, crit_val: float, result: dict) -> MetricValues:
         resource = result[self._resource_attr]
         return {str(resource): crit_val}
 
-    def _trial_id_string(self, trial_id: str, result: Dict):
+    def _trial_id_string(self, trial_id: str, result: dict):
         """
         For multi-fidelity, we also want to output the resource level
         """
         return f"{trial_id}:{result[self._resource_attr]}"
 
     def register_pending(
-        self, trial_id: str, config: Optional[Dict] = None, milestone=None
+        self, trial_id: str, config: Optional[dict] = None, milestone=None
     ):
         """
         Registers trial as pending for resource level `milestone`. This means

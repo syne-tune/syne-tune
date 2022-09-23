@@ -321,7 +321,7 @@ def _create_common_objects(model=None, **kwargs):
         skip_optimization = None
     # Conversion from reward to metric (strictly decreasing) and back.
     # This is done only if the scheduler mode is 'max'.
-    scheduler_mode = kwargs.get("scheduler_mode", "min")
+    scheduler_mode = kwargs.get("mode", "min")
     if scheduler_mode == "max":
         _map_reward = kwargs.get("map_reward", "1_minus_x")
         if isinstance(_map_reward, str):
@@ -345,11 +345,11 @@ def _create_common_objects(model=None, **kwargs):
     else:
         assert (
             scheduler_mode == "min"
-        ), f"scheduler_mode = {scheduler_mode}, must be in ('max', 'min')"
+        ), f"mode = {scheduler_mode}, must be in ('max', 'min')"
         _map_reward = kwargs.get("map_reward")
         if _map_reward is not None:
             logger.warning(
-                f"Since scheduler_mode == 'min', map_reward = {_map_reward} is ignored"
+                f"Since mode == 'min', map_reward = {_map_reward} is ignored"
             )
             _map_reward = None
     result = {

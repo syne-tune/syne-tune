@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, List
+from typing import Optional, List
 import logging
 import os
 import numpy as np
@@ -179,7 +179,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
 
     """
 
-    def __init__(self, config_space: Dict, **kwargs):
+    def __init__(self, config_space: dict, **kwargs):
         super().__init__(config_space)
         # Check values and impute default values
         assert_no_invalid_options(kwargs, _ARGUMENT_KEYS, name="FIFOScheduler")
@@ -223,7 +223,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
                     "config_space": self.config_space.copy(),
                     "metric": self.metric,
                     "points_to_evaluate": kwargs.get("points_to_evaluate"),
-                    "scheduler_mode": kwargs["mode"],
                     "mode": kwargs["mode"],
                     "random_seed_generator": self.random_seed_generator,
                 }
@@ -275,7 +274,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
         ), "Argument must be of type TimeKeeper"
         self.time_keeper = time_keeper
 
-    def _extend_search_options(self, search_options: Dict) -> Dict:
+    def _extend_search_options(self, search_options: dict) -> dict:
         return search_options
 
     def _initialize_searcher(self):
@@ -317,7 +316,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
             config = TrialSuggestion.start_suggestion(config)
         return config
 
-    def _on_config_suggest(self, config: Dict, trial_id: str, **kwargs) -> Dict:
+    def _on_config_suggest(self, config: dict, trial_id: str, **kwargs) -> dict:
         # We register the config here, not in `on_trial_add`. While this risks
         # registering a config which is not successfully started, this is the
         # right thing to do for batch suggestions. There, `suggest` is called
@@ -330,7 +329,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
             config = dict(config, trial_id=trial_id)
         return config
 
-    def _promote_trial(self) -> (Optional[str], Optional[Dict]):
+    def _promote_trial(self) -> (Optional[str], Optional[dict]):
         """
         Has to be implemented by pause/resume schedulers.
         If a trial can be promoted, its trial_id is returned, otherwise None.
@@ -362,18 +361,18 @@ class FIFOScheduler(ResourceLevelsScheduler):
         if self.searcher.debug_log is not None:
             logger.info(f"trial_id {trial_id}: Evaluation failed!")
 
-    def _check_key_of_result(self, result: Dict, key: str):
+    def _check_key_of_result(self, result: dict, key: str):
         assert key in result, (
             "Your training evaluation function needs to report values "
             + f"for the key {key}:\n   report({key}=..., ...)"
         )
 
-    def _check_result(self, result: Dict):
+    def _check_result(self, result: dict):
         self._check_key_of_result(result, self.metric)
 
     # Not doing much. Note the result at the end of the trial run is
     # passed to `on_trial_complete`
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         self._check_result(result)
         trial_id = str(trial.trial_id)
         trial_decision = SchedulerDecision.CONTINUE
@@ -396,7 +395,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
             logger.debug(log_msg)
         return trial_decision
 
-    def on_trial_complete(self, trial: Trial, result: Dict):
+    def on_trial_complete(self, trial: Trial, result: dict):
         if len(result) > 0:
             self._initialize_searcher()
             config = self._preprocess_config(trial.config)

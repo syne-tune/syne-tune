@@ -17,7 +17,7 @@ import numpy as np
 
 from dataclasses import dataclass
 from collections import deque
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from syne_tune.config_space import Domain, Integer, Float, FiniteRange
 from syne_tune.backend.trial_status import Trial
@@ -154,8 +154,8 @@ class PopulationBasedTraining(FIFOScheduler):
 
     def __init__(
         self,
-        config_space: Dict,
-        custom_explore_fn: Optional[Callable[[Dict], Dict]] = None,
+        config_space: dict,
+        custom_explore_fn: Optional[Callable[[dict], dict]] = None,
         **kwargs,
     ):
         # The current implementation only supports a random searcher
@@ -212,7 +212,7 @@ class PopulationBasedTraining(FIFOScheduler):
         else:
             return trial.trial_id
 
-    def on_trial_result(self, trial: Trial, result: Dict) -> str:
+    def on_trial_result(self, trial: Trial, result: dict) -> str:
         if self._resource_attr not in result:
             time_missing_msg = (
                 f"Cannot find resource_attr {self._resource_attr} "
@@ -266,7 +266,7 @@ class PopulationBasedTraining(FIFOScheduler):
             self._trial_decisions_stack.append((trial_id_to_continue, config))
             return SchedulerDecision.PAUSE
 
-    def _save_trial_state(self, state: PBTTrialState, time: int, result: Dict) -> Dict:
+    def _save_trial_state(self, state: PBTTrialState, time: int, result: dict) -> dict:
         """Saves necessary trial information when result is received.
         Args:
             state (PBTTrialState): The state object for the trial.
@@ -323,7 +323,7 @@ class PopulationBasedTraining(FIFOScheduler):
                 config=config, checkpoint_trial_id=trial_id_to_continue
             )
 
-    def _explore(self, config: Dict) -> Dict:
+    def _explore(self, config: dict) -> dict:
         """Return a config perturbed as specified.
 
         Args:

@@ -10,8 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict
-
 from syne_tune.optimizer.scheduler import TrialScheduler
 from syne_tune.optimizer.schedulers.synchronous.hyperband import (
     SynchronousHyperbandScheduler,
@@ -69,7 +67,7 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
 
     """
 
-    def __init__(self, config_space: Dict, **kwargs):
+    def __init__(self, config_space: dict, **kwargs):
         TrialScheduler.__init__(self, config_space)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
@@ -121,7 +119,7 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
 
     """
 
-    def __init__(self, config_space: Dict, **kwargs):
+    def __init__(self, config_space: dict, **kwargs):
         TrialScheduler.__init__(self, config_space)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
