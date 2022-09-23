@@ -39,7 +39,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.iss
     _flatvec,
     _colvec,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_impl import (
     decode_extended_features,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.issm import (
@@ -60,9 +60,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.fre
     resource_kernel_likelihood_computations,
     resource_kernel_likelihood_precomputations,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 
 logger = logging.getLogger(__name__)
 

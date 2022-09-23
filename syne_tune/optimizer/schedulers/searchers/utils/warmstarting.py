@@ -12,13 +12,13 @@
 # permissions and limitations under the License.
 from typing import Optional
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Configuration,
     ConfigurationFilter,
 )

@@ -30,9 +30,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model im
     CostModel,
     CostValue,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )

@@ -37,7 +37,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.iss
     _inner_product,
     predict_posterior_marginals,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_impl import (
     EPS,
 )
 

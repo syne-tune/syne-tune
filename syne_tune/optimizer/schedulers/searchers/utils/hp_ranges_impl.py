@@ -15,14 +15,14 @@ import numpy as np
 from autograd import numpy as anp
 
 from syne_tune.config_space import Domain, FiniteRange, Categorical, Ordinal
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Hyperparameter,
     Configuration,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.scaling import (
+from syne_tune.optimizer.schedulers.searchers.utils.scaling import (
     Scaling,
     LinearScaling,
     get_scaling,

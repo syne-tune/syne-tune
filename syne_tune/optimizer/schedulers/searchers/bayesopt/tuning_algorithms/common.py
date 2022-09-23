@@ -17,11 +17,11 @@ import logging
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     CandidateGenerator,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Configuration,
     ConfigurationFilter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (

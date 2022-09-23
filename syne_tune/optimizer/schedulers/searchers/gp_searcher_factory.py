@@ -28,7 +28,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory imp
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
     ExtendedConfiguration,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (

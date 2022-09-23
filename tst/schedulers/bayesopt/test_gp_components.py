@@ -24,7 +24,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import
     create_tuning_job_state,
 )
 from syne_tune.config_space import uniform, randint, choice, loguniform
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
 

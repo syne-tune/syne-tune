@@ -13,13 +13,13 @@
 from typing import List, Dict, Optional
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
     TrialEvaluations,
     PendingEvaluation,
     MetricValues,
     INTERNAL_METRIC_NAME,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
 

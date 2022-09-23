@@ -35,9 +35,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     FantasizedPendingEvaluation,
-    Configuration,
     TrialEvaluations,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
     ExtendedConfiguration,
 )

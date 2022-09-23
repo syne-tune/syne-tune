@@ -20,9 +20,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     SurrogateModel,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    ConfigurationFilter,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.common import ConfigurationFilter
 
 logger = logging.getLogger(__name__)
 

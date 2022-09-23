@@ -29,12 +29,12 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
     PendingEvaluation,
     TrialEvaluations,
     dictionarize_objective,
     INTERNAL_METRIC_NAME,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)

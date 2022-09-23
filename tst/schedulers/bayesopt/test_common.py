@@ -14,10 +14,10 @@ from typing import List, Set, Tuple
 import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    Configuration,
     dictionarize_objective,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
@@ -27,7 +27,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
     RepeatedCandidateGenerator,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
 from syne_tune.config_space import randint, choice

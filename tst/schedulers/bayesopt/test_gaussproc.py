@@ -21,7 +21,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
@@ -47,7 +47,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import
     create_tuning_job_state,
     tuples_to_configs,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
 

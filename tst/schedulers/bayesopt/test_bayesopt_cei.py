@@ -18,7 +18,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
     INTERNAL_CONSTRAINT_NAME,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
 from syne_tune.config_space import uniform
