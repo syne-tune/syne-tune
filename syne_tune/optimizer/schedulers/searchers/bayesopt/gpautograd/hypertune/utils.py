@@ -16,8 +16,12 @@ from autograd.tracer import getval
 from typing import Optional, Tuple, List, Union, Dict, Callable
 from numpy.random import RandomState
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_impl import (
     decode_extended_features,
+    HyperparameterRangeInteger,
+)
+from syne_tune.optimizer.schedulers.searchers.utils.scaling import (
+    LinearScaling,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.independent.posterior_state import (
     IndependentGPPerResourcePosteriorState,
@@ -26,12 +30,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_stat
     GaussProcPosteriorState,
     PosteriorStateWithSampleJoint,
     backward_gradient_given_predict,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.hp_ranges_impl import (
-    HyperparameterRangeInteger,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.scaling import (
-    LinearScaling,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     MeanFunction,
