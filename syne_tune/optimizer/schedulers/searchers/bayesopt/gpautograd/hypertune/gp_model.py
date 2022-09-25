@@ -172,9 +172,9 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         resource_attr_range: Tuple[int, int],
         hypertune_distribution_args: HyperTuneDistributionArguments,
         separate_noise_variances: bool = False,
-        initial_noise_variance: float = None,
-        initial_covariance_scale: float = None,
-        optimization_config: OptimizationConfig = None,
+        initial_noise_variance: Optional[float] = None,
+        initial_covariance_scale: Optional[float] = None,
+        optimization_config: Optional[OptimizationConfig] = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):
@@ -222,7 +222,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         else:
             return None
 
-    def fit(self, data: dict, profiler: SimpleProfiler = None):
+    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
         super().fit(data, profiler)
         poster_state: IndependentGPPerResourcePosteriorState = self.states[0]
         ensemble_distribution = self.fit_distributions(
@@ -257,8 +257,8 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         resource_attr_range: Tuple[int, int],
         hypertune_distribution_args: HyperTuneDistributionArguments,
         mean: Optional[MeanFunction] = None,
-        initial_noise_variance: float = None,
-        optimization_config: OptimizationConfig = None,
+        initial_noise_variance: Optional[float] = None,
+        optimization_config: Optional[OptimizationConfig] = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):
@@ -310,7 +310,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         else:
             return None
 
-    def fit(self, data: dict, profiler: SimpleProfiler = None):
+    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
         super().fit(data, profiler)
         resource_attr_range = self._likelihood_kwargs["resource_attr_range"]
         poster_state = GaussProcPosteriorStateAndRungLevels(

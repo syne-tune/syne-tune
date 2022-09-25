@@ -134,7 +134,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
     def __init__(
         self,
         kernel: KernelFunction,
-        mean: MeanFunction = None,
+        mean: Optional[MeanFunction] = None,
         initial_noise_variance=None,
         encoding_type=None,
         **kwargs,
