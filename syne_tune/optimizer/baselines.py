@@ -13,6 +13,7 @@
 from typing import Dict, Optional
 import numpy as np
 import logging
+import copy
 
 from syne_tune.optimizer.schedulers import (
     FIFOScheduler,
@@ -108,6 +109,51 @@ class MOBSTER(HyperbandScheduler):
             config_space=config_space,
             metric=metric,
             searcher="bayesopt",
+            resource_attr=resource_attr,
+            **kwargs,
+        )
+
+
+class HyperTune(HyperbandScheduler):
+    def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
+        """
+         One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
+         `type='promotion'`, the latter is more useful, see also
+         :class:`HyperbandScheduler`.
+
+         Hyper-Tune is a model-based variant of ASHA with more than one bracket.
+         It can be seen as extension of MOBSTER and can be used with the
+         "gp_independent" or "gp_multitask" model. It has a model-based way
+         to sample the bracket for every new trial, as well as an ensemble
+        predictive distribution. Our
+         implementation is based on:
+
+            Yang Li et al
+            Hyper-Tune: Towards Efficient Hyper-parameter Tuning at Scale
+            VLDB 2022
+
+        See also :class:`HyperTuneIndependentGPModel`.
+        """
+        _assert_need_one(kwargs)
+        kwargs = copy.deepcopy(kwargs)
+        search_options = kwargs.get("search_options", dict())
+        k, v, supp = "model", "gp_independent", {"gp_independent", "gp_multitask"}
+        model = search_options.get(k, v)
+        assert model in supp, (
+            f"HyperTune does not support search_options['{k}'] = '{model}'"
+            f", must be in {supp}"
+        )
+        search_options[k] = model
+        k = "hypertune_distribution_num_samples"
+        num_samples = search_options.get(k, 50)
+        search_options[k] = num_samples
+        kwargs["search_options"] = search_options
+        num_brackets = kwargs.get("brackets", 4)
+        kwargs["brackets"] = num_brackets
+        super(HyperTune, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher="hypertune",
             resource_attr=resource_attr,
             **kwargs,
         )

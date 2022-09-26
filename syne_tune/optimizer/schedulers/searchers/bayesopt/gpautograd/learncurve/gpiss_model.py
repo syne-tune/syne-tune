@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.likelihood import (
@@ -79,9 +80,9 @@ class GaussianProcessLearningCurveModel(GaussianProcessOptimizeModel):
         self,
         kernel: KernelFunction,
         res_model: LCModel,
-        mean: MeanFunction = None,
-        initial_noise_variance: float = None,
-        optimization_config: OptimizationConfig = None,
+        mean: Optional[MeanFunction] = None,
+        initial_noise_variance: Optional[float] = None,
+        optimization_config: Optional[OptimizationConfig] = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):

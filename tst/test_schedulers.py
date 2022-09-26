@@ -32,6 +32,12 @@ _async_parameterizations = list(
         ["random", "bayesopt", "grid"],
         ["min", "max"],
     )
+) + list(
+    itertools.product(
+        ["hyperband_stopping", "hyperband_promotion"],
+        ["hypertune"],
+        ["min", "max"],
+    )
 )
 
 
@@ -58,6 +64,8 @@ def test_async_scheduler(scheduler, searcher, mode):
     trial_backend = temporary_local_backend(entry_point=entry_point)
 
     search_options = {"debug_log": False, "num_init_random": num_workers}
+    if searcher == "hypertune":
+        search_options["model"] = "gp_independent"
 
     if scheduler == "fifo":
         myscheduler = FIFOScheduler(

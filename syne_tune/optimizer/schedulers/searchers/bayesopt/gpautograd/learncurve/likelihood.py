@@ -76,7 +76,7 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
         self,
         kernel: KernelFunction,
         res_model: LCModel,
-        mean: MeanFunction = None,
+        mean: Optional[MeanFunction] = None,
         initial_noise_variance=None,
         encoding_type=None,
         **kwargs

@@ -29,6 +29,7 @@ from syne_tune.optimizer.baselines import (
     BayesianOptimization,
     ASHA,
     MOBSTER,
+    HyperTune,
     REA,
     SyncHyperband,
     SyncBOHB,
@@ -226,6 +227,13 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         MOBSTER(
             config_space=config_space,
             search_options={"model": "gp_independent"},
+            metric=metric1,
+            resource_attr=resource_attr,
+            max_t=max_t,
+            mode=mode,
+        ),
+        HyperTune(
+            config_space=config_space,
             metric=metric1,
             resource_attr=resource_attr,
             max_t=max_t,

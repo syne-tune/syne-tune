@@ -134,7 +134,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
     def __init__(
         self,
         kernel: KernelFunction,
-        mean: MeanFunction = None,
+        mean: Optional[MeanFunction] = None,
         initial_noise_variance=None,
         encoding_type=None,
         **kwargs,
@@ -167,7 +167,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         )
 
     @staticmethod
-    def _assert_data_entries(data: dict):
+    def assert_data_entries(data: dict):
         features = data.get("features")
         targets = data.get("targets")
         assert (
@@ -183,7 +183,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         )
 
     def get_posterior_state(self, data: dict) -> PosteriorState:
-        self._assert_data_entries(data)
+        self.assert_data_entries(data)
         return GaussProcPosteriorState(
             features=data["features"],
             targets=data["targets"],
@@ -233,7 +233,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         self._set_noise_variance(param_dict["noise_variance"])
 
     def on_fit_start(self, data: dict, profiler: Optional[SimpleProfiler] = None):
-        self._assert_data_entries(data)
+        self.assert_data_entries(data)
         targets = data["targets"]
         assert (
             targets.shape[1] == 1

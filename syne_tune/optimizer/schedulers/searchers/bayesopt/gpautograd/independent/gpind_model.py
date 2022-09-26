@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Optional
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
     OptimizationConfig,
@@ -67,9 +67,9 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
         mean_factory: Callable[[int], MeanFunction],
         resource_attr_range: Tuple[int, int],
         separate_noise_variances: bool = False,
-        initial_noise_variance: float = None,
-        initial_covariance_scale: float = None,
-        optimization_config: OptimizationConfig = None,
+        initial_noise_variance: Optional[float] = None,
+        initial_covariance_scale: Optional[float] = None,
+        optimization_config: Optional[OptimizationConfig] = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):

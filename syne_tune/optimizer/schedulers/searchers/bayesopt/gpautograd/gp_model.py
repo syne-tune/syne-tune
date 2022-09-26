@@ -195,7 +195,7 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
 
     def __init__(
         self,
-        optimization_config: OptimizationConfig = None,
+        optimization_config: Optional[OptimizationConfig] = None,
         random_seed=None,
         fit_reset_params: bool = True,
     ):
@@ -214,7 +214,7 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
     def likelihood(self) -> MarginalLikelihood:
         raise NotImplementedError
 
-    def fit(self, data: dict, profiler: SimpleProfiler = None):
+    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
         """
         Fit the model parameters by optimizing the marginal likelihood,
         and set posterior states.

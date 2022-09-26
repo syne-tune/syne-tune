@@ -25,6 +25,10 @@ import benchmarking
 from syne_tune.util import s3_experiment_path, random_string
 
 
+def _filter_none(a: dict) -> dict:
+    return {k: v for k, v in a.items() if v is not None}
+
+
 def launch_remote(
     entry_point: Path,
     methods: dict,
@@ -80,7 +84,7 @@ def launch_remote(
         }
         if extra_args is not None:
             assert map_extra_args is not None
-            hyperparameters.update(map_extra_args(args))
+            hyperparameters.update(_filter_none(map_extra_args(args)))
         if seed is not None:
             hyperparameters["num_seeds"] = seed
             hyperparameters["run_all_seed"] = 0

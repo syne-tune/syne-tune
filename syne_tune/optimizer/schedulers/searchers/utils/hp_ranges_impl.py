@@ -28,10 +28,6 @@ from syne_tune.optimizer.schedulers.searchers.utils.scaling import (
     get_scaling,
 )
 
-__all__ = [
-    "HyperparameterRangesImpl",
-    "decode_extended_features",
-]
 
 # Epsilon margin to account for numerical errors
 EPS = 1e-8
