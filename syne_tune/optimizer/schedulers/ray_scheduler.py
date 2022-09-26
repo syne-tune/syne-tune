@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class RayTuneScheduler(TrialScheduler):
     from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
-    from ray.tune.suggest import Searcher as RT_Searcher
+    from ray.tune.search import Searcher as RT_Searcher
 
     class RandomSearch(RT_Searcher):
         def __init__(
@@ -184,7 +184,7 @@ class RayTuneScheduler(TrialScheduler):
         :param config_space:
         :return:
         """
-        import ray.tune.sample as ray_sp
+        import ray.tune.search.sample as ray_sp
 
         ray_config_space = dict()
         for name, hp_range in config_space.items():

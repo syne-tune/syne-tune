@@ -82,7 +82,7 @@ mode = "max"
 
 
 def make_ray_skopt():
-    from ray.tune.suggest.skopt import SkOptSearch
+    from ray.tune.search.skopt import SkOptSearch
 
     ray_searcher = SkOptSearch()
     ray_searcher.set_search_properties(

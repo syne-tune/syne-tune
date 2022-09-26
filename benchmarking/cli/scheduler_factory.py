@@ -190,7 +190,7 @@ def scheduler_factory(
     else:
         from ray.tune.schedulers import AsyncHyperBandScheduler
         from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
-        from ray.tune.suggest.skopt import SkOptSearch
+        from ray.tune.search.skopt import SkOptSearch
         from syne_tune.optimizer.schedulers import RayTuneScheduler
         from syne_tune.optimizer.schedulers.searchers import impute_points_to_evaluate
 
