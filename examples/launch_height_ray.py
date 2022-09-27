@@ -14,7 +14,7 @@ import logging
 from pathlib import Path
 
 from ray.tune.schedulers import AsyncHyperBandScheduler
-from ray.tune.suggest.skopt import SkOptSearch
+from ray.tune.search.skopt import SkOptSearch
 import numpy as np
 
 from syne_tune.backend import LocalBackend
