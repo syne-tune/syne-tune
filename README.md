@@ -163,6 +163,7 @@ You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalit
 
 Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](docs/tutorials/basics/README.md)
+* [Multi-Fidelity Hyperparameter Optimization](docs/tutorials/multifidelity/README.md)
 * [Using the built-in schedulers](docs/schedulers.md)
 * [Choosing a configuration space](docs/search_space.md)
 * [Using the command line launcher to benchmark schedulers](docs/command_line.md)
