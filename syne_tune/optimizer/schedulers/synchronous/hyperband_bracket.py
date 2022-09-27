@@ -15,6 +15,8 @@ from operator import itemgetter
 import numpy as np
 from dataclasses import dataclass
 
+from syne_tune.util import is_increasing, is_positive_integer
+
 
 @dataclass
 class SlotInRung:
@@ -53,27 +55,17 @@ class SynchronousBracket:
         self.current_rung = 0
 
     @staticmethod
-    def _is_increasing(lst: List[int]) -> bool:
-        return all(x < y for x, y in zip(lst, lst[1:]))
-
-    @staticmethod
-    def _is_positive_integer(lst: List[int]) -> bool:
-        return all(x == int(x) and x >= 1 for x in lst)
-
-    @staticmethod
     def assert_check_rungs(rungs: List[Tuple[int, int]]):
         assert len(rungs) > 0, "There must be at least one rung"
         sizes, levels = zip(*rungs)
-        assert SynchronousHyperbandBracket._is_positive_integer(
+        assert is_positive_integer(
             levels
         ), f"Rung levels {levels} are not positive integers"
-        assert SynchronousHyperbandBracket._is_increasing(
-            levels
-        ), f"Rung levels {levels} are not increasing"
-        assert SynchronousHyperbandBracket._is_positive_integer(
+        assert is_increasing(levels), f"Rung levels {levels} are not increasing"
+        assert is_positive_integer(
             sizes
         ), f"Rung sizes {sizes} are not positive integers"
-        assert SynchronousHyperbandBracket._is_increasing(
+        assert is_increasing(
             [-x for x in sizes]
         ), f"Rung sizes {sizes} are not decreasing"
 

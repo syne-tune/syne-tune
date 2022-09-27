@@ -17,7 +17,7 @@ import random
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Union
 from time import perf_counter
 from contextlib import contextmanager
 
@@ -195,3 +195,11 @@ def catchtime(name: str) -> float:
         yield lambda: perf_counter() - start
     finally:
         print(f"Time for {name}: {perf_counter() - start:.4f} secs")
+
+
+def is_increasing(lst: List[Union[float, int]]) -> bool:
+    return all(x < y for x, y in zip(lst, lst[1:]))
+
+
+def is_positive_integer(lst: List[int]) -> bool:
+    return all(x == int(x) and x >= 1 for x in lst)

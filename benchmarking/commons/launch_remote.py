@@ -82,6 +82,8 @@ def launch_remote(
         checkpoint_s3_uri = s3_experiment_path(
             tuner_name=tuner_name, experiment_name=experiment_tag
         )
+        if checkpoint_s3_uri[-1] != "/":
+            checkpoint_s3_uri += "/"
         sm_args = dict(
             entry_point=entry_point.name,
             source_dir=str(entry_point.parent),
@@ -103,6 +105,7 @@ def launch_remote(
             "support_checkpointing": int(args.support_checkpointing),
             "save_tuner": int(args.save_tuner),
             "verbose": int(args.verbose),
+            "fcnet_ordinal": args.fcnet_ordinal,
         }
         if extra_args is not None:
             assert map_extra_args is not None

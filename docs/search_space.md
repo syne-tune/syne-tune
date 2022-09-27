@@ -54,10 +54,19 @@ means, a basic component of many HPO algorithms. The following domains are curre
 * `choice(categories)`: Uniform from the finite list `categories` of values.
   Entries in `categories` should ideally be of type `str`, but types `int` and
   `float` are also allowed (the latter can lead to errors due to round-off).
-* `ordinal(categories)`: Variant of `choice` for which the order of entries in
-  `categories` matters. Essentially, we use `randint(0, len(categories) - 1)`
-  internally on the positions in `categories`. For methods like Bayesian
-  optimization, nearby elements in the list have closer encodings.
+* `ordinal(categories, kind)`: Variant of `choice` for which the order of
+  entries in `categories` matters. For methods like Bayesian optimization,
+  nearby elements in the list have closer encodings. Compared to `choice`, the
+  encoding consists of a single number here. Different variants are implemented.
+  If `kind="equal"` (general default), we use `randint(0, len(categories) - 1)`
+  internally on the positions in `categories`, so that each category is chosen
+  with the same probability. If `kind="nn"` (default if `categories` strictly
+  increasing and of type `int` or `float`), `categories` must contain strictly
+  increasing `int` or `float` values. Internally, we use `uniform` for an
+  interval containing all values, a real value is mapped to a category by
+  nearest neighbor. If `kind="nn-log"`, this is done in the log space. The
+  latter two kinds are finite set versions of `uniform`, `loguniform`, the
+  different categories are (in general) not chosen with equal probabilities.
 * `finrange(lower, upper, size)`: Can be used as finite analogue of `uniform`.
   Uniform from the finite range `lower, ..., upper` of size `size`, where
   entries are equally spaced. For example, `finrange(0.5, 1.5, 3)` means
@@ -108,10 +117,14 @@ provide some recommendations.
 * **For finite numerical domains, use `finrange` or `logfinrange`.** If you
   insist on a finite range (in some cases, this may be the better choice) for
   a numerical parameter, make use of `finrange` or `logfinrange` instead of
-  `choice`, as alternatives to `uniform` and `loguniform` respectively.
+  `choice`, as alternatives to `uniform` and `loguniform` respectively. If
+  your value spacing is not regular, you can use `ordinal` with `kind="nn"`
+  or `kind="nn-log"`. For example,
+  `choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])` can be replaced by
+  `ordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1], kind="nn-log")`.
 * **Explore `ordinal` as alternative to `choice`.** Ordinal parameters are
-  encoded by a single int value, which is more economical in Bayesian
+  encoded by a single int value (if `kind="equal"`) or a single float value
+  (if `kind in {"nn", "nn-log"}`), which is more economical in Bayesian
   optimization.
 * **Use a log transform** for parameters which may vary over several orders of
   magnitude. Examples are learning rates or regularization constants.
-

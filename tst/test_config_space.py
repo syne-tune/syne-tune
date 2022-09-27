@@ -26,6 +26,8 @@ from syne_tune.config_space import (
     finrange,
     logfinrange,
     restrict_domain,
+    ordinal,
+    OrdinalNearestNeighbor,
 )
 
 
@@ -105,17 +107,28 @@ def test_serialization():
         finrange(0, 6, 4, cast_int=True),
         logfinrange(0.001, 1.0, 4),
         logfinrange(2, 64, 7, cast_int=True),
+        ordinal([0.01, 0.05, 0.1, 0.5]),
+        ordinal([0.01, 0.05, 0.1, 0.5], kind="nn"),
+        ordinal([0.01, 0.05, 0.1, 0.5], kind="nn-log"),
     ]
 
-    for x in config_space:
-        x2 = from_dict(to_dict(x))
-        assert type(x) == type(x2)
-        if x.sampler is not None:
-            assert x.sampler.__dict__ == x2.sampler.__dict__
-            assert type(x.sampler) == type(x2.sampler)
-        assert {k: v for k, v in x.__dict__.items() if k != "sampler"} == {
-            k: v for k, v in x2.__dict__.items() if k != "sampler"
+    for x1 in config_space:
+        x2 = from_dict(to_dict(x1))
+        assert type(x1) == type(x2)
+        if x1.sampler is not None:
+            assert x1.sampler.__dict__ == x2.sampler.__dict__
+            assert type(x1.sampler) == type(x2.sampler)
+        dct1 = {
+            k: v
+            for k, v in x1.__dict__.items()
+            if k != "sampler" and not k.startswith("_")
         }
+        dct2 = {
+            k: v
+            for k, v in x2.__dict__.items()
+            if k != "sampler" and not k.startswith("_")
+        }
+        assert dct1 == dct2
 
 
 def test_config_space_size():
@@ -126,8 +139,9 @@ def test_config_space_size():
         "c": choice(["a", "b", "c"]),
         "d": "constant",
         "e": 3.1415927,
+        "g": ordinal([0.01, 0.05, 0.1, 0.5]),
     }
-    cs_size = 6 * 6 * 3
+    cs_size = 6 * 6 * 3 * 4
     cases = [
         (config_space, cs_size),
         (dict(config_space, f=uniform(0, 1)), None),
@@ -180,6 +194,8 @@ def test_finrange_domain(domain, value_set):
         (logfinrange(np.exp(0.1), np.exp(1.0), 10), float),
         (finrange(0, 8, 5, cast_int=True), int),
         (logfinrange(8, 512, 7, cast_int=True), int),
+        (ordinal([0.01, 0.05, 0.1, 0.5]), float),
+        (ordinal([1, 4, 8, 17], kind="nn-log"), int),
     ],
 )
 def test_type_of_sample(domain, tp):
@@ -204,3 +220,17 @@ def test_restrict_domain():
     new_domain = restrict_domain(domain, 32, 128)
     print(new_domain)
     assert new_domain._values == [32, 64, 128]
+
+
+@pytest.mark.parametrize(
+    "categories, is_nn",
+    [
+        ([0, 2, 3, 5, 9], True),
+        (["a", "b", "c"], False),
+        ([0.1, 0.2, 0.4, 0.8, 1.6], True),
+        ([0.1, 0.2, 0.4, 0.3], False),
+        ([3, 2, 4, 8], False),
+    ],
+)
+def test_ordinal_default(categories, is_nn):
+    assert isinstance(ordinal(categories), OrdinalNearestNeighbor) == is_nn

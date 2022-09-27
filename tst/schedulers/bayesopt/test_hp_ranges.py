@@ -111,17 +111,23 @@ def test_categorical_to_and_from_ndarray(choices, external_hp, internal_ndarray)
 
 
 @pytest.mark.parametrize(
-    "choices,external_hp,internal_ndarray",
+    "choices,external_hp,internal_ndarray,kind",
     [
-        (["a", "b"], "a", [0.25]),
-        (["a", "b"], "b", [0.75]),
-        (["a", "b", "c"], "b", [0.5]),
-        (["a", "b", "c"], "c", [2.5 / 3]),
-        (["a", "b", "c", "d"], "c", [2.5 / 4]),
+        (["a", "b"], "a", [0.25], "equal"),
+        (["a", "b"], "b", [0.75], "equal"),
+        (["a", "b", "c"], "b", [0.5], "equal"),
+        (["a", "b", "c"], "c", [2.5 / 3], "equal"),
+        (["a", "b", "c", "d"], "c", [2.5 / 4], "equal"),
+        ([1, 2, 4, 7], 2, [2 / 8], "nn"),
+        ([1, 2, 4, 7], 7, [7 / 8], "nn"),
+        ([0.01, 0.05, 0.1, 0.5], 0.05, [0.43355607], "nn-log"),
+        ([0.01, 0.05, 0.1, 0.5], 0.1, [0.56644393], "nn-log"),
+        ([0.01, 0.05, 0.1, 0.5], 0.01, [0.125], "nn-log"),
+        ([0.01, 0.05, 0.1, 0.5], 0.5, [0.875], "nn-log"),
     ],
 )
-def test_ordinal_to_and_from_ndarray(choices, external_hp, internal_ndarray):
-    hp_ranges = make_hyperparameter_ranges({"a": ordinal(choices)})
+def test_ordinal_to_and_from_ndarray(choices, external_hp, internal_ndarray, kind):
+    hp_ranges = make_hyperparameter_ranges({"a": ordinal(choices, kind=kind)})
     config = hp_ranges.tuple_to_config((external_hp,))
     config_enc = np.array(internal_ndarray)
     assert_allclose(hp_ranges.to_ndarray(config), config_enc)
@@ -437,6 +443,8 @@ def test_encoded_ranges():
         "4": choice([3, 2, 1]),
         "5": choice([0.01, 0.001, 0.0001, 0.00001]),
         "6": choice(["a", "b"]),
+        "7": ordinal([0.05, 0.25, 0.5, 0.8], kind="equal"),
+        "8": ordinal([0.05, 0.25, 0.5, 0.8], kind="nn"),
     }
     hp_ranges = make_hyperparameter_ranges(config_space)
     encoded_ranges = hp_ranges.encoded_ranges
@@ -447,3 +455,5 @@ def test_encoded_ranges():
     assert encoded_ranges["4"] == (6, 9)
     assert encoded_ranges["5"] == (9, 13)
     assert encoded_ranges["6"] == (13, 14)
+    assert encoded_ranges["7"] == (14, 15)
+    assert encoded_ranges["8"] == (15, 16)

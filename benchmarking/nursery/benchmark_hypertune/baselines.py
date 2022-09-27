@@ -10,7 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.baselines import search_options
+from benchmarking.commons.baselines import (
+    search_options,
+    convert_categorical_to_ordinal_numeric,
+)
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
@@ -27,9 +30,15 @@ class Methods:
     BOHB = "BOHB"
 
 
+def conv_numeric_only(margs) -> dict:
+    return convert_categorical_to_ordinal_numeric(
+        margs.config_space, kind=margs.fcnet_ordinal
+    )
+
+
 methods = {
     Methods.ASHA: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="random",
         type="promotion",
         search_options=search_options(method_arguments),
@@ -41,7 +50,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.MOBSTER_JOINT: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="bayesopt",
         type="promotion",
         search_options=search_options(method_arguments),
@@ -53,7 +62,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.MOBSTER_INDEP: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="bayesopt",
         type="promotion",
         search_options=dict(
@@ -68,7 +77,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.HYPERTUNE_INDEP: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="hypertune",
         type="promotion",
         search_options=dict(
@@ -84,7 +93,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.HYPERTUNE_JOINT: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="hypertune",
         type="promotion",
         search_options=dict(
@@ -100,7 +109,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.SYNCHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="random",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -111,7 +120,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.BOHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="kde",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,

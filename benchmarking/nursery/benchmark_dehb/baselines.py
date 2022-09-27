@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 from benchmarking.commons.baselines import (
     convert_categorical_to_ordinal,
+    convert_categorical_to_ordinal_numeric,
     MethodArguments,
     search_options,
 )
@@ -38,9 +39,23 @@ class Methods:
     SYNCMOBSTER = "SYNCMOBSTER"
 
 
+def conv_numeric_only(margs) -> dict:
+    return convert_categorical_to_ordinal_numeric(
+        margs.config_space, kind=margs.fcnet_ordinal
+    )
+
+
+def conv_numeric_then_rest(margs) -> dict:
+    return convert_categorical_to_ordinal(
+        convert_categorical_to_ordinal_numeric(
+            margs.config_space, kind=margs.fcnet_ordinal
+        )
+    )
+
+
 methods = {
     Methods.ASHA: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="random",
         type="promotion",
         search_options=search_options(method_arguments),
@@ -52,7 +67,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.SYNCHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="random",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -63,7 +78,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.DEHB: lambda method_arguments: GeometricDifferentialEvolutionHyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="random_encoded",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -74,7 +89,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.BOHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="kde",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -85,7 +100,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.ASHA_ORD: lambda method_arguments: HyperbandScheduler(
-        config_space=convert_categorical_to_ordinal(method_arguments),
+        config_space=conv_numeric_then_rest(method_arguments),
         searcher="random",
         type="promotion",
         search_options=search_options(method_arguments),
@@ -96,7 +111,7 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.SYNCHB_ORD: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=convert_categorical_to_ordinal(method_arguments),
+        config_space=conv_numeric_then_rest(method_arguments),
         searcher="random",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -107,7 +122,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.DEHB_ORD: lambda method_arguments: GeometricDifferentialEvolutionHyperbandScheduler(
-        config_space=convert_categorical_to_ordinal(method_arguments),
+        config_space=conv_numeric_then_rest(method_arguments),
         searcher="random_encoded",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -118,7 +133,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.BOHB_ORD: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=convert_categorical_to_ordinal(method_arguments),
+        config_space=conv_numeric_then_rest(method_arguments),
         searcher="kde",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
@@ -129,7 +144,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.ASHA_STOP: lambda method_arguments: HyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="random",
         type="stopping",
         search_options=search_options(method_arguments),
@@ -141,7 +156,7 @@ methods = {
         brackets=method_arguments.num_brackets,
     ),
     Methods.SYNCMOBSTER: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
-        config_space=method_arguments.config_space,
+        config_space=conv_numeric_only(method_arguments),
         searcher="bayesopt",
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,
