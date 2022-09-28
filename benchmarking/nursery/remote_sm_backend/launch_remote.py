@@ -24,6 +24,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 import syne_tune
 import benchmarking
 from syne_tune.util import s3_experiment_path, random_string
+from benchmarking.commons.launch_remote import message_sync_from_s3
 
 
 if __name__ == "__main__":
@@ -106,10 +107,4 @@ if __name__ == "__main__":
         est = PyTorch(**sm_args)
         est.fit(job_name=f"{experiment_tag}-{seed}-{suffix}", wait=False)
 
-    print(
-        "\nLaunched all requested experiments. Once everything is done, use this "
-        "command to sync result files from S3:\n"
-        f"$ aws s3 sync {s3_experiment_path(experiment_name=experiment_tag)}/ "
-        f'~/syne-tune/{experiment_tag}/ --exclude "*" '
-        '--include "*metadata.json" --include "*results.csv.zip"'
-    )
+    print("\n" + message_sync_from_s3(experiment_tag))

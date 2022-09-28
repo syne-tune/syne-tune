@@ -88,7 +88,7 @@ class RemoteLauncher:
         self.log_level = log_level
         if s3_path is None:
             s3_path = s3_experiment_path()
-        self.s3_path = s3_path
+        self.s3_path = s3_path.rstrip("/")
         assert isinstance(no_tuner_logging, bool)
         self.no_tuner_logging = no_tuner_logging
 
