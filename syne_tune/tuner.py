@@ -126,6 +126,7 @@ class Tuner:
         )
 
         self.tuning_status = None
+        self.tuner_saver = None
 
     def run(self):
         """
@@ -147,10 +148,14 @@ class Tuner:
                 ),
             )
             # saves the tuner every results_update_interval seconds
-            self.tuner_saver = RegularCallback(
-                callback=lambda tuner: tuner.save(),
-                call_seconds_frequency=self.results_update_interval,
-            )
+            if self.save_tuner:
+                add_callback = self.tuner_saver is None
+                self.tuner_saver = RegularCallback(
+                    callback=lambda tuner: tuner.save(),
+                    call_seconds_frequency=self.results_update_interval,
+                )
+                if add_callback:
+                    self.callbacks.append(self.tuner_saver)
 
             self.metadata[ST_TUNER_START_TIMESTAMP] = time.time()
 
