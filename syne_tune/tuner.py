@@ -149,13 +149,10 @@ class Tuner:
             )
             # saves the tuner every results_update_interval seconds
             if self.save_tuner:
-                add_callback = self.tuner_saver is None
                 self.tuner_saver = RegularCallback(
                     callback=lambda tuner: tuner.save(),
                     call_seconds_frequency=self.results_update_interval,
                 )
-                if add_callback:
-                    self.callbacks.append(self.tuner_saver)
 
             self.metadata[ST_TUNER_START_TIMESTAMP] = time.time()
 
@@ -189,7 +186,7 @@ class Tuner:
                     running_trials_ids=running_trials_ids,
                 )
 
-                if new_results:
+                if new_results and self.save_tuner:
                     # Save tuner state only if there have been new results
                     self.tuner_saver(tuner=self)
 
