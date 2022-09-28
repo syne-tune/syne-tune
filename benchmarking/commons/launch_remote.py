@@ -81,6 +81,7 @@ def launch_remote(
             "experiment_tag": experiment_tag,
             "method": method,
             "support_checkpointing": int(args.support_checkpointing),
+            "save_tuner": int(args.save_tuner),
         }
         if extra_args is not None:
             assert map_extra_args is not None

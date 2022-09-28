@@ -54,6 +54,7 @@ class Tuner:
         callbacks: Optional[List[TunerCallback]] = None,
         metadata: Optional[dict] = None,
         suffix_tuner_name: bool = True,
+        save_tuner: bool = True,
     ):
         """
         Allows to run an tuning job, call `run` after initializing.
@@ -83,6 +84,9 @@ class Tuner:
         the time-stamp when the tuner started to run.
         :param suffix_tuner_name: If True, a timestamp is appended to the provided `tuner_name` that ensures uniqueness
         otherwise the name is left unchanged and is expected to be unique.
+        :param save_tuner: If True, the `Tuner` object is serialized at the end
+            of tuning, including its dependencies (e.g., scheduler). This allows
+            all details of the experiment to be recovered
         """
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -93,6 +97,7 @@ class Tuner:
         self.asynchronous_scheduling = asynchronous_scheduling
         self.wait_trial_completion_when_stopping = wait_trial_completion_when_stopping
         self.metadata = self._enrich_metadata(metadata)
+        self.save_tuner = save_tuner
 
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
@@ -121,6 +126,7 @@ class Tuner:
         )
 
         self.tuning_status = None
+        self.tuner_saver = None
 
     def run(self):
         """
@@ -142,10 +148,11 @@ class Tuner:
                 ),
             )
             # saves the tuner every results_update_interval seconds
-            self.tuner_saver = RegularCallback(
-                callback=lambda tuner: tuner.save(),
-                call_seconds_frequency=self.results_update_interval,
-            )
+            if self.save_tuner:
+                self.tuner_saver = RegularCallback(
+                    callback=lambda tuner: tuner.save(),
+                    call_seconds_frequency=self.results_update_interval,
+                )
 
             self.metadata[ST_TUNER_START_TIMESTAMP] = time.time()
 
@@ -179,7 +186,7 @@ class Tuner:
                     running_trials_ids=running_trials_ids,
                 )
 
-                if new_results:
+                if new_results and self.save_tuner:
                     # Save tuner state only if there have been new results
                     self.tuner_saver(tuner=self)
 
@@ -256,7 +263,8 @@ class Tuner:
                 callback.on_tuning_end()
 
             # Serialize Tuner object
-            self.save()
+            if self.save_tuner:
+                self.save()
 
             logger.info("Stopping trials that may still be running.")
             self.trial_backend.stop_all()

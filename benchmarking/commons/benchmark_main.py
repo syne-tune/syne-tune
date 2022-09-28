@@ -27,7 +27,7 @@ from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from benchmarking.nursery.benchmark_automl.baselines import MethodArguments
+from benchmarking.commons.baselines import MethodArguments
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
@@ -147,6 +147,12 @@ def parse_args(
         default=1,
         help="if 0, trials are started from scratch when resumed",
     )
+    parser.add_argument(
+        "--save_tuner",
+        type=int,
+        default=1,
+        help="Serialize Tuner object at the end of tuning?",
+    )
     if extra_args is not None:
         for kwargs in extra_args:
             name = kwargs.pop("name")
@@ -154,6 +160,7 @@ def parse_args(
     args, _ = parser.parse_known_args()
     args.verbose = bool(args.verbose)
     args.support_checkpointing = bool(args.support_checkpointing)
+    args.save_tuner = bool(args.save_tuner)
     args.run_all_seeds = bool(args.run_all_seeds)
     if args.run_all_seeds:
         seeds = list(range(args.start_seed, args.num_seeds))
@@ -266,5 +273,6 @@ def main(
             print_update_interval=600,
             tuner_name=experiment_tag,
             metadata=metadata,
+            save_tuner=args.save_tuner,
         )
         tuner.run()
