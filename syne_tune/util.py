@@ -89,8 +89,9 @@ def s3_experiment_path(
 ) -> str:
     """
     Returns S3 path for storing results and checkpoints.
+    Note: The path ends on "/".
 
-    :param s3_bucket: If not given,, the default bucket for the SageMaker
+    :param s3_bucket: If not given, the default bucket for the SageMaker
         session is used
     :param experiment_name: If given, this is used as first directory
     :param tuner_name: If given, this is used as second directory
@@ -98,10 +99,10 @@ def s3_experiment_path(
     """
     if s3_bucket is None:
         s3_bucket = sagemaker.Session().default_bucket()
-    s3_path = f"s3://{s3_bucket}/{SYNE_TUNE_DEFAULT_FOLDER}"
+    s3_path = f"s3://{s3_bucket}/{SYNE_TUNE_DEFAULT_FOLDER}/"
     for part in (experiment_name, tuner_name):
         if part is not None:
-            s3_path += "/" + part
+            s3_path += part + "/"
     return s3_path
 
 

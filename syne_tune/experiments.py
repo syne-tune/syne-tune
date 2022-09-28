@@ -116,7 +116,7 @@ def download_single_experiment(
     """
     s3_path = s3_experiment_path(
         s3_bucket=s3_bucket, tuner_name=tuner_name, experiment_name=experiment_name
-    )
+    ).rstrip("/")
     tgt_dir = experiment_path(tuner_name=tuner_name)
     tgt_dir.mkdir(exist_ok=True, parents=True)
     s3 = boto3.client("s3")

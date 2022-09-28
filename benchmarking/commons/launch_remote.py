@@ -29,6 +29,16 @@ def _filter_none(a: dict) -> dict:
     return {k: v for k, v in a.items() if v is not None}
 
 
+def message_sync_from_s3(experiment_tag: str) -> str:
+    return (
+        "Launched all requested experiments. Once everything is done, use this "
+        "command to sync result files from S3:\n"
+        f"$ aws s3 sync {s3_experiment_path(experiment_name=experiment_tag)} "
+        f'~/syne-tune/{experiment_tag}/ --exclude "*" '
+        '--include "*metadata.json" --include "*results.csv.zip"'
+    )
+
+
 def launch_remote(
     entry_point: Path,
     methods: dict,
@@ -102,10 +112,4 @@ def launch_remote(
         est = PyTorch(**sm_args)
         est.fit(job_name=f"{experiment_tag}-{tuner_name}-{suffix}", wait=False)
 
-    print(
-        "\nLaunched all requested experiments. Once everything is done, use this "
-        "command to sync result files from S3:\n"
-        f"$ aws s3 sync {s3_experiment_path(experiment_name=experiment_tag)}/ "
-        f'~/syne-tune/{experiment_tag}/ --exclude "*" '
-        '--include "*metadata.json" --include "*results.csv.zip"'
-    )
+    print("\n" + message_sync_from_s3(experiment_tag))
