@@ -129,6 +129,9 @@ class BotorchSearcher(SearcherWithRandomSeed):
         try:
             X = np.array(self._config_to_feature_matrix(self._configs_with_results()))
             y = self.objectives()
+            if self.mode == "min":
+                # qExpectedImprovement only supports maximization
+                y *= -1
 
             if (
                 self.max_num_observations is not None
@@ -156,10 +159,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
 
             acq = qExpectedImprovement(
                 model=gp,
-                best_f=Y_tensor.min().item()
-                if self.mode == "min"
-                else Y_tensor.max().item(),
-                maximize=self.mode == "max",
+                best_f=Y_tensor.max().item(),
                 X_pending=X_pending,
             )
 
