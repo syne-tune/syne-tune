@@ -35,7 +35,10 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Boolean,
 )
 from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.searcher import (
+    BaseSearcher,
+    impute_points_to_evaluate,
+)
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
@@ -161,7 +164,8 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         If searcher == "random_encoded", the encoded configs are
         sampled directly, each entry independent from U([0, 1]).
         This distribution has higher entropy than for "random" if
-        there are discrete hyperparameters in `config_space`.
+        there are discrete hyperparameters in `config_space`. Note that
+        `points_to_evaluate` is stll used in this case.
     search_options : dict
         Passed to `searcher_factory`
     metric : str
@@ -259,6 +263,10 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
             self.searcher = None
             if search_options.get("debug_log", True):
                 self._debug_log = DebugLogPrinter()
+            points_to_evaluate = kwargs.get("points_to_evaluate")
+            self._points_to_evaluate = impute_points_to_evaluate(
+                points_to_evaluate, self.config_space
+            )
         else:
             search_options.update(
                 {
@@ -283,6 +291,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
                 search_options["max_epochs"] = max_epochs
             self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
             self._debug_log = self.searcher.debug_log
+            self._points_to_evaluate = None
         # Bracket manager
         self.bracket_manager = DifferentialEvolutionHyperbandBracketManager(
             rungs_first_bracket=rungs_first_bracket,
@@ -413,20 +422,25 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         return suggestion
 
     def _encoded_config_from_searcher(self, trial_id: int) -> np.ndarray:
+        config = None
+        encoded_config = None
         if self.searcher is not None:
             if self._debug_log is not None:
                 logger.info("Draw new config from searcher")
             config = self.searcher.get_config(trial_id=str(trial_id))
-            if config is not None:
-                encoded_config = self._hp_ranges.to_ndarray(config)
-            else:
-                encoded_config = None
         else:
-            if self._debug_log is not None:
-                logger.info("Draw new encoded config uniformly at random")
-            encoded_config = self.random_state.uniform(
-                low=0, high=1, size=self._hp_ranges.ndarray_size
-            )
+            # `random_encoded` internal searcher. Still, `points_to_evaluate`
+            # is used
+            if self._points_to_evaluate:
+                config = self._points_to_evaluate.pop(0)
+            else:
+                if self._debug_log is not None:
+                    logger.info("Draw new encoded config uniformly at random")
+                encoded_config = self.random_state.uniform(
+                    low=0, high=1, size=self._hp_ranges.ndarray_size
+                )
+        if config is not None:
+            encoded_config = self._hp_ranges.to_ndarray(config)
         return encoded_config
 
     def _encoded_config_by_promotion(
