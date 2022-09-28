@@ -109,4 +109,4 @@ if __name__ == "__main__":
         print(f"Launching {job_name}")
         est.fit(wait=False, job_name=job_name)
 
-    print("\n" + message_sync_from_s3(experiment_tag))
+    print("\n" + message_sync_from_s3(experiment_name))
