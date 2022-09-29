@@ -12,7 +12,7 @@ concepts of Syne Tune.
 A simple example for a new scheduler (called `SimpleScheduler`) is given in
 [launch_height_standalone_scheduler.py](../../../examples/launch_height_standalone_scheduler.py).
 All schedulers are subclasses of
-[TrialScheduler](../../../syne_tune/optimizer/scheduler.py). Important methods
+[TrialScheduler](../../../syne_tune/optimizer/scheduler.py#L94). Important methods
 include:
 * Constructor: Needs to be passed the configuration space. Most schedulers also
   have `metric` (name of metric to be optimized) and `mode` (whether metric is
@@ -27,11 +27,11 @@ include:
 * `on_trial_result`: Called by the `Tuner` whenever a new result reported by a
   running trial has been received. Here, `trial` provides information about
   the trial (most important is `trial.trial_id`), and `result` contains the
-  arguments passed to [report](../../../syne_tune/report.py) by the underlying
+  arguments passed to [Reporter](../../../syne_tune/report.py#L41) by the underlying
   training script. All but the simplest schedulers maintain a state which is
   modified based on this information. The scheduler also decides what to do
   with this trial, returning a
-  [SchedulerDecision](../../../syne_tune/optimizer/scheduler.py) to the
+  [SchedulerDecision](../../../syne_tune/optimizer/scheduler.py#L23) to the
   `Tuner`, which in turn relays this decision to the back-end.
   Our `SimpleScheduler` maintains a sorted list of all metric values
   reported in `self.sorted_results`. Whenever a trial reports a metric value
@@ -58,7 +58,7 @@ scheduler to support, and which is discussed in more detail
 
 Recall from [Basics of Syne Tune](../basics/README.md) that an HPO experiment
 is run as interplay between a *back-end* and a *scheduler*, which is
-orchestrated by the [Tuner](../../../syne_tune/tuner.py). The back-end starts,
+orchestrated by the [Tuner](../../../syne_tune/tuner.py#L40). The back-end starts,
 stops, pauses, or resumes training jobs and relays their reports. A *trial*
 abstracts the evaluation of a hyperparameter *configuration*. There is a
 diverse range of schedulers which can be implemented in Syne Tune, some
@@ -70,13 +70,13 @@ examples are:
 * Early-stopping schedulers. These require trials to post intermediate
   results (e.g., validation errors after every epoch), and their
   `on_trial_result` may stop underperforming trials early. An example is
-  [HyperbandScheduler](../../../syne_tune/optimizer/schedulers/hyperband.py)
+  [HyperbandScheduler](../../../syne_tune/optimizer/schedulers/hyperband.py#L147)
   with `type="stopping"`.
 * Pause-and-resume schedulers. These require trials to post intermediate
   results (e.g., validation errors after every epoch). Their `on_trial_result`
   may pause trials at certain points in time, and their `_suggest` may
   decide to resume a paused trial instead of starting a new one. An example is
-  [HyperbandScheduler](../../../syne_tune/optimizer/schedulers/hyperband.py)
+  [HyperbandScheduler](../../../syne_tune/optimizer/schedulers/hyperband.py#L147)
   with `type="promotion"`.
 
 ### Asynchronous Job Execution
@@ -133,13 +133,13 @@ Tune is this: **be lazy!**
 * Does your idea involve changing the stop/continue or pause/resume decisions
   in asynchronous successive halving or Hyperband? All you need to do is to
   implement a new
-  [RungSystem](../../../syne_tune/optimizer/schedulers/hyperband_stopping.py).
+  [RungSystem](../../../syne_tune/optimizer/schedulers/hyperband_stopping.py#L37).
   Examples:
-  [StoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_stopping.py),
-  [PromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_promotion.py),
-  [RUSHStoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_rush.py),
-  [PASHARungSystem](../../../syne_tune/optimizer/schedulers/hyperband_pasha.py),
-  [CostPromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_cost_promotion.py).
+  [StoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_stopping.py#L146),
+  [PromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_promotion.py#L21),
+  [RUSHStoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_rush.py#L80),
+  [PASHARungSystem](../../../syne_tune/optimizer/schedulers/hyperband_pasha.py#L17),
+  [CostPromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_cost_promotion.py#L20).
 
 
 In the [next section](random_search.md), we walk through the implementation of

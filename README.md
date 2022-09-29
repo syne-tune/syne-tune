@@ -160,12 +160,15 @@ You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalit
 * [What different schedulers do you support? What are the main differences between them?](docs/faq.md#schedulers-supported)
 * [How do I define the search space?](docs/faq.md#search-space) 
 * [How can I visualize the progress of my tuning experiment with Tensorboard?](docs/faq.md#tensorboard) 
+* [How can I add a new scheduler?](docs/faq.md#add-scheduler)
+* [How can I add a new tabular or surrogate benchmark?](docs/faq.md#add-blackbox)
 
 Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](docs/tutorials/basics/README.md)
 * [Multi-Fidelity Hyperparameter Optimization](docs/tutorials/multifidelity/README.md)
-* [Using the built-in schedulers](docs/schedulers.md)
-* [Choosing a configuration space](docs/search_space.md)
+* [How to Contribute a New Scheduler](docs/tutorials/developer/README.md)
+* [Choosing a Configuration Space](docs/search_space.md)
+* [Using the Built-in Schedulers](docs/schedulers.md)
 * [Using the command line launcher to benchmark schedulers](docs/command_line.md)
 * [Using and extending the list of benchmarks](docs/benchmarks.md)
 

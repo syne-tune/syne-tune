@@ -9,8 +9,8 @@ make sure that the same configuration is not suggested twice.
 In this section, we walk through the Syne Tune implementation of random search,
 thereby discussing some additional concepts. This will also be a first example
 of the modular concept just described: random search is implemented as generic
-[FIFOScheduler](../../../syne_tune/optimizer/schedulers/fifo.py) configured by a
-[RandomSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py).
+[FIFOScheduler](../../../syne_tune/optimizer/schedulers/fifo.py#L118) configured by a
+[RandomSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py#L365).
 A self-contained implementation of random search would be shorter. On the other
 hand, as seen in [baselines](../../../syne_tune/optimizer/baselines.py),
 `FIFOScheduler` also powers GP-based Bayesian optimization, grid search, BORE,
@@ -22,15 +22,15 @@ once only and can be maintained much more easily.
 ## FIFOScheduler and RandomSearcher
 
 We will have a close look at
-[FIFOScheduler](../../../syne_tune/optimizer/schedulers/fifo.py) and
-[RandomSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py).
+[FIFOScheduler](../../../syne_tune/optimizer/schedulers/fifo.py#L118) and
+[RandomSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py#L365).
 Let us first consider the arguments of `FIFOScheduler`:
 * `searcher`, `search_options`: These are used to configure the scheduler with
   a searcher. For ease of use, `searcher` can be a name, and additional
   arguments can be passed via `search_options`. In this case, the searcher is
   created by a factory, as detailed [below](new_searcher.md). Alternatively,
   `searcher` can also be a
-  [BaseSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py)
+  [BaseSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py#L119)
   object.
 * `metric`, `mode`: As discussed [above](first_example.md#first-example) in
   `SimpleScheduler`.
@@ -52,7 +52,7 @@ Let us first consider the arguments of `FIFOScheduler`:
 
 The most important use case is to configure `FIFOScheduler` with a new searcher,
 and we will concentrate on this one. First, the base class of all searchers is
-[BaseSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py):
+[BaseSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py#L119):
 * `points_to_evaluate`: A list of configurations to be suggested first. This
   is initialized and (possibly) imputed in the base class, but needs to be used
   in child classes. Configurations in `points_to_evaluate` can be partially
@@ -95,20 +95,20 @@ and we will concentrate on this one. First, the base class of all searchers is
   `FIFOScheduler` and the Syne Tune searchers.
 
 Below `BaseSearcher`, there is
-[SearcherWithRandomSeed](../../../syne_tune/optimizer/schedulers/searchers/searcher.py),
+[SearcherWithRandomSeed](../../../syne_tune/optimizer/schedulers/searchers/searcher.py#L330),
 which should be used by all searchers which make random decisions. It maintains
 a PRN generator and provides methods to serialize and de-serialize its state.
 
 Finally, let us walk through
-[RandomSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py):
+[RandomSearcher](../../../syne_tune/optimizer/schedulers/searchers/searcher.py#L365):
 * There are a few features beyond `SimpleScheduler` above. The searcher does
   not suggest the same configuration twice, and also warns if a finite
   configuration space has been exhausted. It also uses
-  [HyperparameterRanges](../../../syne_tune/optimizer/schedulers/searchers/utils/hp_ranges.py)
+  [HyperparameterRanges](../../../syne_tune/optimizer/schedulers/searchers/utils/hp_ranges.py#L36)
   for random sampling and comparing configurations (to spot duplicates). This
   is a useful helper class, also for encoding configurations as vectors.
   Detecting duplicates is done by a
-  [ExclusionList](../../../syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common.py).
+  [ExclusionList](../../../syne_tune/optimizer/schedulers/searchers/bayesopt/tuning_algorithms/common.py#L92).
   Finally, `debug_log` is used for diagnostic logs.
 * `get_config` first asks for another entry from `points_to_evaluate` by way
   of `_next_initial_config`. It then samples a new configuration at random,

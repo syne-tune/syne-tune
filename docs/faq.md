@@ -24,7 +24,8 @@
 * [How can I benchmark experiments from the command line?](#benchmark-cli)
 * [What different schedulers do you support? What are the main differences between them?](#schedulers-supported)
 * [How do I define the search space?](#search-space) 
-* [How can I visualize the progress of my tuning experiment with Tensorboard?](#tensorboard) 
+* [How can I visualize the progress of my tuning experiment with Tensorboard?](#tensorboard)
+* [How can I add a new scheduler?](#add-scheduler)
 * [How can I add a new tabular or surrogate benchmark?](#add-blackbox)
 
 
@@ -150,7 +151,7 @@ Syne Tune stores the following files `metadata.json`, `results.csv.zip`, and `tu
 
 ### <a name="trial-checkpointing"></a> How can I enable trial checkpointing?
 
-Since trials may be paused and resumed (either by schedulers or when using spot-instances), the user may checkpoint intermediate results to avoid starting computation from scratch. Model outputs and checkpoints must be written into a specific local path given by the command line argument `st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load the state when the job is stopped/resumed (setting the folder correctly and uniquely per trial is the responsibility of the backend), see [checkpoint_example.py](https://github.com/awslabs/syne-tune/blob/main/examples/training_scripts/checkpoint_example/checkpoint_example.py) for a working example of a tuning script with checkpointing enabled.
+Since trials may be paused and resumed (either by schedulers or when using spot-instances), the user may checkpoint intermediate results to avoid starting computation from scratch. Model outputs and checkpoints must be written into a specific local path given by the command line argument `st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load the state when the job is stopped/resumed (setting the folder correctly and uniquely per trial is the responsibility of the backend), see [checkpoint_example.py](../examples/training_scripts/checkpoint_example/checkpoint_example.py) for a working example of a tuning script with checkpointing enabled.
 
 When using SageMaker backend or tuning remotely, we use the [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) under the hood to sync local checkpoints to s3. Checkpoints are synced to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/`, where `sagemaker-default-bucket` is the default bucket for SageMaker. 
 This can also be configured, for instance if you launch experiments with the benchmarking CLI,
@@ -161,8 +162,8 @@ the files are written to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-
 Checkpointing means storing the state of a trial (i.e., model parameters, optimizer or learning rate scheduler 
 parameters), so that it can be paused and potentially resumed at a later point in time, without having to start 
 training from scratch. Syne Tune checkpointing support is detailed in 
-[checkpointing](https://github.com/awslabs/syne-tune/blob/main/docs/benchmarks.md#checkpointing) and 
-[checkpoint_example.py](https://github.com/awslabs/syne-tune/blob/main/examples/training_scripts/checkpoint_example/checkpoint_example.py). Once checkpointing to and from a local file is added to a training script, Syne Tune is managing the checkpoints (e.g., copy to/from cloud storage for distributed back-ends).
+[checkpointing](benchmarks.md#checkpointing) and 
+[checkpoint_example.py](../examples/training_scripts/checkpoint_example/checkpoint_example.py). Once checkpointing to and from a local file is added to a training script, Syne Tune is managing the checkpoints (e.g., copy to/from cloud storage for distributed back-ends).
 
 The following schedulers make use of checkpointing:
 
@@ -257,25 +258,40 @@ All Syne Tune and user metadata are saved when the tuner starts under `metadata.
 ### <a name="logging-additional-information"></a> How do I append additional information to the results which are stored? 
 
 Results are processed and stored by callbacks passed to `Tuner`, in particular see 
-[tuner_callback.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/tuner_callback.py#L80). 
+[tuner_callback.py](../syne_tune/tuner_callback.py#L80). 
 In order to add more information to these results, you can inherit from `StoreResultsCallback`. 
 A good example is given in 
-[searcher_callback.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L63).
+[searcher_callback.py](../syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L63).
 
 If you run experiments with tabulated benchmarks using the `SimulatorBackend`, as demonstrated in 
-[launch_nasbench201_simulated.py](https://github.com/awslabs/syne-tune/blob/main/examples/launch_nasbench201_simulated.py), results are stored by `SimulatorCallback` instead, and you need to inherit from this class, as shown in 
-[searcher_callback.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L88).
+[launch_nasbench201_simulated.py](../examples/launch_nasbench201_simulated.py), results are stored by `SimulatorCallback` instead, and you need to inherit from this class, as shown in 
+[searcher_callback.py](../syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L88).
 
 ### <a name="remote-tuning"></a> I don’t want to wait, how can I launch the tuning on a remote machine?
 
-You can use the remote launcher to launch a tuning on a remote machine. The remote launcher supports both `LocalBackend` and `SageMakerBackend`. In the former case, multiple trials will be evaluated on the remote machine (one use-case being to use a beefy machine), in the latter case trials will be evaluated as separate SageMaker training jobs.
+You can use the remote launcher to launch an experiment on a remote machine. The
+remote launcher supports both `LocalBackend` and `SageMakerBackend`. In the
+former case, multiple trials will be evaluated on the remote machine (one use-case
+being to use a beefy machine), in the latter case trials will be evaluated as
+separate SageMaker training jobs.
 
-See for an example on how to run tuning with the remote launcher: [launch_height_sagemaker_remotely.py](https://github.com/awslabs/syne-tune/blob/main/examples/launch_height_sagemaker_remotely.py)
+Here is an example for how to run tuning with the remote launcher:
+[launch_height_sagemaker_remotely.py](../examples/launch_height_sagemaker_remotely.py).
+It may be more convenient for you to write your own launcher scripts. Examples
+for how this is done are
+[benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py](../benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py)
+or [benchmarking/nursery/benchmark_dehb/launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py).
+An example with the SageMaker backend is given in
+[benchmarking/nursery/remote_sm_backend/launch_remote.py](../benchmarking/nursery/remote_sm_backend/launch_remote.py).
 
 ### <a name="experiment-parallel"></a> How can I run many experiments in parallel?
 
-You can call the remote launcher multiple times to schedules a list of experiments. In some case, you will want more flexibility and directly write your experiment loop, you can check 
-[benchmark_loop](https://github.com/awslabs/syne-tune/tree/main/benchmarking/benchmark_loop) for an example.
+You can call the remote launcher multiple times to schedules a list of experiments.
+In some case, you will want more flexibility and directly write your experiment
+loop, you can check 
+[benchmark_loop](https://github.com/awslabs/syne-tune/tree/main/benchmarking/benchmark_loop)
+for an example. Many of the examples in [benchmarking/nursery/](../benchmarking/nursery/)
+allow for running many experiments in parallel.
 
 ### <a name="results-remote-tuning"></a> How can I access results after tuning remotely?
 
@@ -292,48 +308,76 @@ To get all results without the tuner state (you can ommit the include and exclud
 When you run remote code, you often need to install packages (e.g. scipy) or have custom code available.
 
 * To install packages, you can add a file `requirements.txt` in the same folder as your endpoint script. All those packages will be installed by SageMaker when docker container starts.
-* To include custom code (for instance a library that you are working on), you can set the parameter `dependencies` on the remote launcher or on a SageMaker framework to a list of folders. The folders indicated will be compressed, sent to s3 and added to the python path when the container starts. You can see [launch_remote.py](https://github.com/awslabs/syne-tune/blob/main/benchmarking/benchmark_loop/launch_remote.py#L28) for an example setting dependencies in a SageMaker estimator.
+* To include custom code (for instance a library that you are working on), you can set the parameter `dependencies` on the remote launcher or on a SageMaker framework to a list of folders. The folders indicated will be compressed, sent to s3 and added to the python path when the container starts. You can see [launch_remote.py](../benchmarking/benchmark_loop/launch_remote.py#L28) for an example setting dependencies in a SageMaker estimator.
 
 ### <a name="benchmark-cli"></a> How can I benchmark different methods?
 
-Syne Tune provides a command line launcher in `benchmarking/cli/launch_hpo.py`. It allows to launch a range of experiments with a single command. The CLI is documented [here](https://github.com/awslabs/syne-tune/blob/main/docs/command_line.md). In order to use the CLI with your own training script, you need add some meta-information, as explained [here](https://github.com/awslabs/syne-tune/blob/main/docs/benchmarks.md).
-
-Another possibility is to write a custom loop over different methods and benchmarks and an example is provided 
-and documented in this [directory](https://github.com/awslabs/syne-tune/blob/main/benchmarking/benchmark_loop/README.md).
-
-
-
+The most flexible way to do so is to write a custom remote launcher script. This
+is explained
+[here](../benchmarking/benchmark_loop/README.md).
+Other examples are [here](../benchmarking/nursery/fine_tuning_transformer_glue/)
+and [here](../benchmarking/nursery/remote_sm_backend/) for the SageMaker backend.
+Examples for comparing different methods using the simulator backend (on tabulated
+benchmarks) are [here](../benchmarking/nursery/benchmark_dehb/) and
+[here](../benchmarking/nursery/benchmark_hypertune/). You can easily configure them
+to your experimental setup.
 
 ### <a name="schedulers-supported"></a> What different schedulers do you support? What are the main differences between them?
 
-We refer to HPO algorithms as *schedulers*. A scheduler decides which configurations to assign to new trials, but also when to stop a running or resume a paused trial. Some schedulers delegate the first decision to a *searcher*. The most important differences between schedulers in the single-objective case are:
+We refer to HPO algorithms as *schedulers*. A scheduler decides which configurations
+to assign to new trials, but also when to stop a running or resume a paused trial.
+Some schedulers delegate the first decision to a *searcher*. The most important
+differences between schedulers in the single-objective case are:
 
-* Does the scheduler stop trials early or pause and resume trials (`HyperbandScheduler`) or not (`FIFOScheduler`). The former requires a resource dimension (e.g., number of epochs; size of training set) and slightly more elaborate reporting (e.g., evaluation after every epoch), but can outperform the latter by a large margin.
-* Does the searcher suggest new configurations by uniform random sampling (`searcher='random'`) or by sequential model-based decision-making (`searcher='bayesopt'`, `searcher='kde'`). The latter can be more expensive if a lot of trials are run, but can also be more sample-efficient.
+* Does the scheduler stop trials early or pause and resume trials (`HyperbandScheduler`)
+  or not (`FIFOScheduler`). The former requires a resource dimension (e.g., number
+  of epochs; size of training set) and slightly more elaborate reporting (e.g.,
+  evaluation after every epoch), but can outperform the latter by a large margin.
+* Does the searcher suggest new configurations by uniform random sampling
+  (`searcher='random'`) or by sequential model-based decision-making
+  (`searcher='bayesopt'`, `searcher='kde'`). The latter can be more expensive if a
+  lot of trials are run, but can also be more sample-efficient.
 
-An overview of this landscape is given [here](https://github.com/awslabs/syne-tune/blob/main/docs/schedulers.md). Further schedulers provided by Syne Tune include:
+An overview of this landscape is given [here](schedulers.md).
 
-* [Population based training (PBT)](https://github.com/awslabs/syne-tune/blob/main/examples/launch_pbt.py)
-* [Multi-objective asynchronous successive halving (MOASHA)](https://github.com/awslabs/syne-tune/blob/main/examples/launch_moasha_instance_tuning.py)
-* [Constrained Bayesian optimization](https://github.com/awslabs/syne-tune/blob/main/examples/launch_bayesopt_constrained.py)
-* [Bayesian optimization by density-ratio estimation (BORE)](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/baselines.py#L172)
-* [Regularized evolution](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/baselines.py#L185)
-* [Median stopping rule](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/median_stopping_rule.py)
-* [Synchronous Hyperband](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/synchronous/hyperband_impl.py#L46)
-* [Transfer learning schedulers](https://github.com/awslabs/syne-tune/blob/main/examples/launch_nas201_transfer_learning.py)
-* [Wrappers for Ray Tune schedulers](https://github.com/awslabs/syne-tune/blob/main/examples/launch_height_ray.py)
+Here is a [tutorial for multi-fidelity schedulers](tutorials/multifidelity/README.md).
+Further schedulers provided by Syne Tune include:
 
-Most of those methods can be accessed with short names by from [baselines.py](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/baselines.py).
+* [Population based training (PBT)](../examples/launch_pbt.py)
+* [Multi-objective asynchronous successive halving (MOASHA)](../examples/launch_moasha_instance_tuning.py)
+* [Constrained Bayesian optimization](../examples/launch_bayesopt_constrained.py)
+* [Bayesian optimization by density-ratio estimation (BORE)](../syne_tune/optimizer/baselines.py#L172)
+* [Regularized evolution](../syne_tune/optimizer/baselines.py#L185)
+* [Median stopping rule](../syne_tune/optimizer/schedulers/median_stopping_rule.py)
+* [Synchronous Hyperband](tutorials/multifidelity/mf_syncsh.md)
+* [Differential Evolution Hyperband (DEHB)](tutorials/multifidelity/mf_sync_model.md)
+* [Hyper-Tune](tutorials/multifidelity/mf_async_model.md)
+* [Transfer learning schedulers](../examples/launch_nas201_transfer_learning.py)
+* [Wrappers for Ray Tune schedulers](../examples/launch_height_ray.py)
+
+Most of those methods can be accessed with short names by from [baselines.py](../syne_tune/optimizer/baselines.py).
 
 ### <a name="search-space"></a> How do I define the search space? 
 
-While the training script defines the function to be optimized, some care needs to be taken to define the search space for the hyperparameter optimization problem. This being a global optimization problem without gradients easily available, it is most important to reduce the number of parameters. Some advice is given [here](https://github.com/awslabs/syne-tune/blob/main/docs/search_space.md).
+While the training script defines the function to be optimized, some care needs
+to be taken to define the search space for the hyperparameter optimization
+problem. This being a global optimization problem without gradients easily
+available, it is most important to reduce the number of parameters. Some advice
+is given [here](search_space.md).
 
-A powerful approach is to run experiments in parallel. Namely, split your hyperparameters into groups A, B, such that HPO over B is tractable. Draw a set of N configurations from A at random, then start N HPO experiments in parallel, where in each of them the search space is over B only, while the parameters in A are fixed. Syne Tune supports [massively parallel experimentation](https://github.com/awslabs/syne-tune/blob/main/docs/command_line.md#launching-many-experiments).
+A powerful approach is to run experiments in parallel. Namely, split your
+hyperparameters into groups A, B, such that HPO over B is tractable. Draw a set
+of N configurations from A at random, then start N HPO experiments in parallel,
+where in each of them the search space is over B only, while the parameters in A
+are fixed. Syne Tune supports
+[massively parallel experimentation](command_line.md#launching-many-experiments),
+see also examples in [benchmarking/nursery/](../benchmarking/nursery/).
 
 ### <a name="tensorboard"></a> How can I visualize the progress of my tuning experiment with Tensorboard?
 
-To visualize the progress of Syne Tune in [Tensorboard](https://www.tensorflow.org/tensorboard), you can pass the `TensorboardCallback` to the `Tuner` object:
+To visualize the progress of Syne Tune in
+[Tensorboard](https://www.tensorflow.org/tensorboard), you can pass the
+`TensorboardCallback` to the `Tuner` object:
 
 ```
 tuner = Tuner(
@@ -353,17 +397,22 @@ tensorboard --logdir ~/syne-tune/{tuner-name}/tensorboard_output
 
 If you want to plot the cumulative optimum of the metric you want to optimize, you can pass the `target_metric` argument to TensorboardCallback. This will also report the best found hyperparameter configuration over time.
 
+### <a name="add-scheduler"></a> How can I add a new scheduler?
 
-### <a name="add-blackbox"></a> [How can I add a new tabular or surrogate benchmark?
+This is explained in detail in [this tutorial](tutorials/developer/README.md).
+Please do consider [contributing back](../CONTRIBUTING.md) your efforts to the
+Syne Tune community, thanks!
+
+### <a name="add-blackbox"></a> How can I add a new tabular or surrogate benchmark?
 
 To add a new dataset of tabular evaluations, you need to 
 1) write a blackbox recipe able to regenerate it by extending
-[`BlackboxRecipe`](https://github.com/awslabs/syne-tune/blob/main/syne_tune/blackbox_repository/conversion_scripts/BlackboxRecipe.py). 
+[`BlackboxRecipe`](../syne_tune/blackbox_repository/conversion_scripts/BlackboxRecipe.py). 
 You need in particular to provide the name of the blackbox, the reference so that users are prompted to cite the appropriated paper and a code 
  that can generate it from scratch, see 
 [`lcbench.py`](https://github.com/awslabs/syne_tune/blackbox_repository/conversion_scripts/scripts/lcbench/lcbench.py) 
 for an example.
 2) add your new recipe class in 
-[`recipes`](https://github.com/awslabs/syne-tune/blob/main/syne_tune/blackbox_repository/conversion_scripts/recipes.py) 
+[`recipes`](../syne_tune/blackbox_repository/conversion_scripts/recipes.py) 
 to make it available in Syne Tune.
 
