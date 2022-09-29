@@ -29,7 +29,7 @@ multi-fidelity scheduler, where trials report intermediate results (e.g.,
 validation error at the end of each epoch of training). We can formalize this
 notion by the concept of *resource* $r = 1, 2, 3, \dots$ (e.g., $r$ is the
 number of epochs trained). A generic implementation of this method is provided
-in [HyperbandScheduler](../../../syne_tune/optimizer/schedulers/hyperband.py).
+in [HyperbandScheduler](../../../syne_tune/optimizer/schedulers/hyperband.py#L147).
 Let us have a look at its arguments not shared with the base class
 `FIFOScheduler`:
 * A mandatory argument is `resource_attr`, which is the name of a field in
@@ -70,8 +70,8 @@ Let us have a look at its arguments not shared with the base class
 One of the most flexible ways of extending `HyperbandScheduler` is to provide
 it with a novel [searcher](first_example.md#searchers-and-schedulers). In order
 to understand how this is done, we will walk through
-[MultiFidelityKernelDensityEstimator](../../../syne_tune/optimizer/schedulers/searchers/multi_fidelity_kde_searcher.py)
-and [KernelDensityEstimator](../../../syne_tune/optimizer/schedulers/searchers/kde_searcher.py).
+[MultiFidelityKernelDensityEstimator](../../../syne_tune/optimizer/schedulers/searchers/kde/multi_fidelity_kde_searcher.py#L26)
+and [KernelDensityEstimator](../../../syne_tune/optimizer/schedulers/searchers/kde/kde_searcher.py#L30).
 This searcher implements `suggest` as in [BOHB](https://arxiv.org/abs/1807.01774),
 as also detailed in the
 [tutorial](../multifidelity/mf_sync_model.md#synchronous-bohb). In a nutshell,
@@ -87,7 +87,7 @@ implements most of what is needed in the multi-fidelity context.
 * The code does quite some bookkeeping concerned with mapping configurations
   to feature vectors. If you want to do this from scratch for your searcher,
   we recommend to use
-  [HyperparameterRanges](../../../syne_tune/optimizer/schedulers/searchers/utils/hp_ranges.py).
+  [HyperparameterRanges](../../../syne_tune/optimizer/schedulers/searchers/utils/hp_ranges.py#L36).
   However, `KernelDensityEstimator` was extracted from the original BOHB
   implementation.
 * Observation data is collected in `self.X` (feature vectors for configurations)
@@ -119,8 +119,8 @@ does not showcase the full range of information exchanged between
   searcher are not properly serialized.
 
 For a more complete and advanced example, the reader is invited to study
-[GPMultiFidelitySearcher](../../../syne_tune/optimizer/schedulers/searchers/gp_multifidelity_searcher.py)
-and [GPFIFOSearcher](../../../syne_tune/optimizer/schedulers/searchers/gp_fifo_searcher.py)
+[GPMultiFidelitySearcher](../../../syne_tune/optimizer/schedulers/searchers/gp_multifidelity_searcher.py#L43)
+and [GPFIFOSearcher](../../../syne_tune/optimizer/schedulers/searchers/gp_fifo_searcher.py#L440)
 This searcher takes pending evaluations into account (by way of fantasizing).
 Moreover, it can be configured with a Gaussian process model and an acquisition
 function, which is optimized in a gradient-based manner.
@@ -128,11 +128,11 @@ function, which is optimized in a gradient-based manner.
 Moreover, as already noted [here](first_example.md#searchers-and-schedulers),
 `HyperbandScheduler` also allows to configure the decision rule for stop/continue
 or pause/resume as part of `on_trial_report`. Examples for this are found in
-[StoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_stopping.py),
-[PromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_promotion.py),
-[RUSHStoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_rush.py),
-[PASHARungSystem](../../../syne_tune/optimizer/schedulers/hyperband_pasha.py),
-[CostPromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_cost_promotion.py).
+[StoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_stopping.py#L146),
+[PromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_promotion.py#L21),
+[RUSHStoppingRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_rush.py#L80),
+[PASHARungSystem](../../../syne_tune/optimizer/schedulers/hyperband_pasha.py#L17),
+[CostPromotionRungSystem](../../../syne_tune/optimizer/schedulers/hyperband_cost_promotion.py#L20).
 
 
 In the [next section](extend_sync_hb.md), we show how extensions of synchronous

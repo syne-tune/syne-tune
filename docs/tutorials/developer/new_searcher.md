@@ -34,7 +34,7 @@ It is the purpose of [searcher_factory](../../../syne_tune/optimizer/schedulers/
 to create the correct `BaseSearcher` object for given scheduler arguments,
 including `searcher` (name) and `search_options`. Let us have a look how the
 constructor `__init__` of
-[FIFOScheduler](../../../syne_tune/optimizer/schedulers/fifo.py) calls the
+[FIFOScheduler](../../../syne_tune/optimizer/schedulers/fifo.py#L118) calls the
 factory. We see how scheduler arguments like `metric`, `mode`,
 `points_to_evaluate` are just passed through to the factory. We also need to
 set `search_options["scheduler"]` in order to tell `searcher_factory` which

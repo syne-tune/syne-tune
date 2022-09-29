@@ -25,11 +25,11 @@ asynchronously. This requirement poses slight additional challenges for an
 implementation, over what is said in
 [published work](https://jmlr.org/papers/v18/16-558.html).
 We start with an overview of
-[SynchronousHyperbandScheduler](../../../syne_tune/optimizer/schedulers/synchronous/hyperband.py).
+[SynchronousHyperbandScheduler](../../../syne_tune/optimizer/schedulers/synchronous/hyperband.py#L73).
 Concepts such as resource, rung, bracket, grace period $r_{min}$, reduction
 factor $\eta$ are detailed in the [tutorial](../multifidelity/README.md).
 
-[SynchronousHyperbandBracket](../../../syne_tune/optimizer/schedulers/synchronous/hyperband_bracket.py)
+[SynchronousHyperbandBracket](../../../syne_tune/optimizer/schedulers/synchronous/hyperband_bracket.py#165)
 represents a bracket, consisting of a list of rungs, where each rung is
 defined by `(rung_size, level)`, `rung_size` is the number of slots, `level`
 the resource level. Any system of rungs is admissible, as long as `rung_size`
@@ -55,7 +55,7 @@ is strictly decreasing and `level` is strictly increasing.
   `None` at the beginning, they are set by the caller (using new `trial_id`
   values provided by the back-end).
 
-[SynchronousHyperbandBracketManager](../../../syne_tune/optimizer/schedulers/synchronous/hyperband_bracket_manager.py)
+[SynchronousHyperbandBracketManager](../../../syne_tune/optimizer/schedulers/synchronous/hyperband_bracket_manager.py#L25)
 maintains all brackets during an experiment. It is configured by a list of
 brackets, where each bracket has one less rungs than its predecessor. The
 Hyperband algorithm cycles through this `RungSystemsPerBracket` in a round
@@ -69,7 +69,7 @@ yet complete, is the *primary bracket*.
   can take the job, a new bracket is created.
 
 Given these classes,
-[SynchronousHyperbandScheduler](../../../syne_tune/optimizer/schedulers/synchronous/hyperband.py)
+[SynchronousHyperbandScheduler](../../../syne_tune/optimizer/schedulers/synchronous/hyperband.py#L73)
 is straightforward. It is a pause-and-resume scheduler.
 * `_suggest` polls `self.bracket_manager.next_job()`. If the `SlotInRung`
   returned has `trial_id` assigned, it corresponds to a trial to be promoted,
@@ -139,7 +139,7 @@ we can map mutation and cross-over to `suggest`, and selection to
 `on_trial_report`. It becomes clear that we can use most of the infrastructure
 for synchronous Hyperband without change.
 
-[DifferentialEvolutionHyperbandBracket](../../../syne_tune/optimizer/schedulers/synchronous/dehb_bracket.py)
+[DifferentialEvolutionHyperbandBracket](../../../syne_tune/optimizer/schedulers/synchronous/dehb_bracket.py#L21)
 has only minor differences to `SynchronousHyperbandBracket`. First,
 `_promote_trials_at_rung_complete` does nothing, because promotion (i.e.,
 determining the trials for a rung from the one above) is a more complex
@@ -167,7 +167,7 @@ type of information is not present when we need it, we are not allowed to wait.
   changes between cross-over and selection. Also, in rare cases, the target
   may not have a metric at selection time. In this case, the candidate wins.
 
-[DifferentialEvolutionHyperbandBracketManager](../../../syne_tune/optimizer/schedulers/synchronous/dehb_bracket_manager.py)
+[DifferentialEvolutionHyperbandBracketManager](../../../syne_tune/optimizer/schedulers/synchronous/dehb_bracket_manager.py#L23)
 is very similar to `SynchronousHyperbandBracketManager`. Differences include:
 * The system of brackets is more rigid in DEHB, in that subsequent brackets are
   determined by the first one. In particular, later brackets have less total
@@ -177,7 +177,7 @@ is very similar to `SynchronousHyperbandBracketManager`. Differences include:
 * `trial_id_from_parent_slot` selects the `trial_id` for the target for
   cross-over and selection.
 
-[DifferentialEvolutionHyperbandScheduler](../../../syne_tune/optimizer/schedulers/synchronous/dehb.py)
+[DifferentialEvolutionHyperbandScheduler](../../../syne_tune/optimizer/schedulers/synchronous/dehb.py#L128)
 implements the DEHB scheduler.
 * On top of `SynchronousHyperbandScheduler`, it also maps `trial_id` to encoded
   configuration in `self._trial_info`, and `self._global_parent_pool` maintains

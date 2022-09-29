@@ -1,7 +1,7 @@
 # Contributing a New Scheduler: The TrialScheduler API
 
 In this section, we have a closer look at the
-[TrialScheduler](../../../syne_tune/optimizer/scheduler.py) API, and how a
+[TrialScheduler](../../../syne_tune/optimizer/scheduler.py#L94) API, and how a
 scheduler interacts with the trial back-end.
 
 
@@ -28,7 +28,7 @@ pause-and-resume scheduling is done via
 load checkpoints locally must be provided by the training script, the
 back-end makes them available when needed. There are two basic events which
 happen repeatedly during an HPO experiment, as orchestrated by the
-[Tuner](../../../syne_tune/tuner.py):
+[Tuner](../../../syne_tune/tuner.py#L40):
 * The `Tuner` polls the back-end, which signals that one or more workers are
   available. For each free worker, it calls `scheduler.suggest`, asking for
   what to do next. As already seen in our
@@ -57,17 +57,17 @@ idle having to wait for results from other trials.
 ## TrialScheduler API
 
 We now discuss additional aspects of the
-[TrialScheduler](../../../syne_tune/optimizer/scheduler.py) API, beyond what
+[TrialScheduler](../../../syne_tune/optimizer/scheduler.py#L94) API, beyond what
 has already been covered [here](first_example.md#first-example):
 * `suggest` returns a
-  [TrialSuggestion](../../../syne_tune/optimizer/scheduler.py) object with
+  [TrialSuggestion](../../../syne_tune/optimizer/scheduler.py#L30) object with
   fields `spawn_new_trial_id`, `checkpoint_trial_id`, `config`. Here,
   `start_suggestion` has `spawn_new_trial_id=True` and requires `config`. A
   new trial is to be started with configuration `config`. Typically, this
   trial starts training from scratch. However, some specific schedulers
   allow the trial to warm-start from a checkpoint written for a different
   trial (an example is
-  [PopulationBasedTraining](../../../syne_tune/optimizer/schedulers/pbt.py)).
+  [PopulationBasedTraining](../../../syne_tune/optimizer/schedulers/pbt.py#L78)).
   A pause-and-resume scheduler may also return `resume_suggestion`, where
   `spawn_new_trial_id=False` and `checkpoint_trial_id` is mandatory. In this
   case, a currently paused trial with ID `checkpoint_trial_id` is to be
@@ -83,7 +83,7 @@ has already been covered [here](first_example.md#first-example):
   when interfacing with a searcher. Namely, the configuration space (member
   `config_space`) may contain any number of fixed attributes alongside the
   hyperparameters to be tuned (the latter have values of type
-  [Domain](../../../syne_tune/config_space.py)), and each hyperparameter has
+  [Domain](../../../syne_tune/config_space.py#L30)), and each hyperparameter has
   a specific `value_type` (mostly `float`, `int` or `str`). Searchers require
   clean configurations, containing only hyperparameters with the correct
   value types, which is ensured by `_preprocess_config`. Also,
