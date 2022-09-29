@@ -136,6 +136,7 @@ def load_experiment(
     download_if_not_found: bool = True,
     load_tuner: bool = False,
     local_path: Optional[str] = None,
+    experiment_name: Optional[str] = None,
 ) -> ExperimentResult:
     """
     :param tuner_name: name of a tuning experiment previously run
@@ -151,7 +152,7 @@ def load_experiment(
         logging.info(
             f"experiment {tuner_name} not found locally, trying to get it from s3."
         )
-        download_single_experiment(tuner_name=tuner_name)
+        download_single_experiment(tuner_name=tuner_name, experiment_name=experiment_name)
     try:
         with open(metadata_path, "r") as f:
             metadata = json.load(f)
