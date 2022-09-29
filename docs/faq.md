@@ -2,6 +2,7 @@
 
 ## Table of contents
 
+* [Why should I use Syne Tune, and not Ray Tune, Optuna, ...?](#why-syne-tune)
 * [What are the different installations options supported?](#installations)
 * [How can I run on AWS and SageMaker?](#running-on-sagemaker)
 * [What are the metrics reported by default when calling the `Reporter`?](#reporter-metrics)
@@ -29,6 +30,42 @@
 * [How can I add a new tabular or surrogate benchmark?](#add-blackbox)
 
 
+### <a name="why-syne-tune"></a> Why should I use Syne Tune, and not Ray Tune, Optuna, ...?
+
+HPO is an important problem since many years, with a healthy number of commercial
+and open source tools available. Notable examples for open source tools are
+[Ray Tyne](https://docs.ray.io/en/latest/tune/index.html) and
+[Optuna](https://optuna.readthedocs.io/en/stable/). Here are some reasons why you
+may prefer Syne Tune over these alternatives.
+* Lightweight and platform agnostic: Syne Tune is designed to work with different
+  execution back-ends, so you are not locked into a particular distributed system
+  architecture. Syne Tune runs with minimal dependencies.
+* Wide range of modalities: Syne Tune supports multi-fidelity HPO, constrained HPO,
+  multi-objective HPO, transfer tuning, cost-aware HPO.
+* Simple, modular design: Rather than wrapping all sorts of other HPO frameworks,
+  Syne Tune provides simple APIs and scheduler templates, which can easily be
+  [extended to your specific needs](tutorials/developer/README.md).
+* Industry-strength Bayesian optimization: Syne Tune has special support for
+  [Gaussian process based Bayesian optimization](tutorials/basics/basics_bayesopt.md).
+  The same code powers modalities like multi-fidelity HPO, constrained HPO, or
+  cost-aware HPO, having been tried and tested for several years in SageMaker
+  services.
+* Special support for researchers: Syne Tune allows for rapid development and
+  comparison between different tuning algorithms. Its
+  [blackbox repository and simulator back-end](tutorials/multifidelity/mf_setup.md)
+  run realistic simulations of experiments many times faster than real time.
+
+If you are an AWS customer, there are additional good reasons to use Syne Tune over
+the alternatives:
+* Syne Tune is tightly integrated into the AWS ecosystem, and in particular into
+  AWS SageMaker. If you use AWS services or SageMaker frameworks day to day, Syne
+  Tune works out of the box and fits into your normal workflow.
+* Syne Tune code powers several of the algorithms in the
+  [Automatic Model Tuning](https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html)
+  service, and more transfer will be forthcoming.
+
+
+
 ### <a name="installations"></a> What are the different installations options supported?
 
 To install Syne Tune with minimal dependencies from pip, you can simply do:
@@ -40,11 +77,14 @@ pip install 'syne-tune[core]'
 If you want in addition to install our own Gaussian process based optimizers, Ray Tune or Bore optimizer, 
 you can run `pip install 'syne-tune[X]'` where `X` can be 
 * `gpsearchers`: For built-in Gaussian process based optimizers
+* `aws`: AWS SageMaker dependencies
 * `raytune`: For Ray Tune optimizers
 * `benchmarks`: For installing dependencies required to run all benchmarks
+* `blackbox-repository`: Blackbox repository for simulated tuning
+* `kde`: For KDE optimizer
+* `botorch`: Bayesian optimization from BOTorch
 * `extra`: For installing all the above
 * `bore`: For Bore optimizer
-* `kde`: For KDE optimizer
 
 For instance, `pip install 'syne-tune[gpsearchers]'` will install Syne Tune along with many built-in Gaussian process 
 optimizers.
