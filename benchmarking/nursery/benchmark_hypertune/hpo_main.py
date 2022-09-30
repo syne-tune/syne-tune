@@ -21,8 +21,7 @@ extra_args = [
     dict(
         name="--num_brackets",
         type=int,
-        required=False,
-        help="number of brackets",
+        help="Number of brackets",
     ),
     dict(
         name="--num_samples",

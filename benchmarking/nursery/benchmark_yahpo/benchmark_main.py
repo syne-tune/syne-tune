@@ -10,25 +10,35 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.nursery.benchmark_neuralband.baselines import methods
-from benchmarking.nursery.benchmark_neuralband.benchmark_definitions import (
+from benchmarking.commons.benchmark_main import main
+from benchmarking.nursery.benchmark_yahpo.baselines import methods
+from benchmarking.nursery.benchmark_yahpo.benchmark_definitions import (
     benchmark_definitions,
 )
 
 
 extra_args = [
     dict(
-        name="--num_brackets",
+        name="--grace_period",
         type=int,
-        help="Number of brackets",
+        default=1,
+        help="Minimum resource level in Hyperband",
+    ),
+    dict(
+        name="--reduction_factor",
+        type=int,
+        default=3,
+        help="Reduction factor in Hyperband",
     ),
 ]
 
 
 def map_extra_args(args) -> dict:
     return dict(
-        num_brackets=args.num_brackets,
+        scheduler_kwargs={
+            "grace_period": args.grace_period,
+            "reduction_factor": args.reduction_factor,
+        }
     )
 
 

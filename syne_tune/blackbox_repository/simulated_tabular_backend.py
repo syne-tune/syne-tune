@@ -248,18 +248,25 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         If you want to add a new dataset, see the section `Adding a new dataset section` of
         `blackbox_repository/README.md`.
 
-        :param blackbox_name: name of a blackbox, should have been registered in blackbox repository.
+        :param blackbox_name: name of a blackbox, should have been registered in
+            blackbox repository.
         :param elapsed_time_attr: name of the column containing cumulative time
         :param max_resource_attr:
         :param dataset: Selects different versions of the blackbox
-        :param surrogate: optionally, a model that is fitted to predict objectives given any configuration.
-        Possible examples: "KNeighborsRegressor" or "MLPRegressor" or "XGBRegressor" which would enable using
-        the corresponding Scikit-learn estimator.
-        The model is fit on top of pipeline that applies basic feature-processing to convert hyperparameters
-        rows in X to vectors. The configuration_space hyperparameters types are used to deduce the types of columns in
-         X (for instance CategoricalHyperparameter are one-hot encoded).
-        :param surrogate_kwargs: arguments for the scikit-learn estimator, for instance {"n_neighbors": 1} can be used
-        if `surrogate="KNeighborsRegressor"` is chosen.
+        :param surrogate: optionally, a model that is fitted to predict objectives
+            given any configuration.
+            Possible examples: "KNeighborsRegressor" or "MLPRegressor" or "XGBRegressor"
+            which would enable using the corresponding Scikit-learn estimator.
+            The model is fit on top of pipeline that applies basic feature-processing
+            to convert hyperparameters rows in X to vectors. The configuration_space
+            hyperparameters types are used to deduce the types of columns in X (for
+            instance CategoricalHyperparameter are one-hot encoded).
+        :param surrogate_kwargs: arguments for the scikit-learn estimator, for
+            instance {"n_neighbors": 1} can be used if `surrogate="KNeighborsRegressor"`
+            is chosen.
+            If `blackbox_name` is a YAHPO blackbox, then `surrogate_kwargs` is passed
+            as `yahpo_kwargs` to `load_blackbox`. In this case, `surrogate` is
+            ignored (YAHPO always uses surrogates).
         :param config_space_surrogate: if `surrogate` is given, this is the
             configuration space for the surrogate blackbox. If not given, the
             space of the original blackbox is used. However, if this is a tabular
@@ -283,7 +290,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             make_surrogate(surrogate=surrogate, surrogate_kwargs=surrogate_kwargs)
         self._surrogate = surrogate
         self._surrogate_kwargs = (
-            surrogate_kwargs if surrogate_kwargs is not None else {}
+            surrogate_kwargs if surrogate_kwargs is not None else dict()
         )
         if config_space_surrogate is not None:
             self._config_space_surrogate = {
@@ -295,15 +302,17 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
     @property
     def blackbox(self) -> Blackbox:
         if self._blackbox is None:
+            self._blackbox = load_blackbox(
+                self.blackbox_name, yahpo_kwargs=self._surrogate_kwargs
+            )
             if self.dataset is None:
-                self._blackbox = load_blackbox(self.blackbox_name)
                 # TODO: This could fail earlier
                 assert not isinstance(self._blackbox, dict), (
                     f"blackbox_name = '{self.blackbox_name}' maps to a dict, "
                     + "dataset argument must be given"
                 )
             else:
-                self._blackbox = load_blackbox(self.blackbox_name)[self.dataset]
+                self._blackbox = self._blackbox[self.dataset]
             if self._surrogate is not None:
                 surrogate = make_surrogate(
                     surrogate=self._surrogate, surrogate_kwargs=self._surrogate_kwargs

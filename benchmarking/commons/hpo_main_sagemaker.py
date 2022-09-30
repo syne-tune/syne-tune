@@ -54,16 +54,6 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
                 help="Benchmark to run",
             ),
             dict(
-                name="n_workers",
-                type=int,
-                help="Number of workers",
-            ),
-            dict(
-                name="max_wallclock_time",
-                type=int,
-                help="Maximum runtime for experiment",
-            ),
-            dict(
                 name="max_failures",
                 type=int,
                 default=3,
@@ -74,6 +64,11 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
                 type=int,
                 default=0,
                 help="If 1, the SageMaker managed warm pools feature is used. This can be more expensive, but also reduces startup delays, leading to an experiment finishing in less time",
+            ),
+            dict(
+                name="instance_type",
+                type=str,
+                help="AWS SageMaker instance type (overwrites default of benchmark)",
             ),
         ]
     )
@@ -106,7 +101,6 @@ def main(
         experiment_tag="A",
         tuner_name="B",
         benchmark=benchmark,
-        sagemaker_backend=False,
     )
     del sm_args["checkpoint_s3_uri"]
     sm_args["sagemaker_session"] = default_sagemaker_session()
@@ -120,6 +114,8 @@ def main(
             "------------------------------------------------------------------------"
         )
         sm_args["keep_alive_period_in_seconds"] = WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS
+    if args.instance_type is not None:
+        sm_args["instance_type"] = args.instance_type
     trial_backend = SageMakerBackend(
         sm_estimator=sagemaker_estimator[benchmark.framework](**sm_args),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the

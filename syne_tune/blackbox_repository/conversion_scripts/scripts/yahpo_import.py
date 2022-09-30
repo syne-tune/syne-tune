@@ -16,6 +16,7 @@ Wrap Surrogates from
 YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization
 Florian Pfisterer, Lennart Schneider, Julia Moosbauer, Martin Binder, Bernd Bischl
 """
+from typing import Optional, List
 import logging
 import shutil
 
@@ -38,15 +39,13 @@ from syne_tune.blackbox_repository.serialize import (
 )
 import syne_tune.config_space as cs
 from syne_tune.blackbox_repository.blackbox import Blackbox
-from typing import Dict, Optional
-
+from syne_tune.constants import ST_WORKER_ITER
+from syne_tune.util import is_increasing, is_positive_integer
 
 import ConfigSpace
 from yahpo_gym.benchmark_set import BenchmarkSet
 from yahpo_gym.configuration import list_scenarios
 from yahpo_gym import local_config
-
-from syne_tune.constants import ST_WORKER_ITER
 
 
 def download(target_path: Path, version: str):
@@ -64,12 +63,46 @@ def download(target_path: Path, version: str):
         logging.info(f"File {target_file} found, skipping download.")
 
 
+def _check_whether_iaml(benchmark: BenchmarkSet) -> bool:
+    return benchmark.config.config_id.startswith("iaml_")
+
+
+def _check_whether_rbv2(benchmark: BenchmarkSet) -> bool:
+    return benchmark.config.config_id.startswith("rbv2_")
+
+
 class BlackBoxYAHPO(Blackbox):
     """
     A wrapper that allows putting a 'YAHPO' BenchmarkInstance into a Blackbox.
     """
 
-    def __init__(self, benchmark):
+    def __init__(
+        self,
+        benchmark: BenchmarkSet,
+        fidelities: Optional[List[int]] = None,
+    ):
+        """
+        If `fidelities` is given, it restricts `fidelity_values` to these values.
+        The sequence must be positive int and increasing. This works only if there
+        is a single fidelity attribute with integer values (but note that for
+        some specific YAHPO benchmarks, a fractional fidelity is transformed to
+        an integer one).
+
+        Even though YAHPO interpolates between fidelities, it can make sense
+        to restrict them to the values which have really been acquired in the
+        data. Note that this restricts multi-fidelity schedulers like
+        :class:`HyperbandScheduler`, in that all their rungs levels have to
+        be fidelity values.
+
+        For example, for YAHPO `iaml`, the fidelity `trainsize` has been
+        acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed
+        to [1, 2, 4, 8, 12, 16, 20]. By default, the fidelity is
+        represented by `cs.randint(1, 20)`, but if `fidelities` is passed,
+        it uses `cs.ordinal(fidelities)`.
+
+        :param benchmark: YAHPO `BenchmarkSet`
+        :param fidelities: See above
+        """
         self.benchmark = benchmark
         super(BlackBoxYAHPO, self).__init__(
             configuration_space=cs_to_synetune(
@@ -79,15 +112,74 @@ class BlackBoxYAHPO(Blackbox):
             objectives_names=self.benchmark.config.y_names,
         )
         self.num_seeds = 1
+        self._is_iaml = _check_whether_iaml(benchmark)
+        self._is_rbv2 = _check_whether_rbv2(benchmark)
+        self._initialize_for_scenario()
+        # Has to be called after `_initialize_for_scenario`, in order to
+        # transform fidelity space for some of the YAHPO scenarios
+        self._adjust_fidelity_space(fidelities)
+
+    def _initialize_for_scenario(self):
+        if self._is_iaml or self._is_rbv2:
+            # For `iaml_`, the fidelity `trainsize` has been evaluated at values
+            # [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1]. We multiply these values by 20
+            # in order to obtain integers: [1, 2, 4, 8, 12, 16, 20]
+            # For `rbv2_`, the fidelity `trainsize` has been evaluated at values
+            # [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]. We
+            # multiply these values by 20 in order to obtain integers:
+            # [1, 2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+            if self._is_iaml:
+                assert len(self.fidelity_space) == 1
+            domain = self.fidelity_space.get("trainsize")
+            assert domain is not None
+            assert isinstance(domain, cs.Float)
+            assert domain.upper == 1 and domain.lower <= 0.05
+            self.fidelity_space["trainsize"] = cs.randint(1, 20)
+            if self._is_rbv2:
+                # For `rbv2_`, a second fidelity is `repl`, but it is constant
+                # 10, so can be removed
+                assert len(self.fidelity_space) == 2
+                assert "repl" in self.fidelity_space
+                del self.fidelity_space["repl"]
+
+    def _adjust_fidelity_space(self, fidelities: Optional[List[int]]):
+        assert len(self.fidelity_space) == 1, "Only one fidelity is supported"
+        self._fidelity_name, domain = next(iter(self.fidelity_space.items()))
+        assert (
+            domain.value_type == int
+        ), f"value_type of fidelity attribute must be int, but is {domain.value_type}"
+        if fidelities is None:
+            self._fidelity_values = np.arange(domain.lower, domain.upper + 1)
+        else:
+            assert is_increasing(fidelities) and is_positive_integer(
+                fidelities
+            ), f"fidelities = {fidelities} must be strictly increasing positive integers"
+            assert (
+                domain.lower <= fidelities[0] and fidelities[-1] <= domain.upper
+            ), f"fidelities = {fidelities} must lie in [{domain.lower}, {domain.upper}]"
+            self._fidelity_values = np.array(fidelities)
+            self.fidelity_space[self._fidelity_name] = cs.ordinal(fidelities.copy())
 
     def _objective_function(
         self,
-        configuration: Dict,
-        fidelity: Optional[Dict] = None,
+        configuration: dict,
+        fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> Dict:
+    ) -> dict:
         configuration = configuration.copy()
+        if self._is_rbv2:
+            configuration["repl"] = 10
         if fidelity is not None:
+            if self._is_iaml or self._is_rbv2:
+                k = "trainsize"
+                fidelity_value = fidelity.get(k)
+                assert (
+                    fidelity_value is not None
+                ), f"fidelity = {fidelity} must contain key '{k}'"
+                assert (
+                    fidelity_value in self.fidelity_values
+                ), f"fidelity = {fidelity_value} not cintained in {self.fidelity_values}"
+                fidelity = {k: fidelity_value / 20}
             configuration.update(fidelity)
             return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
@@ -99,12 +191,12 @@ class BlackBoxYAHPO(Blackbox):
             This is used for efficiency (it is much faster to retrieve a full row in an array in term of read time).
             """
             # returns a tensor of shape (num_fidelities, num_objectives)
-            num_fidelities = len(self.fidelity_values)
+            num_fidelities = self.fidelity_values.size
             num_objectives = len(self.objectives_names)
             result = np.empty((num_fidelities, num_objectives))
-            fidelity_name = next(iter(self.fidelity_space.keys()))
+            multiplier = 0.05 if self._is_iaml or self._is_rbv2 else 1
             configs = [
-                {**configuration, fidelity_name: fidelity}
+                {**configuration, self._fidelity_name: fidelity * multiplier}
                 for fidelity in self.fidelity_values
             ]
             result_dicts = self.benchmark.objective_function(configs, seed=seed)
@@ -136,8 +228,7 @@ class BlackBoxYAHPO(Blackbox):
 
     @property
     def fidelity_values(self) -> np.array:
-        fids = next(iter(self.fidelity_space.values()))
-        return np.arange(fids.lower, fids.upper + 1)
+        return self._fidelity_values
 
     @property
     def time_attribute(self) -> str:
@@ -183,7 +274,11 @@ def cs_to_synetune(config_space):
     return dict(zip(keys, vals))
 
 
-def instantiate_yahpo(scenario: str, check: bool = False):
+def instantiate_yahpo(
+    scenario: str,
+    check: bool = False,
+    fidelities: Optional[List[int]] = None,
+):
     """
     Instantiates a dict of `BlackBoxYAHPO`, one entry for each instance.
 
@@ -205,7 +300,10 @@ def instantiate_yahpo(scenario: str, check: bool = False):
 
     return {
         instance: BlackBoxYAHPO(
-            BenchmarkSet(scenario, active_session=False, instance=instance, check=check)
+            BenchmarkSet(
+                scenario, active_session=False, instance=instance, check=check
+            ),
+            fidelities=fidelities,
         )
         for instance in bench.instances
     }

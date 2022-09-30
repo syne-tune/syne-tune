@@ -199,6 +199,10 @@ def main(
     for method, seed, benchmark_name in tqdm(combinations):
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
+        if args.n_workers is not None:
+            benchmark.n_workers = args.n_workers
+        if args.max_wallclock_time is not None:
+            benchmark.max_wallclock_time = args.max_wallclock_time
         print(
             f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
         )

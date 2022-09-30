@@ -10,27 +10,27 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.nursery.benchmark_neuralband.baselines import methods
-from benchmarking.nursery.benchmark_neuralband.benchmark_definitions import (
+from pathlib import Path
+
+from benchmarking.commons.launch_remote import launch_remote
+from benchmarking.nursery.benchmark_yahpo.benchmark_definitions import (
     benchmark_definitions,
+)
+from benchmarking.nursery.benchmark_yahpo.baselines import (
+    methods,
 )
 
 
-extra_args = [
-    dict(
-        name="--num_brackets",
-        type=int,
-        help="Number of brackets",
-    ),
-]
-
-
-def map_extra_args(args) -> dict:
-    return dict(
-        num_brackets=args.num_brackets,
-    )
-
-
 if __name__ == "__main__":
-    main(methods, benchmark_definitions, extra_args, map_extra_args)
+
+    def _is_expensive_method(method: str) -> bool:
+        # return True
+        return method == "BO"
+
+    entry_point = Path(__file__).parent / "benchmark_main.py"
+    launch_remote(
+        entry_point=entry_point,
+        methods=methods,
+        benchmark_definitions=benchmark_definitions,
+        is_expensive_method=_is_expensive_method,
+    )

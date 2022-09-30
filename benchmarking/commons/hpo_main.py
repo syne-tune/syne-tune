@@ -44,12 +44,22 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
         default=0,
         help="First seed to run",
     )
-    parser.add_argument("--method", type=str, required=False, help="HPO method to run")
+    parser.add_argument("--method", type=str, help="HPO method to run")
     parser.add_argument(
         "--save_tuner",
         type=int,
         default=0,
         help="Serialize Tuner object at the end of tuning?",
+    )
+    parser.add_argument(
+        "--n_workers",
+        type=int,
+        help="Number of workers (overwrites default of benchmark)",
+    )
+    parser.add_argument(
+        "--max_wallclock_time",
+        type=int,
+        help="Maximum runtime for experiment (overwrites default of benchmark)",
     )
     if extra_args is not None:
         extra_args = copy.deepcopy(extra_args)
