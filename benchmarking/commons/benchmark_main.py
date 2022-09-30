@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Union, Dict
 
 import numpy as np
 import itertools
@@ -28,12 +28,24 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
 from benchmarking.commons.baselines import MethodArguments
+from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
+
+
+BenchmarkDefinitions = Union[
+    Dict[str, BenchmarkDefinition], Dict[str, Dict[str, BenchmarkDefinition]]
+]
+
+
+def is_dict_of_dict(benchmark_definitions: BenchmarkDefinitions) -> bool:
+    assert isinstance(benchmark_definitions, dict) and len(benchmark_definitions) > 0
+    val = next(iter(benchmark_definitions.values()))
+    return isinstance(val, dict)
 
 
 def get_transfer_learning_evaluations(
@@ -96,7 +108,9 @@ def get_transfer_learning_evaluations(
 
 
 def parse_args(
-    methods: dict, benchmark_definitions: dict, extra_args: Optional[List[dict]] = None
+    methods: dict,
+    benchmark_definitions: BenchmarkDefinitions,
+    extra_args: Optional[List[dict]] = None,
 ):
     try:
         default_experiment_tag = generate_slug(2)
@@ -150,9 +164,16 @@ def parse_args(
     parser.add_argument(
         "--save_tuner",
         type=int,
-        default=1,
+        default=0,
         help="Serialize Tuner object at the end of tuning?",
     )
+    # Internal parameter, to support nested dict for `benchmark_definitions`
+    nested_dict = is_dict_of_dict(benchmark_definitions)
+    if nested_dict:
+        parser.add_argument(
+            "--benchmark_key",
+            type=str,
+        )
     if extra_args is not None:
         for kwargs in extra_args:
             name = kwargs.pop("name")
@@ -167,24 +188,43 @@ def parse_args(
     else:
         seeds = [args.num_seeds]
     method_names = [args.method] if args.method is not None else list(methods.keys())
-    benchmark_names = (
-        [args.benchmark]
-        if args.benchmark is not None
-        else list(benchmark_definitions.keys())
-    )
+    if args.benchmark is not None:
+        benchmark_names = [args.benchmark]
+    else:
+        if nested_dict:
+            # If `parse_args` is called from `launch_remote`, `benchmark_key` is
+            # not set. In this case, `benchmark_names` is not needed
+            k = args.benchmark_key
+            if k is None:
+                bm_dict = dict()
+            else:
+                bm_dict = benchmark_definitions.get(k)
+                assert (
+                    bm_dict is not None
+                ), f"{k} (value of --benchmark_key) is not among keys of benchmark_definition [{list(benchmark_definitions.keys())}]"
+        else:
+            bm_dict = benchmark_definitions
+        benchmark_names = list(bm_dict.keys())
+
     return args, method_names, benchmark_names, seeds
 
 
 def main(
     methods: dict,
-    benchmark_definitions: dict,
+    benchmark_definitions: BenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[Callable] = None,
+    use_transfer_learning: bool = False,
 ):
     args, method_names, benchmark_names, seeds = parse_args(
         methods, benchmark_definitions, extra_args
     )
     experiment_tag = args.experiment_tag
+    if is_dict_of_dict(benchmark_definitions):
+        assert (
+            args.benchmark_key is not None
+        ), "Use --benchmark_key if benchmark_definitions is a nested dictionary"
+        benchmark_definitions = benchmark_definitions[args.benchmark_key]
 
     if args.verbose:
         logging.getLogger().setLevel(logging.INFO)
@@ -232,6 +272,14 @@ def main(
             assert map_extra_args is not None
             extra_args = map_extra_args(args)
             method_kwargs.update(extra_args)
+        if use_transfer_learning:
+            method_kwargs["transfer_learning_evaluations"] = (
+                get_transfer_learning_evaluations(
+                    blackbox_name=benchmark.blackbox_name,
+                    test_task=benchmark.dataset_name,
+                    datasets=benchmark.datasets,
+                ),
+            )
         scheduler = methods[method](
             MethodArguments(
                 config_space=config_space,
@@ -240,11 +288,6 @@ def main(
                 random_seed=seed,
                 resource_attr=resource_attr,
                 verbose=args.verbose,
-                transfer_learning_evaluations=get_transfer_learning_evaluations(
-                    blackbox_name=benchmark.blackbox_name,
-                    test_task=benchmark.dataset_name,
-                    datasets=benchmark.datasets,
-                ),
                 use_surrogates="lcbench" in benchmark_name,
                 **method_kwargs,
             )

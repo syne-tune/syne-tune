@@ -78,6 +78,7 @@ class BlackBoxYAHPO(Blackbox):
             fidelity_space=cs_to_synetune(self.benchmark.get_fidelity_space()),
             objectives_names=self.benchmark.config.y_names,
         )
+        self.num_seeds = 1
 
     def _objective_function(
         self,
@@ -85,9 +86,10 @@ class BlackBoxYAHPO(Blackbox):
         fidelity: Optional[Dict] = None,
         seed: Optional[int] = None,
     ) -> Dict:
+        configuration = configuration.copy()
         if fidelity is not None:
             configuration.update(fidelity)
-            return self.benchmark.objective_function(configuration, seed)[0]
+            return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
             """
             copying the parent comment of the parent class:
@@ -101,16 +103,15 @@ class BlackBoxYAHPO(Blackbox):
             num_objectives = len(self.objectives_names)
             result = np.empty((num_fidelities, num_objectives))
             fidelity_name = next(iter(self.fidelity_space.keys()))
-            configs = []
-            for fidelity in self.fidelity_values:
-                config_with_fidelity = configuration.copy()
-                config_with_fidelity[fidelity_name] = fidelity
-                configs.append(config_with_fidelity)
+            configs = [
+                {**configuration, fidelity_name: fidelity}
+                for fidelity in self.fidelity_values
+            ]
             result_dicts = self.benchmark.objective_function(configs, seed=seed)
 
-            for i, fidelity in enumerate(self.fidelity_values):
+            for i, result_dict in enumerate(result_dicts):
                 result[i] = [
-                    result_dicts[i][objective] for objective in self.objectives_names
+                    result_dict[objective] for objective in self.objectives_names
                 ]
 
             return result
@@ -126,7 +127,7 @@ class BlackBoxYAHPO(Blackbox):
             instance_names = self.benchmark.config.instance_names
         else:
             instance_names = "instance-names"
-        self.configuration_space[instance_names] = cs.choice([instance])
+        self.configuration_space[instance_names] = instance
         return self
 
     @property
@@ -136,7 +137,7 @@ class BlackBoxYAHPO(Blackbox):
     @property
     def fidelity_values(self) -> np.array:
         fids = next(iter(self.fidelity_space.values()))
-        return np.arange(fids.lower, fids.upper)
+        return np.arange(fids.lower, fids.upper + 1)
 
     @property
     def time_attribute(self) -> str:
@@ -157,9 +158,13 @@ def cs_to_synetune(config_space):
     for a in hps:
         keys += [a.name]
         if isinstance(a, ConfigSpace.hyperparameters.CategoricalHyperparameter):
-            vals += [cs.choice(a.choices)]
+            if len(a.choices) > 1:
+                val = cs.choice(a.choices)
+            else:
+                val = a.choices[0]
+            vals += [val]
         elif isinstance(a, ConfigSpace.hyperparameters.Constant):
-            vals += [cs.choice([a.value])]
+            vals += [a.value]
         elif isinstance(a, ConfigSpace.hyperparameters.UniformIntegerHyperparameter):
             if a.log:
                 vals += [cs.lograndint(a.lower, a.upper)]
@@ -178,9 +183,19 @@ def cs_to_synetune(config_space):
     return dict(zip(keys, vals))
 
 
-def instantiate_yahpo(scenario: str):
-    assert scenario.startswith("yahpo")
-    scenario = scenario[6:]
+def instantiate_yahpo(scenario: str, check: bool = False):
+    """
+    Instantiates a dict of `BlackBoxYAHPO`, one entry for each instance.
+
+    :param scenario:
+    :param check: If False, `objective_function` of the blackbox does not
+        check whether the input configuration is valid. This is faster, but
+        calls fail silently if configurations are invalid.
+    :return:
+    """
+    prefix = "yahpo-"
+    assert scenario.startswith(prefix)
+    scenario = scenario[len(prefix) :]
 
     local_config.init_config()
     local_config.set_data_path(str(repository_path / "yahpo"))
@@ -190,8 +205,8 @@ def instantiate_yahpo(scenario: str):
 
     return {
         instance: BlackBoxYAHPO(
-            BenchmarkSet(scenario, active_session=False, check=False)
-        ).set_instance(instance)
+            BenchmarkSet(scenario, active_session=False, instance=instance, check=check)
+        )
         for instance in bench.instances
     }
 

@@ -13,10 +13,15 @@
 from typing import Optional, List, Callable
 from pathlib import Path
 from tqdm import tqdm
+import itertools
 
 from sagemaker.pytorch import PyTorch
 
-from benchmarking.commons.benchmark_main import parse_args
+from benchmarking.commons.benchmark_main import (
+    parse_args,
+    BenchmarkDefinitions,
+    is_dict_of_dict,
+)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )
@@ -42,7 +47,7 @@ def message_sync_from_s3(experiment_tag: str) -> str:
 def launch_remote(
     entry_point: Path,
     methods: dict,
-    benchmark_definitions: dict,
+    benchmark_definitions: BenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[Callable] = None,
     is_expensive_method: Optional[Callable[[str], bool]] = None,
@@ -54,22 +59,26 @@ def launch_remote(
     args, method_names, benchmark_names, seeds = parse_args(
         methods, benchmark_definitions, extra_args
     )
-    if len(benchmark_names) == 1:
-        benchmark_name = benchmark_names[0]
-    else:
-        benchmark_name = None
+    nested_dict = is_dict_of_dict(benchmark_definitions)
+    benchmark_name = args.benchmark
     experiment_tag = args.experiment_tag
     suffix = random_string(4)
     combinations = []
     for method in method_names:
         seed_range = seeds if is_expensive_method(method) else [None]
         combinations.extend([(method, seed) for seed in seed_range])
+    if nested_dict:
+        benchmark_keys = list(benchmark_definitions.keys())
+        combinations = list(itertools.product(combinations, benchmark_keys))
+    else:
+        combinations = [(x, None) for x in combinations]
 
-    for method, seed in tqdm(combinations):
+    for (method, seed), benchmark_key in tqdm(combinations):
+        tuner_name = method
         if seed is not None:
-            tuner_name = f"{method}-{seed}"
-        else:
-            tuner_name = method
+            tuner_name += f"-{seed}"
+        if benchmark_key is not None:
+            tuner_name += f"-{benchmark_key}"
         checkpoint_s3_uri = s3_experiment_path(
             tuner_name=tuner_name, experiment_name=experiment_tag
         )
@@ -93,6 +102,7 @@ def launch_remote(
             "method": method,
             "support_checkpointing": int(args.support_checkpointing),
             "save_tuner": int(args.save_tuner),
+            "verbose": int(args.verbose),
         }
         if extra_args is not None:
             assert map_extra_args is not None
@@ -105,6 +115,8 @@ def launch_remote(
             hyperparameters["start_seed"] = args.start_seed
         if benchmark_name is not None:
             hyperparameters["benchmark"] = benchmark_name
+        if benchmark_key is not None:
+            hyperparameters["benchmark_key"] = benchmark_key
         sm_args["hyperparameters"] = hyperparameters
         print(
             f"{experiment_tag}-{tuner_name}\n"

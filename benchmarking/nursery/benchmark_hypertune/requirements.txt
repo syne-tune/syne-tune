@@ -1,10 +1,2 @@
-syne-tune[gpsearchers]
+syne-tune[gpsearchers,kde,blackbox-repository]
 tqdm
-numpy
-pandas
-fastparquet
-s3fs
-sklearn
-h5py # note: only needed for fcnet
-xgboost
-statsmodels

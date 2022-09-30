@@ -387,6 +387,10 @@ class Float(Domain):
             and np.isclose(self.upper, other.upper)
         )
 
+    def __repr__(self):
+        name = "loguniform" if is_log_space(self) else "uniform"
+        return name + self.domain_str
+
 
 class Integer(Domain):
     class _Uniform(Uniform):
@@ -489,6 +493,10 @@ class Integer(Domain):
             and self.lower == other.lower
             and self.upper == other.upper
         )
+
+    def __repr__(self):
+        name = "lograndint" if is_log_space(self) else "randint"
+        return name + self.domain_str
 
 
 class Categorical(Domain):
@@ -745,7 +753,8 @@ class FiniteRange(Domain):
 
     def __repr__(self):
         values_str = ",".join([str(x) for x in self._values])
-        return f"finite-range([{values_str}])"
+        name = "logfinrange" if self.log_scale else "finrange"
+        return f"{name}([{values_str}])"
 
     @property
     def value_type(self):

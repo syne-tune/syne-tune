@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, Dict
+from typing import Optional
 import pandas as pd
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline, FeatureUnion, make_pipeline
@@ -45,8 +45,8 @@ class BlackboxSurrogate(Blackbox):
         self,
         X: pd.DataFrame,
         y: pd.DataFrame,
-        configuration_space: Dict,
-        fidelity_space: Optional[Dict] = None,
+        configuration_space: dict,
+        fidelity_space: Optional[dict] = None,
         fidelity_values: Optional[np.array] = None,
         surrogate=None,
         max_fit_samples: Optional[int] = None,
@@ -163,10 +163,10 @@ class BlackboxSurrogate(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict,
-        fidelity: Optional[Dict] = None,
+        configuration: dict,
+        fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> Dict[str, float]:
+    ) -> dict:
         surrogate_input = configuration.copy()
         if fidelity is not None or self.fidelity_values is None:
             if fidelity is not None:

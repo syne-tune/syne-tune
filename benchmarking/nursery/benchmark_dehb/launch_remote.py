@@ -13,18 +13,20 @@
 from pathlib import Path
 
 from benchmarking.commons.launch_remote import launch_remote
-from benchmarking.commons.benchmark_definitions import benchmark_definitions
+from benchmarking.nursery.benchmark_dehb.benchmark_definitions import (
+    benchmark_definitions,
+)
+from benchmarking.nursery.benchmark_dehb.baselines import (
+    methods,
+    Methods,
+)
+from benchmarking.nursery.benchmark_dehb.benchmark_main import (
+    extra_args,
+    map_extra_args,
+)
 
 
 if __name__ == "__main__":
-    from benchmarking.nursery.benchmark_dehb.baselines import (
-        methods,
-        Methods,
-    )
-    from benchmarking.nursery.benchmark_dehb.benchmark_main import (
-        extra_args,
-        map_extra_args,
-    )
 
     def _is_expensive_method(method: str) -> bool:
         return method == Methods.SYNCMOBSTER

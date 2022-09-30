@@ -11,6 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from benchmarking.commons.benchmark_main import main
+from benchmarking.nursery.benchmark_neuralband.baselines import methods
+from benchmarking.nursery.benchmark_neuralband.benchmark_definitions import (
+    benchmark_definitions,
+)
 
 
 extra_args = [
@@ -30,9 +34,4 @@ def map_extra_args(args) -> dict:
 
 
 if __name__ == "__main__":
-    from benchmarking.nursery.benchmark_neuralband.baselines import methods
-    from benchmarking.commons.benchmark_definitions import (
-        benchmark_definitions,
-    )
-
     main(methods, benchmark_definitions, extra_args, map_extra_args)

@@ -10,15 +10,21 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_definitions import (
-    nas201_benchmark_definitions,
-    fcnet_benchmark_definitions,
-    lcbench_selected_benchmark_definitions,
-)
+from dataclasses import dataclass
+from typing import Optional, List
 
 
-benchmark_definitions = {
-    **nas201_benchmark_definitions,
-    **fcnet_benchmark_definitions,
-    **lcbench_selected_benchmark_definitions,
-}
+@dataclass
+class BenchmarkDefinition:
+    max_wallclock_time: float
+    n_workers: int
+    elapsed_time_attr: str
+    metric: str
+    mode: str
+    blackbox_name: str
+    dataset_name: str
+    max_resource_attr: str
+    max_num_evaluations: Optional[int] = None
+    surrogate: Optional[str] = None
+    surrogate_kwargs: Optional[dict] = None
+    datasets: Optional[List[str]] = None

@@ -28,8 +28,8 @@ class BlackboxOffline(Blackbox):
     def __init__(
         self,
         df_evaluations: pd.DataFrame,
-        configuration_space: Dict,
-        fidelity_space: Optional[Dict] = None,
+        configuration_space: dict,
+        fidelity_space: Optional[dict] = None,
         objectives_names: Optional[List[str]] = None,
         seed_col: Optional[str] = None,
     ):
@@ -90,10 +90,10 @@ class BlackboxOffline(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Dict,
-        fidelity: Optional[Dict] = None,
+        configuration: dict,
+        fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> Dict[str, float]:
+    ) -> dict:
         """
         Return the dictionary of objectives for a configuration/fidelity/seed.
         :param configuration:
