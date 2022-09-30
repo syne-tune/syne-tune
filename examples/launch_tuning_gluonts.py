@@ -68,6 +68,8 @@ if __name__ == "__main__":
                 py_version="py3",
                 base_job_name="hpo-gluonts",
                 sagemaker_session=default_sagemaker_session(),
+                disable_profiler=True,
+                debugger_hook_config=False,
             ),
             # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
             # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example

@@ -95,6 +95,7 @@ if __name__ == "__main__":
             max_run=2 * args.max_wallclock_time,
             dependencies=[str(repository_root_path() / "benchmarking/")],
             disable_profiler=True,
+            debugger_hook_config=False,
             sagemaker_session=default_sagemaker_session(),
         ),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
