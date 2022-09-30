@@ -1,11 +1,3 @@
-syne-tune[extra]
+syne-tune[gpsearchers,kde,blackbox-repository]
 tqdm
-coolname
-numpy
-pandas
-fastparquet
-s3fs
-sklearn
-h5py # note: only needed for fcnet
 botorch
-xgboost

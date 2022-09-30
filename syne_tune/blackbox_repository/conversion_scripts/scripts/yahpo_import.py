@@ -126,7 +126,7 @@ class BlackBoxYAHPO(Blackbox):
             instance_names = self.benchmark.config.instance_names
         else:
             instance_names = "instance-names"
-        self.configuration_space[instance_names] = cs.choice([instance])
+        self.configuration_space[instance_names] = instance
         return self
 
     @property
@@ -157,9 +157,13 @@ def cs_to_synetune(config_space):
     for a in hps:
         keys += [a.name]
         if isinstance(a, ConfigSpace.hyperparameters.CategoricalHyperparameter):
-            vals += [cs.choice(a.choices)]
+            if len(a.choices) > 1:
+                val = cs.choice(a.choices)
+            else:
+                val = a.choices[0]
+            vals += [val]
         elif isinstance(a, ConfigSpace.hyperparameters.Constant):
-            vals += [cs.choice([a.value])]
+            vals += [a.value]
         elif isinstance(a, ConfigSpace.hyperparameters.UniformIntegerHyperparameter):
             if a.log:
                 vals += [cs.lograndint(a.lower, a.upper)]
@@ -179,8 +183,9 @@ def cs_to_synetune(config_space):
 
 
 def instantiate_yahpo(scenario: str):
-    assert scenario.startswith("yahpo")
-    scenario = scenario[6:]
+    prefix = "yahpo-"
+    assert scenario.startswith(prefix)
+    scenario = scenario[len(prefix) :]
 
     local_config.init_config()
     local_config.set_data_path(str(repository_path / "yahpo"))

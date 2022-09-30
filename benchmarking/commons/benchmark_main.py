@@ -150,7 +150,7 @@ def parse_args(
     parser.add_argument(
         "--save_tuner",
         type=int,
-        default=1,
+        default=0,
         help="Serialize Tuner object at the end of tuning?",
     )
     if extra_args is not None:
@@ -180,6 +180,7 @@ def main(
     benchmark_definitions: dict,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[Callable] = None,
+    use_transfer_learning: bool = False,
 ):
     args, method_names, benchmark_names, seeds = parse_args(
         methods, benchmark_definitions, extra_args
@@ -232,6 +233,14 @@ def main(
             assert map_extra_args is not None
             extra_args = map_extra_args(args)
             method_kwargs.update(extra_args)
+        if use_transfer_learning:
+            method_kwargs["transfer_learning_evaluations"] = (
+                get_transfer_learning_evaluations(
+                    blackbox_name=benchmark.blackbox_name,
+                    test_task=benchmark.dataset_name,
+                    datasets=benchmark.datasets,
+                ),
+            )
         scheduler = methods[method](
             MethodArguments(
                 config_space=config_space,
@@ -240,11 +249,6 @@ def main(
                 random_seed=seed,
                 resource_attr=resource_attr,
                 verbose=args.verbose,
-                transfer_learning_evaluations=get_transfer_learning_evaluations(
-                    blackbox_name=benchmark.blackbox_name,
-                    test_task=benchmark.dataset_name,
-                    datasets=benchmark.datasets,
-                ),
                 use_surrogates="lcbench" in benchmark_name,
                 **method_kwargs,
             )

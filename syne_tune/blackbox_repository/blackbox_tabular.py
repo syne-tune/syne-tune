@@ -28,8 +28,8 @@ class BlackboxTabular(Blackbox):
     def __init__(
         self,
         hyperparameters: pd.DataFrame,
-        configuration_space: Dict,
-        fidelity_space: Dict,
+        configuration_space: dict,
+        fidelity_space: dict,
         objectives_evaluations: np.array,
         fidelity_values: Optional[np.array] = None,
         objectives_names: Optional[List[str]] = None,
@@ -106,10 +106,10 @@ class BlackboxTabular(Blackbox):
 
     def _objective_function(
         self,
-        configuration: Union[Dict, int],
-        fidelity: Optional[Dict] = None,
+        configuration: Union[dict, int],
+        fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> Dict:
+    ) -> dict:
         if seed is not None:
             assert 0 <= seed < self.num_seeds
         else:
@@ -252,7 +252,7 @@ class BlackboxTabular(Blackbox):
 
 
 def serialize(
-    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[Dict] = None
+    bb_dict: Dict[str, BlackboxTabular], path: str, metadata: Optional[dict] = None
 ):
     # check all blackboxes share the same search space and have evaluated the same hyperparameters
     # pick an arbitrary blackbox

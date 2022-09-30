@@ -81,6 +81,9 @@ def load_blackbox(
     * "icml-xgboost": 5O00 single-fidelity configurations of XGBoost evaluated on 9 datasets.
     A quantile-based approach for hyperparameter transfer learning.
     Salinas, D., Shen, H., and Perrone, V. 2021.
+    * "yahpo-*": Number of different benchmarks from YAHPO Gym. Note that these
+        blackboxes come with surrogates already, so no need to wrap them into
+        :class:`SurrogateBlackbox`
     :param skip_if_present: skip the download if the file locally exists
     :param s3_root: S3 root directory for blackbox repository. Defaults to
         S3 bucket name of SageMaker session

@@ -13,15 +13,15 @@
 from numbers import Number
 
 import pandas as pd
-from typing import Dict, Optional, Callable, List, Tuple, Union
+from typing import Optional, Callable, List, Tuple, Union
 import numpy as np
 
 
 class Blackbox:
     def __init__(
         self,
-        configuration_space: Dict,
-        fidelity_space: Optional[Dict] = None,
+        configuration_space: dict,
+        fidelity_space: Optional[dict] = None,
         objectives_names: Optional[List[str]] = None,
     ):
         """
@@ -33,10 +33,10 @@ class Blackbox:
 
     def objective_function(
         self,
-        configuration: Dict,
-        fidelity: Union[Dict, Number] = None,
+        configuration: dict,
+        fidelity: Union[dict, Number] = None,
         seed: Optional[int] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Returns an evaluation of the blackbox, first perform data check and then call `_objective_function` that should
         be overriden in the child class.
@@ -76,16 +76,16 @@ class Blackbox:
 
     def _objective_function(
         self,
-        configuration: Dict,
-        fidelity: Optional[Dict] = None,
+        configuration: dict,
+        fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Override this function to provide your benchmark function.
         """
         pass
 
-    def __call__(self, *args, **kwargs) -> Dict:
+    def __call__(self, *args, **kwargs) -> dict:
         """
         Allows to call blackbox directly as a function rather than having to call the specific method.
         :return:
@@ -108,9 +108,9 @@ class Blackbox:
 
 
 def from_function(
-    configuration_space: Dict,
+    configuration_space: dict,
     eval_fun: Callable,
-    fidelity_space: Optional[Dict] = None,
+    fidelity_space: Optional[dict] = None,
     objectives_names: Optional[List[str]] = None,
 ):
     """
@@ -131,10 +131,10 @@ def from_function(
 
         def objective_function(
             self,
-            configuration: Dict,
-            fidelity: Optional[Dict] = None,
+            configuration: dict,
+            fidelity: Optional[dict] = None,
             seed: Optional[int] = None,
-        ) -> Dict:
+        ) -> dict:
             return eval_fun(configuration, fidelity, seed)
 
     return BB()
