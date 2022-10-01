@@ -1,3 +1,15 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 import json
 import logging
 import os
@@ -6,7 +18,6 @@ import time
 from pathlib import Path
 from typing import Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -16,21 +27,22 @@ from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER
 from syne_tune.experiments import load_experiment
 
 
-def plot_tuner_results(tuner_name: str,
-                       experiment_name: str,
-                       overwrite=True,
-                       return_df: bool = False,
-                       refresh: bool = False,
-                       refresh_rate: int = 60,
-                       height: Optional[int] = None,
-                       width: Optional[int] = None,
-                       max_rows: int = 100,
-                       max_cols: int = 100,
-                       display_dataframe: bool = True,
-                       display_metadata: bool = False,
-                       dimensions_max_cardinality: int = 50,
-                       save_figure: bool = False,
-    ) -> Optional[pd.DataFrame]:
+def plot_tuner_results(
+    tuner_name: str,
+    experiment_name: str,
+    overwrite=True,
+    return_df: bool = False,
+    refresh: bool = False,
+    refresh_rate: int = 60,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
+    max_rows: int = 100,
+    max_cols: int = 100,
+    display_dataframe: bool = True,
+    display_metadata: bool = False,
+    dimensions_max_cardinality: int = 50,
+    save_figure: bool = False,
+) -> Optional[pd.DataFrame]:
 
     """
     This assumes the SageMaker output path of your hpo estimator is of the format:
@@ -69,20 +81,24 @@ def plot_tuner_results(tuner_name: str,
         syne_local_path = os.path.join(str(Path.home()), SYNE_TUNE_DEFAULT_FOLDER)
         job_path = os.path.join(syne_local_path, tuner_name)
         if os.path.exists(job_path) and overwrite:
-            log.info('clearing local syne tune cache...')
+            log.info("clearing local syne tune cache...")
             shutil.rmtree(job_path)
 
         # Download data
-        tuning_experiment = load_experiment(tuner_name, experiment_name=experiment_name, load_tuner=True)
+        tuning_experiment = load_experiment(
+            tuner_name, experiment_name=experiment_name, load_tuner=True
+        )
         if tuning_experiment.metadata is None:
             clear_output(wait=True)
-            tuning_experiment = load_experiment(tuner_name, experiment_name=experiment_name, load_tuner=True)
+            tuning_experiment = load_experiment(
+                tuner_name, experiment_name=experiment_name, load_tuner=True
+            )
 
         # Get metadata
         metadata = tuning_experiment.metadata
         try:
             # Get first metric
-            metric = metadata['metric_names'][0]
+            metric = metadata["metric_names"][0]
 
             # Get best config
             best_config = tuning_experiment.best_config()
@@ -92,33 +108,39 @@ def plot_tuner_results(tuner_name: str,
 
         except Exception as e:
             clear_output(wait=True)
-            log.info('Waiting for tuning information to be logged...')
+            log.info("Waiting for tuning information to be logged...")
 
         if ready_to_display:
-            print(f'tuner_name: {tuner_name}')
-            print(f'experiment_name: {experiment_name}')
+            print(f"tuner_name: {tuner_name}")
+            print(f"experiment_name: {experiment_name}")
             if display_metadata:
-                print(f'Metadata:\n{json.dumps(metadata, indent=4)}')
+                print(f"Metadata:\n{json.dumps(metadata, indent=4)}")
 
             # Filter dataframe
-            results = (tuning_experiment.results.sort_values(by=metric,
-                        ascending=False).drop_duplicates('trial_id'))
+            results = tuning_experiment.results.sort_values(
+                by=metric, ascending=False
+            ).drop_duplicates("trial_id")
             trials = tuning_experiment.results.trial_id.unique()
             keep_cols = []
             for c in results.columns:
-                if ((metric in c) or
-                    ('config_' in c) or
-                    #('epoch' in c) or # how to get scheduler.resource_attr?
-                    ('st_status' in c) or
-                    ('trial_id' in c) or
-                    ('st_decision' in c)
+                if (
+                    (metric in c)
+                    or ("config_" in c)
+                    or
+                    # ('epoch' in c) or # how to get scheduler.resource_attr?
+                    ("st_status" in c)
+                    or ("trial_id" in c)
+                    or ("st_decision" in c)
                 ):
                     keep_cols.append(c)
             results = results[keep_cols]
             for col in results.columns:
                 if len(results[col].unique()) == 1:
                     results.drop(col, inplace=True, axis=1)
-            results.columns = [c if 'config_' not in c else c.replace('config_', '') for c in results.columns]
+            results.columns = [
+                c if "config_" not in c else c.replace("config_", "")
+                for c in results.columns
+            ]
             results = results[[metric] + [c for c in results.columns if c != metric]]
             results.reset_index(drop=True, inplace=True)
             results = np.round(results, decimals=6)
@@ -126,15 +148,16 @@ def plot_tuner_results(tuner_name: str,
                 display(results)
 
             # Plot basic performance
-            logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
+            logging.getLogger("matplotlib").setLevel(logging.CRITICAL)
             tuning_experiment.plot()
 
             height = max(35 * results.shape[0] if not height else height, 260)
-            width = max(len(' '.join(results.columns)) * 12, 1000)
-            try: # Parallel Categories Diagram
-                fig = px.parallel_categories(results,
+            width = max(len(" ".join(results.columns)) * 12, 1000)
+            try:  # Parallel Categories Diagram
+                fig = px.parallel_categories(
+                    results,
                     color=metric,
-                    title=f'Syne Tune Hyperparameters ranked by {metric}',
+                    title=f"Syne Tune Hyperparameters ranked by {metric}",
                     color_continuous_scale=px.colors.diverging.Portland,
                     height=height,
                     width=width,
@@ -143,10 +166,10 @@ def plot_tuner_results(tuner_name: str,
                 fig.show()
 
                 if save_figure:
-                    fig.write_html(f'{experiment_name}_parallel_categories.html')
+                    fig.write_html(f"{experiment_name}_parallel_categories.html")
             except:
-                print('bla')
-                log.info(f'Waiting for metric {metric} information to be logged...')
+                print("bla")
+                log.info(f"Waiting for metric {metric} information to be logged...")
 
             if return_df:
                 return tuning_experiment.results
