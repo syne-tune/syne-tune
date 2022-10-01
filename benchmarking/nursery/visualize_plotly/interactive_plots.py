@@ -1,15 +1,3 @@
-# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
 import json
 import logging
 import os
@@ -29,18 +17,19 @@ from syne_tune.experiments import load_experiment
 
 
 def plot_tuner_results(tuner_name: str,
-                      experiment_name: str,
-                      return_df: bool = False,
-                      refresh: bool = False,
-                      refresh_rate: int = 60,
-                      height: Optional[int] = None,
-                      width: Optional[int] = None,
-                      max_rows: int = 100,
-                      max_cols: int = 100,
-                      display_dataframe: bool = True,
-                      display_metadata: bool = False,
-                      dimensions_max_cardinality: int = 50,
-                      save_figure: bool = False,
+                       experiment_name: str,
+                       overwrite=True,
+                       return_df: bool = False,
+                       refresh: bool = False,
+                       refresh_rate: int = 60,
+                       height: Optional[int] = None,
+                       width: Optional[int] = None,
+                       max_rows: int = 100,
+                       max_cols: int = 100,
+                       display_dataframe: bool = True,
+                       display_metadata: bool = False,
+                       dimensions_max_cardinality: int = 50,
+                       save_figure: bool = False,
     ) -> Optional[pd.DataFrame]:
 
     """
@@ -49,6 +38,7 @@ def plot_tuner_results(tuner_name: str,
 
     :param tuner_name: name of a tuning experiment previously run
     :param experiment_name: name of a single experiment to load
+    :param overwrite: allow deletion of local cache at SYNE_TUNE_DEFAULT_FOLDER/tuner_name
     :param return_df: whether to return a results dataframe
     :param refresh: whether to refresh plotly figure every refresh_rate seconds
     :param refresh_rate: refresh rate in seconds
@@ -69,15 +59,18 @@ def plot_tuner_results(tuner_name: str,
     pd.options.display.max_columns = max_rows
     pd.options.display.max_rows = max_cols
 
+    log = logging.getLogger("syne_tune")
+
     while True:
         ready_to_display = False
 
-        # Clear cached data
+        # Clear cached data so that we can see the latest results
         clear_output(wait=True)
         syne_local_path = os.path.join(str(Path.home()), SYNE_TUNE_DEFAULT_FOLDER)
-        if os.path.exists(syne_local_path):
-            logging.info('clearing local syne tune cache...')
-            shutil.rmtree(syne_local_path)
+        job_path = os.path.join(syne_local_path, tuner_name)
+        if os.path.exists(job_path) and overwrite:
+            log.info('clearing local syne tune cache...')
+            shutil.rmtree(job_path)
 
         # Download data
         tuning_experiment = load_experiment(tuner_name, experiment_name=experiment_name, load_tuner=True)
@@ -99,7 +92,7 @@ def plot_tuner_results(tuner_name: str,
 
         except Exception as e:
             clear_output(wait=True)
-            logging.info('Waiting for tuning information to be logged...')
+            log.info('Waiting for tuning information to be logged...')
 
         if ready_to_display:
             print(f'tuner_name: {tuner_name}')
@@ -136,20 +129,24 @@ def plot_tuner_results(tuner_name: str,
             logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
             tuning_experiment.plot()
 
+            height = max(35 * results.shape[0] if not height else height, 260)
+            width = max(len(' '.join(results.columns)) * 12, 1000)
             try: # Parallel Categories Diagram
                 fig = px.parallel_categories(results,
                     color=metric,
                     title=f'Syne Tune Hyperparameters ranked by {metric}',
                     color_continuous_scale=px.colors.diverging.Portland,
-                    height= 35 * results.shape[0] if not height else height,
-                    width=len(' '.join(results.columns)) * 12,
+                    height=height,
+                    width=width,
                     dimensions_max_cardinality=dimensions_max_cardinality,
                 )
                 fig.show()
+
                 if save_figure:
                     fig.write_html(f'{experiment_name}_parallel_categories.html')
             except:
-                logging.info(f'Waiting for metric {metric} information to be logged...')
+                print('bla')
+                log.info(f'Waiting for metric {metric} information to be logged...')
 
             if return_df:
                 return tuning_experiment.results
