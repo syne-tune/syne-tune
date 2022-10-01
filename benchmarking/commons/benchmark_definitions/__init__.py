@@ -10,20 +10,22 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
-from benchmarking.commons.benchmark_definitions.fcnet import (
+from benchmarking.commons.benchmark_definitions.common import (  # noqa: F401
+    BenchmarkDefinition,
+)
+from benchmarking.commons.benchmark_definitions.fcnet import (  # noqa: F401
     fcnet_benchmark_definitions,
     fcnet_benchmark,
 )
-from benchmarking.commons.benchmark_definitions.nas201 import (
+from benchmarking.commons.benchmark_definitions.nas201 import (  # noqa: F401
     nas201_benchmark_definitions,
     nas201_benchmark,
 )
-from benchmarking.commons.benchmark_definitions.lcbench import (
+from benchmarking.commons.benchmark_definitions.lcbench import (  # noqa: F401
     lcbench_selected_benchmark_definitions,
     lcbench_benchmark,
 )
-from benchmarking.commons.benchmark_definitions.yahpo import (
+from benchmarking.commons.benchmark_definitions.yahpo import (  # noqa: F401
     yahpo_nb301_benchmark_definitions,
     yahpo_lcbench_benchmark_definitions,
     yahpo_fcnet_benchmark_definitions,
