@@ -30,7 +30,7 @@ from syne_tune.experiments import load_experiment
 def plot_tuner_results(
     tuner_name: str,
     experiment_name: str,
-    overwrite=True,
+    overwrite: bool = False,
     return_df: bool = False,
     refresh: bool = False,
     refresh_rate: int = 60,
