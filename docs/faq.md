@@ -57,13 +57,11 @@ may prefer Syne Tune over these alternatives.
 
 If you are an AWS customer, there are additional good reasons to use Syne Tune over
 the alternatives:
-* Syne Tune is tightly integrated into the AWS ecosystem, and in particular into
-  AWS SageMaker. If you use AWS services or SageMaker frameworks day to day, Syne
-  Tune works out of the box and fits into your normal workflow.
-* Syne Tune code powers several of the algorithms in the
+* If you use AWS services or SageMaker frameworks day to day, Syne Tune works
+  out of the box and fits into your normal workflow.
+* Syne Tune is developed in collaboration with the team behind the
   [Automatic Model Tuning](https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html)
-  service, and more transfer will be forthcoming.
-
+  service.
 
 
 ### <a name="installations"></a> What are the different installations options supported?
