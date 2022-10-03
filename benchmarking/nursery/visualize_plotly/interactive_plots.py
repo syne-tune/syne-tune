@@ -168,7 +168,6 @@ def plot_tuner_results(
                 if save_figure:
                     fig.write_html(f"{experiment_name}_parallel_categories.html")
             except:
-                print("bla")
                 log.info(f"Waiting for metric {metric} information to be logged...")
 
             if return_df:
