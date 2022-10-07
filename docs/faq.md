@@ -315,21 +315,21 @@ separate SageMaker training jobs.
 
 Here is an example for how to run tuning with the remote launcher:
 [launch_height_sagemaker_remotely.py](../examples/launch_height_sagemaker_remotely.py).
-It may be more convenient for you to write your own launcher scripts. Examples
-for how this is done are
-[benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py](../benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py)
-or [benchmarking/nursery/benchmark_dehb/launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py).
-An example with the SageMaker backend is given in
-[benchmarking/nursery/remote_sm_backend/launch_remote.py](../benchmarking/nursery/remote_sm_backend/launch_remote.py).
+It may be more convenient for you to write your own launcher scripts. Examples:
+* Local backend: [benchmarking/nursery/launch_local/launch_remote.py](../benchmarking/nursery/launch_local/launch_remote.py)
+* Simulator backend: [benchmarking/nursery/benchmark_dehb/launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py)
+* SageMaker backend: [benchmarking/nursery/launch_sagemaker/launch_remote.py](../benchmarking/nursery/launch_sagemaker/launch_remote.py)
 
 ### <a name="experiment-parallel"></a> How can I run many experiments in parallel?
 
-You can call the remote launcher multiple times to schedules a list of experiments.
+You can call the remote launcher multiple times to schedule a list of experiments.
 In some case, you will want more flexibility and directly write your experiment
 loop, you can check 
 [benchmark_loop](https://github.com/awslabs/syne-tune/tree/main/benchmarking/benchmark_loop)
-for an example. Many of the examples in [benchmarking/nursery/](../benchmarking/nursery/)
-allow for running many experiments in parallel.
+for an example. Other examples include:
+* Local backend: [benchmarking/nursery/launch_local/launch_remote.py](../benchmarking/nursery/launch_local/launch_remote.py)
+* Simulator backend: [benchmarking/nursery/benchmark_dehb/launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py)
+* SageMaker backend: [benchmarking/nursery/launch_sagemaker/launch_remote.py](../benchmarking/nursery/launch_sagemaker/launch_remote.py)
 
 ### <a name="results-remote-tuning"></a> How can I access results after tuning remotely?
 

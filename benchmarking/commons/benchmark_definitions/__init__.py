@@ -11,7 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from benchmarking.commons.benchmark_definitions.common import (  # noqa: F401
-    BenchmarkDefinition,
+    SurrogateBenchmarkDefinition,
+    RealBenchmarkDefinition,
 )
 from benchmarking.commons.benchmark_definitions.fcnet import (  # noqa: F401
     fcnet_benchmark_definitions,
@@ -51,4 +52,13 @@ from benchmarking.commons.benchmark_definitions.yahpo import (  # noqa: F401
     yahpo_rbv2_xgboost_benchmark,
     yahpo_rbv2_svm_benchmark,
     yahpo_rbv2_aknn_benchmark,
+)
+from benchmarking.commons.benchmark_definitions.resnet_cifar10 import (  # noqa: F401
+    resnet_cifar10_benchmark,
+)
+from benchmarking.commons.benchmark_definitions.lstm_wikitext2 import (  # noqa: F401
+    lstm_wikitext2_benchmark,
+)
+from benchmarking.commons.benchmark_definitions.real_benchmark_definitions import (  # noqa: F401
+    real_benchmark_definitions,
 )

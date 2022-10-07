@@ -10,25 +10,24 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Callable, Union, Dict
-
+from typing import Optional, List, Union, Dict
 import numpy as np
 import itertools
-import logging
-from argparse import ArgumentParser
 from tqdm import tqdm
 
-try:
-    from coolname import generate_slug
-except ImportError:
-    print("coolname is not installed, will not be used")
-
+from benchmarking.commons.baselines import MethodArguments
+from benchmarking.commons.benchmark_definitions.common import (
+    SurrogateBenchmarkDefinition,
+)
+from benchmarking.commons.hpo_main import (
+    parse_args as _parse_args,
+    set_logging_level,
+    get_metadata,
+)
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from benchmarking.commons.baselines import MethodArguments
-from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
@@ -38,7 +37,8 @@ from syne_tune.tuner import Tuner
 
 
 BenchmarkDefinitions = Union[
-    Dict[str, BenchmarkDefinition], Dict[str, Dict[str, BenchmarkDefinition]]
+    Dict[str, SurrogateBenchmarkDefinition],
+    Dict[str, Dict[str, SurrogateBenchmarkDefinition]],
 ]
 
 
@@ -112,89 +112,50 @@ def parse_args(
     benchmark_definitions: BenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
 ):
-    try:
-        default_experiment_tag = generate_slug(2)
-    except Exception:
-        default_experiment_tag = "syne_tune_experiment"
-    parser = ArgumentParser()
-    parser.add_argument(
-        "--experiment_tag",
-        type=str,
-        default=default_experiment_tag,
-    )
-    parser.add_argument(
-        "--num_seeds",
-        type=int,
-        default=30,
-        help="number of seeds to run",
-    )
-    parser.add_argument(
-        "--run_all_seeds",
-        type=int,
-        default=1,
-        help="if 1 run all the seeds [0, `num_seeds`-1], otherwise run seed `num_seeds` only",
-    )
-    parser.add_argument(
-        "--start_seed",
-        type=int,
-        default=0,
-        help="first seed to run (if `run_all_seed` == 1)",
-    )
-    parser.add_argument(
-        "--method", type=str, required=False, help="a method to run from baselines.py"
-    )
-    parser.add_argument(
-        "--benchmark",
-        type=str,
-        required=False,
-        help="a benchmark to run from benchmark_definitions.py",
-    )
-    parser.add_argument(
-        "--verbose",
-        type=int,
-        default=0,
-        help="verbose log output?",
-    )
-    parser.add_argument(
-        "--support_checkpointing",
-        type=int,
-        default=1,
-        help="if 0, trials are started from scratch when resumed",
-    )
-    parser.add_argument(
-        "--save_tuner",
-        type=int,
-        default=0,
-        help="Serialize Tuner object at the end of tuning?",
-    )
-    parser.add_argument(
-        "--fcnet_ordinal",
-        type=str,
-        choices=("none", "equal", "nn", "nn-log"),
-        default="none",
-        help="Ordinal encoding for fcnet categorical HPs",
-    )
-    # Internal parameter, to support nested dict for `benchmark_definitions`
+    if extra_args is None:
+        extra_args = []
+    else:
+        extra_args = extra_args.copy()
     nested_dict = is_dict_of_dict(benchmark_definitions)
+    extra_args.extend(
+        [
+            dict(
+                name="benchmark",
+                type=str,
+                help="Benchmark to run from benchmark_definitions",
+            ),
+            dict(
+                name="verbose",
+                type=int,
+                default=0,
+                help="Verbose log output?",
+            ),
+            dict(
+                name="support_checkpointing",
+                type=int,
+                default=1,
+                help="If 0, trials are started from scratch when resumed",
+            ),
+            dict(
+                name="fcnet_ordinal",
+                type=str,
+                choices=("none", "equal", "nn", "nn-log"),
+                default="none",
+                help="Ordinal encoding for fcnet categorical HPs",
+            ),
+        ]
+    )
     if nested_dict:
-        parser.add_argument(
-            "--benchmark_key",
-            type=str,
+        extra_args.append(
+            dict(
+                name="benchmark_key",
+                type=str,
+                required=True,
+            )
         )
-    if extra_args is not None:
-        for kwargs in extra_args:
-            name = kwargs.pop("name")
-            parser.add_argument(name, **kwargs)
-    args, _ = parser.parse_known_args()
+    args, method_names, seeds = _parse_args(methods, extra_args)
     args.verbose = bool(args.verbose)
     args.support_checkpointing = bool(args.support_checkpointing)
-    args.save_tuner = bool(args.save_tuner)
-    args.run_all_seeds = bool(args.run_all_seeds)
-    if args.run_all_seeds:
-        seeds = list(range(args.start_seed, args.num_seeds))
-    else:
-        seeds = [args.num_seeds]
-    method_names = [args.method] if args.method is not None else list(methods.keys())
     if args.benchmark is not None:
         benchmark_names = [args.benchmark]
     else:
@@ -212,7 +173,6 @@ def parse_args(
         else:
             bm_dict = benchmark_definitions
         benchmark_names = list(bm_dict.keys())
-
     return args, method_names, benchmark_names, seeds
 
 
@@ -220,7 +180,7 @@ def main(
     methods: dict,
     benchmark_definitions: BenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
-    map_extra_args: Optional[Callable] = None,
+    map_extra_args: Optional[callable] = None,
     use_transfer_learning: bool = False,
 ):
     args, method_names, benchmark_names, seeds = parse_args(
@@ -232,22 +192,13 @@ def main(
             args.benchmark_key is not None
         ), "Use --benchmark_key if benchmark_definitions is a nested dictionary"
         benchmark_definitions = benchmark_definitions[args.benchmark_key]
-
-    if args.verbose:
-        logging.getLogger().setLevel(logging.INFO)
-    else:
-        logging.getLogger("syne_tune.optimizer.schedulers").setLevel(logging.WARNING)
-        logging.getLogger("syne_tune.backend").setLevel(logging.WARNING)
-        logging.getLogger(
-            "syne_tune.backend.simulator_backend.simulator_backend"
-        ).setLevel(logging.WARNING)
+    set_logging_level(args)
 
     combinations = list(itertools.product(method_names, seeds, benchmark_names))
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
         np.random.seed(seed)
         benchmark = benchmark_definitions[benchmark_name]
-
         print(
             f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
         )
@@ -274,7 +225,6 @@ def main(
         else:
             config_space = backend.blackbox.configuration_space
             method_kwargs = {"max_t": max_resource_level}
-
         if extra_args is not None:
             assert map_extra_args is not None
             extra_args = map_extra_args(args)
@@ -310,15 +260,10 @@ def main(
             max_wallclock_time=benchmark.max_wallclock_time,
             max_num_evaluations=benchmark.max_num_evaluations,
         )
-        metadata = {
-            "seed": seed,
-            "algorithm": method,
-            "tag": experiment_tag,
-            "benchmark": benchmark_name,
-            "fcnet_ordinal": args.fcnet_ordinal,
-        }
-        if extra_args is not None:
-            metadata.update(extra_args)
+        metadata = get_metadata(
+            seed, method, experiment_tag, benchmark_name, extra_args=extra_args
+        )
+        metadata["fcnet_ordinal"] = args.fcnet_ordinal
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,

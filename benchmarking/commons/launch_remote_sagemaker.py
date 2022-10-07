@@ -1,0 +1,81 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+from typing import Optional, List
+from pathlib import Path
+from tqdm import tqdm
+import itertools
+import os
+
+from syne_tune.try_import import try_import_aws_message
+
+try:
+    import boto3
+except ImportError:
+    print(try_import_aws_message())
+
+from benchmarking.commons.hpo_main_local import (
+    BenchmarkDefinitions,
+    get_benchmark,
+)
+from benchmarking.commons.hpo_main_sagemaker import parse_args
+from benchmarking.commons.utils import (
+    message_sync_from_s3,
+    basic_cpu_instance_sagemaker_estimator,
+    find_or_create_requirements_txt,
+)
+from benchmarking.commons.launch_remote import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_local import get_hyperparameters
+from syne_tune.util import random_string
+
+
+def launch_remote(
+    entry_point: Path,
+    methods: dict,
+    benchmark_definitions: BenchmarkDefinitions,
+    extra_args: Optional[List[dict]] = None,
+    map_extra_args: Optional[callable] = None,
+):
+    args, method_names, seeds = parse_args(methods, extra_args)
+    experiment_tag = args.experiment_tag
+    suffix = random_string(4)
+    if boto3.Session().region_name is None:
+        os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
+    environment = {"AWS_DEFAULT_REGION": boto3.Session().region_name}
+    benchmark = get_benchmark(args, benchmark_definitions, sagemaker_backend=True)
+    find_or_create_requirements_txt(entry_point)
+
+    combinations = list(itertools.product(method_names, seeds))
+    for method, seed in tqdm(combinations):
+        tuner_name = f"{method}-{seed}"
+        sm_args = sagemaker_estimator_args(
+            entry_point=entry_point,
+            experiment_tag=args.experiment_tag,
+            tuner_name=tuner_name,
+            benchmark=benchmark,
+            sagemaker_backend=True,
+        )
+        sm_args["environment"] = environment
+        hyperparameters = get_hyperparameters(
+            seed, method, experiment_tag, args, benchmark, map_extra_args
+        )
+        hyperparameters["max_failures"] = args.max_failures
+        sm_args["hyperparameters"] = hyperparameters
+        print(
+            f"{experiment_tag}-{tuner_name}\n"
+            f"hyperparameters = {hyperparameters}\n"
+            f"Results written to {sm_args['checkpoint_s3_uri']}"
+        )
+        est = basic_cpu_instance_sagemaker_estimator(**sm_args)
+        est.fit(job_name=f"{experiment_tag}-{tuner_name}-{suffix}", wait=False)
+
+    print("\n" + message_sync_from_s3(experiment_tag))

@@ -177,7 +177,7 @@ checkpointing support, training for a resumed trial has to start from scratch,
 which is wasteful.
 
 Let us look at code snippets from
-[lstm_wikitext2.py](../benchmarking/nursery/lstm_wikitext2/lstm_wikitext2.py):
+[lstm_wikitext2.py](../benchmarking/training_scripts/lstm_wikitext2/lstm_wikitext2.py):
 
 ```python
 # ...

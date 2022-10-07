@@ -32,7 +32,7 @@ def resnet_cifar10_default_params(params=None):
         # need more memory
         instance_type = "ml.g4dn.12xlarge"
     return {
-        "epochs": 27,
+        "max_resource_level": 27,
         "grace_period": 1,
         "reduction_factor": 3,
         "instance_type": instance_type,
@@ -40,6 +40,7 @@ def resnet_cifar10_default_params(params=None):
         "framework": "PyTorch",
         "framework_version": "1.6",
         "num_gpus": 1,
+        "dataset_path": "./",
         "cost_model_type": "quadratic_spline",
     }
 

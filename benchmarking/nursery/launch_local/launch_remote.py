@@ -12,38 +12,17 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote_simulator import launch_remote
-from benchmarking.nursery.benchmark_neuralband.benchmark_definitions import (
-    benchmark_definitions,
+from benchmarking.commons.launch_remote_local import launch_remote
+from benchmarking.commons.benchmark_definitions import (
+    real_benchmark_definitions as benchmark_definitions,
 )
-from benchmarking.nursery.benchmark_neuralband.baselines import (
-    methods,
-    Methods,
-)
-from benchmarking.nursery.benchmark_neuralband.hpo_main import (
-    extra_args,
-    map_extra_args,
-)
+from benchmarking.nursery.launch_local.baselines import methods
 
 
 if __name__ == "__main__":
-
-    def _is_expensive_method(method: str) -> bool:
-        return method in {
-            Methods.MOBSTER,
-            Methods.NeuralBandSH,
-            Methods.NeuralBandHB,
-            Methods.NeuralBand_UCB,
-            Methods.NeuralBand_TS,
-            Methods.NeuralBandEpsilon,
-        }
-
     entry_point = Path(__file__).parent / "hpo_main.py"
     launch_remote(
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
-        extra_args=extra_args,
-        map_extra_args=map_extra_args,
-        is_expensive_method=_is_expensive_method,
     )

@@ -38,7 +38,7 @@ def distilbert_imdb_benchmark(params):
     config_space = dict(
         _config_space,
         dataset_path=params["dataset_path"],
-        max_steps=params["max_resource_level"],
+        epochs=params["max_resource_level"],
     )
     return {
         "script": Path(__file__).parent.parent

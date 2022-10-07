@@ -35,7 +35,7 @@ from benchmarking.definitions.definition_resnet_cifar10 import (
     resnet_cifar10_benchmark,
     resnet_cifar10_default_params,
 )
-from benchmarking.nursery.lstm_wikitext2.definition_lstm_wikitext2 import (
+from benchmarking.definitions.definition_lstm_wikitext2 import (
     lstm_wikitext2_benchmark,
     lstm_wikitext2_default_params,
 )

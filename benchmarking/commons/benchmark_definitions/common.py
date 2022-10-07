@@ -11,11 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional, List
 
 
 @dataclass
-class BenchmarkDefinition:
+class SurrogateBenchmarkDefinition:
     max_wallclock_time: float
     n_workers: int
     elapsed_time_attr: str
@@ -28,3 +29,19 @@ class BenchmarkDefinition:
     surrogate: Optional[str] = None
     surrogate_kwargs: Optional[dict] = None
     datasets: Optional[List[str]] = None
+
+
+@dataclass
+class RealBenchmarkDefinition:
+    script: Path
+    config_space: dict
+    max_wallclock_time: float
+    n_workers: int
+    instance_type: str
+    metric: str
+    mode: str
+    max_resource_attr: str
+    resource_attr: Optional[str] = None
+    framework: Optional[str] = None
+    estimator_kwargs: Optional[dict] = None
+    max_num_evaluations: Optional[int] = None

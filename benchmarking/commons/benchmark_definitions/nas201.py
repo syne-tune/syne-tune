@@ -10,7 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
+from benchmarking.commons.benchmark_definitions.common import (
+    SurrogateBenchmarkDefinition,
+)
 
 
 NAS201_MAX_WALLCLOCK_TIME = {
@@ -28,7 +30,7 @@ NAS201_N_WORKERS = {
 
 
 def nas201_benchmark(dataset_name):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=NAS201_MAX_WALLCLOCK_TIME[dataset_name],
         n_workers=NAS201_N_WORKERS[dataset_name],
         elapsed_time_attr="metric_elapsed_time",

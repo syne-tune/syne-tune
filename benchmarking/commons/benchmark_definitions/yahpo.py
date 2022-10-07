@@ -10,7 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
+from benchmarking.commons.benchmark_definitions.common import (
+    SurrogateBenchmarkDefinition,
+)
 
 
 # Note: We do not include scenarios `iaml_super`, `rbv2_super` for now,
@@ -68,7 +70,7 @@ openml_task_name_to_id = {
 
 
 def yahpo_nb301_benchmark(dataset_name):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         n_workers=4,
         elapsed_time_attr="runtime",
@@ -89,7 +91,7 @@ yahpo_nb301_benchmark_definitions = {
 
 
 def yahpo_lcbench_benchmark(dataset_name):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=7200,
         n_workers=4,
         elapsed_time_attr="time",
@@ -111,7 +113,7 @@ yahpo_lcbench_benchmark_definitions = {
 
 
 def yahpo_iaml_rpart_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -138,7 +140,7 @@ yahpo_iaml_rpart_benchmark_definitions = {
 
 
 def yahpo_iaml_glmnet_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -164,7 +166,7 @@ yahpo_iaml_glmnet_benchmark_definitions = {
 
 
 def yahpo_iaml_ranger_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -187,7 +189,7 @@ yahpo_iaml_ranger_benchmark_definitions = {
 
 
 def yahpo_iaml_xgboost_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -210,7 +212,7 @@ yahpo_iaml_xgboost_benchmark_definitions = {
 
 
 def yahpo_rbv2_rpart_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -354,7 +356,7 @@ yahpo_rbv2_rpart_benchmark_definitions = {
 
 
 def yahpo_rbv2_glmnet_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -377,7 +379,7 @@ yahpo_rbv2_glmnet_benchmark_definitions = {
 
 
 def yahpo_rbv2_ranger_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -400,7 +402,7 @@ yahpo_rbv2_ranger_benchmark_definitions = {
 
 
 def yahpo_rbv2_xgboost_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -423,7 +425,7 @@ yahpo_rbv2_xgboost_benchmark_definitions = {
 
 
 def yahpo_rbv2_svm_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,
@@ -444,7 +446,7 @@ yahpo_rbv2_svm_benchmark_definitions = {
 
 
 def yahpo_rbv2_aknn_benchmark(dataset_name, metric, mode="max"):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=1800,  # TODO
         max_num_evaluations=1000,
         n_workers=4,

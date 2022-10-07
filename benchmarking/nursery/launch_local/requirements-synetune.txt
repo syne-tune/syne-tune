@@ -1,4 +1,2 @@
 syne-tune[gpsearchers]
 tqdm
-numpy
-pandas
