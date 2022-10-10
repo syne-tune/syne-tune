@@ -62,6 +62,7 @@ def load_blackbox(
     skip_if_present: bool = True,
     s3_root: Optional[str] = None,
     generate_if_not_found: bool = True,
+    yahpo_kwargs: Optional[dict] = None,
 ) -> Union[Dict[str, Blackbox], Blackbox]:
     """
     :param name: name of a blackbox present in the repository, see blackbox_list() to get list of available blackboxes.
@@ -81,11 +82,16 @@ def load_blackbox(
     * "icml-xgboost": 5O00 single-fidelity configurations of XGBoost evaluated on 9 datasets.
     A quantile-based approach for hyperparameter transfer learning.
     Salinas, D., Shen, H., and Perrone, V. 2021.
+    * "yahpo-*": Number of different benchmarks from YAHPO Gym. Note that these
+        blackboxes come with surrogates already, so no need to wrap them into
+        :class:`SurrogateBlackbox`
     :param skip_if_present: skip the download if the file locally exists
     :param s3_root: S3 root directory for blackbox repository. Defaults to
         S3 bucket name of SageMaker session
     :param generate_if_not_found: If the blackbox file is not present locally
         or on S3, should it be generated using its conversion script?
+    :param yahpo_kwargs: For a YAHPO blackbox (`name == "yahpo-*"`), these are
+        additional arguments to `instantiate_yahpo`
     :return: blackbox with the given name, download it if not present.
     """
     tgt_folder = Path(repository_path) / name
@@ -124,7 +130,9 @@ def load_blackbox(
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
 
     if name.startswith("yahpo"):
-        return instantiate_yahpo(name)
+        if yahpo_kwargs is None:
+            yahpo_kwargs = dict()
+        return instantiate_yahpo(name, **yahpo_kwargs)
     if name.startswith("pd1"):
         return deserialize_pd1(tgt_folder)
     if (tgt_folder / "hyperparameters.parquet").exists():

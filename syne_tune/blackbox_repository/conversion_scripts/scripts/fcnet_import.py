@@ -103,8 +103,8 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
     def save_objective_values_helper(name, values):
         assert values.shape == (n_hps, n_seeds, n_fidelities)
 
-        name_index = dict(zip(objective_names, range(len(objective_names))))
-        objective_evaluations[..., name_index[name]] = values
+        name_pos = objective_names.index(name)
+        objective_evaluations[..., name_pos] = values
 
     # (n_hps, n_seeds,)
     final_test_error = np.stack(

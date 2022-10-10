@@ -48,7 +48,7 @@ will work through here. To this end, we will have a look at
   linked to the blackbox repository and obtains evaluation data from there.
 * [1] We first select the benchmark and create the simulator backend linked with
   this benchmark. Relevant properties of supported benchmarks are collected in
-  [benchmark_definitions](../../../benchmarking/commons/benchmark_definitions.py),
+  [benchmark_definitions](../../../benchmarking/commons/benchmark_definitions/__init__.py),
   using the class `BenchmarkDefinition`. Some properties are tied to the benchmark
   and must not be changed (`elapsed_time_attr`, `metric`, `mode`, `blackbox_name`,
   `max_resource_attr`). Other properties are default values suggested for the
