@@ -137,6 +137,7 @@ employs an easy-to-use benchmark convention
 
 You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalities. 
 
+* [Why should I use Syne Tune, and not Ray Tune, Optuna, ...?](docs/faq.md#why-syne-tune)
 * [What are the different installations options supported?](docs/faq.md#installations)
 * [How can I run on AWS and SageMaker?](docs/faq.md#running-on-sagemaker)
 * [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md#reporter-metrics)
