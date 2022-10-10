@@ -85,6 +85,7 @@ def launch_remote(
             role=get_execution_role(),
             dependencies=syne_tune.__path__ + benchmarking.__path__,
             disable_profiler=True,
+            debugger_hook_config=False,
         )
 
         hyperparameters = {

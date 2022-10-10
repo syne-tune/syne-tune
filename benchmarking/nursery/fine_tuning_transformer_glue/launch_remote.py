@@ -102,6 +102,7 @@ if __name__ == "__main__":
             role=get_execution_role(),
             dependencies=dependencies,
             disable_profiler=True,
+            debugger_hook_config=False,
             hyperparameters=hyperparameters,
         )
 
