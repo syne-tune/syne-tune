@@ -29,7 +29,6 @@ from benchmarking.commons.benchmark_definitions.lcbench import (  # noqa: F401
 from benchmarking.commons.benchmark_definitions.yahpo import (  # noqa: F401
     yahpo_nb301_benchmark_definitions,
     yahpo_lcbench_benchmark_definitions,
-    yahpo_fcnet_benchmark_definitions,
     yahpo_iaml_rpart_benchmark_definitions,
     yahpo_iaml_glmnet_benchmark_definitions,
     yahpo_iaml_ranger_benchmark_definitions,
@@ -42,7 +41,6 @@ from benchmarking.commons.benchmark_definitions.yahpo import (  # noqa: F401
     yahpo_rbv2_aknn_benchmark_definitions,
     yahpo_nb301_benchmark,
     yahpo_lcbench_benchmark,
-    yahpo_fcnet_benchmark,
     yahpo_iaml_rpart_benchmark,
     yahpo_iaml_glmnet_benchmark,
     yahpo_iaml_ranger_benchmark,
