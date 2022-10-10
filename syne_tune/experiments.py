@@ -152,7 +152,9 @@ def load_experiment(
         logging.info(
             f"experiment {tuner_name} not found locally, trying to get it from s3."
         )
-        download_single_experiment(tuner_name=tuner_name, experiment_name=experiment_name)
+        download_single_experiment(
+            tuner_name=tuner_name, experiment_name=experiment_name
+        )
     try:
         with open(metadata_path, "r") as f:
             metadata = json.load(f)
