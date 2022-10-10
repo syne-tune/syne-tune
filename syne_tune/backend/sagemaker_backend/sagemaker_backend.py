@@ -187,20 +187,32 @@ class SageMakerBackend(TrialBackend):
 
         # Once a trial gets resumed, the running job number has to feature in
         # the SM job_name
-        job_name = f"{self.tuner_name}-{trial_id}"
-        job_running_number = self.resumed_counter.get(trial_id, 0)
-        if job_running_number > 0:
-            job_name += f"-{job_running_number}"
         jobname = sagemaker_fit(
             sm_estimator=self.sm_estimator,
             # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
             hyperparameters=self._numpy_serialize(hyperparameters),
             checkpoint_s3_uri=checkpoint_s3_uri,
-            job_name=job_name,
+            job_name=self._make_sagemaker_jobname(
+                trial_id=trial_id,
+                job_running_number=self.resumed_counter.get(trial_id, 0),
+            ),
             **self.sagemaker_fit_kwargs,
         )
         logger.info(f"scheduled {jobname} for trial-id {trial_id}")
         self.job_id_mapping[trial_id] = jobname
+
+    def _make_sagemaker_jobname(self, trial_id: int, job_running_number: int) -> str:
+        f"""
+        :param trial_id:
+        :param job_running_number: the number of times the trial was resumed
+        :return: sagemaker job name with the form [trial_id]-[job_running_number]-[tuner_name]
+        trial_id is put first to avoid mismatch when searching for job information in SageMaker from prefix.
+        """
+        job_name = f"{trial_id}"
+        if job_running_number > 0:
+            job_name += f"-{job_running_number}"
+        job_name += f"-{self.tuner_name}"
+        return job_name
 
     def _pause_trial(self, trial_id: int, result: Optional[dict]):
         self._stop_trial_job(trial_id)
