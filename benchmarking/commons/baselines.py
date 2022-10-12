@@ -11,9 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 
 from syne_tune.config_space import ordinal, Categorical
+from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
+    CONFIGURATION_SPACE,
+)
 
 
 @dataclass
@@ -30,16 +33,42 @@ class MethodArguments:
     num_brackets: Optional[int] = None
     verbose: Optional[bool] = False
     num_samples: int = 50
+    fcnet_ordinal: Optional[str] = None
 
 
 def search_options(args: MethodArguments) -> dict:
     return {"debug_log": args.verbose}
 
 
-def convert_categorical_to_ordinal(args: MethodArguments) -> dict:
+def convert_categorical_to_ordinal(config_space: dict) -> dict:
     return {
         name: (
             ordinal(domain.categories) if isinstance(domain, Categorical) else domain
         )
-        for name, domain in args.config_space.items()
+        for name, domain in config_space.items()
     }
+
+
+def _is_fcnet(config_space: dict) -> bool:
+    fcnet_keys = set(CONFIGURATION_SPACE.keys())
+    return fcnet_keys.issubset(set(config_space.keys()))
+
+
+def convert_categorical_to_ordinal_numeric(
+    config_space: dict,
+    kind: Optional[str],
+    do_convert: Optional[Callable[[dict], bool]] = None,
+) -> dict:
+    if do_convert is None:
+        do_convert = _is_fcnet
+    if kind is None or kind == "none" or not do_convert(config_space):
+        return config_space
+    else:
+        return {
+            name: (
+                ordinal(domain.categories, kind=kind)
+                if isinstance(domain, Categorical)
+                else domain
+            )
+            for name, domain in config_space.items()
+        }

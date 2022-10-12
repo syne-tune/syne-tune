@@ -19,10 +19,12 @@ from copy import copy
 from inspect import signature
 from math import isclose
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, List, Optional, Sequence, Union
 import argparse
 
 import numpy as np
+
+from syne_tune.util import is_increasing
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +122,7 @@ class Sampler:
     def sample(
         self,
         domain: Domain,
-        spec: Optional[Union[List[Dict], Dict]] = None,
+        spec: Optional[Union[List[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
     ):
@@ -189,7 +191,7 @@ class Grid(Sampler):
     def sample(
         self,
         domain: Domain,
-        spec: Optional[Union[List[Dict], Dict]] = None,
+        spec: Optional[Union[List[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
     ):
@@ -211,7 +213,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -226,7 +228,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -249,7 +251,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -266,7 +268,7 @@ class Float(Domain):
         def sample(
             self,
             domain: "Float",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -397,7 +399,7 @@ class Integer(Domain):
         def sample(
             self,
             domain: "Integer",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -412,7 +414,7 @@ class Integer(Domain):
         def sample(
             self,
             domain: "Integer",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -504,7 +506,7 @@ class Categorical(Domain):
         def sample(
             self,
             domain: "Categorical",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -603,7 +605,7 @@ class Ordinal(Categorical):
         super().__init__(categories)
 
     def __repr__(self):
-        return f"ordinal({self.categories})"
+        return f"ordinal-equal({self.categories})"
 
     def __eq__(self, other) -> bool:
         return (
@@ -613,12 +615,105 @@ class Ordinal(Categorical):
         )
 
 
+class OrdinalNearestNeighbor(Ordinal):
+    """
+    Different type for ordered set of numerical values (int or float).
+    Essentially, the finite set is represented by a real-valued interval
+    containing all values, and random sampling draws a value from this
+    interval and rounds it to the nearest value in `categories`. If
+    `log_scale` is True, all of this happens in log scale. Unless values
+    are equidistant, this is different from `Ordinal`.
+    """
+
+    def __init__(self, categories: Sequence, log_scale: bool = False):
+        super().__init__(categories)
+        self.log_scale = log_scale
+        self._initialize()
+
+    def __repr__(self):
+        typ = "nn-log" if self.log_scale else "nn"
+        return f"ordinal-{typ}({self.categories})"
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, OrdinalNearestNeighbor)
+            and super(Ordinal, self).__eq__(other)
+            and self.categories == other.categories
+            and self.log_scale == other.log_scale
+        )
+
+    def _initialize(self):
+        assert (
+            self.value_type == int or self.value_type == float
+        ), f"Value type must be int or float: {self.categories}"
+        assert is_increasing(
+            self.categories
+        ), f"Values must be strictly increasing: {self.categories}"
+        assert (
+            not self.log_scale or self.categories[0] > 0
+        ), f"Values must be positive: {self.categories}"
+        self._lower_int = None
+        self._upper_int = None
+        self._categories_int = None
+        self._more_than_one_category = len(self.categories) > 1
+        if self._more_than_one_category:
+            if self.log_scale:
+                self._categories_int = np.array(
+                    [np.log(float(x)) for x in self.categories]
+                )
+            else:
+                self._categories_int = np.array([float(x) for x in self.categories])
+            avg_dist = 0.5 * np.mean(
+                self._categories_int[1:] - self._categories_int[:-1]
+            )
+            self._lower_int = self._categories_int[0] - avg_dist
+            self._upper_int = self._categories_int[-1] + avg_dist
+
+    @property
+    def lower_int(self) -> Optional[float]:
+        return self._lower_int
+
+    @property
+    def upper_int(self) -> Optional[float]:
+        return self._upper_int
+
+    @property
+    def categories_int(self) -> Optional[np.ndarray]:
+        return self._categories_int
+
+    def cast_int(self, value_int: float):
+        if self._more_than_one_category:
+            distances = np.abs(self._categories_int - value_int)
+            minind = np.argmin(distances)
+        else:
+            minind = 0
+        return self.categories[minind]
+
+    def cast(self, value):
+        return self.cast_int(np.log(float(value)) if self.log_scale else float(value))
+
+    def set_sampler(self, sampler, allow_override=False):
+        raise NotImplementedError()
+
+    def get_sampler(self):
+        return None
+
+    def sample(self, spec=None, size=1, random_state=None):
+        if random_state is None:
+            random_state = np.random
+        items = random_state.uniform(self._lower_int, self._upper_int, size=size)
+        if size > 1:
+            return [self.cast_int(x) for x in items]
+        else:
+            return self.cast_int(items)
+
+
 class Function(Domain):
     class _CallSampler(BaseSampler):
         def sample(
             self,
             domain: "Function",
-            spec: Optional[Union[List[Dict], Dict]] = None,
+            spec: Optional[Union[List[dict], dict]] = None,
             size: int = 1,
             random_state: Optional[np.random.RandomState] = None,
         ):
@@ -684,7 +779,7 @@ class Quantized(Sampler):
     def sample(
         self,
         domain: Domain,
-        spec: Optional[Union[List[Dict], Dict]] = None,
+        spec: Optional[Union[List[dict], dict]] = None,
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
     ):
@@ -812,7 +907,7 @@ class FiniteRange(Domain):
         )
 
 
-def sample_from(func: Callable[[Dict], Any]):
+def sample_from(func: Callable[[dict], Any]):
     """Specify that tune should sample configuration values from this function.
 
     Arguments:
@@ -886,7 +981,7 @@ def qloguniform(lower: float, upper: float, q: float):
     return Float(lower, upper).loguniform().quantized(q)
 
 
-def choice(categories: List):
+def choice(categories: list):
     """Sample a categorical value.
 
     Sampling from ``tune.choice([1, 2])`` is equivalent to sampling from
@@ -896,9 +991,42 @@ def choice(categories: List):
     return Categorical(categories).uniform()
 
 
-def ordinal(categories: List):
-    """Sample an ordinal value."""
-    return Ordinal(categories).uniform()
+def ordinal(categories: list, kind: Optional[str] = None):
+    """
+    Ordinal value from list `categories`. Different variants are selected by
+    `kind`.
+
+    For `kind == "equal"`, sampling is the same as for `choice`, and the
+    internal encoding is by int (first value maps to 0, second to 1, ...).
+
+    For `kind == "nn"`, the finite set is represented by a real-valued interval
+    containing all values, and random sampling draws a value from this
+    interval and rounds it to the nearest value in `categories`. This behaves
+    like a finite version of `uniform` or `randint`. For `kind == "nn-log"`,
+    all this happens in log scale. For these two latter types, values in
+    `categories` must be int or float, strictly increasing, and positive
+    for `"nn-log"`.
+
+    :param categories:
+    :param kind: Can be "equal", "nn", "nn-log"
+    """
+    if kind is None:
+        # Default is "nn" for value type float or int and increasing,
+        # "equal" otherwise
+        kind = "equal"
+        if len(categories) > 1 and isinstance(categories[0], (int, float)):
+            if is_increasing(categories):
+                kind = "nn"
+            else:
+                logger.info(
+                    "Using kind='equal' for ordinal, since categories are not sorted in increasing order"
+                )
+    if kind == "equal":
+        return Ordinal(categories).uniform()
+    else:
+        log_scale = kind == "nn-log"
+        assert log_scale or kind == "nn", f"kind = {kind} not supported"
+        return OrdinalNearestNeighbor(categories, log_scale=log_scale)
 
 
 def randint(lower: int, upper: int):
@@ -1028,7 +1156,7 @@ def is_uniform_space(domain: Domain) -> bool:
         )
 
 
-def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):
+def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict):
     """
     Use this to prepare argument parser in endpoint script, for the
     non-fixed parameters in `config_space`.
@@ -1042,7 +1170,7 @@ def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict):
         parser.add_argument(f"--{name}", type=tp, required=True)
 
 
-def cast_config_values(config: Dict, config_space: Dict) -> Dict:
+def cast_config_values(config: dict, config_space: dict) -> dict:
     """
     Returns config with keys, values of `config`, but values are casted to
     their specific types.
@@ -1058,7 +1186,7 @@ def cast_config_values(config: Dict, config_space: Dict) -> Dict:
     }
 
 
-def non_constant_hyperparameter_keys(config_space: Dict) -> List[str]:
+def non_constant_hyperparameter_keys(config_space: dict) -> List[str]:
     """
     :param config_space:
     :return: Keys corresponding to (non-fixed) hyperparameters
@@ -1066,7 +1194,7 @@ def non_constant_hyperparameter_keys(config_space: Dict) -> List[str]:
     return [name for name, domain in config_space.items() if isinstance(domain, Domain)]
 
 
-def config_space_size(config_space: Dict, upper_limit: int = 2**20) -> Optional[int]:
+def config_space_size(config_space: dict, upper_limit: int = 2**20) -> Optional[int]:
     """
     Counts the number of distinct configurations in the configuration space
     `config_space`. If this is infinite (due to real-valued parameters) or
@@ -1085,7 +1213,7 @@ def config_space_size(config_space: Dict, upper_limit: int = 2**20) -> Optional[
     return size
 
 
-def config_to_match_string(config: Dict, config_space: Dict, keys: List[str]) -> str:
+def config_to_match_string(config: dict, config_space: dict, keys: List[str]) -> str:
     """
     Maps configuration to a match string, which can be used to compare configs
     for (approximate) equality. Only keys in `keys` are used, in that ordering.
@@ -1103,7 +1231,7 @@ def config_to_match_string(config: Dict, config_space: Dict, keys: List[str]) ->
     return ",".join(parts)
 
 
-def to_dict(x: "Domain") -> Dict:
+def to_dict(x: "Domain") -> dict:
     """
     We assume that for each `Domain` subclass, the `__init__` kwargs are
     also members, and all other members start with `_`.
@@ -1122,7 +1250,7 @@ def to_dict(x: "Domain") -> Dict:
     return result
 
 
-def from_dict(d: Dict) -> Domain:
+def from_dict(d: dict) -> Domain:
     domain_cls = getattr(sys.modules[__name__], d["domain_cls"])
     domain_kwargs = d["domain_kwargs"]
     domain = domain_cls(**domain_kwargs)

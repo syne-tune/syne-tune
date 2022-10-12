@@ -14,7 +14,13 @@ from typing import Tuple, Dict, List, Any, Optional, Union
 import numpy as np
 from autograd import numpy as anp
 
-from syne_tune.config_space import Domain, FiniteRange, Categorical, Ordinal
+from syne_tune.config_space import (
+    Domain,
+    FiniteRange,
+    Categorical,
+    Ordinal,
+    OrdinalNearestNeighbor,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Hyperparameter,
     Configuration,
@@ -479,7 +485,7 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
         return self._range_int.get_ndarray_bounds()
 
 
-class HyperparameterRangeOrdinal(HyperparameterRangeCategorical):
+class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
     def __init__(self, name: str, choices: Tuple[Any, ...]):
         super().__init__(name, choices)
         self._range_int = HyperparameterRangeInteger(
@@ -503,8 +509,48 @@ class HyperparameterRangeOrdinal(HyperparameterRangeCategorical):
         return self._range_int.get_ndarray_bounds()
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, HyperparameterRangeOrdinal):
+        if isinstance(other, HyperparameterRangeOrdinalEqual):
             return self.name == other.name and self.choices == other.choices
+        return False
+
+
+class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
+    def __init__(self, name: str, choices: Tuple[Any, ...], log_scale: bool = False):
+        assert len(choices) > 1, "Use HyperparameterRangeOrdinalEqual"
+        super().__init__(name, choices)
+        self._domain_int = OrdinalNearestNeighbor(choices, log_scale=log_scale)
+        self._range_int = HyperparameterRangeContinuous(
+            name=name + "_INTERNAL",
+            lower_bound=self._domain_int.lower_int,
+            upper_bound=self._domain_int.upper_int,
+            scaling=LinearScaling(),
+        )
+
+    @property
+    def log_scale(self) -> bool:
+        return self._domain_int.log_scale
+
+    def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
+        self._assert_value_type(hp)
+        assert hp in self.choices, "{} not in {}".format(hp, self)
+        return self._range_int.to_ndarray(
+            np.log(float(hp)) if self.log_scale else float(hp)
+        )
+
+    def from_ndarray(self, cand_ndarray: np.ndarray) -> Hyperparameter:
+        assert len(cand_ndarray) == 1
+        return self._domain_int.cast_int(self._range_int.from_ndarray(cand_ndarray))
+
+    def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
+        return self._range_int.get_ndarray_bounds()
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, HyperparameterRangeOrdinalNearestNeighbor):
+            return (
+                self.name == other.name
+                and self.choices == other.choices
+                and self.log_scale == other.log_scale
+            )
         return False
 
 
@@ -536,17 +582,25 @@ class HyperparameterRangesImpl(HyperparameterRanges):
             if isinstance(hp_range, Categorical):
                 kwargs = dict()
                 is_in_active = name in self.active_config_space
+                num_categories = len(hp_range.categories)
                 if isinstance(hp_range, Ordinal):
                     assert (
                         not is_in_active
                     ), f"Parameter '{name}' of type Ordinal cannot be used in active_config_space"
-                    _cls = HyperparameterRangeOrdinal
+                    if (
+                        isinstance(hp_range, OrdinalNearestNeighbor)
+                        and num_categories > 1
+                    ):
+                        _cls = HyperparameterRangeOrdinalNearestNeighbor
+                        kwargs["log_scale"] = hp_range.log_scale
+                    else:
+                        _cls = HyperparameterRangeOrdinalEqual
                 else:
                     if is_in_active:
                         kwargs["active_choices"] = tuple(
                             self.active_config_space[name].categories
                         )
-                    if len(hp_range.categories) == 2:
+                    if num_categories == 2:
                         _cls = HyperparameterRangeCategoricalBinary
                     else:
                         _cls = HyperparameterRangeCategoricalNonBinary

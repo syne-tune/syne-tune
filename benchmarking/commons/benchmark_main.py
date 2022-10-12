@@ -167,6 +167,13 @@ def parse_args(
         default=0,
         help="Serialize Tuner object at the end of tuning?",
     )
+    parser.add_argument(
+        "--fcnet_ordinal",
+        type=str,
+        choices=("none", "equal", "nn", "nn-log"),
+        default="none",
+        help="Ordinal encoding for fcnet categorical HPs",
+    )
     # Internal parameter, to support nested dict for `benchmark_definitions`
     nested_dict = is_dict_of_dict(benchmark_definitions)
     if nested_dict:
@@ -288,6 +295,12 @@ def main(
                 random_seed=seed,
                 resource_attr=resource_attr,
                 verbose=args.verbose,
+                fcnet_ordinal=args.fcnet_ordinal,
+                transfer_learning_evaluations=get_transfer_learning_evaluations(
+                    blackbox_name=benchmark.blackbox_name,
+                    test_task=benchmark.dataset_name,
+                    datasets=benchmark.datasets,
+                ),
                 use_surrogates="lcbench" in benchmark_name,
                 **method_kwargs,
             )
@@ -302,6 +315,7 @@ def main(
             "algorithm": method,
             "tag": experiment_tag,
             "benchmark": benchmark_name,
+            "fcnet_ordinal": args.fcnet_ordinal,
         }
         if extra_args is not None:
             metadata.update(extra_args)
