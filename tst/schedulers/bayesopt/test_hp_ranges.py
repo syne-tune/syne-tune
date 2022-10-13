@@ -27,6 +27,7 @@ from syne_tune.config_space import (
     logfinrange,
     reverseloguniform,
     ordinal,
+    logordinal,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
@@ -445,6 +446,7 @@ def test_encoded_ranges():
         "6": choice(["a", "b"]),
         "7": ordinal([0.05, 0.25, 0.5, 0.8], kind="equal"),
         "8": ordinal([0.05, 0.25, 0.5, 0.8], kind="nn"),
+        "9": logordinal([0.05, 0.25, 0.5, 0.8]),
     }
     hp_ranges = make_hyperparameter_ranges(config_space)
     encoded_ranges = hp_ranges.encoded_ranges
@@ -457,3 +459,4 @@ def test_encoded_ranges():
     assert encoded_ranges["6"] == (13, 14)
     assert encoded_ranges["7"] == (14, 15)
     assert encoded_ranges["8"] == (15, 16)
+    assert encoded_ranges["9"] == (16, 17)
