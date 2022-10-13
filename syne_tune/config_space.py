@@ -605,7 +605,7 @@ class Ordinal(Categorical):
         super().__init__(categories)
 
     def __repr__(self):
-        return f"ordinal-equal({self.categories})"
+        return f"ordinal({self.categories}, kind='equal')"
 
     def __eq__(self, other) -> bool:
         return (
@@ -631,8 +631,10 @@ class OrdinalNearestNeighbor(Ordinal):
         self._initialize()
 
     def __repr__(self):
-        typ = "log" if self.log_scale else ""
-        return f"{typ}ordinal-nn({self.categories})"
+        if self.log_scale:
+            return f"logordinal({self.categories})"
+        else:
+            return f"ordinal({self.categories}, kind='nn')"
 
     def __eq__(self, other) -> bool:
         return (
