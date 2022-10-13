@@ -631,8 +631,8 @@ class OrdinalNearestNeighbor(Ordinal):
         self._initialize()
 
     def __repr__(self):
-        typ = "nn-log" if self.log_scale else "nn"
-        return f"ordinal-{typ}({self.categories})"
+        typ = "log" if self.log_scale else ""
+        return f"{typ}ordinal-nn({self.categories})"
 
     def __eq__(self, other) -> bool:
         return (
@@ -1003,9 +1003,11 @@ def ordinal(categories: list, kind: Optional[str] = None):
     containing all values, and random sampling draws a value from this
     interval and rounds it to the nearest value in `categories`. This behaves
     like a finite version of `uniform` or `randint`. For `kind == "nn-log"`,
-    all this happens in log scale. For these two latter types, values in
-    `categories` must be int or float, strictly increasing, and positive
-    for `"nn-log"`.
+    nearest neighbour rounding happens in log space, which behaves like a
+    finite version of `loguniform` or `lograndint`. You can also use the
+    synonym `logordinal`.
+    For this type, values in `categories` must be int or float and strictly
+    increasing, and also positive if `kind == "nn-log"`.
 
     :param categories:
     :param kind: Can be "equal", "nn", "nn-log"
@@ -1027,6 +1029,19 @@ def ordinal(categories: list, kind: Optional[str] = None):
         log_scale = kind == "nn-log"
         assert log_scale or kind == "nn", f"kind = {kind} not supported"
         return OrdinalNearestNeighbor(categories, log_scale=log_scale)
+
+
+def logordinal(categories: list):
+    """
+    Ordinal value from list `categories`.
+
+    Corresponds to `ordinal` with `kind="nn-log"`, so that nearest neighbour
+    mapping happens in log scale. Values in `categories` must be int or
+    float, strictly increasing, and positive.
+
+    :param categories:
+    """
+    return OrdinalNearestNeighbor(categories, log_scale=True)
 
 
 def randint(lower: int, upper: int):
@@ -1132,6 +1147,8 @@ def logfinrange(lower: float, upper: float, size: int, cast_int: bool = False):
 
 def is_log_space(domain: Domain) -> bool:
     if isinstance(domain, FiniteRange):
+        return domain.log_scale
+    elif isinstance(domain, OrdinalNearestNeighbor):
         return domain.log_scale
     else:
         sampler = domain.get_sampler()

@@ -27,6 +27,7 @@ from syne_tune.config_space import (
     logfinrange,
     restrict_domain,
     ordinal,
+    logordinal,
     OrdinalNearestNeighbor,
 )
 
@@ -107,9 +108,9 @@ def test_serialization():
         finrange(0, 6, 4, cast_int=True),
         logfinrange(0.001, 1.0, 4),
         logfinrange(2, 64, 7, cast_int=True),
-        ordinal([0.01, 0.05, 0.1, 0.5]),
+        ordinal([0.01, 0.05, 0.1, 0.5], kind="equal"),
         ordinal([0.01, 0.05, 0.1, 0.5], kind="nn"),
-        ordinal([0.01, 0.05, 0.1, 0.5], kind="nn-log"),
+        logordinal([0.01, 0.05, 0.1, 0.5]),
     ]
 
     for x1 in config_space:
@@ -195,7 +196,7 @@ def test_finrange_domain(domain, value_set):
         (finrange(0, 8, 5, cast_int=True), int),
         (logfinrange(8, 512, 7, cast_int=True), int),
         (ordinal([0.01, 0.05, 0.1, 0.5]), float),
-        (ordinal([1, 4, 8, 17], kind="nn-log"), int),
+        (logordinal([1, 4, 8, 17]), int),
     ],
 )
 def test_type_of_sample(domain, tp):
