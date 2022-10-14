@@ -24,7 +24,8 @@ Thanks to all contributors (sorted by chronological commit order):
 * New HPO algorithm: Grid search (categorical variables only)
 * BOTorch searcher
 * MOBSTER algorithm supports independent GPs at each rung level
-* Support for launching benchmarks in benchmarking/commons
+* Support for launching experiments in benchmarking/commons, for local,
+  SageMaker, and simulator back-end
 * New benchmark: Fine-tuning Hugging Face transformers
 * Add IPython util function to display results as parallel categories plot
 * New hyperparameter types `ordinal`, `logordinal`
