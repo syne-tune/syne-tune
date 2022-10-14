@@ -5,19 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 
-## [0.3.1] - 2022-10-??
+## [0.3.1] - 2022-10-17
 
 We release 0.3.1 version which you can install with `pip install syne-tune[extra]`.
 
 Thanks to all contributors (sorted by chronological commit order):
 @mseeger, @geoalgo, @aaronkl, @wistuba, @talesa, @hfurkanbozkurt, @rsnirwan,
-@duck105, @ondrejbohdal, @iaroslav-ai, @austinmw, @banyikun, @jjaeyeon
+@duck105, @ondrejbohdal, @iaroslav-ai, @austinmw, @banyikun, @jjaeyeon, @ltiao
 
 ### Added
 * New tutorial: How to Contribute a New Scheduler
 * New tutorial: Multi-Fidelity Hyperparameter Optimization
 * YAHPO benchmarks integrated into blackbox repository
-* PD1 benchmark integrated into blackbox repository
+* PD1 benchmarks integrated into blackbox repository
 * New HPO algorithm: Hyper-Tune
 * New HPO algorithm: Differential Evolution Hyperband (DEHB)
 * New experimental HPO algorithm: Neuralband
@@ -39,7 +39,8 @@ Thanks to all contributors (sorted by chronological commit order):
 * New dependencies `yahpo`
  
 ### Fixed
-* In SageMaker back-end, trials with low IDs received reports several times
+* In SageMaker back-end, trials with low IDs received reports several times. This
+  is fixed
 * Fixing issue with checkpoint_s3_uri usage
 * Fix mode in BOTorch searcher when maximizing
 * Avoid experiment abort due to throttling of SageMaker job launching
