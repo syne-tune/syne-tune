@@ -10,28 +10,19 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_main import main
-from benchmarking.nursery.benchmark_dehb.baselines import methods
-from benchmarking.nursery.benchmark_dehb.benchmark_definitions import (
-    benchmark_definitions,
+from pathlib import Path
+
+from benchmarking.commons.launch_remote_sagemaker import launch_remote
+from benchmarking.commons.benchmark_definitions import (
+    real_benchmark_definitions as benchmark_definitions,
 )
-
-
-extra_args = [
-    dict(
-        name="--num_brackets",
-        type=int,
-        required=False,
-        help="number of brackets",
-    ),
-]
-
-
-def map_extra_args(args) -> dict:
-    return dict(
-        num_brackets=args.num_brackets,
-    )
+from benchmarking.nursery.launch_sagemaker.baselines import methods
 
 
 if __name__ == "__main__":
-    main(methods, benchmark_definitions, extra_args, map_extra_args)
+    entry_point = Path(__file__).parent / "hpo_main.py"
+    launch_remote(
+        entry_point=entry_point,
+        methods=methods,
+        benchmark_definitions=benchmark_definitions,
+    )

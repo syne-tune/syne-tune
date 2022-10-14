@@ -10,3 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from benchmarking.commons.hpo_main_local import main
+from benchmarking.nursery.launch_local.baselines import methods
+from benchmarking.commons.benchmark_definitions import (
+    real_benchmark_definitions as benchmark_definitions,
+)
+
+
+if __name__ == "__main__":
+    main(methods, benchmark_definitions)

@@ -34,6 +34,7 @@ class MethodArguments:
     verbose: Optional[bool] = False
     num_samples: int = 50
     fcnet_ordinal: Optional[str] = None
+    scheduler_kwargs: Optional[dict] = None
 
 
 def search_options(args: MethodArguments) -> dict:

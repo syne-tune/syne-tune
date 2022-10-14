@@ -10,11 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
+from benchmarking.commons.benchmark_definitions.common import (
+    SurrogateBenchmarkDefinition,
+)
 
 
 def lcbench_benchmark(dataset_name, datasets=None):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=7200,
         n_workers=4,
         elapsed_time_attr="time",

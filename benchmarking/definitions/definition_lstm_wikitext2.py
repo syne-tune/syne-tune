@@ -16,7 +16,7 @@ Example that reproduces the LSTM on WikiText2 benchmark from AutoGluonExperiment
 from pathlib import Path
 
 from benchmarking.utils import get_cost_model_for_batch_size
-from benchmarking.nursery.lstm_wikitext2.lstm_wikitext2 import (
+from benchmarking.training_scripts.lstm_wikitext2.lstm_wikitext2 import (
     BATCH_SIZE_LOWER,
     BATCH_SIZE_UPPER,
     BATCH_SIZE_KEY,
@@ -58,7 +58,10 @@ def lstm_wikitext2_benchmark(params):
         report_current_best=params["report_current_best"],
     )
     return {
-        "script": Path(__file__).parent / "lstm_wikitext2.py",
+        "script": Path(__file__).parent.parent
+        / "training_scripts"
+        / "lstm_wikitext2"
+        / "lstm_wikitext2.py",
         "metric": METRIC_NAME,
         "mode": "max",
         "resource_attr": RESOURCE_ATTR,

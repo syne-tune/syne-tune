@@ -11,14 +11,14 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from benchmarking.commons.benchmark_definitions import (
-    BenchmarkDefinition,
+    SurrogateBenchmarkDefinition,
     fcnet_benchmark_definitions,
     lcbench_selected_benchmark_definitions,
 )
 
 
 def nas201_benchmark(dataset_name):
-    return BenchmarkDefinition(
+    return SurrogateBenchmarkDefinition(
         max_wallclock_time=6 * 3600,
         n_workers=4,
         elapsed_time_attr="metric_elapsed_time",

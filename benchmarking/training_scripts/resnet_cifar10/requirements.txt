@@ -1,4 +1,2 @@
-torch
-torchvision
 filelock
 tqdm

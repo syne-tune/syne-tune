@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote import launch_remote
+from benchmarking.commons.launch_remote_simulator import launch_remote
 from benchmarking.nursery.benchmark_dehb.benchmark_definitions import (
     benchmark_definitions,
 )
@@ -20,7 +20,7 @@ from benchmarking.nursery.benchmark_dehb.baselines import (
     methods,
     Methods,
 )
-from benchmarking.nursery.benchmark_dehb.benchmark_main import (
+from benchmarking.nursery.benchmark_dehb.hpo_main import (
     extra_args,
     map_extra_args,
 )
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     def _is_expensive_method(method: str) -> bool:
         return method == Methods.SYNCMOBSTER
 
-    entry_point = Path(__file__).parent / "benchmark_main.py"
+    entry_point = Path(__file__).parent / "hpo_main.py"
     launch_remote(
         entry_point=entry_point,
         methods=methods,

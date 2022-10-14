@@ -21,8 +21,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )
 from syne_tune.util import s3_experiment_path, random_string
-from benchmarking.commons.launch_remote import message_sync_from_s3
-
+from benchmarking.commons.utils import message_sync_from_s3
 
 if __name__ == "__main__":
     experiment_name = "glue-4"

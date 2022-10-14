@@ -308,13 +308,12 @@ def objective(config):
         # Feed the score back back to Tune.
         _loss = best_val_loss if report_current_best else val_loss
         objective = -math.exp(_loss)
-        report(
-            **{
-                RESOURCE_ATTR: epoch,
-                METRIC_NAME: objective,
-                ELAPSED_TIME_ATTR: elapsed_time,
-            }
-        )
+        report_kwargs = {
+            RESOURCE_ATTR: epoch,
+            METRIC_NAME: objective,
+            ELAPSED_TIME_ATTR: elapsed_time,
+        }
+        report(**report_kwargs)
 
         # Write checkpoint (optional)
         checkpoint_model_at_rung_level(config, save_model_fn, epoch)

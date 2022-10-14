@@ -19,7 +19,7 @@ from tqdm import tqdm
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from benchmarking.commons.benchmark_main import get_transfer_learning_evaluations
+from benchmarking.commons.hpo_main_simulator import get_transfer_learning_evaluations
 from benchmarking.nursery.benchmark_automl.baselines import MethodArguments
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
