@@ -1,10 +1,2 @@
-syne-tune[gpsearchers,kde,blackbox-repository]
+syne-tune[gpsearchers,kde,blackbox-repository,yahpo]
 tqdm
-# YAHPO requirements (yahpo not yet supported in 0.3.0)
-# With new release: Remove entries below and add yahpo to syne-tune
-# dependency groups above
-onnxruntime>=1.10.0
-pyyaml
-configspace
-pandas
-yahpo-gym
