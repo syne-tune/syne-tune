@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 
-## [0.3.1] - 2022-10-17
+## [0.3.2] - 2022-10-14
 
-We release 0.3.1 version which you can install with `pip install syne-tune[extra]`.
+We release 0.3.2 version which you can install with `pip install syne-tune[extra]`.
 
 Thanks to all contributors (sorted by chronological commit order):
 @mseeger, @geoalgo, @aaronkl, @wistuba, @talesa, @hfurkanbozkurt, @rsnirwan,
