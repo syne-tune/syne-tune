@@ -94,6 +94,11 @@ def load_blackbox(
         additional arguments to `instantiate_yahpo`
     :return: blackbox with the given name, download it if not present.
     """
+    if name.startswith("yahpo-"):
+        if yahpo_kwargs is None:
+            yahpo_kwargs = dict()
+        return instantiate_yahpo(name, **yahpo_kwargs)
+
     tgt_folder = Path(repository_path) / name
     if (
         tgt_folder.exists()
@@ -101,7 +106,7 @@ def load_blackbox(
         and skip_if_present
     ):
         logging.info(
-            f"skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
+            f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )
     else:
         tgt_folder.mkdir(exist_ok=True, parents=True)
@@ -125,17 +130,13 @@ def load_blackbox(
                 + "generate_if_not_found=True in order to generate and persist them"
             )
             logging.info(
-                "did not find blackbox files locally nor on S3, regenerating it locally and persisting it on S3."
+                "Did not find blackbox files locally nor on S3, regenerating it locally and persisting it on S3."
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
 
-    if name.startswith("yahpo"):
-        if yahpo_kwargs is None:
-            yahpo_kwargs = dict()
-        return instantiate_yahpo(name, **yahpo_kwargs)
     if name.startswith("pd1"):
         return deserialize_pd1(tgt_folder)
-    if (tgt_folder / "hyperparameters.parquet").exists():
+    elif (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
     else:
         return deserialize_offline(tgt_folder)
