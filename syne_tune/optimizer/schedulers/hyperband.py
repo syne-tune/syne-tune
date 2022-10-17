@@ -495,7 +495,7 @@ class HyperbandScheduler(FIFOScheduler):
         :return: Is this variant doing pause and resume scheduling, in the
             sense that trials can be paused and resumed later?
         """
-        return self.scheduler_type != "stopping"
+        return HyperbandBracketManager.does_pause_resume(self.scheduler_type)
 
     @property
     def rung_levels(self) -> List[int]:
@@ -958,6 +958,16 @@ def hyperband_rung_levels(rung_levels, grace_period, reduction_factor, max_t):
     return rung_levels
 
 
+RUNG_SYSTEMS = {
+    "stopping": StoppingRungSystem,
+    "promotion": PromotionRungSystem,
+    "pasha": PASHARungSystem,
+    "rush_promotion": RUSHPromotionRungSystem,
+    "rush_stopping": RUSHStoppingRungSystem,
+    "cost_promotion": CostPromotionRungSystem,
+}
+
+
 class HyperbandBracketManager:
     """Hyperband Manager
 
@@ -1060,6 +1070,14 @@ class HyperbandBracketManager:
             for s in range(num_systems)
         ]
         self.random_state = np.random.RandomState(random_seed)
+
+    @staticmethod
+    def does_pause_resume(scheduler_type: str) -> bool:
+        """
+        :return: Is this variant doing pause and resume scheduling, in the
+            sense that trials can be paused and resumed later?
+        """
+        return RUNG_SYSTEMS[scheduler_type].does_pause_resume()
 
     def _get_rung_system_for_bracket_id(self, bracket_id: int):
         if self._rung_system_per_bracket:
