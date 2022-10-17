@@ -247,3 +247,7 @@ class PromotionRungSystem(RungSystem):
 
     def on_task_remove(self, trial_id: str):
         del self._running[trial_id]
+
+    @staticmethod
+    def does_pause_resume() -> bool:
+        return True

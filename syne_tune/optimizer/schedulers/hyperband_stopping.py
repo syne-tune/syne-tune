@@ -142,6 +142,14 @@ class RungSystem:
         milestone_rungs = self._milestone_rungs(skip_rungs)
         return [(x.level, x.data) for x in milestone_rungs]
 
+    @staticmethod
+    def does_pause_resume() -> bool:
+        """
+        :return: Is this variant doing pause and resume scheduling, in the
+            sense that trials can be paused and resumed later?
+        """
+        raise NotImplementedError
+
 
 class StoppingRungSystem(RungSystem):
     """
@@ -224,3 +232,7 @@ class StoppingRungSystem(RungSystem):
             "milestone_reached": milestone_reached,
             "next_milestone": next_milestone,
         }
+
+    @staticmethod
+    def does_pause_resume() -> bool:
+        return False

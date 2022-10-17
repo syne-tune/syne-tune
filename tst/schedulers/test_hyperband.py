@@ -19,6 +19,16 @@ from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.searchers import RandomSearcher
+from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
+from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
+from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
+from syne_tune.optimizer.schedulers.hyperband_rush import (
+    RUSHPromotionRungSystem,
+    RUSHStoppingRungSystem,
+)
+from syne_tune.optimizer.schedulers.hyperband_cost_promotion import (
+    CostPromotionRungSystem,
+)
 
 
 def _make_result(epoch, metric):
@@ -188,3 +198,31 @@ def test_hyperband_max_t_inference():
                     mode="max",
                     metric="accuracy",
                 )
+
+
+@pytest.mark.parametrize(
+    "scheduler_type,terminator_cls,does_pause_resume",
+    [
+        ("stopping", StoppingRungSystem, False),
+        ("promotion", PromotionRungSystem, True),
+        ("pasha", PASHARungSystem, True),
+        ("rush_promotion", RUSHPromotionRungSystem, True),
+        ("rush_stopping", RUSHStoppingRungSystem, False),
+        ("cost_promotion", CostPromotionRungSystem, True),
+    ],
+)
+def test_hyperband_scheduler_type(scheduler_type, terminator_cls, does_pause_resume):
+    config_space = {
+        "epochs": 15,
+    }
+    myscheduler = HyperbandScheduler(
+        config_space,
+        type=scheduler_type,
+        metric="accuracy",
+        mode="max",
+        resource_attr="epoch",
+        max_resource_attr="epochs",
+        cost_attr="cost",
+    )
+    assert isinstance(myscheduler.terminator._rung_systems[0], terminator_cls)
+    assert myscheduler.does_pause_resume() == does_pause_resume
