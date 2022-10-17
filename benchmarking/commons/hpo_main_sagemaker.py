@@ -33,6 +33,13 @@ from benchmarking.commons.hpo_main import (
 from benchmarking.commons.launch_remote import sagemaker_estimator_args
 
 
+# SageMaker managed warm pools:
+# https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html#train-warm-pools-resource-limits
+# Maximum time a warm pool instance is kept alive, waiting to be associated with
+# a new job. Setting this too large may lead to extra costs.
+WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS = 10 * 60
+
+
 def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
     if extra_args is None:
         extra_args = []
@@ -62,9 +69,16 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
                 default=3,
                 help="Number of trials which can fail without experiment being terminated",
             ),
+            dict(
+                name="warm_pool",
+                type=int,
+                default=0,
+                help="If 1, the SageMaker managed warm pools feature is used. This can be more expensive, but also reduces startup delays, leading to an experiment finishing in less time",
+            ),
         ]
     )
     args, method_names, seeds = _parse_args(methods, extra_args)
+    args.warm_pool = bool(args.warm_pool)
     return args, method_names, seeds
 
 
@@ -97,6 +111,15 @@ def main(
     del sm_args["checkpoint_s3_uri"]
     sm_args["sagemaker_session"] = default_sagemaker_session()
     sm_args["dependencies"] = benchmarking.__path__
+    if args.warm_pool:
+        print(
+            "------------------------------------------------------------------------\n"
+            "Using SageMaker managed warm pools in order to decrease start-up delays.\n"
+            "In order for this to work, you need to have quotas of the type\n"
+            f"   {benchmark.instance_type} for training warm pool usage\n"
+            "------------------------------------------------------------------------"
+        )
+        sm_args["keep_alive_period_in_seconds"] = WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS
     trial_backend = SageMakerBackend(
         sm_estimator=sagemaker_estimator[benchmark.framework](**sm_args),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the

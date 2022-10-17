@@ -48,6 +48,12 @@ def launch_remote(
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag
     suffix = random_string(4)
+    if args.warm_pool:
+        print(
+            "ATTENTION: At the moment, -warm_pool 1 does not work with remote "
+            "launching, please use it with local launching only. Switching it off."
+        )
+        args.warm_pool = False
     if boto3.Session().region_name is None:
         os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
     environment = {"AWS_DEFAULT_REGION": boto3.Session().region_name}
@@ -69,6 +75,7 @@ def launch_remote(
             seed, method, experiment_tag, args, benchmark, map_extra_args
         )
         hyperparameters["max_failures"] = args.max_failures
+        hyperparameters["warm_pool"] = int(args.warm_pool)
         sm_args["hyperparameters"] = hyperparameters
         print(
             f"{experiment_tag}-{tuner_name}\n"

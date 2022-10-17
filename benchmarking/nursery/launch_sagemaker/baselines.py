@@ -48,6 +48,7 @@ methods = {
     Methods.ASHA: lambda method_arguments: ASHA(
         config_space=method_arguments.config_space,
         search_options=search_options(method_arguments),
+        type="promotion",
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_resource_attr=method_arguments.max_resource_attr,
@@ -62,6 +63,7 @@ methods = {
     Methods.MOBSTER: lambda method_arguments: MOBSTER(
         config_space=method_arguments.config_space,
         search_options=search_options(method_arguments),
+        type="promotion",
         mode=method_arguments.mode,
         metric=method_arguments.metric,
         max_resource_attr=method_arguments.max_resource_attr,

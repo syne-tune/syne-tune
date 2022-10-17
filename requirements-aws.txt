@@ -1,4 +1,5 @@
 boto3
-sagemaker>=2.32.0
+sagemaker>=2.112.0
 PyYaml
 ujson
+s3fs
