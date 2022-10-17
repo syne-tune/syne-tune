@@ -248,6 +248,18 @@ class TrialBackend:
         results = sorted(results, key=lambda result: result[1][ST_WORKER_TIMESTAMP])
         return trial_status_dict, results
 
+    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+        """Returns list of ids for currently busy trials
+
+        A trial is busy if its status is `Status.in_progress` or `Status.stopping`.
+        If the execution setup is able to run `n_workers` jobs in parallel,
+        then if this method returns a list of size `n`, the tuner may start
+        `n_workers - n` new jobs.
+
+        :return: List of `(trial_id, status)`
+        """
+        raise NotImplementedError()
+
     def stdout(self, trial_id: int) -> List[str]:
         """Fetch stdout log for trial
 

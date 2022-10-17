@@ -38,6 +38,8 @@ def get_benchmark(
         benchmark_kwargs["n_workers"] = args.n_workers
     if args.max_wallclock_time is not None:
         benchmark_kwargs["max_wallclock_time"] = args.max_wallclock_time
+    if args.instance_type is not None:
+        benchmark_kwargs["instance_type"] = args.instance_type
     return benchmark_definitions(**benchmark_kwargs)[args.benchmark]
 
 
@@ -59,6 +61,11 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
                 type=int,
                 default=0,
                 help="Verbose log output?",
+            ),
+            dict(
+                name="instance_type",
+                type=str,
+                help="AWS SageMaker instance type",
             ),
         ]
     )

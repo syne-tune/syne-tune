@@ -56,6 +56,8 @@ def test_local_backend_checkpoint(caplog):
             (trial_id, {"step": 1, "train_acc": 2}),
         ],
     )
+    busy_trial_ids = backend.busy_trial_ids()
+    assert len(busy_trial_ids) == 0, busy_trial_ids
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     check_metrics(new_metrics, [])
@@ -66,10 +68,18 @@ def test_local_backend_checkpoint(caplog):
     backend.pause_trial(trial_id=trial_id)
     backend.resume_trial(trial_id=trial_id)
 
+    busy_trial_ids = backend.busy_trial_ids()
+    assert len(busy_trial_ids) == 1 and busy_trial_ids[0] == (
+        trial_id,
+        Status.in_progress,
+    ), busy_trial_ids
+
     wait_until_all_trials_completed(backend)
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.completed}
     check_metrics(new_metrics, [])
+    busy_trial_ids = backend.busy_trial_ids()
+    assert len(busy_trial_ids) == 0, busy_trial_ids
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert new_metrics == []
@@ -79,11 +89,15 @@ def test_local_backend_checkpoint(caplog):
 
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.stopped}
+    busy_trial_ids = backend.busy_trial_ids()
+    assert len(busy_trial_ids) == 0, busy_trial_ids
 
     trial_id = backend.start_trial(config={"num-epochs": 200}).trial_id
     backend.pause_trial(trial_id=trial_id)
     trial_statuses, new_metrics = get_status_metrics(backend, trial_id)
     assert trial_statuses == {trial_id: Status.paused}
+    busy_trial_ids = backend.busy_trial_ids()
+    assert len(busy_trial_ids) == 0, busy_trial_ids
 
 
 def test_resume_config_local_backend(caplog):

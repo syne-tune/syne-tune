@@ -20,9 +20,10 @@ import numpy as np
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from syne_tune.backend.trial_backend import TrialBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_backend import BUSY_STATUS
 from syne_tune.num_gpu import get_num_gpus
 from syne_tune.report import retrieve
 from syne_tune.backend.trial_status import TrialResult, Status
@@ -81,7 +82,10 @@ class LocalBackend(TrialBackend):
         self.trial_gpu = None
         self.gpu_times_assigned = None
         # sets the path where to write files, can be overidden later by Tuner.
-        self.set_path(Path(experiment_path(tuner_name=random_string(length=10))))
+        self.set_path(str(Path(experiment_path(tuner_name=random_string(length=10)))))
+        # Trials which may currently be busy (status in `BUSY_STATUS`). The
+        # corresponding jobs are polled for status in `busy_trial_ids`.
+        self._busy_trial_id_candidates = set()
 
     def trial_path(self, trial_id: int) -> Path:
         return self.local_path / str(trial_id)
@@ -178,6 +182,7 @@ class LocalBackend(TrialBackend):
                 self.trial_subprocess[trial_id] = subprocess.Popen(
                     cmd.split(" "), stdout=stdout, stderr=stderr, env=env
                 )
+        self._busy_trial_id_candidates.add(trial_id)  # Mark trial as busy
 
     def _allocate_gpu(self, trial_id: int, env: dict):
         if self.rotate_gpus:
@@ -224,10 +229,15 @@ class LocalBackend(TrialBackend):
             res.append(trial_results)
         return res
 
+    def _release_from_worker(self, trial_id: int):
+        if trial_id in self._busy_trial_id_candidates:
+            self._busy_trial_id_candidates.remove(trial_id)
+
     def _pause_trial(self, trial_id: int, result: Optional[dict]):
         self._file_path(trial_id=trial_id, filename="pause").touch()
         self._kill_process(trial_id)
         self._deallocate_gpu(trial_id)
+        self._release_from_worker(trial_id)
 
     def _resume_trial(self, trial_id: int):
         pause_path = self._file_path(trial_id=trial_id, filename="pause")
@@ -240,6 +250,7 @@ class LocalBackend(TrialBackend):
         self._file_path(trial_id=trial_id, filename="stop").touch()
         self._kill_process(trial_id)
         self._deallocate_gpu(trial_id)
+        self._release_from_worker(trial_id)
 
     def _kill_process(self, trial_id: int):
         # send a kill process to the process
@@ -279,6 +290,27 @@ class LocalBackend(TrialBackend):
                     return Status.completed
                 else:
                     return Status.failed
+
+    def _get_busy_trial_ids(self) -> List[Tuple[int, str]]:
+        busy_list = []
+        for trial_id in self._busy_trial_id_candidates:
+            status = self._read_status(trial_id)
+            if status in BUSY_STATUS:
+                busy_list.append((trial_id, status))
+        return busy_list
+
+    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+        # Note that at this point, `self._busy_trial_id_candidates` contains
+        # trials whose jobs have been busy in the past, but they may have
+        # stopped or terminated since. We query the current status for all
+        # these jobs and update `self._busy_trial_id_candidates` accordingly.
+        if self._busy_trial_id_candidates:
+            busy_list = self._get_busy_trial_ids()
+            # Update internal candidate list
+            self._busy_trial_id_candidates = set(trial_id for trial_id, _ in busy_list)
+            return busy_list
+        else:
+            return []
 
     def stdout(self, trial_id: int) -> List[str]:
         with open(self.trial_path(trial_id=trial_id) / "std.out", "r") as f:

@@ -147,6 +147,7 @@ class SimulatorBackend(LocalBackend):
         self._simulator_state = SimulatorState()
         self._time_keeper = SimulatedTimeKeeper()
         self._next_results_to_fetch = dict()
+        self._busy_trial_ids = set()
         logger.setLevel(logging.INFO)  # Suppress DEBUG for this class
 
     @property
@@ -197,64 +198,15 @@ class SimulatorBackend(LocalBackend):
             time_event, event = next_event
             trial_id = event.trial_id
             if isinstance(event, StartEvent):
-                self._debug_message("StartEvent", time=time_event, trial_id=trial_id)
-                # Run training script and push event for each result
                 self._process_start_event(trial_id=trial_id, time_event=time_event)
             elif isinstance(event, CompleteEvent):
-                trial_result = self._trial_dict[trial_id]
-                status = event.status
-                self._debug_message(
-                    "CompleteEvent", time=time_event, trial_id=trial_id, status=status
+                self._process_complete_event(
+                    trial_id=trial_id, time_event=time_event, status=event.status
                 )
-                training_end_time = self._time_keeper.start_time_stamp + timedelta(
-                    seconds=time_event
-                )
-                if isinstance(trial_result, TrialResult):
-                    trial_result.status = status
-                    trial_result.training_end_time = training_end_time
-                else:
-                    # No results reported for the trial. This can happen if
-                    # the trial failed
-                    self._trial_dict[trial_id] = trial_result.add_results(
-                        metrics=[], status=status, training_end_time=training_end_time
-                    )
             elif isinstance(event, StopEvent):
-                self._debug_message("StopEvent", time=time_event, trial_id=trial_id)
-                # Remove all remaining events for `trial_id`. This includes
-                # the `CompleteEvent` pushed with `StartEvent`, so there can
-                # be no confusion with the 2nd `CompleteEvent` pushed by
-                # `_stop_trial`.
-                self._simulator_state.remove_events(trial_id)
+                self._process_stop_event(trial_id=trial_id, time_event=time_event)
             elif isinstance(event, OnTrialResultEvent):
-                result = copy.copy(event.result)
-                if self._debug_resource_attr:
-                    k = self._debug_resource_attr
-                    debug_kwargs = {k: result.get(k)}
-                else:
-                    debug_kwargs = dict()
-                self._debug_message(
-                    "OnTrialResultEvent",
-                    time=time_event,
-                    trial_id=trial_id,
-                    **debug_kwargs,
-                )
-                # Append timestamps to `result`. This is done here, but not in
-                # the other back-ends, for which timestamps are only added when
-                # results are written out.
-                result[ST_TUNER_TIME] = time_event
-                if trial_id in self._next_results_to_fetch:
-                    self._next_results_to_fetch[trial_id].append(result)
-                else:
-                    self._next_results_to_fetch[trial_id] = [result]
-                trial_result = self._trial_dict[trial_id]
-                if isinstance(trial_result, TrialResult):
-                    trial_result.metrics.append(result)
-                else:
-                    self._trial_dict[trial_id] = trial_result.add_results(
-                        metrics=[result],
-                        status=Status.in_progress,
-                        training_end_time=None,
-                    )
+                self._process_on_trial_result_event(time_event=time_event, event=event)
             else:
                 raise TypeError(f"Event at time {time_event} of unknown type: {event}")
             next_event = self._simulator_state.next_until(time_now)
@@ -262,6 +214,7 @@ class SimulatorBackend(LocalBackend):
     def _process_start_event(
         self, trial_id: int, time_event: float, config: Optional[dict] = None
     ):
+        self._debug_message("StartEvent", time=time_event, trial_id=trial_id)
         # Run training script and record results
         status, results = self._run_job_and_collect_results(trial_id, config=config)
         time_final_result = time_event
@@ -305,6 +258,71 @@ class SimulatorBackend(LocalBackend):
         self._debug_message(
             "CompleteEvent", time=time_complete, trial_id=trial_id, pushed=True
         )
+        self._busy_trial_ids.add(trial_id)
+
+    def _process_complete_event(self, trial_id: int, time_event: float, status: str):
+        self._debug_message(
+            "CompleteEvent", time=time_event, trial_id=trial_id, status=status
+        )
+        trial_result = self._trial_dict[trial_id]
+        training_end_time = self._time_keeper.start_time_stamp + timedelta(
+            seconds=time_event
+        )
+        if isinstance(trial_result, TrialResult):
+            trial_result.status = status
+            trial_result.training_end_time = training_end_time
+        else:
+            # No results reported for the trial. This can happen if
+            # the trial failed
+            self._trial_dict[trial_id] = trial_result.add_results(
+                metrics=[], status=status, training_end_time=training_end_time
+            )
+        if trial_id in self._busy_trial_ids:
+            self._busy_trial_ids.remove(trial_id)
+
+    def _process_stop_event(self, trial_id: int, time_event: float):
+        self._debug_message("StopEvent", time=time_event, trial_id=trial_id)
+        # Remove all remaining events for `trial_id`. This includes
+        # the `CompleteEvent` pushed with `StartEvent`, so there can
+        # be no confusion with the 2nd `CompleteEvent` pushed by
+        # `_stop_trial`.
+        self._simulator_state.remove_events(trial_id)
+        if trial_id in self._busy_trial_ids:
+            self._busy_trial_ids.remove(trial_id)
+
+    def _process_on_trial_result_event(
+        self, time_event: float, event: OnTrialResultEvent
+    ):
+        trial_id = event.trial_id
+        result = copy.copy(event.result)
+        if self._debug_resource_attr:
+            k = self._debug_resource_attr
+            debug_kwargs = {k: result.get(k)}
+        else:
+            debug_kwargs = dict()
+        self._debug_message(
+            "OnTrialResultEvent",
+            time=time_event,
+            trial_id=trial_id,
+            **debug_kwargs,
+        )
+        # Append timestamps to `result`. This is done here, but not in
+        # the other back-ends, for which timestamps are only added when
+        # results are written out.
+        result[ST_TUNER_TIME] = time_event
+        if trial_id in self._next_results_to_fetch:
+            self._next_results_to_fetch[trial_id].append(result)
+        else:
+            self._next_results_to_fetch[trial_id] = [result]
+        trial_result = self._trial_dict[trial_id]
+        if isinstance(trial_result, TrialResult):
+            trial_result.metrics.append(result)
+        else:
+            self._trial_dict[trial_id] = trial_result.add_results(
+                metrics=[result],
+                status=Status.in_progress,
+                training_end_time=None,
+            )
 
     def _advance_by_outside_time(self):
         self._time_keeper.advance(self._time_keeper.real_time_since_last_recent_exit())
@@ -506,3 +524,7 @@ class SimulatorBackend(LocalBackend):
         )
         results = all_results[num_already_before:]
         return status, results
+
+    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+        self._process_events_until_now()
+        return [(trial_id, Status.in_progress) for trial_id in self._busy_trial_ids]

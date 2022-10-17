@@ -57,23 +57,43 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
                 name="max_failures",
                 type=int,
                 default=3,
-                help="Number of trials which can fail without experiment being terminated",
+                help=(
+                    "Number of trials which can fail without experiment being "
+                    "terminated"
+                ),
             ),
             dict(
                 name="warm_pool",
                 type=int,
                 default=0,
-                help="If 1, the SageMaker managed warm pools feature is used. This can be more expensive, but also reduces startup delays, leading to an experiment finishing in less time",
+                help=(
+                    "If 1, the SageMaker managed warm pools feature is used. "
+                    "This can be more expensive, but also reduces startup "
+                    "delays, leading to an experiment finishing in less time"
+                ),
             ),
             dict(
                 name="instance_type",
                 type=str,
                 help="AWS SageMaker instance type (overwrites default of benchmark)",
             ),
+            dict(
+                name="start_jobs_without_delay",
+                type=int,
+                default=0,
+                help=(
+                    "If 1, the tuner starts new trials immediately after "
+                    "sending existing ones a stop signal. This leads to more "
+                    "than n_workers instances being used during certain times, "
+                    "which can lead to quotas being exceeded, or the warm pool "
+                    "feature not working optimal."
+                ),
+            ),
         ]
     )
     args, method_names, seeds = _parse_args(methods, extra_args)
     args.warm_pool = bool(args.warm_pool)
+    args.start_jobs_without_delay = bool(args.start_jobs_without_delay)
     return args, method_names, seeds
 
 
@@ -107,11 +127,11 @@ def main(
     sm_args["dependencies"] = benchmarking.__path__
     if args.warm_pool:
         print(
-            "------------------------------------------------------------------------\n"
+            "--------------------------------------------------------------------------\n"
             "Using SageMaker managed warm pools in order to decrease start-up delays.\n"
-            "In order for this to work, you need to have quotas of the type\n"
+            f"In order for this to work, you need to have at least {benchmark.n_workers} quotas of the type\n"
             f"   {benchmark.instance_type} for training warm pool usage\n"
-            "------------------------------------------------------------------------"
+            "--------------------------------------------------------------------------"
         )
         sm_args["keep_alive_period_in_seconds"] = WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS
     if args.instance_type is not None:
@@ -157,5 +177,6 @@ def main(
         save_tuner=args.save_tuner,
         sleep_time=5.0,
         max_failures=args.max_failures,
+        start_jobs_without_delay=args.start_jobs_without_delay,
     )
     tuner.run()

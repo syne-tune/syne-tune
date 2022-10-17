@@ -52,6 +52,7 @@ def get_hyperparameters(
         "start_seed": seed,
         "n_workers": benchmark.n_workers,
         "max_wallclock_time": benchmark.max_wallclock_time,
+        "instance_type": benchmark.instance_type,
     }
     if map_extra_args is not None:
         hyperparameters.update(filter_none(map_extra_args(args)))
