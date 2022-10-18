@@ -53,7 +53,7 @@ config_space = {
 
 Here, `n_units_1` is sampled uniformly from `4,...,1024`, while `learning_rate`
 is sampled log-uniformly from `[1e-6, 1]` (i.e. it is `exp(u)`, where `u` is
-sampled uniformly in `[-6 log(10), 0]`). As seen in FIGREF, random search in
+sampled uniformly in `[-6 log(10), 0]`). As seen in figure above, random search in
 general does better than grid search when some HPs are more important than
 others.
 
