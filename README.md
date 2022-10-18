@@ -22,7 +22,7 @@ This package provides state-of-the-art distributed hyperparameter optimizers (HP
 To install Syne Tune from pip, you can simply do:
 
 ```bash
-pip install 'syne-tune[extra]==0.3.0'
+pip install 'syne-tune[extra]'
 ```
 
 or to get the latest version from git: 
@@ -34,7 +34,7 @@ cd syne-tune
 pip install -e '.[extra]'
 ```
 
-We recommend you to install it in a virutal environment to avoid package inconsistencies. You can see the FAQ [What are the different installations options supported?](docs/faq.md#installations) for more install options.
+When installing Syne Tune from sources, we recommend to use a virtual environment. You can see the FAQ [What are the different installations options supported?](docs/faq.md#installations) for more install options.
 
 See our [change log](CHANGELOG.md) to see what changed in the latest version. 
 
