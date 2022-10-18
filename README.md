@@ -34,7 +34,7 @@ cd syne-tune
 pip install -e '.[extra]'
 ```
 
-You can see the FAQ [What are the different installations options supported?](docs/faq.md#installations) for more install options.
+We recommend you to install it in a virutal environment to avoid package inconsistencies. You can see the FAQ [What are the different installations options supported?](docs/faq.md#installations) for more install options.
 
 See our [change log](CHANGELOG.md) to see what changed in the latest version. 
 
