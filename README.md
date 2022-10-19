@@ -168,6 +168,7 @@ Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](docs/tutorials/basics/README.md)
 * [Multi-Fidelity Hyperparameter Optimization](docs/tutorials/multifidelity/README.md)
 * [How to Contribute a New Scheduler](docs/tutorials/developer/README.md)
+* [Benchmarking in Syne Tune](docs/tutorials/benchmarking/README.md)
 * [Choosing a Configuration Space](docs/search_space.md)
 * [Using the Built-in Schedulers](docs/schedulers.md)
 

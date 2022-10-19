@@ -37,11 +37,11 @@ and open source tools available. Notable examples for open source tools are
 [Ray Tyne](https://docs.ray.io/en/latest/tune/index.html) and
 [Optuna](https://optuna.readthedocs.io/en/stable/). Here are some reasons why you
 may prefer Syne Tune over these alternatives.
-* Lightweight and platform agnostic: Syne Tune is designed to work with different
+* Lightweight and platform-agnostic: Syne Tune is designed to work with different
   execution back-ends, so you are not locked into a particular distributed system
   architecture. Syne Tune runs with minimal dependencies.
 * Wide range of modalities: Syne Tune supports multi-fidelity HPO, constrained HPO,
-  multi-objective HPO, transfer tuning, cost-aware HPO.
+  multi-objective HPO, transfer tuning, cost-aware HPO, population based training.
 * Simple, modular design: Rather than wrapping all sorts of other HPO frameworks,
   Syne Tune provides simple APIs and scheduler templates, which can easily be
   [extended to your specific needs](tutorials/developer/README.md).
@@ -54,6 +54,7 @@ may prefer Syne Tune over these alternatives.
   comparison between different tuning algorithms. Its
   [blackbox repository and simulator back-end](tutorials/multifidelity/mf_setup.md)
   run realistic simulations of experiments many times faster than real time.
+  [Benchmarking](tutorials/benchmarking/README.md) is simple and efficient.
 
 If you are an AWS customer, there are additional good reasons to use Syne Tune over
 the alternatives:
@@ -79,7 +80,8 @@ you can run `pip install 'syne-tune[X]'` where `X` can be
 * `raytune`: For Ray Tune optimizers
 * `benchmarks`: For installing dependencies required to run all benchmarks
 * `blackbox-repository`: Blackbox repository for simulated tuning
-* `kde`: For KDE optimizer
+* `yahpo`: YAHPO Gym surrogate blackboxes
+* `kde`: For BOHB
 * `botorch`: Bayesian optimization from BOTorch
 * `extra`: For installing all the above
 * `bore`: For Bore optimizer
@@ -163,7 +165,6 @@ When running remotely on SageMaker, the output of the tuning is saved under `/op
 the tuning output is synced regularly to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/`.
 
 If you run remote tuning via the CLI, the tuning output is synced to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-name}/{tuner-name}/`, where `experiment-name` is the prefix of `tuner-name` without the datetime extension (in the example above, `experiment-name = 'train-height'`).
-
 
 ### <a name="tuning-output-location"></a> How can I change the default output folder where tuning results are stored?
 
@@ -336,7 +337,6 @@ tuner = Tuner(
 
 All Syne Tune and user metadata are saved when the tuner starts under `metadata.json`.
 
-
 ### <a name="logging-additional-information"></a> How do I append additional information to the results which are stored? 
 
 Results are processed and stored by callbacks passed to `Tuner`, in particular see 
@@ -351,29 +351,34 @@ If you run experiments with tabulated benchmarks using the `SimulatorBackend`, a
 
 ### <a name="remote-tuning"></a> I don’t want to wait, how can I launch the tuning on a remote machine?
 
+Remote launching of experiments has a number of advantages:
+* The machine you are working on is not blocked
+* You can launch many experiments in parallel
+* You can launch experiments with any instance type you like, without having to
+  provision them yourselves
+
 You can use the remote launcher to launch an experiment on a remote machine. The
 remote launcher supports both `LocalBackend` and `SageMakerBackend`. In the
 former case, multiple trials will be evaluated on the remote machine (one use-case
 being to use a beefy machine), in the latter case trials will be evaluated as
-separate SageMaker training jobs.
-
-Here is an example for how to run tuning with the remote launcher:
+separate SageMaker training jobs. An example for running the remote launcher is
+given in
 [launch_height_sagemaker_remotely.py](../examples/launch_height_sagemaker_remotely.py).
-It may be more convenient for you to write your own launcher scripts. Examples:
-* Local backend: [benchmarking/nursery/launch_local/launch_remote.py](../benchmarking/nursery/launch_local/launch_remote.py)
-* Simulator backend: [benchmarking/nursery/benchmark_dehb/launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py)
-* SageMaker backend: [benchmarking/nursery/launch_sagemaker/launch_remote.py](../benchmarking/nursery/launch_sagemaker/launch_remote.py)
+
+Remote launching for benchmarking (i.e., running many remote experiments in order
+to compare multiple methods) is detailed in
+[this tutorial](tutorials/benchmarking/README.md).
 
 ### <a name="experiment-parallel"></a> How can I run many experiments in parallel?
 
-You can call the remote launcher multiple times to schedule a list of experiments.
-In some case, you will want more flexibility and directly write your experiment
-loop, you can check 
-[benchmark_loop](https://github.com/awslabs/syne-tune/tree/main/benchmarking/benchmark_loop)
-for an example. Other examples include:
-* Local backend: [benchmarking/nursery/launch_local/launch_remote.py](../benchmarking/nursery/launch_local/launch_remote.py)
-* Simulator backend: [benchmarking/nursery/benchmark_dehb/launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py)
-* SageMaker backend: [benchmarking/nursery/launch_sagemaker/launch_remote.py](../benchmarking/nursery/launch_sagemaker/launch_remote.py)
+You can remotely launch any number of experiments, which will then run in parallel,
+as detailed in
+[this tutorial](tutorials/benchmarking/README.md), see also these examples:
+* Local backend: [launch_remote.py](../benchmarking/nursery/launch_local/launch_remote.py)
+* Simulator backend: [launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py)
+* SageMaker backend: [launch_remote.py](../benchmarking/nursery/launch_sagemaker/launch_remote.py)
+
+Another example is given in [benchmark_loop](../benchmarking/benchmark_loop).
 
 ### <a name="results-remote-tuning"></a> How can I access results after tuning remotely?
 
@@ -394,15 +399,13 @@ When you run remote code, you often need to install packages (e.g. scipy) or hav
 
 ### <a name="benchmark-cli"></a> How can I benchmark different methods?
 
-The most flexible way to do so is to write a custom remote launcher script. This
-is explained
-[here](../benchmarking/benchmark_loop/README.md).
-Other examples are [here](../benchmarking/nursery/fine_tuning_transformer_glue/)
-and [here](../benchmarking/nursery/remote_sm_backend/) for the SageMaker backend.
-Examples for comparing different methods using the simulator backend (on tabulated
-benchmarks) are [here](../benchmarking/nursery/benchmark_dehb/) and
-[here](../benchmarking/nursery/benchmark_hypertune/). You can easily configure them
-to your experimental setup.
+The most flexible way to do so is to write a custom launcher script, as detailed in
+[this tutorial](tutorials/benchmarking/README.md), see also these examples:
+* Local backend: [launch_remote.py](../benchmarking/nursery/launch_local/launch_remote.py)
+* Simulator backend: [launch_remote.py](../benchmarking/nursery/benchmark_dehb/launch_remote.py)
+* SageMaker backend: [launch_remote.py](../benchmarking/nursery/launch_sagemaker/launch_remote.py)
+* Fine-tuning transformers: [launch_remote.py](../benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py)
+* Hyper-Tune: [launch_remote.py](../benchmarking/nursery/benchmark_hypertune/launch_remote.py)
 
 ### <a name="schedulers-supported"></a> What different schedulers do you support? What are the main differences between them?
 
@@ -451,8 +454,9 @@ A powerful approach is to run experiments in parallel. Namely, split your
 hyperparameters into groups A, B, such that HPO over B is tractable. Draw a set
 of N configurations from A at random, then start N HPO experiments in parallel,
 where in each of them the search space is over B only, while the parameters in A
-are fixed. Syne Tune supports massively parallel experimentation, see examples
-in [benchmarking/nursery/](../benchmarking/nursery/).
+are fixed. Syne Tune supports
+[massively parallel experimentation](command_line.md#launching-many-experiments),
+see [this tutorial](tutorials/benchmarking/README.md).
 
 ### <a name="tensorboard"></a> How can I visualize the progress of my tuning experiment with Tensorboard?
 
@@ -491,9 +495,10 @@ To add a new dataset of tabular evaluations, you need to
 [`BlackboxRecipe`](../syne_tune/blackbox_repository/conversion_scripts/BlackboxRecipe.py). 
 You need in particular to provide the name of the blackbox, the reference so that users are prompted to cite the appropriated paper and a code 
  that can generate it from scratch, see 
-[`lcbench.py`](https://github.com/awslabs/syne_tune/blackbox_repository/conversion_scripts/scripts/lcbench/lcbench.py) 
+[`lcbench.py`](../syne_tune/blackbox_repository/conversion_scripts/scripts/lcbench/lcbench.py) 
 for an example.
 2) add your new recipe class in 
 [`recipes`](../syne_tune/blackbox_repository/conversion_scripts/recipes.py) 
 to make it available in Syne Tune.
 
+Further details are given [here](tutorials/benchmarking/bm_contributing.md#contributing-a-tabulated-benchmark).

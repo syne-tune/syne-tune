@@ -14,13 +14,8 @@ experimental. Here is an incomplete overview:
   running repetitions of experiments, as results carry quite some stochastic
   variation. Also, there are higher-level decisions best done by trial-and-error,
   which can be seen as "outer loop random search". Syne Tune offers facilities to
-  launch many tuning experiments in parallel, as SageMaker training jobs. See
-  [README.md](../../../README.md#launching-a-tuning-job) and
-  [launch_height_sagemaker_remotely.py](../../../examples/launch_height_sagemaker_remotely.py)
-  for one variant, and
-  [benchmarking/benchmark_loop/README.md](../../../benchmarking/benchmark_loop/README.md)
-  for another. The latter allows to run several tuning experiments sequentially
-  on the same remote instance.
+  launch many tuning experiments in parallel, as SageMaker training jobs. More
+  details are found in [this tutorial](../benchmarking/README.md).
 * **Population-based Training**: This is a popular scheduler for tuning
   reinforcement learning, where optimization hyperparameters like learning
   rate can be changed at certain points during the training. An example is at
