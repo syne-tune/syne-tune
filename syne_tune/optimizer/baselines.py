@@ -290,7 +290,9 @@ class BORE(FIFOScheduler):
         super(BORE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=Bore(config_space=config_space, metric=metric, mode=mode, **kwargs),
+            searcher=Bore(
+                config_space=config_space, metric=metric, mode=mode, **kwargs
+            ),
             mode=mode,
             **kwargs,
         )
