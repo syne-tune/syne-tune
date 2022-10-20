@@ -189,28 +189,72 @@ Syne Tune stores the following files `metadata.json`, `results.csv.zip`, and `tu
 
 ### <a name="trial-checkpointing"></a> How can I enable trial checkpointing?
 
-Since trials may be paused and resumed (either by schedulers or when using spot-instances), the user may checkpoint intermediate results to avoid starting computation from scratch. Model outputs and checkpoints must be written into a specific local path given by the command line argument `st_checkpoint_dir`. Saving/loading model checkpoint from this directory enables to save/load the state when the job is stopped/resumed (setting the folder correctly and uniquely per trial is the responsibility of the backend), see [checkpoint_example.py](../examples/training_scripts/checkpoint_example/checkpoint_example.py) for a working example of a tuning script with checkpointing enabled.
+Since trials may be paused and resumed (either by schedulers or when using
+spot-instances), the user may checkpoint intermediate results to avoid starting
+computation from scratch. Model outputs and checkpoints must be written into a
+specific local path given by the command line argument `st_checkpoint_dir`.
+Saving/loading model checkpoint from this directory enables to save/load the state
+when the job is stopped/resumed (setting the folder correctly and uniquely per
+trial is the responsibility of the backend), see
+[checkpoint_example.py](../examples/training_scripts/checkpoint_example/checkpoint_example.py)
+for a working example of a tuning script with checkpointing enabled.
 
-When using SageMaker backend or tuning remotely, we use the [SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html) under the hood to sync local checkpoints to s3. Checkpoints are synced to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/`, where `sagemaker-default-bucket` is the default bucket for SageMaker. 
-This can also be configured, for instance if you launch experiments with the benchmarking CLI,
-the files are written to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-name}/{tuner-name}/{trial-id}/`.
+When using SageMaker backend or tuning remotely, we use the
+[SageMaker checkpoint mechanism](https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html)
+under the hood to sync local checkpoints to s3. Checkpoints are synced to
+`s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/`, where
+`sagemaker-default-bucket` is the default bucket for SageMaker.
+
+There are some convenience functions which help you to implement checkpointing
+for your training script. Have a look at the example
+[lstm_wikitext2.py](../benchmarking/training_scripts/lstm_wikitext2/lstm_wikitext2.py):
+* Checkpoints have to be written at the end of certain epochs (namely those
+  after which the scheduler may pause the trial). This is dealt with by
+  `checkpoint_model_at_rung_level(config, save_model_fn, epoch)`. Here,
+  `epoch` is the current epoch, allowing the function to decide whether to
+  checkpoint or not. `save_model_fn` stores the current mutable state
+  along with `epoch` to a local path (see below). Finally, `config` contains
+  arguments provided by the scheduler (see below).
+* Before the training loop starts (and optionally), the mutable state to start
+  from has to be loaded from a checkpoint. This is done by
+  `resume_from_checkpointed_model(config, load_model_fn)`. If the
+  checkpoint has been loaded successfully, the training loop may start with
+  epoch `resume_from + 1` instead of `1`. Here, `load_model_fn` loads the
+  mutable state from a checkpoint in a local path, returning its `epoch`
+  value if successful, which is returned as `resume_from`.
+
+In general, `load_model_fn` and `save_model_fn` have to be provided as part of
+the script. For most PyTorch models, you can use `pytorch_load_save_functions`
+to this end. In general, you will want to include the model, the optimizer,
+and the learning rate scheduler. In our example above, optimizer and
+learning rate scheduler are home-made, the state of the latter is contained in
+`mutable_state`.
+
+Finally, the scheduler provides additional information about checkpointing in
+`config`. You don't have to worry about this:
+`add_checkpointing_to_argparse(parser)` adds corresponding arguments to the parser.
 
 ### <a name="schedulers-checkpointing"></a> Which schedulers make use of checkpointing?
 
-Checkpointing means storing the state of a trial (i.e., model parameters, optimizer or learning rate scheduler 
-parameters), so that it can be paused and potentially resumed at a later point in time, without having to start 
-training from scratch. Syne Tune checkpointing support is detailed in 
-[checkpointing](benchmarks.md#checkpointing) and 
-[checkpoint_example.py](../examples/training_scripts/checkpoint_example/checkpoint_example.py). Once checkpointing to and from a local file is added to a training script, Syne Tune is managing the checkpoints (e.g., copy to/from cloud storage for distributed back-ends).
-
+Checkpointing means storing the state of a trial (i.e., model parameters, optimizer
+or learning rate scheduler parameters), so that it can be paused and potentially
+resumed at a later point in time, without having to start training from scratch.
 The following schedulers make use of checkpointing:
 
-* Promotion-based Hyperband: `HyperbandScheduler(type='promotion', ...)`
-    The code runs without checkpointing, but in this case, any trial which is resumed is started from scratch. For example, if a trial was paused after 9 epochs of training and is resumed later, training starts from scratch and the first 9 epochs are wasted effort. Moreover, extra variance is introduced by starting from scratch, since weights may be initialized differently. It is not recommended to run promotion-based Hyperband without checkpointing.
+* Promotion-based Hyperband: `HyperbandScheduler(type='promotion', ...)`, as well
+  as other asynchronous multi-fidelity schedulers.
+  The code runs without checkpointing, but in this case, any trial which is resumed
+  is started from scratch. For example, if a trial was paused after 9 epochs of
+  training and is resumed later, training starts from scratch and the first 9
+  epochs are wasted effort. Moreover, extra variance is introduced by starting from
+  scratch, since weights may be initialized differently. It is not recommended
+  running promotion-based Hyperband without checkpointing.
 * Population-based training: `PopulationBasedTraining`
-    PBT does not work without checkpointing.
-* Synchronous Hyperband: `SynchronousGeometricHyperbandScheduler`
-    This code runs without checkpointing, but wastes effort in the same sense as promotion-based asynchronous Hyperband
+  PBT does not work without checkpointing.
+* Synchronous Hyperband: `SynchronousGeometricHyperbandScheduler`, as well as
+  other synchronous multi-fidelity schedulers.
+  This code runs without checkpointing, but wastes effort in the same sense as
+  promotion-based asynchronous Hyperband
 
 ### <a name="tuner-checkpointing"></a> Is the tuner checkpointed?
 
@@ -407,9 +451,8 @@ A powerful approach is to run experiments in parallel. Namely, split your
 hyperparameters into groups A, B, such that HPO over B is tractable. Draw a set
 of N configurations from A at random, then start N HPO experiments in parallel,
 where in each of them the search space is over B only, while the parameters in A
-are fixed. Syne Tune supports
-[massively parallel experimentation](command_line.md#launching-many-experiments),
-see also examples in [benchmarking/nursery/](../benchmarking/nursery/).
+are fixed. Syne Tune supports massively parallel experimentation, see examples
+in [benchmarking/nursery/](../benchmarking/nursery/).
 
 ### <a name="tensorboard"></a> How can I visualize the progress of my tuning experiment with Tensorboard?
 
