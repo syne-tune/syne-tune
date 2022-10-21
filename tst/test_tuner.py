@@ -26,7 +26,7 @@ from tst.util_test import temporary_local_backend
 
 
 @pytest.fixture
-def tunertools(max_steps, sleep_time, max_wallclock_time, mode, metric):
+def tunertools():
     max_steps = 100
     sleep_time = 0.01
     max_wallclock_time = 0.5
