@@ -155,6 +155,10 @@ class Bore(SearcherWithRandomSeed):
 
         start_time = time.time()
 
+        config = self._next_initial_config()
+        if config is not None:
+            return config
+
         if len(self.inputs) < self.init_random or np.random.rand() < self.random_prob:
             config = self._hp_ranges.random_config(self.random_state)
 
