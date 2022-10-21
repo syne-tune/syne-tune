@@ -13,10 +13,8 @@
 import logging
 from pathlib import Path
 
-import numpy as np
 import pytest
 
-from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.backend.trial_status import Status
 from syne_tune.config_space import randint
@@ -24,50 +22,40 @@ from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.util import script_height_example_path
 from tst.util_test import temporary_local_backend
 
+_parameterizations = [
+    ("dummy", "dummy", False, Status.stopped),  # Worker should be stopped after 0.5 second
+    ("dummy", "dummy", True, Status.completed),  # Worker should complete (NOT be stopped) after 0.5 second
+    ("dummy", "dummy", True, Status.completed),  # Worker should complete (NOT be stopped) after 0.5 second
+]
 
-@pytest.fixture
-def tunertools():
-    max_steps = 100
-    sleep_time = 0.01
-    max_wallclock_time = 0.5
+
+@pytest.mark.parametrize("dummy, dummy2, wait_for_completion, desired_status", _parameterizations)
+def test_tuner_wait_trial_completion_when_stopping(dummy, dummy2, wait_for_completion, desired_status):
+    max_steps = 10
+    sleep_time_bench = 0.2
+    sleep_time_tuner = 0.1
+    max_wallclock_time = 1
     mode = "min"
     metric = "mean_loss"
+    num_workers = 1
 
     config_space = {
         "steps": max_steps,
-        "sleep_time": sleep_time,
+        "sleep_time": sleep_time_bench,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
     entry_point = script_height_example_path()
     scheduler = RandomSearch(config_space, metric=metric, mode=mode)
     trial_backend = temporary_local_backend(entry_point=entry_point)
-    stop_criterion = StoppingCriterion(
-        max_wallclock_time=max_wallclock_time, min_metric_value={"mean_loss": -np.inf}
-    )
-    return scheduler, stop_criterion, trial_backend
-
-
-@pytest.mark.parametrize(
-    "wait_trial_completion_when_stopping,desired_status",
-    [
-        (False, Status.stopped),  # Worker should be stopped after 0.5 second
-        (True, Status.completed),  # Worker should complete (NOT be stopped) after 0.5 second
-    ])
-def test_tuner_not_wait_trial_completion_when_stopping(
-        tunertools,
-        wait_trial_completion_when_stopping: bool,
-        desired_status: str
-):
-    # Worker should be stopped after 1 second given the max_wallclock_time is 1s
-    scheduler, stop_criterion, trial_backend = tunertools
+    stop_criterion = lambda status: status.wallclock_time > max_wallclock_time
     tuner = Tuner(
         trial_backend=trial_backend,
-        sleep_time=0.01,
+        sleep_time=sleep_time_tuner,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
-        n_workers=1,
-        wait_trial_completion_when_stopping=wait_trial_completion_when_stopping
+        n_workers=num_workers,
+        wait_trial_completion_when_stopping=wait_for_completion
     )
     tuner.run()
     for trial, status in tuner.tuning_status.last_trial_status_seen.items():
