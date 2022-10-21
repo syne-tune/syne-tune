@@ -18,6 +18,7 @@ import pytest
 
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
+from syne_tune.backend.trial_status import Status
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.util import script_height_example_path
@@ -25,10 +26,10 @@ from tst.util_test import temporary_local_backend
 
 
 @pytest.fixture
-def tunertools():
+def tunertools(max_steps, sleep_time, max_wallclock_time, mode, metric):
     max_steps = 100
-    sleep_time = 0.02
-    max_wallclock_time = 1
+    sleep_time = 0.01
+    max_wallclock_time = 0.5
     mode = "min"
     metric = "mean_loss"
 
@@ -47,36 +48,30 @@ def tunertools():
     return scheduler, stop_criterion, trial_backend
 
 
-def test_tuner_not_wait_trial_completion_when_stopping(tunertools):
+@pytest.mark.parametrize(
+    "wait_trial_completion_when_stopping,desired_status",
+    [
+        (False, Status.stopped),  # Worker should be stopped after 0.5 second
+        (True, Status.completed),  # Worker should complete (NOT be stopped) after 0.5 second
+    ])
+def test_tuner_not_wait_trial_completion_when_stopping(
+        tunertools,
+        wait_trial_completion_when_stopping: bool,
+        desired_status: str
+):
     # Worker should be stopped after 1 second given the max_wallclock_time is 1s
     scheduler, stop_criterion, trial_backend = tunertools
     tuner = Tuner(
         trial_backend=trial_backend,
-        sleep_time=0.1,
+        sleep_time=0.01,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=1,
-        wait_trial_completion_when_stopping=False
+        wait_trial_completion_when_stopping=wait_trial_completion_when_stopping
     )
     tuner.run()
     for trial, status in tuner.tuning_status.last_trial_status_seen.items():
-        assert status == "Stopped"
-
-
-def test_tuner_wait_trial_completion_when_stopping(tunertools):
-    # Worker should NOT be stopped after 1 second given the run takes 2s and we wait untill its finished.
-    scheduler, stop_criterion, trial_backend = tunertools
-    tuner = Tuner(
-        trial_backend=trial_backend,
-        sleep_time=1,
-        scheduler=scheduler,
-        stop_criterion=stop_criterion,
-        n_workers=1,
-        wait_trial_completion_when_stopping=True
-    )
-    tuner.run()
-    for trial, status in tuner.tuning_status.last_trial_status_seen.items():
-        assert status == "Completed"
+        assert status == desired_status
 
 
 if __name__ == '__main__':
