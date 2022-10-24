@@ -23,14 +23,16 @@ from syne_tune.util import script_height_example_path
 from tst.util_test import temporary_local_backend
 
 _parameterizations = [
-    ("dummy", "dummy", False, Status.stopped),  # Worker should be stopped after 0.5 second
-    ("dummy", "dummy", True, Status.completed),  # Worker should complete (NOT be stopped) after 0.5 second
-    ("dummy", "dummy", True, Status.completed),  # Worker should complete (NOT be stopped) after 0.5 second
+    (False, Status.stopped),  # Worker should be stopped after 0.5 second
+    (
+        True,
+        Status.completed,
+    ),  # Worker should complete (NOT be stopped) after 0.5 second
 ]
 
 
-@pytest.mark.parametrize("dummy, dummy2, wait_for_completion, desired_status", _parameterizations)
-def test_tuner_wait_trial_completion_when_stopping(dummy, dummy2, wait_for_completion, desired_status):
+@pytest.mark.parametrize("wait_for_completion, desired_status", _parameterizations)
+def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_status):
     max_steps = 10
     sleep_time_bench = 0.2
     sleep_time_tuner = 0.1
@@ -55,14 +57,14 @@ def test_tuner_wait_trial_completion_when_stopping(dummy, dummy2, wait_for_compl
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=num_workers,
-        wait_trial_completion_when_stopping=wait_for_completion
+        wait_trial_completion_when_stopping=wait_for_completion,
     )
     tuner.run()
     for trial, status in tuner.tuning_status.last_trial_status_seen.items():
         assert status == desired_status
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
     # Run the tests without capturing stdout if this file is executed
     pytest.main(args=["-s", Path(__file__)])
