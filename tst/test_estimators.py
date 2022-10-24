@@ -10,29 +10,35 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.cli.estimator_factory import sagemaker_estimator_factory
-from benchmarking.cli.benchmark_factory import benchmark_factory, supported_benchmarks
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role
-from syne_tune.util import repository_root_path
+import pytest
+
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    default_sagemaker_session,
+)
+import benchmarking
+from benchmarking.commons.benchmark_definitions import real_benchmark_definitions
+from benchmarking.commons.utils import sagemaker_estimator
+from benchmarking.commons.launch_remote import sagemaker_estimator_args
 
 
-def test_create_estimators():
+all_real_benchmarks = [
+    (bm, False) for bm in real_benchmark_definitions(sagemaker_backend=False).values()
+] + [(bm, True) for bm in real_benchmark_definitions(sagemaker_backend=True).values()]
+
+
+@pytest.mark.parametrize("benchmark, sagemaker_backend", all_real_benchmarks)
+def test_create_estimators(benchmark, sagemaker_backend):
     try:
-        role = get_execution_role()
-        for benchmark_name in supported_benchmarks():
-            benchmark = benchmark_factory({"benchmark_name": benchmark_name})
-            def_params = benchmark["default_params"]
-            framework = def_params.get("framework")
-            if framework is not None:
-                sm_estimator = sagemaker_estimator_factory(
-                    entry_point=benchmark["script"],
-                    instance_type=def_params["instance_type"],
-                    framework=framework,
-                    role=role,
-                    dependencies=[str(repository_root_path() / "benchmarking")],
-                    framework_version=def_params.get("framework_version"),
-                    pytorch_version=def_params.get("pytorch_version"),
-                )
+        sm_args = sagemaker_estimator_args(
+            entry_point=benchmark.script,
+            experiment_tag="A",
+            tuner_name="B",
+            benchmark=benchmark,
+            sagemaker_backend=False,
+        )
+        sm_args["sagemaker_session"] = default_sagemaker_session()
+        sm_args["dependencies"] = benchmarking.__path__
+        sm_estimator = sagemaker_estimator[benchmark.framework](**sm_args)
     except Exception:
         print(
             "Cannot run this test, because SageMaker role is not specified, "

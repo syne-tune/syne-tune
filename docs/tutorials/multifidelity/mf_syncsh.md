@@ -94,7 +94,7 @@ checkpoint is loaded and training can resume from there. Say a trial is paused
 at $r = 9$ and is later resumed towards $r = 27$. With checkpointing,
 we have to train for $27 - 9 = 18$ epochs only instead of 27 epochs for
 training from scratch. More details are given
-[here](../../benchmarks.md#checkpointing). For tabulated benchmarks, checkpointing
+[here](../../faq.md#trial-checkpointing). For tabulated benchmarks, checkpointing
 is supported by default.
 
 Finally, it is important to understand in which sense the method detailed in this

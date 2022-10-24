@@ -21,13 +21,6 @@ experimental. Here is an incomplete overview:
   [benchmarking/benchmark_loop/README.md](../../../benchmarking/benchmark_loop/README.md)
   for another. The latter allows to run several tuning experiments sequentially
   on the same remote instance.
-* **Command line launcher**: Once you get used to running many experiments in
-  parallel, you will appreciate starting them from the command line. To do so,
-  you need to
-  [annotate your training script with some meta-information](../../benchmarks.md).
-  Once this is done, it is accessible to the
-  [command line launcher](../../command_line.md). One of the major use cases of
-  the CLI is to launch many experiments in parallel.
 * **Population-based Training**: This is a popular scheduler for tuning
   reinforcement learning, where optimization hyperparameters like learning
   rate can be changed at certain points during the training. An example is at

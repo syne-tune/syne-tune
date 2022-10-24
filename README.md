@@ -170,8 +170,6 @@ Do you want to know more? Here are a number of tutorials.
 * [How to Contribute a New Scheduler](docs/tutorials/developer/README.md)
 * [Choosing a Configuration Space](docs/search_space.md)
 * [Using the Built-in Schedulers](docs/schedulers.md)
-* [Using the command line launcher to benchmark schedulers](docs/command_line.md)
-* [Using and extending the list of benchmarks](docs/benchmarks.md)
 
 ## Security
 

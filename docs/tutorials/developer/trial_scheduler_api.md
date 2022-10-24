@@ -18,13 +18,13 @@ on separate *workers* (which can be different GPUs or CPU cores on the
 same instance, or different instances).
 
 In Syne Tune, this process is split between two entities: the
-[trial back-end](../../command_line.md#different-back-ends) and the
+trial back-end and the
 [trial scheduler](../../schedulers.md). The back-end wraps the training code to
 be executed for different configurations and is responsible to start jobs, as
 well as stop, pause or resume them. It also collects results reported by
 the training jobs and relays them to the scheduler. In Syne Tune,
 pause-and-resume scheduling is done via
-[checkpointing](../../benchmarks.md#checkpointing). While code to write and
+[checkpointing](../../faq.md#trial-checkpointing). While code to write and
 load checkpoints locally must be provided by the training script, the
 back-end makes them available when needed. There are two basic events which
 happen repeatedly during an HPO experiment, as orchestrated by the

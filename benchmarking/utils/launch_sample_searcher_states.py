@@ -24,7 +24,7 @@ from benchmarking.definitions.definition_mlp_on_fashion_mnist import (
     mlp_fashionmnist_benchmark,
     mlp_fashionmnist_default_params,
 )
-from benchmarking.cli.searcher_state_callback import StoreSearcherStatesCallback
+from benchmarking.utils.searcher_state_callback import StoreSearcherStatesCallback
 
 
 if __name__ == "__main__":
