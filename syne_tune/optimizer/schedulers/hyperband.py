@@ -770,71 +770,63 @@ class HyperbandScheduler(FIFOScheduler):
         self._check_result(result)
         trial_id = str(trial.trial_id)
         debug_log = self.searcher.debug_log
-        trial_decision = SchedulerDecision.CONTINUE
-        if len(result) == 0:
-            # An empty dict should just be skipped
-            if debug_log is not None:
-                logger.info(
-                    f"trial_id {trial_id}: Skipping empty dict received "
-                    "from reporter"
-                )
-        else:
-            # Time since start of experiment
-            time_since_start = self._elapsed_time()
-            do_update = False
-            config = self._preprocess_config(trial.config)
-            cost_and_promotion = (
-                self._cost_attr is not None
-                and self._cost_attr in result
-                and self.does_pause_resume()
+        # Time since start of experiment
+        time_since_start = self._elapsed_time()
+        do_update = False
+        config = self._preprocess_config(trial.config)
+        cost_and_promotion = (
+            self._cost_attr is not None
+            and self._cost_attr in result
+            and self.does_pause_resume()
+        )
+        if cost_and_promotion:
+            # Trial may have paused/resumed before, so need to add cost
+            # offset from these
+            cost_offset = self._cost_offset.get(trial_id, 0)
+            result[self._total_cost_attr()] = result[self._cost_attr] + cost_offset
+        # We may receive a report from a trial which has been stopped or
+        # paused before. In such a case, we override trial_decision to be
+        # STOP or PAUSE as before, so the report is not taken into account
+        # by the scheduler. The report is sent to the searcher, but with
+        # update=False. This means that the report is registered, but cannot
+        # influence any decisions.
+        record = self._active_trials[trial_id]
+        trial_decision = record.trial_decision
+        ignore_data = False
+        if trial_decision != SchedulerDecision.CONTINUE:
+            logger.warning(
+                f"trial_id {trial_id}: {trial_decision}, but receives "
+                f"another report {result}\nThis report is ignored"
             )
+        else:
+            task_info = self.terminator.on_task_report(trial_id, result)
+            task_continues = task_info["task_continues"]
+            milestone_reached = task_info["milestone_reached"]
+            ignore_data = task_info.get("ignore_data", False)
             if cost_and_promotion:
-                # Trial may have paused/resumed before, so need to add cost
-                # offset from these
-                cost_offset = self._cost_offset.get(trial_id, 0)
-                result[self._total_cost_attr()] = result[self._cost_attr] + cost_offset
-            # We may receive a report from a trial which has been stopped or
-            # paused before. In such a case, we override trial_decision to be
-            # STOP or PAUSE as before, so the report is not taken into account
-            # by the scheduler. The report is sent to the searcher, but with
-            # update=False. This means that the report is registered, but cannot
-            # influence any decisions.
-            record = self._active_trials[trial_id]
-            trial_decision = record.trial_decision
-            if trial_decision != SchedulerDecision.CONTINUE:
-                logger.warning(
-                    f"trial_id {trial_id}: {trial_decision}, but receives "
-                    f"another report {result}\nThis report is ignored"
-                )
-            else:
-                task_info = self.terminator.on_task_report(trial_id, result)
-                task_continues = task_info["task_continues"]
-                milestone_reached = task_info["milestone_reached"]
-                if cost_and_promotion:
-                    if milestone_reached:
-                        # Trial reached milestone and will pause there: Update
-                        # cost offset
-                        if self._cost_attr is not None:
-                            self._cost_offset[trial_id] = result[
-                                self._total_cost_attr()
-                            ]
-                    elif task_info.get("ignore_data", False):
-                        # For a resumed trial, the report is for resource <=
-                        # resume_from, where resume_from < milestone. This
-                        # happens if checkpointing is not implemented and a
-                        # resumed trial has to start from scratch, publishing
-                        # results all the way up to resume_from. In this case,
-                        # we can erase the `_cost_offset` entry, since the
-                        # instantaneous cost reported by the trial does not
-                        # have any offset.
-                        if self._cost_offset[trial_id] > 0:
-                            logger.info(
-                                f"trial_id {trial_id}: Resumed trial seems to have been "
-                                + "started from scratch (no checkpointing?), so we erase "
-                                + "the cost offset."
-                            )
-                        self._cost_offset[trial_id] = 0
+                if milestone_reached:
+                    # Trial reached milestone and will pause there: Update
+                    # cost offset
+                    if self._cost_attr is not None:
+                        self._cost_offset[trial_id] = result[self._total_cost_attr()]
+                elif ignore_data:
+                    # For a resumed trial, the report is for resource <=
+                    # resume_from, where resume_from < milestone. This
+                    # happens if checkpointing is not implemented and a
+                    # resumed trial has to start from scratch, publishing
+                    # results all the way up to resume_from. In this case,
+                    # we can erase the `_cost_offset` entry, since the
+                    # instantaneous cost reported by the trial does not
+                    # have any offset.
+                    if self._cost_offset[trial_id] > 0:
+                        logger.info(
+                            f"trial_id {trial_id}: Resumed trial seems to have been "
+                            + "started from scratch (no checkpointing?), so we erase "
+                            + "the cost offset."
+                        )
+                    self._cost_offset[trial_id] = 0
 
+            if not ignore_data:
                 # Update searcher and register pending
                 do_update = self._update_searcher(trial_id, config, result, task_info)
                 # Change snapshot entry for task
@@ -888,19 +880,21 @@ class HyperbandScheduler(FIFOScheduler):
                         if next_milestone is not None:
                             msg += f" to {next_milestone}"
                         logger.info(msg)
+
+        if not ignore_data:
             self.searcher.on_trial_result(
                 trial_id, config, result=result, update=do_update
             )
-        # Extra info in debug mode
-        log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
-        for k, is_float in ((self._resource_attr, False), ("elapsed_time", True)):
-            if k in result:
-                if is_float:
-                    log_msg += f", {k} = {result[k]:.2f}"
-                else:
-                    log_msg += f", {k} = {result[k]}"
-        log_msg += f"): decision = {trial_decision}"
-        logger.debug(log_msg)
+            # Extra info in debug mode
+            log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
+            for k, is_float in ((self._resource_attr, False), ("elapsed_time", True)):
+                if k in result:
+                    if is_float:
+                        log_msg += f", {k} = {result[k]:.2f}"
+                    else:
+                        log_msg += f", {k} = {result[k]}"
+            log_msg += f"): decision = {trial_decision}"
+            logger.debug(log_msg)
         return trial_decision
 
     def on_trial_remove(self, trial: Trial):
