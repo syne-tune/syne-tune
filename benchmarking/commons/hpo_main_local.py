@@ -21,7 +21,7 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from benchmarking.commons.baselines import MethodArguments
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
-from benchmarking.commons.hpo_main import (
+from benchmarking.commons.hpo_main_common import (
     parse_args as _parse_args,
     set_logging_level,
     get_metadata,

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_main import main
+from benchmarking.commons.hpo_main_simulator import main
 from benchmarking.nursery.benchmark_yahpo.baselines import methods
 from benchmarking.nursery.benchmark_yahpo.benchmark_definitions import (
     benchmark_definitions,

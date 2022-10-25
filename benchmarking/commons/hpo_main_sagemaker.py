@@ -26,7 +26,7 @@ from benchmarking.commons.hpo_main_local import (
     get_benchmark,
 )
 from benchmarking.commons.utils import sagemaker_estimator
-from benchmarking.commons.hpo_main import (
+from benchmarking.commons.hpo_main_common import (
     parse_args as _parse_args,
     get_metadata,
 )

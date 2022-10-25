@@ -12,12 +12,14 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote import launch_remote
+from benchmarking.commons.launch_remote_simulator import launch_remote
 from benchmarking.nursery.benchmark_yahpo.benchmark_definitions import (
     benchmark_definitions,
 )
-from benchmarking.nursery.benchmark_yahpo.baselines import (
-    methods,
+from benchmarking.nursery.benchmark_yahpo.baselines import methods
+from benchmarking.nursery.benchmark_yahpo.hpo_main import (
+    extra_args,
+    map_extra_args,
 )
 
 
@@ -27,10 +29,12 @@ if __name__ == "__main__":
         # return True
         return method == "BO"
 
-    entry_point = Path(__file__).parent / "benchmark_main.py"
+    entry_point = Path(__file__).parent / "hpo_main.py"
     launch_remote(
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
+        extra_args=extra_args,
+        map_extra_args=map_extra_args,
         is_expensive_method=_is_expensive_method,
     )

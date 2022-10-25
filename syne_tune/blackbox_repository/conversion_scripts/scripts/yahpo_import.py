@@ -178,7 +178,7 @@ class BlackBoxYAHPO(Blackbox):
                 ), f"fidelity = {fidelity} must contain key '{k}'"
                 assert (
                     fidelity_value in self.fidelity_values
-                ), f"fidelity = {fidelity_value} not cintained in {self.fidelity_values}"
+                ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
                 fidelity = {k: fidelity_value / 20}
             configuration.update(fidelity)
             return self.benchmark.objective_function(configuration, seed=seed)[0]
