@@ -20,7 +20,7 @@ from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
 from syne_tune import Tuner
 from syne_tune import StoppingCriterion
-from syne_tune.config_space import randint, choice, uniform
+from syne_tune.config_space import randint, uniform, choice
 
 
 _grid_parameterizations = list(
@@ -30,7 +30,6 @@ _grid_parameterizations = list(
         ["min"],
     )
 )
-
 
 
 @pytest.mark.parametrize("scheduler, searcher, mode", _grid_parameterizations)
@@ -62,6 +61,52 @@ def test_grid_scheduler(scheduler, searcher, mode):
 
     myscheduler = FIFOScheduler(
         config_space,
+        searcher=searcher,
+        search_options=search_options,
+        mode=mode,
+        metric=metric,
+        random_seed=random_seed,
+    )
+    stop_criterion = StoppingCriterion(max_wallclock_time=60)
+
+    tuner = Tuner(
+        trial_backend=trial_backend,
+        scheduler=myscheduler,
+        sleep_time=0.1,
+        n_workers=num_workers,
+        stop_criterion=stop_criterion,
+    )
+
+    tuner.run()
+
+@pytest.mark.parametrize("scheduler, searcher, mode", _grid_parameterizations)
+def test_grid_scheduler_categorical(scheduler, searcher, mode):
+    max_steps = 100
+    num_workers = 2
+    random_seed = 382378623
+
+    categorical_config_space = {
+        "steps": max_steps,
+        "width": choice([1,5,10,15,20]),
+        "height": choice([30,40,50,60,70,80]),
+        "sleep_time": 0.001,
+    }
+
+    metric = "mean_loss"
+
+    entry_point = (
+            Path(__file__).parent.parent
+            / "examples"
+            / "training_scripts"
+            / "height_example"
+            / "train_height.py"
+    )
+    trial_backend = LocalBackend(entry_point=str(entry_point))
+
+    search_options = {"debug_log": True, "num_init_random": num_workers}
+
+    myscheduler = FIFOScheduler(
+        config_space=categorical_config_space,
         searcher=searcher,
         search_options=search_options,
         mode=mode,

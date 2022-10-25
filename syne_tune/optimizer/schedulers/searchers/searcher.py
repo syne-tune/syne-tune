@@ -658,13 +658,15 @@ class GridSearcher(BaseSearcher):
         hp_values = []
         ## adding categorical, finiteRange, scalar parameters
         for hp, hp_range in reversed(list(self.config_space.items())):
+            if isinstance(hp_range, Float) or isinstance(hp_range, Integer):
+                continue
             if isinstance(hp_range, Categorical):
                 hp_keys.append(hp)
                 hp_values.append(hp_range.categories)
             elif isinstance(hp_range, FiniteRange):
                 hp_keys.append(hp)
                 hp_values.append(hp_range.values)
-            elif isinstance(hp_range, Hyperparameter):
+            else: # isinstance(hp_range, Hyperparameter)
                 hp_keys.append(hp)
                 hp_values.append([hp_range])
 
