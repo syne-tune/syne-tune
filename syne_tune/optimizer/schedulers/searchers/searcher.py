@@ -15,10 +15,19 @@ import numpy as np
 from random import shuffle
 from typing import Optional, List, Tuple
 
-from syne_tune.config_space import Domain, config_space_size, is_log_space, Categorical
+from syne_tune.config_space import (
+    Domain,
+    config_space_size,
+    is_log_space,
+    Categorical,
+    Float,
+    Integer,
+    Function, FiniteRange,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import Hyperparameter
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
@@ -163,6 +172,11 @@ class BaseSearcher:
             self._metric = scheduler.metric
 
     def _next_initial_config(self) -> Optional[dict]:
+        '''
+        Returns:
+            The next unprocessed configuration from the initial list
+            and None if the list is exhausted.
+        '''
         if self._points_to_evaluate:
             return self._points_to_evaluate.pop(0)
         else:
@@ -475,11 +489,10 @@ class RandomSearcher(SearcherWithRandomSeed):
 
 
 class GridSearcher(BaseSearcher):
-    """Searcher that samples configurations from a equally spaced grid over config_space.
+    """Searcher that samples configurations from an equally spaced grid over config_space.
     It first evaluates configurations defined in points_to_evaluate and then
     continues with the remaining points from the grid"
 
-    Note: GridSearcher only support Categorical hyperparameters for now
 
     Parameters
     ----------
@@ -488,6 +501,11 @@ class GridSearcher(BaseSearcher):
         the full specification of the Hyperparameters, and the configurations
         generated is the combinations of these Hyperparameters.
         The specified hyperparameter must be Categorical for now.
+    num_samples: dict
+        Number of samples per hyperparameter. This is required for hyperparameters
+        of type float, optional for integer hyperparameters, and will be ignored
+        for other types (categorical, scalar). If specified for an integer hyperparameter,
+        it will be used instead of the full range.
     metric : str
         Name of metric passed to update.
     points_to_evaluate : List[dict] or None
@@ -516,13 +534,15 @@ class GridSearcher(BaseSearcher):
         self,
         config_space,
         metric,
+        num_samples=None,
         points_to_evaluate=None,
         shuffle_config=True,
         **kwargs,
     ):
         super().__init__(config_space, metric, points_to_evaluate)
-        self._validate_config_space(config_space)
+        self._validate_config_space(config_space, num_samples)
         self._hp_ranges = make_hyperparameter_ranges(config_space)
+
         if not isinstance(shuffle_config, bool):
             shuffle_config = True
         self._shuffle_config = shuffle_config
@@ -577,11 +597,39 @@ class GridSearcher(BaseSearcher):
                 configs.append(config)
         return configs
 
-    def _validate_config_space(self, config_space: dict):
-        # GridSearcher only supports Categorical hyperparameters for now
-        for hp_range in config_space.values():
+    def _validate_config_space(self, config_space: dict, num_samples: dict):
+        '''
+        This function validates config_space from two aspects: first, that all hyperparameters
+        are of acceptable types (i.e. float, integer, categorical). Second, num_samples is specified
+        for float hyperparameters. Num_samples for categorical variables are ignored as all of their
+        values is used in GridSearch. Num_samples for integer variables is optional, if specified it
+        will be used and will be capped at their range length.
+        Args:
+            config_space: The configuration space that defines search space grid.
+            num_samples: Number of samples for each hyperparmaters.Only required for float hyperparameters.
+        '''
+        self.num_samples = num_samples
+        for hp, hp_range in config_space.items():
+            # Acceptable types for hyperparameters are Float, Integer, Categorical.
             if isinstance(hp_range, Domain):
-                assert isinstance(hp_range, Categorical)
+                assert not isinstance(hp_range, Function), "{} must be either float, integer or categorical type.".format(hp)
+            # Float parameters must have bounded range and have num_samples specified
+            if isinstance(hp_range, Float):
+                assert hp_range.lower != float('-inf') and hp_range.upper != float(
+                    'inf'), "{} must have a bounded range.".format(hp)
+                assert hp in self.num_samples, "number of samples is required for {}".format(hp)
+            # n_sample for integer hp must be capped at length of the range
+            if isinstance(hp_range, Integer):
+                if hp in self.num_samples:
+                    if self.num_samples[hp] > len(hp_range):
+                        self.num_samples[hp] = len(hp_range)
+                        logger.info("number of samples for \"{}\" is capped at its range length, i.e. {} samples".format(hp, len(hp_range)))
+                else:
+                    self.num_samples[hp] = len(hp_range)
+                    logger.info("Grid search is using all integers in inclusive range ({},{}) for \"{}\".".format(hp_range.lower, hp_range.upper, hp))
+            if isinstance(hp_range, Categorical):
+                if hp in self.num_samples:
+                    logger.info("number of samples for categorical variable \"{}\" are ignored.".format(hp))
 
     def _generate_remaining_candidates(self) -> List[dict]:
         excl_list = ExclusionList.empty_list(self._hp_ranges)
@@ -595,15 +643,36 @@ class GridSearcher(BaseSearcher):
         return remaining_candidates
 
     def _generate_all_candidates_on_grid(self) -> List[dict]:
-        # Get hp values that are specified as Domain
+        '''
+        This function generates all configurations on grid.
+        Returns:
+            The set of all configurations on grid.
+        '''
         hp_keys = []
         hp_values = []
-        for key, hp_range in reversed(list(self.config_space.items())):
-            if isinstance(hp_range, Domain):
-                hp_keys.append(key)
+        ## adding categorical, finiteRange, scalar parameters
+        for hp, hp_range in reversed(list(self.config_space.items())):
+            if isinstance(hp_range, Categorical):
+                hp_keys.append(hp)
                 hp_values.append(hp_range.categories)
+            elif isinstance(hp_range, FiniteRange):
+                hp_keys.append(hp)
+                hp_values.append(hp_range.values)
+            elif isinstance(hp_range, Hyperparameter):
+                hp_keys.append(hp)
+                hp_values.append([hp_range])
+
+        ## adding float, integer parameters
+        for hpr in self._hp_ranges._hp_ranges:
+            if hpr.name in hp_keys: continue
+            _hpr_nsamples = self.num_samples[hpr.name]
+            _normalized_points = [(idx + 0.5) / _hpr_nsamples for idx in range(_hpr_nsamples)]
+            _hpr_points = [hpr.from_ndarray(np.array([point])) for point in _normalized_points]
+            hp_keys.append(hpr.name)
+            hp_values.append(_hpr_points)
 
         hp_values_combinations = list(product(*hp_values))
+
         if self._shuffle_config:
             shuffle(hp_values_combinations)
 
@@ -612,7 +681,13 @@ class GridSearcher(BaseSearcher):
             all_candidates_on_grid.append(dict(zip(hp_keys, values)))
         return all_candidates_on_grid
 
+
     def _next_candidate_on_grid(self) -> Optional[dict]:
+        '''
+        Returns:
+            Next configuration from the set of remaining candidates
+            or None if no candidate is left.
+        '''
         if self._remaining_candidates:
             return self._remaining_candidates.pop(0)
         else:
@@ -629,6 +704,7 @@ class GridSearcher(BaseSearcher):
     def clone_from_state(self, state: dict):
         new_searcher = GridSearcher(
             config_space=self.config_space,
+            num_samples=self.num_samples,
             metric=self._metric,
             shuffle_config=self._shuffle_config,
         )
