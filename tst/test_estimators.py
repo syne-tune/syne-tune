@@ -18,7 +18,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 import benchmarking
 from benchmarking.commons.benchmark_definitions import real_benchmark_definitions
 from benchmarking.commons.utils import sagemaker_estimator
-from benchmarking.commons.launch_remote import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 
 
 all_real_benchmarks = [

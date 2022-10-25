@@ -24,7 +24,7 @@ except ImportError:
     print(try_import_aws_message())
 
 from benchmarking.commons.hpo_main_local import (
-    BenchmarkDefinitions,
+    RealBenchmarkDefinitions,
     get_benchmark,
 )
 from benchmarking.commons.hpo_main_sagemaker import parse_args
@@ -33,7 +33,7 @@ from benchmarking.commons.utils import (
     basic_cpu_instance_sagemaker_estimator,
     find_or_create_requirements_txt,
 )
-from benchmarking.commons.launch_remote import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.launch_remote_local import get_hyperparameters
 from syne_tune.util import random_string
 
@@ -41,7 +41,7 @@ from syne_tune.util import random_string
 def launch_remote(
     entry_point: Path,
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):

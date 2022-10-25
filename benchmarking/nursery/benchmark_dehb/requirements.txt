@@ -1,2 +1,2 @@
-syne-tune[gpsearchers,kde,blackbox-repository,yahpo]
+syne-tune[gpsearchers,kde,blackbox-repository,yahpo,aws]
 tqdm

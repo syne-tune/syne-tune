@@ -1,2 +1,2 @@
-syne-tune[gpsearchers]
+syne-tune[gpsearchers,aws]
 tqdm

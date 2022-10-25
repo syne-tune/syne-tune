@@ -22,15 +22,15 @@ from syne_tune.tuner import Tuner
 import benchmarking
 from benchmarking.commons.baselines import MethodArguments
 from benchmarking.commons.hpo_main_local import (
-    BenchmarkDefinitions,
+    RealBenchmarkDefinitions,
     get_benchmark,
 )
 from benchmarking.commons.utils import sagemaker_estimator
-from benchmarking.commons.hpo_main import (
+from benchmarking.commons.hpo_main_common import (
     parse_args as _parse_args,
     get_metadata,
 )
-from benchmarking.commons.launch_remote import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 
 
 # SageMaker managed warm pools:
@@ -54,16 +54,6 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
                 help="Benchmark to run",
             ),
             dict(
-                name="n_workers",
-                type=int,
-                help="Number of workers",
-            ),
-            dict(
-                name="max_wallclock_time",
-                type=int,
-                help="Maximum runtime for experiment",
-            ),
-            dict(
                 name="max_failures",
                 type=int,
                 default=3,
@@ -75,6 +65,11 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
                 default=0,
                 help="If 1, the SageMaker managed warm pools feature is used. This can be more expensive, but also reduces startup delays, leading to an experiment finishing in less time",
             ),
+            dict(
+                name="instance_type",
+                type=str,
+                help="AWS SageMaker instance type (overwrites default of benchmark)",
+            ),
         ]
     )
     args, method_names, seeds = _parse_args(methods, extra_args)
@@ -84,7 +79,7 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
 
 def main(
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):
@@ -106,7 +101,6 @@ def main(
         experiment_tag="A",
         tuner_name="B",
         benchmark=benchmark,
-        sagemaker_backend=False,
     )
     del sm_args["checkpoint_s3_uri"]
     sm_args["sagemaker_session"] = default_sagemaker_session()
@@ -120,6 +114,8 @@ def main(
             "------------------------------------------------------------------------"
         )
         sm_args["keep_alive_period_in_seconds"] = WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS
+    if args.instance_type is not None:
+        sm_args["instance_type"] = args.instance_type
     trial_backend = SageMakerBackend(
         sm_estimator=sagemaker_estimator[benchmark.framework](**sm_args),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the

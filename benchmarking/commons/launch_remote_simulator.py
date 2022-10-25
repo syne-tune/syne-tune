@@ -17,7 +17,7 @@ import itertools
 
 from benchmarking.commons.hpo_main_simulator import (
     parse_args,
-    BenchmarkDefinitions,
+    SurrogateBenchmarkDefinitions,
     is_dict_of_dict,
 )
 from benchmarking.commons.utils import (
@@ -26,14 +26,14 @@ from benchmarking.commons.utils import (
     basic_cpu_instance_sagemaker_estimator,
     find_or_create_requirements_txt,
 )
-from benchmarking.commons.launch_remote import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from syne_tune.util import random_string
 
 
 def launch_remote(
     entry_point: Path,
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[Callable] = None,
     is_expensive_method: Optional[Callable[[str], bool]] = None,

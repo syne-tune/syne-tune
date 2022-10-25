@@ -14,19 +14,13 @@ from benchmarking.commons.benchmark_definitions import (
     nas201_benchmark_definitions,
     fcnet_benchmark_definitions,
     lcbench_selected_benchmark_definitions,
-    yahpo_lcbench_benchmark_definitions,
+    yahpo_lcbench_selected_benchmark_definitions,
 )
-from benchmarking.commons.benchmark_definitions.lcbench import lcbench_selected_datasets
 
 
 benchmark_definitions = {
     **nas201_benchmark_definitions,
     **fcnet_benchmark_definitions,
     **lcbench_selected_benchmark_definitions,
+    **yahpo_lcbench_selected_benchmark_definitions,
 }
-
-# Add the same 5 lcbench datasets, but provided by YAHPO (which does its own
-# surrogate modeling)
-for dataset in lcbench_selected_datasets:
-    k = "yahpo-lcbench-" + dataset
-    benchmark_definitions[k] = yahpo_lcbench_benchmark_definitions[k]
