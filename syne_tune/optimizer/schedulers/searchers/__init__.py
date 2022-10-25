@@ -16,17 +16,17 @@ from syne_tune.try_import import try_import_gpsearchers_message
 
 # TODO wildcard import should be avoided
 from syne_tune.optimizer.schedulers.searchers.searcher import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import (
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa: F401
     searcher_factory,
-)  # noqa: F401
+)
 
 try:
     from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (  # noqa: F401
         ModelBasedSearcher,
         GPFIFOSearcher,
     )
-    from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (
+    from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (  # noqa: F401
         GPMultiFidelitySearcher,
-    )  # noqa: F401
+    )
 except ImportError:
     logging.info(try_import_gpsearchers_message())
