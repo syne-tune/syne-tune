@@ -10,15 +10,23 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-# TODO wildcard import should be avoided
 import logging
 
 from syne_tune.try_import import try_import_gpsearchers_message
+
+# TODO wildcard import should be avoided
 from syne_tune.optimizer.schedulers.searchers.searcher import *  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.searcher_factory import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.searcher_factory import (
+    searcher_factory,
+)  # noqa: F401
 
 try:
-    from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import *  # noqa: F401
-    from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import *  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (  # noqa: F401
+        ModelBasedSearcher,
+        GPFIFOSearcher,
+    )
+    from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (
+        GPMultiFidelitySearcher,
+    )  # noqa: F401
 except ImportError:
     logging.info(try_import_gpsearchers_message())

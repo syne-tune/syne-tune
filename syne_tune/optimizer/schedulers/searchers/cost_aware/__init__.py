@@ -10,3 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
+    CostAwareGPFIFOSearcher,
+)  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_multifidelity_searcher import (
+    CostAwareGPMultiFidelitySearcher,
+)  # noqa: F401

@@ -45,10 +45,9 @@ from syne_tune.optimizer.schedulers import (
     PopulationBasedTraining,
     RayTuneScheduler,
 )
-from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher
-
-# FIXME: Resolve #324 and bring back in:
-# from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher
+from syne_tune.optimizer.schedulers.searchers.botorch import (
+    BotorchSearcher,
+)
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
