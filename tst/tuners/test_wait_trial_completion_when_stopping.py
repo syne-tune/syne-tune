@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from syne_tune import Tuner
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend.trial_status import Status
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import RandomSearch
@@ -33,10 +33,24 @@ _parameterizations = [
 
 @pytest.mark.parametrize("wait_for_completion, desired_status", _parameterizations)
 def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_status):
+    """
+    This test check the behavior of the wait_trial_completion_when_stopping parametr of the tuner.
+
+    In this scenario, starting the tuner will start n_workes (1) workers,
+    each aiming to evaluate the objective for 0.2s (100 steps of 0.02s) given a set of params.
+
+    In case the tuner does not wait until worker completion (wait_trial_completion_when_stopping=False)
+    the jobs will be stopped after the stopping criterion is fulfilled (walltime reachig 0.1s).
+    This means all worker jobs will be aborted and and with Status.stopped
+
+    In case the tuner does wait until worker completion (wait_trial_completion_when_stopping=True)
+    the jobs will not be stopped after the stopping criterion is fulfilled (walltime reachig 0.1s).
+    They will run until completion 0.1s later (full 0.2s passed) and then conclude naturally with Status.compled
+    """
     max_steps = 10
-    sleep_time_bench = 0.2
-    sleep_time_tuner = 0.1
-    max_wallclock_time = 1
+    sleep_time_bench = 0.02
+    sleep_time_tuner = 0.01
+    max_wallclock_time = 0.1
     mode = "min"
     metric = "mean_loss"
     num_workers = 1
@@ -50,7 +64,7 @@ def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_
     entry_point = script_height_example_path()
     scheduler = RandomSearch(config_space, metric=metric, mode=mode)
     trial_backend = temporary_local_backend(entry_point=entry_point)
-    stop_criterion = lambda status: status.wallclock_time > max_wallclock_time
+    stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
     tuner = Tuner(
         trial_backend=trial_backend,
         sleep_time=sleep_time_tuner,
@@ -62,9 +76,3 @@ def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_
     tuner.run()
     for trial, status in tuner.tuning_status.last_trial_status_seen.items():
         assert status == desired_status
-
-
-if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
-    # Run the tests without capturing stdout if this file is executed
-    pytest.main(args=["-s", Path(__file__)])
