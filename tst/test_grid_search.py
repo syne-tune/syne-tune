@@ -16,17 +16,11 @@ import pytest
 import itertools
 
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import (
-    SynchronousGeometricHyperbandScheduler,
-    GeometricDifferentialEvolutionHyperbandScheduler,
-)
+
 from syne_tune import Tuner
 from syne_tune import StoppingCriterion
 from syne_tune.config_space import randint, choice, uniform
-from syne_tune.util import script_checkpoint_example_path
-from tst.util_test import temporary_local_backend
 
 
 _grid_parameterizations = list(
@@ -63,9 +57,6 @@ def test_grid_scheduler(scheduler, searcher, mode):
             / "train_height.py"
     )
     trial_backend = LocalBackend(entry_point=str(entry_point))
-
-    #entry_point = str(script_checkpoint_example_path())
-    #trial_backend = temporary_local_backend(entry_point=entry_point)
 
     search_options = {"debug_log": True, "num_init_random": num_workers, "num_samples":num_samples}
 

@@ -530,6 +530,8 @@ class GridSearcher(BaseSearcher):
             (1, 4, 7), (2, 4, 7), (3, 4, 7), (1, 5, 7), (2, 5, 7), (3, 5, 7)
     """
 
+    DEFAULT_NSAMPLE = 5
+
     def __init__(
         self,
         config_space,
@@ -563,7 +565,7 @@ class GridSearcher(BaseSearcher):
             new_config = self._next_candidate_on_grid()
 
         if new_config is not None:
-            # Write debug log for the the config
+            # Write debug log for the config
             entries = ["{}: {}".format(k, v) for k, v in new_config.items()]
             msg = "\n".join(entries)
             trial_id = kwargs.get("trial_id")
@@ -608,6 +610,8 @@ class GridSearcher(BaseSearcher):
             config_space: The configuration space that defines search space grid.
             num_samples: Number of samples for each hyperparmaters.Only required for float hyperparameters.
         '''
+        if num_samples is None:
+            num_samples = {}
         self.num_samples = num_samples
         for hp, hp_range in config_space.items():
             # Acceptable types for hyperparameters are Float, Integer, Categorical.
@@ -617,7 +621,9 @@ class GridSearcher(BaseSearcher):
             if isinstance(hp_range, Float):
                 assert hp_range.lower != float('-inf') and hp_range.upper != float(
                     'inf'), "{} must have a bounded range.".format(hp)
-                assert hp in self.num_samples, "number of samples is required for {}".format(hp)
+                if hp not in self.num_samples:
+                    self.num_samples[hp] = GridSearcher.DEFAULT_NSAMPLE
+                    logger.warning("number of samples is required for {}. By default, {} is set as number of samples".format(hp, GridSearcher.DEFAULT_NSAMPLE))
             # n_sample for integer hp must be capped at length of the range
             if isinstance(hp_range, Integer):
                 if hp in self.num_samples:
@@ -625,8 +631,8 @@ class GridSearcher(BaseSearcher):
                         self.num_samples[hp] = len(hp_range)
                         logger.info("number of samples for \"{}\" is capped at its range length, i.e. {} samples".format(hp, len(hp_range)))
                 else:
-                    self.num_samples[hp] = len(hp_range)
-                    logger.info("Grid search is using all integers in inclusive range ({},{}) for \"{}\".".format(hp_range.lower, hp_range.upper, hp))
+                    self.num_samples[hp] = GridSearcher.DEFAULT_NSAMPLE
+                    #logger.info("Grid search uses {} samples as default number of samples for \"{}\".".format(GridSearcher.DEFAULT_NSAMPLE, hp))
             if isinstance(hp_range, Categorical):
                 if hp in self.num_samples:
                     logger.info("number of samples for categorical variable \"{}\" are ignored.".format(hp))
