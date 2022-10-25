@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Union
 
 
 @dataclass
@@ -32,6 +32,10 @@ class SurrogateBenchmarkDefinition:
     :param surrogate_kwargs: Default value for arguments of surrogate,
         see :func:`make_surrogate`
     :param max_resource_attr: Internal name between back-end and scheduler
+    :param datasets: Used in transfer tuning
+    :param fidelities: If given, this is a strictly increasing subset of
+        the fidelity values provided by the surrogate, and only those
+        will be reported
     """
 
     max_wallclock_time: float
@@ -46,6 +50,7 @@ class SurrogateBenchmarkDefinition:
     surrogate_kwargs: Optional[dict] = None
     max_resource_attr: Optional[str] = None
     datasets: Optional[List[str]] = None
+    fidelities: Optional[List[int]] = None
 
     def __post_init__(self):
         if self.max_resource_attr is None:
@@ -86,3 +91,6 @@ class RealBenchmarkDefinition:
     resource_attr: Optional[str] = None
     estimator_kwargs: Optional[dict] = None
     max_num_evaluations: Optional[int] = None
+
+
+BenchmarkDefinition = Union[SurrogateBenchmarkDefinition, RealBenchmarkDefinition]

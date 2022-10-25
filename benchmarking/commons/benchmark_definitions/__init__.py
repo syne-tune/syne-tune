@@ -30,28 +30,15 @@ from benchmarking.commons.benchmark_definitions.lcbench import (  # noqa: F401
 from benchmarking.commons.benchmark_definitions.yahpo import (  # noqa: F401
     yahpo_nb301_benchmark_definitions,
     yahpo_lcbench_benchmark_definitions,
-    yahpo_iaml_rpart_benchmark_definitions,
-    yahpo_iaml_glmnet_benchmark_definitions,
-    yahpo_iaml_ranger_benchmark_definitions,
-    yahpo_iaml_xgboost_benchmark_definitions,
-    yahpo_rbv2_rpart_benchmark_definitions,
-    yahpo_rbv2_glmnet_benchmark_definitions,
-    yahpo_rbv2_ranger_benchmark_definitions,
-    yahpo_rbv2_xgboost_benchmark_definitions,
-    yahpo_rbv2_svm_benchmark_definitions,
-    yahpo_rbv2_aknn_benchmark_definitions,
+    yahpo_lcbench_selected_benchmark_definitions,
+    yahpo_iaml_benchmark_definitions,
+    yahpo_iaml_selected_benchmark_definitions,
+    yahpo_rbv2_benchmark_definitions,
+    yahpo_rbv2_selected_benchmark_definitions,
     yahpo_nb301_benchmark,
     yahpo_lcbench_benchmark,
-    yahpo_iaml_rpart_benchmark,
-    yahpo_iaml_glmnet_benchmark,
-    yahpo_iaml_ranger_benchmark,
-    yahpo_iaml_xgboost_benchmark,
-    yahpo_rbv2_rpart_benchmark,
-    yahpo_rbv2_glmnet_benchmark,
-    yahpo_rbv2_ranger_benchmark,
-    yahpo_rbv2_xgboost_benchmark,
-    yahpo_rbv2_svm_benchmark,
-    yahpo_rbv2_aknn_benchmark,
+    yahpo_iaml_benchmark,
+    yahpo_rbv2_benchmark,
 )
 from benchmarking.commons.benchmark_definitions.resnet_cifar10 import (  # noqa: F401
     resnet_cifar10_benchmark,
@@ -61,4 +48,10 @@ from benchmarking.commons.benchmark_definitions.lstm_wikitext2 import (  # noqa:
 )
 from benchmarking.commons.benchmark_definitions.real_benchmark_definitions import (  # noqa: F401
     real_benchmark_definitions,
+)
+from benchmarking.commons.benchmark_definitions.distilbert_on_imdb import (  # noqa: F401
+    distilbert_imdb_benchmark,
+)
+from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (  # noqa: F401
+    mlp_fashionmnist_benchmark,
 )

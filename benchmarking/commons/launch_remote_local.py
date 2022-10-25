@@ -10,15 +10,16 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pathlib import Path
 from tqdm import tqdm
 import itertools
 import logging
 
-from benchmarking.commons.launch_remote import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
+from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
 from benchmarking.commons.hpo_main_local import (
-    BenchmarkDefinitions,
+    RealBenchmarkDefinitions,
     get_benchmark,
     parse_args,
 )
@@ -34,7 +35,14 @@ from syne_tune.util import random_string
 logger = logging.getLogger(__name__)
 
 
-def get_hyperparameters(seed, method, experiment_tag, args, benchmark, map_extra_args):
+def get_hyperparameters(
+    seed: int,
+    method: str,
+    experiment_tag: str,
+    args,
+    benchmark: RealBenchmarkDefinition,
+    map_extra_args: Optional[callable],
+) -> Dict[str, Any]:
     hyperparameters = {
         "experiment_tag": experiment_tag,
         "benchmark": args.benchmark,
@@ -53,7 +61,7 @@ def get_hyperparameters(seed, method, experiment_tag, args, benchmark, map_extra
 def launch_remote(
     entry_point: Path,
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):

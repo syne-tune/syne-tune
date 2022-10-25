@@ -71,34 +71,6 @@ fidelity_space = {
 }
 ```
 
-## fcnet
-
-```python
-instances = ['fcnet_naval_propulsion', 'fcnet_protein_structure', 'fcnet_slice_localization', 'fcnet_parkinsons_telemonitoring']
-
-metrics = ['valid_loss', 'valid_mse', 'runtime', 'n_params']
-
-config_space = {
-   'activation_fn_1': choice(['relu', 'tanh']),
-   'activation_fn_2': choice(['tanh', 'relu']),
-   'batch_size': lograndint(8, 64),
-   'dropout_1': uniform(0.0, 0.6),
-   'dropout_2': uniform(0.0, 0.6),
-   'init_lr': loguniform(0.0005, 0.1),
-   'lr_schedule': choice(['const', 'cosine']),
-   'n_units_1': randint(16, 512),
-   'n_units_2': randint(16, 512),
-   'replication': lograndint(1, 4),
-}
-fidelity_space = {
-   'epoch': lograndint(1, 100),
-}
-```
-
-Note: `replication` is the seed (all FCNet configurations have been evaluated 4
-times). It must be removed from `config_space`.
-
-
 ## iaml: Interpretable AutoML
 
 Text from YAHPO paper (Appendix F):
@@ -282,6 +254,12 @@ From reference [9]:
 
 We use subsampling with the following factions of the training data:
 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9.
+
+From communication with YAHPO authors:
+* F1 is problematic for multi-class classification, since it is NaN often in the
+  raw data. It should only be used with binary classification setups.
+* AUC can often be very close to 1, since the OpenML tasks are often quite simple.
+  For example, for `svm`, about 3% of configs give AUC larger than 0.9999999.
 
 ### rbv2_super
 

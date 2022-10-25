@@ -1,0 +1,2 @@
+syne-tune[gpsearchers,blackbox-repository,yahpo,aws]
+tqdm

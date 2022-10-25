@@ -21,18 +21,18 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from benchmarking.commons.baselines import MethodArguments
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
-from benchmarking.commons.hpo_main import (
+from benchmarking.commons.hpo_main_common import (
     parse_args as _parse_args,
     set_logging_level,
     get_metadata,
 )
 
 
-BenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
+RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
 
 
 def get_benchmark(
-    args, benchmark_definitions: BenchmarkDefinitions, **benchmark_kwargs
+    args, benchmark_definitions: RealBenchmarkDefinitions, **benchmark_kwargs
 ):
     if args.n_workers is not None:
         benchmark_kwargs["n_workers"] = args.n_workers
@@ -51,23 +51,14 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
             dict(
                 name="benchmark",
                 type=str,
-                help="Benchmark to run from benchmark_definitions",
+                default="resnet_cifar10",
+                help="Benchmark to run",
             ),
             dict(
                 name="verbose",
                 type=int,
                 default=0,
                 help="Verbose log output?",
-            ),
-            dict(
-                name="n_workers",
-                type=int,
-                help="Number of workers",
-            ),
-            dict(
-                name="max_wallclock_time",
-                type=int,
-                help="Maximum runtime for experiment",
             ),
         ]
     )
@@ -78,7 +69,7 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
 
 def main(
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):

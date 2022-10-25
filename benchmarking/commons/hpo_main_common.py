@@ -10,10 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 from argparse import ArgumentParser
 import copy
+
+from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
+
 
 try:
     from coolname import generate_slug
@@ -44,12 +47,22 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
         default=0,
         help="First seed to run",
     )
-    parser.add_argument("--method", type=str, required=False, help="HPO method to run")
+    parser.add_argument("--method", type=str, help="HPO method to run")
     parser.add_argument(
         "--save_tuner",
         type=int,
         default=0,
         help="Serialize Tuner object at the end of tuning?",
+    )
+    parser.add_argument(
+        "--n_workers",
+        type=int,
+        help="Number of workers (overwrites default of benchmark)",
+    )
+    parser.add_argument(
+        "--max_wallclock_time",
+        type=int,
+        help="Maximum runtime for experiment (overwrites default of benchmark)",
     )
     if extra_args is not None:
         extra_args = copy.deepcopy(extra_args)
@@ -75,8 +88,13 @@ def set_logging_level(args):
 
 
 def get_metadata(
-    seed, method, experiment_tag, benchmark_name, benchmark=None, extra_args=None
-):
+    seed: int,
+    method: str,
+    experiment_tag: str,
+    benchmark_name: str,
+    benchmark: Optional[BenchmarkDefinition] = None,
+    extra_args: Optional[dict] = None,
+) -> Dict[str, Any]:
     metadata = {
         "seed": seed,
         "algorithm": method,
