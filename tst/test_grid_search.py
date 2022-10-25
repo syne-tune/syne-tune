@@ -24,7 +24,7 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import (
 )
 from syne_tune import Tuner
 from syne_tune import StoppingCriterion
-from syne_tune.config_space import randint, choice
+from syne_tune.config_space import randint, choice, uniform
 from syne_tune.util import script_checkpoint_example_path
 from tst.util_test import temporary_local_backend
 
@@ -48,11 +48,11 @@ def test_grid_scheduler(scheduler, searcher, mode):
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
-        "height": randint(-100, 100),
+        "height": uniform(-100, 100),
         "sleep_time": 0.001,
     }
 
-    num_samples = {"width":2, "height":5}
+    num_samples = {"width":5, "height":10}
     metric = "mean_loss"
 
     entry_point = (
@@ -88,4 +88,3 @@ def test_grid_scheduler(scheduler, searcher, mode):
     )
 
     tuner.run()
-
