@@ -10,10 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 from argparse import ArgumentParser
 import copy
+
+from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
+
 
 try:
     from coolname import generate_slug
@@ -85,8 +88,13 @@ def set_logging_level(args):
 
 
 def get_metadata(
-    seed, method, experiment_tag, benchmark_name, benchmark=None, extra_args=None
-):
+    seed: int,
+    method: str,
+    experiment_tag: str,
+    benchmark_name: str,
+    benchmark: Optional[BenchmarkDefinition] = None,
+    extra_args: Optional[dict] = None,
+) -> Dict[str, Any]:
     metadata = {
         "seed": seed,
         "algorithm": method,

@@ -28,11 +28,11 @@ from benchmarking.commons.hpo_main_common import (
 )
 
 
-BenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
+RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
 
 
 def get_benchmark(
-    args, benchmark_definitions: BenchmarkDefinitions, **benchmark_kwargs
+    args, benchmark_definitions: RealBenchmarkDefinitions, **benchmark_kwargs
 ):
     if args.n_workers is not None:
         benchmark_kwargs["n_workers"] = args.n_workers
@@ -69,7 +69,7 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
 
 def main(
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):

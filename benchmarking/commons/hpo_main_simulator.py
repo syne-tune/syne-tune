@@ -36,13 +36,13 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
 
-BenchmarkDefinitions = Union[
+SurrogateBenchmarkDefinitions = Union[
     Dict[str, SurrogateBenchmarkDefinition],
     Dict[str, Dict[str, SurrogateBenchmarkDefinition]],
 ]
 
 
-def is_dict_of_dict(benchmark_definitions: BenchmarkDefinitions) -> bool:
+def is_dict_of_dict(benchmark_definitions: SurrogateBenchmarkDefinitions) -> bool:
     assert isinstance(benchmark_definitions, dict) and len(benchmark_definitions) > 0
     val = next(iter(benchmark_definitions.values()))
     return isinstance(val, dict)
@@ -109,7 +109,7 @@ def get_transfer_learning_evaluations(
 
 def parse_args(
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
 ):
     if extra_args is None:
@@ -178,7 +178,7 @@ def parse_args(
 
 def main(
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
     use_transfer_learning: bool = False,

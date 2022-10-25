@@ -22,7 +22,7 @@ from syne_tune.tuner import Tuner
 import benchmarking
 from benchmarking.commons.baselines import MethodArguments
 from benchmarking.commons.hpo_main_local import (
-    BenchmarkDefinitions,
+    RealBenchmarkDefinitions,
     get_benchmark,
 )
 from benchmarking.commons.utils import sagemaker_estimator
@@ -30,7 +30,7 @@ from benchmarking.commons.hpo_main_common import (
     parse_args as _parse_args,
     get_metadata,
 )
-from benchmarking.commons.launch_remote import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 
 
 # SageMaker managed warm pools:
@@ -79,7 +79,7 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
 
 def main(
     methods: dict,
-    benchmark_definitions: BenchmarkDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):

@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Union
 
 
 @dataclass
@@ -91,3 +91,6 @@ class RealBenchmarkDefinition:
     resource_attr: Optional[str] = None
     estimator_kwargs: Optional[dict] = None
     max_num_evaluations: Optional[int] = None
+
+
+BenchmarkDefinition = Union[SurrogateBenchmarkDefinition, RealBenchmarkDefinition]

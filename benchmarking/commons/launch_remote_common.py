@@ -11,8 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
+from typing import Optional, Dict, Any
 
 import benchmarking
+from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
 import syne_tune
 from syne_tune.util import s3_experiment_path
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
@@ -24,9 +26,9 @@ def sagemaker_estimator_args(
     entry_point: Path,
     experiment_tag: str,
     tuner_name: str,
-    benchmark=None,
-    sagemaker_backend=False,
-):
+    benchmark: Optional[BenchmarkDefinition] = None,
+    sagemaker_backend: bool = False,
+) -> Dict[str, Any]:
     checkpoint_s3_uri = s3_experiment_path(
         tuner_name=tuner_name, experiment_name=experiment_tag
     )
