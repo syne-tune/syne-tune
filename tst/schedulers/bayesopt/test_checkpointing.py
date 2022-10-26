@@ -18,11 +18,11 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
     constrained_gp_fifo_searcher_defaults,
     cost_aware_gp_fifo_searcher_defaults,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
-from syne_tune.optimizer.schedulers.searchers.constrained.constrained_gp_fifo_searcher import (
+from syne_tune.optimizer.schedulers.searchers import GPFIFOSearcher
+from syne_tune.optimizer.schedulers.searchers.constrained import (
     ConstrainedGPFIFOSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
+from syne_tune.optimizer.schedulers.searchers.cost_aware import (
     CostAwareGPFIFOSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
