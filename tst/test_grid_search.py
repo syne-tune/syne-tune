@@ -23,21 +23,14 @@ from syne_tune import StoppingCriterion
 from syne_tune.config_space import randint, uniform, choice
 
 
-_grid_parameterizations = list(
-    itertools.product(
-        ["fifo"],
-        ["grid"],
-        ["min"],
-    )
-)
 
-
-@pytest.mark.parametrize("scheduler, searcher, mode", _grid_parameterizations)
-def test_grid_scheduler(scheduler, searcher, mode):
+def test_grid_scheduler():
     max_steps = 100
     num_workers = 2
     random_seed = 382378624
 
+    searcher = "grid"
+    mode = "min"
     config_space = {
         "steps": max_steps,
         "width": randint(0, 20),
@@ -79,12 +72,14 @@ def test_grid_scheduler(scheduler, searcher, mode):
 
     tuner.run()
 
-@pytest.mark.parametrize("scheduler, searcher, mode", _grid_parameterizations)
-def test_grid_scheduler_categorical(scheduler, searcher, mode):
+
+def test_grid_scheduler_categorical():
     max_steps = 100
     num_workers = 2
     random_seed = 382378623
 
+    searcher = "grid"
+    mode = "min"
     categorical_config_space = {
         "steps": max_steps,
         "width": choice([1,5,10,15,20]),

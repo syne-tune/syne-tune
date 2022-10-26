@@ -600,7 +600,7 @@ class GridSearcher(BaseSearcher):
         return configs
 
     def _validate_config_space(self, config_space: dict, num_samples: dict):
-        '''
+        """
         This function validates config_space from two aspects: first, that all hyperparameters
         are of acceptable types (i.e. float, integer, categorical). Second, num_samples is specified
         for float hyperparameters. Num_samples for categorical variables are ignored as all of their
@@ -609,18 +609,12 @@ class GridSearcher(BaseSearcher):
         Args:
             config_space: The configuration space that defines search space grid.
             num_samples: Number of samples for each hyperparmaters.Only required for float hyperparameters.
-        '''
+        """
         if num_samples is None:
             num_samples = {}
         self.num_samples = num_samples
         for hp, hp_range in config_space.items():
-            # Acceptable types for hyperparameters are Float, Integer, Categorical.
-            if isinstance(hp_range, Domain):
-                assert not isinstance(hp_range, Function), "{} must be either float, integer or categorical type.".format(hp)
-            # Float parameters must have bounded range and have num_samples specified
             if isinstance(hp_range, Float):
-                assert hp_range.lower != float('-inf') and hp_range.upper != float(
-                    'inf'), "{} must have a bounded range.".format(hp)
                 if hp not in self.num_samples:
                     self.num_samples[hp] = GridSearcher.DEFAULT_NSAMPLE
                     logger.warning("number of samples is required for {}. By default, {} is set as number of samples".format(hp, GridSearcher.DEFAULT_NSAMPLE))
@@ -632,10 +626,10 @@ class GridSearcher(BaseSearcher):
                         logger.info("number of samples for \"{}\" is capped at its range length, i.e. {} samples".format(hp, len(hp_range)))
                 else:
                     self.num_samples[hp] = GridSearcher.DEFAULT_NSAMPLE
-                    #logger.info("Grid search uses {} samples as default number of samples for \"{}\".".format(GridSearcher.DEFAULT_NSAMPLE, hp))
-            if isinstance(hp_range, Categorical):
+                    logger.info("Number of samples for \"{}\" is set to default value ({}).".format(hp, GridSearcher.DEFAULT_NSAMPLE))
+            if isinstance(hp_range, Categorical) or isinstance(hp_range, FiniteRange):
                 if hp in self.num_samples:
-                    logger.info("number of samples for categorical variable \"{}\" are ignored.".format(hp))
+                    logger.info("number of samples for categorical variable \"{}\" is ignored.".format(hp))
 
     def _generate_remaining_candidates(self) -> List[dict]:
         excl_list = ExclusionList.empty_list(self._hp_ranges)
@@ -649,11 +643,11 @@ class GridSearcher(BaseSearcher):
         return remaining_candidates
 
     def _generate_all_candidates_on_grid(self) -> List[dict]:
-        '''
+        """
         This function generates all configurations on grid.
         Returns:
             The set of all configurations on grid.
-        '''
+        """
         hp_keys = []
         hp_values = []
         ## adding categorical, finiteRange, scalar parameters
@@ -666,18 +660,19 @@ class GridSearcher(BaseSearcher):
             elif isinstance(hp_range, FiniteRange):
                 hp_keys.append(hp)
                 hp_values.append(hp_range.values)
-            else: # isinstance(hp_range, Hyperparameter)
+            elif not isinstance(hp_range, Domain):
                 hp_keys.append(hp)
                 hp_values.append([hp_range])
 
         ## adding float, integer parameters
         for hpr in self._hp_ranges._hp_ranges:
-            if hpr.name in hp_keys: continue
-            _hpr_nsamples = self.num_samples[hpr.name]
-            _normalized_points = [(idx + 0.5) / _hpr_nsamples for idx in range(_hpr_nsamples)]
-            _hpr_points = [hpr.from_ndarray(np.array([point])) for point in _normalized_points]
-            hp_keys.append(hpr.name)
-            hp_values.append(_hpr_points)
+            if hpr.name not in hp_keys:
+                _hpr_nsamples = self.num_samples[hpr.name]
+                _normalized_points = [(idx + 0.5) / _hpr_nsamples for idx in range(_hpr_nsamples)]
+                _hpr_points = [hpr.from_ndarray(np.array([point])) for point in _normalized_points]
+                _hpr_points = list(set(_hpr_points))
+                hp_keys.append(hpr.name)
+                hp_values.append(_hpr_points)
 
         hp_values_combinations = list(product(*hp_values))
 
