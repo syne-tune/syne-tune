@@ -37,8 +37,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model import
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["GPMultiFidelitySearcher"]
-
 
 class GPMultiFidelitySearcher(GPFIFOSearcher):
     """Gaussian process Bayesian optimization for Hyperband scheduler

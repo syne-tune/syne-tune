@@ -17,7 +17,7 @@ from syne_tune.try_import import (
     try_import_kde_message,
     try_import_bore_message,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher import (
+from syne_tune.optimizer.schedulers.searchers import (
     RandomSearcher,
     GridSearcher,
 )
@@ -54,10 +54,8 @@ def searcher_factory(searcher_name, **kwargs):
         searcher_cls = GridSearcher
     elif searcher_name == "kde":
         try:
-            from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
+            from syne_tune.optimizer.schedulers.searchers.kde import (
                 KernelDensityEstimator,
-            )
-            from syne_tune.optimizer.schedulers.searchers.kde.multi_fidelity_kde_searcher import (
                 MultiFidelityKernelDensityEstimator,
             )
         except ImportError:
@@ -71,8 +69,8 @@ def searcher_factory(searcher_name, **kwargs):
             searcher_cls = MultiFidelityKernelDensityEstimator
     elif searcher_name == "bore":
         try:
-            from syne_tune.optimizer.schedulers.searchers.bore import Bore
-            from syne_tune.optimizer.schedulers.searchers.bore.multi_fidelity_bore import (
+            from syne_tune.optimizer.schedulers.searchers.bore import (
+                Bore,
                 MultiFidelityBore,
             )
         except ImportError:
@@ -95,22 +93,18 @@ def searcher_factory(searcher_name, **kwargs):
             searcher_name in gp_searchers
         ), f"searcher '{searcher_name}' is not supported"
         try:
-            from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (
+            from syne_tune.optimizer.schedulers.searchers import (
                 GPFIFOSearcher,
-            )
-            from syne_tune.optimizer.schedulers.searchers.constrained.constrained_gp_fifo_searcher import (
-                ConstrainedGPFIFOSearcher,
-            )
-            from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
-                CostAwareGPFIFOSearcher,
-            )
-            from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (
                 GPMultiFidelitySearcher,
             )
-            from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_multifidelity_searcher import (
+            from syne_tune.optimizer.schedulers.searchers.constrained import (
+                ConstrainedGPFIFOSearcher,
+            )
+            from syne_tune.optimizer.schedulers.searchers.cost_aware import (
+                CostAwareGPFIFOSearcher,
                 CostAwareGPMultiFidelitySearcher,
             )
-            from syne_tune.optimizer.schedulers.searchers.hypertune.hypertune_searcher import (
+            from syne_tune.optimizer.schedulers.searchers.hypertune import (
                 HyperTuneSearcher,
             )
         except ImportError:

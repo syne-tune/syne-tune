@@ -11,3 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from syne_tune.optimizer.schedulers.searchers.bore.bore import Bore  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.bore.multi_fidelity_bore import (  # noqa: F401
+    MultiFidelityBore,
+)

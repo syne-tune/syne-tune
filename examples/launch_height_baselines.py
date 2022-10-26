@@ -23,7 +23,7 @@ from syne_tune.optimizer.baselines import (
 # from syne_tune.optimizer.schedulers.synchronous import \
 #    SynchronousGeometricHyperbandScheduler  # noqa: F401
 # from syne_tune.optimizer.schedulers import FIFOScheduler  # noqa: F401
-# from syne_tune.optimizer.schedulers.botorch.botorch_searcher import BotorchSearcher  # noqa: F401
+# from syne_tune.optimizer.schedulers.botorch import BotorchSearcher  # noqa: F401
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from syne_tune.try_import import try_import_gpsearchers_message
