@@ -89,8 +89,6 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ModelBasedSearcher", "GPFIFOSearcher"]
-
 
 GET_CONFIG_RANDOM_RETRIES = 50
 
