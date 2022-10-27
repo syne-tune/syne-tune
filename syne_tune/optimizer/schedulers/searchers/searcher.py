@@ -541,7 +541,6 @@ class GridSearcher(BaseSearcher):
         **kwargs,
     ):
         super().__init__(config_space, metric, points_to_evaluate)
-        self._points_to_evaluate = []
         GridSearcher.DEFAULT_NSAMPLE = 5
         self._validate_config_space(config_space, num_samples)
         self._hp_ranges = make_hyperparameter_ranges(config_space)

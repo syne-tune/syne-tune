@@ -128,7 +128,7 @@ def test_grid_scheduler_categorical():
 def test_get_config():
     config_space = {
         "char_attr": choice(["a", "b"]),
-        "float_attr": uniform(1, 10),
+        "float_attr": uniform(1, 5),
         "int_attr": randint(10, 40),
     }
     num_samples = {"float_attr": 2, "int_attr": 2}
@@ -145,7 +145,7 @@ def test_get_config():
     ]
 
     num_valid_config = len(all_candidates_on_grid)
-    searcher = GridSearcher(config_space, num_samples=num_samples, metric="accuracy")
+    searcher = GridSearcher(config_space, num_samples=num_samples, metric="accuracy", points_to_evaluate=[])
     for trial_id in range(num_valid_config):
         # These should get new config
         config = searcher.get_config(trial_id=trial_id)
