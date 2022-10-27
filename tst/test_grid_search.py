@@ -21,7 +21,7 @@ from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune import Tuner
 from syne_tune import StoppingCriterion
 from syne_tune.config_space import randint, uniform, choice
-
+from syne_tune.optimizer.schedulers.searchers import GridSearcher
 
 
 def test_grid_scheduler():
@@ -119,3 +119,31 @@ def test_grid_scheduler_categorical():
     )
 
     tuner.run()
+
+
+def test_get_config():
+    config_space = {
+        "char_attr": choice(["a", "b"]),
+        "float_attr": uniform(1, 5),
+        "int_attr": randint(10, 40)
+    }
+    num_samples = {"float_attr": 2, "int_attr": 2}
+
+    all_candidates_on_grid = [
+        {"char_attr": "a", "float_attr": 2.0, "int_attr": 17},
+        {"char_attr": "a", "float_attr": 2.0, "int_attr": 33},
+        {"char_attr": "a", "float_attr": 4.0, "int_attr": 17},
+        {"char_attr": "a", "float_attr": 4.0, "int_attr": 33},
+        {"char_attr": "b", "float_attr": 2.0, "int_attr": 17},
+        {"char_attr": "b", "float_attr": 2.0, "int_attr": 33},
+        {"char_attr": "b", "float_attr": 4.0, "int_attr": 17},
+        {"char_attr": "b", "float_attr": 4.0, "int_attr": 33}
+    ]
+
+    num_valid_config = len(all_candidates_on_grid)
+    searcher = GridSearcher(config_space, num_samples=num_samples, metric="accuracy")
+    for trial_id in range(num_valid_config):
+        # These should get new config
+        config = searcher.get_config(trial_id=trial_id)
+        assert config in all_candidates_on_grid
+
