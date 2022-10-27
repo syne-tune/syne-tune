@@ -22,7 +22,8 @@ from syne_tune.config_space import (
     Categorical,
     Float,
     Integer,
-    Function, FiniteRange,
+    Function,
+    FiniteRange,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
@@ -172,11 +173,11 @@ class BaseSearcher:
             self._metric = scheduler.metric
 
     def _next_initial_config(self) -> Optional[dict]:
-        '''
+        """
         Returns:
             The next unprocessed configuration from the initial list
             and None if the list is exhausted.
-        '''
+        """
         if self._points_to_evaluate:
             return self._points_to_evaluate.pop(0)
         else:
@@ -530,8 +531,6 @@ class GridSearcher(BaseSearcher):
             (1, 4, 7), (2, 4, 7), (3, 4, 7), (1, 5, 7), (2, 5, 7), (3, 5, 7)
     """
 
-
-
     def __init__(
         self,
         config_space,
@@ -619,19 +618,35 @@ class GridSearcher(BaseSearcher):
             if isinstance(hp_range, Float):
                 if hp not in self.num_samples:
                     self.num_samples[hp] = GridSearcher.DEFAULT_NSAMPLE
-                    logger.warning("number of samples is required for {}. By default, {} is set as number of samples".format(hp, GridSearcher.DEFAULT_NSAMPLE))
+                    logger.warning(
+                        "number of samples is required for {}. By default, {} is set as number of samples".format(
+                            hp, GridSearcher.DEFAULT_NSAMPLE
+                        )
+                    )
             # n_sample for integer hp must be capped at length of the range
             if isinstance(hp_range, Integer):
                 if hp in self.num_samples:
                     if self.num_samples[hp] > len(hp_range):
                         self.num_samples[hp] = GridSearcher.DEFAULT_NSAMPLE
-                        logger.info("number of samples for \"{}\" is larger than its range. By default, {} is set as number of samples".format(hp, GridSearcher.DEFAULT_NSAMPLE))
+                        logger.info(
+                            'number of samples for "{}" is larger than its range. By default, {} is set as number of samples'.format(
+                                hp, GridSearcher.DEFAULT_NSAMPLE
+                            )
+                        )
                 else:
                     self.num_samples[hp] = GridSearcher.DEFAULT_NSAMPLE
-                    logger.info("Number of samples for \"{}\" is set to default value ({}).".format(hp, GridSearcher.DEFAULT_NSAMPLE))
+                    logger.info(
+                        'Number of samples for "{}" is set to default value ({}).'.format(
+                            hp, GridSearcher.DEFAULT_NSAMPLE
+                        )
+                    )
             if isinstance(hp_range, Categorical) or isinstance(hp_range, FiniteRange):
                 if hp in self.num_samples:
-                    logger.info("number of samples for categorical variable \"{}\" is ignored.".format(hp))
+                    logger.info(
+                        'number of samples for categorical variable "{}" is ignored.'.format(
+                            hp
+                        )
+                    )
 
     def _generate_remaining_candidates(self) -> List[dict]:
         excl_list = ExclusionList.empty_list(self._hp_ranges)
@@ -670,8 +685,12 @@ class GridSearcher(BaseSearcher):
         for hpr in self._hp_ranges._hp_ranges:
             if hpr.name not in hp_keys:
                 _hpr_nsamples = self.num_samples[hpr.name]
-                _normalized_points = [(idx + 0.5) / _hpr_nsamples for idx in range(_hpr_nsamples)]
-                _hpr_points = [hpr.from_ndarray(np.array([point])) for point in _normalized_points]
+                _normalized_points = [
+                    (idx + 0.5) / _hpr_nsamples for idx in range(_hpr_nsamples)
+                ]
+                _hpr_points = [
+                    hpr.from_ndarray(np.array([point])) for point in _normalized_points
+                ]
                 _hpr_points = list(set(_hpr_points))
                 hp_keys.append(hpr.name)
                 hp_values.append(_hpr_points)
@@ -685,7 +704,6 @@ class GridSearcher(BaseSearcher):
         for values in hp_values_combinations:
             all_candidates_on_grid.append(dict(zip(hp_keys, values)))
         return all_candidates_on_grid
-
 
     def _next_candidate_on_grid(self) -> Optional[dict]:
         """
