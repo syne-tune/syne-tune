@@ -145,7 +145,9 @@ def test_get_config():
     ]
 
     num_valid_config = len(all_candidates_on_grid)
-    searcher = GridSearcher(config_space, num_samples=num_samples, metric="accuracy", points_to_evaluate=[])
+    searcher = GridSearcher(
+        config_space, num_samples=num_samples, metric="accuracy", points_to_evaluate=[]
+    )
     for trial_id in range(num_valid_config):
         # These should get new config
         config = searcher.get_config(trial_id=trial_id)
