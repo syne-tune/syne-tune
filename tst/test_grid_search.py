@@ -11,10 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
-
-import pytest
-import itertools
-
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
