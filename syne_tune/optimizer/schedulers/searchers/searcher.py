@@ -22,7 +22,6 @@ from syne_tune.config_space import (
     Categorical,
     Float,
     Integer,
-    Function,
     FiniteRange,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
