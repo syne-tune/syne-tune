@@ -15,7 +15,14 @@ import numpy as np
 from random import shuffle
 from typing import Optional, List, Tuple
 
-from syne_tune.config_space import Domain, config_space_size, is_log_space, Categorical
+from syne_tune.config_space import (
+    Domain,
+    config_space_size,
+    is_log_space,
+    Categorical,
+    Ordinal,
+    OrdinalNearestNeighbor,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
@@ -44,11 +51,24 @@ def _impute_default_config(default_config, config_space):
     for name, hp_range in config_space.items():
         if isinstance(hp_range, Domain):
             if name not in default_config:
+                is_numerical = True
+                lower, upper = None, None
                 if isinstance(hp_range, Categorical):
-                    # For categorical: Pick first entry
-                    new_config[name] = hp_range.categories[0]
+                    is_numerical = False
+                    if isinstance(hp_range, Ordinal):
+                        if isinstance(hp_range, OrdinalNearestNeighbor):
+                            lower = hp_range.categories[0]
+                            upper = hp_range.categories[-1]
+                            is_numerical = True
+                        else:
+                            num_cats = len(hp_range)
+                            new_config[name] = hp_range.categories[num_cats // 2]
+                    else:
+                        # For categorical: Pick first entry
+                        new_config[name] = hp_range.categories[0]
                 else:
                     lower, upper = float(hp_range.lower), float(hp_range.upper)
+                if is_numerical:
                     if not is_log_space(hp_range):
                         midpoint = 0.5 * (upper + lower)
                     else:
@@ -56,7 +76,9 @@ def _impute_default_config(default_config, config_space):
                     # Casting may involve rounding to nearest value in
                     # a finite range
                     midpoint = hp_range.cast(midpoint)
-                    midpoint = np.clip(midpoint, hp_range.lower, hp_range.upper)
+                    lower = hp_range.value_type(lower)
+                    upper = hp_range.value_type(upper)
+                    midpoint = np.clip(midpoint, lower, upper)
                     new_config[name] = midpoint
             else:
                 # Check validity
