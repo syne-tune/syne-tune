@@ -56,7 +56,7 @@ def test_get_config():
 
 def test_generate_all_candidates_on_grid():
     searcher = GridSearcher(config_space, metric="accuracy", points_to_evaluate=[])
-    generate_result = searcher._remaining_candidates
+    generate_result = searcher._grid_candidates
     for i in range(len(all_candidates_on_grid)):
         assert generate_result[i] in all_candidates_on_grid
 
@@ -66,20 +66,6 @@ def test_non_shuffle():
     for i in range(len(all_candidates_on_grid)):
         config = searcher.get_config(trial_id=i)
         assert config == all_candidates_on_grid[i]
-
-
-def test_get_batch_configs():
-    for batch_size in range(1, len(all_candidates_on_grid) + 1):
-        searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
-        assert (
-            searcher.get_batch_configs(batch_size)
-            == all_candidates_on_grid[:batch_size]
-        )
-
-    # If `batch_size` is larger than search space, only returns the remaining candidate
-    TOO_LARGE_BATCH_SIZE = 100
-    searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
-    assert searcher.get_batch_configs(TOO_LARGE_BATCH_SIZE) == all_candidates_on_grid
 
 
 def test_store_and_restore_state_without_initial_config():
@@ -114,7 +100,8 @@ def test_store_and_restore_state_with_initial_config():
         new_config = new_searcher.get_config(trail_id=idx)
         assert new_config == all_candidates_on_grid[idx]
 
-def test_grid_scheduler():
+
+def test_grid_scheduler_continuous():
     max_steps = 100
     num_workers = 2
     random_seed = 382378624
