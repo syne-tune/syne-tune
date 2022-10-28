@@ -23,6 +23,10 @@ from syne_tune.config_space import (
     Ordinal,
     OrdinalNearestNeighbor,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
+    Hyperparameter,
+    Configuration,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
@@ -46,57 +50,66 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def _impute_default_config(default_config, config_space):
+def _impute_default_config(
+    default_config: Configuration, config_space: dict
+) -> Configuration:
     new_config = dict()
     for name, hp_range in config_space.items():
         if isinstance(hp_range, Domain):
-            if name not in default_config:
-                is_numerical = True
-                lower, upper = None, None
-                if isinstance(hp_range, Categorical):
-                    is_numerical = False
-                    if isinstance(hp_range, Ordinal):
-                        if isinstance(hp_range, OrdinalNearestNeighbor):
-                            lower = hp_range.categories[0]
-                            upper = hp_range.categories[-1]
-                            is_numerical = True
-                        else:
-                            num_cats = len(hp_range)
-                            new_config[name] = hp_range.categories[num_cats // 2]
-                    else:
-                        # For categorical: Pick first entry
-                        new_config[name] = hp_range.categories[0]
-                else:
-                    lower, upper = float(hp_range.lower), float(hp_range.upper)
-                if is_numerical:
-                    if not is_log_space(hp_range):
-                        midpoint = 0.5 * (upper + lower)
-                    else:
-                        midpoint = np.exp(0.5 * (np.log(upper) + np.log(lower)))
-                    # Casting may involve rounding to nearest value in
-                    # a finite range
-                    midpoint = hp_range.cast(midpoint)
-                    lower = hp_range.value_type(lower)
-                    upper = hp_range.value_type(upper)
-                    midpoint = np.clip(midpoint, lower, upper)
-                    new_config[name] = midpoint
+            if name in default_config:
+                new_config[name] = _default_config_value(default_config, hp_range, name)
             else:
-                # Check validity
-                # Note: For `FiniteRange`, the value is mapped to
-                # the closest one in the range
-                val = hp_range.cast(default_config[name])
-                if isinstance(hp_range, Categorical):
-                    assert val in hp_range.categories, (
-                        f"default_config[{name}] = {val} is not in "
-                        + f"categories = {hp_range.categories}"
-                    )
-                else:
-                    assert hp_range.lower <= val <= hp_range.upper, (
-                        f"default_config[{name}] = {val} is not in "
-                        + f"[{hp_range.lower}, {hp_range.upper}]"
-                    )
-                new_config[name] = val
+                new_config[name] = _non_default_config(hp_range)
     return new_config
+
+
+def _default_config_value(
+    default_config: Configuration, hp_range: Domain, name: str
+) -> Hyperparameter:
+    # Check validity
+    # Note: For `FiniteRange`, the value is mapped to
+    # the closest one in the range
+    val = hp_range.cast(default_config[name])
+    if isinstance(hp_range, Categorical):
+        assert val in hp_range.categories, (
+            f"default_config[{name}] = {val} is not in "
+            + f"categories = {hp_range.categories}"
+        )
+    else:
+        assert hp_range.lower <= val <= hp_range.upper, (
+            f"default_config[{name}] = {val} is not in "
+            + f"[{hp_range.lower}, {hp_range.upper}]"
+        )
+    return val
+
+
+def _non_default_config(hp_range: Domain) -> Hyperparameter:
+    if isinstance(hp_range, Categorical):
+        if not isinstance(hp_range, Ordinal):
+            # For categorical: Pick first entry
+            return hp_range.categories[0]
+        if not isinstance(hp_range, OrdinalNearestNeighbor):
+            # For non-NN ordinal: Pick middle entry
+            num_cats = len(hp_range)
+            return hp_range.categories[num_cats // 2]
+        # Nearest neighbour ordinal: Treat as numerical
+        lower = float(hp_range.categories[0])
+        upper = float(hp_range.categories[-1])
+    else:
+        lower = float(hp_range.lower)
+        upper = float(hp_range.upper)
+    # Mid-point: Arithmetic or geometric
+    if not is_log_space(hp_range):
+        midpoint = 0.5 * (upper + lower)
+    else:
+        midpoint = np.exp(0.5 * (np.log(upper) + np.log(lower)))
+    # Casting may involve rounding to nearest value in
+    # a finite range
+    midpoint = hp_range.cast(midpoint)
+    lower = hp_range.value_type(lower)
+    upper = hp_range.value_type(upper)
+    midpoint = np.clip(midpoint, lower, upper)
+    return midpoint
 
 
 def _to_tuple(config: dict, keys: List) -> Tuple:
