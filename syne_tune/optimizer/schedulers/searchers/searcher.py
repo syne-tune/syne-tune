@@ -13,7 +13,6 @@
 import random
 import logging
 import numpy as np
-from random import shuffle
 from typing import Optional, List, Tuple
 
 from syne_tune.config_space import (
@@ -667,13 +666,15 @@ class GridSearcher(SearcherWithRandomSeed):
             if isinstance(hp_range, Float) or isinstance(hp_range, Integer):
                 continue
             if isinstance(hp_range, Categorical):
-                values = hp_range.categories
+                hp_keys.append(hp)
+                hp_values.append(hp_range.categories)
             elif isinstance(hp_range, FiniteRange):
-                values = hp_range.values
+                hp_keys.append(hp)
+                hp_values.append(hp_range.values)
             elif not isinstance(hp_range, Domain):
-                values = [hp_range]
-            hp_keys.append(hp)
-            hp_values.append(values)
+                hp_keys.append(hp)
+                hp_values.append([hp_range])
+
 
         ## adding float, integer parameters
         for hpr in self._hp_ranges._hp_ranges:
@@ -693,8 +694,7 @@ class GridSearcher(SearcherWithRandomSeed):
         self.hp_values_combinations = list(product(*hp_values))
 
         if self._shuffle_config:
-            random.seed(self.random_state)
-            shuffle(self.hp_values_combinations)
+            self.random_state.shuffle(self.hp_values_combinations)
 
         all_candidates_on_grid = []
         for values in self.hp_values_combinations:
