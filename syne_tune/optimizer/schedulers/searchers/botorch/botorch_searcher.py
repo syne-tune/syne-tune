@@ -10,25 +10,30 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, List
+from typing import Optional, List
 import logging
 
 import numpy as np
-import torch
-from botorch.models import SingleTaskGP
-from botorch.fit import fit_gpytorch_model
-from botorch.models.transforms import Warp
-from botorch.utils import standardize
-from botorch.utils.transforms import normalize
-from gpytorch.mlls import ExactMarginalLogLikelihood
-from botorch.acquisition import qExpectedImprovement
-from botorch.optim import optimize_acqf
-from gpytorch.utils.errors import NotPSDError
+from syne_tune.try_import import try_import_botorch_message
+
+try:
+    import torch
+    from botorch.models import SingleTaskGP
+    from botorch.fit import fit_gpytorch_model
+    from botorch.models.transforms import Warp
+    from botorch.utils import standardize
+    from botorch.utils.transforms import normalize
+    from gpytorch.mlls import ExactMarginalLogLikelihood
+    from botorch.acquisition import qExpectedImprovement
+    from botorch.optim import optimize_acqf
+    from gpytorch.utils.errors import NotPSDError
+except ImportError:
+    print(try_import_botorch_message())
 
 import syne_tune.config_space as cs
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 
-from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
+from syne_tune.optimizer.schedulers.searchers.utils import (
     make_hyperparameter_ranges,
 )
 
@@ -42,12 +47,12 @@ NOISE_LEVEL = 1e-3
 class BotorchSearcher(SearcherWithRandomSeed):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
-        num_init_random_draws: int = 3,
+        points_to_evaluate: Optional[List[dict]] = None,
         mode: str = "min",
-        points_to_evaluate: Optional[List[Dict]] = None,
-        fantasising: bool = True,
+        num_init_random: int = 3,
+        no_fantasizing: bool = False,
         max_num_observations: Optional[int] = 200,
         input_warping: bool = True,
         **kwargs,
@@ -57,7 +62,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
         `qExpectedImprovement is used for the acquisition function given that it supports pending evaluations.
         :param config_space: configuration space to optimize
         :param metric: metric to optimize, should be present in reported results.
-        :param num_init_random_draws: number of initial random draws, after this number the suggestion are obtained
+        :param num_init_random: number of initial random draws, after this number the suggestion are obtained
         from the GP surrogate model.
         :param mode: 'min' or 'max'
         :param points_to_evaluate: if passed, those configurations are evaluated first
@@ -70,33 +75,33 @@ class BotorchSearcher(SearcherWithRandomSeed):
         super(BotorchSearcher, self).__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
-        assert num_init_random_draws >= 2
+        assert num_init_random >= 2
         assert mode in ["min", "max"]
         self.hp_ranges = make_hyperparameter_ranges(config_space=config_space)
         self.mode = mode
         self.metric_name = metric
-        self.num_minimum_observations = num_init_random_draws
+        self.num_minimum_observations = num_init_random
         self.points_to_evaluate = points_to_evaluate
         self.config_seen = set()
-        self.fantasising = fantasising
+        self.fantasising = not no_fantasizing
         self.max_num_observations = max_num_observations
         self.input_warping = input_warping
-        self.trial_configs = {}
+        self.trial_configs = dict()
         self.pending_trials = set()
-        self.trial_observations = {}
+        self.trial_observations = dict()
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         trial_id = int(trial_id)
         self.trial_observations[trial_id] = result[self.metric_name]
         self.pending_trials.remove(trial_id)
 
     def clone_from_state(self, state):
-        pass
+        raise NotImplementedError
 
     def num_suggestions(self):
         return len(self.trial_configs)
 
-    def get_config(self, trial_id: str, **kwargs):
+    def get_config(self, trial_id: str, **kwargs) -> Optional[dict]:
         trial_id = int(trial_id)
         config_suggested = self._next_initial_config()
 
@@ -121,7 +126,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
 
         return config_suggested
 
-    def _sample_next_candidate(self) -> Dict:
+    def _sample_next_candidate(self) -> dict:
         """
         :return: a next candidate to evaluate, if possible it is obtained by fitting a GP on past data and maximizing EI
         if this fails because of numerical difficulties with non PSD matrices, then the candidate is sampled at random.
@@ -199,7 +204,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
             warp_tf = None
         return SingleTaskGP(X_tensor, Y_tensor, input_transform=warp_tf)
 
-    def _config_to_feature_matrix(self, configs: List[Dict]) -> torch.Tensor:
+    def _config_to_feature_matrix(self, configs: List[dict]) -> torch.Tensor:
         bounds = torch.Tensor(self.hp_ranges.get_ndarray_bounds()).T
         X = torch.Tensor([self.hp_ranges.to_ndarray(config) for config in configs])
         return normalize(X, bounds)
@@ -207,7 +212,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
     def objectives(self):
         return np.array(list(self.trial_observations.values()))
 
-    def _sample_and_pick_acq_best(self, acq, num_samples: int = 100) -> Dict:
+    def _sample_and_pick_acq_best(self, acq, num_samples: int = 100) -> dict:
         """
         :param acq:
         :param num_samples:
@@ -229,7 +234,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
     def _is_config_already_seen(self, config) -> bool:
         return tuple(config.values()) in self.config_seen
 
-    def _sample_random(self) -> Dict:
+    def _sample_random(self) -> dict:
         return {
             k: v.sample(random_state=self.random_state)
             if isinstance(v, cs.Domain)
@@ -237,14 +242,14 @@ class BotorchSearcher(SearcherWithRandomSeed):
             for k, v in self.config_space.items()
         }
 
-    def _configs_with_results(self) -> List[Dict]:
+    def _configs_with_results(self) -> List[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()
             if not trial in self.pending_trials
         ]
 
-    def _configs_pending(self) -> List[Dict]:
+    def _configs_pending(self) -> List[dict]:
         return [
             config
             for trial, config in self.trial_configs.items()

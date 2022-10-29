@@ -27,7 +27,6 @@ from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
     Integer as DA_Integer,
-    Boolean as DA_Boolean,
     filter_by_key,
     String as DA_String,
     Float as DA_Float,
@@ -53,7 +52,6 @@ _ARGUMENT_KEYS = {
     "perturbation_interval",
     "quantile_fraction",
     "resample_probability",
-    "log_config",
 }
 
 _DEFAULT_OPTIONS = {
@@ -62,7 +60,6 @@ _DEFAULT_OPTIONS = {
     "perturbation_interval": 60.0,
     "quantile_fraction": 0.25,
     "resample_probability": 0.25,
-    "log_config": True,
 }
 
 _CONSTRAINTS = {
@@ -71,7 +68,6 @@ _CONSTRAINTS = {
     "perturbation_interval": DA_Float(0.01, None),
     "quantile_fraction": DA_Float(0.0, 0.5),
     "resample_probability": DA_Float(0.0, 1.0),
-    "log_config": DA_Boolean(),
 }
 
 
@@ -146,8 +142,6 @@ class PopulationBasedTraining(FIFOScheduler):
         `hyperparam_mutations` are applied, and should return `config` updated
         as needed. You must specify at least one of `hyperparam_mutations` or
         `custom_explore_fn`.
-    log_config (bool): Whether to log the ray config of each model to\
-        `local_dir` at each exploit. Allows config schedule to be reconstructed.
     time_keeper : TimeKeeper
         See :class:`FIFOScheduler`
     """
@@ -173,7 +167,6 @@ class PopulationBasedTraining(FIFOScheduler):
         self._quantile_fraction = kwargs["quantile_fraction"]
         self._resample_probability = kwargs["resample_probability"]
         self._custom_explore_fn = custom_explore_fn
-        self._log_config = kwargs["log_config"]
         # Superclass constructor
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
         assert self.max_t is not None, (
@@ -183,7 +176,7 @@ class PopulationBasedTraining(FIFOScheduler):
         )
 
         self._metric_op = 1.0 if self.mode == "max" else -1.0
-        self._trial_state = {}
+        self._trial_state = dict()
         self._next_perturbation_sync = self._perturbation_interval
         self._trial_decisions_stack = deque()
         self._checkpointing_history = []
@@ -203,14 +196,15 @@ class PopulationBasedTraining(FIFOScheduler):
         """
         lower_quantile, upper_quantile = self._quantiles()
         # If we are not in the upper quantile, we pause:
-        if trial.trial_id in lower_quantile:
-            logger.debug(f"Trial {trial.trial_id} is in lower quantile")
+        trial_id = trial.trial_id
+        if trial_id in lower_quantile:
+            logger.debug(f"Trial {trial_id} is in lower quantile")
             # sample random trial from upper quantile
             trial_id_to_clone = self._random_state.choice(upper_quantile)
-            assert trial.trial_id is not trial_id_to_clone
+            assert trial_id is not trial_id_to_clone
             return trial_id_to_clone
         else:
-            return trial.trial_id
+            return trial_id
 
     def on_trial_result(self, trial: Trial, result: dict) -> str:
         if self._resource_attr not in result:
@@ -303,7 +297,7 @@ class PopulationBasedTraining(FIFOScheduler):
             )
             if num_trials_in_quantile > len(trials) / 2:
                 num_trials_in_quantile = int(math.floor(len(trials) / 2))
-            return (trials[:num_trials_in_quantile], trials[-num_trials_in_quantile:])
+            return trials[:num_trials_in_quantile], trials[-num_trials_in_quantile:]
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         # If no time keeper was provided at construction, we use a local

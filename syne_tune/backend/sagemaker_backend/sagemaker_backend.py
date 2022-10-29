@@ -14,7 +14,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 import boto3
 from botocore.exceptions import ClientError
 import numpy as np
@@ -142,12 +142,12 @@ class SageMakerBackend(TrialBackend):
         return res
 
     @staticmethod
-    def _numpy_serialize(dict):
-        def np_encoder(object):
-            if isinstance(object, np.generic):
-                return object.item()
+    def _numpy_serialize(mydict):
+        def np_encoder(myobject):
+            if isinstance(myobject, np.generic):
+                return myobject.item()
 
-        return json.loads(json.dumps(dict, default=np_encoder))
+        return json.loads(json.dumps(mydict, default=np_encoder))
 
     def _checkpoint_s3_uri_for_trial(self, trial_id: int) -> str:
         res_path = self.s3_path
@@ -155,7 +155,7 @@ class SageMakerBackend(TrialBackend):
             res_path = f"{res_path}/{self.tuner_name}"
         return f"{res_path}/{str(trial_id)}/checkpoints/"
 
-    def _schedule(self, trial_id: int, config: Dict):
+    def _schedule(self, trial_id: int, config: dict):
         config[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
         hyperparameters = config.copy()
 

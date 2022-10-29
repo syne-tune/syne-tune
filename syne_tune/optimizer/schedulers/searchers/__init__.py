@@ -14,8 +14,14 @@ import logging
 
 from syne_tune.try_import import try_import_gpsearchers_message
 
-# TODO wildcard import should be avoided
-from syne_tune.optimizer.schedulers.searchers.searcher import *  # noqa: F401
+from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
+    BaseSearcher,
+    SearcherWithRandomSeed,
+    RandomSearcher,
+    GridSearcher,
+    impute_points_to_evaluate,
+    extract_random_seed,
+)
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa: F401
     searcher_factory,
 )

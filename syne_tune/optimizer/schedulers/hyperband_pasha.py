@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import List
 import numpy as np
 from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 
@@ -17,23 +18,22 @@ from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSyst
 class PASHARungSystem(PromotionRungSystem):
     """
     Implements PASHA algorithm. It is very similar to ASHA, but it progressively
-    extends the maximum resources if the ranking in the top two current rungs changes.
-
-    A report introducing and evaluating the approach is available at
+    extends the maximum resources if the ranking in the top two current rungs
+    changes. A report introducing and evaluating the approach is available at:
     TODO: add link
     """
 
     def __init__(
         self,
-        rung_levels,
-        promote_quantiles,
-        metric,
-        mode,
-        resource_attr,
-        max_t,
-        ranking_criterion,
-        epsilon,
-        epsilon_scaling,
+        rung_levels: List[int],
+        promote_quantiles: List[float],
+        metric: str,
+        mode: str,
+        resource_attr: str,
+        max_t: int,
+        ranking_criterion: str,
+        epsilon: float,
+        epsilon_scaling: float,
     ):
         super().__init__(
             rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
@@ -50,7 +50,7 @@ class PASHARungSystem(PromotionRungSystem):
         self.epsilon = epsilon
         self.epsilon_scaling = epsilon_scaling
 
-    # overriding the method in HB promotion to accomodate the increasing max resources level
+    # overriding the method in HB promotion to accommodate the increasing max resources level
     def _effective_max_t(self):
         return self.current_max_t
 

@@ -15,13 +15,17 @@ import logging
 import os
 from datetime import timedelta
 import copy
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 import numpy as np
 import subprocess
 
 from syne_tune.report import retrieve
+from syne_tune.backend.trial_backend import (
+    TrialAndStatusInformation,
+    TrialIdAndResultList,
+)
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.trial_status import TrialResult, Status, Trial
 from syne_tune.backend.simulator_backend.time_keeper import SimulatedTimeKeeper
@@ -79,6 +83,41 @@ class SimulatorConfig:
 
 
 class SimulatorBackend(LocalBackend):
+    """
+    Note: In order to simulate tuning from a tabulated or surrogate
+    blackbox, use :class:`BlackboxRepositoryBackend`.
+
+    This simulator back-end drives experiments with tabulated training
+    evaluation functions, which return their computation time rather than
+    spend it. To this end, time (on the tuning instance) is simulated using
+    a `time_keeper` and an event priority queue in `_simulator_state`.
+
+    Time is advanced both by `Tuner.run` waiting, and by non-negligible
+    computations during the tuning loop (in particular, we take care of
+    `scheduler.suggest` and `scheduler.on_trial_result` there).
+
+    When the `entry_point` script is executed, we wait for all results to
+    be returned. In each result, the value for key `elapsed_time_attr`
+    contains the time since start of the script. These values are used
+    to place worker events on the simulated timeline (represented by
+    `simulator_state`).
+    NOTE: If a trial is resumed, the elapsed_time value contains the time
+    since start of the last recent resume, NOT the cumulative time used by
+    the trial.
+
+    Each method call starts by advancing time by what was spent outside,
+    since the last recent call to the back-end. Then, all events in
+    `simulator_state` are processed whose time is before the current time
+    in `time_keeper`. The method ends by `time_keeper.mark_exit()`.
+
+    Note: In this basic version of the simulator back-end, we still call a
+    Python main function as a subprocess, which returns the requested
+    metrics by looking them up or running a surrogate. This is flexible,
+    but has the overhead of loading a table at every call. For faster
+    simulations, use :class:`BlackboxRepositoryBackend` after bringing your
+    tabulated data or surrogate benchmark into the blackbox repository.
+    """
+
     def __init__(
         self,
         entry_point: str,
@@ -88,42 +127,13 @@ class SimulatorBackend(LocalBackend):
         debug_resource_attr: Optional[str] = None,
     ):
         """
-        This simulator back-end drives experiments with tabulated training
-        evaluation functions, which return their computation time rather than
-        spend it. To this end, time (on the tuning instance) is simulated using
-        a `time_keeper` and an event priority queue in `_simulator_state`.
-
-        Time is advanced both by `Tuner.run` waiting, and by non-negligible
-        computations during the tuning loop (in particular, we take care of
-        `scheduler.suggest` and `scheduler.on_trial_result` there).
-
-        When the `entry_point` script is executed, we wait for all results to
-        be returned. In each result, the value for key `elapsed_time_attr`
-        contains the time since start of the script. These values are used
-        to place worker events on the simulated time line (represented by
-        `simulator_state`).
-        NOTE: If a trial is resumed, the elapsed_time value contains the time
-        since start of the last recent resume, NOT the cumulative time used by
-        the trial.
-
-        Each method call starts by advancing time by what was spent outside,
-        since the last recent call to the back-end. Then, all events in
-        `simulator_state` are processed whose time is before the current time
-        in `time_keeper`. The method ends by `time_keeper.mark_exit()`.
-
-        Note: In this basic version of the simulator back-end, we still call a
-        Python main function as a subprocess, which returns the requested
-        metrics by looking them up or running a surrogate. This is flexible,
-        but has the overhead of loading a table at every call. For faster
-        simulations, use :class:`BlackboxRepositoryBackend` after bringing your
-        tabulated data or surrogate benchmark into the blackbox repository.
-
-        :param entry_point: Python main file to be tuned
+        :param entry_point: Python main file to be tuned (this should
+            return all results directly, and report elapsed time in the
+            `elapsed_time_attr` field
         :param elapsed_time_attr: See above
         :param simulator_config: Parameters for simulator
         :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
-            information is needed in `SimulatorCallback`
-
+            information is needed in :class:`SimulatorCallback`
         """
         super().__init__(entry_point=entry_point, rotate_gpus=False)
         self.elapsed_time_attr = elapsed_time_attr
@@ -301,7 +311,7 @@ class SimulatorBackend(LocalBackend):
 
     def fetch_status_results(
         self, trial_ids: List[int]
-    ) -> Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, Dict]]]:
+    ) -> (TrialAndStatusInformation, TrialIdAndResultList):
         self._advance_by_outside_time()
         # Process all events in the past
         self._process_events_until_now()
@@ -364,6 +374,9 @@ class SimulatorBackend(LocalBackend):
 
         Note: This call is "non-blocking": The start event is registered
         here (in the future), but is not yet processed.
+
+        :param trial_id: ID of trial to schedule
+        :param config: Configuration for this trial
         """
         self._advance_by_outside_time()
         # Process all events in the past
@@ -408,6 +421,9 @@ class SimulatorBackend(LocalBackend):
 
         Note: This call is "blocking": Stop and complete events
         are not just registered here, but also processed.
+
+        :param trial_id: ID of trial to stop or pause
+        :param status: `Status.paused` or `Status.stopped`
         """
         self._advance_by_outside_time()
         time_stop = self._time_keeper.time() + self.simulator_config.delay_stop
@@ -441,8 +457,8 @@ class SimulatorBackend(LocalBackend):
         `trial(trial_id).config`. This is a blocking call, we wait for the
         script to finish, then parse all its results and return them.
 
-        :param trial_id:
-        :return: (final status, list of all results reported)
+        :param trial_id: ID for trial to be run
+        :return: `(final_status, list_of_results_reported)`
         """
         assert (
             trial_id in self._trial_dict
@@ -489,5 +505,4 @@ class SimulatorBackend(LocalBackend):
             + f"processed {num_already_before} before!"
         )
         results = all_results[num_already_before:]
-
         return status, results

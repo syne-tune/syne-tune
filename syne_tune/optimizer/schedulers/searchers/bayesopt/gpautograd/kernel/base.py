@@ -37,8 +37,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     MeanFunction,
 )
 
-__all__ = ["KernelFunction", "Matern52"]
-
 
 class KernelFunction(MeanFunction):
     """

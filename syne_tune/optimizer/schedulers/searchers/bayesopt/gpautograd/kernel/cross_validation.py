@@ -20,8 +20,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     MeanFunction,
 )
 
-__all__ = ["CrossValidationKernelFunction", "CrossValidationMeanFunction"]
-
 
 def decode_resource_values(res_encoded, num_folds):
     """

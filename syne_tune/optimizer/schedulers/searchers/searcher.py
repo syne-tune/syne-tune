@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 import numpy as np
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 from collections import OrderedDict
 
 from syne_tune.config_space import (
@@ -41,15 +41,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
     ExclusionList,
 )
 from itertools import product
-
-__all__ = [
-    "BaseSearcher",
-    "SearcherWithRandomSeed",
-    "RandomSearcher",
-    "GridSearcher",
-    "impute_points_to_evaluate",
-    "extract_random_seed",
-]
 
 logger = logging.getLogger(__name__)
 DEFAULT_NSAMPLE = 5
@@ -176,7 +167,12 @@ class BaseSearcher:
         configurations are specified.
     """
 
-    def __init__(self, config_space, metric, points_to_evaluate=None):
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+    ):
         self.config_space = config_space
         assert metric is not None, "Argument 'metric' is required"
         self._metric = metric
@@ -213,7 +209,7 @@ class BaseSearcher:
         else:
             return None  # No more initial configs
 
-    def get_config(self, **kwargs):
+    def get_config(self, **kwargs) -> Optional[dict]:
         """Function to sample a new configuration
 
         This function is called inside TaskScheduler to query a new
@@ -261,7 +257,10 @@ class BaseSearcher:
         raise NotImplementedError
 
     def register_pending(
-        self, trial_id: str, config: Optional[dict] = None, milestone=None
+        self,
+        trial_id: str,
+        config: Optional[dict] = None,
+        milestone: Optional[int] = None,
     ):
         """
         Signals to searcher that evaluation for trial has started, but not
@@ -357,7 +356,7 @@ class BaseSearcher:
         return None
 
 
-def extract_random_seed(kwargs: dict) -> (int, dict):
+def extract_random_seed(**kwargs) -> (int, dict):
     key = "random_seed_generator"
     if kwargs.get(key) is not None:
         random_seed = kwargs[key]()
@@ -391,11 +390,17 @@ class SearcherWithRandomSeed(BaseSearcher):
 
     """
 
-    def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        **kwargs,
+    ):
         super().__init__(
             config_space, metric=metric, points_to_evaluate=points_to_evaluate
         )
-        random_seed, _ = extract_random_seed(kwargs)
+        random_seed, _ = extract_random_seed(**kwargs)
         self.random_state = np.random.RandomState(random_seed)
 
     def get_state(self) -> dict:
@@ -420,12 +425,20 @@ class RandomSearcher(SearcherWithRandomSeed):
 
     MAX_RETRIES = 100
 
-    def __init__(self, config_space, metric, points_to_evaluate=None, **kwargs):
-        super().__init__(config_space, metric, points_to_evaluate, **kwargs)
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
         self._hp_ranges = make_hyperparameter_ranges(config_space)
         self._resource_attr = kwargs.get("resource_attr")
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)
-        # Debug log printing (switched on by default)
+        # Debug log printing (switched off by default)
         debug_log = kwargs.get("debug_log", False)
         if isinstance(debug_log, bool):
             if debug_log:
@@ -450,15 +463,18 @@ class RandomSearcher(SearcherWithRandomSeed):
                 Scheduler the searcher is used with.
 
         """
-        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+        from syne_tune.optimizer.schedulers import HyperbandScheduler
+        from syne_tune.optimizer.schedulers.synchronous import (
+            SynchronousHyperbandScheduler,
+        )
 
         super().configure_scheduler(scheduler)
         # If the scheduler is Hyperband, we want to know the resource
         # attribute, this is used for debug_log
-        if isinstance(scheduler, HyperbandScheduler):
-            self._resource_attr = scheduler._resource_attr
+        if isinstance(scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)):
+            self._resource_attr = scheduler.resource_attr
 
-    def get_config(self, **kwargs):
+    def get_config(self, **kwargs) -> Optional[dict]:
         """Sample a new configuration at random
         This is done without replacement, so previously returned configs are
         not suggested again.
@@ -508,7 +524,10 @@ class RandomSearcher(SearcherWithRandomSeed):
 
     def clone_from_state(self, state: dict):
         new_searcher = RandomSearcher(
-            self.config_space, metric=self._metric, debug_log=self._debug_log
+            self.config_space,
+            metric=self._metric,
+            points_to_evaluate=[],
+            debug_log=self._debug_log,
         )
         new_searcher._resource_attr = self._resource_attr
         new_searcher._restore_from_state(state)
@@ -521,8 +540,9 @@ class RandomSearcher(SearcherWithRandomSeed):
 
 class GridSearcher(SearcherWithRandomSeed):
     """Searcher that samples configurations from an equally spaced grid over config_space.
+
     It first evaluates configurations defined in points_to_evaluate and then
-    continues with the remaining points from the grid"
+    continues with the remaining points from the grid.
 
 
     Parameters
@@ -565,14 +585,16 @@ class GridSearcher(SearcherWithRandomSeed):
 
     def __init__(
         self,
-        config_space,
-        metric,
-        num_samples=None,
-        points_to_evaluate=None,
-        shuffle_config=True,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        num_samples: Optional[Dict[str, int]] = None,
+        shuffle_config: bool = True,
         **kwargs,
     ):
-        super().__init__(config_space, metric, points_to_evaluate, **kwargs)
+        super().__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
         self._validate_config_space(config_space, num_samples)
         self._hp_ranges = make_hyperparameter_ranges(config_space)
 
@@ -595,7 +617,7 @@ class GridSearcher(SearcherWithRandomSeed):
             num_samples: Number of samples for each hyperparameters. Only required for float hyperparameters.
         """
         if num_samples is None:
-            num_samples = {}
+            num_samples = dict()
         self.num_samples = num_samples
         for hp, hp_range in config_space.items():
             # num_sample is required for float hp. If not specified default DEFAULT_NSAMPLE is used.
@@ -629,15 +651,14 @@ class GridSearcher(SearcherWithRandomSeed):
                         )
                     )
 
-    def _generate_all_candidates_on_grid(self) -> List[dict]:
+    def _generate_all_candidates_on_grid(self):
         """
-        Generates all configurations to be evaluated by placing a regular, equally spaced grid over the configuration space
-        Returns:
-            The set of all configurations on grid as a list of tuples, where each tuple is a configuration
+        Generates all configurations to be evaluated by placing a regular,
+        equally spaced grid over the configuration space.
         """
         hp_keys = []
         hp_values = []
-        ## adding categorical, finiteRange, scalar parameters
+        # adding categorical, finiteRange, scalar parameters
         for hp, hp_range in reversed(list(self.config_space.items())):
             if isinstance(hp_range, Float) or isinstance(hp_range, Integer):
                 continue
@@ -652,7 +673,7 @@ class GridSearcher(SearcherWithRandomSeed):
                 hp_keys.append(hp)
                 hp_values.append([hp_range])
 
-        ## adding float, integer parameters
+        # adding float, integer parameters
         for hpr in self._hp_ranges._hp_ranges:
             if hpr.name not in hp_keys:
                 _hpr_nsamples = self.num_samples[hpr.name]
@@ -672,7 +693,7 @@ class GridSearcher(SearcherWithRandomSeed):
         if self._shuffle_config:
             self.random_state.shuffle(self.hp_values_combinations)
 
-    def get_config(self, **kwargs):
+    def get_config(self, **kwargs) -> Optional[dict]:
         """Select the next configuration from the grid.
         This is done without replacement, so previously returned configs are
         not suggested again.
@@ -707,7 +728,7 @@ class GridSearcher(SearcherWithRandomSeed):
             logger.warning(msg)
         return new_config
 
-    def _next_candidate_on_grid(self) -> Optional[dict]:
+    def _next_candidate_on_grid(self) -> Optional[tuple]:
         """
         Returns:
             Next configuration from the set of grid candidates
@@ -746,4 +767,4 @@ class GridSearcher(SearcherWithRandomSeed):
 
     def _update(self, trial_id: str, config: dict, result: dict):
         # GridSearcher does not contains a surrogate model, just return.
-        return
+        pass

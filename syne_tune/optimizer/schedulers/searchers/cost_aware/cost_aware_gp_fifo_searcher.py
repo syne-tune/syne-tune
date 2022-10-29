@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Optional, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
@@ -30,8 +31,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 )
 
 logger = logging.getLogger(__name__)
-
-__all__ = ["CostAwareGPFIFOSearcher"]
 
 
 class MultiModelGPFIFOSearcher(GPFIFOSearcher):
@@ -73,12 +72,20 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     """
 
-    def __init__(self, config_space, metric, **kwargs):
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        **kwargs
+    ):
         assert kwargs.get("cost_attr") is not None, (
             "This searcher needs a cost attribute. Please specify its "
             + "name in search_options['cost_attr']"
         )
-        super().__init__(config_space, metric, **kwargs)
+        super().__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
