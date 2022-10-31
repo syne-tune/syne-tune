@@ -56,9 +56,8 @@ def test_get_config():
 
 def test_generate_all_candidates_on_grid():
     searcher = GridSearcher(config_space, metric="accuracy", points_to_evaluate=[])
-    generate_result = searcher._grid_candidates
     for i in range(len(all_candidates_on_grid)):
-        assert generate_result[i] in all_candidates_on_grid
+        assert searcher.get_config(trial_id=i) in all_candidates_on_grid
 
 
 def test_non_shuffle():
