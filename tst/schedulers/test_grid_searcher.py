@@ -44,7 +44,7 @@ def test_get_config():
     num_valid_config = 4
 
     for config_space in config_spaces:
-        searcher = GridSearcher(config_space, metric="accuracy")
+        searcher = GridSearcher(config_space, metric="accuracy", points_to_evaluate=[])
         for trial_id in range(num_valid_config):
             # These should get new config
             config = searcher.get_config(trial_id=trial_id)
@@ -61,7 +61,9 @@ def test_generate_all_candidates_on_grid():
 
 
 def test_non_shuffle():
-    searcher = GridSearcher(config_space, metric="accuracy", shuffle_config=False)
+    searcher = GridSearcher(
+        config_space, metric="accuracy", shuffle_config=False, points_to_evaluate=[]
+    )
     for i in range(len(all_candidates_on_grid)):
         config = searcher.get_config(trial_id=i)
         assert config == all_candidates_on_grid[i]
@@ -69,7 +71,7 @@ def test_non_shuffle():
 
 def test_store_and_restore_state_without_initial_config():
     searcher = GridSearcher(
-        config_space, metric="accuracy", point_to_evaluate=[], shuffle_config=False
+        config_space, metric="accuracy", points_to_evaluate=[], shuffle_config=False
     )
     previous_config = searcher.get_config(trial_id=0)
     state = searcher.get_state()
@@ -97,7 +99,7 @@ def test_store_and_restore_state_with_initial_config():
     assert previous_config == all_candidates_on_grid[0]
     for idx in [3, 1, 2]:
         new_config = new_searcher.get_config(trail_id=idx)
-        assert new_config == all_candidates_on_grid[idx]
+        assert new_config in all_candidates_on_grid
 
 
 def test_grid_scheduler_continuous():

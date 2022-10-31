@@ -14,6 +14,7 @@ import random
 import logging
 import numpy as np
 from typing import Optional, List, Tuple
+from collections import OrderedDict
 
 from syne_tune.config_space import (
     Domain,
@@ -581,7 +582,7 @@ class GridSearcher(SearcherWithRandomSeed):
         self._shuffle_config = shuffle_config
 
         self._generate_all_candidates_on_grid()
-        self._candidate_index = 0
+        self._next_index = 0
 
     def _validate_config_space(self, config_space: dict, num_samples: dict):
         """
@@ -650,14 +651,14 @@ class GridSearcher(SearcherWithRandomSeed):
     #             excl_list.add(candidate)
     #
     #     self._grid_candidates = remaining_candidates
-    #     self._candidate_index = 0
+    #     self._next_index = 0
     #     return
 
     def _generate_all_candidates_on_grid(self) -> List[dict]:
         """
         Generates all configurations to be evaluated by placing a regular, equally spaced grid over the configuration space
         Returns:
-            The set of all configurations on grid.
+            The set of all configurations on grid as a list of tuples, where each tuple is a configuration
         """
         hp_keys = []
         hp_values = []
@@ -667,7 +668,8 @@ class GridSearcher(SearcherWithRandomSeed):
                 continue
             if isinstance(hp_range, Categorical):
                 hp_keys.append(hp)
-                hp_values.append(hp_range.categories)
+                values = list(OrderedDict.fromkeys(hp_range.categories))
+                hp_values.append(values)
             elif isinstance(hp_range, FiniteRange):
                 hp_keys.append(hp)
                 hp_values.append(hp_range.values)
@@ -703,13 +705,15 @@ class GridSearcher(SearcherWithRandomSeed):
         Returns
         -------
         A new configuration that is valid, or None if no new config can be
-        suggested.
+        suggested. The returned configuration is a dictionary that maps
+        hyperparameters to its values.
         """
 
         new_config = self._next_initial_config()
-
         if new_config is None:
-            new_config = self._next_candidate_on_grid()
+            values = self._next_candidate_on_grid()
+            if values is not None:
+                new_config = dict(zip(self.hp_keys, values))
         if new_config is not None:
             # Write debug log for the config
             entries = ["{}: {}".format(k, v) for k, v in new_config.items()]
@@ -732,15 +736,13 @@ class GridSearcher(SearcherWithRandomSeed):
         """
         Returns:
             Next configuration from the set of grid candidates
-            or None if no candidate is left.
+            or None if no candidate is left. The returned configuration
+            is a tuple of hyperparameter values.
         """
-        _grid_candidates = []
-        for values in self.hp_values_combinations:
-            _grid_candidates.append(dict(zip(self.hp_keys, values)))
 
-        if self._candidate_index < len(_grid_candidates):
-            candidate = _grid_candidates[self._candidate_index]
-            self._candidate_index += 1
+        if self._next_index < len(self.hp_values_combinations):
+            candidate = self.hp_values_combinations[self._next_index]
+            self._next_index += 1
             return candidate
         else:
             # No more candidates
@@ -749,7 +751,7 @@ class GridSearcher(SearcherWithRandomSeed):
     def get_state(self) -> dict:
         state = dict(
             super().get_state(),
-            remaining_candidates=self._candidate_index,
+            _next_index=self._next_index,
         )
         return state
 
@@ -765,7 +767,7 @@ class GridSearcher(SearcherWithRandomSeed):
 
     def _restore_from_state(self, state: dict):
         super()._restore_from_state(state)
-        self._remaining_candidates = state["remaining_candidates"]
+        self._next_index = state["_next_index"]
 
     def _update(self, trial_id: str, config: dict, result: dict):
         # GridSearcher does not contains a surrogate model, just return.
