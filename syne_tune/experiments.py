@@ -62,7 +62,7 @@ class ExperimentResult:
                 plt.plot(x, y_metric, label=metric, **plt_kwargs)
             plt.xlabel("Wallclock time (s)")
             plt.ylabel("Metric value")
-            plt.title(self.entrypoint_name() + " " + self.name)
+            plt.title(f"Best result over time {self.name}")
             plt.legend()
             plt.show()
 
