@@ -194,8 +194,8 @@ class TensorboardCallback(TunerCallback):
             result[ST_TUNER_TIME] = perf_counter() - self.start_time_stamp
 
     def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
-        walltime = result[ST_TUNER_TIME]
         self._set_time_fields(result)
+        walltime = result[ST_TUNER_TIME]
 
         if self.target_metric is not None:
 
