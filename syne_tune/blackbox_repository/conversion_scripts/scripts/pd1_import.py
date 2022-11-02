@@ -217,7 +217,7 @@ class PD1Recipe(BlackboxRecipe):
         bb_dict = self._convert_data()
         self._save_data(bb_dict)
 
-        with catchtime('compute hash'):
+        with catchtime("compute hash"):
             store_hash(__file__, repository_path / BLACKBOX_NAME)
 
 

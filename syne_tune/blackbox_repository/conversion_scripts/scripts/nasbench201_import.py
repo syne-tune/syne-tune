@@ -25,7 +25,10 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     resource_attr,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path, store_hash
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+    store_hash,
+)
 
 from syne_tune.config_space import randint, choice
 from syne_tune.util import catchtime
@@ -273,7 +276,7 @@ class NASBench201Recipe(BlackboxRecipe):
                     resource_attr: RESOURCE_ATTR,
                 },
             )
-        with catchtime('compute hash'):
+        with catchtime("compute hash"):
             store_hash(__file__, repository_path / BLACKBOX_NAME)
 
 

@@ -68,26 +68,29 @@ def download_file(source: str, destination: str):
             with open(destination, "wb") as f:
                 shutil.copyfileobj(r.raw, f)
 
+
 def compute_hash(filename):
     h = hashlib.sha256()
-    b = bytearray(128*1024)
+    b = bytearray(128 * 1024)
     mv = memoryview(b)
-    with open(filename, 'rb', buffering=0) as f:
+    with open(filename, "rb", buffering=0) as f:
         for n in iter(lambda: f.readinto(mv), 0):
             h.update(mv[:n])
     return h.hexdigest()
 
+
 def store_hash(filename, path):
     sha256_hash = compute_hash(filename)
     print(path)
-    with open(path / f'sha256.txt', 'w') as fh:
+    with open(path / f"sha256.txt", "w") as fh:
         fh.write(sha256_hash)
+
 
 def compare_hash(tgt_folder, name):
     print(tgt_folder)
-    stored_hash = open(tgt_folder / 'sha256.txt').read()
+    stored_hash = open(tgt_folder / "sha256.txt").read()
 
-    filename = Path(__file__).parent / 'scripts' / f'{name}_import.py'
+    filename = Path(__file__).parent / "scripts" / f"{name}_import.py"
     current_hash = compute_hash(filename)
     print(stored_hash, current_hash)
     return stored_hash == current_hash

@@ -39,7 +39,10 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     resource_attr,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path, store_hash
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+    store_hash,
+)
 
 from syne_tune.util import catchtime
 from syne_tune.config_space import choice, logfinrange, finrange, randint
@@ -199,7 +202,7 @@ def generate_fcnet():
                 resource_attr: RESOURCE_ATTR,
             },
         )
-    with catchtime('compute hash'):
+    with catchtime("compute hash"):
         store_hash(__file__, repository_path / blackbox_name)
 
 

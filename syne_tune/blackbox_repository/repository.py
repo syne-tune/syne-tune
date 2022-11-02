@@ -47,7 +47,7 @@ from syne_tune.blackbox_repository.conversion_scripts.recipes import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     s3_blackbox_folder,
-    compare_hash
+    compare_hash,
 )
 
 
@@ -108,7 +108,9 @@ def load_blackbox(
         and skip_if_present
     ):
         if not compare_hash(tgt_folder, name):
-            logging.warning(f'The code to create {name} has changed. You might want to regenerate the benchmark.')
+            logging.warning(
+                f"The code to create {name} has changed. You might want to regenerate the benchmark."
+            )
         logging.info(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )
