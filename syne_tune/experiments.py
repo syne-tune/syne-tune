@@ -63,7 +63,6 @@ class ExperimentResult:
             plt.xlabel("wallclock time")
             plt.ylabel(metric)
             plt.title(f"Best result over time {self.name}")
-            plt.legend()
             plt.show()
 
     def metric_mode(self) -> str:
