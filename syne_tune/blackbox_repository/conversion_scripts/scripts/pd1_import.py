@@ -32,6 +32,7 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     download_file,
+    store_hash,
 )
 from syne_tune.blackbox_repository.serialize import (
     deserialize_configspace,
@@ -215,6 +216,9 @@ class PD1Recipe(BlackboxRecipe):
         self._download_data()
         bb_dict = self._convert_data()
         self._save_data(bb_dict)
+
+        with catchtime('compute hash'):
+            store_hash(__file__, repository_path / BLACKBOX_NAME)
 
 
 def serialize(

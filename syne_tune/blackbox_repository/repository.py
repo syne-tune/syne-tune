@@ -47,6 +47,7 @@ from syne_tune.blackbox_repository.conversion_scripts.recipes import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     s3_blackbox_folder,
+    compare_hash
 )
 
 
@@ -100,11 +101,14 @@ def load_blackbox(
         return instantiate_yahpo(name, **yahpo_kwargs)
 
     tgt_folder = Path(repository_path) / name
+
     if (
         tgt_folder.exists()
         and (tgt_folder / "metadata.json").exists()
         and skip_if_present
     ):
+        if not compare_hash(tgt_folder, name):
+            logging.warning(f'The code to create {name} has changed. You might want to regenerate the benchmark.')
         logging.info(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )

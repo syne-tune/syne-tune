@@ -32,6 +32,7 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     metric_elapsed_time,
     resource_attr,
+    store_hash
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 from syne_tune.blackbox_repository.serialize import (
@@ -350,6 +351,7 @@ class YAHPORecipe(BlackboxRecipe):
 
     def _generate_on_disk(self):
         serialize_yahpo(self.scenario)
+        store_hash(__file__, repository_path / 'yahpo')
 
 
 yahpo_scenarios = list_scenarios()
