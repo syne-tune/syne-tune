@@ -81,16 +81,13 @@ def compute_hash(filename):
 
 def store_hash(filename, path):
     sha256_hash = compute_hash(filename)
-    print(path)
     with open(path / f"sha256.txt", "w") as fh:
         fh.write(sha256_hash)
 
 
 def compare_hash(tgt_folder, name):
-    print(tgt_folder)
     stored_hash = open(tgt_folder / "sha256.txt").read()
 
     filename = Path(__file__).parent / "scripts" / f"{name}_import.py"
     current_hash = compute_hash(filename)
-    print(stored_hash, current_hash)
     return stored_hash == current_hash

@@ -129,6 +129,11 @@ def load_blackbox(
                 tgt = tgt_folder / Path(src).name
                 logging.info(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
+
+            if not compare_hash(tgt_folder, name):
+                logging.warning(
+                    f"The code to create {name} has changed. You might want to regenerate the benchmark."
+                )
         else:
             assert generate_if_not_found, (
                 "Blackbox files do not exist locally or on S3. If you have "
