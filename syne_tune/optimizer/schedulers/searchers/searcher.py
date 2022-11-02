@@ -629,7 +629,6 @@ class GridSearcher(SearcherWithRandomSeed):
                         )
                     )
 
-
     def _generate_all_candidates_on_grid(self) -> List[dict]:
         """
         Generates all configurations to be evaluated by placing a regular, equally spaced grid over the configuration space
