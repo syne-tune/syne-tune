@@ -79,15 +79,16 @@ def compute_hash(filename):
     return h.hexdigest()
 
 
-def store_hash(filename, path):
-    sha256_hash = compute_hash(filename)
-    with open(path / f"sha256.txt", "w") as fh:
-        fh.write(sha256_hash)
+def compute_hash_benchmark(tgt_folder):
+    hashes = []
+    for fname in os.listdir(tgt_folder):
+        h = compute_hash(Path(tgt_folder) / fname)
+        hashes.append(h)
+    aggregated_hash = hashlib.sha256()
+    [aggregated_hash.update(h.encode('utf-8')) for h in hashes]
+    return aggregated_hash.hexdigest()
 
 
-def compare_hash(tgt_folder, name):
-    stored_hash = open(tgt_folder / "sha256.txt").read()
-
-    filename = Path(__file__).parent / "scripts" / f"{name}_import.py"
-    current_hash = compute_hash(filename)
-    return stored_hash == current_hash
+def compare_hash(tgt_folder, original_hash):
+    current_hash = compute_hash_benchmark(tgt_folder)
+    return original_hash == current_hash

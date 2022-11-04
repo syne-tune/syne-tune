@@ -33,7 +33,6 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     download_file,
-    store_hash,
 )
 from syne_tune.blackbox_repository.serialize import (
     deserialize_configspace,
@@ -53,6 +52,8 @@ METRIC_VALID_ERROR = "metric_valid_error_rate"
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
 RESOURCE_ATTR = "global_step"
+
+SHA256_HASH = ''
 
 CONFIGURATION_SPACE = {
     "lr_initial_value": loguniform(1e-5, 10),
@@ -127,6 +128,7 @@ class PD1Recipe(BlackboxRecipe):
     def __init__(self):
         super(PD1Recipe, self).__init__(
             name=BLACKBOX_NAME,
+            hash=SHA256_HASH,
             cite_reference="Pre-trained Gaussian processes for Bayesian optimization. "
             "Wang, Z. and Dahl G. and Swersky K. and Lee C. and Mariet Z. and Nado Z. and Gilmer J. and Snoek J. and "
             "Ghahramani Z. 2021.",
@@ -236,9 +238,6 @@ class PD1Recipe(BlackboxRecipe):
         self._download_data()
         bb_dict = self._convert_data()
         self._save_data(bb_dict)
-
-        with catchtime("compute hash"):
-            store_hash(__file__, repository_path / BLACKBOX_NAME)
 
 
 def serialize(

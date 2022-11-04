@@ -49,6 +49,8 @@ from yahpo_gym.configuration import list_scenarios
 from yahpo_gym import local_config
 
 
+SHA256_HASH = ''
+
 def download(target_path: Path, version: str):
     import urllib
 
@@ -345,6 +347,7 @@ class YAHPORecipe(BlackboxRecipe):
         self.scenario = name
         super(YAHPORecipe, self).__init__(
             name=name,
+            hash=SHA256_HASH,
             cite_reference="YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization. "
             "Pfisterer F., Schneider S., Moosbauer J., Binder M., Bischl B., 2022",
         )

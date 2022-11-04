@@ -41,7 +41,6 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
-    store_hash,
 )
 
 from syne_tune.util import catchtime
@@ -60,6 +59,8 @@ MAX_RESOURCE_LEVEL = 100
 NUM_UNITS_1 = "hp_n_units_1"
 
 NUM_UNITS_2 = "hp_n_units_2"
+
+SHA256_HASH = 'b4fcdcbc3d17510c5c04be5cd6e79e3552e0b0ca5d55911b94f4003cbfadc8b3'
 
 CONFIGURATION_SPACE = {
     "hp_activation_fn_1": choice(["tanh", "relu"]),
@@ -202,8 +203,6 @@ def generate_fcnet():
                 resource_attr: RESOURCE_ATTR,
             },
         )
-    with catchtime("compute hash"):
-        store_hash(__file__, repository_path / blackbox_name)
 
 
 def plot_learning_curves():
@@ -227,6 +226,7 @@ class FCNETRecipe(BlackboxRecipe):
     def __init__(self):
         super(FCNETRecipe, self).__init__(
             name=BLACKBOX_NAME,
+            hash=SHA256_HASH,
             cite_reference="Tabular benchmarks for joint architecture and hyperparameter optimization. "
             "Klein, A. and Hutter, F. 2019.",
         )
