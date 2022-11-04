@@ -53,7 +53,7 @@ METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
 RESOURCE_ATTR = "global_step"
 
-SHA256_HASH = ''
+SHA256_HASH = ""
 
 CONFIGURATION_SPACE = {
     "lr_initial_value": loguniform(1e-5, 10),

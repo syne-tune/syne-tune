@@ -14,7 +14,10 @@ import logging
 from typing import Optional
 
 from syne_tune.util import catchtime
-from syne_tune.blackbox_repository.conversion_scripts.utils import compute_hash_benchmark, repository_path
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    compute_hash_benchmark,
+    repository_path,
+)
 
 
 class BlackboxRecipe:
@@ -46,8 +49,10 @@ class BlackboxRecipe:
 
         hash = compute_hash_benchmark(repository_path / self.name)
 
-        logging.info(f'Hash of new generated benchmark: {hash}. If you send a PR, '
-                     f'replace SHA256_HASH in the conversion script with this new hash.')
+        logging.info(
+            f"Hash of new generated benchmark: {hash}. If you send a PR, "
+            f"replace SHA256_HASH in the conversion script with this new hash."
+        )
 
         with catchtime("uploading to s3"):
             from syne_tune.blackbox_repository.conversion_scripts.utils import (

@@ -85,7 +85,7 @@ def compute_hash_benchmark(tgt_folder):
         h = compute_hash(Path(tgt_folder) / fname)
         hashes.append(h)
     aggregated_hash = hashlib.sha256()
-    [aggregated_hash.update(h.encode('utf-8')) for h in hashes]
+    [aggregated_hash.update(h.encode("utf-8")) for h in hashes]
     return aggregated_hash.hexdigest()
 
 

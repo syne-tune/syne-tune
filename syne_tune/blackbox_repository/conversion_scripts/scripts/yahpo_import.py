@@ -49,7 +49,8 @@ from yahpo_gym.configuration import list_scenarios
 from yahpo_gym import local_config
 
 
-SHA256_HASH = ''
+SHA256_HASH = ""
+
 
 def download(target_path: Path, version: str):
     import urllib

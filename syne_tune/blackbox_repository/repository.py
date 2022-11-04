@@ -115,7 +115,9 @@ def load_blackbox(
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
             if not compare_hash(tgt_folder, original_hash):
-                Exception(f'The hash of the files do not match the stored hash after regenerations.')
+                Exception(
+                    f"The hash of the files do not match the stored hash after regenerations."
+                )
         logging.info(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )

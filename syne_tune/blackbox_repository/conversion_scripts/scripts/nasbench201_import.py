@@ -43,7 +43,7 @@ METRIC_VALID_ERROR = "metric_valid_error"
 
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
-SHA256_HASH = ''
+SHA256_HASH = ""
 
 # This is time required for the given epoch, not time elapsed
 # since start of training
