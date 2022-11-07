@@ -60,7 +60,7 @@ NUM_UNITS_1 = "hp_n_units_1"
 
 NUM_UNITS_2 = "hp_n_units_2"
 
-SHA256_HASH = "b4fcdcbc3d17510c5c04be5cd6e79e3552e0b0ca5d55911b94f4003cbfadc8b3"
+SHA256_HASH = "e257244102ec24e48b5fb7a3aebaae685ddcc9bc0221d5dac52f2101c9f0f406"
 
 CONFIGURATION_SPACE = {
     "hp_activation_fn_1": choice(["tanh", "relu"]),
