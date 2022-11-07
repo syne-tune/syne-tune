@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import os
 import json
 import logging
 import tarfile
@@ -142,7 +143,26 @@ class PD1Recipe(BlackboxRecipe):
 
     def _convert_data(self) -> Dict[str, BlackboxTabular]:
         with tarfile.open(repository_path / f"{BLACKBOX_NAME}.tar.gz") as f:
-            f.extractall(path=repository_path)
+
+            def is_within_directory(directory, target):
+
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+
+                return prefix == abs_directory
+
+            def safe_extract(tar_file, path: str):
+
+                for member in tar_file.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+
+                tar_file.extractall(path, members=None, numeric_owner=False)
+
+            safe_extract(f, path=repository_path)
         data = []
         for matched in ["matched", "unmatched"]:
             path = (
