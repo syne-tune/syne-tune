@@ -47,6 +47,7 @@ from syne_tune.blackbox_repository.conversion_scripts.recipes import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     s3_blackbox_folder,
+    compare_hash,
 )
 
 
@@ -100,11 +101,23 @@ def load_blackbox(
         return instantiate_yahpo(name, **yahpo_kwargs)
 
     tgt_folder = Path(repository_path) / name
+
+    original_hash = generate_blackbox_recipes[name].hash
+
     if (
         tgt_folder.exists()
         and (tgt_folder / "metadata.json").exists()
         and skip_if_present
     ):
+        if not compare_hash(tgt_folder, original_hash):
+            logging.warning(
+                f"Files seem to be corrupted (hash missmatch), regenerating it locally and persisting it on S3."
+            )
+            generate_blackbox_recipes[name].generate(s3_root=s3_root)
+            if not compare_hash(tgt_folder, original_hash):
+                Exception(
+                    f"The hash of the files do not match the stored hash after regenerations."
+                )
         logging.info(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )
@@ -123,6 +136,12 @@ def load_blackbox(
                 tgt = tgt_folder / Path(src).name
                 logging.info(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
+
+            if not compare_hash(tgt_folder, original_hash):
+                logging.warning(
+                    f"Files seem to be corrupted (hash missmatch), regenerating it locally and overwrite files on S3."
+                )
+                generate_blackbox_recipes[name].generate(s3_root=s3_root)
         else:
             assert generate_if_not_found, (
                 "Blackbox files do not exist locally or on S3. If you have "

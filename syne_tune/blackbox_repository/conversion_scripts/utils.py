@@ -13,6 +13,7 @@
 from typing import Optional
 import os
 import logging
+import hashlib
 from functools import lru_cache
 from pathlib import Path
 
@@ -66,3 +67,28 @@ def download_file(source: str, destination: str):
         with requests.get(source, stream=True) as r:
             with open(destination, "wb") as f:
                 shutil.copyfileobj(r.raw, f)
+
+
+def compute_hash(filename):
+    h = hashlib.sha256()
+    b = bytearray(128 * 1024)
+    mv = memoryview(b)
+    with open(filename, "rb", buffering=0) as f:
+        for n in iter(lambda: f.readinto(mv), 0):
+            h.update(mv[:n])
+    return h.hexdigest()
+
+
+def compute_hash_benchmark(tgt_folder):
+    hashes = []
+    for fname in os.listdir(tgt_folder):
+        h = compute_hash(Path(tgt_folder) / fname)
+        hashes.append(h)
+    aggregated_hash = hashlib.sha256()
+    [aggregated_hash.update(h.encode("utf-8")) for h in hashes]
+    return aggregated_hash.hexdigest()
+
+
+def compare_hash(tgt_folder, original_hash):
+    current_hash = compute_hash_benchmark(tgt_folder)
+    return original_hash == current_hash

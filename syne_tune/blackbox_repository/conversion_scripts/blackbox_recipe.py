@@ -14,10 +14,14 @@ import logging
 from typing import Optional
 
 from syne_tune.util import catchtime
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    compute_hash_benchmark,
+    repository_path,
+)
 
 
 class BlackboxRecipe:
-    def __init__(self, name: str, cite_reference: str):
+    def __init__(self, name: str, cite_reference: str, hash: str = None):
         """
         Parent class for a blackbox recipe that allows to generate the blackbox data on disk, see `FCNETRecipe` or
         `LCBenchRecipe` classes for example on how to add a new benchmark.
@@ -26,6 +30,7 @@ class BlackboxRecipe:
         to ask the user to cite the relevant paper.
         """
         self.name = name
+        self.hash = hash
         self.cite_reference = cite_reference
 
     def generate(self, s3_root: Optional[str] = None):
@@ -41,6 +46,13 @@ class BlackboxRecipe:
         )
         logging.info(message)
         self._generate_on_disk()
+
+        hash = compute_hash_benchmark(repository_path / self.name)
+
+        logging.info(
+            f"Hash of new generated benchmark: {hash}. If you send a PR, "
+            f"replace SHA256_HASH in the conversion script with this new hash."
+        )
 
         with catchtime("uploading to s3"):
             from syne_tune.blackbox_repository.conversion_scripts.utils import (

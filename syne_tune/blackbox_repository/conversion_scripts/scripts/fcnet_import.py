@@ -16,6 +16,7 @@ Convert tabular data from
  Aaron Klein Frank Hutter
  https://arxiv.org/pdf/1905.04970.pdf.
 """
+import os
 import urllib
 import tarfile
 
@@ -38,7 +39,9 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     resource_attr,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+)
 
 from syne_tune.util import catchtime
 from syne_tune.config_space import choice, logfinrange, finrange, randint
@@ -56,6 +59,8 @@ MAX_RESOURCE_LEVEL = 100
 NUM_UNITS_1 = "hp_n_units_1"
 
 NUM_UNITS_2 = "hp_n_units_2"
+
+SHA256_HASH = "e257244102ec24e48b5fb7a3aebaae685ddcc9bc0221d5dac52f2101c9f0f406"
 
 CONFIGURATION_SPACE = {
     "hp_activation_fn_1": choice(["tanh", "relu"]),
@@ -162,6 +167,7 @@ def convert_dataset(dataset_path: Path, max_rows: int = None):
 
 def generate_fcnet():
     blackbox_name = BLACKBOX_NAME
+    os.makedirs(repository_path, exist_ok=True)
     fcnet_file = repository_path / "fcnet_tabular_benchmarks.tar.gz"
     if not fcnet_file.exists():
         src = "http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz"
@@ -220,6 +226,7 @@ class FCNETRecipe(BlackboxRecipe):
     def __init__(self):
         super(FCNETRecipe, self).__init__(
             name=BLACKBOX_NAME,
+            hash=SHA256_HASH,
             cite_reference="Tabular benchmarks for joint architecture and hyperparameter optimization. "
             "Klein, A. and Hutter, F. 2019.",
         )
