@@ -40,8 +40,8 @@ from syne_tune.blackbox_repository.serialize import (
     serialize_metadata,
 )
 from syne_tune.config_space import (
-    config_space_from_dict,
-    config_space_to_dict,
+    from_json_dict,
+    to_json_dict,
     loguniform,
     randint,
     uniform,
@@ -267,7 +267,7 @@ def serialize(
         )
 
         with open(path / f"{task}-fidelity_space.json", "w") as f:
-            json.dump(config_space_to_dict(bb_dict[task].fidelity_space), f)
+            json.dump(to_json_dict(bb_dict[task].fidelity_space), f)
 
         with open(path / f"{task}-objectives_evaluations.npy", "wb") as f:
             np.save(
@@ -312,7 +312,7 @@ def deserialize(path: str) -> Dict[str, BlackboxTabular]:
             Path(path) / f"{task}-hyperparameters.parquet", engine="fastparquet"
         )
         with open(path / f"{task}-fidelity_space.json", "r") as file:
-            fidelity_space = config_space_from_dict(json.load(file))
+            fidelity_space = from_json_dict(json.load(file))
 
         with open(path / f"{task}-fidelity_values.npy", "rb") as f:
             fidelity_values = np.load(f)

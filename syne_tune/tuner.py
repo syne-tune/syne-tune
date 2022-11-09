@@ -21,7 +21,7 @@ import dill as dill
 
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import Status, Trial
-from syne_tune.config_space import config_space_to_dict
+from syne_tune.config_space import to_json_dict
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.tuner_callback import StoreResultsCallback, TunerCallback
@@ -310,9 +310,7 @@ class Tuner:
         self._set_metadata(
             res, "scheduler_name", str(self.scheduler.__class__.__name__)
         )
-        config_space_json = json.dumps(
-            config_space_to_dict(self.scheduler.config_space)
-        )
+        config_space_json = json.dumps(to_json_dict(self.scheduler.config_space))
         self._set_metadata(res, "config_space", config_space_json)
         return res
 
