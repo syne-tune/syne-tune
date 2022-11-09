@@ -28,6 +28,8 @@ class BlackboxRecipe:
         :param name: name of the blackbox
         :param cite_reference: name of the paper to be referenced. A message is prompted when generating the blackbox
         to ask the user to cite the relevant paper.
+        :param hash: pre-computed hash of all generated files. Hashes are stored as constants
+        in the conversion_scripts.
         """
         self.name = name
         self.hash = hash
