@@ -22,7 +22,7 @@ from pathlib import Path
 import dill
 
 from syne_tune.backend.python_backend.python_backend import file_md5
-from syne_tune.config_space import add_to_argparse, from_json_dict
+from syne_tune.config_space import add_to_argparse, config_space_from_json_dict
 
 if __name__ == "__main__":
     root = logging.getLogger()
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         tuned_function = dill.load(file)
 
     with open(root / "configspace.json", "r") as file:
-        config_space = from_json_dict(json.load(file))
+        config_space = config_space_from_json_dict(json.load(file))
 
     add_to_argparse(parser, config_space)
 

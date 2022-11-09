@@ -20,7 +20,7 @@ from typing import Callable, Dict, Optional
 import dill
 
 from syne_tune.backend import LocalBackend
-from syne_tune.config_space import to_json_dict
+from syne_tune.config_space import config_space_to_json_dict
 
 
 def file_md5(filename: str) -> str:
@@ -117,4 +117,4 @@ class PythonBackend(LocalBackend):
         with open(self.tune_function_path / "tune_function.dill", "wb") as file:
             dill.dump(tune_function, file)
         with open(self.tune_function_path / "configspace.json", "w") as file:
-            json.dump(to_json_dict(self.config_space), file)
+            json.dump(config_space_to_json_dict(self.config_space), file)

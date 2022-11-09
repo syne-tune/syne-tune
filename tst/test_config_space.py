@@ -14,8 +14,8 @@ import pytest
 import numpy as np
 
 from syne_tune.config_space import (
-    from_json_dict,
-    to_json_dict,
+    config_space_from_json_dict,
+    config_space_to_json_dict,
     randint,
     lograndint,
     uniform,
@@ -146,7 +146,10 @@ def test_from_and_to_json_dict():
         "const_int": 1,
         "const_float": 2.0,
     }
-    assert from_json_dict(to_json_dict(config_space)) == config_space
+    assert (
+        config_space_from_json_dict(config_space_to_json_dict(config_space))
+        == config_space
+    )
 
 
 def test_config_space_size():

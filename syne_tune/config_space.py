@@ -1281,7 +1281,7 @@ def from_dict(d: dict) -> Domain:
     return domain
 
 
-def to_json_dict(
+def config_space_to_json_dict(
     config_space: Dict[str, Union[Domain, int, float, str]]
 ) -> Dict[str, Union[int, float, str]]:
     """Converts `config_space` into a dictionary that can be saved as a json file."""
@@ -1290,7 +1290,7 @@ def to_json_dict(
     }
 
 
-def from_json_dict(
+def config_space_from_json_dict(
     config_space_dict: Dict[str, Union[int, float, str]]
 ) -> Dict[str, Union[Domain, int, float, str]]:
     """Converts the given dictionary into a Syne Tune search space."""

@@ -14,7 +14,10 @@ from pathlib import Path
 from typing import Optional, Dict
 import json
 
-from syne_tune.config_space import from_json_dict, to_json_dict
+from syne_tune.config_space import (
+    config_space_from_json_dict,
+    config_space_to_json_dict,
+)
 
 
 def serialize_configspace(
@@ -22,11 +25,11 @@ def serialize_configspace(
 ):
     path = Path(path)
     with open(path / "configspace.json", "w") as f:
-        json.dump(to_json_dict(configuration_space), f)
+        json.dump(config_space_to_json_dict(configuration_space), f)
 
     if fidelity_space is not None:
         with open(path / "fidelityspace.json", "w") as f:
-            json.dump(to_json_dict(fidelity_space), f)
+            json.dump(config_space_to_json_dict(fidelity_space), f)
 
 
 def deserialize_configspace(path: str):
@@ -34,7 +37,7 @@ def deserialize_configspace(path: str):
         config_path = Path(path) / name
         if config_path.exists():
             with open(config_path, "r") as file:
-                return from_json_dict(json.load(file))
+                return config_space_from_json_dict(json.load(file))
         else:
             return None
 

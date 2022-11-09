@@ -22,7 +22,11 @@ from syne_tune.blackbox_repository import add_surrogate, load_blackbox
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.utils import metrics_for_configuration
-from syne_tune.config_space import Domain, from_json_dict, to_json_dict
+from syne_tune.config_space import (
+    Domain,
+    config_space_from_json_dict,
+    config_space_to_json_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -340,7 +344,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             "surrogate_kwargs": self._surrogate_kwargs,
         }
         if self._config_space_surrogate is not None:
-            state["config_space_surrogate"] = to_json_dict(self._config_space_surrogate)
+            state["config_space_surrogate"] = config_space_to_json_dict(
+                self._config_space_surrogate
+            )
         return state
 
     def __setstate__(self, state):
@@ -357,7 +363,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self._surrogate_kwargs = state["surrogate_kwargs"]
         self._blackbox = None
         if "config_space_surrogate" in state:
-            self._config_space_surrogate = from_json_dict(
+            self._config_space_surrogate = config_space_from_json_dict(
                 state["config_space_surrogate"]
             )
         else:
