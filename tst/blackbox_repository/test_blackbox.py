@@ -217,7 +217,7 @@ def test_blackbox_tabular_serialization():
 
         print(
             bb_dict2["slice"].objective_function(
-                {"hp_x1": x1[0], "hp_x2": x2[0]}, fidelity={"hp_epochs": 1}
+                {"hp_x1": x1[0], "hp_x2": x2[0]}, fidelity={"hp_epoch": 1}
             )
         )
 

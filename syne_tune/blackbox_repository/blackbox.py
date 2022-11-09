@@ -48,6 +48,7 @@ class Blackbox:
         :return: dictionary of objectives evaluated or tensor with shape (num_fidelities, num_objectives) if no fidelity
         was given.
         """
+        self._check_keys(config=configuration, fidelity=fidelity)
         if self.fidelity_space is None:
             assert fidelity is None
         else:
@@ -91,6 +92,20 @@ class Blackbox:
         :return:
         """
         return self.objective_function(*args, **kwargs)
+
+    def _check_keys(self, config, fidelity):
+        if isinstance(fidelity, dict):
+            for key in fidelity.keys():
+                assert key in self.fidelity_space.keys(), (
+                    f'The key "{key}" passed as fidelity is not present in the fidelity space keys: '
+                    f"{self.fidelity_space.keys()}"
+                )
+        if isinstance(config, dict):
+            for key in config.keys():
+                assert key in self.configuration_space.keys(), (
+                    f'The key "{key}" passed in the configuration is not present in the configuration space keys: '
+                    f"{self.configuration_space.keys()}"
+                )
 
     def hyperparameter_objectives_values(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
