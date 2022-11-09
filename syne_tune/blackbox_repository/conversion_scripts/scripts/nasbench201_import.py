@@ -25,7 +25,9 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     resource_attr,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+)
 
 from syne_tune.config_space import randint, choice
 from syne_tune.util import catchtime
@@ -40,6 +42,8 @@ CONFIG_KEYS = ("hp_x0", "hp_x1", "hp_x2", "hp_x3", "hp_x4", "hp_x5")
 METRIC_VALID_ERROR = "metric_valid_error"
 
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
+
+SHA256_HASH = "cfa50314edc7ee86f93891eaaa8d93944006b973cddf9ab853243c67c8ad2020"
 
 # This is time required for the given epoch, not time elapsed
 # since start of training
@@ -213,6 +217,7 @@ class NASBench201Recipe(BlackboxRecipe):
     def __init__(self):
         super(NASBench201Recipe, self).__init__(
             name="nasbench201",
+            hash=SHA256_HASH,
             cite_reference="NAS-Bench-201: Extending the scope of reproducible neural architecture search. "
             "Dong, X. and Yang, Y. 2020.",
         )

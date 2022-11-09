@@ -47,6 +47,7 @@ from syne_tune.blackbox_repository.conversion_scripts.recipes import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     s3_blackbox_folder,
+    validate_hash,
 )
 
 
@@ -63,6 +64,7 @@ def load_blackbox(
     s3_root: Optional[str] = None,
     generate_if_not_found: bool = True,
     yahpo_kwargs: Optional[dict] = None,
+    ignore_hash: bool = False,
 ) -> Union[Dict[str, Blackbox], Blackbox]:
     """
     :param name: name of a blackbox present in the repository, see blackbox_list() to get list of available blackboxes.
@@ -92,6 +94,8 @@ def load_blackbox(
         or on S3, should it be generated using its conversion script?
     :param yahpo_kwargs: For a YAHPO blackbox (`name == "yahpo-*"`), these are
         additional arguments to `instantiate_yahpo`
+    :param ignore_hash: do not check if hash of currently stored files matches the pre-computed hash. Be careful with
+    this option. If hashes do not match, results might not be reproducible.
     :return: blackbox with the given name, download it if not present.
     """
     if name.startswith("yahpo-"):
@@ -100,11 +104,28 @@ def load_blackbox(
         return instantiate_yahpo(name, **yahpo_kwargs)
 
     tgt_folder = Path(repository_path) / name
+
+    expected_hash = generate_blackbox_recipes[name].hash
+
     if (
         tgt_folder.exists()
         and (tgt_folder / "metadata.json").exists()
         and skip_if_present
     ):
+        if (
+            not ignore_hash
+            and expected_hash is not None
+            and not validate_hash(tgt_folder, expected_hash)
+        ):
+            logging.warning(
+                f"Files seem to be corrupted (hash mismatch), regenerating it locally and persisting it on S3."
+            )
+            generate_blackbox_recipes[name].generate(s3_root=s3_root)
+            if not validate_hash(tgt_folder, expected_hash):
+                Exception(
+                    f"The hash of the files do not match the stored hash after regenerations. "
+                    f"Consider updating the hash and sending a pull-request to change it or set the option `ignore_hash` to True."
+                )
         logging.info(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )
@@ -123,6 +144,16 @@ def load_blackbox(
                 tgt = tgt_folder / Path(src).name
                 logging.info(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
+
+            if (
+                not ignore_hash
+                and expected_hash is not None
+                and not validate_hash(tgt_folder, expected_hash)
+            ):
+                logging.warning(
+                    f"Files seem to be corrupted (hash mismatch), regenerating it locally and overwrite files on S3."
+                )
+                generate_blackbox_recipes[name].generate(s3_root=s3_root)
         else:
             assert generate_if_not_found, (
                 "Blackbox files do not exist locally or on S3. If you have "
