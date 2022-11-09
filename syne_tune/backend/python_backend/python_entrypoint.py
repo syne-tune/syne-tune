@@ -18,12 +18,11 @@ import json
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Dict
 
 import dill
 
 from syne_tune.backend.python_backend.python_backend import file_md5
-from syne_tune.config_space import add_to_argparse, from_dict
+from syne_tune.config_space import add_to_argparse, config_space_from_json_dict
 
 if __name__ == "__main__":
     root = logging.getLogger()
@@ -47,11 +46,7 @@ if __name__ == "__main__":
         tuned_function = dill.load(file)
 
     with open(root / "configspace.json", "r") as file:
-        config_space = json.load(file)
-        config_space = {
-            k: from_dict(v) if isinstance(v, Dict) else v
-            for k, v in config_space.items()
-        }
+        config_space = config_space_from_json_dict(json.load(file))
 
     add_to_argparse(parser, config_space)
 

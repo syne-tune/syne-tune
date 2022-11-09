@@ -19,7 +19,7 @@ from copy import copy
 from inspect import signature
 from math import isclose
 import sys
-from typing import Any, Callable, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import argparse
 
 import numpy as np
@@ -1279,6 +1279,25 @@ def from_dict(d: dict) -> Domain:
         sampler = sampler_cls(**sampler_kwargs)
         domain.set_sampler(sampler)
     return domain
+
+
+def config_space_to_json_dict(
+    config_space: Dict[str, Union[Domain, int, float, str]]
+) -> Dict[str, Union[int, float, str]]:
+    """Converts `config_space` into a dictionary that can be saved as a json file."""
+    return {
+        k: to_dict(v) if isinstance(v, Domain) else v for k, v in config_space.items()
+    }
+
+
+def config_space_from_json_dict(
+    config_space_dict: Dict[str, Union[int, float, str]]
+) -> Dict[str, Union[Domain, int, float, str]]:
+    """Converts the given dictionary into a Syne Tune search space."""
+    return {
+        k: from_dict(v) if isinstance(v, dict) else v
+        for k, v in config_space_dict.items()
+    }
 
 
 def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Domain:

@@ -10,9 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import os
 import json
 import logging
+import os
 import tarfile
 from pathlib import Path
 from typing import Dict, Optional
@@ -20,7 +20,6 @@ from typing import Dict, Optional
 import numpy as np
 import pandas as pd
 
-from syne_tune import config_space
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
 from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
     BlackboxRecipe,
@@ -31,8 +30,8 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     resource_attr,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
-    repository_path,
     download_file,
+    repository_path,
 )
 from syne_tune.blackbox_repository.serialize import (
     deserialize_configspace,
@@ -40,7 +39,13 @@ from syne_tune.blackbox_repository.serialize import (
     serialize_configspace,
     serialize_metadata,
 )
-from syne_tune.config_space import loguniform, randint, uniform
+from syne_tune.config_space import (
+    config_space_from_json_dict,
+    config_space_to_json_dict,
+    loguniform,
+    randint,
+    uniform,
+)
 from syne_tune.util import catchtime
 
 logger = logging.getLogger(__name__)
@@ -265,13 +270,7 @@ def serialize(
         )
 
         with open(path / f"{task}-fidelity_space.json", "w") as f:
-            json.dump(
-                {
-                    k: config_space.to_dict(v)
-                    for k, v in bb_dict[task].fidelity_space.items()
-                },
-                f,
-            )
+            json.dump(config_space_to_json_dict(bb_dict[task].fidelity_space), f)
 
         with open(path / f"{task}-objectives_evaluations.npy", "wb") as f:
             np.save(
@@ -316,9 +315,7 @@ def deserialize(path: str) -> Dict[str, BlackboxTabular]:
             Path(path) / f"{task}-hyperparameters.parquet", engine="fastparquet"
         )
         with open(path / f"{task}-fidelity_space.json", "r") as file:
-            fidelity_space = {
-                k: config_space.from_dict(v) for k, v in json.load(file).items()
-            }
+            fidelity_space = config_space_from_json_dict(json.load(file))
 
         with open(path / f"{task}-fidelity_values.npy", "rb") as f:
             fidelity_values = np.load(f)

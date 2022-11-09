@@ -15,12 +15,12 @@ import json
 import logging
 import types
 from pathlib import Path
-from typing import Dict, Callable, Optional
+from typing import Callable, Dict, Optional
 
 import dill
 
 from syne_tune.backend import LocalBackend
-from syne_tune.config_space import to_dict, Domain
+from syne_tune.config_space import config_space_to_json_dict
 
 
 def file_md5(filename: str) -> str:
@@ -117,10 +117,4 @@ class PythonBackend(LocalBackend):
         with open(self.tune_function_path / "tune_function.dill", "wb") as file:
             dill.dump(tune_function, file)
         with open(self.tune_function_path / "configspace.json", "w") as file:
-            json.dump(
-                {
-                    k: to_dict(v) if isinstance(v, Domain) else v
-                    for k, v in self.config_space.items()
-                },
-                file,
-            )
+            json.dump(config_space_to_json_dict(self.config_space), file)
