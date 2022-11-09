@@ -89,6 +89,12 @@ def compute_hash_benchmark(tgt_folder):
     return aggregated_hash.hexdigest()
 
 
-def compare_hash(tgt_folder, original_hash):
+def validate_hash(tgt_folder, original_hash):
+    """
+    Computes hash of the files in tgt_folder and validates it with the original hash
+    :param tgt_folder: target folder that contains the files of the original benchmark
+    :param original_hash: original sha256 hash
+    :return:
+    """
     current_hash = compute_hash_benchmark(tgt_folder)
     return original_hash == current_hash

@@ -47,7 +47,7 @@ from syne_tune.blackbox_repository.conversion_scripts.recipes import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     repository_path,
     s3_blackbox_folder,
-    compare_hash,
+    validate_hash,
 )
 
 
@@ -105,7 +105,7 @@ def load_blackbox(
 
     tgt_folder = Path(repository_path) / name
 
-    original_hash = generate_blackbox_recipes[name].hash
+    expected_hash = generate_blackbox_recipes[name].hash
 
     if (
         tgt_folder.exists()
@@ -114,14 +114,14 @@ def load_blackbox(
     ):
         if (
             not ignore_hash
-            and original_hash is not None
-            and not compare_hash(tgt_folder, original_hash)
+            and expected_hash is not None
+            and not validate_hash(tgt_folder, expected_hash)
         ):
             logging.warning(
-                f"Files seem to be corrupted (hash missmatch), regenerating it locally and persisting it on S3."
+                f"Files seem to be corrupted (hash mismatch), regenerating it locally and persisting it on S3."
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
-            if not compare_hash(tgt_folder, original_hash):
+            if not validate_hash(tgt_folder, expected_hash):
                 Exception(
                     f"The hash of the files do not match the stored hash after regenerations. "
                     f"Consider updating the hash and sending a pull-request to change it or set the option `ignore_hash` to True."
@@ -147,11 +147,11 @@ def load_blackbox(
 
             if (
                 not ignore_hash
-                and original_hash is not None
-                and not compare_hash(tgt_folder, original_hash)
+                and expected_hash is not None
+                and not validate_hash(tgt_folder, expected_hash)
             ):
                 logging.warning(
-                    f"Files seem to be corrupted (hash missmatch), regenerating it locally and overwrite files on S3."
+                    f"Files seem to be corrupted (hash mismatch), regenerating it locally and overwrite files on S3."
                 )
                 generate_blackbox_recipes[name].generate(s3_root=s3_root)
         else:
