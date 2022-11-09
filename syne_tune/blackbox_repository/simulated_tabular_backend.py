@@ -10,19 +10,19 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import logging
 from pathlib import Path
 from typing import List, Optional
-import logging
-import numpy as np
 
-from syne_tune.blackbox_repository import load_blackbox, add_surrogate
-from syne_tune.blackbox_repository.blackbox import Blackbox
-from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
-from syne_tune.blackbox_repository.utils import metrics_for_configuration
+import numpy as np
 
 from syne_tune.backend.simulator_backend.simulator_backend import SimulatorBackend
 from syne_tune.backend.trial_status import Status
-from syne_tune.config_space import to_dict, from_dict, Domain
+from syne_tune.blackbox_repository import add_surrogate, load_blackbox
+from syne_tune.blackbox_repository.blackbox import Blackbox
+from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
+from syne_tune.blackbox_repository.utils import metrics_for_configuration
+from syne_tune.config_space import Domain, config_space_from_dict, config_space_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -340,9 +340,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             "surrogate_kwargs": self._surrogate_kwargs,
         }
         if self._config_space_surrogate is not None:
-            state["config_space_surrogate"] = {
-                k: to_dict(v) for k, v in self._config_space_surrogate.items()
-            }
+            state["config_space_surrogate"] = config_space_to_dict(
+                self._config_space_surrogate
+            )
         return state
 
     def __setstate__(self, state):
@@ -359,9 +359,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self._surrogate_kwargs = state["surrogate_kwargs"]
         self._blackbox = None
         if "config_space_surrogate" in state:
-            self._config_space_surrogate = {
-                k: from_dict(v) for k, v in state["config_space_surrogate"].items()
-            }
+            self._config_space_surrogate = config_space_from_dict(
+                state["config_space_surrogate"]
+            )
         else:
             self._config_space_surrogate = None
 

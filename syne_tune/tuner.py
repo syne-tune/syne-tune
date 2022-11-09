@@ -15,21 +15,22 @@ import logging
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import List, Callable, Tuple, Optional, Dict, Set
+from typing import Callable, Dict, List, Optional, Set, Tuple
+
 import dill as dill
 
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import Status, Trial
-from syne_tune.config_space import to_dict, Domain
+from syne_tune.config_space import config_space_to_dict
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
-from syne_tune.tuner_callback import TunerCallback, StoreResultsCallback
+from syne_tune.tuner_callback import StoreResultsCallback, TunerCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 from syne_tune.util import (
     RegularCallback,
+    check_valid_sagemaker_name,
     experiment_path,
     name_from_base,
-    check_valid_sagemaker_name,
 )
 
 logger = logging.getLogger(__name__)
@@ -310,10 +311,7 @@ class Tuner:
             res, "scheduler_name", str(self.scheduler.__class__.__name__)
         )
         config_space_json = json.dumps(
-            {
-                k: to_dict(v) if isinstance(v, Domain) else v
-                for k, v in self.scheduler.config_space.items()
-            }
+            config_space_to_dict(self.scheduler.config_space)
         )
         self._set_metadata(res, "config_space", config_space_json)
         return res

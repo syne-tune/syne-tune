@@ -14,6 +14,8 @@ import pytest
 import numpy as np
 
 from syne_tune.config_space import (
+    config_space_from_dict,
+    config_space_to_dict,
     randint,
     lograndint,
     uniform,
@@ -130,6 +132,19 @@ def test_serialization():
             if k != "sampler" and not k.startswith("_")
         }
         assert dct1 == dct2
+
+
+def test_config_space_from_and_to_dict():
+    config_space = {
+        "int": randint(1, 2),
+        "logint": lograndint(3, 4),
+        "float": uniform(5.5, 6.5),
+        "logfloat": loguniform(7.5, 8.5),
+        "categorical": choice(["a", "b", "c"]),
+        "normal": randn(2.0, 1.0),
+        "const_str": "constant",
+    }
+    assert config_space_from_dict(config_space_to_dict(config_space)) == config_space
 
 
 def test_config_space_size():
