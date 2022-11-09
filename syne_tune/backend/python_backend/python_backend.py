@@ -117,4 +117,4 @@ class PythonBackend(LocalBackend):
         with open(self.tune_function_path / "tune_function.dill", "wb") as file:
             dill.dump(tune_function, file)
         with open(self.tune_function_path / "configspace.json", "w") as file:
-            json.dump(config_space_to_dict(self.config_space))
+            json.dump(config_space_to_dict(self.config_space), file)
