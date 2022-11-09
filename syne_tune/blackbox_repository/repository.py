@@ -112,7 +112,11 @@ def load_blackbox(
         and (tgt_folder / "metadata.json").exists()
         and skip_if_present
     ):
-        if not ignore_hash and original_hash is not None and not compare_hash(tgt_folder, original_hash):
+        if (
+            not ignore_hash
+            and original_hash is not None
+            and not compare_hash(tgt_folder, original_hash)
+        ):
             logging.warning(
                 f"Files seem to be corrupted (hash missmatch), regenerating it locally and persisting it on S3."
             )
@@ -141,7 +145,11 @@ def load_blackbox(
                 logging.info(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
 
-            if not ignore_hash and original_hash is not None and not compare_hash(tgt_folder, original_hash):
+            if (
+                not ignore_hash
+                and original_hash is not None
+                and not compare_hash(tgt_folder, original_hash)
+            ):
                 logging.warning(
                     f"Files seem to be corrupted (hash missmatch), regenerating it locally and overwrite files on S3."
                 )
