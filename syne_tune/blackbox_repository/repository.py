@@ -107,11 +107,7 @@ def load_blackbox(
 
     expected_hash = generate_blackbox_recipes[name].hash
 
-    if (
-        tgt_folder.exists()
-        and (tgt_folder / "metadata.json").exists()
-        and skip_if_present
-    ):
+    if check_blackbox_local_files(repository_path, name) and skip_if_present:
         if (
             not ignore_hash
             and expected_hash is not None
@@ -130,6 +126,7 @@ def load_blackbox(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )
     else:
+        logging.info("Local files not found, attempting to copy from S3.")
         tgt_folder.mkdir(exist_ok=True, parents=True)
         try:
             s3_folder = s3_blackbox_folder(s3_root)
@@ -171,6 +168,16 @@ def load_blackbox(
         return deserialize_tabular(tgt_folder)
     else:
         return deserialize_offline(tgt_folder)
+
+
+def check_blackbox_local_files(repository_path: str, name: str) -> bool:
+    """checks whether the file of the blackbox `name` are present in `repository_path`"""
+    if "yahpo" in name:
+        # yahpo files are written into their own folder to be compatible with yahpo-gym loaders
+        tgt_folder = Path(repository_path) / "yahpo" / name.replace("yahpo-", "")
+    else:
+        tgt_folder = Path(repository_path) / name
+    return tgt_folder.exists() and (tgt_folder / "metadata.json").exists()
 
 
 if __name__ == "__main__":
