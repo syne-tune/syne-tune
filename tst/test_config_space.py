@@ -131,7 +131,6 @@ def test_from_and_to_json_dict():
         "float": uniform(5.5, 6.5),
         "logfloat": loguniform(7.5, 8.5),
         "categorical": choice(["a", "b", "c"]),
-        "normal": randn(2.0, 1.0),
         "const_str": "constant",
         "const_int": 1,
         "const_float": 2.0,
