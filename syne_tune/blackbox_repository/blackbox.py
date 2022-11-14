@@ -13,8 +13,11 @@
 from numbers import Number
 
 import pandas as pd
-from typing import Optional, Callable, List, Tuple, Union
+from typing import Optional, Callable, List, Tuple, Union, Dict
 import numpy as np
+
+
+ObjectiveFunctionResult = Union[Dict[str, float], np.ndarray]
 
 
 class Blackbox:
@@ -36,17 +39,21 @@ class Blackbox:
         configuration: dict,
         fidelity: Union[dict, Number] = None,
         seed: Optional[int] = None,
-    ) -> dict:
-        """
-        Returns an evaluation of the blackbox, first perform data check and then call `_objective_function` that should
+    ) -> ObjectiveFunctionResult:
+        """Returns an evaluation of the blackbox.
+
+        First perform data check and then call `_objective_function` that should
         be overriden in the child class.
-        :param configuration: configuration to be evaluated, should belong to `self.configuration_space`
-        :param fidelity: not passing a fidelity is possible if either the blackbox does not have a fidelity space
-        or if it has a single fidelity in its fidelity space. In the latter case, all fidelities are returned in form
-        of a tensor with shape (num_fidelities, num_objectives).
-        :param seed:
-        :return: dictionary of objectives evaluated or tensor with shape (num_fidelities, num_objectives) if no fidelity
-        was given.
+
+        :param configuration: configuration to be evaluated, should belong to
+            `self.configuration_space`
+        :param fidelity: not passing a fidelity is possible if either the blackbox
+            does not have a fidelity space or if it has a single fidelity in its
+            fidelity space. In the latter case, all fidelities are returned in
+            form of a tensor with shape `(num_fidelities, num_objectives)`.
+        :param seed: Only used if the blackbox defines multiple seeds
+        :return: dictionary of objectives evaluated or tensor with shape
+            `(num_fidelities, num_objectives)` if no fidelity was given.
         """
         self._check_keys(config=configuration, fidelity=fidelity)
         if self.fidelity_space is None:
@@ -80,13 +87,13 @@ class Blackbox:
         configuration: dict,
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> dict:
+    ) -> ObjectiveFunctionResult:
         """
         Override this function to provide your benchmark function.
         """
         pass
 
-    def __call__(self, *args, **kwargs) -> dict:
+    def __call__(self, *args, **kwargs) -> ObjectiveFunctionResult:
         """
         Allows to call blackbox directly as a function rather than having to call the specific method.
         :return:
@@ -107,10 +114,26 @@ class Blackbox:
                     f"{self.configuration_space.keys()}"
                 )
 
-    def hyperparameter_objectives_values(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def hyperparameter_objectives_values(
+        self, predict_curves: bool = False
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        :return: a tuple of two dataframes, the first one contains hyperparameters values and the second
-        one contains objective values, this is used when fitting a surrogate model.
+        If `predict_curves` is False, the shape of X is
+        `(num_evals * num_seeds * num_fidelities, num_hps + 1)`, the shape of y
+        is `(num_evals * num_seeds * num_fidelities, num_objectives)`.
+        This can be reshaped to `(num_fidelities, num_seeds, num_evals, *)`.
+        The final column of X is the fidelity value (only a single fidelity
+        attribute is supported).
+
+        If `predict_curves` is True, the shape of X is
+        `(num_evals * num_seeds, num_hps)`, the shape of y is
+        `(num_evals * num_seeds, num_fidelities * num_objectives)`. The latter
+        can be reshaped to `(num_seeds, num_evals, num_fidelities,
+        num_objectives)`.
+
+        :return: a tuple of two dataframes (X, y), where X contains
+            hyperparameters values and y contains objective values, this is
+            used when fitting a surrogate model.
         """
         pass
 
@@ -133,6 +156,7 @@ def from_function(
     :param configuration_space:
     :param eval_fun: function that returns dictionary of objectives given configuration and fidelity
     :param fidelity_space:
+    :param objectives_names:
     :return:
     """
 
@@ -149,7 +173,7 @@ def from_function(
             configuration: dict,
             fidelity: Optional[dict] = None,
             seed: Optional[int] = None,
-        ) -> dict:
+        ) -> ObjectiveFunctionResult:
             return eval_fun(configuration, fidelity, seed)
 
     return BB()

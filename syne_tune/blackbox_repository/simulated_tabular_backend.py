@@ -243,14 +243,16 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         dataset: Optional[str] = None,
         surrogate: Optional[str] = None,
         surrogate_kwargs: Optional[dict] = None,
+        add_surrogate_kwargs: Optional[dict] = None,
         config_space_surrogate: Optional[dict] = None,
         **simulatorbackend_kwargs,
     ):
         """
-        Backend for evaluations from the blackbox-repository, name of the blackbox and dataset should be present in the
-        repository. See `examples/launch_simulated_benchmark.py` for an example on how to use.
-        If you want to add a new dataset, see the section `Adding a new dataset section` of
-        `blackbox_repository/README.md`.
+        Backend for evaluations from the blackbox-repository, name of the blackbox
+        and dataset should be present in the repository. See
+        `examples/launch_simulated_benchmark.py` for an example on how to use.
+        If you want to add a new dataset, see the section `Adding a new dataset
+        section` of `blackbox_repository/README.md`.
 
         :param blackbox_name: name of a blackbox, should have been registered in
             blackbox repository.
@@ -258,19 +260,18 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         :param max_resource_attr:
         :param dataset: Selects different versions of the blackbox
         :param surrogate: optionally, a model that is fitted to predict objectives
-            given any configuration.
-            Possible examples: "KNeighborsRegressor" or "MLPRegressor" or "XGBRegressor"
-            which would enable using the corresponding Scikit-learn estimator.
+            given any configuration. Possible examples: "KNeighborsRegressor" or
+            "MLPRegressor" or "RandomForetRegressor" which would enable using
+            the corresponding Scikit-learn estimator.
             The model is fit on top of pipeline that applies basic feature-processing
             to convert hyperparameters rows in X to vectors. The configuration_space
-            hyperparameters types are used to deduce the types of columns in X (for
-            instance CategoricalHyperparameter are one-hot encoded).
+            hyperparameters types are used to deduce the types of columns in
+            X (for instance CategoricalHyperparameter are one-hot encoded).
         :param surrogate_kwargs: arguments for the scikit-learn estimator, for
-            instance {"n_neighbors": 1} can be used if `surrogate="KNeighborsRegressor"`
-            is chosen.
-            If `blackbox_name` is a YAHPO blackbox, then `surrogate_kwargs` is passed
-            as `yahpo_kwargs` to `load_blackbox`. In this case, `surrogate` is
-            ignored (YAHPO always uses surrogates).
+            instance {"n_neighbors": 1} can be used if
+            `surrogate="KNeighborsRegressor"` is chosen.
+        :param add_surrogate_kwargs: Arguments for `add_surrogate`, for example
+            `predict_curves`, `separate_seeds` or `fit_differences`.
         :param config_space_surrogate: if `surrogate` is given, this is the
             configuration space for the surrogate blackbox. If not given, the
             space of the original blackbox is used. However, if this is a tabular
@@ -295,6 +296,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self._surrogate = surrogate
         self._surrogate_kwargs = (
             surrogate_kwargs if surrogate_kwargs is not None else dict()
+        )
+        self._add_surrogate_kwargs = (
+            add_surrogate_kwargs if add_surrogate_kwargs is not None else dict()
         )
         if config_space_surrogate is not None:
             self._config_space_surrogate = {
@@ -325,6 +329,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
                     blackbox=self._blackbox,
                     surrogate=surrogate,
                     configuration_space=self._config_space_surrogate,
+                    **self._add_surrogate_kwargs,
                 )
 
         return self._blackbox

@@ -45,9 +45,9 @@ def metrics_for_configuration(
         assert (
             len(fidelity_range) == 2 and fidelity_range[0] <= fidelity_range[1]
         ), f"fidelity_range = {fidelity_range} must be tuple (min, max), min <= max"
-    objective_values = blackbox._objective_function(config, seed=seed)
+    objective_values = blackbox.objective_function(config, seed=seed)
     for fidelity, value in enumerate(all_fidelities):
-        if value >= fidelity_range[0] and value <= fidelity_range[1]:
+        if fidelity_range[0] <= value <= fidelity_range[1]:
             res_dict = dict(zip(blackbox.objectives_names, objective_values[fidelity]))
             res_dict[resource_attr] = value
             res.append(res_dict)

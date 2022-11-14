@@ -16,6 +16,23 @@ from benchmarking.commons.benchmark_definitions.common import (
 
 
 def lcbench_benchmark(dataset_name, datasets=None):
+    """
+    The default is to use nearest neighbour regression with `K=1`. If
+    you use a more sophisticated surrogate, it is recommended to also
+    define `add_surrogate_kwargs`, for example:
+
+    ```python
+    surrogate="RandomForestRegressor",
+    add_surrogate_kwargs={
+        "predict_curves": True,
+        "fit_differences": ["time"],
+    },
+    ```
+
+    :param dataset_name: Value for `dataset_name`
+    :param datasets: Used for transfer learning
+    :return: :class:`SurrogateBenchmarkDefinition` object
+    """
     return SurrogateBenchmarkDefinition(
         max_wallclock_time=7200,
         n_workers=4,
