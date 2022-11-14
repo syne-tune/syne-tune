@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import math
 import pytest
-import numpy as np
 
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.simulator_backend.simulator_backend import (
@@ -26,7 +25,6 @@ from syne_tune.backend.simulator_backend.events import (
     OnTrialResultEvent,
 )
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.backend.trial_status import Status
 from syne_tune.tuner_callback import StoreResultsCallback
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
