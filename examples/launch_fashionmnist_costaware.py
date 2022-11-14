@@ -15,9 +15,11 @@ Example for cost-aware promotion-based Hyperband
 """
 import logging
 
-from benchmarking.definitions.definition_mlp_on_fashion_mnist import (
-    mlp_fashionmnist_default_params,
+from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
     mlp_fashionmnist_benchmark,
+)
+from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import (
+    ELAPSED_TIME_ATTR,
 )
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import HyperbandScheduler
@@ -34,30 +36,25 @@ if __name__ == "__main__":
     # for other arguments (which you are free to override)
     random_seed = 31415927
     n_workers = 4
-    default_params = mlp_fashionmnist_default_params()
-    benchmark = mlp_fashionmnist_benchmark(default_params)
-    mode = benchmark["mode"]
-    metric = benchmark["metric"]
+    benchmark = mlp_fashionmnist_benchmark()
 
     # If you don't like the default config_space, change it here. But let
     # us use the default
-    config_space = benchmark["config_space"]
+    config_space = benchmark.config_space
 
     # Local back-end
-    trial_backend = LocalBackend(entry_point=benchmark["script"])
+    trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
     # Cost-aware variant of ASHA, using a random searcher
     scheduler = HyperbandScheduler(
         config_space,
         searcher="random",
-        max_t=default_params["max_resource_level"],
-        grace_period=default_params["grace_period"],
-        reduction_factor=default_params["reduction_factor"],
-        resource_attr=benchmark["resource_attr"],
-        mode=mode,
-        metric=metric,
+        max_resource_attr=benchmark.max_resource_attr,
+        resource_attr=benchmark.resource_attr,
+        mode=benchmark.mode,
+        metric=benchmark.metric,
         type="cost_promotion",
-        rung_system_kwargs={"cost_attr": benchmark["elapsed_time_attr"]},
+        cost_attr=ELAPSED_TIME_ATTR,
         random_seed=random_seed,
     )
 

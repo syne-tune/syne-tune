@@ -27,9 +27,8 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 
-from benchmarking.definitions.definition_distilbert_on_imdb import (
+from benchmarking.commons.benchmark_definitions.distilbert_on_imdb import (
     distilbert_imdb_benchmark,
-    distilbert_imdb_default_params,
 )
 
 if __name__ == "__main__":
@@ -41,18 +40,17 @@ if __name__ == "__main__":
     # for other arguments (which you are free to override)
     random_seed = 31415927
     n_workers = 4
-    default_params = distilbert_imdb_default_params()
-    benchmark = distilbert_imdb_benchmark(default_params)
-    mode = benchmark["mode"]
-    metric = benchmark["metric"]
-    config_space = benchmark["config_space"]
+    benchmark = distilbert_imdb_benchmark()
+    mode = benchmark.mode
+    metric = benchmark.metric
+    config_space = benchmark.config_space
 
     # Define Hugging Face SageMaker estimator
     root = Path(syne_tune.__path__[0]).parent
     huggingface_estimator = HuggingFace(
-        entry_point=benchmark["script"],
+        entry_point=str(benchmark.script),
         base_job_name="hpo-transformer",
-        instance_type=default_params["instance_type"],
+        instance_type=benchmark.instance_type,
         instance_count=1,
         transformers_version="4.4",
         pytorch_version="1.6",

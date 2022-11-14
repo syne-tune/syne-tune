@@ -41,7 +41,7 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune import Tuner, StoppingCriterion
 
-from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
+from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import \
     mlp_fashionmnist_benchmark
 
 if __name__ == '__main__':
@@ -49,13 +49,13 @@ if __name__ == '__main__':
   n_workers = 4
 
   # We pick the MLP on FashionMNIST benchmark
-  # The 'benchmark' dict contains arguments needed by scheduler and
+  # The 'benchmark' object contains arguments needed by scheduler and
   # searcher (e.g., 'mode', 'metric'), along with suggested default values
   # for other arguments (which you are free to override)
-  benchmark = mlp_fashionmnist_benchmark({'dataset_path': './'})
-  config_space = benchmark['config_space']
+  benchmark = mlp_fashionmnist_benchmark()
+  config_space = benchmark.config_space
 
-  backend = LocalBackend(entry_point=benchmark['script'])
+  backend = LocalBackend(entry_point=benchmark.script)
 
   # GP-based Bayesian optimization searcher. Many options can be specified
   # via `search_options`, but let's use the defaults
@@ -67,8 +67,8 @@ if __name__ == '__main__':
     config_space,
     searcher=searcher,
     search_options=search_options,
-    mode=benchmark['mode'],
-    metric=benchmark['metric'])
+    mode=benchmark.mode,
+    metric=benchmark.metric)
 
   tuner = Tuner(
     trial_backend=backend,
@@ -231,7 +231,7 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 
-from benchmarking.definitions.definition_mlp_on_fashion_mnist import \
+from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import \
     mlp_fashionmnist_benchmark
 
 if __name__ == '__main__':
@@ -239,13 +239,13 @@ if __name__ == '__main__':
   n_workers = 4
 
   # We pick the MLP on FashionMNIST benchmark
-  # The 'benchmark' dict contains arguments needed by scheduler and
+  # The 'benchmark' object contains arguments needed by scheduler and
   # searcher (e.g., 'mode', 'metric'), along with suggested default values
   # for other arguments (which you are free to override)
-  benchmark = mlp_fashionmnist_benchmark({'dataset_path': './'})
-  config_space = benchmark['config_space']
+  benchmark = mlp_fashionmnist_benchmark()
+  config_space = benchmark.config_space
 
-  backend = LocalBackend(entry_point=benchmark['script'])
+  backend = LocalBackend(entry_point=benchmark.script)
 
   # GP-based Bayesian optimization searcher. Many options can be specified
   # via `search_options`, but let's use the defaults
@@ -253,18 +253,15 @@ if __name__ == '__main__':
   search_options = {'num_init_random': n_workers + 2}
   # Hyperband (or successive halving) scheduler of the stopping type.
   # Together with 'bayesopt', this selects the MOBSTER algorithm.
-  default_params = benchmark['default_params']
   scheduler = HyperbandScheduler(
     config_space,
     searcher=searcher,
     search_options=search_options,
     type='stopping',
-    max_t=default_params['epochs'],
-    grace_period=default_params['grace_period'],
-    reduction_factor=default_params['reduction_factor'],
-    resource_attr=benchmark['resource_attr'],
-    mode=benchmark['mode'],
-    metric=benchmark['metric'])
+    max_resource_attr=benchmark.max_resource_attr,
+    resource_attr=benchmark.resource_attr,
+    mode=benchmark.mode,
+    metric=benchmark.metric)
 
   tuner = Tuner(
     trial_backend=backend,

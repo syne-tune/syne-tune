@@ -13,27 +13,53 @@
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
-from benchmarking.definitions.definition_lstm_wikitext2 import (
-    lstm_wikitext2_default_params,
-    lstm_wikitext2_benchmark as _lstm_wikitext2_benchmark,
+from benchmarking.training_scripts.lstm_wikitext2.lstm_wikitext2 import (
+    _config_space,
+    METRIC_NAME,
+    RESOURCE_ATTR,
 )
+
+
+def lstm_wikitext2_default_params(sagemaker_backend: bool) -> dict:
+    if sagemaker_backend:
+        instance_type = "ml.g4dn.xlarge"
+        num_workers = 8
+    else:
+        # For local backend, GPU cores serve different workers, so we
+        # need more memory
+        instance_type = "ml.g4dn.12xlarge"
+        num_workers = 4
+    return {
+        "max_resource_level": 81,
+        "instance_type": instance_type,
+        "num_workers": num_workers,
+        "report_current_best": "False",
+        "dataset_path": "./",
+    }
 
 
 # Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def lstm_wikitext2_benchmark(sagemaker_backend: bool = False, **kwargs):
-    params = {"backend": "sagemaker"} if sagemaker_backend else None
-    params = lstm_wikitext2_default_params(params)
-    benchmark = _lstm_wikitext2_benchmark(params)
+    params = lstm_wikitext2_default_params(sagemaker_backend)
+    config_space = dict(
+        _config_space,
+        dataset_path=params["dataset_path"],
+        epochs=params["max_resource_level"],
+        report_current_best=params["report_current_best"],
+    )
     _kwargs = dict(
-        script=Path(benchmark["script"]),
-        config_space=benchmark["config_space"],
+        script=Path(__file__).parent.parent.parent
+        / "training_scripts"
+        / "lstm_wikitext2"
+        / "lstm_wikitext2.py",
+        config_space=config_space,
         max_wallclock_time=7 * 3600,
         n_workers=params["num_workers"],
         instance_type=params["instance_type"],
-        metric=benchmark["metric"],
-        mode=benchmark["mode"],
-        max_resource_attr=benchmark["max_resource_attr"],
-        resource_attr=benchmark["resource_attr"],
+        metric=METRIC_NAME,
+        mode="max",
+        max_resource_attr="epochs",
+        resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
         estimator_kwargs=dict(
             framework_version="1.7.1",
@@ -42,3 +68,18 @@ def lstm_wikitext2_benchmark(sagemaker_backend: bool = False, **kwargs):
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)
+
+
+# Support for cost models:
+#
+# from benchmarking.utils import get_cost_model_for_batch_size
+# from benchmarking.training_scripts.lstm_wikitext2.lstm_wikitext2 import (
+#     BATCH_SIZE_LOWER,
+#     BATCH_SIZE_UPPER,
+#     BATCH_SIZE_KEY,
+# )
+# cost_model = get_cost_model_for_batch_size(
+#     cost_model_type="quadratic_spline",
+#     batch_size_key = BATCH_SIZE_KEY,
+#     batch_size_range = (BATCH_SIZE_LOWER, BATCH_SIZE_UPPER),
+# )
