@@ -240,6 +240,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         elapsed_time_attr: str,
         max_resource_attr: Optional[str] = None,
         seed: Optional[int] = None,
+        support_checkpointing: bool = True,
         dataset: Optional[str] = None,
         surrogate: Optional[str] = None,
         surrogate_kwargs: Optional[dict] = None,
@@ -285,6 +286,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=elapsed_time_attr,
             max_resource_attr=max_resource_attr,
             seed=seed,
+            support_checkpointing=support_checkpointing,
             **simulatorbackend_kwargs,
         )
         self.blackbox_name = blackbox_name
@@ -382,6 +384,7 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
         elapsed_time_attr: str,
         max_resource_attr: Optional[str] = None,
         seed: Optional[int] = None,
+        support_checkpointing: bool = True,
         **simulatorbackend_kwargs,
     ):
         """
@@ -396,6 +399,7 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=elapsed_time_attr,
             max_resource_attr=max_resource_attr,
             seed=seed,
+            support_checkpointing=support_checkpointing,
             **simulatorbackend_kwargs,
         )
         self._blackbox = blackbox

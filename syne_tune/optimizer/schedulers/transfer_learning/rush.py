@@ -22,12 +22,12 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         metric: str,
         type: str = "stopping",
-        points_to_evaluate: Optional[List[Dict]] = None,
-        custom_rush_points: Optional[List[Dict]] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
+        custom_rush_points: Optional[List[dict]] = None,
         num_hyperparameters_per_task: int = 1,
         **kwargs,
     ) -> None:
@@ -81,7 +81,7 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,
             metric=metric,
-            type=f"rush_{type}",
+            type="rush_" + type,
             points_to_evaluate=points_to_evaluate,
             metric_names=[metric],
             rung_system_kwargs={"num_threshold_candidates": num_threshold_candidates},

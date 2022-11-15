@@ -27,8 +27,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gluon_blocks_h
     create_encoding,
 )
 
-__all__ = ["FabolasKernelFunction"]
-
 
 class FabolasKernelFunction(KernelFunction):
     """

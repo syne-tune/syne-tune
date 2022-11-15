@@ -9,6 +9,7 @@
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
+from typing import Optional, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import GPMultiFidelitySearcher
@@ -38,8 +39,16 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
         a mixture over rung level distributions, weighted by [theta_k]
     """
 
-    def __init__(self, config_space, **kwargs):
-        super().__init__(config_space, **kwargs)
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
         self._previous_distribution = None
 
     def configure_scheduler(self, scheduler):

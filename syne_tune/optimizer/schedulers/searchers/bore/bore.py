@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Optional, List
 import time
 import xgboost
 import logging
@@ -18,8 +19,6 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
-
-from typing import Dict
 
 from syne_tune.optimizer.schedulers.searchers.searcher import SearcherWithRandomSeed
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
@@ -37,19 +36,18 @@ class Bore(SearcherWithRandomSeed):
         self,
         config_space: dict,
         metric: str,
-        points_to_evaluate=None,
-        mode: str = "max",
-        gamma: float = 0.25,
-        calibrate: bool = False,
-        classifier: str = "xgboost",
-        acq_optimizer: str = "rs",
-        feval_acq: int = 500,
-        random_prob: float = 0.0,
-        init_random: int = 6,
-        classifier_kwargs: dict = None,
+        points_to_evaluate: Optional[List[dict]] = None,
+        mode: Optional[str] = None,
+        gamma: Optional[float] = None,
+        calibrate: Optional[bool] = None,
+        classifier: Optional[str] = None,
+        acq_optimizer: Optional[str] = None,
+        feval_acq: Optional[int] = None,
+        random_prob: Optional[float] = None,
+        init_random: Optional[int] = None,
+        classifier_kwargs: Optional[dict] = None,
         **kwargs,
     ):
-
         """
         Implements "Bayesian optimization by Density Ratio Estimation" as described in the following paper:
 
@@ -73,7 +71,7 @@ class Bore(SearcherWithRandomSeed):
         :param feval_acq: Maximum allowed function evaluations of the acquisition function.
         :param random_prob: probability for returning a random configurations (epsilon greedy)
         :param init_random: Number of initial random configurations before we start with the optimization.
-        :param classifier_kwargs: Dict that contains all hyperparameters for the classifier
+        :param classifier_kwargs: dict that contains all hyperparameters for the classifier
         """
 
         super().__init__(
@@ -82,6 +80,22 @@ class Bore(SearcherWithRandomSeed):
             points_to_evaluate=points_to_evaluate,
             **kwargs,
         )
+        if mode is None:
+            mode = "min"
+        if gamma is None:
+            gamma = 0.25
+        if calibrate is None:
+            calibrate = False
+        if classifier is None:
+            classifier = "xgboost"
+        if acq_optimizer is None:
+            acq_optimizer = "rs"
+        if feval_acq is None:
+            feval_acq = 500
+        if random_prob is None:
+            random_prob = 0.0
+        if init_random is None:
+            init_random = 6
 
         self.calibrate = calibrate
         self.gamma = gamma
@@ -128,7 +142,7 @@ class Bore(SearcherWithRandomSeed):
 
         super().configure_scheduler(scheduler)
 
-    def loss(self, x):
+    def _loss(self, x):
         if len(x.shape) < 2:
             y = -self.model.predict_proba(x[None, :])
         else:
@@ -164,7 +178,7 @@ class Bore(SearcherWithRandomSeed):
 
         else:
             # train model
-            self.train_model(self.inputs, self.targets)
+            self._train_model(self.inputs, self.targets)
 
             if self.model is None:
                 config = self._hp_ranges.random_config(self.random_state)
@@ -174,7 +188,7 @@ class Bore(SearcherWithRandomSeed):
                 if self.acq_optimizer == "de":
 
                     def wrapper(x):
-                        l = self.loss(x)
+                        l = self._loss(x)
                         return l[:, None]
 
                     bounds = np.array(self._hp_ranges.get_ndarray_bounds())
@@ -193,7 +207,7 @@ class Bore(SearcherWithRandomSeed):
                     for i in range(self.feval_acq):
                         xi = self._hp_ranges.random_config(self.random_state)
                         X.append(xi)
-                        values.append(self.loss(self._hp_ranges.to_ndarray(xi))[0])
+                        values.append(self._loss(self._hp_ranges.to_ndarray(xi))[0])
 
                     ind = np.array(values).argmin()
                     config = X[ind]
@@ -207,7 +221,7 @@ class Bore(SearcherWithRandomSeed):
                         xi = self._hp_ranges.random_config(self.random_state)
                         if xi not in X:
                             X.append(xi)
-                            values.append(self.loss(self._hp_ranges.to_ndarray(xi))[0])
+                            values.append(self._loss(self._hp_ranges.to_ndarray(xi))[0])
                             counter = 0
                         else:
                             logging.warning(
@@ -231,7 +245,7 @@ class Bore(SearcherWithRandomSeed):
 
         return config
 
-    def train_model(self, train_data, train_targets):
+    def _train_model(self, train_data, train_targets):
 
         start_time = time.time()
 
@@ -264,7 +278,7 @@ class Bore(SearcherWithRandomSeed):
             f"train time : {train_time}"
         )
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         """Update surrogate model with result
 
         :param config: new configuration
@@ -275,4 +289,4 @@ class Bore(SearcherWithRandomSeed):
         self.targets.append(result[self._metric])
 
     def clone_from_state(self, state):
-        pass
+        raise NotImplementedError

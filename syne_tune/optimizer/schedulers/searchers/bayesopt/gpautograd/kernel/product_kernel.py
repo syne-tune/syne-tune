@@ -14,8 +14,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base im
     KernelFunction,
 )
 
-__all__ = ["ProductKernelFunction"]
-
 
 class ProductKernelFunction(KernelFunction):
     """

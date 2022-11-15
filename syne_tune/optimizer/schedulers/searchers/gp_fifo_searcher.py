@@ -114,7 +114,7 @@ def create_initial_candidates_scorer(
         )
 
 
-def check_initial_candidates_scorer(initial_scoring: str) -> str:
+def check_initial_candidates_scorer(initial_scoring: Optional[str]) -> str:
     if initial_scoring is None:
         return DEFAULT_INITIAL_SCORING
     else:
@@ -318,7 +318,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
                 self.profiler.stop("random")
         return config, pick_random
 
-    def get_config(self, **kwargs) -> Configuration:
+    def get_config(self, **kwargs) -> Optional[dict]:
         """
         Runs Bayesian optimization in order to suggest the next config to evaluate.
 
@@ -381,7 +381,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def set_params(self, param_dict):
         self.state_transformer.set_params(param_dict)
 
-    def get_state(self):
+    def get_state(self) -> dict:
         """
         The mutable state consists of the GP model parameters, the
         TuningJobState, and the skip_optimization predicate (which can have a
@@ -587,15 +587,22 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     """
 
-    def __init__(self, config_space, metric, clone_from_state=False, **kwargs):
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        clone_from_state=False,
+        **kwargs,
+    ):
+        super().__init__(
+            config_space,
+            metric=metric,
+            points_to_evaluate=points_to_evaluate,
+            random_seed_generator=kwargs.get("random_seed_generator"),
+            random_seed=kwargs.get("random_seed"),
+        )
         if not clone_from_state:
-            super().__init__(
-                config_space,
-                metric=metric,
-                points_to_evaluate=kwargs.get("points_to_evaluate"),
-                random_seed_generator=kwargs.get("random_seed_generator"),
-                random_seed=kwargs.get("random_seed"),
-            )
             kwargs["config_space"] = config_space
             kwargs["metric"] = metric
             kwargs_int = self._create_kwargs_int(kwargs)
@@ -603,7 +610,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
             # Internal constructor, bypassing the factory
             # Note: Members which are part of the mutable state, will be
             # overwritten in `_restore_from_state`
-            super().__init__(config_space, metric=metric)
             kwargs_int = kwargs.copy()
         self._call_create_internal(kwargs_int)
 

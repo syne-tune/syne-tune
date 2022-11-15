@@ -14,7 +14,7 @@ import copy
 import logging
 
 from collections import deque
-from typing import Optional, Dict, List
+from typing import Optional, List
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
@@ -35,7 +35,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         mode: str = "min",
         population_size: int = 100,
         sample_size: int = 10,
-        points_to_evaluate: Optional[List[Dict]] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
         """
@@ -77,7 +77,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         self.population = deque()
         self.num_sample_try = 1000  # number of times allowed to sample a mutation
 
-    def mutate_config(self, config: Dict) -> Dict:
+    def _mutate_config(self, config: dict) -> dict:
 
         child_config = copy.deepcopy(config)
 
@@ -100,21 +100,21 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             else:
                 break
         if sample_try == self.num_sample_try:
-            logging.INFO(
+            logging.info(
                 f"Did not manage to sample a different configuration with {self.num_sample_try}, "
                 f"sampling at random"
             )
-            return self.sample_random_config()
+            return self._sample_random_config()
 
         return child_config
 
-    def sample_random_config(self) -> Dict:
+    def _sample_random_config(self) -> dict:
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in self.config_space.items()
         }
 
-    def get_config(self, **kwargs):
+    def get_config(self, **kwargs) -> Optional[dict]:
 
         initial_config = self._next_initial_config()
 
@@ -122,18 +122,18 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             return initial_config
 
         if len(self.population) < self.population_size:
-            config = self.sample_random_config()
+            config = self._sample_random_config()
         else:
             candidates = self.random_state.choice(
                 list(self.population), size=self.sample_size
             )
             parent = min(candidates, key=lambda i: i.score)
 
-            config = self.mutate_config(parent.config)
+            config = self._mutate_config(parent.config)
 
         return config
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
 
         score = result[self._metric]
 

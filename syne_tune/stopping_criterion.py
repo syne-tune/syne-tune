@@ -25,10 +25,30 @@ logger = logging.getLogger(__name__)
 class StoppingCriterion:
     """
     Stopping criterion that can be used in a Tuner, for instance
-    `Tuner(stop_criterion=StoppingCriterion(max_wallclock_time=3600), ...)`
-    While a lambda can be used for the Tuner, e.g.
-    `Tuner(stop_criterion=lambda status: status.wallclock_time > 3600, ...)`
-    Using this class is needed when using the remote launcher to ensure serialization works correctly.
+    `Tuner(stop_criterion=StoppingCriterion(max_wallclock_time=3600), ...)`.
+
+    If several arguments are used, the combined criterion is true whenever
+    one of the atomic criteria is true.
+
+    In principle, `stop_criterion` for `Tuner` can be any lambda function, but
+    this class should be used with remote launching in order to ensure
+    proper serialization.
+
+    :param max_wallclock_time: Stop once this wallclock time is reached
+    :param max_num_evaluations: Stop once more than this number of metric
+        records have been reported
+    :param max_num_trials_started: Stop once more than this number of trials
+        have been started
+    :param max_num_trials_completed: Stop once more than this number of trials
+        have been completed. This does not include trials which were stopped
+        or failed
+    :param max_cost: Stop once total cost of evaluations larger than this value
+    :param max_num_trials_finished: Stop once more than this number of trials
+        have finished (i.e., completed, stopped, failed, or stopping)
+    :param min_metric_value: Dictionary with thresholds for selected metrics.
+        Stop once an evaluation reports a metric value below a threshold
+    :param max_metric_value: Dictionary with thresholds for selected metrics.
+        Stop once an evaluation reports a metric value above a threshold
     """
 
     max_wallclock_time: float = None
@@ -37,8 +57,7 @@ class StoppingCriterion:
     max_num_trials_completed: int = None
     max_cost: float = None
     max_num_trials_finished: int = None
-
-    # minimum value for metrics, any value bellow this threshold will trigger a stop
+    # minimum value for metrics, any value below this threshold will trigger a stop
     min_metric_value: Optional[Dict[str, float]] = None
     # maximum value for metrics, any value above this threshold will trigger a stop
     max_metric_value: Optional[Dict[str, float]] = None
@@ -58,7 +77,7 @@ class StoppingCriterion:
             and status.num_trials_started > self.max_num_trials_started
         ):
             logger.info(
-                f"reaching max number of trials started ({self.max_num_trials_started}), stopping there."
+                f"reaching max number of trials started ({self.max_num_trials_started + 1}), stopping there."
             )
             return True
         if (
@@ -66,7 +85,7 @@ class StoppingCriterion:
             and status.num_trials_completed > self.max_num_trials_completed
         ):
             logger.info(
-                f"reaching max number of trials completed ({self.max_num_trials_completed}), stopping there."
+                f"reaching max number of trials completed ({self.max_num_trials_completed + 1}), stopping there."
             )
             return True
         if (
@@ -74,7 +93,7 @@ class StoppingCriterion:
             and status.num_trials_finished > self.max_num_trials_finished
         ):
             logger.info(
-                f"reaching max number of trials finished ({self.max_num_trials_finished}), stopping there."
+                f"reaching max number of trials finished ({self.max_num_trials_finished + 1}), stopping there."
             )
             return True
         if self.max_cost is not None and status.cost > self.max_cost:
@@ -85,7 +104,7 @@ class StoppingCriterion:
             and status.overall_metric_statistics.count > self.max_num_evaluations
         ):
             logger.info(
-                f"reaching {status.overall_metric_statistics.count} evaluations, stopping there. "
+                f"reaching {status.overall_metric_statistics.count + 1} evaluations, stopping there. "
             )
             return True
         if (
@@ -116,7 +135,7 @@ class StoppingCriterion:
                 ):
                     logger.info(
                         f"found {metric} with value ({min_metrics_observed[metric]}), "
-                        f"bellow the provided threshold {min_metric_accepted} stopping there."
+                        f"below the provided threshold {min_metric_accepted} stopping there."
                     )
                     return True
         return False
@@ -126,16 +145,7 @@ class PlateauStopper(object):
     """
     Stops the experiment when a metric plateaued for N consecutive trials
     for more than the given amount of iterations specified in the patience parameter.
-    This code is mostly copied from RayTune.
-
-    :param metric: The metric to be monitored.
-    :param std: The minimal standard deviation after which
-             the tuning process has to stop.
-    :param num_trials: The number of consecutive trials
-    :param mode: The mode to select the top results.
-             Can either be "min" or "max".
-    :param patience: Number of iterations to wait for
-             a change in the top models.
+    This code is inspired by Ray Tune.
     """
 
     def __init__(
@@ -146,6 +156,14 @@ class PlateauStopper(object):
         mode: str = "min",
         patience: int = 0,
     ):
+        """
+        :param metric: The metric to be monitored.
+        :param std: The minimal standard deviation after which the tuning process
+            has to stop.
+        :param num_trials: The number of consecutive trials
+        :param mode: The mode to select the top results ("min" or "max")
+        :param patience: Number of iterations to wait for a change in the top models.
+        """
         if mode not in ("min", "max"):
             raise ValueError("The mode parameter can only be either min or max.")
 
@@ -173,9 +191,7 @@ class PlateauStopper(object):
             self.multiplier = -1
 
     def __call__(self, status: TuningStatus) -> bool:
-
         """Return a boolean representing if the tuning has to stop."""
-
         if status.num_trials_finished == 0:
             return False
 

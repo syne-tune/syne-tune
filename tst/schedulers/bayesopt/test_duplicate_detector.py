@@ -44,16 +44,19 @@ hp_ranges = make_hyperparameter_ranges(
         ([(10, 1.0, "a"), (20, 2.0, "b")], (10, 1.0, "a"), True),
         ([(10, 1.0, "a"), (20, 2.0, "b")], (20, 2.0, "b"), True),
         ([(10, 1.0, "a"), (20, 2.0, "b")], (19, 1.0, "a"), False),
-        ([(10, 1.0, "a"), (20, 2.0, "b")], (10, 1.0000001, "a"), False),
+        ([(10, 1.0, "a"), (20, 2.0, "b")], (10, 1.000001, "a"), False),
         ([(10, 1.0, "a"), (20, 2.0, "b")], (10, 1.0, "c"), False),
         ([(10, 1.0, "a"), (20, 2.0, "b")], (10, 1.0, "b"), False),
         ([(10, 1.0, "a"), (20, 2.0, "b")], (20, 1.0, "b"), False),
     ],
 )
 def test_contains_identical(existing, new, contained):
-    existing = create_exclusion_set(existing, hp_ranges)
-    new = hp_ranges.tuple_to_config(new)
-    assert DuplicateDetectorIdentical().contains(existing, new) == contained
+    existing_candidates = create_exclusion_set(existing, hp_ranges)
+    new_candidate = hp_ranges.tuple_to_config(new)
+    assert (
+        DuplicateDetectorIdentical().contains(existing_candidates, new_candidate)
+        == contained
+    ), f"existing = {existing}, new = {new}, contained = {contained}"
 
 
 @pytest.mark.parametrize(

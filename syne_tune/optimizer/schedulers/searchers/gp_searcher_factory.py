@@ -352,7 +352,7 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
         model == "gp_multitask" or is_hyperband
     ), f"model = {model} only together with hyperband_* scheduler"
     hp_ranges = create_hp_ranges_for_warmstarting(**kwargs)
-    random_seed, _kwargs = extract_random_seed(kwargs)
+    random_seed, _kwargs = extract_random_seed(**kwargs)
     # Skip optimization predicate for GP surrogate model
     if kwargs.get("opt_skip_num_max_resource", False) and is_hyperband:
         skip_optimization = SkipNoMaxResourcePredicate(
@@ -559,7 +559,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
     skip_optimization = result.pop("skip_optimization")
     # We need two model factories: one for active metric (model_factory),
     # the other for constraint metric (model_factory_constraint)
-    random_seed, _kwargs = extract_random_seed(kwargs)
+    random_seed, _kwargs = extract_random_seed(**kwargs)
     model_factory_constraint = _create_gp_standard_model(
         hp_ranges=result["hp_ranges"],
         active_metric=INTERNAL_CONSTRAINT_NAME,
@@ -612,7 +612,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     skip_optimization = result.pop("skip_optimization")
     # We need two model factories: one for active metric (model_factory),
     # the other for cost metric (model_factory_cost)
-    random_seed, _kwargs = extract_random_seed(kwargs)
+    random_seed, _kwargs = extract_random_seed(**kwargs)
     model_factory_cost = _create_gp_standard_model(
         hp_ranges=result["hp_ranges"],
         active_metric=INTERNAL_COST_NAME,

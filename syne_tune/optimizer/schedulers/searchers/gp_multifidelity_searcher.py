@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional
+from typing import Optional, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
@@ -166,8 +166,16 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     GPFIFOSearcher
     """
 
-    def __init__(self, config_space, **kwargs):
-        super().__init__(config_space, **kwargs)
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        **kwargs,
+    ):
+        super().__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -191,12 +199,18 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     def configure_scheduler(self, scheduler):
         from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+        from syne_tune.optimizer.schedulers.synchronous.hyperband import (
+            SynchronousHyperbandScheduler,
+        )
 
         super().configure_scheduler(scheduler)
         assert isinstance(
-            scheduler, HyperbandScheduler
-        ), "This searcher requires HyperbandScheduler scheduler"
-        self._resource_attr = scheduler._resource_attr
+            scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
+        ), (
+            "This searcher requires HyperbandScheduler scheduler or "
+            "SynchronousHyperbandScheduler scheduler"
+        )
+        self._resource_attr = scheduler.resource_attr
         model_factory = self.state_transformer.model_factory
         if isinstance(model_factory, GaussProcAdditiveModelFactory):
             assert scheduler.searcher_data == "all", (
@@ -224,7 +238,10 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         return f"{trial_id}:{result[self._resource_attr]}"
 
     def register_pending(
-        self, trial_id: str, config: Optional[dict] = None, milestone=None
+        self,
+        trial_id: str,
+        config: Optional[dict] = None,
+        milestone: Optional[int] = None,
     ):
         """
         Registers trial as pending for resource level `milestone`. This means
