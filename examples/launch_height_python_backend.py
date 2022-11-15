@@ -39,8 +39,9 @@ def train_height(steps: int, width: float, height: float):
     root.setLevel(logging.INFO)
     reporter = Reporter()
     for step in range(steps):
-        dummy_score = train_height_inner(step, width, height)
+        time.sleep(0.1)
         # Feed the score back to Syne Tune.
+        dummy_score = train_height_inner(step, width, height)
         reporter(
             **{
                 "step": step,
@@ -48,7 +49,6 @@ def train_height(steps: int, width: float, height: float):
                 RESOURCE_ATTR: step + 1,
             }
         )
-        time.sleep(0.1)
 
 
 if __name__ == "__main__":
