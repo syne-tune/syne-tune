@@ -20,9 +20,8 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner
 
-from benchmarking.definitions.definition_mlp_on_fashion_mnist import (
+from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
     mlp_fashionmnist_benchmark,
-    mlp_fashionmnist_default_params,
 )
 from benchmarking.utils.searcher_state_callback import StoreSearcherStatesCallback
 
@@ -31,7 +30,7 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
 
     # We pick the MLP on FashionMNIST benchmark
-    # The 'benchmark' dict contains arguments needed by scheduler and
+    # The 'benchmark' object contains arguments needed by scheduler and
     # searcher (e.g., 'mode', 'metric'), along with suggested default values
     # for other arguments (which you are free to override)
     random_seed = 31415927
@@ -39,14 +38,13 @@ if __name__ == "__main__":
     # generate_data_for = 'test_expdecay_model'
     generate_data_for = "test_iss_model"
 
-    default_params = mlp_fashionmnist_default_params()
-    benchmark = mlp_fashionmnist_benchmark(default_params)
-    mode = benchmark["mode"]
-    metric = benchmark["metric"]
-    config_space = benchmark["config_space"]
+    benchmark = mlp_fashionmnist_benchmark()
+    mode = benchmark.mode
+    metric = benchmark.metric
+    config_space = benchmark.config_space
 
     # Local back-end
-    trial_backend = LocalBackend(entry_point=benchmark["script"])
+    trial_backend = LocalBackend(entry_point=benchmark.script)
 
     # GP-based Bayesian optimization searcher
     searcher = "bayesopt"
@@ -70,10 +68,8 @@ if __name__ == "__main__":
         config_space,
         searcher=searcher,
         search_options=search_options,
-        max_t=default_params["max_resource_level"],
-        grace_period=default_params["grace_period"],
-        reduction_factor=default_params["reduction_factor"],
-        resource_attr=benchmark["resource_attr"],
+        max_resource_attr=benchmark.max_resource_attr,
+        resource_attr=benchmark.resource_attr,
         mode=mode,
         metric=metric,
         random_seed=random_seed,

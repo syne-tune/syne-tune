@@ -13,27 +13,46 @@
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
-from benchmarking.definitions.definition_distilbert_on_imdb import (
-    distilbert_imdb_default_params,
-    distilbert_imdb_benchmark as _distilbert_imdb_benchmark,
+from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import (
+    METRIC_ACCURACY,
+    RESOURCE_ATTR,
+    _config_space,
 )
+
+
+def distilbert_imdb_default_params() -> dict:
+    return {
+        "max_resource_level": 15,
+        "instance_type": "ml.g4dn.xlarge",
+        "num_workers": 4,
+        "framework": "HuggingFace",
+        "framework_version": "4.4",
+        "pytorch_version": "1.6",
+        "dataset_path": "./",
+    }
 
 
 # TODO: Update `HuggingFace` version
 def distilbert_imdb_benchmark(sagemaker_backend: bool = False, **kwargs):
-    params = {"backend": "sagemaker"} if sagemaker_backend else None
-    params = distilbert_imdb_default_params(params)
-    benchmark = _distilbert_imdb_benchmark(params)
+    params = distilbert_imdb_default_params()
+    config_space = dict(
+        _config_space,
+        dataset_path=params["dataset_path"],
+        epochs=params["max_resource_level"],
+    )
     _kwargs = dict(
-        script=Path(benchmark["script"]),
-        config_space=benchmark["config_space"],
+        script=Path(__file__).parent.parent.parent
+        / "training_scripts"
+        / "distilbert_on_imdb"
+        / "distilbert_on_imdb.py",
+        config_space=config_space,
         max_wallclock_time=3 * 3600,  # TODO
         n_workers=params["num_workers"],
         instance_type=params["instance_type"],
-        metric=benchmark["metric"],
-        mode=benchmark["mode"],
-        max_resource_attr=benchmark["max_resource_attr"],
-        resource_attr=benchmark["resource_attr"],
+        metric=METRIC_ACCURACY,
+        mode="max",
+        max_resource_attr="epochs",
+        resource_attr=RESOURCE_ATTR,
         framework="HuggingFace",
         estimator_kwargs=dict(
             framework_version="4.4",
