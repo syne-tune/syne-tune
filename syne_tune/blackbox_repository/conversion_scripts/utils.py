@@ -14,6 +14,7 @@ from typing import Optional
 import os
 import logging
 import hashlib
+import pandas
 from functools import lru_cache
 from pathlib import Path
 
@@ -69,23 +70,28 @@ def download_file(source: str, destination: str):
                 shutil.copyfileobj(r.raw, f)
 
 
-def compute_hash(filename):
+def compute_hash_binary(filename):
     h = hashlib.sha256()
     b = bytearray(128 * 1024)
     mv = memoryview(b)
     with open(filename, "rb", buffering=0) as f:
         for n in iter(lambda: f.readinto(mv), 0):
             h.update(mv[:n])
-    return h.hexdigest()
+    return h.hexdigest().encode("utf-8")
 
 
 def compute_hash_benchmark(tgt_folder):
     hashes = []
     for fname in os.listdir(tgt_folder):
-        h = compute_hash(Path(tgt_folder) / fname)
+        if fname.endswith('.parquet'):
+            # Parquet files are non-deterministic across hosts. Compute logical hash of the pandas dataframe.
+            df = pandas.read_parquet(Path(tgt_folder) / fname)
+            h = pandas.util.hash_pandas_object(df, index=False).sum()
+        else:
+            h = compute_hash_binary(Path(tgt_folder) / fname)
         hashes.append(h)
     aggregated_hash = hashlib.sha256()
-    [aggregated_hash.update(h.encode("utf-8")) for h in hashes]
+    [aggregated_hash.update(h) for h in hashes]
     return aggregated_hash.hexdigest()
 
 
