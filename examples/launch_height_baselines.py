@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from pathlib import Path
 
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.baselines import (
@@ -25,8 +24,14 @@ from syne_tune.optimizer.baselines import (
 # from syne_tune.optimizer.schedulers import FIFOScheduler  # noqa: F401
 # from syne_tune.optimizer.schedulers.botorch import BotorchSearcher  # noqa: F401
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.config_space import randint
 from syne_tune.try_import import try_import_gpsearchers_message
+from syne_tune.util import script_height_example_path
+from examples.training_scripts.height_example.train_height import (
+    height_config_space,
+    RESOURCE_ATTR,
+    METRIC_ATTR,
+    METRIC_MODE,
+)
 
 
 if __name__ == "__main__":
@@ -36,26 +41,17 @@ if __name__ == "__main__":
     max_steps = 100
     n_workers = 4
 
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-    }
-    entry_point = (
-        Path(__file__).parent
-        / "training_scripts"
-        / "height_example"
-        / "train_height.py"
-    )
-    mode = "min"
-    metric = "mean_loss"
+    config_space = height_config_space(max_steps)
+    entry_point = str(script_height_example_path())
+    mode = METRIC_MODE
+    metric = METRIC_ATTR
 
     schedulers = [
         RandomSearch(config_space, metric=metric, mode=mode),
         ASHA(
             config_space,
             metric=metric,
-            resource_attr="epoch",
+            resource_attr=RESOURCE_ATTR,
             max_t=max_steps,
             mode=mode,
         ),
@@ -97,7 +93,7 @@ if __name__ == "__main__":
             MOBSTER(
                 config_space,
                 metric=metric,
-                resource_attr="epoch",
+                resource_attr=RESOURCE_ATTR,
                 max_t=max_steps,
                 mode=mode,
             )
@@ -111,7 +107,7 @@ if __name__ == "__main__":
         trial_backend = LocalBackend(entry_point=str(entry_point))
 
         stop_criterion = StoppingCriterion(
-            max_wallclock_time=5, min_metric_value={"mean_loss": -6.0}
+            max_wallclock_time=5, min_metric_value={METRIC_ATTR: -6.0}
         )
         tuner = Tuner(
             trial_backend=trial_backend,

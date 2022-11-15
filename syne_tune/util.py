@@ -169,7 +169,7 @@ def script_checkpoint_example_path() -> Path:
     return path
 
 
-def script_height_example_path():
+def script_height_example_path() -> Path:
     """
     :return: Path of train_heigth example
     """

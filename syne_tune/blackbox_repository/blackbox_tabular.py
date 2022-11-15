@@ -70,7 +70,7 @@ class BlackboxTabular(Blackbox):
         self.num_seeds = num_seeds
         self.num_fidelities = num_fidelities
         if fidelity_values is None:
-            self._fidelity_values = np.arange(num_fidelities) + 1
+            self._fidelity_values = np.arange(1, num_fidelities + 1)
         else:
             # assert sorted(fidelity_values.tolist()) == fidelity_values
             self._fidelity_values = fidelity_values

@@ -102,7 +102,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
 
     @property
     def blackbox(self) -> Blackbox:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def resource_attr(self):

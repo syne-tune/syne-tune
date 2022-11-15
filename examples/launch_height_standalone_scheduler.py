@@ -14,7 +14,6 @@
 Example showing how to implement a new Scheduler.
 """
 import logging
-from pathlib import Path
 from typing import Optional, List
 
 import numpy as np
@@ -27,7 +26,12 @@ from syne_tune.optimizer.scheduler import (
     TrialSuggestion,
 )
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.config_space import randint
+from syne_tune.util import script_height_example_path
+from examples.training_scripts.height_example.train_height import (
+    height_config_space,
+    METRIC_ATTR,
+    METRIC_MODE,
+)
 
 
 class SimpleScheduler(TrialScheduler):
@@ -81,24 +85,16 @@ if __name__ == "__main__":
     max_steps = 100
     n_workers = 4
 
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-    }
-    entry_point = str(
-        Path(__file__).parent
-        / "training_scripts"
-        / "height_example"
-        / "train_height.py"
-    )
-    metric = "mean_loss"
+    config_space = height_config_space(max_steps)
+    entry_point = str(script_height_example_path())
+    mode = METRIC_MODE
+    metric = METRIC_ATTR
 
     # Local back-end
     trial_backend = LocalBackend(entry_point=entry_point)
 
     np.random.seed(random_seed)
-    scheduler = SimpleScheduler(config_space=config_space, metric=metric)
+    scheduler = SimpleScheduler(config_space=config_space, metric=metric, mode=mode)
 
     stop_criterion = StoppingCriterion(max_wallclock_time=30)
     tuner = Tuner(

@@ -16,8 +16,14 @@ An example showing to launch a tuning of a python function `train_height`.
 
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend.python_backend import PythonBackend
-from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import ASHA
+from examples.training_scripts.height_example.train_height import (
+    height_config_space,
+    train_height as train_height_inner,
+    RESOURCE_ATTR,
+    METRIC_ATTR,
+    METRIC_MODE,
+)
 
 
 def train_height(steps: int, width: float, height: float):
@@ -33,9 +39,15 @@ def train_height(steps: int, width: float, height: float):
     root.setLevel(logging.INFO)
     reporter = Reporter()
     for step in range(steps):
-        dummy_score = (0.1 + width * step / 100) ** (-1) + height * 0.1
+        dummy_score = train_height_inner(step, width, height)
         # Feed the score back to Syne Tune.
-        reporter(step=step, mean_loss=dummy_score, epoch=step + 1)
+        reporter(
+            **{
+                "step": step,
+                METRIC_ATTR: dummy_score,
+                RESOURCE_ATTR: step + 1,
+            }
+        )
         time.sleep(0.1)
 
 
@@ -48,24 +60,22 @@ if __name__ == "__main__":
     max_steps = 100
     n_workers = 4
 
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-    }
+    config_space = height_config_space(max_steps)
+    mode = METRIC_MODE
+    metric = METRIC_ATTR
 
     scheduler = ASHA(
         config_space,
-        metric="mean_loss",
-        resource_attr="epoch",
+        metric=METRIC_ATTR,
+        resource_attr=RESOURCE_ATTR,
         max_t=max_steps,
-        mode="min",
+        mode=METRIC_MODE,
     )
 
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)
 
     stop_criterion = StoppingCriterion(
-        max_wallclock_time=10, min_metric_value={"mean_loss": -6.0}
+        max_wallclock_time=10, min_metric_value={METRIC_ATTR: -6.0}
     )
     tuner = Tuner(
         trial_backend=trial_backend,

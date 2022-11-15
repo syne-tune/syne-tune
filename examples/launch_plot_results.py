@@ -11,13 +11,17 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from pathlib import Path
 
 from syne_tune.backend import LocalBackend
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.config_space import randint
+from syne_tune.util import script_height_example_path
+from examples.training_scripts.height_example.train_height import (
+    height_config_space,
+    METRIC_ATTR,
+    METRIC_MODE,
+)
 
 
 if __name__ == "__main__":
@@ -27,19 +31,10 @@ if __name__ == "__main__":
     max_steps = 100
     n_workers = 4
 
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-    }
-    entry_point = str(
-        Path(__file__).parent
-        / "training_scripts"
-        / "height_example"
-        / "train_height.py"
-    )
-    mode = "min"
-    metric = "mean_loss"
+    config_space = height_config_space(max_steps)
+    entry_point = str(script_height_example_path())
+    mode = METRIC_MODE
+    metric = METRIC_ATTR
 
     trial_backend = LocalBackend(entry_point=entry_point)
 

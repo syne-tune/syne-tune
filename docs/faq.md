@@ -461,6 +461,8 @@ To visualize the progress of Syne Tune in
 `TensorboardCallback` to the `Tuner` object:
 
 ```
+from syne_tune.callbacks import TensorboardCallback
+
 tuner = Tuner(
     ...
     callbacks=[TensorboardCallback()],
