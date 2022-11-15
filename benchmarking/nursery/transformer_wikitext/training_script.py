@@ -14,6 +14,7 @@
 import argparse
 import os
 import time
+
 # import yaml
 
 import numpy as np
@@ -42,6 +43,7 @@ _config_space = {
     "lr": loguniform(1e-6, 1e-3),
     "dropout": uniform(0, 0.99),
 }
+
 
 def get_batch(source, i, bptt):
     seq_len = min(bptt, len(source) - 1 - i)
@@ -79,6 +81,7 @@ def setprec(t, precision):
 
 DATASET_PATH = "https://raw.githubusercontent.com/pytorch/examples/master/word_language_model/data/wikitext-2/"
 
+
 def download_data(root):
     import urllib
 
@@ -106,12 +109,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input-data-dir",
         type=str,
-        default='./',
+        default="./",
         help="location of the data corpus",
     )
-    parser.add_argument(
-        "--output-data-dir", type=str, default='./output'
-    )
+    parser.add_argument("--output-data-dir", type=str, default="./output")
     parser.add_argument("--module-name", type=str, default="standard")
     parser.add_argument("--bias", type=bool, default=False, help="use bias")
     parser.add_argument("--d-model", type=int, default=256, help="width of the model")
@@ -333,7 +334,6 @@ if __name__ == "__main__":
             logs = checkpoint["logs"]
         else:
             os.makedirs(checkpoint_dir)
-
 
     # At any point you can hit Ctrl + C to break out of training early.
     try:
