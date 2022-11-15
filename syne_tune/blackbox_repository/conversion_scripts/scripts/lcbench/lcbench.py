@@ -43,7 +43,7 @@ RESOURCE_ATTR = "epoch"
 
 MAX_RESOURCE_LEVEL = 50
 
-SHA256_HASH = "0c54f7baea230fbcef4c0db5c4fad0a58f5926a0a17833edf6d5def5b4fef33d"
+SHA256_HASH = "1c899f3d4508213b2f05cfdeb93af87551092b6f3ec47e479b0bfc098b362b49"
 
 CONFIGURATION_SPACE = {
     "num_layers": randint(1, 5),
