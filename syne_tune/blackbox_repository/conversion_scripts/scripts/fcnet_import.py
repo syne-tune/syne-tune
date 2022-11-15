@@ -226,7 +226,7 @@ class FCNETRecipe(BlackboxRecipe):
     def __init__(self):
         super(FCNETRecipe, self).__init__(
             name=BLACKBOX_NAME,
-            hash=SHA256_HASH,
+            # hash=SHA256_HASH,
             cite_reference="Tabular benchmarks for joint architecture and hyperparameter optimization. "
             "Klein, A. and Hutter, F. 2019.",
         )

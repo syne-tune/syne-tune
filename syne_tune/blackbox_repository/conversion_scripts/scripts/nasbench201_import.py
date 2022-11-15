@@ -217,7 +217,7 @@ class NASBench201Recipe(BlackboxRecipe):
     def __init__(self):
         super(NASBench201Recipe, self).__init__(
             name="nasbench201",
-            hash=SHA256_HASH,
+            # hash=SHA256_HASH,
             cite_reference="NAS-Bench-201: Extending the scope of reproducible neural architecture search. "
             "Dong, X. and Yang, Y. 2020.",
         )
