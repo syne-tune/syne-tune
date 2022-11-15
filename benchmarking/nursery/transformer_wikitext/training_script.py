@@ -14,11 +14,9 @@
 import argparse
 import os
 import time
-import json
-import yaml
+# import yaml
 
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -34,25 +32,16 @@ import data
 import model
 
 from syne_tune.report import Reporter
+from syne_tune.config_space import loguniform, uniform
+from syne_tune.constants import ST_CHECKPOINT_DIR
 
 report = Reporter()
 
 
-###############################################################################
-# Training code
-###############################################################################
-"""
-# get_batch subdivides the source data into chunks of length args.bptt.
-# If source is equal to the example output of the batchify function, with
-# a bptt-limit of 2, we'd get the following two Variables for i = 0:
-# â”Œ a g m s â” â”Œ b h n t â”
-# â”” b h n t â”˜ â”” c i o u â”˜
-# Note that despite the name of the function, the subdivison of data is not
-# done along the batch dimension (i.e. dimension 1), since that was handled
-# by the batchify function. The chunks are along dimension 0, corresponding
-# to the seq_len dimension in the LSTM.
-"""
-
+_config_space = {
+    "lr": loguniform(1e-6, 1e-3),
+    "dropout": uniform(0, 0.99),
+}
 
 def get_batch(source, i, bptt):
     seq_len = min(bptt, len(source) - 1 - i)
@@ -88,9 +77,17 @@ def setprec(t, precision):
         raise ValueError(f"invalid precision string {args.precision}")
 
 
-def write_options(options, output_path):
-    with output_path.joinpath("options.yaml").open("w") as outfile:
-        yaml.dump(options, outfile)
+DATASET_PATH = "https://raw.githubusercontent.com/pytorch/examples/master/word_language_model/data/wikitext-2/"
+
+def download_data(root):
+    import urllib
+
+    path = os.path.join(root, "wikitext-2")
+    for fname in ("train.txt", "valid.txt", "test.txt"):
+        fh = os.path.join(path, fname)
+        if not os.path.exists(fh):
+            os.makedirs(path, exist_ok=True)
+            urllib.request.urlretrieve(DATASET_PATH + fname, fh)
 
 
 if __name__ == "__main__":
@@ -109,18 +106,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input-data-dir",
         type=str,
-        default=os.environ["SM_CHANNEL_TRAINING"],
+        default='./',
         help="location of the data corpus",
     )
     parser.add_argument(
-        "--input-shapes-dir", type=str, default=os.environ["SM_CHANNEL_SHAPES"]
+        "--output-data-dir", type=str, default='./output'
     )
-    parser.add_argument(
-        "--output-data-dir", type=str, default=os.environ["SM_OUTPUT_DATA_DIR"]
-    )
-    # parser.add_argument('--model-dir', type=str, default=os.environ['SM_MODEL_DIR'])
-    parser.add_argument("--model-dir", type=str, default=None)
-
     parser.add_argument("--module-name", type=str, default="standard")
     parser.add_argument("--bias", type=bool, default=False, help="use bias")
     parser.add_argument("--d-model", type=int, default=256, help="width of the model")
@@ -190,13 +181,15 @@ if __name__ == "__main__":
         "--resume-dir", type=str, default=None, help="path to resume training"
     )
 
+    parser.add_argument(f"--{ST_CHECKPOINT_DIR}", type=str)
+
     args = parser.parse_args()
 
+    download_data(args.input_data_dir)
     input_data_path = Path(args.input_data_dir).joinpath("wikitext-2")
-    input_shapes_path = Path(args.input_shapes_dir)
     output_path = Path(args.output_data_dir)
 
-    write_options(options=args.sm_hps, output_path=output_path)
+    checkpoint_dir = vars(args)[ST_CHECKPOINT_DIR]
 
     # Set the random seed manually for reproducibility.
     torch.manual_seed(args.seed)
@@ -208,33 +201,15 @@ if __name__ == "__main__":
 
     device = args.device = torch.device("cuda" if args.use_cuda else "cpu")
 
-    ###############################################################################
     # Load data
-    ###############################################################################
-
     corpus = data.Corpus(str(input_data_path))
-
-    # Starting from sequential data, batchify arranges the dataset into columns.
-    # For instance, with the alphabet as the sequence and batch size 4, we'd get
-    # â”Œ a g m s â”
-    # â”‚ b h n t â”‚
-    # â”‚ c i o u â”‚
-    # â”‚ d j p v â”‚
-    # â”‚ e k q w â”‚
-    # â”” f l r x â”˜.
-    # These columns are treated as independent by the model, which means that the
-    # dependence of e. g. 'g' on 'f' can not be learned, but allows more efficient
-    # batch processing.
 
     eval_batch_size = 10
     train_data = batchify(corpus.train, args.batch_size, device)
     val_data = batchify(corpus.valid, eval_batch_size, device)
     test_data = batchify(corpus.test, eval_batch_size, device)
 
-    ###############################################################################
     # Build the model
-    ###############################################################################
-
     ntokens = len(corpus.dictionary)
 
     def evaluate(data_source):
@@ -311,7 +286,7 @@ if __name__ == "__main__":
 
         return epoch_loss / (len(train_data) - 1), first_loss
 
-    model = TransformerModel(
+    model = model.TransformerModel(
         ntokens,
         ninp=args.d_model,
         nhead=args.nhead,
@@ -324,9 +299,6 @@ if __name__ == "__main__":
     model = setprec(model, args.precision)
 
     criterion = nn.NLLLoss()
-
-    if args.model_dir is not None:
-        os.makedirs(args.model_dir, exist_ok=True)
 
     # Loop over epochs.
     lr = args.lr
@@ -349,17 +321,19 @@ if __name__ == "__main__":
 
     logs = []
     start_epoch = 0
-    if args.resume_dir and os.path.exists(
-        os.path.join(args.resume_dir, "checkpoint_last.pt")
-    ):
-        checkpoint = torch.load(os.path.join(args.resume_dir, "checkpoint_last.pt"))
-        model.load_state_dict(checkpoint["model"])
-        optimizer.load_state_dict(checkpoint["optimizer"])
-        if args.precision == "half":
-            amp.load_state_dict(checkpoint["amp"])
-        start_epoch = checkpoint["epoch"]
-        best_val_loss = checkpoint["best_val_loss"]
-        logs = checkpoint["logs"]
+    if checkpoint_dir:
+        if os.path.exists(os.path.join(checkpoint_dir, "checkpoint_last.pt")):
+            checkpoint = torch.load(os.path.join(checkpoint_dir, "checkpoint_last.pt"))
+            model.load_state_dict(checkpoint["model"])
+            optimizer.load_state_dict(checkpoint["optimizer"])
+            if args.precision == "half":
+                amp.load_state_dict(checkpoint["amp"])
+            start_epoch = checkpoint["epoch"]
+            best_val_loss = checkpoint["best_val_loss"]
+            logs = checkpoint["logs"]
+        else:
+            os.makedirs(checkpoint_dir)
+
 
     # At any point you can hit Ctrl + C to break out of training early.
     try:
@@ -389,7 +363,7 @@ if __name__ == "__main__":
             report(epoch=epoch, val_loss=val_loss)
 
             # Save the model if the validation loss is the best we've seen so far.
-            if args.model_dir is not None:
+            if checkpoint_dir is not None:
                 if val_loss < best_val_loss:
                     checkpoint = {
                         "model": model.state_dict(),
@@ -401,7 +375,7 @@ if __name__ == "__main__":
                     if args.precision == "half":
                         checkpoint["amp"] = (amp.state_dict(),)
                     with open(
-                        os.path.join(args.model_dir, "checkpoint_best.pt"), "wb"
+                        os.path.join(checkpoint_dir, "checkpoint_best.pt"), "wb"
                     ) as f:
                         torch.save(checkpoint, f)
                     best_val_loss = val_loss
@@ -416,34 +390,10 @@ if __name__ == "__main__":
                     if args.precision == "half":
                         checkpoint["amp"] = amp.state_dict()
                 with open(
-                    os.path.join(args.model_dir, "checkpoint_last.pt"), "wb"
+                    os.path.join(checkpoint_dir, "checkpoint_last.pt"), "wb"
                 ) as f:
                     torch.save(checkpoint, f)
 
     except KeyboardInterrupt:
         print("-" * 89)
         print("Exiting from training early")
-
-    # Load the best saved model.
-    # if args.model_dir is not None:
-    #     with open(os.path.join(args.model_dir, 'checkpoint_best.pt'), 'rb') as f:
-    #         checkpoint = torch.load(f)
-    #         model.load_state_dict(checkpoint['model'])
-    #         optimizer.load_state_dict(checkpoint['optimizer'])
-    #         if args.precision == 'half':
-    #             amp.load_state_dict(checkpoint['amp'][0])
-    #     # Run on test data.
-    #     test_loss = evaluate(test_data)
-    #     print('=' * 89)
-    #     print('| End of training | test loss {:5.2f} | '
-    #           'test ppl {:8.2f}'.format(test_loss, np.exp(test_loss)))
-    #     print('=' * 89)
-    #     logs.append(dict(
-    #         epoch='-1',
-    #         test_loss=test_loss
-    #     ))
-    #
-    # logdf = pd.DataFrame(logs)
-    # print(output_path.joinpath("result.csv"))
-    # with output_path.joinpath("result.csv").open('w') as f:
-    #     logdf.to_csv(f)
