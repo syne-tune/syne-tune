@@ -1,3 +1,15 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 # coding: utf-8
 import argparse
 import os
@@ -10,10 +22,11 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 try:
     from apex import amp
 except:
-    print('Failed to import apex. You can still train with --precision {float|double}.')
+    print("Failed to import apex. You can still train with --precision {float|double}.")
 
 from pathlib import Path
 
@@ -23,7 +36,6 @@ import model
 from syne_tune.report import Reporter
 
 report = Reporter()
-
 
 
 ###############################################################################
@@ -41,10 +53,11 @@ report = Reporter()
 # to the seq_len dimension in the LSTM.
 """
 
+
 def get_batch(source, i, bptt):
     seq_len = min(bptt, len(source) - 1 - i)
-    data = source[i:i+seq_len]
-    target = source[i+1:i+1+seq_len].view(-1)
+    data = source[i : i + seq_len]
+    target = source[i + 1 : i + 1 + seq_len].view(-1)
     return data, target
 
 
@@ -64,84 +77,118 @@ def batchify(data, bsz, device):
 
 
 def setprec(t, precision):
-    if precision == 'half':
+    if precision == "half":
         # do nothing since this is handled by AMP
         return t
-    elif precision == 'float':
+    elif precision == "float":
         return t.float()
-    elif precision == 'double':
+    elif precision == "double":
         return t.double()
     else:
-        raise ValueError(f'invalid precision string {args.precision}')
+        raise ValueError(f"invalid precision string {args.precision}")
 
 
 def write_options(options, output_path):
-    with output_path.joinpath("options.yaml").open('w') as outfile:
+    with output_path.joinpath("options.yaml").open("w") as outfile:
         yaml.dump(options, outfile)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description=
-    '''
+    parser = argparse.ArgumentParser(
+        description="""
     PyTorch Wikitext-2 Transformer Language Model
-    ''', formatter_class=argparse.RawTextHelpFormatter)
+    """,
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
 
-    parser.add_argument('--n-workers', type=int, default=2, metavar='W')
-    parser.add_argument('--use-cuda', type=bool, default=True)
+    parser.add_argument("--n-workers", type=int, default=2, metavar="W")
+    parser.add_argument("--use-cuda", type=bool, default=True)
 
     # input data and model directories
-    parser.add_argument('--input-data-dir', type=str, default=os.environ['SM_CHANNEL_TRAINING'],
-                        help='location of the data corpus')
-    parser.add_argument('--input-shapes-dir', type=str, default=os.environ['SM_CHANNEL_SHAPES'])
-    parser.add_argument('--output-data-dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR'])
+    parser.add_argument(
+        "--input-data-dir",
+        type=str,
+        default=os.environ["SM_CHANNEL_TRAINING"],
+        help="location of the data corpus",
+    )
+    parser.add_argument(
+        "--input-shapes-dir", type=str, default=os.environ["SM_CHANNEL_SHAPES"]
+    )
+    parser.add_argument(
+        "--output-data-dir", type=str, default=os.environ["SM_OUTPUT_DATA_DIR"]
+    )
     # parser.add_argument('--model-dir', type=str, default=os.environ['SM_MODEL_DIR'])
-    parser.add_argument('--model-dir', type=str, default=None)
+    parser.add_argument("--model-dir", type=str, default=None)
 
-    parser.add_argument('--module-name', type=str, default='standard')
-    parser.add_argument('--bias', type=bool, default=False,
-                        help='use bias')
-    parser.add_argument('--d-model', type=int, default=256,
-                        help='width of the model')
-    parser.add_argument('--ffn-ratio', type=int, default=1,
-                        help='the ratio of d_ffn to d_model')
-    parser.add_argument('--nlayers', type=int, default=2,
-                        help='number of layers')
-    parser.add_argument('--nhead', type=int, default=2,
-                        help='the number of heads in the encoder/decoder of the transformer model')
-    parser.add_argument('--lr', type=float, default=0.001,
-                        help='initial learning rate')
-    parser.add_argument('--momentum', type=float, default=0,
-                        help='momentum')
-    parser.add_argument('--output-mult', type=float, default=1,
-                        help='output is multiplied by sqrt(output_mult/d_model)')
-    parser.add_argument('--input-mult', type=float, default=1,
-                        help='input is multiplied by sqrt(input_mult*d_model)')
-    parser.add_argument('--attn-mult', type=float, default=1,
-                        help='attn is multiplied by sqrt(attn_mult)/head_dim')
-    parser.add_argument('--optimizer-name', default='sgd', choices=['sgd', 'adam'])
-    parser.add_argument('--init-var', type=float, default=1,
-                        help='weights are initialized with variance init_var/ninp')
-    parser.add_argument('--clip', type=float, default=0.25,
-                        help='gradient clipping')
-    parser.add_argument('--epochs', type=int, default=40,
-                        help='upper epoch limit')
-    parser.add_argument('--batch-size', type=int, default=20, metavar='N',
-                        help='batch size')
-    parser.add_argument('--bptt', type=int, default=35,
-                        help='sequence length')
-    parser.add_argument('--dropout', type=float, default=0.2,
-                        help='dropout applied to layers (0 = no dropout)')
-    parser.add_argument('--tied', type=bool, default=False,
-                        help='tie the word embedding and softmax weights')
-    parser.add_argument('--seed', type=int, default=1111,
-                        help='random seed')
-    parser.add_argument('--precision', type=str, default='float',
-                        help='float | double | half')
-    parser.add_argument('--log-interval', type=int, default=200, metavar='N',
-                        help='report interval')
-    parser.add_argument('--resume-dir', type=str, default=None,
-                        help='path to resume training')
+    parser.add_argument("--module-name", type=str, default="standard")
+    parser.add_argument("--bias", type=bool, default=False, help="use bias")
+    parser.add_argument("--d-model", type=int, default=256, help="width of the model")
+    parser.add_argument(
+        "--ffn-ratio", type=int, default=1, help="the ratio of d_ffn to d_model"
+    )
+    parser.add_argument("--nlayers", type=int, default=2, help="number of layers")
+    parser.add_argument(
+        "--nhead",
+        type=int,
+        default=2,
+        help="the number of heads in the encoder/decoder of the transformer model",
+    )
+    parser.add_argument("--lr", type=float, default=0.001, help="initial learning rate")
+    parser.add_argument("--momentum", type=float, default=0, help="momentum")
+    parser.add_argument(
+        "--output-mult",
+        type=float,
+        default=1,
+        help="output is multiplied by sqrt(output_mult/d_model)",
+    )
+    parser.add_argument(
+        "--input-mult",
+        type=float,
+        default=1,
+        help="input is multiplied by sqrt(input_mult*d_model)",
+    )
+    parser.add_argument(
+        "--attn-mult",
+        type=float,
+        default=1,
+        help="attn is multiplied by sqrt(attn_mult)/head_dim",
+    )
+    parser.add_argument("--optimizer-name", default="sgd", choices=["sgd", "adam"])
+    parser.add_argument(
+        "--init-var",
+        type=float,
+        default=1,
+        help="weights are initialized with variance init_var/ninp",
+    )
+    parser.add_argument("--clip", type=float, default=0.25, help="gradient clipping")
+    parser.add_argument("--epochs", type=int, default=40, help="upper epoch limit")
+    parser.add_argument(
+        "--batch-size", type=int, default=20, metavar="N", help="batch size"
+    )
+    parser.add_argument("--bptt", type=int, default=35, help="sequence length")
+    parser.add_argument(
+        "--dropout",
+        type=float,
+        default=0.2,
+        help="dropout applied to layers (0 = no dropout)",
+    )
+    parser.add_argument(
+        "--tied",
+        type=bool,
+        default=False,
+        help="tie the word embedding and softmax weights",
+    )
+    parser.add_argument("--seed", type=int, default=1111, help="random seed")
+    parser.add_argument(
+        "--precision", type=str, default="float", help="float | double | half"
+    )
+    parser.add_argument(
+        "--log-interval", type=int, default=200, metavar="N", help="report interval"
+    )
+    parser.add_argument(
+        "--resume-dir", type=str, default=None, help="path to resume training"
+    )
 
     args = parser.parse_args()
 
@@ -155,7 +202,9 @@ if __name__ == '__main__':
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         if not args.use_cuda:
-            print("WARNING: You have a CUDA device, so you should probably run with --use-cuda")
+            print(
+                "WARNING: You have a CUDA device, so you should probably run with --use-cuda"
+            )
 
     device = args.device = torch.device("cuda" if args.use_cuda else "cpu")
 
@@ -191,7 +240,7 @@ if __name__ == '__main__':
     def evaluate(data_source):
         # Turn on evaluation mode which disables dropout.
         model.eval()
-        total_loss = 0.
+        total_loss = 0.0
         ntokens = len(corpus.dictionary)
         with torch.no_grad():
             for i in range(0, data_source.size(0) - 1, args.bptt):
@@ -204,8 +253,8 @@ if __name__ == '__main__':
     def train(optimizer, epoch):
         # Turn on training mode which enables dropout.
         model.train()
-        total_loss = 0.
-        epoch_loss = 0.
+        total_loss = 0.0
+        epoch_loss = 0.0
         start_time = time.time()
         ntokens = len(corpus.dictionary)
         first_loss = None
@@ -220,7 +269,7 @@ if __name__ == '__main__':
             loss = criterion(output, targets)
             if torch.isnan(loss):
                 exit(0)
-            if args.precision == 'half':
+            if args.precision == "half":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
             else:
@@ -228,8 +277,10 @@ if __name__ == '__main__':
 
             if args.clip > 0:
                 # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-                if args.precision == 'half':
-                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.clip)
+                if args.precision == "half":
+                    torch.nn.utils.clip_grad_norm_(
+                        amp.master_params(optimizer), args.clip
+                    )
                 else:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
 
@@ -241,10 +292,18 @@ if __name__ == '__main__':
             if batch % args.log_interval == 0 and batch > 0:
                 cur_loss = total_loss / args.log_interval
                 elapsed = time.time() - start_time
-                print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.5f} | ms/batch {:5.2f} | '
-                      'loss {:5.2f} | ppl {:8.2f}'.format(
-                        epoch, batch, len(train_data) // args.bptt, lr,
-                        elapsed * 1000 / args.log_interval, cur_loss, np.exp(cur_loss)))
+                print(
+                    "| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.5f} | ms/batch {:5.2f} | "
+                    "loss {:5.2f} | ppl {:8.2f}".format(
+                        epoch,
+                        batch,
+                        len(train_data) // args.bptt,
+                        lr,
+                        elapsed * 1000 / args.log_interval,
+                        cur_loss,
+                        np.exp(cur_loss),
+                    )
+                )
                 total_loss = 0
                 start_time = time.time()
                 if first_loss is None:
@@ -252,12 +311,14 @@ if __name__ == '__main__':
 
         return epoch_loss / (len(train_data) - 1), first_loss
 
-    model = TransformerModel(ntokens,
-                                     ninp=args.d_model,
-                                     nhead=args.nhead,
-                                     nhid=args.d_model * args.ffn_ratio,
-                                     nlayers=args.nlayers,
-                                     dropout=args.dropout)
+    model = TransformerModel(
+        ntokens,
+        ninp=args.d_model,
+        nhead=args.nhead,
+        nhid=args.d_model * args.ffn_ratio,
+        nlayers=args.nlayers,
+        dropout=args.dropout,
+    )
 
     model = model.to(device)
     model = setprec(model, args.precision)
@@ -269,57 +330,60 @@ if __name__ == '__main__':
 
     # Loop over epochs.
     lr = args.lr
-    best_val_loss = float('inf')
+    best_val_loss = float("inf")
 
-    if args.optimizer_name == 'sgd':
+    if args.optimizer_name == "sgd":
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-    elif args.optimizer_name == 'adam':
-        optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(args.momentum, 0.999))
+    elif args.optimizer_name == "adam":
+        optimizer = optim.Adam(
+            model.parameters(), lr=args.lr, betas=(args.momentum, 0.999)
+        )
     else:
         raise ValueError()
 
     # half-precision black magic
-    if args.precision == 'half':
+    if args.precision == "half":
         model, optimizer = amp.initialize(
-            model,
-            optimizer,
-            opt_level='O1',
-            min_loss_scale=0.0001,
-            verbosity=0
-            )
+            model, optimizer, opt_level="O1", min_loss_scale=0.0001, verbosity=0
+        )
 
     logs = []
     start_epoch = 0
-    if args.resume_dir and os.path.exists(os.path.join(args.resume_dir, 'checkpoint_last.pt')):
-        checkpoint = torch.load(os.path.join(args.resume_dir, 'checkpoint_last.pt'))
-        model.load_state_dict(checkpoint['model'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        if args.precision == 'half':
-            amp.load_state_dict(checkpoint['amp'])
-        start_epoch = checkpoint['epoch']
-        best_val_loss = checkpoint['best_val_loss']
-        logs = checkpoint['logs']
+    if args.resume_dir and os.path.exists(
+        os.path.join(args.resume_dir, "checkpoint_last.pt")
+    ):
+        checkpoint = torch.load(os.path.join(args.resume_dir, "checkpoint_last.pt"))
+        model.load_state_dict(checkpoint["model"])
+        optimizer.load_state_dict(checkpoint["optimizer"])
+        if args.precision == "half":
+            amp.load_state_dict(checkpoint["amp"])
+        start_epoch = checkpoint["epoch"]
+        best_val_loss = checkpoint["best_val_loss"]
+        logs = checkpoint["logs"]
 
     # At any point you can hit Ctrl + C to break out of training early.
     try:
-        for epoch in range(start_epoch+1, args.epochs+1):
+        for epoch in range(start_epoch + 1, args.epochs + 1):
             epoch_start_time = time.time()
             train_loss, first_loss = train(optimizer, epoch)
             val_loss = evaluate(val_data)
 
             duration = time.time() - epoch_start_time
-            print('-' * 89)
-            print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-                  'valid ppl {:8.2f}'.format(epoch, duration,
-                                             val_loss, np.exp(val_loss)))
-            print('-' * 89)
-            logs.append(dict(
-                epoch=epoch,
-                train_loss=train_loss,
-                val_loss=val_loss,
-                first_loss=first_loss,
-                duration=duration
-            ))
+            print("-" * 89)
+            print(
+                "| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | "
+                "valid ppl {:8.2f}".format(epoch, duration, val_loss, np.exp(val_loss))
+            )
+            print("-" * 89)
+            logs.append(
+                dict(
+                    epoch=epoch,
+                    train_loss=train_loss,
+                    val_loss=val_loss,
+                    first_loss=first_loss,
+                    duration=duration,
+                )
+            )
 
             # report validation loss back to Syne Tune
             report(epoch=epoch, val_loss=val_loss)
@@ -328,33 +392,37 @@ if __name__ == '__main__':
             if args.model_dir is not None:
                 if val_loss < best_val_loss:
                     checkpoint = {
-                        'model': model.state_dict(),
-                        'optimizer': optimizer.state_dict(),
-                        'epoch': epoch,
-                        'best_val_loss': best_val_loss,
-                        'logs': logs
+                        "model": model.state_dict(),
+                        "optimizer": optimizer.state_dict(),
+                        "epoch": epoch,
+                        "best_val_loss": best_val_loss,
+                        "logs": logs,
                     }
-                    if args.precision == 'half':
-                        checkpoint['amp'] = amp.state_dict(),
-                    with open(os.path.join(args.model_dir, 'checkpoint_best.pt'), 'wb') as f:
+                    if args.precision == "half":
+                        checkpoint["amp"] = (amp.state_dict(),)
+                    with open(
+                        os.path.join(args.model_dir, "checkpoint_best.pt"), "wb"
+                    ) as f:
                         torch.save(checkpoint, f)
                     best_val_loss = val_loss
                 else:
                     checkpoint = {
-                        'model': model.state_dict(),
-                        'optimizer': optimizer.state_dict(),
-                        'epoch': epoch,
-                        'best_val_loss': best_val_loss,
-                        'logs': logs
+                        "model": model.state_dict(),
+                        "optimizer": optimizer.state_dict(),
+                        "epoch": epoch,
+                        "best_val_loss": best_val_loss,
+                        "logs": logs,
                     }
-                    if args.precision == 'half':
-                        checkpoint['amp'] = amp.state_dict()
-                with open(os.path.join(args.model_dir, 'checkpoint_last.pt'), 'wb') as f:
+                    if args.precision == "half":
+                        checkpoint["amp"] = amp.state_dict()
+                with open(
+                    os.path.join(args.model_dir, "checkpoint_last.pt"), "wb"
+                ) as f:
                     torch.save(checkpoint, f)
 
     except KeyboardInterrupt:
-        print('-' * 89)
-        print('Exiting from training early')
+        print("-" * 89)
+        print("Exiting from training early")
 
     # Load the best saved model.
     # if args.model_dir is not None:

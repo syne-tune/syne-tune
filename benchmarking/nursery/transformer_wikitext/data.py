@@ -1,3 +1,15 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 import os
 from io import open
 import torch
@@ -25,43 +37,43 @@ class Corpus(object):
         self.valid = None
         self.test = None
         if not self.load_cache(path):
-            self.train = self.tokenize(os.path.join(path, 'train.txt'))
-            self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
-            self.test = self.tokenize(os.path.join(path, 'test.txt'))
+            self.train = self.tokenize(os.path.join(path, "train.txt"))
+            self.valid = self.tokenize(os.path.join(path, "valid.txt"))
+            self.test = self.tokenize(os.path.join(path, "test.txt"))
             self.save_cache(path)
 
     def load_cache(self, path):
-        for cache in ['dict.pt', 'train.pt', 'valid.pt', 'test.pt']:
+        for cache in ["dict.pt", "train.pt", "valid.pt", "test.pt"]:
             cache_path = os.path.join(path, cache)
             if not os.path.exists(cache_path):
                 return False
-        self.dictionary = torch.load(os.path.join(path, 'dict.pt'))
-        self.train = torch.load(os.path.join(path, 'train.pt'))
-        self.valid = torch.load(os.path.join(path, 'valid.pt'))
-        self.test = torch.load(os.path.join(path, 'test.pt'))
+        self.dictionary = torch.load(os.path.join(path, "dict.pt"))
+        self.train = torch.load(os.path.join(path, "train.pt"))
+        self.valid = torch.load(os.path.join(path, "valid.pt"))
+        self.test = torch.load(os.path.join(path, "test.pt"))
         return True
 
     def save_cache(self, path):
-        torch.save(self.dictionary, os.path.join(path, 'dict.pt'))
-        torch.save(self.train, os.path.join(path, 'train.pt'))
-        torch.save(self.valid, os.path.join(path, 'valid.pt'))
-        torch.save(self.test, os.path.join(path, 'test.pt'))
+        torch.save(self.dictionary, os.path.join(path, "dict.pt"))
+        torch.save(self.train, os.path.join(path, "train.pt"))
+        torch.save(self.valid, os.path.join(path, "valid.pt"))
+        torch.save(self.test, os.path.join(path, "test.pt"))
 
     def tokenize(self, path):
         """Tokenizes a text file."""
         assert os.path.exists(path)
         # Add words to the dictionary
-        with open(path, 'r', encoding="utf8") as f:
+        with open(path, "r", encoding="utf8") as f:
             for line in f:
-                words = line.split() + ['<eos>']
+                words = line.split() + ["<eos>"]
                 for word in words:
                     self.dictionary.add_word(word)
 
         # Tokenize file content
-        with open(path, 'r', encoding="utf8") as f:
+        with open(path, "r", encoding="utf8") as f:
             idss = []
             for line in f:
-                words = line.split() + ['<eos>']
+                words = line.split() + ["<eos>"]
                 ids = []
                 for word in words:
                     ids.append(self.dictionary.word2idx[word])
