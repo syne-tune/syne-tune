@@ -13,27 +13,51 @@
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
-from benchmarking.definitions.definition_resnet_cifar10 import (
-    resnet_cifar10_default_params,
-    resnet_cifar10_benchmark as _resnet_cifar10_benchmark,
+from benchmarking.training_scripts.resnet_cifar10.resnet_cifar10 import (
+    METRIC_NAME,
+    RESOURCE_ATTR,
+    _config_space,
 )
+
+
+def resnet_cifar10_default_params(sagemaker_backend: bool):
+    if sagemaker_backend:
+        instance_type = "ml.g4dn.xlarge"
+    else:
+        # For local backend, GPU cores serve different workers, so we
+        # need more memory
+        instance_type = "ml.g4dn.12xlarge"
+    return {
+        "max_resource_level": 27,
+        "instance_type": instance_type,
+        "num_workers": 4,
+        "num_gpus": 1,
+        "dataset_path": "./",
+    }
 
 
 # Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def resnet_cifar10_benchmark(sagemaker_backend: bool = False, **kwargs):
-    params = {"backend": "sagemaker"} if sagemaker_backend else None
-    params = resnet_cifar10_default_params(params)
-    benchmark = _resnet_cifar10_benchmark(params)
+    params = resnet_cifar10_default_params(sagemaker_backend)
+    config_space = dict(
+        _config_space,
+        epochs=params["max_resource_level"],
+        dataset_path=params["dataset_path"],
+        num_gpus=params["num_gpus"],
+    )
     _kwargs = dict(
-        script=Path(benchmark["script"]),
-        config_space=benchmark["config_space"],
+        script=Path(__file__).parent.parent.parent
+        / "training_scripts"
+        / "resnet_cifar10"
+        / "resnet_cifar10.py",
+        config_space=config_space,
         max_wallclock_time=3 * 3600,
         n_workers=params["num_workers"],
         instance_type=params["instance_type"],
-        metric=benchmark["metric"],
-        mode=benchmark["mode"],
-        max_resource_attr=benchmark["max_resource_attr"],
-        resource_attr=benchmark["resource_attr"],
+        metric=METRIC_NAME,
+        mode="max",
+        max_resource_attr="epochs",
+        resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
         estimator_kwargs=dict(
             framework_version="1.7.1",
@@ -42,3 +66,18 @@ def resnet_cifar10_benchmark(sagemaker_backend: bool = False, **kwargs):
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)
+
+
+# Support for cost models:
+#
+# from benchmarking.utils import get_cost_model_for_batch_size
+# from benchmarking.training_scripts.resnet_cifar10.resnet_cifar10 import (
+#     BATCH_SIZE_LOWER,
+#     BATCH_SIZE_UPPER,
+#     BATCH_SIZE_KEY,
+# )
+# cost_model = get_cost_model_for_batch_size(
+#     cost_model_type="quadratic_spline",
+#     batch_size_key = BATCH_SIZE_KEY,
+#     batch_size_range = (BATCH_SIZE_LOWER, BATCH_SIZE_UPPER),
+# )

@@ -90,30 +90,36 @@ def test_blackbox_fidelity():
     for u, v in zip(x1, x2):
         for epoch in range(n_epochs):
             res = blackbox.objective_function(
-                {"hp_x1": u, "hp_x2": v}, {"hp_epoch": epoch}
+                {"hp_x1": u, "hp_x2": v}, fidelity={"hp_epoch": epoch}
             )
             assert res["metric_rmse"] == u * v + epoch
 
-    # check that blackbox can be called with configuration instead of dict
-    config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
-    config["hp_x1"] = u
-    config["hp_x2"] = v
-    res = blackbox.objective_function(config, {"hp_epoch": epoch})
-    assert res["metric_rmse"] == u * v + epoch
+            # check that blackbox can be called with configuration instead of dict
+            config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
+            config["hp_x1"] = u
+            config["hp_x2"] = v
+            res = blackbox.objective_function(config, fidelity={"hp_epoch": epoch})
+            assert res["metric_rmse"] == u * v + epoch
 
-    # check that blackbox can be called with fidelity value instead of dict
-    config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
-    config["hp_x1"] = u
-    config["hp_x2"] = v
-    res = blackbox.objective_function(config, epoch)
-    assert res["metric_rmse"] == u * v + epoch
+            # check that blackbox can be called with fidelity value instead of dict
+            config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
+            config["hp_x1"] = u
+            config["hp_x2"] = v
+            res = blackbox.objective_function(config, fidelity=epoch)
+            assert res["metric_rmse"] == u * v + epoch
 
-    # check that blackbox can be called with fidelity value instead of dict
-    config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
-    config["hp_x1"] = u
-    config["hp_x2"] = v
-    res = blackbox(config, epoch)
-    assert res["metric_rmse"] == u * v + epoch
+            # check that blackbox can be called directly
+            config = {k: v.sample() for k, v in blackbox.configuration_space.items()}
+            config["hp_x1"] = u
+            config["hp_x2"] = v
+            res = blackbox(config, epoch)
+            assert res["metric_rmse"] == u * v + epoch
+
+        # check that tensor is returned
+        res = blackbox.objective_function({"hp_x1": u, "hp_x2": v})
+        assert res.shape == (n_epochs, 1)
+        should_be = (np.arange(n_epochs) + u * v).reshape((-1, 1))
+        assert (res == should_be).all()
 
 
 def test_blackbox_seed():
@@ -243,12 +249,14 @@ def test_blackbox_tabular_serialization():
 def test_blackbox_tabular():
     data = np.stack([x1, x2]).T
     hyperparameters = pd.DataFrame(data=data, columns=["hp_x1", "hp_x2"])
+    num_evals = len(hyperparameters)
     num_seeds = 3
     num_fidelities = 5
     num_objectives = 2
+    num_hps = 2
 
     objectives_evaluations = np.random.rand(
-        len(hyperparameters), num_seeds, num_fidelities, num_objectives
+        num_evals, num_seeds, num_fidelities, num_objectives
     )
 
     blackbox = BlackboxTabular(
@@ -269,3 +277,18 @@ def test_blackbox_tabular():
             list(res.values()),
             objectives_evaluations[i, num_seeds - 1, num_fidelities - 1, :],
         )
+
+    num_evalsxseeds = num_evals * num_seeds
+    X, y = blackbox.hyperparameter_objectives_values(predict_curves=False)
+    assert X.shape == (num_evalsxseeds * num_fidelities, num_hps + 1)
+    assert y.shape == (num_evalsxseeds * num_fidelities, num_objectives)
+    assert np.allclose(
+        np.ravel(objectives_evaluations.transpose((2, 1, 0, 3))), np.ravel(y.to_numpy())
+    )
+
+    X, y = blackbox.hyperparameter_objectives_values(predict_curves=True)
+    assert X.shape == (num_evalsxseeds, num_hps)
+    assert y.shape == (num_evalsxseeds, num_fidelities * num_objectives)
+    assert np.allclose(
+        np.ravel(objectives_evaluations.transpose((1, 0, 2, 3))), np.ravel(y.to_numpy())
+    )

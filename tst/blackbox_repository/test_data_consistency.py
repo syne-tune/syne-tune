@@ -58,16 +58,25 @@ def nas201_benchmark(dataset_name):
     )
 
 
-def lcbench_benchmark(dataset_name):
+def lcbench_benchmark(dataset_name, surrogate="nn-1"):
+    if surrogate.startswith("nn-"):
+        kwargs = dict(
+            surrogate="KNeighborsRegressor",
+            surrogate_kwargs={"n_neighbors": int(surrogate[3:])},
+        )
+    else:
+        map_name = dict(
+            xgb="XGBRegressor", rf="RandomForestRegressor", mlp="MLPRegressor"
+        )
+        kwargs = dict(surrogate=map_name[surrogate])
     return BenchmarkDefinition(
         elapsed_time_attr="time",
         metric="val_accuracy",
         mode="max",
         blackbox_name="lcbench",
         dataset_name=dataset_name,
-        surrogate="KNeighborsRegressor",
-        surrogate_kwargs={"n_neighbors": 1},
         max_resource_attr="epochs",
+        **kwargs,
     )
 
 
@@ -89,10 +98,17 @@ lc_bench_datasets = [
     "covertype",
     "christine",
 ]
-for task in lc_bench_datasets:
-    benchmark_definitions[
-        "lcbench-" + task.replace("_", "-").replace(".", "")
-    ] = lcbench_benchmark(task)
+
+# Consistency tests fail for "xgb", "mlp". What is XGBoost doing?
+# surrogates = ("nn-1", "nn-5", "rf", "xgb", "mlp")
+surrogates = ("nn-1", "nn-5", "rf")
+
+for surrogate in surrogates:
+    for task in lc_bench_datasets:
+        _task = task.replace("_", "-").replace(".", "")
+        benchmark_definitions[f"lcbench-{_task}-{surrogate}"] = lcbench_benchmark(
+            task, surrogate
+        )
 
 
 def create_blackbox(benchmark: BenchmarkDefinition):
@@ -136,8 +152,8 @@ def _assert_no_extreme_deviations(elapsed_times: List[float], error_prefix: str)
 
 
 @pytest.mark.skip("Needs blackbox data files locally or on S3")
-@pytest.mark.parametrize("benchmark", benchmark_definitions.values())
-def test_elapsed_time_consistency(benchmark):
+@pytest.mark.parametrize("name, benchmark", list(benchmark_definitions.items()))
+def test_elapsed_time_consistency(name, benchmark):
     num_configs = 20
     random_seed = 382378624
 
@@ -158,6 +174,7 @@ def test_elapsed_time_consistency(benchmark):
     for config in configs:
         for seed in seeds:
             error_prefix = (
+                f"name = {name}, "
                 f"blackbox = {benchmark.blackbox_name}, "
                 f"dataset = {benchmark.dataset_name}, "
                 f"seed = {seed}, config = {config}"

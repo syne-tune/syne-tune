@@ -10,13 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import List, Dict, Callable, Optional, Union
 import json
 import logging
 from datetime import datetime
 from json.decoder import JSONDecodeError
-from typing import List, Dict, Callable, Optional
 import pandas as pd
 from dataclasses import dataclass
+from pathlib import Path
 
 from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
 from syne_tune import Tuner
@@ -34,7 +35,7 @@ except ImportError:
 class ExperimentResult:
     name: str
     results: pd.DataFrame
-    metadata: Dict
+    metadata: dict
     tuner: Tuner
 
     def __str__(self):
@@ -44,9 +45,16 @@ class ExperimentResult:
         return res
 
     def creation_date(self):
+        """
+        :return: Timestamp when `Tuner` was created
+        """
         return datetime.fromtimestamp(self.metadata[ST_TUNER_CREATION_TIMESTAMP])
 
     def plot(self, **plt_kwargs):
+        """Plot best metric value as function of wallclock time
+
+        :param plt_kwargs: Arguments to `matplotlib.pyplot.plot`
+        """
         import matplotlib.pyplot as plt
 
         metric = self.metric_names()[0]
@@ -60,7 +68,7 @@ class ExperimentResult:
                 else df.loc[:, metric].cummin()
             )
             plt.plot(x, y, **plt_kwargs)
-            plt.xlabel("wallclock time")
+            plt.xlabel("wallclock time (secs)")
             plt.ylabel(metric)
             plt.title(f"Best result over time {self.name}")
             plt.show()
@@ -74,7 +82,7 @@ class ExperimentResult:
     def entrypoint_name(self) -> str:
         return self.metadata["entrypoint"]
 
-    def best_config(self) -> Dict:
+    def best_config(self) -> dict:
         """
         Return the best config found for the first metric defined in the scheduler.
         :param self:
@@ -85,8 +93,8 @@ class ExperimentResult:
 
         if len(metric_names) > 1:
             logging.warning(
-                "Several metrics exists so the best is not defined, this will return the best other the"
-                f"first metric {metric_names}."
+                "Several metrics exists so the best is not defined, this will "
+                f"return the best w.r.t. the first metric of {metric_names}."
             )
         metric_name = metric_names[0]
 
@@ -97,7 +105,7 @@ class ExperimentResult:
             best_index = self.results.loc[:, metric_name].argmax()
         res = dict(self.results.loc[best_index])
 
-        # dont include internal fields
+        # Don't include internal fields
         return {k: v for k, v in res.items() if not k.startswith("st_")}
 
 
@@ -106,12 +114,12 @@ def download_single_experiment(
     s3_bucket: Optional[str] = None,
     experiment_name: Optional[str] = None,
 ):
-    """
-    Downloads results from s3 of a tuning experiment previously run with remote launcher.
-    :param tuner_name: named of the tuner to be retrieved.
-    :param s3_bucket: If not given, the default bucket for the SageMaker session is used
+    """Downloads results from S3 of a tuning experiment
+
+    :param tuner_name: Name of tuner to be retrieved.
+    :param s3_bucket: If not given, the default bucket for the SageMaker session
+        is used
     :param experiment_name: If given, this is used as first directory.
-    :return:
     """
     s3_path = s3_experiment_path(
         s3_bucket=s3_bucket, tuner_name=tuner_name, experiment_name=experiment_name
@@ -137,15 +145,17 @@ def load_experiment(
     local_path: Optional[str] = None,
     experiment_name: Optional[str] = None,
 ) -> ExperimentResult:
-    """
-    :param tuner_name: name of a tuning experiment previously run
-    :param download_if_not_found: whether to fetch the experiment from s3 if not found locally
-    :param load_tuner: whether to load the tuner in addition to metadata and results
-    :param local_path: path containing the experiment to load if not specified, then `~/{SYNE_TUNE_FOLDER}/` is used.
-    :return:
+    """Load results from an experiment
+
+    :param tuner_name: Name of a tuning experiment previously run
+    :param download_if_not_found: If True, fetch resultsfrom S3 if not found locally
+    :param load_tuner: Whether to load the tuner in addition to metadata and results
+    :param local_path: Path containing the experiment to load. If not specified,
+        `~/{SYNE_TUNE_FOLDER}/` is used.
+    :param experiment_name: If given, this is used as first directory.
+    :return: `ExperimentResult` object
     """
     path = experiment_path(tuner_name, local_path)
-
     metadata_path = path / "metadata.json"
     if not (metadata_path.exists()) and download_if_not_found:
         logging.info(
@@ -168,7 +178,7 @@ def load_experiment(
         results = None
     if load_tuner:
         try:
-            tuner = Tuner.load(path)
+            tuner = Tuner.load(str(path))
         except FileNotFoundError:
             tuner = None
         except Exception:
@@ -183,79 +193,131 @@ def load_experiment(
     )
 
 
+PathFilter = Callable[[str], bool]
+
+
+ExperimentFilter = Callable[[ExperimentResult], bool]
+
+
+PathOrExperimentFilter = Union[PathFilter, ExperimentFilter]
+
+
+def _impute_filter(filt: Optional[PathOrExperimentFilter]) -> PathOrExperimentFilter:
+    if filt is None:
+
+        def filt(path) -> bool:
+            return True
+
+    return filt
+
+
 def get_metadata(
-    name_filter: Callable[[str], bool] = None, root=experiment_path()
-) -> Dict[str, Dict]:
+    path_filter: Optional[PathFilter] = None, root: Path = experiment_path()
+) -> Dict[str, dict]:
+    """Load meta-data for a number of experiments
+
+    :param path_filter: If passed then only experiments whose path matching
+        the filter are kept. This allows rapid filtering in the presence of many
+        experiments.
+    :param root: Root path for experiment results. Default is
+        `experiment_path()`
+    :return: Dictionary from tuner name to metadata dict
     """
-    :param name_filter: if passed then only experiments whose path matching the filter are kept. This allows
-    rapid filtering in the presence of many experiments.
-    :return: dictionary from tuner name to metadata dict
-    """
-    res = {}
+    path_filter = _impute_filter(path_filter)
+    res = dict()
     for metadata_path in root.glob("**/metadata.json"):
         path = metadata_path.parent
-        if name_filter is None or name_filter(str(path)):
+        if path_filter(str(path)):
             try:
                 tuner_name = path.name
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
                     # we check that the metadata is valid by verifying that is a dict containing Syne Tune time-stamp
                     if (
-                        isinstance(metadata, Dict)
+                        isinstance(metadata, dict)
                         and ST_TUNER_CREATION_TIMESTAMP in metadata
                     ):
                         metadata["path"] = str(path.parent)
                         res[tuner_name] = metadata
-            except JSONDecodeError as e:
-                print(f"could not read {path}")
+            except JSONDecodeError:
+                print(f"Could not read {path}")
                 pass
     return res
 
 
 def list_experiments(
-    path_filter: Callable[[str], bool] = None,
-    experiment_filter: Callable[[ExperimentResult], bool] = None,
+    path_filter: Optional[PathFilter] = None,
+    experiment_filter: Optional[ExperimentFilter] = None,
+    root: Path = experiment_path(),
     load_tuner: bool = False,
 ) -> List[ExperimentResult]:
+    """List experiments for which results are found
+
+    :param path_filter: If passed then only experiments whose path matching
+        the filter are kept. This allows rapid filtering in the presence of many
+        experiments.
+    :param experiment_filter: Filter on `ExperimentResult`
+    :param root: Root path for experiment results. Default is
+        `experiment_path()`
+    :param load_tuner: Whether to load the tuner in addition to metadata and results
+    :return: List of `ExperimentResult` objects
+    """
+    path_filter = _impute_filter(path_filter)
+    experiment_filter = _impute_filter(experiment_filter)
     res = []
-    for metadata_path in experiment_path().glob("**/metadata.json"):
+    for metadata_path in root.glob("**/metadata.json"):
         path = metadata_path.parent
         tuner_name = path.name
-        if path_filter is None or path_filter(metadata_path):
-            exp = load_experiment(tuner_name, load_tuner, local_path=path.parent)
-            if experiment_filter is None or experiment_filter(exp):
-                if exp.results is not None and exp.metadata is not None:
-                    res.append(exp)
+        if path_filter(str(metadata_path)):
+            result = load_experiment(
+                tuner_name, load_tuner, local_path=str(path.parent)
+            )
+            if (
+                experiment_filter(result)
+                and result.results is not None
+                and result.metadata is not None
+            ):
+                res.append(result)
     return sorted(
         res,
-        key=lambda exp: exp.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0),
+        key=lambda result: result.metadata.get(ST_TUNER_CREATION_TIMESTAMP, 0),
         reverse=True,
     )
 
 
 def load_experiments_df(
-    path_filter: Callable[[str], bool] = None,
-    experiment_filter: Callable[[ExperimentResult], bool] = None,
+    path_filter: Optional[PathFilter] = None,
+    experiment_filter: Optional[ExperimentFilter] = None,
+    root: Path = experiment_path(),
     load_tuner: bool = False,
 ) -> pd.DataFrame:
     """
-    :param: name_filter: if specified, only experiment whose path name matches the filter will be kept.
-    :param experiment_filter: only experiment where the filter is True are kept, default to None and returns everything.
-    :return: a dataframe that contains all evaluations reported by tuners according to the filter given.
-    The columns contains trial-id, hyperparameter evaluated, metrics observed by `report`:
-     metrics collected automatically by syne-tune:
-     `st_worker_time` (indicating time spent in the worker when report was seen)
-     `time` (indicating wallclock time measured by the tuner)
-     `decision` decision taken by the scheduler when observing the result
-     `status` status of the trial that was shown to the tuner
-     `config_{xx}` configuration value for the hyperparameter {xx}
-     `tuner_name` named passed when instantiating the Tuner
-     `entry_point_name`/`entry_point_path` name and path of the entry point that was tuned
+    :param path_filter: If passed then only experiments whose path matching
+        the filter are kept. This allows rapid filtering in the presence of many
+        experiments.
+    :param experiment_filter: Filter on `ExperimentResult`
+    :param root: Root path for experiment results. Default is
+        `experiment_path()`
+    :param load_tuner: Whether to load the tuner in addition to metadata and results
+    :return: Dataframe that contains all evaluations reported by tuners according
+        to the filter given. The columns contains trial-id, hyperparameter
+        evaluated, metrics observed by `report`. metrics collected automatically
+        by syne-tune:
+        * `st_worker_time` (indicating time spent in the worker when report was
+            seen)
+        * `time` (indicating wallclock time measured by the tuner)
+        * `decision` decision taken by the scheduler when observing the result
+        * `status` status of the trial that was shown to the tuner
+        * `config_{xx}` configuration value for the hyperparameter {xx}
+        * `tuner_name` named passed when instantiating the Tuner
+        * `entry_point_name`, `entry_point_path` name and path of the entry
+            point that was tuned
     """
     dfs = []
     for experiment in list_experiments(
         path_filter=path_filter,
         experiment_filter=experiment_filter,
+        root=root,
         load_tuner=load_tuner,
     ):
         assert experiment.results is not None

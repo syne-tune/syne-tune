@@ -211,6 +211,10 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
 
+    @property
+    def resource_attr(self) -> str:
+        return self._resource_attr
+
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         do_debug_log = self.searcher.debug_log is not None
         if do_debug_log and trial_id == 0:

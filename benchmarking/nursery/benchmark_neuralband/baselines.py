@@ -11,12 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from benchmarking.commons.baselines import (
-    MethodArguments,
     search_options,
     convert_categorical_to_ordinal_numeric,
-)
-from syne_tune.blackbox_repository.simulated_tabular_backend import (
-    BlackboxRepositoryBackend,
 )
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
@@ -192,43 +188,3 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
 }
-
-
-if __name__ == "__main__":
-    # Run a loop that initializes all schedulers on all benchmark to see if they all work
-    from benchmarking.nursery.benchmark_automl.benchmark_main import (
-        get_transfer_learning_evaluations,
-    )
-    from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
-        benchmark_definitions,
-    )
-
-    benchmarks = ["fcnet-protein", "nas201-cifar10", "lcbench-Fashion-MNIST"]
-    for benchmark_name in benchmarks:
-        benchmark = benchmark_definitions[benchmark_name]
-        backend = BlackboxRepositoryBackend(
-            elapsed_time_attr=benchmark.elapsed_time_attr,
-            time_this_resource_attr=benchmark.time_this_resource_attr,
-            blackbox_name=benchmark.blackbox_name,
-            dataset=benchmark.dataset_name,
-        )
-        for method_name, method_fun in methods.items():
-            print(f"checking initialization of: {method_name}, {benchmark_name}")
-            scheduler = method_fun(
-                MethodArguments(
-                    config_space=backend.blackbox.configuration_space,
-                    metric=benchmark.metric,
-                    mode=benchmark.mode,
-                    random_seed=0,
-                    max_t=max(backend.blackbox.fidelity_values),
-                    resource_attr=next(iter(backend.blackbox.fidelity_space.keys())),
-                    transfer_learning_evaluations=get_transfer_learning_evaluations(
-                        blackbox_name=benchmark.blackbox_name,
-                        test_task=benchmark.dataset_name,
-                        datasets=benchmark.datasets,
-                    ),
-                    use_surrogates=benchmark_name == "lcbench-Fashion-MNIST",
-                )
-            )
-            scheduler.suggest(0)
-            scheduler.suggest(1)

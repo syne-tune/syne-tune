@@ -86,7 +86,10 @@ class PythonBackend(LocalBackend):
         self.config_space = config_space
         # save function without reference to global variables or modules
         self.tune_function = types.FunctionType(tune_function.__code__, {})
-        self.tune_function_path = self.local_path / "tune_function"
+
+    @property
+    def tune_function_path(self) -> Path:
+        return self.local_path / "tune_function"
 
     def set_path(
         self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
@@ -95,10 +98,9 @@ class PythonBackend(LocalBackend):
             results_root=results_root, tuner_name=tuner_name
         )
         if self.local_path.exists():
-            logging.error(
-                f"path {self.local_path} already exists, make sure you have a unique tuner name."
+            logging.warning(
+                f"Path {self.local_path} already exists, make sure you have a unique tuner name."
             )
-        self.tune_function_path = self.local_path / "tune_function"
 
     def _schedule(self, trial_id: int, config: Dict):
         if not (self.tune_function_path / "tune_function.dill").exists():
@@ -108,7 +110,7 @@ class PythonBackend(LocalBackend):
         # to detect if the serialized function is the same as the one passed by the user, we pass the md5 to the
         # endpoint script. The hash is checked before executing the function.
         config["tune_function_hash"] = file_md5(
-            self.tune_function_path / "tune_function.dill"
+            str(self.tune_function_path / "tune_function.dill")
         )
         super(PythonBackend, self)._schedule(trial_id=trial_id, config=config)
 

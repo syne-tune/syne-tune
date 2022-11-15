@@ -31,6 +31,7 @@ class SurrogateBenchmarkDefinition:
         :func:`make_surrogate`. Otherwise: use no surrogate
     :param surrogate_kwargs: Default value for arguments of surrogate,
         see :func:`make_surrogate`
+    :param add_surrogate_kwargs: Arguments passed to `add_surrogate`. Optional.
     :param max_resource_attr: Internal name between back-end and scheduler
     :param datasets: Used in transfer tuning
     :param fidelities: If given, this is a strictly increasing subset of
@@ -48,6 +49,7 @@ class SurrogateBenchmarkDefinition:
     max_num_evaluations: Optional[int] = None
     surrogate: Optional[str] = None
     surrogate_kwargs: Optional[dict] = None
+    add_surrogate_kwargs: Optional[dict] = None
     max_resource_attr: Optional[str] = None
     datasets: Optional[List[str]] = None
     fidelities: Optional[List[int]] = None

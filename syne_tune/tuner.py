@@ -19,7 +19,11 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import dill as dill
 
-from syne_tune.backend.trial_backend import TrialBackend
+from syne_tune.backend.trial_backend import (
+    TrialBackend,
+    TrialAndStatusInformation,
+    TrialIdAndResultList,
+)
 from syne_tune.backend.trial_status import Status, Trial
 from syne_tune.config_space import config_space_to_json_dict
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
@@ -39,6 +43,12 @@ DEFAULT_SLEEP_TIME = 5.0
 
 
 class Tuner:
+    """
+    Controller of tuning loop, manages interplay between scheduler and
+    trial back-end. Also, stopping criterion and number of workers are
+    maintained here.
+    """
+
     def __init__(
         self,
         trial_backend: TrialBackend,
@@ -58,36 +68,45 @@ class Tuner:
         save_tuner: bool = True,
     ):
         """
-        Allows to run an tuning job, call `run` after initializing.
-        :param trial_backend:
-        :param scheduler:
-        :param stop_criterion: the tuning stops when this predicates returns True, called each iteration with the
-        current tuning status, for instance pass `stop_criterion=lambda status: status.num_trials_completed > 200`
-        to stop after 200 completed jobs.
-        :param n_workers: Number of workers used here. Note that the backend
+        :param trial_backend: Back-end for trial evaluations
+        :param scheduler: Tuning algorithm for making decisions about which
+            trials to start, stop, pause, or resume
+        :param stop_criterion: Tuning stops when this predicates returns `True`.
+            Called in each iteration with the current tuning status. It is
+            recommended to use :class:`StoppingCriterion`.
+        :param n_workers: Number of workers used here. Note that the back-end
             needs to support (at least) this number of workers to be run
             in parallel
-        :param sleep_time: time to sleep when all workers are busy
-        :param results_update_interval: frequency at which results are updated and stored in seconds
-        :param max_failures: max failures allowed,
-        :param tuner_name: name associated with the tuning experiment, default to the name of the entrypoint.
-        It can only consists in alpha-digits characters, possibly separated by '-'. A postfix with a date time-stamp
-        is added to ensure unicity.
-        :param asynchronous_scheduling: whether to use asynchronous scheduling when scheduling new trials. If `True`,
-        trials are scheduled as soon as a worker is available, if `False`, the tuner waits that all trials are finished
-         before scheduling a new batch.
-        :param wait_trial_completion_when_stopping: how to deal with running trials when stopping criterion is
-        met. If `True`, the tuner waits that all trials are finished, if `False`, all trials are terminated.
-        :param callbacks: called when events happens in the tuning loop such as when a result is seen, by default
-        a callback that stores results every `results_update_interval` is used.
-        :param metadata: dictionary of user-metadata that will be persistend in {tuner_path}/metadata.json, in addition
-        to the metadata provided by the user, `SMT_TUNER_CREATION_TIMESTAMP` is always included which measures
-        the time-stamp when the tuner started to run.
-        :param suffix_tuner_name: If True, a timestamp is appended to the provided `tuner_name` that ensures uniqueness
-        otherwise the name is left unchanged and is expected to be unique.
+        :param sleep_time: Time to sleep when all workers are busy
+        :param results_update_interval: Frequency at which results are updated and
+            stored (in seconds)
+        :param max_failures: This many trial execution failures are allowed before
+            the tuning loop is aborted
+        :param tuner_name: Name associated with the tuning experiment, default to
+            the name of the entrypoint. Must consists of alpha-digits characters,
+            possibly separated by '-'. A postfix with a date time-stamp is added
+            to ensure uniqueness.
+        :param asynchronous_scheduling: Whether to use asynchronous scheduling
+            when scheduling new trials. If `True`, trials are scheduled as soon as
+            a worker is available. If `False`, the tuner waits that all trials
+            are finished before scheduling a new batch of size `n_workers`.
+        :param wait_trial_completion_when_stopping: How to deal with running
+            trials when stopping criterion is met. If `True`, the tuner waits
+            until all trials are finished. If `False`, all trials are terminated.
+        :param callbacks: Called at certain times in the tuning loop, for example
+            when a result is seen. The default callback stores results every
+            `results_update_interval`.
+        :param metadata: Dictionary of user-metadata that will be persisted in
+            `{tuner_path}/metadata.json`, in addition to metadata provided by
+            the user. `SMT_TUNER_CREATION_TIMESTAMP` is always included which
+            measures the time-stamp when the tuner started to run.
+        :param suffix_tuner_name: If True, a timestamp is appended to the
+            provided `tuner_name` that ensures uniqueness, otherwise the name is
+            left unchanged and is expected to be unique.
         :param save_tuner: If True, the `Tuner` object is serialized at the end
             of tuning, including its dependencies (e.g., scheduler). This allows
-            all details of the experiment to be recovered
+            all details of the experiment to be recovered (however, these dill
+            files can be of substantial size)
         """
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -130,10 +149,7 @@ class Tuner:
         self.tuner_saver = None
 
     def run(self):
-        """
-        Launches the tuning.
-        :return: the tuning status when finished
-        """
+        """Launches the tuning."""
         try:
             logger.info(f"results of trials will be saved on {self.tuner_path}")
 
@@ -297,9 +313,10 @@ class Tuner:
             )
         metadata[name] = value
 
-    def _enrich_metadata(self, metadata: dict):
+    def _enrich_metadata(self, metadata: dict) -> dict:
         """
-        :return: adds creation time stamp, metric names and mode, entrypoint and backend to the metadata.
+        :param metadata: Original metadata
+        :return: `metadata` enriched by default entries
         """
         res = metadata if metadata is not None else dict()
         self._set_metadata(res, ST_TUNER_CREATION_TIMESTAMP, time.time())
@@ -326,11 +343,18 @@ class Tuner:
             or self.tuning_status.num_trials_failed > self.max_failures
         )
 
-    def _process_new_results(self, running_trials_ids: Set[int]):
-        """
-        Communicates new results from the backend to the scheduler
-        :param running_trials_ids: list of trials currently running
-        :return: dictionary from trial-id to status of trials that are not running and new results observed
+    def _process_new_results(
+        self, running_trials_ids: Set[int]
+    ) -> (TrialAndStatusInformation, TrialIdAndResultList):
+        """Communicates new results from the back-end to the scheduler
+
+        Returns dictionary of trials which are not running, along with their
+        status, in `done_trials_statuses`, and list of new results (tuples
+        `(trial_id, result)`), observed since the previous call, in
+        `new_results`.
+
+        :param running_trials_ids: Trials currently running
+        :return: `(done_trials_statuses, new_results)`
         """
 
         # fetch new results
@@ -348,7 +372,8 @@ class Tuner:
         # Gets list of trials that are done with the new results.
         # The trials can be finished for different reasons:
         # - they completed,
-        # - they were stopped independently of the scheduler, e.g. due to a timeout argument or a manual interruption
+        # - they were stopped independently of the scheduler, e.g. due to a
+        #   timeout argument or a manual interruption
         # - scheduler decided to interrupt them.
         # Note: `done_trials` includes trials which are paused.
         done_trials_statuses = self._update_running_trials(
@@ -365,8 +390,13 @@ class Tuner:
 
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
         """
-        Schedules new tasks if resources are available or sleep.
-        :param running_trials_ids: set if trial-ids currently running, gets updated if new trials are scheduled.
+        Schedules new tasks if resources are available, or sleep otherwise.
+        Note: For back-ends where stopping or terminating a job is not
+        instantaneous, there may be temporarily more than `n_workers` jobs
+        busy.
+
+        :param running_trials_ids: Set if trial-ids currently running, gets
+            updated if new trials are scheduled.
         """
         running_trials_threshold = self.n_workers if self.asynchronous_scheduling else 1
         num_running_trials = len(running_trials_ids)
@@ -386,9 +416,11 @@ class Tuner:
                 running_trials_ids.add(trial_id)
 
     def _schedule_new_task(self) -> Optional[int]:
-        """
-        Schedules a new task according to scheduler suggestion.
-        :return: the trial-id of the task suggested, None if the scheduler was done.
+        """Schedules a new task according to scheduler suggestion.
+
+        :return: The trial-id of the task suggested, None if the scheduler does
+            not suggest a new configuration (this can happen if its configuration
+            space is exhausted)
         """
         trial_id = self.trial_backend.new_trial_id()
         suggestion = self.scheduler.suggest(trial_id=trial_id)
@@ -446,21 +478,29 @@ class Tuner:
 
     def _update_running_trials(
         self,
-        trial_status_dict: Dict[int, Tuple[Trial, str]],
-        new_results: List[Tuple[int, dict]],
+        trial_status_dict: TrialAndStatusInformation,
+        new_results: TrialIdAndResultList,
         callbacks: List[TunerCallback],
-    ) -> Dict[int, Tuple[Trial, str]]:
+    ) -> TrialAndStatusInformation:
         """
-        Updates schedulers with new results and sends decision to stop/pause trials to the backend.
-        :return: dictionary mapping trial-ids that are finished to status.
+        Updates schedulers with new results and sends decision to stop/pause
+        trials to the back-end.
+
         Trials can be finished because:
-         1) the scheduler decided to stop or pause.
-         2) the trial failed.
-         3) the trial was stopped independently of the scheduler, e.g. due to a timeout argument or a manual interruption.
-         4) the trial completed.
+        * the scheduler decided to stop or pause.
+        * the trial failed.
+        * the trial was stopped independently of the scheduler, e.g. due to a
+            timeout argument or a manual interruption.
+        * the trial completed.
+
+        :param trial_status_dict: Information on trials from
+            `trial_backend.fetch_status_results`
+        :param new_results: New results from `trial_backend.fetch_status_results`
+        :param callbacks: `on_trial_result` for these callbacks is called here
+        :return: Dictionary mapping trial-ids that are finished to status
         """
         # gets the list of jobs from running_jobs that are done
-        done_trials = {}
+        done_trials = dict()
 
         for trial_id, result in new_results:
             if trial_id not in done_trials:
@@ -538,6 +578,6 @@ class Tuner:
 
     def _default_callback(self):
         """
-        :return: default callback to store results
+        :return: Default callback to store results
         """
         return StoreResultsCallback()

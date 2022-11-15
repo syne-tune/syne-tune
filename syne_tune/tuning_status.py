@@ -10,33 +10,39 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import List, Tuple, Union, Set, Optional
 import numbers
 import logging
 import time
 from collections import defaultdict, OrderedDict
-from typing import List, Dict, Tuple
 import pandas as pd
 from numpy import inf as np_inf
 
-from syne_tune.backend.trial_status import Status, Trial
+from syne_tune.backend.trial_status import Status
 from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
+from syne_tune.backend.trial_backend import (
+    TrialAndStatusInformation,
+    TrialIdAndResultList,
+)
 
 
 class MetricsStatistics:
+    """
+    Allows to maintain simple running statistics (min/max/sum/count) of metrics
+    provided. Statistics are tracked for numeric types only. Types of first added
+    metrics define its types.
+    """
+
     def __init__(self):
-        """
-        Allows to maintain simple running statistics (min/max/sum/count) of metrics provided.
-        Statistics are tracked for numeric types only. Types of first added metrics define its types.
-        """
         self.metric_names = []
         self.count = 0
-        self.min_metrics = {}
-        self.max_metrics = {}
-        self.sum_metrics = {}
-        self.last_metrics = {}
-        self.is_numeric = {}
+        self.min_metrics = dict()
+        self.max_metrics = dict()
+        self.sum_metrics = dict()
+        self.last_metrics = dict()
+        self.is_numeric = dict()
 
-    def add(self, metrics: Dict):
+    def add(self, metrics: dict):
         for metric_name, current_metric in metrics.items():
             if metric_name in self.is_numeric:
                 if self.is_numeric[metric_name] != isinstance(
@@ -66,10 +72,15 @@ class MetricsStatistics:
 
 class TuningStatus:
     """
-    Information of a tuning job to display as progress or to use to decide whether to stop the tuning job.
+    Information of a tuning job to display as progress or to use to decide whether
+    to stop the tuning job.
     """
 
+    # TODO: `metric_names` not used for anything. Remove?
     def __init__(self, metric_names: List[str]):
+        """
+        :param metric_names: Names of metrics reported
+        """
         self.metric_names = metric_names
         self.start_time = time.perf_counter()
 
@@ -81,8 +92,8 @@ class TuningStatus:
 
     def update(
         self,
-        trial_status_dict: Dict[int, Tuple[Trial, str]],
-        new_results: List[Tuple[int, Dict]],
+        trial_status_dict: TrialAndStatusInformation,
+        new_results: TrialIdAndResultList,
     ):
         """
         Updates the tuning status given new statuses and results.
@@ -133,9 +144,13 @@ class TuningStatus:
     def num_trials_started(self):
         return len(self.last_trial_status_seen)
 
-    def _num_trials(self, status: str):
+    def _num_trials(self, status: Union[str, Set[str]]):
+        if isinstance(status, str):
+            status = set([status])
+        elif not isinstance(status, set):
+            status = set(status)
         return sum(
-            trial_status == status
+            trial_status in status
             for trial_status in self.last_trial_status_seen.values()
         )
 
@@ -154,12 +169,13 @@ class TuningStatus:
         """
         # note it may be inefficient to query several times the dataframe in case a very large number of jobs are
         #  present, we could query the dataframe only once
-        return (
-            self._num_trials(status=Status.completed)
-            + self._num_trials(status=Status.stopped)
-            + self._num_trials(status=Status.stopping)
-            + self._num_trials(status=Status.failed)
-        )
+        status_finished = {
+            Status.completed,
+            Status.stopped,
+            Status.stopping,
+            Status.failed,
+        }
+        return self._num_trials(status=status_finished)
 
     @property
     def num_trials_running(self):
@@ -227,17 +243,19 @@ class TuningStatus:
 
 
 def print_best_metric_found(
-    tuning_status: TuningStatus, metric_names: List[str], mode: str
-) -> Tuple[int, float]:
-    """
-    Prints trial status summary and the best metric found.
-    :param tuning_status:
-    :param metric_names:
-    :param mode:
+    tuning_status: TuningStatus, metric_names: List[str], mode: Optional[str] = None
+) -> Optional[Tuple[int, float]]:
+    """Prints trial status summary and the best metric found.
+
+    :param tuning_status: Current tuning status
+    :param metric_names: Plot results for first metric in this list
+    :param mode: "min" or "max"
     :return: trial-id and value of the best metric found
     """
     if tuning_status.overall_metric_statistics.count == 0:
-        return
+        return None
+    if mode is None:
+        mode = "min"
     # only plot results of the best first metric for now in summary, plotting the optimal metrics for multiple
     # objectives would require to display the Pareto set.
     metric_name = metric_names[0]

@@ -131,7 +131,7 @@ class XGBoostRecipe(BlackboxRecipe):
     def __init__(self):
         super(XGBoostRecipe, self).__init__(
             name="icml-xgboost",
-            hash=SHA256_HASH_XGBOOST,
+            # hash=SHA256_HASH_XGBOOST,
             cite_reference="A quantile-based approach for hyperparameter transfer learning."
             "Salinas, D., Shen, H., and Perrone, V. 2021.",
         )
@@ -144,7 +144,7 @@ class DeepARRecipe(BlackboxRecipe):
     def __init__(self):
         super(DeepARRecipe, self).__init__(
             name="icml-deepar",
-            hash=SHA256_HASH_DEEPAR,
+            # hash=SHA256_HASH_DEEPAR,
             cite_reference="A quantile-based approach for hyperparameter transfer learning."
             "Salinas, D., Shen, H., and Perrone, V. 2021.",
         )

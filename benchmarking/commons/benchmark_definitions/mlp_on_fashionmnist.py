@@ -13,27 +13,45 @@
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
-from benchmarking.definitions.definition_mlp_on_fashion_mnist import (
-    mlp_fashionmnist_default_params,
-    mlp_fashionmnist_benchmark as _mlp_fashionmnist_benchmark,
+from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import (
+    _config_space,
+    METRIC_NAME,
+    RESOURCE_ATTR,
 )
+
+
+def mlp_fashionmnist_default_params() -> dict:
+    return {
+        "max_resource_level": 81,
+        "instance_type": "ml.c5.4xlarge",
+        "num_workers": 4,
+        "dataset_path": "./",
+        "report_current_best": "False",
+    }
 
 
 # Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def mlp_fashionmnist_benchmark(sagemaker_backend: bool = False, **kwargs):
-    params = {"backend": "sagemaker"} if sagemaker_backend else None
-    params = mlp_fashionmnist_default_params(params)
-    benchmark = _mlp_fashionmnist_benchmark(params)
+    params = mlp_fashionmnist_default_params()
+    config_space = dict(
+        _config_space,
+        dataset_path=params["dataset_path"],
+        epochs=params["max_resource_level"],
+        report_current_best=params["report_current_best"],
+    )
     _kwargs = dict(
-        script=Path(benchmark["script"]),
-        config_space=benchmark["config_space"],
+        script=Path(__file__).parent.parent.parent
+        / "training_scripts"
+        / "mlp_on_fashion_mnist"
+        / "mlp_on_fashion_mnist.py",
+        config_space=config_space,
         max_wallclock_time=3 * 3600,  # TODO
         n_workers=params["num_workers"],
         instance_type=params["instance_type"],
-        metric=benchmark["metric"],
-        mode=benchmark["mode"],
-        max_resource_attr=benchmark["max_resource_attr"],
-        resource_attr=benchmark["resource_attr"],
+        metric=METRIC_NAME,
+        mode="max",
+        max_resource_attr="epochs",
+        resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
         estimator_kwargs=dict(
             framework_version="1.7.1",
@@ -42,3 +60,39 @@ def mlp_fashionmnist_benchmark(sagemaker_backend: bool = False, **kwargs):
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)
+
+
+# Support for cost models
+#
+# from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import (
+#     NUM_UNITS_1,
+#     NUM_UNITS_2,
+# )
+#
+# def get_cost_model(params):
+#     """
+#     This cost model ignores the batch size, but depends on the number of units
+#     in the two layers only.
+#     """
+#     try:
+#         from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.linear_cost_model import (
+#             FixedLayersMLPCostModel,
+#         )
+#
+#         num_inputs = 28 * 28
+#         num_outputs = 10
+#         num_units_keys = [NUM_UNITS_1, NUM_UNITS_2]
+#         (
+#             expected_hidden_layer_width,
+#             exp_vals,
+#         ) = FixedLayersMLPCostModel.get_expected_hidden_layer_width(
+#             _config_space, num_units_keys
+#         )
+#         return FixedLayersMLPCostModel(
+#             num_inputs=num_inputs,
+#             num_outputs=num_outputs,
+#             num_units_keys=num_units_keys,
+#             expected_hidden_layer_width=expected_hidden_layer_width,
+#         )
+#     except Exception:
+#         return None

@@ -20,7 +20,7 @@ import numpy as np
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.num_gpu import get_num_gpus
@@ -34,33 +34,35 @@ logger = logging.getLogger(__name__)
 
 if "OMP_NUM_THREADS" not in os.environ:
     logger.debug(
-        "OMP_NUM_THREADS is not set, it is going to be set to 1 to avoid performance issues in case of many "
-        "workers are used locally. Overrides this behavior by setting a custom value."
+        "OMP_NUM_THREADS is not set, it is going to be set to 1 to avoid "
+        "performance issues in case of many workers being used locally. "
+        "Overrides this behavior by setting a custom value."
     )
     os.environ["OMP_NUM_THREADS"] = "1"
 
 
 class LocalBackend(TrialBackend):
+    """
+    A backend running locally by spawning sub-process concurrently. Note that
+    no resource management is done so the concurrent number of trials should
+    be adjusted to the machine capacity.
+    """
+
     def __init__(
         self,
         entry_point: str,
-        rotate_gpus: bool = True,
         delete_checkpoints: bool = False,
+        rotate_gpus: bool = True,
     ):
         """
-        A backend running locally by spawning sub-process concurrently.
-        Note that no resource management is done so the concurrent number of
-        trials should be adjusted to the machine capacity.
-
-        :param entry_point: python main file to be tuned
-        :param rotate_gpus: in case several GPUs are present, each trial is
+        :param entry_point: Path to Python main file to be tuned
+        :param delete_checkpoints: If True, checkpoints of stopped or completed
+            trials are deleted
+        :param rotate_gpus: In case several GPUs are present, each trial is
             scheduled on a different GPU. A new trial is preferentially
             scheduled on a free GPU, and otherwise the GPU with least prior
             assignments is chosen. If False, then all GPUs are used at the same
             time for all trials.
-        :param delete_checkpoints: If True, checkpoints of stopped or completed
-            trials are deleted
-
         """
         super(LocalBackend, self).__init__(delete_checkpoints)
 
@@ -68,8 +70,8 @@ class LocalBackend(TrialBackend):
             entry_point
         ).exists(), f"the script provided to tune does not exist ({entry_point})"
         self.entry_point = entry_point
-
-        self.trial_subprocess = {}
+        self.local_path = None
+        self.trial_subprocess = dict()
 
         # GPU rotation
         # Note that the initialization is delayed until first used, so we can
@@ -78,7 +80,6 @@ class LocalBackend(TrialBackend):
         self.num_gpus = None
         self.trial_gpu = None
         self.gpu_times_assigned = None
-
         # sets the path where to write files, can be overidden later by Tuner.
         self.set_path(Path(experiment_path(tuner_name=random_string(length=10))))
 
@@ -103,7 +104,6 @@ class LocalBackend(TrialBackend):
         In particular, we initialize variables related to GPU scheduling, if
         `rotate_gpus' is set. This is done before the first call of `_schedule`,
         so we can be sure it runs on the target instance.
-
         """
         if self.rotate_gpus and self.num_gpus is None:
             if num_gpus is None:
@@ -125,7 +125,6 @@ class LocalBackend(TrialBackend):
         running trials have precedence. Ties are resolved by selecting a GPU
         with the least number of previous assignments.
         The number of assignments is incremented for the GPU returned.
-
         """
         assert self.rotate_gpus
         free_gpus = set(range(self.num_gpus)).difference(self.trial_gpu.values())
@@ -146,7 +145,7 @@ class LocalBackend(TrialBackend):
         self.gpu_times_assigned[res_gpu] += 1
         return res_gpu
 
-    def _schedule(self, trial_id: int, config: Dict):
+    def _schedule(self, trial_id: int, config: dict):
         self._prepare_for_schedule()
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
@@ -161,9 +160,9 @@ class LocalBackend(TrialBackend):
                     [f"--{key} {value}" for key, value in config_copy.items()]
                 )
 
-                def np_encoder(object):
-                    if isinstance(object, np.generic):
-                        return object.item()
+                def np_encoder(obj):
+                    if isinstance(obj, np.generic):
+                        return obj.item()
 
                 with open(trial_path / "config.json", "w") as f:
                     # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
@@ -192,10 +191,6 @@ class LocalBackend(TrialBackend):
             del self.trial_gpu[trial_id]
 
     def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
-        """
-        :param trial_ids: list of trial-ids whose status must be retrieved
-        :return:
-        """
         res = []
         for trial_id in trial_ids:
             trial_path = self.trial_path(trial_id)

@@ -136,7 +136,7 @@ class PD1Recipe(BlackboxRecipe):
     def __init__(self):
         super(PD1Recipe, self).__init__(
             name=BLACKBOX_NAME,
-            hash=SHA256_HASH,
+            # hash=SHA256_HASH,
             cite_reference="Pre-trained Gaussian processes for Bayesian optimization. "
             "Wang, Z. and Dahl G. and Swersky K. and Lee C. and Mariet Z. and Nado Z. and Gilmer J. and Snoek J. and "
             "Ghahramani Z. 2021.",

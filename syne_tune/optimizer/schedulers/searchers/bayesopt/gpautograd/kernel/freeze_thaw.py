@@ -31,8 +31,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     MeanFunction,
 )
 
-__all__ = ["FreezeThawKernelFunction", "FreezeThawMeanFunction"]
-
 
 class FreezeThawKernelFunction(KernelFunction):
     """

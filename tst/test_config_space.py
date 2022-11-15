@@ -22,7 +22,6 @@ from syne_tune.config_space import (
     loguniform,
     choice,
     config_space_size,
-    randn,
     to_dict,
     from_dict,
     finrange,
@@ -44,7 +43,6 @@ def test_convert_config_space():
         "float": uniform(5.5, 6.5),
         "logfloat": loguniform(7.5, 8.5),
         "categorical": choice(["a", "b", "c"]),
-        "normal": randn(2.0, 1.0),
         "const_str": "constant",
     }
 
@@ -84,13 +82,6 @@ def test_convert_config_space():
     assert isinstance(v, Categorical) and set(v.categories) == set(
         config_space["categorical"].categories
     )
-    v = ray_config_space["normal"]
-    assert (
-        isinstance(v, Float)
-        and isinstance(v.get_sampler(), Float._Normal)
-        and v.sampler.mean == 2.0
-        and v.sampler.sd == 1.0
-    )
     assert ray_config_space["const_str"] == config_space["const_str"]
 
     for v in config_space.values():
@@ -105,7 +96,6 @@ def test_serialization():
         uniform(5.5, 6.5),
         loguniform(7.5, 8.5),
         choice(["a", "b", "c"]),
-        randn(2.0, 1.0),
         finrange(0.0, 1.0, 4),
         finrange(0, 6, 4, cast_int=True),
         logfinrange(0.001, 1.0, 4),
@@ -141,7 +131,6 @@ def test_from_and_to_json_dict():
         "float": uniform(5.5, 6.5),
         "logfloat": loguniform(7.5, 8.5),
         "categorical": choice(["a", "b", "c"]),
-        "normal": randn(2.0, 1.0),
         "const_str": "constant",
         "const_int": 1,
         "const_float": 2.0,

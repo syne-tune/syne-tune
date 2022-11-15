@@ -18,8 +18,6 @@ from syne_tune.optimizer.schedulers.searchers.kde.kde_searcher import (
     KernelDensityEstimator,
 )
 
-__all__ = ["MultiFidelityKernelDensityEstimator"]
-
 logger = logging.getLogger(__name__)
 
 
@@ -81,16 +79,18 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         config_space: Dict,
         metric: str,
         points_to_evaluate: Optional[List[Dict]] = None,
-        mode: str = "min",
-        num_min_data_points: int = None,
-        top_n_percent: int = 15,
-        min_bandwidth: float = 0.1,
-        num_candidates: int = 64,
-        bandwidth_factor: int = 3,
-        random_fraction: float = 0.33,
+        mode: Optional[str] = None,
+        num_min_data_points: Optional[int] = None,
+        top_n_percent: Optional[int] = None,
+        min_bandwidth: Optional[float] = None,
+        num_candidates: Optional[int] = None,
+        bandwidth_factor: Optional[int] = None,
+        random_fraction: Optional[float] = None,
         resource_attr: Optional[str] = None,
         **kwargs
     ):
+        if min_bandwidth is None:
+            min_bandwidth = 0.1  # Different default value
         super().__init__(
             config_space,
             metric=metric,
@@ -113,15 +113,15 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             SynchronousHyperbandScheduler,
         )
 
-        assert isinstance(scheduler, HyperbandScheduler) or isinstance(
-            scheduler, SynchronousHyperbandScheduler
+        assert isinstance(
+            scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
         ), (
             "This searcher requires HyperbandScheduler or "
             + "SynchronousHyperbandScheduler scheduler"
         )
-        self.resource_attr = scheduler._resource_attr
+        self.resource_attr = scheduler.resource_attr
 
-    def train_kde(self, train_data, train_targets):
+    def _train_kde(self, train_data, train_targets):
 
         # find the highest resource level we have at least num_min_data_points data points
         unique_resource_levels, counts = np.unique(
@@ -138,7 +138,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         train_data = np.array([self.X[i] for i in indices])
         train_targets = np.array([self.y[i] for i in indices])
 
-        super().train_kde(train_data, train_targets)
+        super()._train_kde(train_data, train_targets)
 
     def _update(self, trial_id: str, config: Dict, result: Dict):
         super()._update(trial_id=trial_id, config=config, result=result)
