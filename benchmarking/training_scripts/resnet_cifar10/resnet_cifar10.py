@@ -208,13 +208,13 @@ def objective(config):
         scheduler.step()
         elapsed_time = time.time() - ts_start
 
-        # Feed the score back back to Tune.
+        # Write checkpoint (optional)
+        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
+
+        # Feed the score back to Tune.
         report(
             **{RESOURCE_ATTR: epoch, METRIC_NAME: y, ELAPSED_TIME_ATTR: elapsed_time}
         )
-
-        # Write checkpoint (optional)
-        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
 
         if debug_log:
             print(
