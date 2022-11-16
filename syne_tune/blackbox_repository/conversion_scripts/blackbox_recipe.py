@@ -16,8 +16,6 @@ from typing import Optional
 from syne_tune.util import catchtime
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     compute_hash_benchmark,
-    repository_path,
-    get_sub_directory_and_name,
     blackbox_local_path,
 )
 
