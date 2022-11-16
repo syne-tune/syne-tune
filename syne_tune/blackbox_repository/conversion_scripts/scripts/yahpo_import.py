@@ -33,7 +33,10 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     metric_elapsed_time,
     resource_attr,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path, blackbox_local_path
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+    blackbox_local_path,
+)
 from syne_tune.blackbox_repository.serialize import (
     serialize_metadata,
 )
@@ -350,7 +353,9 @@ class YAHPORecipe(BlackboxRecipe):
     def _generate_on_disk(self):
         # Note: Yahpo expects to see tasks such as "rbv2_xgb" with specific folders under the data-path.
         # for this reason, we create all blackboxes under a subdir yahpo/ to avoid name clashes with other blackboxes
-        serialize_yahpo(self.scenario, target_path=blackbox_local_path(name=self.scenario))
+        serialize_yahpo(
+            self.scenario, target_path=blackbox_local_path(name=self.scenario)
+        )
 
 
 yahpo_scenarios = list_scenarios()
