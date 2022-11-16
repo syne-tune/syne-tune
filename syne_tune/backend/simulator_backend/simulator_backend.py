@@ -50,20 +50,18 @@ class SimulatorConfig:
     """
     Configures the simulator:
 
-    delay_on_trial_result:
-        Time from `report` called on worker to result registered at back-end
-    delay_complete_after_final_report:
-        Time from final `report` called on worker to job completion being
-        registered at back-end
-    delay_complete_after_stop:
-        Time from stop signal received at worker to job completion being
-        registered at back-end
-    delay_start:
-        Time from start command being sent at back-end and job starting on
-        the worker (which is free)
-    delay_stop:
-        Time from stop signal being sent at back-end to signal received at
-        worker (which is running)
+    :param delay_on_trial_result: Time from `report` called on worker to result
+        registered at back-end, defaults to `DEFAULT_DELAY`
+    :param delay_complete_after_final_report: Time from final `report` called
+        on worker to job completion being registered at back-end. Defaults to
+        `DEFAULT_DELAY`
+    :param delay_complete_after_stop: Time from stop signal received at worker
+        to job completion being registered at back-end. Defaults to
+        `DEFAULT_DELAY`
+    :param delay_start: Time from start command being sent at back-end and job
+        starting on the worker (which is free). Defaults to `DEFAULT_DELAY`
+    :param delay_stop: Time from stop signal being sent at back-end to signal
+        received at worker (which is running). Defaults to `DEFAULT_DELAY`
     """
 
     delay_on_trial_result: float = DEFAULT_DELAY
@@ -131,9 +129,10 @@ class SimulatorBackend(LocalBackend):
             return all results directly, and report elapsed time in the
             `elapsed_time_attr` field
         :param elapsed_time_attr: See above
-        :param simulator_config: Parameters for simulator
+        :param simulator_config: Parameters for simulator, optional
         :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
-            information is needed in :class:`SimulatorCallback`
+            information is needed in :class:`SimulatorCallback`. Defaults
+            to `DEFAULT_SLEEP_TIME`
         """
         super().__init__(entry_point=entry_point, rotate_gpus=False)
         self.elapsed_time_attr = elapsed_time_attr
@@ -188,10 +187,7 @@ class SimulatorBackend(LocalBackend):
         return trial
 
     def _process_events_until_now(self):
-        """
-        We process all events in the queue with times before
-        `time_keeper.time()`.
-        """
+        """Process all events in the queue with times before `time_keeper.time()`."""
         time_now = self._time_keeper.time()
         next_event = self._simulator_state.next_until(time_now)
         while next_event is not None:
@@ -476,6 +472,7 @@ class SimulatorBackend(LocalBackend):
         script to finish, then parse all its results and return them.
 
         :param trial_id: ID for trial to be run
+        :param config: Configuration, defaults to config of `trial_id`
         :return: `(final_status, list_of_results_reported)`
         """
         assert (

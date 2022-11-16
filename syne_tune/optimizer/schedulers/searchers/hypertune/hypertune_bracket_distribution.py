@@ -48,8 +48,8 @@ class HyperTuneBracketDistribution(DefaultHyperbandBracketDistribution):
         assert isinstance(
             scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
         ), (
-            "This searcher requires HyperbandScheduler scheduler or "
-            "SynchronousHyperbandScheduler scheduler"
+            "This searcher requires HyperbandScheduler or "
+            + "SynchronousHyperbandScheduler scheduler"
         )
         self._searcher = scheduler.searcher
         assert isinstance(self._searcher, GPMultiFidelitySearcher)

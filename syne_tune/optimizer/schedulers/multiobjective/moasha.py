@@ -29,7 +29,9 @@ logger = logging.getLogger(__name__)
 
 
 class MOASHA(TrialScheduler):
-    """Implements Multiojbective asynchronous successive halving with different multiobjective sort options.
+    """
+    Implements MultiObjective Asynchronous Successive HAlving with different
+    multiobjective sort options.
 
     References:
     A multi-objective perspective on jointly tuning hardware and hyperparameters
@@ -38,29 +40,9 @@ class MOASHA(TrialScheduler):
 
     and
 
-    Multi-objective multi-fidelity hyperparameter optimization with application to fairness
+    Multi-objective multi-fidelity hyperparameter optimization with application
+        to fairness
     Robin Schmucker, Michele Donini, Valerio Perrone, Cédric Archambeau
-
-
-    Args:
-        time_attr: A training result attr to use for comparing time.
-            Note that you can pass in something non-temporal such as
-            `training_iteration` as a measure of progress, the only requirement
-            is that the attribute should increase monotonically.
-        multiobjective_priority: The multiobjective priority that is used to sort multiobjectives candidates.
-        We support several choices such as non-dominated sort or linear scalarization, default is non-dominated sort.
-        metrics: The training result objectives to optimize. Stopping
-            procedures will use this attribute.
-        mode: One of {min, max} or a list of {min, max}. Determines whether objectives are minimized or maximized,
-        in a case of a list the specification is done per objective. By default, all objectives are minimized.
-        max_t: max time units per trial. Trials will be stopped after
-            max_t time units (determined by time_attr) have passed.
-        grace_period: Only stop trials at least this old in time.
-            The units are the same as the attribute named by `time_attr`.
-        reduction_factor: Used to set halving rate and amount. This
-            is simply a unit-less scalar.
-        brackets: Number of brackets. Each bracket has a different
-            halving rate, specified by the reduction factor.
     """
 
     def __init__(
@@ -75,6 +57,32 @@ class MOASHA(TrialScheduler):
         reduction_factor: float = 3,
         brackets: int = 1,
     ):
+        """
+        :param config_space: Configuration space
+        :param metrics: List of metric names MOASHA optimizes over
+        :param mode: One of `{"min", "max"}` or a list of these values (same
+            size as `metrics`. Determines whether objectives are minimized or
+            maximized. Defaults to "min"
+        :param time_attr: A training result attr to use for comparing time.
+            Note that you can pass in something non-temporal such as
+            `training_iteration` as a measure of progress, the only requirement
+            is that the attribute should increase monotonically.
+            Defaults to "training_iteration"
+        :param multiobjective_priority: The multiobjective priority that is used
+            to sort multiobjectives candidates. We support several choices such
+            as non-dominated sort or linear scalarization, default is
+            non-dominated sort.
+        :param max_t: max time units per trial. Trials will be stopped after
+            `max_t` time units (determined by `time_attr`) have passed.
+            Defaults to 100
+        :param grace_period: Only stop trials at least this old in time.
+            The units are the same as the attribute named by `time_attr`.
+            Defaults to 1
+        :param reduction_factor: Used to set halving rate and amount. This
+            is simply a unit-less scalar. Defaults to 3
+        :param brackets: Number of brackets. Each bracket has a different
+            `grace_period` and number of rung levels. Defaults to 1
+        """
         super(MOASHA, self).__init__(config_space=config_space)
         assert max_t > 0, "Max (time_attr) not valid!"
         assert max_t >= grace_period, "grace_period must be <= max_t!"
@@ -130,10 +138,6 @@ class MOASHA(TrialScheduler):
         return self._mode
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        """
-        Implements `suggest`, except for basic postprocessing of
-        config.
-        """
         config = {
             k: v.sample() if hasattr(v, "sample") else v
             for k, v in self.config_space.items()

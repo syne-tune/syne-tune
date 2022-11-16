@@ -29,7 +29,7 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
-from syne_tune.tuner_callback import TensorboardCallback
+from syne_tune.callbacks.tensorboard_callback import TensorboardCallback
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)

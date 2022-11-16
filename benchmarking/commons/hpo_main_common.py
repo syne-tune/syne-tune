@@ -24,7 +24,20 @@ except ImportError:
     print("coolname is not installed, will not be used")
 
 
-def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
+def parse_args(
+    methods: Dict[str, Any], extra_args: Optional[List[dict]] = None
+) -> (Any, List[str], List[int]):
+    """Default implementation for parsing command line arguments.
+
+    :param methods: If `--method` is not given, then `method_names` are the
+        keys of this dictionary
+    :param extra_args: List of dictionaries, containing additional arguments
+        to be passed. Must contain `name` for argument name (without leading
+        `"--"`), and other kwargs to `parser.add_argument`. Optional
+    :return: `(args, method_names, seeds)`, where `args` is result of
+        `parser.parse_known_args()`, `method_names` see `methods`, and
+        `seeds` are list of seeds specified by `--num_seeds` and `--start_seed`
+    """
     try:
         default_experiment_tag = generate_slug(2)
     except Exception:
@@ -95,6 +108,17 @@ def get_metadata(
     benchmark: Optional[BenchmarkDefinition] = None,
     extra_args: Optional[dict] = None,
 ) -> Dict[str, Any]:
+    """Returns default value for `metadata` passed to `Tuner`.
+
+    :param seed: Seed of repetition
+    :param method: Name of method
+    :param experiment_tag: Tag of experiment
+    :param benchmark_name: Name of benchmark
+    :param benchmark: Optional. Take `n_workers`, `max_wallclock_time`
+        from there
+    :param extra_args: `metadata` updated by these at the end. Optional
+    :return: Default `metadata` dictionary
+    """
     metadata = {
         "seed": seed,
         "algorithm": method,

@@ -29,6 +29,21 @@ def sagemaker_estimator_args(
     benchmark: Optional[BenchmarkDefinition] = None,
     sagemaker_backend: bool = False,
 ) -> Dict[str, Any]:
+    """
+    Returns SageMaker estimator keyword arguments for remote tuning job.
+
+    Note: We switch off SageMaker profiler and debugger, as both are not needed
+    and consume extra resources and may introduce instabilities.
+
+    :param entry_point: Script for running HPO experiment, used for `entry_point`
+        and `source_dir` arguments
+    :param experiment_tag: Tag of experiment, used to create `checkpoint_s3_uri`
+    :param tuner_name: Name of tuner, used to create `checkpoint_s3_uri`
+    :param benchmark: Benchmark definition, optional
+    :param sagemaker_backend: Is remote tuning job running the SageMaker back-end?
+        If not, it either runs local or simulator back-end. Defaults to False
+    :return: Keyword arguments for SageMaker estimator
+    """
     checkpoint_s3_uri = s3_experiment_path(
         tuner_name=tuner_name, experiment_name=experiment_tag
     )

@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Optional
+from typing import Optional, List
 
 from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
@@ -22,16 +22,21 @@ logger = logging.getLogger(__name__)
 class RUSHDecider:
     """
     Implements the additional decision logic according to the RUSH algorithm.
-    It is used as part of RUSHStoppingRungSystem and RUSHPromotionRungSystem.
+    It is used as part of :class:`RUSHStoppingRungSystem` and
+    :class:`RUSHPromotionRungSystem`.
 
     Reference: A resource-efficient method for repeated HPO and NAS.
-    Giovanni Zappella, David Salinas, Cédric Archambeau. AutoML workshop @ ICML 2021.
+    Giovanni Zappella, David Salinas, Cédric Archambeau.
+    AutoML workshop @ ICML 2021.
 
-    For a more detailed description, refer to
-    :class:`RUSHScheduler`.
+    For a more detailed description, refer to :class:`RUSHScheduler`.
     """
 
     def __init__(self, num_threshold_candidates: int, mode: str):
+        """
+        :param num_threshold_candidates: Number of threshold candidates
+        :param mode: "min" or "max"
+        """
         if num_threshold_candidates <= 0:
             logger.warning(
                 "No threshold candidates provided. 'rush_stopping' will behave exactly like 'stopping'."
@@ -78,9 +83,21 @@ class RUSHDecider:
 
 
 class RUSHStoppingRungSystem(StoppingRungSystem):
-    def __init__(self, num_threshold_candidates: int, **kwargs):
-        super().__init__(**kwargs)
-        self._decider = RUSHDecider(num_threshold_candidates, self._mode)
+    """
+    Implementation for RUSH algorithm, stopping variant.
+    """
+
+    def __init__(
+        self,
+        rung_levels: List[int],
+        promote_quantiles: List[float],
+        metric: str,
+        mode: str,
+        resource_attr: str,
+        num_threshold_candidates: int,
+    ):
+        super().__init__(rung_levels, promote_quantiles, metric, mode, resource_attr)
+        self._decider = RUSHDecider(num_threshold_candidates, mode)
 
     def _task_continues(
         self,
@@ -99,9 +116,24 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
 
 
 class RUSHPromotionRungSystem(PromotionRungSystem):
-    def __init__(self, num_threshold_candidates: int, **kwargs):
-        super().__init__(**kwargs)
-        self._decider = RUSHDecider(num_threshold_candidates, self._mode)
+    """
+    Implementation for RUSH algorithm, promotion variant.
+    """
+
+    def __init__(
+        self,
+        rung_levels: List[int],
+        promote_quantiles: List[float],
+        metric: str,
+        mode: str,
+        resource_attr: str,
+        max_t: int,
+        num_threshold_candidates: int,
+    ):
+        super().__init__(
+            rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
+        )
+        self._decider = RUSHDecider(num_threshold_candidates, mode)
 
     def _is_promotable_trial(
         self, trial_id: str, metric_value: float, is_paused: bool, resource: int

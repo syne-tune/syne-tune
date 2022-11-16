@@ -48,6 +48,25 @@ BUSY_STATUS = {Status.in_progress, Status.stopping}
 
 
 class SageMakerBackend(TrialBackend):
+    """
+    This back-end executes each trial evaluation as a separate SageMaker
+    training job, using `sm_estimator` as estimator.
+
+    Checkpoints are written to and loaded from S3, using `checkpoint_s3_uri`
+    of the estimator.
+
+    Compared to :class:`LocalBackend`, this back-end can run any number of
+    jobs in parallel (given sufficient resources), and any instance type can
+    be used.
+
+    This back-end allows to select the instance type and count for a trial
+    evaluation, by passing values in the configuration, using names
+    `ST_INSTANCE_TYPE` and `ST_INSTANCE_COUNT`. If these are given in the
+    configuration, they overwrite the default in `sm_estimator`. This allows
+    for tuning instance type and count along with the hyperparameter
+    configuration.
+    """
+
     def __init__(
         self,
         sm_estimator: Framework,
@@ -57,15 +76,15 @@ class SageMakerBackend(TrialBackend):
         **sagemaker_fit_kwargs,
     ):
         """
-        :param sm_estimator: sagemaker estimator to be fitted
-        :param metrics_names: name of metrics passed to `report`, used to plot
-            live curve in sagemaker (optional, only used for visualization
-            purpose)
+        :param sm_estimator: SageMaker estimator for trial evaluations.
+        :param metrics_names: Names of metrics passed to `report`, used to plot
+            live curve in SageMaker (optional, only used for visualization)
         :param s3_path: S3 base path used for checkpointing. The full path
-            also involves the tuner name and the trial_id
-        :param delete_checkpoints: TODO: Not yet supported
-        :param sagemaker_fit_kwargs: extra arguments that are passed to
-            sagemaker.estimator. Framework when fitting the job, for instance
+            also involves the tuner name and the `trial_id`. The default base
+            path is the S3 bucket associated with the SageMaker account
+        :param delete_checkpoints: Must be False at present!
+        :param sagemaker_fit_kwargs: Extra arguments that passed to
+            `sagemaker.estimator.Framework` when fitting the job, for instance
             `{'train': 's3://my-data-bucket/path/to/my/training/data'}`
         """
 
@@ -233,11 +252,13 @@ class SageMakerBackend(TrialBackend):
         self._busy_trial_id_candidates.add(trial_id)  # Mark trial as busy
 
     def _make_sagemaker_jobname(self, trial_id: int, job_running_number: int) -> str:
-        f"""
-        :param trial_id:
-        :param job_running_number: the number of times the trial was resumed
-        :return: sagemaker job name with the form [trial_id]-[job_running_number]-[tuner_name]
-        trial_id is put first to avoid mismatch when searching for job information in SageMaker from prefix.
+        """
+        :param trial_id: ID of trial
+        :param job_running_number: Number of times the trial was resumed
+        :return: sagemaker job name with the form
+            `[trial_id]-[job_running_number]-[tuner_name]`. `trial_id` is put
+             first to avoid mismatch when searching for job information in
+            SageMaker from prefix.
         """
         job_name = f"{trial_id}"
         if job_running_number > 0:

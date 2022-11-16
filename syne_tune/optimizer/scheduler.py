@@ -29,11 +29,12 @@ class SchedulerDecision:
 @dataclass
 class TrialSuggestion:
     """Suggestion returned by a scheduler.
-    :param spawn_new_trial_id: whether a new trial-id should be used.
-    :param checkpoint_trial_id: the checkpoint of the trial-id that should be used.
-        If `spawn_new_trial_id` is False, then the trial `checkpoint_trial_id` is
-        resumed with its previous checkpoint.
-    :param config: the configuration that should be evaluated.
+
+    :param spawn_new_trial_id: Whether a new `trial_id` should be used.
+    :param checkpoint_trial_id: Optional. Checkpoint of this trial ID should
+        be used to resume from. If `spawn_new_trial_id` is False, then the
+        trial `checkpoint_trial_id` is resumed with its previous checkpoint.
+    :param config: Optional. The configuration which should be evaluated.
     """
 
     spawn_new_trial_id: bool = True
@@ -54,11 +55,13 @@ class TrialSuggestion:
     def start_suggestion(
         config: dict, checkpoint_trial_id: Optional[int] = None
     ) -> "TrialSuggestion":
-        """
-        :param config: configuration to use for the new trial.
-        :param checkpoint_trial_id: if given, then the checkpoint folder of the
-            corresponding trial is used when starting the new trial.
-        :return: a trial decision that consists in starting a new trial (which
+        """Suggestion to start new trial
+
+        :param config: Configuration to use for the new trial.
+        :param checkpoint_trial_id: Optional. Use checkpoint of this trial
+            when starting the new trial (otherwise, it is started from
+            scratch).
+        :return: A trial decision that consists in starting a new trial (which
             would receive a new trial-id).
         """
         return TrialSuggestion(
@@ -71,11 +74,12 @@ class TrialSuggestion:
     def resume_suggestion(
         trial_id: int, config: Optional[dict] = None
     ) -> "TrialSuggestion":
-        """
-        :param trial_id:
-        :param config:
-        :return: a trial decision that consists in resuming trial `trial-id`
-            with `config` if provided or the previous configuration used if
+        """Suggestion to resume a paused trial
+
+        :param trial_id: ID of trial to be resumed (from its checkpoint)
+        :param config: Optional. Configuration to use for resumed trial
+        :return: A trial decision that consists in resuming trial `trial-id`
+            with `config` if provided, or the previous configuration used if
             not provided.
         """
         return TrialSuggestion(
@@ -98,12 +102,13 @@ class TrialScheduler:
 
     Some schedulers support pausing and resuming trials. In this case, they
     also drive the decision when to restart a paused trial.
-
-    Note that Ray Tune distributes these decisions between schedulers and
-    searchers (see :class:`RayTuneScheduler`).
     """
 
     def __init__(self, config_space: dict):
+        """
+        :param config_space: Configuration spoce
+        """
+
         self.config_space = config_space
         self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
 
@@ -134,7 +139,7 @@ class TrialScheduler:
         :param trial_id: ID for new trial to be started (ignored if existing
             trial to be resumed)
         :return: Suggestion for a trial to be started or to be resumed, see
-            above
+            above. If no suggestion can be made, None is returned
         """
         ret_val = self._suggest(trial_id)
         if ret_val is not None:
@@ -148,11 +153,12 @@ class TrialScheduler:
         return ret_val
 
     def _postprocess_config(self, config: dict) -> dict:
-        """
-        Post-processes a config as returned by a searcher. This involves:
-        - Adding parameters which are constant, therefore do not feature
+        """Post-processes a config as returned by a searcher
+
+        This involves:
+        * Adding parameters which are constant, therefore do not feature
             in the config space of the searcher
-        - Casting values to types (float, int, str) according to config_space
+        * Casting values to types (float, int, str) according to `config_space`
             value types
 
         :param config: Config returned by searcher
@@ -163,14 +169,15 @@ class TrialScheduler:
         return new_config
 
     def _preprocess_config(self, config: dict) -> dict:
-        """
-        Pre-processes a config before passing it to a searcher. This involves:
-        - Removing parameters which are constant in the config space (these do
-            not feature in the config space used by the searcher)
-        - Casting values to types (float, int, str) according to config_space
-            value types
+        """Pre-processes a config before passing it to a searcher
 
-        :param config:
+        This involves:
+        * Removing parameters which are constant in `config_space` (these do
+            not feature in the config space used by the searcher)
+        * Casting values to types (float, int, str) according to
+            `config_space` value types
+
+        :param config: Config coming from the tuner
         :return: Pre-processed config, can be passed to searcher
         """
         return cast_config_values(
@@ -179,47 +186,69 @@ class TrialScheduler:
         )
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        """
-        Implements `suggest`, except for basic postprocessing of config.
+        """Implements `suggest`, except for basic postprocessing of config.
+
         Note that the config returned here may also contain values for constant
         parameters in the config space. If so, these values take precedence.
         See :class:`HyperbandScheduler` with `type = 'promotion'` for an
         example how this is used.
+
+        :param trial_id: ID for new trial to be started (ignored if existing
+            trial to be resumed)
+        :return: Suggestion for a trial to be started or to be resumed, see
+            above. If no suggestion can be made, None is returned
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def on_trial_add(self, trial: Trial):
         """Called when a new trial is added to the trial runner.
 
         Additions are normally triggered by `suggest`.
+
+        :param trial: Trial to be added
         """
         pass
 
     def on_trial_error(self, trial: Trial):
-        """Notification for the error of trial."""
+        """Called when a trial has failed.
+
+        :param trial: Trial for which error is reported.
+        """
         pass
 
     def on_trial_result(self, trial: Trial, result: dict) -> str:
-        """Called on each intermediate result returned by a trial.
+        """Called on each intermediate result reported by a trial.
 
         At this point, the trial scheduler can make a decision by returning
         one of CONTINUE, PAUSE, and STOP. This will only be called when the
         trial is in the RUNNING state.
 
-        :param trial:
-        :param result:
-        :return: trial_decision
+        :param trial: Trial for which results are reported
+        :param result: Result dictionary
+        :return: Decision what to do with the trial
         """
         return SchedulerDecision.CONTINUE
 
     def on_trial_complete(self, trial: Trial, result: dict):
-        """Notification for the completion of trial."""
+        """Notification for the completion of trial.
+
+        Note that `on_trial_result` is called with the same result before.
+        However, if the scheduler only uses one final report from each
+        trial, it may ignore `on_trial_result` and just use `result` here.
+
+        :param trial: Trial which is completing
+        :param result: Result dictionary
+        """
         pass
 
     def on_trial_remove(self, trial: Trial):
         """Called to remove trial.
+
         This is called when the trial is in PAUSED or PENDING state. Otherwise,
-        call `on_trial_complete`."""
+        call `on_trial_complete`.
+
+        :param trial: Trial to be removed
+        """
         pass
 
     def metric_names(self) -> List[str]:
@@ -231,9 +260,10 @@ class TrialScheduler:
 
     def metric_mode(self) -> str:
         """
-        :return: 'min' if target metric is minimized, otherwise 'max', 'min' is the default in all schedulers.
+        :return: "min" if target metric is minimized, otherwise "max".
+            Here, "min" should be the default.
         """
         if hasattr(self, "mode"):
             return self.mode
         else:
-            raise NotImplementedError()
+            raise NotImplementedError

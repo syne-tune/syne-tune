@@ -28,6 +28,19 @@ from syne_tune.optimizer.scheduler import (
 
 
 class MedianStoppingRule(TrialScheduler):
+    """
+    Applies median stopping rule in top of an existing scheduler.
+    * If result at time-step ranks less than the cutoff of other results observed
+        at this time-step, the trial is interrupted and otherwise, the wrapped
+        scheduler is called to make the stopping decision.
+    * Suggest decisions are left to the wrapped scheduler.
+    * The mode of the wrapped scheduler is used.
+
+    Reference:
+    Google Vizier: A Service for Black-Box Optimization.
+    Golovin et al. 2017.
+    """
+
     def __init__(
         self,
         scheduler: TrialScheduler,
@@ -39,26 +52,24 @@ class MedianStoppingRule(TrialScheduler):
         rank_cutoff: float = 0.5,
     ):
         """
-        Applies median stopping rule in top of an existing scheduler.
-        * If result at time-step ranks less than the cutoff of other results observed at this time-step, the trial is
-        interrupted and otherwise, the wrapped scheduler is called to make the stopping decision.
-        * Suggest decisions are left to the wrapped scheduler.
-        * The mode of the wrapped scheduler is used.
-        Reference: Google Vizier: A Service for Black-Box Optimization. Golovin et al. 2017.
-        :param scheduler: scheduler to be called for trial suggestion or when median-stopping-rule decision is to
-        continue.
-        :param resource_attr: key in the reported dictionary that accounts for the resource (e.g. epoch or
-        wall-clocktime).
-        :param running_average: if True, then uses the running average of observation instead of raw observations.
-        :param metric: metric to be considered.
-        :param grace_time: median stopping rule is only applied for results whose `time_attr` exceeds this amount.
-        :param grace_population: median stopping rule when at least `grace_population` have been observed at a resource
-        level.
-        :param rank_cutoff: results whose quantiles are bellow this level are discarded (discard by default trials
-         whose results are bellow the median).
+        :param scheduler: Scheduler to be called for trial suggestion or when
+            median-stopping-rule decision is to continue.
+        :param resource_attr: Key in the reported dictionary that accounts for the
+            resource (e.g. epoch).
+        :param running_average: If True, then uses the running average of
+            observation instead of raw observations. Defaults to True
+        :param metric: Metric to be considered, defaults to `scheduler.metric`
+        :param grace_time: Median stopping rule is only applied for results whose
+            `resource_attr` exceeds this amount. Defaults to 1
+        :param grace_population: Median stopping rule when at least
+            `grace_population` have been observed at a resource level. Defaults to 5
+        :param rank_cutoff: Results whose quantiles are below this level are
+            discarded. Defaults to 0.5 (median)
         """
         super(MedianStoppingRule, self).__init__(config_space=scheduler.config_space)
-        self.metric = scheduler.metric if metric is None else metric
+        if metric is None and hasattr(scheduler, "metric"):
+            metric = getattr(scheduler, "metric")
+        self.metric = metric
         self.sorted_results = defaultdict(list)
         self.scheduler = scheduler
         self.resource_attr = resource_attr

@@ -45,47 +45,6 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
     BOHB: Robust and Efficient Hyperparameter Optimization at Scale
     S. Falkner and A. Klein and F. Hutter
     Proceedings of the 35th International Conference on Machine Learning
-
-    Parameters
-    ----------
-    config_space: dict
-        Configuration space for trial evaluation function
-    metric : str
-        Name of metric to optimize, key in result's obtained via
-        `on_trial_result`
-    mode : str
-        Mode to use for the metric given, can be 'min' or 'max'. Is obtained
-        scheduler in `configure_scheduler`
-    random_seed_generator : RandomSeedGenerator (optional)
-        If given, the random_seed for `random_state` is obtained from there,
-        otherwise `random_seed` is used
-    random_seed : int (optional)
-        This is used if `random_seed_generator` is not given.
-    num_min_data_points: int
-        Minimum number of data points that we use to fit the KDEs. If set to None
-        than we set this to the number of hyperparameters.
-    top_n_percent: int
-        Determines how many datapoints we use to fit the first KDE model for
-        modeling the well performing configurations.
-    min_bandwidth: float
-        The minimum bandwidth for the KDE models
-    num_candidates: int
-        Number of candidates that are sampled to optimize the acquisition function
-    bandwidth_factor: int
-        We sample continuous hyperparameter from a truncated Normal. This factor
-        is multiplied to the bandwidth to define the standard deviation of this
-        trunacted Normal.
-    random_fraction: float
-        Defines the fraction of configurations that are drawn uniformly at random
-        instead of sampling from the model
-    points_to_evaluate: List[dict] or None
-        List of configurations to be evaluated initially (in that order).
-        Each config in the list can be partially specified, or even be an
-        empty dict. For each hyperparameter not specified, the default value
-        is determined using a midpoint heuristic.
-        If None (default), this is mapped to [dict()], a single default config
-        determined by the midpoint heuristic. If [] (empty list), no initial
-        configurations are specified.
     """
 
     def __init__(
@@ -102,6 +61,28 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         random_fraction: Optional[float] = None,
         **kwargs,
     ):
+        """
+        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
+
+        :param mode: Mode to use for the metric given, can be "min" or "max". Is
+            obtained from scheduler in `configure_scheduler`. Defaults to "min"
+        :param num_min_data_points: Minimum number of data points that we use to fit
+            the KDEs. If set to None, we set this to the number of hyperparameters.
+            Defaults to None.
+        :param top_n_percent: Determines how many datapoints we use to fit the first
+            KDE model for modeling the well performing configurations.
+            Defaults to 15
+        :param min_bandwidth: The minimum bandwidth for the KDE models. Defaults
+            to 1e-3
+        :param num_candidates: Number of candidates that are sampled to optimize
+            the acquisition function. Defaults to 64
+        :param bandwidth_factor: We sample continuous hyperparameter from a
+            truncated Normal. This factor is multiplied to the bandwidth to define
+            the standard deviation of this truncated Normal. Defaults to 3
+        :param random_fraction: Defines the fraction of configurations that are
+            drawn uniformly at random instead of sampling from the model.
+            Defaults to 0.33
+        """
         super().__init__(
             config_space=config_space,
             metric=metric,
@@ -272,7 +253,6 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
 
     def get_config(self, **kwargs) -> Optional[dict]:
         suggestion = self._next_initial_config()
-
         if suggestion is None:
             models = self._train_kde(np.array(self.X), np.array(self.y))
 
@@ -349,7 +329,6 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         return suggestion
 
     def _train_kde(self, train_data, train_targets):
-
         if train_data.shape[0] < self.num_min_data_points:
             return None
 

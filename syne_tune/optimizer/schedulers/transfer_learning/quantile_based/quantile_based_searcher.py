@@ -110,6 +110,18 @@ def subsample(
 
 
 class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
+    """
+    Implements the transfer-learning method:
+
+    A Quantile-based Approach for Hyperparameter Transfer Learning.
+    David Salinas, Huibin Shen, Valerio Perrone. ICML 2020.
+
+    This is the Copula Thompson Sampling approach described in the paper where a
+    surrogate is fitted on the transfer learning data to predict mean/variance of
+    configuration performance given a hyperparameter. The surrogate is then sampled
+    from and the best configurations are returned as next candidate to evaluate.
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -121,20 +133,17 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
         **kwargs,
     ):
         """
-        Implement the transfer-learning method:
-        A Quantile-based Approach for Hyperparameter Transfer Learning.
-        David Salinas, Huibin Shen, Valerio Perrone. ICML 2020.
-        This is the Copula Thompson Sampling approach described in the paper where a surrogate is fitted on the
-        transfer learning data to predict mean/variance of configuration performance given a hyperparameter.
-        The surrogate is then sampled from and the best configurations are returned as next candidate to evaluate.
-        :param config_space:
-        :param mode: whether to minimize or maximize, default to 'min'.
-        :param metric: metric to optimize
-        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
-        :param max_fit_samples: maximum number to use when fitting the method.
-        :param normalization: default to "gaussian" which first computes the rank and then applies Gaussian inverse CDF.
-        "standard" applies just standard normalization (remove mean and divide by variance) but performs significanly
-        worse.
+        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
+
+        :param mode: Whether to minimize or maximize, default to "min".
+        :param transfer_learning_evaluations: Dictionary from task name to offline
+            evaluations.
+        :param max_fit_samples: Maximum number to use when fitting the method.
+            Defaults to 100000
+        :param normalization: Default to "gaussian" which first computes the rank
+            and then applies Gaussian inverse CDF. "standard" applies just
+            standard normalization (remove mean and divide by variance) but can
+            perform significantly worse.
         """
         super(QuantileBasedSurrogateSearcher, self).__init__(
             config_space=config_space,

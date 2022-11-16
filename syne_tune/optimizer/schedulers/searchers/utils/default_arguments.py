@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Set, Tuple, Dict
+from typing import Set, Tuple, Dict, Optional
 import logging
 import numbers
 
@@ -101,21 +101,21 @@ def check_and_merge_defaults(
     options: dict,
     mandatory: Set[str],
     default_options: dict,
-    constraints: Dict[str, CheckType] = None,
-    dict_name=None,
+    constraints: Optional[Dict[str, CheckType]] = None,
+    dict_name: Optional[str] = None,
 ) -> dict:
     """
     First, check that all keys in mandatory appear in options. Second, create
-    result_options by merging options and default_options, where entries in
-    options have precedence. Finally, if constraints is given, this is used to
+    result_options by merging `options` and `default_options`, where entries in
+    `options` have precedence. Finally, if `constraints` is given, this is used to
     check validity of values.
 
-    :param options:
-    :param mandatory:
-    :param default_options:
-    :param constraints:
-    :param dict_name:
-    :return: result_options
+    :param options: Input arguments
+    :param mandatory: Set of mandatory argument names
+    :param default_options: Default values for `options`
+    :param constraints: See above, optional
+    :param dict_name: Prefix used in assert messages, optional
+    :return: Output arguments
     """
     prefix = "" if dict_name is None else "{}: ".format(dict_name)
     for key in mandatory:
@@ -159,12 +159,12 @@ def check_and_merge_defaults(
 
 def filter_by_key(options: dict, remove_keys: Set[str]) -> dict:
     """
-    Filter options by removing entries whose keys are in remove_keys.
+    Filter options by removing entries whose keys are in `remove_keys`.
     Used to filter kwargs passed to a constructor, before passing it to
     the superclass constructor.
 
-    :param options:
-    :param remove_keys:
+    :param options: Arguments to be filtered
+    :param remove_keys: See above
     :return: Filtered options
     """
     return {k: v for k, v in options.items() if k not in remove_keys}

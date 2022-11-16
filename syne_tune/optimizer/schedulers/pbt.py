@@ -73,21 +73,23 @@ _CONSTRAINTS = {
 
 class PopulationBasedTraining(FIFOScheduler):
     """
-    Implements the Population Based Training (PBT) algorithm. This is an adapted version of
-    the Raytune implementation for Syne Tune:
-     https://docs.ray.io/en/latest/tune/tutorials/tune-advanced-tutorial.html
+    Implements the Population Based Training (PBT) algorithm. This is an adapted
+    version of the Ray Tune implementation:
+
+    https://docs.ray.io/en/latest/tune/tutorials/tune-advanced-tutorial.html
 
     PBT was original presented in the following paper:
+
     https://deepmind.com/blog/population-based-training-neural-networks
 
-
-    Population based training (PBT) maintains a population of neural network models spread across
-    an asynchronous set of workers and dynamically adjust their hyperparameters during training.
-    Every time a worker reaches a user-defined milestone, it returns the performance of the currently
-    evaluated network. If the network is within the top percentile of the population,
-    the worker resumes its training until the next milestone. If not, PBT selects a neural network
-    from the top percentile uniformly at random. The worker now continues with the latest checkpoint
-    of this new neural network but mutates the hyperparameters.
+    Population based training (PBT) maintains a population of models spread across
+    an asynchronous set of workers and dynamically adjust their hyperparameters
+    during training. Every time a worker reaches a user-defined milestone, it
+    returns the performance of the currently evaluated network. If the network is
+    within the top percentile of the population, the worker resumes its training
+    until the next milestone. If not, PBT selects a model from the top percentile
+    uniformly at random. The worker now continues with the latest checkpoint of
+    this new model but mutates the hyperparameters.
 
     The mutation happens as following. For each hyperparameter, we either resample
     its value uniformly at random, or otherwise increment (multiply by 1.2) or
@@ -95,55 +97,8 @@ class PopulationBasedTraining(FIFOScheduler):
     hyperparameters, the value is always resampled uniformly.
 
     Note: While this is implemented as child of :class:`FIFOScheduler`, we
-    require `searcher='random'` (default), since the current code only supports
+    require `searcher="random"` (default), since the current code only supports
     a random searcher.
-
-    Parameters
-    ----------
-    config_space: dict
-        Configuration space for trial evaluation function
-    search_options : dict
-        If searcher is str, these arguments are passed to searcher_factory.
-    metric : str
-        Name of metric to optimize, key in result's obtained via
-        `on_trial_result`
-    mode : str
-        Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
-    points_to_evaluate: list[dict] or None
-        See :class:`FIFOScheduler`
-    random_seed : int
-        Master random seed. Generators used in the scheduler or searcher are
-        seeded using `RandomSeedGenerator`. If not given, the master random
-        seed is drawn at random here.
-    max_t : int (optional)
-        See :class:`FIFOScheduler`. This is mandatory here. If not given, we
-        try to infer it.
-    max_resource_attr : str (optional)
-        See :class:`FIFOScheduler`.
-    population_size : int)
-        Defines the size of the population.
-    perturbation_interval : float
-        Models will be considered for perturbation at this interval of `time_attr`.
-        Note that perturbation incurs checkpoint overhead, so you shouldn't set
-        this to be too frequent.
-    quantile_fraction : float
-        Parameters are transferred from the top `quantile_fraction` fraction of
-        trials to the bottom `quantile_fraction` fraction. Needs to be between
-        0 and 0.5. Setting it to 0 essentially implies doing no exploitation at
-        all.
-    resample_probability : float
-        The probability of resampling from the original distribution when
-        applying `hyperparam_mutations`. If not resampled, the value will be
-        perturbed by a factor of 1.2 or 0.8 if continuous, or changed to an
-        adjacent value if discrete.
-    custom_explore_fn : callable
-        You can also specify a custom exploration function. This function is
-        invoked as `f(config)` after built-in perturbations from
-        `hyperparam_mutations` are applied, and should return `config` updated
-        as needed. You must specify at least one of `hyperparam_mutations` or
-        `custom_explore_fn`.
-    time_keeper : TimeKeeper
-        See :class:`FIFOScheduler`
     """
 
     def __init__(
@@ -152,6 +107,38 @@ class PopulationBasedTraining(FIFOScheduler):
         custom_explore_fn: Optional[Callable[[dict], dict]] = None,
         **kwargs,
     ):
+        """
+        Additional arguments on top of parent class :class:`FIFOScheduler`.
+
+        :param resource_attr: Name of resource attribute in results obtained
+            via `on_trial_result`, defaults to "time_total_s"
+        :type resource_attr: str
+        :param population_size: Size of the population, defaults to 4
+        :type population_size: int, optional
+        :param perturbation_interval: Models will be considered for perturbation
+            at this interval of `resource_attr`. Note that perturbation incurs
+            checkpoint overhead, so you shouldn't set this to be too frequent.
+            Defaults to 60
+        :type perturbation_interval: float, optional
+        :param quantile_fraction: Parameters are transferred from the top
+            `quantile_fraction` fraction of trials to the bottom
+            `quantile_fraction` fraction. Needs to be between 0 and 0.5. Setting
+            it to 0 essentially implies doing no exploitation at all.
+            Defaults to 0.25
+        :type quantile_fraction: float, optional
+        :param resample_probability: The probability of resampling from the
+            original distribution when applying `hyperparam_mutations`. If not
+            resampled, the value will be perturbed by a factor of 1.2 or 0.8 if
+            continuous, or changed to an adjacent value if discrete.
+            Defaults to 0.25
+        :type resample_probability: float, optional
+        :param custom_explore_fn: Optional. Custom exploration function. This
+            function is invoked as `f(config)` after built-in perturbations from
+            `hyperparam_mutations` are applied, and should return `config` updated
+            as needed. You must specify at least one of `hyperparam_mutations` or
+            `custom_explore_fn`.
+        :type custom_explore_fn: function, optional
+        """
         # The current implementation only supports a random searcher
         searcher = kwargs.get("searcher")
         if searcher is not None:
@@ -187,21 +174,25 @@ class PopulationBasedTraining(FIFOScheduler):
     def on_trial_add(self, trial: Trial):
         self._trial_state[trial.trial_id] = PBTTrialState(trial=trial)
 
-    def _get_trial_id_to_continue(self, trial: Trial):
-        """
-        Determine which trial to continue. Following the original PBT formulation if the trial is not in the top %n
+    def _get_trial_id_to_continue(self, trial: Trial) -> int:
+        """Determine which trial to continue.
+
+        Following the original PBT formulation if the trial is not in the top %n
         percent, we sample a trial uniformly at random from the upper quantile.
-        :param trial:
-        :return: int that specifies which trial should be continued
+
+        :param trial: Trial at question right now
+        :return: ID (int) of trial which should be continued inplace of `trial`
         """
         lower_quantile, upper_quantile = self._quantiles()
         # If we are not in the upper quantile, we pause:
         trial_id = trial.trial_id
         if trial_id in lower_quantile:
-            logger.debug(f"Trial {trial_id} is in lower quantile")
             # sample random trial from upper quantile
-            trial_id_to_clone = self._random_state.choice(upper_quantile)
+            trial_id_to_clone = int(self._random_state.choice(upper_quantile))
             assert trial_id is not trial_id_to_clone
+            logger.debug(
+                f"Trial {trial_id} is in lower quantile, replaced by {trial_id_to_clone}"
+            )
             return trial_id_to_clone
         else:
             return trial_id
@@ -260,12 +251,13 @@ class PopulationBasedTraining(FIFOScheduler):
             self._trial_decisions_stack.append((trial_id_to_continue, config))
             return SchedulerDecision.PAUSE
 
-    def _save_trial_state(self, state: PBTTrialState, time: int, result: dict) -> dict:
+    def _save_trial_state(self, state: PBTTrialState, time: int, result: dict) -> float:
         """Saves necessary trial information when result is received.
-        Args:
-            state (PBTTrialState): The state object for the trial.
-            time (int): The current timestep of the trial.
-            result (dict): The trial's result dictionary.
+
+        :param state: State object for trial.
+        :param time: The current timestep (resource level) of the trial.
+        :param result: The trial's result dictionary.
+        :return: Current score
         """
 
         # This trial has reached its perturbation interval.
@@ -274,13 +266,14 @@ class PopulationBasedTraining(FIFOScheduler):
         state.last_score = score
         state.last_train_time = time
         state.last_result = result
-
         return score
 
     def _quantiles(self) -> Tuple[List[Trial], List[Trial]]:
         """Returns trials in the lower and upper `quantile` of the population.
 
         If there is not enough data to compute this, returns empty lists.
+
+        :return `(lower_quantile, upper_quantile)`
         """
         trials = []
         for trial, state in self._trial_state.items():
@@ -320,8 +313,8 @@ class PopulationBasedTraining(FIFOScheduler):
     def _explore(self, config: dict) -> dict:
         """Return a config perturbed as specified.
 
-        Args:
-            config (dict): Original hyperparameter configuration from the cloned trial
+        :param config: Original hyperparameter configuration from the cloned trial
+        :return: Perturbed config
         """
 
         new_config = copy.deepcopy(config)

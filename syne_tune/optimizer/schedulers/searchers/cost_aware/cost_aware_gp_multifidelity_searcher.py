@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import List, Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (
@@ -44,7 +44,6 @@ class MultiModelGPMultiFidelitySearcher(GPMultiFidelitySearcher):
     We first call `ModelBasedSearcher._create_internal` passing factory and
     skip_optimization predicate for the `INTERNAL_METRIC_NAME` model, then
     replace the state transformer by a multi-model one.
-
     """
 
     def _call_create_internal(self, kwargs_int):
@@ -74,7 +73,6 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
 
     Cost values are read from each report and cost is modeled as c(x, r), the
     cost model being given by `kwargs['cost_model']`.
-
     """
 
     def __init__(
@@ -82,8 +80,23 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
-        **kwargs
+        **kwargs,
     ):
+        """
+        Additional arguments on top of parent class :class:`GPMultiFidelitySearcher`.
+
+        :param cost_attr: Mandatory. Name of cost attribute in data obtained
+            from reporter (e.g., elapsed training time). Depending on whether
+            `resource_attr` is given, cost values are read from each report or
+            only at the end.
+        :type cost_attr: str
+        :param resource_attr: Name of resource attribute in reports.
+            Cost values are read from each report and cost is modeled as
+            c(x, r), the cost model being given by `cost_model`.
+        :type resource_attr: str
+        :param cost_model: Model for c(x, r).
+        :type :class:`CostModel`
+        """
         assert kwargs.get("cost_attr") is not None, (
             "This searcher needs a cost attribute. Please specify its "
             + "name in search_options['cost_attr']"
@@ -96,7 +109,7 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
         _kwargs = check_and_merge_defaults(
             kwargs,
             *cost_aware_gp_multifidelity_searcher_defaults(),
-            dict_name="search_options"
+            dict_name="search_options",
         )
         kwargs_int = cost_aware_gp_multifidelity_searcher_factory(**_kwargs)
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
@@ -125,7 +138,7 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
             init_state=init_state,
             output_skip_optimization=output_skip_optimization,
             config_space_ext=self.config_space_ext,
-            resource_for_acquisition=self.resource_for_acquisition
+            resource_for_acquisition=self.resource_for_acquisition,
         )
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)

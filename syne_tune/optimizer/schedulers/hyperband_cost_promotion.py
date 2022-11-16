@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import List, Optional
 import logging
 
 from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
@@ -46,18 +47,17 @@ class CostPromotionRungSystem(PromotionRungSystem):
     Note that costs c(x, r) reported via `cost_attr` need to be total costs of
     a trial. If the trial is paused and resumed, partial costs have to be added
     up. See :class:`HyperbandScheduler` for how this works.
-
     """
 
     def __init__(
         self,
-        rung_levels,
-        promote_quantiles,
-        metric,
-        mode,
-        resource_attr,
-        cost_attr,
-        max_t,
+        rung_levels: List[int],
+        promote_quantiles: List[float],
+        metric: str,
+        mode: str,
+        resource_attr: str,
+        cost_attr: str,
+        max_t: int,
     ):
         super().__init__(
             rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
@@ -67,7 +67,9 @@ class CostPromotionRungSystem(PromotionRungSystem):
         # (metric_value, cost_value, was_promoted), where metric_value is
         # m(x, r), cost value is c(x, r).
 
-    def _find_promotable_trial(self, recorded, prom_quant, resource):
+    def _find_promotable_trial(
+        self, recorded: dict, prom_quant: float, resource: int
+    ) -> Optional[str]:
         """
         Check whether any not yet promoted entry in `recorded` is
         promotable (see header comment). If there are several such, the one

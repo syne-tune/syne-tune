@@ -9,7 +9,6 @@
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
-from typing import Optional, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import GPMultiFidelitySearcher
@@ -33,22 +32,40 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
     :class:`HyperTuneIndependentGPModel` for references.
 
     Two modifications:
-
     * New brackets are sampled from a model-based distribution [w_k]
     * The acquisition function is fed with predictive means and variances from
         a mixture over rung level distributions, weighted by [theta_k]
+
+    It is *not* recommended to create :class:`HyperTuneSearcher` searcher
+    objects directly, but rather to create :class:`HyperbandScheduler` objects
+    with `searcher="hypertune"`, and passing arguments here in `search_options`.
+    This will use the appropriate functions from `gp_searcher_factory.py` to
+    create components in a consistent way.
     """
 
-    def __init__(
-        self,
-        config_space: dict,
-        metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
-        **kwargs,
-    ):
-        super().__init__(
-            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
-        )
+    def __init__(self, config_space, **kwargs):
+        """
+        The following arguments of the parent class are not relevant here, and are
+        ignored: `gp_resource_kernel`, `resource_acq`, `issm_gamma_one`,
+        `expdecay_normalize_inputs`.
+
+        Additional arguments on top of parent class :class:`GPMultiFidelitySearcher`.
+
+        :param model: Selects surrogate model (learning curve model) to be used.
+            Choices are:
+            * "gp_multitask": GP multi-task surrogate model
+            * "gp_independent" (default): Independent GPs for each rung level,
+                sharing an ARD kernel
+            The default is "gp_independent" (as in the Hyper-Tune paper), which
+            is different to the default in :class:`GPMultiFidelitySearcher` (which
+            is "gp_multitask"). "gp_issm", "gp_expdecay" not supported here.
+        :type model: str, optional
+        :param hypertune_distribution_num_samples: Parameter for estimating the
+            distribution, given by [theta_k]. Defaults to 50
+        :type hypertune_distribution_num_samples: int, optional
+
+        """
+        super().__init__(config_space, **kwargs)
         self._previous_distribution = None
 
     def configure_scheduler(self, scheduler):

@@ -28,44 +28,38 @@ class PopulationElement:
 
 
 class RegularizedEvolution(SearcherWithRandomSeed):
+    """
+    Implements the regularized evolution algorithm. The original implementation
+    only considers categorical hyperparameters. For integer and float parameters
+    we sample a new value uniformly at random.
+
+    Real, E., Aggarwal, A., Huang, Y., and Le, Q. V.
+    Regularized Evolution for Image Classifier Architecture Search.
+    In Proceedings of the Conference on Artificial Intelligence (AAAI’19)
+
+    The code is based one the original regularized evolution open-source
+    implementation:
+    https://colab.research.google.com/github/google-research/google-research/blob/master/evolution/regularized_evolution_algorithm/regularized_evolution.ipynb
+    """
+
     def __init__(
         self,
         config_space,
         metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
         mode: str = "min",
         population_size: int = 100,
         sample_size: int = 10,
-        points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
         """
-        Implements the regularized evolution algorithm proposed by Real et al. The original implementation only
-        considers categorical hyperparameters. For integer and float parameters we sample a new value uniformly
-        at random.
+        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
 
-        Real, E., Aggarwal, A., Huang, Y., and Le, Q. V.
-        Regularized Evolution for Image Classifier Architecture Search.
-        In Proceedings of the Conference on Artificial Intelligence (AAAI’19)
-
-        The code is based one the original regularized evolution open-source implementation:
-        https://colab.research.google.com/github/google-research/google-research/blob/master/evolution/regularized_evolution_algorithm/regularized_evolution.ipynb
-
-
-        Parameters
-        ----------
-        config_space: dict
-            Configuration space for trial evaluation function
-        metric : str
-            Name of metric to optimize, key in result's obtained via
-            `on_trial_result`
-        mode : str
-            Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
-        population_size : int
-            Size of the population.
-        sample_size : int
-            Size of the candidate set to obtain a parent for the mutation.
-        random_seed : int
-            Seed for the random number generation. If set to None, use random seed.
+        :param mode: Mode to use for the metric given, can be "min" or "max",
+            defaults to "min"
+        :param population_size: Size of the population, defaults to 100
+        :param sample_size: Size of the candidate set to obtain a parent for the
+            mutation, defaults to 10
         """
 
         super(RegularizedEvolution, self).__init__(
@@ -78,7 +72,6 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         self.num_sample_try = 1000  # number of times allowed to sample a mutation
 
     def _mutate_config(self, config: dict) -> dict:
-
         child_config = copy.deepcopy(config)
 
         # sample mutation until a different configuration is found
@@ -115,9 +108,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         }
 
     def get_config(self, **kwargs) -> Optional[dict]:
-
         initial_config = self._next_initial_config()
-
         if initial_config is not None:
             return initial_config
 
@@ -134,7 +125,6 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         return config
 
     def _update(self, trial_id: str, config: dict, result: dict):
-
         score = result[self._metric]
 
         if self.mode == "max":

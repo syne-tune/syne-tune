@@ -38,9 +38,40 @@ def launch_remote(
     map_extra_args: Optional[Callable] = None,
     is_expensive_method: Optional[Callable[[str], bool]] = None,
 ):
+    """
+    Launches sequence of SageMaker training jobs, each running an experiment
+    with the simulator back-end.
+
+    The loop runs over methods selected from `methods`. Different repetitions
+    (seeds) are run sequentially in the remote job. However, if
+    `is_expensive_method(method_name)` is true, we launch different remote
+    jobs for every seed for this particular method. This is to cater for
+    methods which are themselves expensive to run (e.g., involving Gaussian
+    process based Bayesian optimization).
+
+    If `benchmark_definitions` is a single-level dictionary and no benchmark
+    is selected on the command line, then all benchmarks are run sequentially
+    in the remote job. However, if `benchmark_definitions` is two-level nested,
+    we loop over the outer level and start separate remote jobs, each of which
+    iterates over its inner level of benchmarks. This is useful if the number
+    of benchmarks to iterate over is large.
+
+    :param entry_point: Script for running the experiment
+    :param methods: Dictionary with method constructors; one is selected from
+        command line arguments
+    :param benchmark_definitions: Definitions of benchmarks, can be nested
+        (see above)
+    :param extra_args: Extra arguments for command line parser, optional
+    :param map_extra_args: Maps `args` returned by `parse_args` to dictionary
+        for extra argument values. Needed only if `extra_args` given
+    :param is_expensive_method: See above. The default is a predicative always
+        returning False (no method is expensive)
+    """
     if is_expensive_method is None:
         # Nothing is expensive
-        is_expensive_method = lambda method: False
+        def is_expensive_method(method):
+            return False
+
     args, method_names, benchmark_names, seeds = parse_args(
         methods, benchmark_definitions, extra_args
     )

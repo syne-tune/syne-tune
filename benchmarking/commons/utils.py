@@ -38,6 +38,13 @@ sagemaker_estimator = {
 # Used for simulator back-end experiments and for remote launching of
 # SageMaker back-end experiments
 def basic_cpu_instance_sagemaker_estimator(**kwargs):
+    """
+    Returns SageMaker estimator to be used for simulator back-end experiments
+    and for remote launching of SageMaker back-end experiments.
+
+    :param kwargs: Extra arguments to SageMaker estimator
+    :return: SageMaker estimator
+    """
     return SKLearn(
         instance_type="ml.c5.4xlarge",
         instance_count=1,

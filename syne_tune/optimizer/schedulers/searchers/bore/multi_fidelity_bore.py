@@ -58,7 +58,7 @@ class MultiFidelityBore(Bore):
         """
         Additional arguments on top of parent class :class:`Bore`.
 
-        :param resource_attr: Name of resource attribute
+        :param resource_attr: Name of resource attribute. Defaults to "epoch"
         """
         if acq_optimizer is None:
             acq_optimizer = "rs_with_replacement"

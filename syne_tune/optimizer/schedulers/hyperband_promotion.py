@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional
+from typing import Optional, List
 
 from syne_tune.optimizer.schedulers.hyperband_stopping import (
     quantile_cutoff,
@@ -34,20 +34,26 @@ class PromotionRungSystem(RungSystem):
     `continues` becomes `gets_promoted`. If several paused trials in a
     rung can be promoted, the one with the best metric value is chosen.
 
-    Note: Say that an evaluation is resumed from level resume_from. If the
-    train_fn does not implement pause & resume, it needs to start training from
-    scratch, in which case metrics are reported for every epoch, also those <
-    resume_from. At least for some modes of fitting the searcher model to data,
-    this would lead to duplicate target values for the same extended config
-    (x, r), which we want to avoid. The solution is to maintain resume_from in
-    the data for the terminator (see `PromotionRungSystem._running`). Given
-    this, we can report in `on_task_report` that the current metric data should
-    not be used for the searcher model (`ignore_data = True`), namely as long
-    as the evaluation has not yet gone beyond level resume_from.
+    Note: Say that an evaluation is resumed from level `resume_from`. If the
+    trial evaluation function does not implement pause & resume, it needs to
+    start training from scratch, in which case metrics are reported for every
+    epoch, also those `< resume_from`. At least for some modes of fitting the
+    searcher model to data, this would lead to duplicate target values for the
+    same extended config `(x, r)`, which we want to avoid. The solution is to
+    maintain `resume_from` in the data for the terminator (see `self._running`).
+    Given this, we can report in `on_task_report` that the current metric data
+    should not be used for the searcher model (`ignore_data = True`), namely
+    as long as the evaluation has not yet gone beyond level `resume_from`.
     """
 
     def __init__(
-        self, rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
+        self,
+        rung_levels: List[int],
+        promote_quantiles: List[float],
+        metric: str,
+        mode: str,
+        resource_attr: str,
+        max_t: int,
     ):
         super().__init__(rung_levels, promote_quantiles, metric, mode, resource_attr)
         # The data entry in `_rungs` is a dict mapping trial_id to
@@ -107,6 +113,10 @@ class PromotionRungSystem(RungSystem):
         as filter in `_find_promotable_trial`. Can be used in subclasses to
         sharpen the condition for promotion.
 
+        :param trial_id: ID of trial
+        :param metric_value: Value of target metric
+        :param is_paused: Is trial paused right now?
+        :param resource: Resource level the trial has just reported at
         """
         return is_paused
 
@@ -164,7 +174,12 @@ class PromotionRungSystem(RungSystem):
         Called when new task is started. Depending on kwargs['new_config'],
         this could start an evaluation (True) or promote an existing config
         to the next milestone (False). In the latter case, kwargs contains
-        additional information about the promotion.
+        additional information about the promotion (`milestone`, `resume_from`).
+
+        :param trial_id: ID of trial to be started
+        :param skip_rungs: This number of smallest rung levels are not
+            considered milestones for this task
+        :param kwargs: Additional arguments
         """
         new_config = kwargs.get("new_config", True)
         if new_config:
@@ -189,13 +204,13 @@ class PromotionRungSystem(RungSystem):
 
     def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         """
-        Decision on whether task may continue (task_continues = True), or
-        should be paused (task_continues = False).
-        milestone_reached is a flag whether resource coincides with a
+        Decision on whether task may continue (`task_continues=True`), or
+        should be paused (`task_continues=False`).
+        `milestone_reached` is a flag whether resource coincides with a
         milestone.
         For this scheduler, we have that
 
-            task_continues == not milestone_reached,
+            `task_continues == not milestone_reached`,
 
         since a trial is always paused at a milestone.
 
@@ -204,12 +219,12 @@ class PromotionRungSystem(RungSystem):
         implemented (or not used), because resumed trials are started from
         scratch then. These metric values should in general be ignored.
 
-        :param trial_id:
+        :param trial_id: ID of trial which reported results
         :param result: Reported metrics
-        :param skip_rungs: This number of lowest rung levels are not
+        :param skip_rungs: This number of smallest rung levels are not
             considered milestones for this task
-        :return: dict(task_continues, milestone_reached, next_milestone,
-                      ignore_data)
+        :return: `dict(task_continues, milestone_reached, next_milestone,
+            ignore_data)`
         """
         resource = result[self._resource_attr]
         milestone_reached = False
