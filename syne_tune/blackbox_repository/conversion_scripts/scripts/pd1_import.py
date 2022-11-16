@@ -58,7 +58,7 @@ METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
 RESOURCE_ATTR = "global_step"
 
-SHA256_HASH = "d10de50b426b428bd72df91661fa683012719bfe12c6772ad4d1c4e43522f159"
+SHA256_HASH = "bd5b599179b1c5163d146a26dd2d559e5cb561f491ef48a22503e821651fd4d1"
 
 CONFIGURATION_SPACE = {
     "lr_initial_value": loguniform(1e-5, 10),
@@ -136,7 +136,7 @@ class PD1Recipe(BlackboxRecipe):
     def __init__(self):
         super(PD1Recipe, self).__init__(
             name=BLACKBOX_NAME,
-            # hash=SHA256_HASH,
+            hash=SHA256_HASH,
             cite_reference="Pre-trained Gaussian processes for Bayesian optimization. "
             "Wang, Z. and Dahl G. and Swersky K. and Lee C. and Mariet Z. and Nado Z. and Gilmer J. and Snoek J. and "
             "Ghahramani Z. 2021.",

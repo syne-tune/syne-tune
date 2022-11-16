@@ -43,7 +43,7 @@ RESOURCE_ATTR = "epoch"
 
 MAX_RESOURCE_LEVEL = 50
 
-SHA256_HASH = "1c899f3d4508213b2f05cfdeb93af87551092b6f3ec47e479b0bfc098b362b49"
+SHA256_HASH = "5461a65e6b94a877fd3214b4ef50436e25127f73303bf3e77f5db59289ecc670"
 
 CONFIGURATION_SPACE = {
     "num_layers": randint(1, 5),
@@ -112,7 +112,7 @@ class LCBenchRecipe(BlackboxRecipe):
     def __init__(self):
         super(LCBenchRecipe, self).__init__(
             name=BLACKBOX_NAME,
-            # hash=SHA256_HASH,
+            hash=SHA256_HASH,
             cite_reference="Auto-PyTorch: Multi-Fidelity MetaLearning for Efficient and Robust AutoDL. "
             "Lucas Zimmer, Marius Lindauer, Frank Hutter. 2020.",
         )
