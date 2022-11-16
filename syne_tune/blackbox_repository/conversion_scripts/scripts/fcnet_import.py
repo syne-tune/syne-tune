@@ -60,7 +60,7 @@ NUM_UNITS_1 = "hp_n_units_1"
 
 NUM_UNITS_2 = "hp_n_units_2"
 
-SHA256_HASH = "e257244102ec24e48b5fb7a3aebaae685ddcc9bc0221d5dac52f2101c9f0f406"
+SHA256_HASH = "1bb685bbef55ad339c1f81100c66e1fb7755ab4237ee1ed2ff8e59fe05d6df96"
 
 CONFIGURATION_SPACE = {
     "hp_activation_fn_1": choice(["tanh", "relu"]),
@@ -226,7 +226,7 @@ class FCNETRecipe(BlackboxRecipe):
     def __init__(self):
         super(FCNETRecipe, self).__init__(
             name=BLACKBOX_NAME,
-            # hash=SHA256_HASH,
+            hash=SHA256_HASH,
             cite_reference="Tabular benchmarks for joint architecture and hyperparameter optimization. "
             "Klein, A. and Hutter, F. 2019.",
         )

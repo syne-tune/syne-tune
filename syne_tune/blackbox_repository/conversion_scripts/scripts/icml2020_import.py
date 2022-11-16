@@ -25,8 +25,8 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 import syne_tune.config_space as sp
 
-SHA256_HASH_DEEPAR = "c083daee5f2200a3459d991ae047c89f8c3974d45a6ce02d88f51d88ff22a408"
-SHA256_HASH_XGBOOST = "b73da359dbded9e368f89bc4fd8febe56f901b97679c53b0f28a2f352be73df5"
+SHA256_HASH_DEEPAR = "b282b369daedc2986b3e59646d5e0c6bc93ccb3b4fbec02980f47cd89a002605"
+SHA256_HASH_XGBOOST = "2f6ebb75b2a95614eb783c8d5874cb1dc9e1859e5081fa31e6e46fc9ba56774d"
 
 
 def download(blackbox: str):
@@ -131,7 +131,7 @@ class XGBoostRecipe(BlackboxRecipe):
     def __init__(self):
         super(XGBoostRecipe, self).__init__(
             name="icml-xgboost",
-            # hash=SHA256_HASH_XGBOOST,
+            hash=SHA256_HASH_XGBOOST,
             cite_reference="A quantile-based approach for hyperparameter transfer learning."
             "Salinas, D., Shen, H., and Perrone, V. 2021.",
         )
@@ -144,7 +144,7 @@ class DeepARRecipe(BlackboxRecipe):
     def __init__(self):
         super(DeepARRecipe, self).__init__(
             name="icml-deepar",
-            # hash=SHA256_HASH_DEEPAR,
+            hash=SHA256_HASH_DEEPAR,
             cite_reference="A quantile-based approach for hyperparameter transfer learning."
             "Salinas, D., Shen, H., and Perrone, V. 2021.",
         )
