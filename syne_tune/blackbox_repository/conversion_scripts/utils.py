@@ -86,7 +86,7 @@ def compute_hash_benchmark(tgt_folder):
         if fname.endswith(".parquet"):
             # Parquet files are non-deterministic across hosts. Compute logical hash of the pandas dataframe.
             df = pandas.read_parquet(Path(tgt_folder) / fname)
-            h = pandas.util.hash_pandas_object(df, index=False).sum()
+            h = pandas.util.hash_pandas_object(df.round(decimals=10), index=False).sum()
         else:
             h = compute_hash_binary(Path(tgt_folder) / fname)
         hashes.append(h)
