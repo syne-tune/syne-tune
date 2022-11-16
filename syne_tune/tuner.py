@@ -163,7 +163,9 @@ class Tuner:
 
         # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
-        self.trial_backend.set_path(results_root=str(self.tuner_path), tuner_name=self.name)
+        self.trial_backend.set_path(
+            results_root=str(self.tuner_path), tuner_name=self.name
+        )
         self.callbacks = (
             callbacks if callbacks is not None else [self._default_callback()]
         )
