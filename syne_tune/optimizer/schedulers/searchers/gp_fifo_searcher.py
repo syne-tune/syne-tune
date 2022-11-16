@@ -90,7 +90,7 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 logger = logging.getLogger(__name__)
 
 
-GET_CONFIG_RANDOM_RETRIES = 50
+GET_CONFIG_RANDOM_RETRIES = 100000
 
 
 def create_initial_candidates_scorer(
