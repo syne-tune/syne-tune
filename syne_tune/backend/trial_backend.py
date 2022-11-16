@@ -23,20 +23,27 @@ from syne_tune.constants import ST_WORKER_TIMESTAMP
 logger = logging.getLogger(__name__)
 
 
+TrialAndStatusInformation = Dict[int, Tuple[Trial, str]]
+
+
+TrialIdAndResultList = List[Tuple[int, dict]]
+
+
 class TrialBackend:
+    """
+    Interface for back-end to execute evaluations of trials.
+    """
+
     def __init__(self, delete_checkpoints: bool = False):
         """
-        If `delete_checkpoints` is True, the checkpoints written by a trial are
-        deleted once the trial is stopped or is registered as completed. Also,
-        as part of `stop_all` called at the end of the tuning loop, all remaining
-        checkpoints are deleted.
-
-        :param delete_checkpoints: See above
-
+        :param delete_checkpoints: If True, the checkpoints written by a trial
+            are deleted once the trial is stopped or is registered as
+            completed. Also, as part of `stop_all` called at the end of the
+            tuning loop, all remaining checkpoints are deleted.
         """
         self.delete_checkpoints = delete_checkpoints
         self.trial_ids = []
-        self._trial_dict = {}
+        self._trial_dict = dict()
 
         # index of the last metric that was seen for each trial-id
         self._last_metric_seen_index = defaultdict(lambda: 0)
@@ -44,10 +51,12 @@ class TrialBackend:
     def start_trial(
         self, config: dict, checkpoint_trial_id: Optional[int] = None
     ) -> TrialResult:
-        """
-        :param config: program arguments of `script`
-        :param checkpoint_trial_id: id of a trial to be resumed, if given the checkpoint of this trial-id is be copied
-        to the checkpoint of the new trial-id.
+        """Start new trial with new trial ID
+
+        :param config: Configuration for new trial
+        :param checkpoint_trial_id: If given, the new trial starts from the
+            checkpoint written by this previous trial
+        :return: `TrialResult` for new trial, which includes new trial ID
         """
         trial_id = self.new_trial_id()
         if checkpoint_trial_id is not None:
@@ -72,8 +81,8 @@ class TrialBackend:
         """
         Copy the checkpoint folder from one trial to the other.
 
-        :param src_trial_id:
-        :param tgt_trial_id:
+        :param src_trial_id: Source trial ID (copy from)
+        :param tgt_trial_id: Target trial ID (copy to)
         """
         raise NotImplementedError()
 
@@ -82,16 +91,16 @@ class TrialBackend:
         Removes checkpoint folder for a trial. It is OK for the folder not to
         exist.
 
-        :param trial_id:
+        :param trial_id: ID of trial for which checkpoint files are deleted
         """
         raise NotImplementedError()
 
     def resume_trial(self, trial_id: int, new_config: Optional[dict] = None):
-        """
-        :param trial_id: id of the trial to be resumed
-        :param new_config: If given, the config maintained in trial.config is
-            replaced by new_config
-        :return:
+        """Resume paused trial
+
+        :param trial_id: ID of (paused) trial to be resumed
+        :param new_config: If given, the config maintained in `trial.config` is
+            replaced by `new_config`
         """
         assert trial_id < len(
             self.trial_ids
@@ -108,13 +117,17 @@ class TrialBackend:
 
     def _resume_trial(self, trial_id: int):
         """
-        update internal backend information when a trial gets resumed
+        Called in `resume_trial`, before job is scheduled.
+
+        :param trial_id: See `resume_trial`
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def pause_trial(self, trial_id: int, result: Optional[dict] = None):
-        """
-        Checks that the operation is valid and call backend internal implementation to actually pause the trial.
+        """Pauses a running trial
+
+        Checks that the operation is valid and calls backend internal
+        implementation to actually pause the trial.
         If the status is queried after this function, it should be `paused`.
 
         :param trial_id: ID of trial to pause
@@ -126,15 +139,21 @@ class TrialBackend:
         self._pause_trial(trial_id=trial_id, result=result)
 
     def _pause_trial(self, trial_id: int, result: Optional[dict]):
+        """Implements `pause_trial`.
+
+        :param trial_id: ID of trial to pause
+        :param result: Result dict based on which scheduler decided to pause the
+            trial
         """
-        Backend specific operation that pauses the trial.
-        """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def stop_trial(self, trial_id: int, result: Optional[dict] = None):
-        """
-        Checks that the operation is valid and call backend internal implementation to actually stop the trial.
-        If the status is queried after this function, it should be `stopped`.
+        """Stops (and terminates) a running trial
+
+        Checks that the operation is valid and calls backend internal
+        implementation to actually stop the trial. f the status is queried after
+        this function, it should be `stopped`.
+
         :param trial_id: ID of trial to stop
         :param result: Result dict based on which scheduler decided to stop the
             trial
@@ -149,31 +168,44 @@ class TrialBackend:
     def _stop_trial(self, trial_id: int, result: Optional[dict]):
         """
         Backend specific operation that stops the trial.
+
+        :param trial_id: ID of trial to stop
+        :param result: Result dict based on which scheduler decided to stop the
+            trial
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def new_trial_id(self) -> int:
         return len(self.trial_ids)
 
     def _schedule(self, trial_id: int, config: dict):
-        raise NotImplementedError()
+        """Schedules job for trial evaluation.
+
+        Called by `start_trial`, `resume_trial`.
+
+        :param trial_id: ID of trial to schedule
+        :param config: Configuration for this trial
+        """
+        raise NotImplementedError
 
     def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
+        """Returns results for selected trials
+
+        :param trial_ids: IDs of trials for which results are to be queried
+        :return: list of results corresponding to `trial_ids`, contains all the
+            results obtained since the start of each trial.
         """
-        :param trial_ids:
-        :return: list of results corresponding to the trial-id passed, contains all the results obtained since the start
-        of the trial.
-        """
-        pass
+        raise NotImplementedError
 
     def fetch_status_results(
         self, trial_ids: List[int]
-    ) -> Tuple[Dict[int, Tuple[Trial, str]], List[Tuple[int, dict]]]:
+    ) -> (TrialAndStatusInformation, TrialIdAndResultList):
         """
-        :param trial_ids: trials whose information should be fetch.
-        :return: A tuple containing 1) a dictionary from trial-id to Trial and status information 2) list of
-        trial-id/results pair for each new result that was emitted since the last call. The list of results is sorted
-         by the worker time-stamp (last time-stamp appears last).
+        :param trial_ids: Trials whose information should be fetched.
+        :return: A tuple containing 1) a dictionary from trial-id to Trial and status
+            information; 2) a list of (trial-id, results) pairs for each new result
+            emitted since the last call. The list of results is sorted by the worker
+            time-stamp.
         """
         all_trial_results = self._all_trial_results(trial_ids)
         results = []
@@ -202,7 +234,7 @@ class TrialBackend:
                 for new_metric in new_metrics:
                     results.append((trial_id, new_metric))
 
-        trial_status_dict = {}
+        trial_status_dict = dict()
         for trial_id in trial_ids:
             trial_result = self._trial_dict[trial_id]
             # we cast TrialResult to Trial to avoid downstream code depending on TrialResult which we should ultimately
@@ -217,20 +249,23 @@ class TrialBackend:
         return trial_status_dict, results
 
     def stdout(self, trial_id: int) -> List[str]:
+        """Fetch stdout log for trial
+
+        :param trial_id: ID of trial
+        :return: Lines of the log of the trial (stdout)
         """
-        :param trial_id:
-        :return: lines of the log of the trial (stdout)
-        """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def stderr(self, trial_id: int) -> List[str]:
+        """Fetch stderr log for trial
+
+        :param trial_id: ID of trial
+        :return: Lines of the log of the trial (stderr)
         """
-        :param trial_id:
-        :return: lines of the log of the trial (stderr)
-        """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def stop_all(self):
+        """Stop all trials which are in progress."""
         trial_results = self._all_trial_results(self.trial_ids)
         for trial in trial_results:
             if trial.status == Status.in_progress:
@@ -245,28 +280,29 @@ class TrialBackend:
         self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
     ):
         """
-        :param results_root: the local folder that should contains the results of the tuning experiment.
-        Used by Tuner to indicate a desired path where the results should be written to. This is used
-         to unify the location of backend files and Tuner results when possible (in the local backend).
-         By default, the backend does not do anything since not all backends may be able to unify their files
-         locations.
-        :param tuner_name: name of the tuner can be used for instance to save checkpoints on remote storage.
+        :param results_root: The local folder that should contains the results of
+            the tuning experiment. Used by `Tuner` to indicate a desired path
+            where the results should be written to. This is used to unify the
+            location of backend files and Tuner results when possible (in the local
+            backend). By default, the backend does not do anything since not all
+            backends may be able to unify their files locations.
+        :param tuner_name: Name of the tuner, can be used for instance to save
+            checkpoints on remote storage.
         """
         pass
 
     def entrypoint_path(self) -> Path:
         """
-        :return: the path of the entrypoint to be executed
+        :return: Entrypoint path of script to be executed
         """
-        pass
+        raise NotImplementedError
 
     def set_entrypoint(self, entry_point: str):
+        """Update the entrypoint.
+
+        :param entry_point: New path of the entrypoint.
         """
-        Update the entrypoint to point path.
-        :param entry_point: new path of the entrypoint.
-        :return:
-        """
-        pass
+        raise NotImplementedError
 
     def on_tuner_save(self):
         """

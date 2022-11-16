@@ -174,6 +174,8 @@ def objective(config):
         elapsed_time = time.time() - ts_start
         if current_best is None or accuracy > current_best:
             current_best = accuracy
+        # Write checkpoint (optional)
+        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
         # Feed the score back to Tune.
         objective = current_best if report_current_best else accuracy
         report(
@@ -183,8 +185,6 @@ def objective(config):
                 ELAPSED_TIME_ATTR: elapsed_time,
             }
         )
-        # Write checkpoint (optional)
-        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
 
 
 if __name__ == "__main__":

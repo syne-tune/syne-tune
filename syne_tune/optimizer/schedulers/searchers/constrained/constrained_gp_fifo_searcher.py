@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict
+from typing import Optional, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
@@ -31,8 +31,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ConstrainedGPFIFOSearcher"]
-
 
 class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
     """
@@ -42,12 +40,20 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     """
 
-    def __init__(self, config_space, metric, **kwargs):
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        points_to_evaluate: Optional[List[dict]] = None,
+        **kwargs,
+    ):
         assert kwargs.get("constraint_attr") is not None, (
             "This searcher needs a constraint attribute. Please specify its "
             + "name in search_options['constraint_attr']"
         )
-        super().__init__(config_space, metric, **kwargs)
+        super().__init__(
+            config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
+        )
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -57,7 +63,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         return kwargs_int
 
-    def _copy_kwargs_to_kwargs_int(self, kwargs_int: Dict, kwargs: Dict):
+    def _copy_kwargs_to_kwargs_int(self, kwargs_int: dict, kwargs: dict):
         super()._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         k = "constraint_attr"
         kwargs_int[k] = kwargs[k]
@@ -66,7 +72,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         self._constraint_attr = kwargs_int.pop("constraint_attr")
         super()._call_create_internal(kwargs_int)
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         # We can call the superclass method, because
         # `state_transformer.label_trial` can be called two times
         # with parts of the metrics

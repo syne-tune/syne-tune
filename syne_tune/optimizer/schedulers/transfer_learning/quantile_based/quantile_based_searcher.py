@@ -112,13 +112,13 @@ def subsample(
 class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         mode: Optional[str] = None,
         max_fit_samples: int = 100000,
         normalization: str = "gaussian",
-        random_seed: Optional[int] = None,
+        **kwargs,
     ):
         """
         Implement the transfer-learning method:
@@ -135,13 +135,12 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
         :param normalization: default to "gaussian" which first computes the rank and then applies Gaussian inverse CDF.
         "standard" applies just standard normalization (remove mean and divide by variance) but performs significanly
         worse.
-        :param random_seed:
         """
         super(QuantileBasedSurrogateSearcher, self).__init__(
             config_space=config_space,
             metric=metric,
-            random_seed=random_seed,
             points_to_evaluate=[],
+            **kwargs,
         )
         self.mode = mode
         self.model_pipeline, sigma_train, sigma_val = fit_model(
@@ -167,13 +166,13 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
                 self.mu_pred = self.mu_pred.reshape(-1, 1)
             self.sigma_pred = np.ones_like(self.mu_pred) * sigma_val
 
-    def _update(self, trial_id: str, config: Dict, result: Dict):
+    def _update(self, trial_id: str, config: dict, result: dict):
         pass
 
-    def clone_from_state(self, state):
-        pass
+    def clone_from_state(self, state: dict):
+        raise NotImplementedError
 
-    def get_config(self, **kwargs):
+    def get_config(self, **kwargs) -> Optional[dict]:
         samples = self.random_state.normal(loc=self.mu_pred, scale=self.sigma_pred)
         if self.mode == "max":
             samples *= -1

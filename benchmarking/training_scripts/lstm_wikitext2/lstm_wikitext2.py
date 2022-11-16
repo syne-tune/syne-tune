@@ -305,6 +305,9 @@ def objective(config):
             # Anneal the learning rate if no improvement has been seen in the validation dataset.
             mutable_state["lr"] /= lr_factor
 
+        # Write checkpoint (optional)
+        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
+
         # Feed the score back back to Tune.
         _loss = best_val_loss if report_current_best else val_loss
         objective = -math.exp(_loss)
@@ -314,9 +317,6 @@ def objective(config):
             ELAPSED_TIME_ATTR: elapsed_time,
         }
         report(**report_kwargs)
-
-        # Write checkpoint (optional)
-        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
 
         if debug_log:
             print(

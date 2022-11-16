@@ -22,8 +22,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
 
-__all__ = ["KernelDensityEstimator"]
-
 logger = logging.getLogger(__name__)
 
 
@@ -95,13 +93,13 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
-        mode: str = "min",
-        num_min_data_points: int = None,
-        top_n_percent: int = 15,
-        min_bandwidth: float = 1e-3,
-        num_candidates: int = 64,
-        bandwidth_factor: int = 3,
-        random_fraction: float = 0.33,
+        mode: Optional[str] = None,
+        num_min_data_points: Optional[int] = None,
+        top_n_percent: Optional[int] = None,
+        min_bandwidth: Optional[float] = None,
+        num_candidates: Optional[int] = None,
+        bandwidth_factor: Optional[int] = None,
+        random_fraction: Optional[float] = None,
         **kwargs,
     ):
         super().__init__(
@@ -110,6 +108,18 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             points_to_evaluate=points_to_evaluate,
             **kwargs,
         )
+        if mode is None:
+            mode = "min"
+        if top_n_percent is None:
+            top_n_percent = 15
+        if min_bandwidth is None:
+            min_bandwidth = 1e-3
+        if num_candidates is None:
+            num_candidates = 64
+        if bandwidth_factor is None:
+            bandwidth_factor = 3
+        if random_fraction is None:
+            random_fraction = 0.33
         self.mode = mode
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
@@ -163,7 +173,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             assert isinstance(debug_log, DebugLogPrinter)
             self._debug_log = debug_log
 
-    def to_feature(self, config):
+    def _to_feature(self, config):
         def numerize(value, domain, categorical_map):
             if isinstance(domain, sp.Categorical):
                 res = categorical_map[value] / len(domain)
@@ -194,7 +204,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             ]
         )
 
-    def from_feature(self, feature_vector):
+    def _from_feature(self, feature_vector):
         def inv_numerize(values, domain, categorical_map):
             if not isinstance(domain, sp.Domain):
                 # constant value
@@ -242,15 +252,15 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         super().configure_scheduler(scheduler)
         self.mode = scheduler.mode
 
-    def to_objective(self, result: dict):
+    def _to_objective(self, result: dict):
         if self.mode == "min":
             return result[self._metric]
         elif self.mode == "max":
             return -result[self._metric]
 
     def _update(self, trial_id: str, config: dict, result: dict):
-        self.X.append(self.to_feature(config=config))
-        self.y.append(self.to_objective(result))
+        self.X.append(self._to_feature(config=config))
+        self.y.append(self._to_objective(result))
         if self._debug_log is not None:
             metric_val = result[self._metric]
             if self._resource_attr is not None:
@@ -260,11 +270,11 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
-    def get_config(self, **kwargs):
+    def get_config(self, **kwargs) -> Optional[dict]:
         suggestion = self._next_initial_config()
 
         if suggestion is None:
-            models = self.train_kde(np.array(self.X), np.array(self.y))
+            models = self._train_kde(np.array(self.X), np.array(self.y))
 
             if models is None or self.random_state.rand() < self.random_fraction:
                 # return random candidate because a) we don't have enough data points or
@@ -334,11 +344,11 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                         current_best = candidate
                         val_current_best = val
 
-                suggestion = self.from_feature(feature_vector=current_best)
+                suggestion = self._from_feature(feature_vector=current_best)
 
         return suggestion
 
-    def train_kde(self, train_data, train_targets):
+    def _train_kde(self, train_data, train_targets):
 
         if train_data.shape[0] < self.num_min_data_points:
             return None

@@ -31,20 +31,23 @@ except ImportError:
 
 
 class RegularCallback:
-    def __init__(self, callback, call_seconds_frequency: float):
+    """
+    Allows to call the callback function at most once every `call_seconds_frequency` seconds.
+    """
+
+    def __init__(self, callback: callable, call_seconds_frequency: float):
         """
-        Allows to call the callback function at most once every `call_seconds_frequency` seconds.
-        :param callback:
-        :param call_seconds_frequency:
+        :param callback: `TunerCallback` object
+        :param call_seconds_frequency: Wait time between subsequent calls
         """
-        self.start = datetime.now()
+        self.time_last_recent_call = datetime.now()
         self.frequency = call_seconds_frequency
         self.callback = callback
 
     def __call__(self, *args, **kwargs):
-        seconds_since_last_call = (datetime.now() - self.start).seconds
+        seconds_since_last_call = (datetime.now() - self.time_last_recent_call).seconds
         if seconds_since_last_call > self.frequency:
-            self.start = datetime.now()
+            self.time_last_recent_call = datetime.now()
             self.callback(*args, **kwargs)
 
 
@@ -52,34 +55,36 @@ def experiment_path(
     tuner_name: Optional[str] = None, local_path: Optional[str] = None
 ) -> Path:
     f"""
-    Return the path of an experiment which is used both by the Tuner and to collect results of experiments.
-    :param tuner_name: name of a tuning experiment
-    :param local_path: local path where results should be saved when running locally outside of Sagemaker.
-    If not specified, then the environment variable `"SYNETUNE_FOLDER"` is used if defined otherwise
-    `~/syne-tune/` is used. Defining the enviroment variable `"SYNETUNE_FOLDER"` allows to override the default path.
-    :return: path where to write logs and results for Syne Tune tuner. On Sagemaker, results are written
-    under "/opt/ml/checkpoints/" so that files are persisted continuously by Sagemaker.
+    Return the path of an experiment which is used both by the Tuner and to
+    collect results of experiments.
+
+    :param tuner_name: Name of a tuning experiment
+    :param local_path: Local path where results should be saved when running
+        locally outside of SageMaker. If not specified, then the environment
+        variable `"SYNETUNE_FOLDER"` is used if defined otherwise `~/syne-tune/`
+        is used. Defining the enviroment variable `"SYNETUNE_FOLDER"` allows to
+        override the default path.
+    :return: Path where to write logs and results for Syne Tune tuner. On
+        SageMaker, results are written to "/opt/ml/checkpoints/" so that files
+        are persisted continuously to S3 by SageMaker.
     """
     is_sagemaker = "SM_MODEL_DIR" in os.environ
     if is_sagemaker:
         # if SM_MODEL_DIR is present in the environment variable, this means that we are running on Sagemaker
         # we use this path to store results as it is persisted by Sagemaker.
-        sagemaker_path = Path("/opt/ml/checkpoints")
-        if tuner_name is not None:
-            sagemaker_path = sagemaker_path / tuner_name
-        return sagemaker_path
+        result_path = Path("/opt/ml/checkpoints")
     else:
         # means we are running on a local machine, we store results in a local path
         if local_path is None:
             if SYNE_TUNE_ENV_FOLDER in os.environ:
-                local_path = Path(os.environ[SYNE_TUNE_ENV_FOLDER]).expanduser()
+                result_path = Path(os.environ[SYNE_TUNE_ENV_FOLDER]).expanduser()
             else:
-                local_path = Path(f"~/{SYNE_TUNE_DEFAULT_FOLDER}").expanduser()
+                result_path = Path(f"~/{SYNE_TUNE_DEFAULT_FOLDER}").expanduser()
         else:
-            local_path = Path(local_path)
-        if tuner_name is not None:
-            local_path = local_path / tuner_name
-        return local_path
+            result_path = Path(local_path)
+    if tuner_name is not None:
+        result_path = result_path / tuner_name
+    return result_path
 
 
 def s3_experiment_path(
@@ -87,15 +92,13 @@ def s3_experiment_path(
     experiment_name: Optional[str] = None,
     tuner_name: Optional[str] = None,
 ) -> str:
-    """
-    Returns S3 path for storing results and checkpoints.
-    Note: The path ends on "/".
+    """Returns S3 path for storing results and checkpoints.
 
     :param s3_bucket: If not given, the default bucket for the SageMaker
         session is used
     :param experiment_name: If given, this is used as first directory
     :param tuner_name: If given, this is used as second directory
-    :return: S3 path
+    :return: S3 path, ending on "/"
     """
     if s3_bucket is None:
         s3_bucket = sagemaker.Session().default_bucket()
@@ -119,13 +122,10 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
     not longer than the specified max length, trimming the input parameter if
     necessary.
 
-    Args:
-        base (str): String used as prefix to generate the unique name.
-        default (str): String used in case base is None.
-        max_length (int): Maximum length for the resulting string (default: 63).
-
-    Returns:
-        str: Input parameter with appended timestamp.
+    :param base: String used as prefix to generate the unique name
+    :param default: String used if `base is None`
+    :param max_length: Maximum length for the resulting string (default: 63)
+    :return: Input parameter with appended timestamp
     """
     if base is None:
         check_valid_sagemaker_name(default)
@@ -149,16 +149,14 @@ def random_string(length: int) -> str:
 
 def repository_root_path() -> Path:
     """
-    :return: Returns path including `syne_tune`, `examples`,
-        `benchmarking`
+    :return: Returns path including `syne_tune`, `examples`, `benchmarking`
     """
     return Path(__file__).parent.parent
 
 
 def script_checkpoint_example_path() -> Path:
     """
-    Util to get easily the name of an example file
-    :return:
+    :return: Path of checkpoint example
     """
     path = (
         repository_root_path()
@@ -173,8 +171,7 @@ def script_checkpoint_example_path() -> Path:
 
 def script_height_example_path():
     """
-    Util to get easily the name of an example file
-    :return:
+    :return: Path of train_heigth example
     """
     path = (
         repository_root_path()
@@ -198,8 +195,16 @@ def catchtime(name: str) -> float:
 
 
 def is_increasing(lst: List[Union[float, int]]) -> bool:
+    """
+    :param lst: List of float or int entries
+    :return: Is `lst` strictly increasing?
+    """
     return all(x < y for x, y in zip(lst, lst[1:]))
 
 
 def is_positive_integer(lst: List[int]) -> bool:
+    """
+    :param lst: List of int entries
+    :return: Are all entries of `lst` of type `int` and positive?
+    """
     return all(x == int(x) and x >= 1 for x in lst)

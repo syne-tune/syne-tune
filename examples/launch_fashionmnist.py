@@ -19,9 +19,8 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner, StoppingCriterion
 
-from benchmarking.definitions.definition_mlp_on_fashion_mnist import (
+from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
     mlp_fashionmnist_benchmark,
-    mlp_fashionmnist_default_params,
 )
 
 
@@ -34,17 +33,14 @@ if __name__ == "__main__":
     # for other arguments (which you are free to override)
     random_seed = 31415927
     n_workers = 4
-    default_params = mlp_fashionmnist_default_params()
-    benchmark = mlp_fashionmnist_benchmark(default_params)
-    mode = benchmark["mode"]
-    metric = benchmark["metric"]
+    benchmark = mlp_fashionmnist_benchmark()
 
     # If you don't like the default config_space, change it here. But let
     # us use the default
-    config_space = benchmark["config_space"]
+    config_space = benchmark.config_space
 
     # Local back-end
-    trial_backend = LocalBackend(entry_point=benchmark["script"])
+    trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
     # GP-based Bayesian optimization searcher. Many options can be specified
     # via `search_options`, but let's use the defaults
@@ -57,12 +53,10 @@ if __name__ == "__main__":
         config_space,
         searcher=searcher,
         search_options=search_options,
-        max_t=default_params["max_resource_level"],
-        grace_period=default_params["grace_period"],
-        reduction_factor=default_params["reduction_factor"],
-        resource_attr=benchmark["resource_attr"],
-        mode=mode,
-        metric=metric,
+        max_resource_attr=benchmark.max_resource_attr,
+        resource_attr=benchmark.resource_attr,
+        mode=benchmark.mode,
+        metric=benchmark.metric,
         random_seed=random_seed,
     )
 

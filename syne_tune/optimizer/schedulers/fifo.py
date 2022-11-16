@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from typing import Optional, List
 import logging
-import os
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
@@ -21,7 +20,6 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
     Categorical,
     String,
-    Boolean,
     assert_no_invalid_options,
     Integer,
 )
@@ -43,31 +41,26 @@ logger = logging.getLogger(__name__)
 _ARGUMENT_KEYS = {
     "searcher",
     "search_options",
-    "checkpoint",
-    "resume",
     "metric",
     "mode",
     "points_to_evaluate",
     "random_seed",
-    "max_t",
     "max_resource_attr",
+    "max_t",
     "time_keeper",
 }
 
 _DEFAULT_OPTIONS = {
     "searcher": "random",
-    "resume": False,
     "mode": "min",
 }
 
 _CONSTRAINTS = {
-    "checkpoint": String(),
-    "resume": Boolean(),
     "metric": String(),
     "mode": Categorical(choices=("min", "max")),
     "random_seed": Integer(0, 2**32 - 1),
-    "max_t": Integer(1, None),
     "max_resource_attr": String(),
+    "max_t": Integer(1, None),
 }
 
 
@@ -127,14 +120,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
         searcher_factory along with search_options.
     search_options : dict
         If searcher is str, these arguments are passed to searcher_factory.
-    checkpoint : str
-        If filename given here, a checkpoint of scheduler (and searcher) state
-        is written to file every time a job finishes.
-        Note: May not be fully supported by all searchers.
-    resume : bool
-        If True, scheduler state is loaded from checkpoint, and experiment
-        starts from there.
-        Note: May not be fully supported by all searchers.
     metric : str
         Name of metric to optimize, key in result's obtained via
         `on_trial_result`
@@ -240,21 +225,8 @@ class FIFOScheduler(ResourceLevelsScheduler):
             assert isinstance(searcher, BaseSearcher)
             self.searcher: BaseSearcher = searcher
 
-        checkpoint = kwargs.get("checkpoint")
-        self._checkpoint = checkpoint
         self._start_time = None  # Will be set at first `suggest`
         self._searcher_initialized = False
-        # Resume experiment from checkpoint?
-        if kwargs["resume"]:
-            assert checkpoint is not None, "Need checkpoint to be set if resume = True"
-            if os.path.isfile(checkpoint):
-                raise NotImplementedError()
-                # TODO: Need load
-                # self.load_state_dict(load(checkpoint))
-            else:
-                msg = f"checkpoint path {checkpoint} is not available for resume."
-                logger.exception(msg)
-                raise FileExistsError(msg)
         # Time keeper
         time_keeper = kwargs.get("time_keeper")
         if time_keeper is not None:
@@ -281,16 +253,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
         if not self._searcher_initialized:
             self.searcher.configure_scheduler(self)
             self._searcher_initialized = True
-
-    def save(self, checkpoint=None):
-        """Save Checkpoint"""
-        if checkpoint is None:
-            checkpoint = self._checkpoint
-        if checkpoint is not None:
-            raise NotImplementedError()
-            # TODO: Need mkdir, save
-            # mkdir(os.path.dirname(checkpoint))
-            # save(self.state_dict(), checkpoint)
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         self._initialize_searcher()
@@ -376,32 +338,26 @@ class FIFOScheduler(ResourceLevelsScheduler):
         self._check_result(result)
         trial_id = str(trial.trial_id)
         trial_decision = SchedulerDecision.CONTINUE
-        if len(result) == 0:
-            # An empty dict should just be skipped
-            if self.searcher.debug_log is not None:
-                logger.info(f"trial_id {trial_id}: Skipping empty result")
-        else:
-            config = self._preprocess_config(trial.config)
-            self.searcher.on_trial_result(trial_id, config, result=result, update=False)
-            # Extra info in debug mode
-            log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
-            for k, is_float in (("epoch", False), ("elapsed_time", True)):
-                if k in result:
-                    if is_float:
-                        log_msg += f", {k} = {result[k]:.2f}"
-                    else:
-                        log_msg += f", {k} = {result[k]}"
-            log_msg += f"): decision = {trial_decision}"
-            logger.debug(log_msg)
+        config = self._preprocess_config(trial.config)
+        self.searcher.on_trial_result(trial_id, config, result=result, update=False)
+        # Extra info in debug mode
+        log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
+        for k, is_float in (("epoch", False), ("elapsed_time", True)):
+            if k in result:
+                if is_float:
+                    log_msg += f", {k} = {result[k]:.2f}"
+                else:
+                    log_msg += f", {k} = {result[k]}"
+        log_msg += f"): decision = {trial_decision}"
+        logger.debug(log_msg)
         return trial_decision
 
     def on_trial_complete(self, trial: Trial, result: dict):
-        if len(result) > 0:
-            self._initialize_searcher()
-            config = self._preprocess_config(trial.config)
-            self.searcher.on_trial_result(
-                str(trial.trial_id), config, result=result, update=True
-            )
+        self._initialize_searcher()
+        config = self._preprocess_config(trial.config)
+        self.searcher.on_trial_result(
+            str(trial.trial_id), config, result=result, update=True
+        )
 
     def metric_names(self) -> List[str]:
         return [self.metric]

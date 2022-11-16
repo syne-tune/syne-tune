@@ -15,10 +15,7 @@ Example for running the simulator back-end on a tabulated benchmark
 """
 import logging
 
-from benchmarking.definitions.definition_nasbench201 import (
-    nasbench201_default_params,
-    nasbench201_benchmark,
-)
+from benchmarking.commons.benchmark_definitions.nas201 import nas201_benchmark
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers import HyperbandScheduler
@@ -30,39 +27,31 @@ if __name__ == "__main__":
 
     random_seed = 31415927
     n_workers = 4
-    default_params = nasbench201_default_params({"backend": "simulated"})
-    benchmark = nasbench201_benchmark(default_params)
-    # Benchmark must be tabulated to support simulation:
-    assert benchmark.get("supports_simulated", False)
-    mode = benchmark["mode"]
-    metric = benchmark["metric"]
-    blackbox_name = benchmark.get("blackbox_name")
-    # NASBench201 is a blackbox from the repository
-    assert blackbox_name is not None
     dataset_name = "cifar100"
-
-    # If you don't like the default config_space, change it here. But let
-    # us use the default
-    config_space = benchmark["config_space"]
+    benchmark = nas201_benchmark(dataset_name)
 
     # Simulator back-end specialized to tabulated blackboxes
+    max_resource_attr = benchmark.max_resource_attr
     trial_backend = BlackboxRepositoryBackend(
-        blackbox_name=blackbox_name,
-        elapsed_time_attr=benchmark["elapsed_time_attr"],
+        elapsed_time_attr=benchmark.elapsed_time_attr,
+        max_resource_attr=max_resource_attr,
+        blackbox_name=benchmark.blackbox_name,
         dataset=dataset_name,
     )
 
-    searcher = "random"
+    resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
+    max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
+    config_space = dict(
+        trial_backend.blackbox.configuration_space,
+        **{max_resource_attr: max_resource_level},
+    )
     # Hyperband (or successive halving) scheduler of the stopping type.
     scheduler = HyperbandScheduler(
         config_space,
-        searcher=searcher,
-        max_t=default_params["max_resource_level"],
-        grace_period=default_params["grace_period"],
-        reduction_factor=default_params["reduction_factor"],
-        resource_attr=benchmark["resource_attr"],
-        mode=mode,
-        metric=metric,
+        max_resource_attr=max_resource_attr,
+        resource_attr=resource_attr,
+        mode=benchmark.mode,
+        metric=benchmark.metric,
         random_seed=random_seed,
     )
 

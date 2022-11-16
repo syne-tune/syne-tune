@@ -58,7 +58,7 @@ METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
 RESOURCE_ATTR = "global_step"
 
-SHA256_HASH = "654cc894e2be0648806fad41dfb77371316dfa9ddde82f5c658f4e4a682fbe31"
+SHA256_HASH = "bd5b599179b1c5163d146a26dd2d559e5cb561f491ef48a22503e821651fd4d1"
 
 CONFIGURATION_SPACE = {
     "lr_initial_value": loguniform(1e-5, 10),
@@ -82,6 +82,9 @@ COLUMN_RENAMING = {
 
 def convert_task(task_data):
     hyperparameters = task_data[list(CONFIGURATION_SPACE.keys())]
+    for hyperparameter_name, search_space in CONFIGURATION_SPACE.items():
+        assert search_space.lower <= hyperparameters[hyperparameter_name].min()
+        assert hyperparameters[hyperparameter_name].max() <= search_space.upper
 
     objective_names = [
         "metric_valid_error_rate",
@@ -186,6 +189,9 @@ class PD1Recipe(BlackboxRecipe):
         df["eval_time"] = df["eval_time"].apply(
             lambda x: None if x is None else np.cumsum(x).tolist()
         )
+        df["hps.opt_hparams.momentum"] = df["hps.opt_hparams.momentum"].map(
+            lambda x: 1 - x
+        )
 
         tasks = df[
             ["dataset", "model", "hps.batch_size", "hps.activation_fn"]
@@ -232,14 +238,6 @@ class PD1Recipe(BlackboxRecipe):
             )
 
     def _generate_on_disk(self):
-        matched_file = (
-            repository_path / BLACKBOX_NAME / "pd1_matched_phase1_results.jsonl.gz"
-        )
-        unmatched_file = (
-            repository_path / BLACKBOX_NAME / "pd1_unmatched_phase1_results.jsonl.gz"
-        )
-        if matched_file.exists() and unmatched_file.exists():
-            return
         self._download_data()
         bb_dict = self._convert_data()
         self._save_data(bb_dict)

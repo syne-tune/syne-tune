@@ -39,10 +39,18 @@ class HyperTuneBracketDistribution(DefaultHyperbandBracketDistribution):
 
     def configure(self, scheduler: TrialScheduler):
         from syne_tune.optimizer.schedulers import HyperbandScheduler
+        from syne_tune.optimizer.schedulers.synchronous.hyperband import (
+            SynchronousHyperbandScheduler,
+        )
         from syne_tune.optimizer.schedulers.searchers import GPMultiFidelitySearcher
 
         super().configure(scheduler)
-        assert isinstance(scheduler, HyperbandScheduler)
+        assert isinstance(
+            scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
+        ), (
+            "This searcher requires HyperbandScheduler scheduler or "
+            "SynchronousHyperbandScheduler scheduler"
+        )
         self._searcher = scheduler.searcher
         assert isinstance(self._searcher, GPMultiFidelitySearcher)
 

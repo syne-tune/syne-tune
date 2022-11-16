@@ -39,13 +39,29 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Reporter:
-    # Whether to add automatically `st_worker_time` information on the metric reported by the worker which measures
-    # the number of seconds spent since the creation of the Reporter.
-    add_time: bool = True
+    """
+    Callback for reporting metric values from a training script back to Syne Tune.
+    Example:
 
-    # Whether to add automatically `st_worker_cost` information on the metric reported by the worker which measures
-    # the estimated dollar-cost (only available and activated by default on Sagemaker backend). This option requires
-    # add_time to be activated.
+    ```python
+
+    from syne_tune import Reporter
+
+    report = Reporter()
+
+    for epoch in range(1, epochs + 1):
+        # ...
+        report(epoch=epoch, accuracy=accuracy)
+    ```
+
+    :param add_time: If True (default), the time (in secs) since creation of the
+        `Reporter` object is reported automatically as `ST_WORKER_TIME`
+    :param add_cost: If True (default), estimated dollar cost since creation of
+        `Reporter` object is reported automatically as `ST_WORKER_COST`. This is
+        available for SageMaker back-end only. Requires `add_time=True`.
+    """
+
+    add_time: bool = True
     add_cost: bool = True
 
     def __post_init__(self):
@@ -74,35 +90,32 @@ class Reporter:
                         ).cost_per_hour
                         self.dollar_cost = cost_per_hour * self.instance_count / 3600
 
-    def __call__(self, **kw) -> None:
-        """
-        Report metrics obtained after evaluating a training function, see `train_height.py` for a full
-         example on how to use it and to define a training function.
-        A time stamp `st_timestamp` is added, if `add_time` is True then `st_worker_time` is added
-        which measures seconds spent in the worker, if `add_cost` is True `st_worker_cost` is added that measures
-        dollar cost spent in worker (only available on Sagemaker instances and requires `st_worker_time` to be
-        activated).
-        :param kwargs: key word arguments of the metrics to report, for instance `report(epoch=1, loss=1.2)` the only
-        constrain is that values must be serializable with json and keys should not start with `st_` which is a
-        reserved namespace for Syne Tune internals.
-        """
-        for key in kw.keys():
-            assert not key.startswith("st_"), (
-                "The metric prefix 'st_' is used by Syne Tune internals, "
-                "please use a metric name that does not start with 'st_'."
-            )
+    def __call__(self, **kwargs) -> None:
+        """Report metric values from training function back to Syne Tune
 
-        kw[ST_WORKER_TIMESTAMP] = time()
+        A time stamp `ST_WORKER_TIMESTAMP` is added. See `add_time`, `add_cost`
+        comments for other automatically added metrics.
+
+        :param kwargs: Keyword arguments for metrics to be reported, for instance
+            `report(epoch=1, loss=1.2)`. Values must be serializable with json,
+            keys should not start with `st_` which is a reserved namespace for
+            Syne Tune internals.
+        """
+        assert not any(key.startswith("st_") for key in kwargs), (
+            "The metric prefix 'st_' is used by Syne Tune internals, "
+            "please use a metric name that does not start with 'st_'."
+        )
+        kwargs[ST_WORKER_TIMESTAMP] = time()
         if self.add_time:
             seconds_spent = perf_counter() - self.start
-            kw[ST_WORKER_TIME] = seconds_spent
+            kwargs[ST_WORKER_TIME] = seconds_spent
             # second cost will only be there if we were able to properly detect the instance-type and instance-count
             # from the environment
             if hasattr(self, "dollar_cost"):
-                kw[ST_WORKER_COST] = seconds_spent * self.dollar_cost
-        kw[ST_WORKER_ITER] = self.iter
+                kwargs[ST_WORKER_COST] = seconds_spent * self.dollar_cost
+        kwargs[ST_WORKER_ITER] = self.iter
         self.iter += 1
-        _report_logger(**kw)
+        _report_logger(**kwargs)
 
 
 def _report_logger(**kwargs):
@@ -118,9 +131,9 @@ def _serialize_report_dict(report_dict: dict) -> str:
     """
     try:
 
-        def np_encoder(object):
-            if isinstance(object, np.generic):
-                return object.item()
+        def np_encoder(obj):
+            if isinstance(obj, np.generic):
+                return obj.item()
 
         report_str = json.dumps(report_dict, default=np_encoder)
         assert sys.getsizeof(report_str) < 50_000
@@ -136,9 +149,9 @@ def _serialize_report_dict(report_dict: dict) -> str:
 
 
 def retrieve(log_lines: List[str]) -> List[Dict[str, float]]:
-    """
-    Retrieves metrics reported with `_report_logger` given log lines.
-    :param log_lines:
+    """Retrieves metrics reported with `_report_logger` given log lines.
+
+    :param log_lines: Lines in log file to be scanned for metric reports
     :return: list of metrics retrieved from the log lines.
     """
     metrics = []

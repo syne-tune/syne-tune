@@ -13,13 +13,12 @@
 import logging
 from typing import Dict, Optional
 
-import numpy as np
 import pandas as pd
 import xgboost
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
+from syne_tune.optimizer.schedulers.searchers.searcher import SearcherWithRandomSeed
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
     TransferLearningMixin,
@@ -28,16 +27,16 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 logger = logging.getLogger(__name__)
 
 
-class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
+class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
     def __init__(
         self,
-        config_space: Dict,
-        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
+        config_space: dict,
         metric: str,
+        transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         mode: str = "min",
         sort_transfer_learning_evaluations: bool = True,
         use_surrogates: bool = False,
-        random_seed: Optional[int] = None,
+        **kwargs,
     ) -> None:
         """
         A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
@@ -48,23 +47,23 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
         IEEE International Conference on Data Mining (ICDM) 2015.
 
         :param config_space: Configuration space for trial evaluation function.
-        :param transfer_learning_evaluations: Dictionary from task name to offline evaluations.
+        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
         :param metric: Objective name to optimize, must be present in transfer learning evaluations.
         :param mode: Whether to minimize (min) or maximize (max)
         :param sort_transfer_learning_evaluations: Use False if the hyperparameters for each task in
         transfer_learning_evaluations Are already in the same order. If set to True, hyperparameters are sorted.
         :param use_surrogates: If the same configuration is not evaluated on all tasks, set this to true. This will
         generate a set of configurations and will impute their performance using surrogate models.
-        :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
         """
         super().__init__(
             config_space=config_space,
-            transfer_learning_evaluations=transfer_learning_evaluations,
             metric=metric,
+            points_to_evaluate=[],
+            transfer_learning_evaluations=transfer_learning_evaluations,
             metric_names=[metric],
+            **kwargs,
         )
         self._mode = mode
-        self._random_state = np.random.RandomState(random_seed)
         if use_surrogates and len(transfer_learning_evaluations) <= 1:
             use_surrogates = False
             sort_transfer_learning_evaluations = False
@@ -111,7 +110,7 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
 
     def _create_surrogate_transfer_learning_evaluations(
         self,
-        config_space: Dict,
+        config_space: dict,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         metric: str,
     ) -> Dict[str, TransferLearningTaskEvaluations]:
@@ -153,7 +152,7 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
             )
         return surrogate_transfer_learning_evaluations
 
-    def get_config(self, **kwargs) -> Optional[Dict]:
+    def get_config(self, **kwargs) -> Optional[dict]:
         if self._ranks.shape[1] == 0:
             return None
         # Select greedy-best configuration considering all others
@@ -168,17 +167,17 @@ class ZeroShotTransfer(TransferLearningMixin, BaseSearcher):
             self._ranks = self._update_ranks()
         return best_config.to_dict()
 
-    def _sample_random_config(self, config_space: Dict) -> Dict:
+    def _sample_random_config(self, config_space: dict) -> dict:
         return {
-            k: v.sample(random_state=self._random_state) if isinstance(v, Domain) else v
+            k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in config_space.items()
         }
 
     def _update_ranks(self) -> pd.DataFrame:
         return self._scores.rank(axis=1)
 
-    def _update(self, trial_id: str, config: Dict, result: Dict) -> None:
+    def _update(self, trial_id: str, config: dict, result: dict) -> None:
         pass
 
-    def clone_from_state(self, state: Dict):
-        raise NotImplementedError()
+    def clone_from_state(self, state: dict):
+        raise NotImplementedError

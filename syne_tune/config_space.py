@@ -16,10 +16,9 @@
 # future.
 import logging
 from copy import copy
-from inspect import signature
 from math import isclose
 import sys
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 import argparse
 
 import numpy as np
@@ -33,12 +32,11 @@ class Domain:
     """Base class to specify a type and valid range to sample parameters from.
 
     This base class is implemented by parameter spaces, like float ranges
-    (``Float``), integer ranges (``Integer``), or categorical variables
-    (``Categorical``). The ``Domain`` object contains information about
+    (`Float`), integer ranges (`Integer`), or categorical variables
+    (`Categorical`). The :class:`Domain` object contains information about
     valid values (e.g. minimum and maximum values), and exposes methods that
-    allow specification of specific samplers (e.g. ``uniform()`` or
-    ``loguniform()``).
-
+    allow specification of specific samplers (e.g. `uniform()` or
+    `loguniform()`).
     """
 
     sampler = None
@@ -46,10 +44,17 @@ class Domain:
 
     @property
     def value_type(self):
+        """
+        :return: Type of values (one of `str`, `float`, `int`)
+        """
         raise NotImplementedError
 
     def cast(self, value):
-        """Cast value to domain type"""
+        """
+        :param value: Value top cast
+        :return: `value` casted to domain. For a finite domain, this can
+            involve rounding
+        """
         return self.value_type(value)
 
     def set_sampler(self, sampler, allow_override=False):
@@ -85,7 +90,10 @@ class Domain:
         return False
 
     def is_valid(self, value: Any):
-        """Returns True if `value` is a valid value in this domain."""
+        """
+        :param value: Value to test
+        :return: Is `value` a valid value in domain?
+        """
         raise NotImplementedError
 
     @property
@@ -209,6 +217,10 @@ def _sanitize_sample_result(items, domain: Domain):
 
 
 class Float(Domain):
+    """
+    Continuous value in closed interval `[lower, upper]`.
+    """
+
     class _Uniform(Uniform):
         def sample(
             self,
@@ -285,26 +297,20 @@ class Float(Domain):
 
     default_sampler_cls = _Uniform
 
-    def __init__(self, lower: Optional[float], upper: Optional[float]):
-        # Need to explicitly check for None
-        self.lower = lower if lower is not None else float("-inf")
-        self.upper = upper if upper is not None else float("inf")
+    def __init__(self, lower: float, upper: float):
+        """
+        :param lower: Lower bound (included)
+        :param upper: Upper bound (included)
+        """
+        assert float("-inf") < lower <= upper < float("inf")
+        self.lower = lower
+        self.upper = upper
 
     @property
     def value_type(self):
         return float
 
     def uniform(self):
-        if not self.lower > float("-inf"):
-            raise ValueError(
-                "Uniform requires a lower bound. Make sure to set the "
-                "`lower` parameter of `Float()`."
-            )
-        if not self.upper < float("inf"):
-            raise ValueError(
-                "Uniform requires a upper bound. Make sure to set the "
-                "`upper` parameter of `Float()`."
-            )
         new = copy(self)
         new.set_sampler(self._Uniform())
         return new
@@ -313,13 +319,6 @@ class Float(Domain):
         if not self.lower > 0:
             raise ValueError(
                 "LogUniform requires a lower bound greater than 0."
-                f"Got: {self.lower}. Did you pass a variable that has "
-                "been log-transformed? If so, pass the non-transformed value "
-                "instead."
-            )
-        if not 0 < self.upper < float("inf"):
-            raise ValueError(
-                "LogUniform requires a upper bound greater than 0. "
                 f"Got: {self.lower}. Did you pass a variable that has "
                 "been log-transformed? If so, pass the non-transformed value "
                 "instead."
@@ -379,7 +378,7 @@ class Float(Domain):
             return 1
 
     def match_string(self, value) -> str:
-        return f"{value:.7e}"
+        return f"{value:.6e}"
 
     def __eq__(self, other) -> bool:
         return (
@@ -395,6 +394,10 @@ class Float(Domain):
 
 
 class Integer(Domain):
+    """
+    Integer value in closed interval `[lower, upper]`.
+    """
+
     class _Uniform(Uniform):
         def sample(
             self,
@@ -436,6 +439,7 @@ class Integer(Domain):
     default_sampler_cls = _Uniform
 
     def __init__(self, lower, upper):
+        assert lower <= upper
         self.lower = self.cast(lower)
         self.upper = self.cast(upper)
 
@@ -460,13 +464,6 @@ class Integer(Domain):
         if not self.lower > 0:
             raise ValueError(
                 "LogUniform requires a lower bound greater than 0."
-                f"Got: {self.lower}. Did you pass a variable that has "
-                "been log-transformed? If so, pass the non-transformed value "
-                "instead."
-            )
-        if not 0 < self.upper < float("inf"):
-            raise ValueError(
-                "LogUniform requires a upper bound greater than 0. "
                 f"Got: {self.lower}. Did you pass a variable that has "
                 "been log-transformed? If so, pass the non-transformed value "
                 "instead."
@@ -502,6 +499,11 @@ class Integer(Domain):
 
 
 class Categorical(Domain):
+    """
+    Value from finite set, whose values do not have a total ordering. For
+    values with an ordering, use :class:`Ordinal`.
+    """
+
     class _Uniform(Uniform):
         def sample(
             self,
@@ -521,6 +523,9 @@ class Categorical(Domain):
     default_sampler_cls = _Uniform
 
     def __init__(self, categories: Sequence):
+        """
+        :param categories: Finite sequence, all entries must have same type
+        """
         assert len(categories) > 0
         self.categories = list(categories)
         value_type = self.value_type
@@ -580,7 +585,7 @@ class Categorical(Domain):
         return value
 
     def match_string(self, value) -> str:
-        return str(self.categories.index(value))
+        return str(self.categories.index(value))  # Index into `categories`
 
     def __repr__(self):
         return f"choice({self.categories})"
@@ -602,6 +607,9 @@ class Ordinal(Categorical):
     """
 
     def __init__(self, categories: Sequence):
+        """
+        :param categories: Finite sequence, all entries must have same type
+        """
         super().__init__(categories)
 
     def __repr__(self):
@@ -622,10 +630,16 @@ class OrdinalNearestNeighbor(Ordinal):
     containing all values, and random sampling draws a value from this
     interval and rounds it to the nearest value in `categories`. If
     `log_scale` is True, all of this happens in log scale. Unless values
-    are equidistant, this is different from `Ordinal`.
+    are equidistant, this is different from :class:`Ordinal`.
     """
 
     def __init__(self, categories: Sequence, log_scale: bool = False):
+        """
+        :param categories: Finite sequence, must be strictly increasing,
+            value type must be `float` or `int`. If `log_scale=True`, values
+            must be positive
+        :param log_scale: Encoding and NN matching in log domain?
+        """
         super().__init__(categories)
         self.log_scale = log_scale
         self._initialize()
@@ -710,64 +724,6 @@ class OrdinalNearestNeighbor(Ordinal):
             return self.cast_int(items)
 
 
-class Function(Domain):
-    class _CallSampler(BaseSampler):
-        def sample(
-            self,
-            domain: "Function",
-            spec: Optional[Union[List[dict], dict]] = None,
-            size: int = 1,
-            random_state: Optional[np.random.RandomState] = None,
-        ):
-            if random_state is not None:
-                raise NotImplementedError()
-            if domain.pass_spec:
-                items = [
-                    domain.func(spec[i] if isinstance(spec, list) else spec)
-                    for i in range(size)
-                ]
-            else:
-                items = [domain.func() for i in range(size)]
-
-            return _sanitize_sample_result(items, domain)
-
-    default_sampler_cls = _CallSampler
-
-    def __init__(self, func: Callable):
-        sig = signature(func)
-
-        pass_spec = True  # whether we should pass `spec` when calling `func`
-        try:
-            sig.bind({})
-        except TypeError:
-            pass_spec = False
-
-        if not pass_spec:
-            try:
-                sig.bind()
-            except TypeError as exc:
-                raise ValueError(
-                    "The function passed to a `Function` parameter must be "
-                    "callable with either 0 or 1 parameters."
-                ) from exc
-
-        self.pass_spec = pass_spec
-        self.func = func
-
-    def is_function(self):
-        return True
-
-    def is_valid(self, value: Any):
-        return True  # This is user-defined, so lets not assume anything
-
-    @property
-    def domain_str(self):
-        return f"{self.func}()"
-
-    def __len__(self):
-        return 0
-
-
 class Quantized(Sampler):
     def __init__(self, sampler: Sampler, q: Union[float, int]):
         self.sampler = sampler
@@ -814,6 +770,13 @@ class FiniteRange(Domain):
         log_scale: bool = False,
         cast_int: bool = False,
     ):
+        """
+        :param lower: Lower bound (included)
+        :param upper: Upper bound (included)
+        :param size: Number of values
+        :param log_scale: Equal spacing in log domain?
+        :param cast_int: Value type is `int` (`float` otherwise)
+        """
         assert lower <= upper
         assert size >= 1
         if log_scale:
@@ -909,27 +872,18 @@ class FiniteRange(Domain):
         )
 
 
-def sample_from(func: Callable[[dict], Any]):
-    """Specify that tune should sample configuration values from this function.
-
-    Arguments:
-        func: An callable function to draw a sample from.
-    """
-    return Function(func)
-
-
 def uniform(lower: float, upper: float):
-    """Sample a float value uniformly between ``lower`` and ``upper``.
+    """Uniform between `lower` and `upper`
 
-    Sampling from ``tune.uniform(1, 10)`` is equivalent to sampling from
-    ``np.random.uniform(1, 10))``
-
+    :param lower: Lower bound (included)
+    :param upper: Upper bound (included)
+    :return: `Float` object
     """
     return Float(lower, upper).uniform()
 
 
 def quniform(lower: float, upper: float, q: float):
-    """Sample a quantized float value uniformly between ``lower`` and ``upper``.
+    """Sample a quantized float value uniformly between `lower` and `upper`.
 
     Sampling from ``tune.uniform(1, 10)`` is equivalent to sampling from
     ``np.random.uniform(1, 10))``
@@ -942,15 +896,14 @@ def quniform(lower: float, upper: float, q: float):
 
 
 def loguniform(lower: float, upper: float):
-    """Sugar for sampling in different orders of magnitude.
+    """Log-uniform between `lower` and `upper`
 
-    Note: Ray Tune has an argument `base` here, but since this does not
-    affect the distribution, we drop it.
+    Sampling is done as `exp(x)`, where x is uniform between `log(lower)` and
+    `log(upper)`.
 
-    Args:
-        lower (float): Lower boundary of the output interval (e.g. 1e-4)
-        upper (float): Upper boundary of the output interval (e.g. 1e-2)
-
+    :param lower: Lower bound (included)
+    :param upper: Upper bound (included)
+    :return: `Float` object
     """
     return Float(lower, upper).loguniform()
 
@@ -958,10 +911,9 @@ def loguniform(lower: float, upper: float):
 def reverseloguniform(lower: float, upper: float):
     """Values 0 <= x < 1, internally represented as -log(1 - x)
 
-    Args:
-        lower (float): Lower boundary of the output interval (e.g. 0.99)
-        upper (float): Upper boundary of the output interval (e.g. 0.9999)
-
+    :paam lower: Lower boundary of the output interval (e.g. 0.99)
+    :param upper: Upper boundary of the output interval (e.g. 0.9999)
+    :return: `Float` object
     """
     return Float(lower, upper).reverseloguniform()
 
@@ -986,9 +938,9 @@ def qloguniform(lower: float, upper: float, q: float):
 def choice(categories: list):
     """Sample a categorical value.
 
-    Sampling from ``tune.choice([1, 2])`` is equivalent to sampling from
-    ``random.choice([1, 2])``
-
+    :param categories: Sequence of values, all entries must have the same
+        type
+    :return: `Categorical` object
     """
     return Categorical(categories).uniform()
 
@@ -1011,8 +963,10 @@ def ordinal(categories: list, kind: Optional[str] = None):
     For this type, values in `categories` must be int or float and strictly
     increasing, and also positive if `kind == "nn-log"`.
 
-    :param categories:
+    :param categories: Sequence of values, all entries must have the same
+        type
     :param kind: Can be "equal", "nn", "nn-log"
+    :return: `Ordinal` or `OrdinalNearestNeighbor` object
     """
     if kind is None:
         # Default is "nn" for value type float or int and increasing,
@@ -1035,38 +989,41 @@ def ordinal(categories: list, kind: Optional[str] = None):
 
 def logordinal(categories: list):
     """
-    Ordinal value from list `categories`.
-
     Corresponds to `ordinal` with `kind="nn-log"`, so that nearest neighbour
     mapping happens in log scale. Values in `categories` must be int or
     float, strictly increasing, and positive.
 
-    :param categories:
+    :param categories: Sequence of values, strictly increasing, of type
+        `float` or `int`, all positive
+    :return: `OrdinalNearestNeighbor` object
     """
     return OrdinalNearestNeighbor(categories, log_scale=True)
 
 
 def randint(lower: int, upper: int):
-    """Sample an integer value uniformly between ``lower`` and ``upper``.
+    """Uniform integer between `lower` and `upper`
 
-    ``lower`` and ``upper`` are inclusive. This is a difference to Ray Tune,
-    where ``upper`` is exclusive. However, both `lograndint` and `qrandint`
-    have inclusive ``upper`` in Ray Tune, so we fix this inconsistency here.
+    `lower` and `upper` are inclusive. This is a difference to Ray Tune,
+    where `upper` is exclusive. However, both `lograndint` and `qrandint`
+    have inclusive `upper` in Ray Tune, so we fix this inconsistency here.
 
-    Sampling from ``tune.randint(10)`` is equivalent to sampling from
-    ``np.random.randint(10 + 1)``.
-
+    :param lower: Lower bound (included)
+    :param upper: Upper bound (included)
+    :return `Integer` object
     """
     return Integer(lower, upper).uniform()
 
 
 def lograndint(lower: int, upper: int):
-    """Sample an integer value log-uniformly between ``lower`` and ``upper``
+    """Log-uniform integer between `lower` and `upper`
 
-    ``lower`` and ``upper` are inclusive.
-
+    `lower` and `upper` are inclusive.
     Note: Ray Tune has an argument `base` here, but since this does not
     affect the distribution, we drop it.
+
+    :param lower: Lower bound (included)
+    :param upper: Upper bound (included)
+    :return `Integer` object
     """
     return Integer(lower, upper).loguniform()
 
@@ -1095,41 +1052,16 @@ def qlograndint(lower: int, upper: int, q: int):
     return Integer(lower, upper).loguniform().quantized(q)
 
 
-def randn(mean: float = 0.0, sd: float = 1.0):
-    """Sample a float value normally with ``mean`` and ``sd``.
-
-    Args:
-        mean (float): Mean of the normal distribution. Defaults to 0.
-        sd (float): SD of the normal distribution. Defaults to 1.
-
-    """
-    return Float(None, None).normal(mean, sd)
-
-
-def qrandn(mean: float, sd: float, q: float):
-    """Sample a float value normally with ``mean`` and ``sd``.
-
-    The value will be quantized, i.e. rounded to an integer increment of ``q``.
-
-    Args:
-        mean (float): Mean of the normal distribution.
-        sd (float): SD of the normal distribution.
-        q (float): Quantization number. The result will be rounded to an
-            integer increment of this value.
-
-    """
-    return Float(None, None).normal(mean, sd).quantized(q)
-
-
 def finrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
     Finite range `[lower, ..., upper]` with `size` entries, which are
-    equi-spaced. Finite alternative to `uniform`.
+    equally spaced. Finite alternative to `uniform`.
 
     :param lower: Smallest feasible value
     :param upper: Largest feasible value
     :param size: Size of (finite) domain, must be >= 2
-    :param cast_int: Values rounded to int?
+    :param cast_int: Values rounded and cast to int?
+    :return: `FiniteRange` object
     """
     return FiniteRange(lower, upper, size, log_scale=False, cast_int=cast_int)
 
@@ -1137,17 +1069,22 @@ def finrange(lower: float, upper: float, size: int, cast_int: bool = False):
 def logfinrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
     Finite range `[lower, ..., upper]` with `size` entries, which are
-    equi-spaced in the log domain. Finite alternative to `loguniform`.
+    equally spaced in the log domain. Finite alternative to `loguniform`.
 
     :param lower: Smallest feasible value (positive)
     :param upper: Largest feasible value (positive)
     :param size: Size of (finite) domain, must be >= 2
-    :param cast_int: Values rounded to int?
+    :param cast_int: Values rounded and cast to int?
+    :return: `FiniteRange` object
     """
     return FiniteRange(lower, upper, size, log_scale=True, cast_int=cast_int)
 
 
 def is_log_space(domain: Domain) -> bool:
+    """
+    :param domain: Hyperparameter type
+    :return: Logarithmic encoding?
+    """
     if isinstance(domain, FiniteRange):
         return domain.log_scale
     elif isinstance(domain, OrdinalNearestNeighbor):
@@ -1166,7 +1103,13 @@ def is_reverse_log_space(domain: Domain) -> bool:
 
 
 def is_uniform_space(domain: Domain) -> bool:
+    """
+    :param domain: Hyperparameter type
+    :return: Linear (uniform) encoding?
+    """
     if isinstance(domain, FiniteRange):
+        return not domain.log_scale
+    elif isinstance(domain, OrdinalNearestNeighbor):
         return not domain.log_scale
     else:
         sampler = domain.get_sampler()
@@ -1180,9 +1123,8 @@ def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict):
     Use this to prepare argument parser in endpoint script, for the
     non-fixed parameters in `config_space`.
 
-    :param parser:
-    :param config_space:
-    :return:
+    :param parser: `ArgumentParser` object
+    :param config_space: Configuration space
     """
     for name, domain in config_space.items():
         tp = domain.value_type if isinstance(domain, Domain) else type(domain)
@@ -1191,12 +1133,12 @@ def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict):
 
 def cast_config_values(config: dict, config_space: dict) -> dict:
     """
-    Returns config with keys, values of `config`, but values are casted to
+    Returns config with keys, values of `config`, but values are cast to
     their specific types.
 
-    :param config: Config whose values are to be casted
-    :param config_space:
-    :return: New config with values casted to correct types
+    :param config: Config whose values are to be cast
+    :param config_space: Configuration space
+    :return: New config with values cast to correct types
     """
     return {
         name: domain.cast(config[name]) if isinstance(domain, Domain) else config[name]
@@ -1207,7 +1149,7 @@ def cast_config_values(config: dict, config_space: dict) -> dict:
 
 def non_constant_hyperparameter_keys(config_space: dict) -> List[str]:
     """
-    :param config_space:
+    :param config_space: Configuration space
     :return: Keys corresponding to (non-fixed) hyperparameters
     """
     return [name for name, domain in config_space.items() if isinstance(domain, Domain)]
@@ -1218,6 +1160,11 @@ def config_space_size(config_space: dict, upper_limit: int = 2**20) -> Optional[
     Counts the number of distinct configurations in the configuration space
     `config_space`. If this is infinite (due to real-valued parameters) or
     larger than `upper_limit`, None is returned.
+
+    :param config_space: Configuration space
+    :param upper_limit: See above
+    :return: Number of distinct configurations; or None if infinite or more than
+        `upper_limit`
     """
     assert upper_limit > 1
     size = 1
@@ -1225,7 +1172,7 @@ def config_space_size(config_space: dict, upper_limit: int = 2**20) -> Optional[
         if isinstance(domain, Domain):
             domain_size = len(domain)
             if domain_size == 0 or domain_size > upper_limit:
-                return None  # Try to avoid overflow
+                return None  # To avoid overflow
             size *= domain_size
             if size > upper_limit:
                 return None
@@ -1250,11 +1197,13 @@ def config_to_match_string(config: dict, config_space: dict, keys: List[str]) ->
     return ",".join(parts)
 
 
-def to_dict(x: "Domain") -> dict:
+def to_dict(x: Domain) -> dict:
     """
     We assume that for each `Domain` subclass, the `__init__` kwargs are
     also members, and all other members start with `_`.
 
+    :param x: `Domain` object
+    :return: Representation as `dict`
     """
     domain_kwargs = {
         k: v for k, v in x.__dict__.items() if k != "sampler" and not k.startswith("_")
@@ -1270,6 +1219,10 @@ def to_dict(x: "Domain") -> dict:
 
 
 def from_dict(d: dict) -> Domain:
+    """
+    :param d: Representation of `Domain` object as `dict`
+    :return: Decoded `Domain` object
+    """
     domain_cls = getattr(sys.modules[__name__], d["domain_cls"])
     domain_kwargs = d["domain_kwargs"]
     domain = domain_cls(**domain_kwargs)
@@ -1301,9 +1254,12 @@ def config_space_from_json_dict(
 
 
 def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Domain:
-    """
-    Restricts a numerical domain to be in the range [lower, upper]
-    :return:
+    """Restricts a numerical domain to be in the range `[lower, upper]`
+
+    :param numerical_domain: Numerical domain
+    :param lower: Lower bound
+    :param upper: Upper bound
+    :return: Restricted domain
     """
     assert hasattr(numerical_domain, "lower") and hasattr(numerical_domain, "upper")
     lower = numerical_domain.cast(lower)
