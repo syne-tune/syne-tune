@@ -25,8 +25,8 @@ from syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe import (
 from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
 import syne_tune.config_space as sp
 
-SHA256_HASH_DEEPAR = "b391310b79be356d83234c795900fc67c339d84fe2fd886ca4ef26cf83d77d21"
-SHA256_HASH_XGBOOST = "3e3d8f46467e18d729bedc18e021aa24fd165058c915b3d7a3b1eb9339092a78"
+SHA256_HASH_DEEPAR = "b282b369daedc2986b3e59646d5e0c6bc93ccb3b4fbec02980f47cd89a002605"
+SHA256_HASH_XGBOOST = "2f6ebb75b2a95614eb783c8d5874cb1dc9e1859e5081fa31e6e46fc9ba56774d"
 
 
 def download(blackbox: str):

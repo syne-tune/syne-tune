@@ -112,7 +112,7 @@ class LCBenchRecipe(BlackboxRecipe):
     def __init__(self):
         super(LCBenchRecipe, self).__init__(
             name=BLACKBOX_NAME,
-            # hash=SHA256_HASH,
+            hash=SHA256_HASH,
             cite_reference="Auto-PyTorch: Multi-Fidelity MetaLearning for Efficient and Robust AutoDL. "
             "Lucas Zimmer, Marius Lindauer, Frank Hutter. 2020.",
         )
