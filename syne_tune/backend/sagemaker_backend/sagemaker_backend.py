@@ -14,10 +14,11 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import boto3
 from botocore.exceptions import ClientError
 import numpy as np
+import time
 
 from sagemaker import LocalSession
 from sagemaker.estimator import Framework
@@ -43,6 +44,9 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 logger = logging.getLogger(__name__)
 
 
+BUSY_STATUS = {Status.in_progress, Status.stopping}
+
+
 class SageMakerBackend(TrialBackend):
     def __init__(
         self,
@@ -50,18 +54,21 @@ class SageMakerBackend(TrialBackend):
         metrics_names: Optional[List[str]] = None,
         s3_path: Optional[str] = None,
         delete_checkpoints: bool = False,
-        *args,
         **sagemaker_fit_kwargs,
     ):
         """
         :param sm_estimator: sagemaker estimator to be fitted
-        :param metrics_names: name of metrics passed to `report`, used to plot live curve in sagemaker (optional, only
-        used for visualization purpose)
+        :param metrics_names: name of metrics passed to `report`, used to plot
+            live curve in sagemaker (optional, only used for visualization
+            purpose)
         :param s3_path: S3 base path used for checkpointing. The full path
             also involves the tuner name and the trial_id
-        :param sagemaker_fit_kwargs: extra arguments that are passed to sagemaker.estimator.Framework when fitting the
-        job, for instance `{'train': 's3://my-data-bucket/path/to/my/training/data'}`
+        :param delete_checkpoints: TODO: Not yet supported
+        :param sagemaker_fit_kwargs: extra arguments that are passed to
+            sagemaker.estimator. Framework when fitting the job, for instance
+            `{'train': 's3://my-data-bucket/path/to/my/training/data'}`
         """
+
         assert (
             not delete_checkpoints
         ), "delete_checkpoints=True not yet supported for SageMaker backend"
@@ -85,7 +92,7 @@ class SageMakerBackend(TrialBackend):
 
         add_syne_tune_dependency(self.sm_estimator)
 
-        self.job_id_mapping = {}
+        self.job_id_mapping = dict()
         self.sagemaker_fit_kwargs = sagemaker_fit_kwargs
 
         # we keep the list of jobs that were paused/stopped as Sagemaker training job status is not immediately changed
@@ -98,6 +105,17 @@ class SageMakerBackend(TrialBackend):
             s3_path = s3_experiment_path()
         self.s3_path = s3_path.rstrip("/")
         self.tuner_name = None
+        # Trials which may currently be busy (status in `BUSY_STATUS`). The
+        # corresponding jobs are polled for status in `busy_trial_ids`, and
+        # new trials are addd in `_schedule`.
+        # Note: A trial can be in `paused_jobs` or `stopped_jobs` and still
+        # be busy, because the underlying SM training job is still not completed
+        self._busy_trial_id_candidates = set()
+        # This is to estimate the stopping time for a trial (useful information
+        # for now, can be removed once stop delays are reduced).
+        # Note: Trials with a very short stop delay may be missed. This is fine,
+        # because we mainly want to highlight long stop delays.
+        self._stopping_time = dict()
 
     @property
     def sm_client(self):
@@ -135,9 +153,10 @@ class SageMakerBackend(TrialBackend):
 
         # overrides the status return by Sagemaker as the stopping decision may not have been propagated yet.
         for trial_res in res:
-            if trial_res.trial_id in self.paused_jobs:
+            trial_id = trial_res.trial_id
+            if trial_id in self.paused_jobs:
                 trial_res.status = Status.paused
-            if trial_res.trial_id in self.stopped_jobs:
+            if trial_id in self.stopped_jobs:
                 trial_res.status = Status.stopped
         return res
 
@@ -187,19 +206,31 @@ class SageMakerBackend(TrialBackend):
 
         # Once a trial gets resumed, the running job number has to feature in
         # the SM job_name
-        jobname = sagemaker_fit(
-            sm_estimator=self.sm_estimator,
-            # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
-            hyperparameters=self._numpy_serialize(hyperparameters),
-            checkpoint_s3_uri=checkpoint_s3_uri,
-            job_name=self._make_sagemaker_jobname(
-                trial_id=trial_id,
-                job_running_number=self.resumed_counter.get(trial_id, 0),
-            ),
-            **self.sagemaker_fit_kwargs,
-        )
+        try:
+            jobname = sagemaker_fit(
+                sm_estimator=self.sm_estimator,
+                # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
+                hyperparameters=self._numpy_serialize(hyperparameters),
+                checkpoint_s3_uri=checkpoint_s3_uri,
+                job_name=self._make_sagemaker_jobname(
+                    trial_id=trial_id,
+                    job_running_number=self.resumed_counter.get(trial_id, 0),
+                ),
+                **self.sagemaker_fit_kwargs,
+            )
+        except ClientError as ex:
+            if "ResourceLimitExceeded" in str(ex):
+                logger.warning(
+                    "Your resource limit has been exceeded. Here are some hints:\n"
+                    "- Choose Tuner.n_workers <= your limit for the instance type\n"
+                    "- Use Tuner.start_jobs_without_delay = False (default). Setting "
+                    "this to True means that more than Tuner.n_workers jobs will run "
+                    "at certain times"
+                )
+            raise
         logger.info(f"scheduled {jobname} for trial-id {trial_id}")
         self.job_id_mapping[trial_id] = jobname
+        self._busy_trial_id_candidates.add(trial_id)  # Mark trial as busy
 
     def _make_sagemaker_jobname(self, trial_id: int, job_running_number: int) -> str:
         f"""
@@ -241,6 +272,67 @@ class SageMakerBackend(TrialBackend):
             self.resumed_counter[trial_id] += 1
         else:
             self.resumed_counter[trial_id] = 1
+
+    def _get_busy_trial_ids(
+        self, trial_results: List[TrialResult]
+    ) -> List[Tuple[int, str]]:
+        busy_list = []
+        reported_trial_ids = set()
+        for result in trial_results:
+            trial_id, status = result.trial_id, result.status
+            reported_trial_ids.add(trial_id)
+            if status in BUSY_STATUS:
+                busy_list.append((trial_id, result.status))
+                if status == Status.stopping and trial_id not in self._stopping_time:
+                    # First time we see `Status.stopping` for this `trial_id`
+                    self._stopping_time[trial_id] = time.time()
+            elif trial_id in self._stopping_time:
+                # Trial just stopped being busy
+                stop_time = time.time() - self._stopping_time[trial_id]
+                logger.info(
+                    f"Estimated stopping delay for trial_id {trial_id}: {stop_time:.2f} secs"
+                )
+                del self._stopping_time[trial_id]
+        # Note: It can happen that the result of `sagemaker_search` does
+        # not contain all trial_id's requested. We keep such trial_id's in
+        # the busy list
+        extra_trial_ids = []
+        for trial_id in self._busy_trial_id_candidates.difference(reported_trial_ids):
+            # Assume that status is "in_progress": If `sagemaker_search`
+            # drops jobs, they are the ones that have just been started
+            busy_list.append((trial_id, Status.in_progress))
+            extra_trial_ids.append(trial_id)
+        if extra_trial_ids:
+            logger.info(
+                f"Did not obtain status for these trial ids: [{extra_trial_ids}]. "
+                f"Will count them as busy with status {Status.in_progress}"
+            )
+        return busy_list
+
+    def busy_trial_ids(self) -> List[Tuple[int, str]]:
+        # Note that at this point, `self._busy_trial_id_candidates` contains
+        # trials whose jobs have been busy in the past, but they may have
+        # stopped or terminated since. We query the current status for all
+        # these jobs and update `self._busy_trial_id_candidates` accordingly.
+        # It can happen that the status for such a trial is not returned (if
+        # it has just been started). In this case, the trial is kept in the
+        # list and treated as busy.
+        if self._busy_trial_id_candidates:
+            trial_ids_and_names = [
+                (trial_id, self.job_id_mapping[trial_id])
+                for trial_id in self._busy_trial_id_candidates
+            ]
+            # This is calling the SageMaker API in order to query the current
+            # status for all trials in `_busy_trial_id_candidates`
+            trial_results = sagemaker_search(
+                trial_ids_and_names, sm_client=self.sm_client
+            )
+            busy_list = self._get_busy_trial_ids(trial_results)
+            # Update internal candidate list
+            self._busy_trial_id_candidates = set(trial_id for trial_id, _ in busy_list)
+            return busy_list
+        else:
+            return []
 
     def stdout(self, trial_id: int) -> List[str]:
         return get_log(self.job_id_mapping[trial_id])

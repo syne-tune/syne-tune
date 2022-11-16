@@ -66,8 +66,11 @@ class Tuner:
         metadata: Optional[dict] = None,
         suffix_tuner_name: bool = True,
         save_tuner: bool = True,
+        start_jobs_without_delay: bool = True,
     ):
         """
+        Allows to run a tuning job, call `run` after initializing.
+
         :param trial_backend: Back-end for trial evaluations
         :param scheduler: Tuning algorithm for making decisions about which
             trials to start, stop, pause, or resume
@@ -105,8 +108,27 @@ class Tuner:
             left unchanged and is expected to be unique.
         :param save_tuner: If True, the `Tuner` object is serialized at the end
             of tuning, including its dependencies (e.g., scheduler). This allows
-            all details of the experiment to be recovered (however, these dill
-            files can be of substantial size)
+            all details of the experiment to be recovered
+        :param start_jobs_without_delay: Defaults to True. If this is True, the tuner
+            starts new jobs depending on scheduler decisions communicated to the
+            backend. For example, if a trial has just been stopped (by calling
+            `backend.stop_trial`), the tuner may start a new one immediately, even
+            if the SageMaker training job is still busy due to stopping delays.
+            This can lead to faster experiment runtime, because the backend is
+            temporarily going over its budget.
+
+            If set to False, the tuner always asks the backend for the number of
+            busy workers, which guarantees that we never go over the `n_workers`
+            budget. This makes a difference for backends where stopping or pausing
+            trials is not immediate (e.g., :class:`SageMakerBackend`). Not going
+            over budget means that `n_workers` can be set up to the available quota,
+            without running the risk of an exception due to the quota being
+            exceeded. If you get such exceptions, we recommend to use
+            `start_jobs_without_delay=False`. Also, if the SageMaker warm pool
+            feature is used, it is recommended to set
+            `start_jobs_without_delay=False`, since otherwise more than `n_workers`
+            warm pools will be started, because existing ones are busy with
+            stopping when they should be reassigned.
         """
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -118,6 +140,7 @@ class Tuner:
         self.wait_trial_completion_when_stopping = wait_trial_completion_when_stopping
         self.metadata = self._enrich_metadata(metadata)
         self.save_tuner = save_tuner
+        self.start_jobs_without_delay = start_jobs_without_delay
 
         self.max_failures = max_failures
         self.print_update_interval = print_update_interval
@@ -140,7 +163,9 @@ class Tuner:
 
         # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
-        self.trial_backend.set_path(results_root=self.tuner_path, tuner_name=self.name)
+        self.trial_backend.set_path(
+            results_root=str(self.tuner_path), tuner_name=self.name
+        )
         self.callbacks = (
             callbacks if callbacks is not None else [self._default_callback()]
         )
@@ -389,29 +414,42 @@ class Tuner:
         return done_trials_statuses, new_results
 
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
-        """
-        Schedules new tasks if resources are available, or sleep otherwise.
-        Note: For back-ends where stopping or terminating a job is not
-        instantaneous, there may be temporarily more than `n_workers` jobs
-        busy.
+        """Schedules new tasks if resources are available or sleep.
 
-        :param running_trials_ids: Set if trial-ids currently running, gets
+        Note: If `start_jobs_without_delay` is False, we ask the back-end for
+        the number of busy workers, instead of trusting `running_trials_ids`.
+        The latter does not contain trials which have been stopped or completed,
+        but the underlying job is still not completely done.
+
+        :param running_trials_ids: set if trial-ids currently running, gets
             updated if new trials are scheduled.
         """
         running_trials_threshold = self.n_workers if self.asynchronous_scheduling else 1
-        num_running_trials = len(running_trials_ids)
-        if num_running_trials >= running_trials_threshold:
+        if self.start_jobs_without_delay:
+            # Assume that only the trials in `running_trial_ids` are busy (which
+            # is an underestimate for certain backends)
+            busy_trial_ids = None
+            num_busy_workers = len(running_trials_ids)
+        else:
+            # Ask backend how many workers are really busy
+            busy_trial_ids = self.trial_backend.busy_trial_ids()
+            num_busy_workers = len(busy_trial_ids)
+        if num_busy_workers >= running_trials_threshold:
             # Note: For synchronous scheduling, we need to sleep here if at
             # least one worker is busy
             logger.debug(
-                f"{num_running_trials} of {self.n_workers} workers are "
+                f"{num_busy_workers} of {self.n_workers} workers are "
                 f"busy, wait for {self.sleep_time} seconds"
             )
             self._sleep()
-
         else:
+            if not self.start_jobs_without_delay and num_busy_workers < len(
+                running_trials_ids
+            ):
+                # In this case, the information from the backend is more recent
+                running_trials_ids = set(x[0] for x in busy_trial_ids)
             # Schedule as many trials as we have free workers
-            for i in range(self.n_workers - num_running_trials):
+            for _ in range(self.n_workers - num_busy_workers):
                 trial_id = self._schedule_new_task()
                 running_trials_ids.add(trial_id)
 

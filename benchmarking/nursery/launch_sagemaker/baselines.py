@@ -45,6 +45,8 @@ methods = {
         max_resource_attr=method_arguments.max_resource_attr,
         random_seed=method_arguments.random_seed,
     ),
+    # Note: With the SageMaker back-end, "promotion" runs more efficiently
+    # than "stopping", since the latter has major delays
     Methods.ASHA: lambda method_arguments: ASHA(
         config_space=method_arguments.config_space,
         search_options=search_options(method_arguments),
