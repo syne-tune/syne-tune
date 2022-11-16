@@ -269,9 +269,10 @@ def main(
             seed, method, experiment_tag, benchmark_name, extra_args=extra_args
         )
         metadata["fcnet_ordinal"] = args.fcnet_ordinal
-        metadata["predict_curves"] = int(
-            benchmark.add_surrogate_kwargs["predict_curves"]
-        )
+        if benchmark.add_surrogate_kwargs is not None:
+            metadata["predict_curves"] = int(
+                benchmark.add_surrogate_kwargs["predict_curves"]
+            )
         tuner = Tuner(
             trial_backend=backend,
             scheduler=scheduler,
