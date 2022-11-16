@@ -17,6 +17,8 @@ from syne_tune.util import catchtime
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
     compute_hash_benchmark,
     repository_path,
+    get_sub_directory_and_name,
+    blackbox_local_path,
 )
 
 
@@ -49,7 +51,7 @@ class BlackboxRecipe:
         logging.info(message)
         self._generate_on_disk()
 
-        hash = compute_hash_benchmark(repository_path / self.name)
+        hash = compute_hash_benchmark(blackbox_local_path(name=self.name))
 
         logging.info(
             f"Hash of new generated benchmark: {hash}. If you send a PR, "
