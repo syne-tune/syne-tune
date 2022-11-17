@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 import numpy
 import autograd.numpy as anp
+import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     ScalarMeanFunction,
@@ -130,6 +131,7 @@ def test_gp_regression_with_noise():
     numpy.testing.assert_almost_equal(mu_test, y_test, decimal=2)
 
 
+@pytest.mark.timeout(5)
 def test_gp_regression_2d_with_ard():
     def f(x):
         # Only dependent on the first column of x
