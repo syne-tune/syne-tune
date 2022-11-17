@@ -154,7 +154,7 @@ def test_sync_scheduler_simulated(scheduler_cls, searcher, mode):
     )
 
 
-# Schedulers which involve GP-based BO (need more time, so less cases)
+# Schedulers which involve GP-based BO (need more time, so fewer cases)
 
 
 _bo_async_parameterizations = ["fifo", "hyperband_promotion"]
