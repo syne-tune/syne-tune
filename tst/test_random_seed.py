@@ -53,6 +53,7 @@ _parameterizations = list(
 )
 
 
+@pytest.mark.timeout(5)
 @pytest.mark.parametrize("scheduler, random_seed", _parameterizations)
 def test_scheduler(scheduler, random_seed):
     max_steps = 5

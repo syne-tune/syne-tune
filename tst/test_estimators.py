@@ -25,10 +25,19 @@ all_real_benchmarks = [
     (bm, False) for bm in real_benchmark_definitions(sagemaker_backend=False).values()
 ] + [(bm, True) for bm in real_benchmark_definitions(sagemaker_backend=True).values()]
 
+try:
+    sm_session = default_sagemaker_session()
+except Exception:
+    print(
+        "Cannot run this test, because SageMaker role is not specified, "
+        "and it cannot be inferred"
+    )
+    sm_session = None
+
 
 @pytest.mark.parametrize("benchmark, sagemaker_backend", all_real_benchmarks)
 def test_create_estimators(benchmark, sagemaker_backend):
-    try:
+    if sm_session is not None:
         sm_args = sagemaker_estimator_args(
             entry_point=benchmark.script,
             experiment_tag="A",
@@ -36,11 +45,6 @@ def test_create_estimators(benchmark, sagemaker_backend):
             benchmark=benchmark,
             sagemaker_backend=False,
         )
-        sm_args["sagemaker_session"] = default_sagemaker_session()
+        sm_args["sagemaker_session"] = sm_session
         sm_args["dependencies"] = benchmarking.__path__
         sm_estimator = sagemaker_estimator[benchmark.framework](**sm_args)
-    except Exception:
-        print(
-            "Cannot run this test, because SageMaker role is not specified, "
-            "and it cannot be inferred"
-        )

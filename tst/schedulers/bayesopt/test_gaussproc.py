@@ -127,6 +127,7 @@ def test_gp_fit(tuning_job_state):
     ), "Standard deviation on un-observed points should be greater than at observed ones"
 
 
+@pytest.mark.timeout(5)
 def test_gp_mcmc_fit(tuning_job_state):
     hp_ranges = make_hyperparameter_ranges({"x": uniform(-4.0, 4.0)})
 
@@ -182,6 +183,7 @@ def _compute_acq_with_gradient_many(acq_func, X_test):
     return np.array(fvals), np.stack(grads, axis=0)
 
 
+@pytest.mark.timeout(5)
 def test_gp_fantasizing():
     """
     Compare whether acquisition function evaluations (values, gradients) with
@@ -295,6 +297,7 @@ def default_models() -> List[GaussProcSurrogateModel]:
     ]
 
 
+@pytest.mark.timeout(5)
 def test_current_best():
     for model in default_models():
         current_best = model.current_best()[0].item()

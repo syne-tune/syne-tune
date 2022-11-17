@@ -1,3 +1,4 @@
 pytest
+pytest-timeout
 black==22.1.0
 flake8

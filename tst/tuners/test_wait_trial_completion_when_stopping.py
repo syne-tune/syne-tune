@@ -29,6 +29,7 @@ _parameterizations = [
 ]
 
 
+@pytest.mark.timeout(5)
 @pytest.mark.parametrize("wait_for_completion, desired_status", _parameterizations)
 def test_tuner_wait_trial_completion_when_stopping(wait_for_completion, desired_status):
     """

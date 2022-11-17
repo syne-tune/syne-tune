@@ -11,6 +11,9 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import tempfile
+
+import pytest
+
 from syne_tune.backend import PythonBackend
 from syne_tune.backend.trial_status import Status
 from syne_tune.config_space import randint
@@ -28,6 +31,7 @@ def f(x):
         reporter(step=i + 1, y=x + i)
 
 
+@pytest.mark.timeout(5)
 def test_python_backend():
     with tempfile.TemporaryDirectory() as local_path:
         import logging

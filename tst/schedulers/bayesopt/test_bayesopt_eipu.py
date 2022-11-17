@@ -149,7 +149,7 @@ def test_sanity_check():
         assert acq[6] < acq[4] < acq[1], acq
         assert acq[7] < acq[5] < acq[2], acq
 
-
+@pytest.mark.timeout(5)
 def test_best_value():
     # test that the best value affects the cost-aware expected improvement
     active_models = default_models(INTERNAL_METRIC_NAME)
@@ -212,6 +212,7 @@ def test_optimization_improves():
         assert non_zero_acq_at_least_once
 
 
+@pytest.mark.timeout(5)
 def test_numerical_gradient():
     debug_output = False
     random = np.random.RandomState(42)
@@ -252,6 +253,7 @@ def test_numerical_gradient():
                 )
 
 
+@pytest.mark.timeout(5)
 def test_value_same_as_with_gradient():
     # test that compute_acq and compute_acq_with_gradients return the same acquisition values
     active_models = default_models(INTERNAL_METRIC_NAME)
