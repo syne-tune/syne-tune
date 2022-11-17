@@ -154,6 +154,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
             SynchronousHyperbandScheduler,
         )
 
+        super().configure_scheduler(scheduler)
         assert isinstance(
             scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
         ), (
