@@ -19,11 +19,75 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
 )
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
-from syne_tune.config_space import randint, choice
-from syne_tune.util import script_checkpoint_example_path
-from tst.util_test import temporary_local_backend
+from syne_tune.config_space import choice
+from tst.util_test import run_experiment_with_height
+
+
+def make_async_scheduler(scheduler, searcher):
+    def maker(
+        config_space, metric, mode, random_seed, resource_attr, max_resource_attr
+    ):
+        search_options = {"debug_log": False}
+        if searcher == "hypertune":
+            search_options["model"] = "gp_independent"
+        if searcher == "grid":
+            config_space = dict(
+                config_space,
+                width=choice([1, 2, 3, 4, 5]),
+                height=choice([-3, -2, -1, 0, 1, 2, 3]),
+            )
+        if scheduler == "fifo":
+            myscheduler = FIFOScheduler(
+                config_space,
+                searcher=searcher,
+                search_options=search_options,
+                mode=mode,
+                metric=metric,
+                random_seed=random_seed,
+            )
+        else:
+            prefix = "hyperband_"
+            assert scheduler.startswith(prefix)
+            sch_type = scheduler[len(prefix) :]
+            myscheduler = HyperbandScheduler(
+                config_space,
+                searcher=searcher,
+                search_options=search_options,
+                max_resource_attr=max_resource_attr,
+                type=sch_type,
+                resource_attr=resource_attr,
+                random_seed=random_seed,
+                mode=mode,
+                metric=metric,
+            )
+        return myscheduler
+
+    return maker
+
+
+def make_sync_scheduler(scheduler_cls, searcher):
+    def maker(
+        config_space, metric, mode, random_seed, resource_attr, max_resource_attr
+    ):
+        search_options = {"debug_log": False}
+        if searcher == "grid":
+            config_space = dict(
+                config_space,
+                width=choice([1, 2, 3, 4, 5]),
+                height=choice([-3, -2, -1, 0, 1, 2, 3]),
+            )
+        scheduler_kwargs = dict(
+            searcher=searcher,
+            search_options=search_options,
+            mode=mode,
+            metric=metric,
+            resource_attr=resource_attr,
+            max_resource_attr=max_resource_attr,
+            random_seed=random_seed,
+        )
+        return scheduler_cls(config_space, **scheduler_kwargs)
+
+    return maker
 
 
 _async_parameterizations = list(
@@ -42,66 +106,21 @@ _async_parameterizations = list(
 
 
 @pytest.mark.parametrize("scheduler, searcher, mode", _async_parameterizations)
-def test_async_scheduler(scheduler, searcher, mode):
-    max_steps = 5
-    num_workers = 2
-    random_seed = 382378624
-
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-        "sleep_time": 0.001,
-    }
-    # GridSearcher only support Categorical parameters
-    if searcher == "grid":
-        config_space["width"] = choice([1, 2, 3, 4, 5])
-        config_space["height"] = choice([-3, -2, -1, 0, 1, 2, 3])
-
-    entry_point = str(script_checkpoint_example_path())
-    metric = "mean_loss"
-
-    trial_backend = temporary_local_backend(entry_point=entry_point)
-
-    search_options = {"debug_log": False, "num_init_random": num_workers}
-    if searcher == "hypertune":
-        search_options["model"] = "gp_independent"
-
-    if scheduler == "fifo":
-        myscheduler = FIFOScheduler(
-            config_space,
-            searcher=searcher,
-            search_options=search_options,
-            mode=mode,
-            metric=metric,
-            random_seed=random_seed,
-        )
-    else:
-        prefix = "hyperband_"
-        assert scheduler.startswith(prefix)
-        sch_type = scheduler[len(prefix) :]
-        myscheduler = HyperbandScheduler(
-            config_space,
-            searcher=searcher,
-            search_options=search_options,
-            max_t=max_steps,
-            type=sch_type,
-            resource_attr="epoch",
-            random_seed=random_seed,
-            mode=mode,
-            metric=metric,
-        )
-
-    stop_criterion = StoppingCriterion(max_wallclock_time=0.2)
-    tuner = Tuner(
-        trial_backend=trial_backend,
-        scheduler=myscheduler,
-        sleep_time=0.1,
-        n_workers=num_workers,
-        stop_criterion=stop_criterion,
+def test_async_scheduler_local(scheduler, searcher, mode):
+    run_experiment_with_height(
+        make_scheduler=make_async_scheduler(scheduler, searcher),
+        simulated=False,
+        mode=mode,
     )
 
-    tuner.run()
+
+@pytest.mark.parametrize("scheduler, searcher, mode", _async_parameterizations)
+def test_async_scheduler_simulated(scheduler, searcher, mode):
+    run_experiment_with_height(
+        make_scheduler=make_async_scheduler(scheduler, searcher),
+        simulated=True,
+        mode=mode,
+    )
 
 
 _sync_parameterizations = [
@@ -119,47 +138,18 @@ _sync_parameterizations = [
 
 
 @pytest.mark.parametrize("scheduler_cls, searcher, mode", _sync_parameterizations)
-def test_sync_scheduler(scheduler_cls, searcher, mode):
-    max_steps = 5
-    num_workers = 2
-    random_seed = 382378624
-
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-        "sleep_time": 0.001,
-    }
-    # GridSearcher only support Categorical parameters
-    if searcher == "grid":
-        config_space["width"] = choice([1, 2, 3, 4, 5])
-        config_space["height"] = choice([-3, -2, -1, 0, 1, 2, 3])
-
-    entry_point = str(script_checkpoint_example_path())
-    metric = "mean_loss"
-
-    trial_backend = temporary_local_backend(entry_point=entry_point)
-
-    search_options = {"debug_log": False, "num_init_random": num_workers}
-
-    scheduler_kwargs = dict(
-        searcher=searcher,
-        search_options=search_options,
+def test_sync_scheduler_local(scheduler_cls, searcher, mode):
+    run_experiment_with_height(
+        make_scheduler=make_sync_scheduler(scheduler_cls, searcher),
+        simulated=False,
         mode=mode,
-        metric=metric,
-        resource_attr="epoch",
-        max_resource_attr="steps",
-        random_seed=random_seed,
-    )
-    myscheduler = scheduler_cls(config_space, **scheduler_kwargs)
-
-    stop_criterion = StoppingCriterion(max_wallclock_time=0.2)
-    tuner = Tuner(
-        trial_backend=trial_backend,
-        scheduler=myscheduler,
-        sleep_time=0.1,
-        n_workers=num_workers,
-        stop_criterion=stop_criterion,
     )
 
-    tuner.run()
+
+@pytest.mark.parametrize("scheduler_cls, searcher, mode", _sync_parameterizations)
+def test_sync_scheduler_simulated(scheduler_cls, searcher, mode):
+    run_experiment_with_height(
+        make_scheduler=make_sync_scheduler(scheduler_cls, searcher),
+        simulated=True,
+        mode=mode,
+    )
