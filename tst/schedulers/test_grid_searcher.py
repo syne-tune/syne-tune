@@ -10,14 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
-
-from pathlib import Path
-from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-
-from syne_tune import Tuner
-from syne_tune import StoppingCriterion
 from syne_tune.config_space import randint, uniform, choice
 from syne_tune.optimizer.schedulers.searchers import GridSearcher
 
