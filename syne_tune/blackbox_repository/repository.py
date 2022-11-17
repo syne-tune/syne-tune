@@ -100,7 +100,6 @@ def load_blackbox(
     """
     tgt_folder = blackbox_local_path(name)
 
-    print(f"tgt folder {tgt_folder}")
     expected_hash = generate_blackbox_recipes[name].hash
 
     if check_blackbox_local_files(tgt_folder) and skip_if_present:
@@ -126,7 +125,6 @@ def load_blackbox(
         tgt_folder.mkdir(exist_ok=True, parents=True)
         try:
             s3_folder = blackbox_s3_path(name=name, s3_root=s3_root)
-            print(f"s3_folder {s3_folder}")
             fs = s3fs.S3FileSystem()
             data_on_s3 = fs.exists(f"{s3_folder}/metadata.json")
         except NoCredentialsError:
