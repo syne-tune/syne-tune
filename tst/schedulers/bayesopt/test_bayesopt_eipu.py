@@ -149,6 +149,7 @@ def test_sanity_check():
         assert acq[6] < acq[4] < acq[1], acq
         assert acq[7] < acq[5] < acq[2], acq
 
+
 @pytest.mark.timeout(5)
 def test_best_value():
     # test that the best value affects the cost-aware expected improvement

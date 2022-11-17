@@ -22,6 +22,7 @@ from syne_tune.tuning_status import TuningStatus
 
 from tst.util_test import temporary_local_backend
 
+
 @pytest.mark.skip()
 def test_plateau_scheduler_integration():
     max_steps = 5

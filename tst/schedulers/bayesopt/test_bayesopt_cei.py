@@ -329,6 +329,7 @@ def test_optimization_improves():
 
         assert non_zero_acq_at_least_once
 
+
 @pytest.mark.timeout(5)
 def test_numerical_gradient():
     # test that the analytical gradient computation is correct by comparing to the numerical gradient

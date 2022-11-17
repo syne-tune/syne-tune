@@ -280,6 +280,7 @@ def test_numerical_gradient():
                     numerical_derivative.item(), analytical_gradient[i], decimal=4
                 )
 
+
 @pytest.mark.timeout(5)
 def test_value_same_as_with_gradient():
     # test that compute_acq and compute_acq_with_gradients return the same acquisition values
