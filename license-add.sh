@@ -1,4 +1,5 @@
 #!/bin/bash
+# Script that adds license to all python files, run with ./license-add.sh
 set -e
 
 add_license_folder() {
