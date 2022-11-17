@@ -42,6 +42,30 @@ def s3_blackbox_folder(s3_root: Optional[str] = None):
 repository_path = Path("~/.blackbox-repository/").expanduser()
 
 
+def get_sub_directory_and_name(name: str):
+    """
+    Blackboxes are either stored under "{blackbox-repository}/{name}" (such as fcnet, nas201, ...) or
+    "{blackbox-repository}/{subdir}/{subname}" for all yahpo benchmark. In the Yahpo case, "yahpo-rbv2_xgboost"
+    is for instance stored on "{blackbox-repository}/yahpo/rbv2_xgboost/".
+    :param name: name of the blackbox, for instance "fcnet", "lcbench" or "yahpo-rbv2_xgboost".
+    :return: subdirectory and subname such that the blackbox should be stored on {blackbox_repository}/{subdir}/{name}.
+    """
+    if name.startswith("yahpo-"):
+        return "yahpo", name[6:]
+    else:
+        return ".", name
+
+
+def blackbox_local_path(name: str) -> Path:
+    subdir, subname = get_sub_directory_and_name(name)
+    return Path(repository_path) / subdir / subname
+
+
+def blackbox_s3_path(name: str, s3_root: Optional[str] = None) -> Path:
+    subdir, subname = get_sub_directory_and_name(name)
+    return Path(s3_blackbox_folder(s3_root)) / subdir / subname
+
+
 def upload_blackbox(name: str, s3_root: Optional[str] = None):
     """
     Uploads a blackbox locally present in repository_path to S3.
@@ -49,8 +73,10 @@ def upload_blackbox(name: str, s3_root: Optional[str] = None):
     """
     try:
         fs = s3fs.S3FileSystem()
-        for src in Path(repository_path / name).glob("*"):
-            tgt = f"s3://{s3_blackbox_folder(s3_root)}/{name}/{src.name}"
+        local_folder = blackbox_local_path(name)
+        s3_folder = blackbox_s3_path(name, s3_root)
+        for src in local_folder.glob("*"):
+            tgt = f"s3://{s3_folder}/{src.name}"
             logging.info(f"copy {src} to {tgt}")
             fs.put(str(src), tgt)
     except NoCredentialsError:

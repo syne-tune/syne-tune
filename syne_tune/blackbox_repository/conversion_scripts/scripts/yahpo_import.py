@@ -33,7 +33,10 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     metric_elapsed_time,
     resource_attr,
 )
-from syne_tune.blackbox_repository.conversion_scripts.utils import repository_path
+from syne_tune.blackbox_repository.conversion_scripts.utils import (
+    repository_path,
+    blackbox_local_path,
+)
 from syne_tune.blackbox_repository.serialize import (
     serialize_metadata,
 )
@@ -292,6 +295,9 @@ def instantiate_yahpo(
     assert scenario.startswith(prefix)
     scenario = scenario[len(prefix) :]
 
+    # Note: Yahpo expects to see tasks such as "rbv2_xgb" with specific folders under the data-path.
+    # for this reason, we create all blackboxes under a subdir yahpo/ to avoid name clashes with other blackboxes
+    # such as "fcnet" or "lcbench".
     local_config.init_config()
     local_config.set_data_path(str(repository_path / "yahpo"))
 
@@ -309,17 +315,12 @@ def instantiate_yahpo(
     }
 
 
-def serialize_yahpo(scenario: str, version: str = "1.0"):
-    """
-    Serialize YAHPO (Metadata only for now)
-    """
+def serialize_yahpo(scenario: str, target_path: Path, version: str = "1.0"):
     assert scenario.startswith("yahpo-")
     scenario = scenario[6:]
 
     # download yahpo metadata and surrogate
     download(version=version, target_path=repository_path)
-
-    target_path = repository_path / f"yahpo" / scenario
 
     # copy files to yahpo-scenario
     if target_path.exists():
@@ -341,6 +342,7 @@ def serialize_yahpo(scenario: str, version: str = "1.0"):
 
 class YAHPORecipe(BlackboxRecipe):
     def __init__(self, name: str):
+        assert name.startswith("yahpo-")
         self.scenario = name
         super(YAHPORecipe, self).__init__(
             name=name,
@@ -349,7 +351,11 @@ class YAHPORecipe(BlackboxRecipe):
         )
 
     def _generate_on_disk(self):
-        serialize_yahpo(self.scenario)
+        # Note: Yahpo expects to see tasks such as "rbv2_xgb" with specific folders under the data-path.
+        # for this reason, we create all blackboxes under a subdir yahpo/ to avoid name clashes with other blackboxes
+        serialize_yahpo(
+            self.scenario, target_path=blackbox_local_path(name=self.scenario)
+        )
 
 
 yahpo_scenarios = list_scenarios()

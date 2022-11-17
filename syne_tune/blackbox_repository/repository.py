@@ -45,9 +45,9 @@ from syne_tune.blackbox_repository.conversion_scripts.recipes import (
     generate_blackbox_recipes,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
-    repository_path,
-    s3_blackbox_folder,
     validate_hash,
+    blackbox_local_path,
+    blackbox_s3_path,
 )
 
 
@@ -98,20 +98,11 @@ def load_blackbox(
     this option. If hashes do not match, results might not be reproducible.
     :return: blackbox with the given name, download it if not present.
     """
-    if name.startswith("yahpo-"):
-        if yahpo_kwargs is None:
-            yahpo_kwargs = dict()
-        return instantiate_yahpo(name, **yahpo_kwargs)
-
-    tgt_folder = Path(repository_path) / name
+    tgt_folder = blackbox_local_path(name)
 
     expected_hash = generate_blackbox_recipes[name].hash
 
-    if (
-        tgt_folder.exists()
-        and (tgt_folder / "metadata.json").exists()
-        and skip_if_present
-    ):
+    if check_blackbox_local_files(tgt_folder) and skip_if_present:
         if (
             not ignore_hash
             and expected_hash is not None
@@ -130,17 +121,18 @@ def load_blackbox(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )
     else:
+        logging.info("Local files not found, attempting to copy from S3.")
         tgt_folder.mkdir(exist_ok=True, parents=True)
         try:
-            s3_folder = s3_blackbox_folder(s3_root)
+            s3_folder = blackbox_s3_path(name=name, s3_root=s3_root)
             fs = s3fs.S3FileSystem()
-            data_on_s3 = fs.exists(f"{s3_folder}/{name}/metadata.json")
+            data_on_s3 = fs.exists(f"{s3_folder}/metadata.json")
         except NoCredentialsError:
             data_on_s3 = False
         if data_on_s3:
             logging.info("found blackbox on S3, copying it locally")
             # download files from s3 to repository_path
-            for src in fs.glob(f"{s3_folder}/{name}/*"):
+            for src in fs.glob(f"{s3_folder}/*"):
                 tgt = tgt_folder / Path(src).name
                 logging.info(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
@@ -164,13 +156,21 @@ def load_blackbox(
                 "Did not find blackbox files locally nor on S3, regenerating it locally and persisting it on S3."
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
-
-    if name.startswith("pd1"):
+    if name.startswith("yahpo"):
+        if yahpo_kwargs is None:
+            yahpo_kwargs = dict()
+        return instantiate_yahpo(name, **yahpo_kwargs)
+    elif name.startswith("pd1"):
         return deserialize_pd1(tgt_folder)
     elif (tgt_folder / "hyperparameters.parquet").exists():
         return deserialize_tabular(tgt_folder)
     else:
         return deserialize_offline(tgt_folder)
+
+
+def check_blackbox_local_files(tgt_folder) -> bool:
+    """checks whether the file of the blackbox `name` are present in `repository_path`"""
+    return tgt_folder.exists() and (tgt_folder / "metadata.json").exists()
 
 
 if __name__ == "__main__":
