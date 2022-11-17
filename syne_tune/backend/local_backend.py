@@ -114,7 +114,7 @@ class LocalBackend(TrialBackend):
                 self.num_gpus = get_num_gpus()
             else:
                 self.num_gpus = num_gpus
-            logging.info(f"Detected {self.num_gpus} GPUs")
+            logger.info(f"Detected {self.num_gpus} GPUs")
             if self.num_gpus > 1:
                 self.trial_gpu = dict()  # Maps running trials to GPUs
                 # To break ties among GPUs (free ones have precedence)
@@ -134,7 +134,7 @@ class LocalBackend(TrialBackend):
         free_gpus = set(range(self.num_gpus)).difference(self.trial_gpu.values())
         if free_gpus:
             eligible_gpus = free_gpus
-            logging.debug(f"Free GPUs: {free_gpus}")
+            logger.debug(f"Free GPUs: {free_gpus}")
         else:
             eligible_gpus = range(self.num_gpus)
         # We select the GPU which has the least prior assignments. Selection
@@ -155,7 +155,7 @@ class LocalBackend(TrialBackend):
         os.makedirs(trial_path, exist_ok=True)
         with open(trial_path / "std.out", "a") as stdout:
             with open(trial_path / "std.err", "a") as stderr:
-                logging.debug(
+                logger.debug(
                     f"scheduling {trial_id}, {self.entry_point}, {config}, logging into {trial_path}"
                 )
                 config_copy = config.copy()
@@ -177,7 +177,7 @@ class LocalBackend(TrialBackend):
                 env = dict(os.environ)
                 self._allocate_gpu(trial_id, env)
 
-                logging.info(f"running subprocess with command: {cmd}")
+                logger.info(f"running subprocess with command: {cmd}")
 
                 self.trial_subprocess[trial_id] = subprocess.Popen(
                     cmd.split(" "), stdout=stdout, stderr=stderr, env=env
@@ -189,7 +189,7 @@ class LocalBackend(TrialBackend):
             gpu = self._gpu_for_new_trial()
             env["CUDA_VISIBLE_DEVICES"] = str(gpu)
             self.trial_gpu[trial_id] = gpu
-            logging.debug(f"Assigned GPU {gpu} to trial_id {trial_id}")
+            logger.debug(f"Assigned GPU {gpu} to trial_id {trial_id}")
 
     def _deallocate_gpu(self, trial_id: int):
         if self.rotate_gpus and trial_id in self.trial_gpu:
