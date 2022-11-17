@@ -90,6 +90,9 @@ def make_sync_scheduler(scheduler_cls, searcher):
     return maker
 
 
+# Schedulers which do not involve GP-based BO (run fast)
+
+
 _async_parameterizations = list(
     itertools.product(
         ["fifo", "hyperband_stopping", "hyperband_promotion"],
@@ -148,4 +151,52 @@ def test_sync_scheduler_simulated(scheduler_cls, searcher, mode):
         make_scheduler=make_sync_scheduler(scheduler_cls, searcher),
         simulated=True,
         mode=mode,
+    )
+
+
+# Schedulers which involve GP-based BO (need more time, so less cases)
+
+
+_bo_async_parameterizations = ["fifo", "hyperband_promotion"]
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.parametrize("scheduler", _bo_async_parameterizations)
+def test_bo_async_scheduler_local(scheduler):
+    run_experiment_with_height(
+        make_scheduler=make_async_scheduler(scheduler, "bayesopt"),
+        simulated=False,
+    )
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.parametrize("scheduler", _bo_async_parameterizations)
+def test_bo_async_scheduler_simulated(scheduler):
+    run_experiment_with_height(
+        make_scheduler=make_async_scheduler(scheduler, "bayesopt"),
+        simulated=True,
+        num_workers=2,
+        max_wallclock_time=25,
+    )
+
+
+@pytest.mark.timeout(10)
+def test_bo_sync_scheduler_local():
+    scheduler_cls = SynchronousGeometricHyperbandScheduler
+    searcher = "bayesopt"
+    run_experiment_with_height(
+        make_scheduler=make_sync_scheduler(scheduler_cls, searcher),
+        simulated=False,
+    )
+
+
+@pytest.mark.timeout(10)
+def test_bo_sync_scheduler_simulated():
+    scheduler_cls = SynchronousGeometricHyperbandScheduler
+    searcher = "bayesopt"
+    run_experiment_with_height(
+        make_scheduler=make_sync_scheduler(scheduler_cls, searcher),
+        simulated=True,
+        num_workers=2,
+        max_wallclock_time=25,
     )

@@ -63,6 +63,7 @@ def run_experiment_with_height(
     simulated: bool,
     mode: Optional[str] = None,
     config_space: Optional[dict] = None,
+    **kwargs,
 ):
     random_seed = 382378624
     if mode is None:
@@ -71,7 +72,7 @@ def run_experiment_with_height(
     if simulated:
         max_steps = 9
         num_workers = 4
-        script_sleep_time = 0.001
+        script_sleep_time = 0.1
         tuner_sleep_time = 0
         max_wallclock_time = 30
         callbacks = [SimulatorCallback()]
@@ -82,6 +83,10 @@ def run_experiment_with_height(
         tuner_sleep_time = 0.1
         max_wallclock_time = 0.2
         callbacks = None
+    if "max_wallclock_time" in kwargs:
+        max_wallclock_time = kwargs["max_wallclock_time"]
+    if "num_workers" in kwargs:
+        num_workers = kwargs["num_workers"]
 
     # It is possible to pass `config_space` other than the default one
     if config_space is None:
