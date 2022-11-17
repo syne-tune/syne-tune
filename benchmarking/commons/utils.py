@@ -22,6 +22,8 @@ try:
     from sagemaker.mxnet import MXNet
     from sagemaker.tensorflow import TensorFlow
     from sagemaker.sklearn import SKLearn
+    from sagemaker.chainer import Chainer
+    from sagemaker.xgboost import XGBoost
 except ImportError:
     print(try_import_aws_message())
 
@@ -32,6 +34,8 @@ sagemaker_estimator = {
     "MXNet": MXNet,
     "TensorFlow": TensorFlow,
     "SKLearn": SKLearn,
+    "Chainer": Chainer,
+    "XGBoost": XGBoost,
 }
 
 

@@ -29,8 +29,7 @@ grid search is particularly inefficient if some HPs are more important for
 the objective values than others.
 
 For all of these reasons, grid search is not a recommended baseline for HPO,
-unless very few parameters have to be tuned. It is not currently implemented
-in Syne Tune.
+unless very few parameters have to be tuned.
 
 In *random search*, the sequence of configurations is chosen by independent
 sampling. In the simple case of interest here, each value in a configuration
