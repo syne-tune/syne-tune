@@ -13,6 +13,8 @@
 import logging
 from pathlib import Path
 
+import pytest
+
 from syne_tune.backend.trial_status import Status
 from syne_tune.util import script_checkpoint_example_path
 from tst.util_test import temporary_local_backend, wait_until_all_trials_completed
@@ -40,6 +42,7 @@ def get_status_metrics(backend, trial_id):
     return trial_statuses, new_metrics
 
 
+@pytest.mark.timeout(5)
 def test_local_backend_checkpoint(caplog):
     caplog.set_level(logging.INFO)
     path_script = script_checkpoint_example_path()
@@ -100,6 +103,7 @@ def test_local_backend_checkpoint(caplog):
     assert len(busy_trial_ids) == 0, busy_trial_ids
 
 
+@pytest.mark.timeout(5)
 def test_resume_config_local_backend(caplog):
     caplog.set_level(logging.INFO)
     path_script = script_checkpoint_example_path()
@@ -134,6 +138,7 @@ def test_resume_config_local_backend(caplog):
     )
 
 
+@pytest.mark.timeout(5)
 def test_start_config_previous_checkpoint(caplog):
     caplog.set_level(logging.INFO)
     path_script = Path(__file__).parent / "main_checkpoint.py"

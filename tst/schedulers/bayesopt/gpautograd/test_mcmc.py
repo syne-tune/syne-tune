@@ -107,6 +107,7 @@ def test_horse_shoe():
     )
 
 
+@pytest.mark.timeout(10)
 def test_slice_normal():
     normal = Normal(0, 1)
     random_state = anp.random.RandomState(0)

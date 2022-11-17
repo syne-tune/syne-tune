@@ -93,18 +93,13 @@ def make_sync_scheduler(scheduler_cls, searcher):
 _async_parameterizations = list(
     itertools.product(
         ["fifo", "hyperband_stopping", "hyperband_promotion"],
-        ["random", "bayesopt", "grid"],
-        ["min", "max"],
-    )
-) + list(
-    itertools.product(
-        ["hyperband_stopping", "hyperband_promotion"],
-        ["hypertune"],
+        ["random", "grid"],
         ["min", "max"],
     )
 )
 
 
+@pytest.mark.timeout(10)
 @pytest.mark.parametrize("scheduler, searcher, mode", _async_parameterizations)
 def test_async_scheduler_local(scheduler, searcher, mode):
     run_experiment_with_height(
@@ -114,6 +109,7 @@ def test_async_scheduler_local(scheduler, searcher, mode):
     )
 
 
+@pytest.mark.timeout(10)
 @pytest.mark.parametrize("scheduler, searcher, mode", _async_parameterizations)
 def test_async_scheduler_simulated(scheduler, searcher, mode):
     run_experiment_with_height(
@@ -126,8 +122,6 @@ def test_async_scheduler_simulated(scheduler, searcher, mode):
 _sync_parameterizations = [
     [SynchronousGeometricHyperbandScheduler, "random", "min"],
     [SynchronousGeometricHyperbandScheduler, "random", "max"],
-    [SynchronousGeometricHyperbandScheduler, "bayesopt", "min"],
-    [SynchronousGeometricHyperbandScheduler, "bayesopt", "max"],
     [SynchronousGeometricHyperbandScheduler, "grid", "min"],
     [SynchronousGeometricHyperbandScheduler, "grid", "max"],
     [GeometricDifferentialEvolutionHyperbandScheduler, "random", "min"],
@@ -137,6 +131,7 @@ _sync_parameterizations = [
 ]
 
 
+@pytest.mark.timeout(10)
 @pytest.mark.parametrize("scheduler_cls, searcher, mode", _sync_parameterizations)
 def test_sync_scheduler_local(scheduler_cls, searcher, mode):
     run_experiment_with_height(
@@ -146,6 +141,7 @@ def test_sync_scheduler_local(scheduler_cls, searcher, mode):
     )
 
 
+@pytest.mark.timeout(10)
 @pytest.mark.parametrize("scheduler_cls, searcher, mode", _sync_parameterizations)
 def test_sync_scheduler_simulated(scheduler_cls, searcher, mode):
     run_experiment_with_height(

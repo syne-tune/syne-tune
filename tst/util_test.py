@@ -71,7 +71,7 @@ def run_experiment_with_height(
     if simulated:
         max_steps = 9
         num_workers = 4
-        script_sleep_time = 0.1
+        script_sleep_time = 0.001
         tuner_sleep_time = 0
         max_wallclock_time = 30
         callbacks = [SimulatorCallback()]

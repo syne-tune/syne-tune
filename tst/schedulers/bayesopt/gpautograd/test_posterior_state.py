@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 import numpy
 import autograd.numpy as anp
+import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
     IncrementalUpdateGPPosteriorState,
@@ -23,6 +24,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import Matern52
 
 
+@pytest.mark.timeout(5)
 def test_incremental_update():
     def f(x):
         return anp.sin(x) / x

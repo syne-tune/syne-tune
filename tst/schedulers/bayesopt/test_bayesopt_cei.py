@@ -163,6 +163,7 @@ def plot_ei_mean_std(model, cei, max_grid=1.0):
 
 # Note: This test fails when run with GP MCMC model. There, acq[5] > acq[7], and acq[8] > acq[5]
 # ==> Need to look into GP MCMC model
+@pytest.mark.timeout(10)
 def test_sanity_check():
     # - test that values are negative as we should be returning *minus* expected improvement
     # - test that values that are further from evaluated candidates have higher expected improvement
@@ -215,6 +216,7 @@ def test_sanity_check():
             assert acq[7] < acq[5] < acq[2], acq
 
 
+@pytest.mark.timeout(10)
 def test_no_feasible_candidates():
     # - test that values are negative as we should be returning *minus* expected improvement
     # - test that values that are further from evaluated candidates have higher expected improvement
@@ -329,6 +331,7 @@ def test_optimization_improves():
         assert non_zero_acq_at_least_once
 
 
+@pytest.mark.timeout(10)
 def test_numerical_gradient():
     # test that the analytical gradient computation is correct by comparing to the numerical gradient
     # both when the feasible best exists and when it does not
@@ -383,6 +386,7 @@ def test_numerical_gradient():
                 )
 
 
+@pytest.mark.timeout(10)
 def test_value_same_as_with_gradient():
     # test that compute_acq and compute_acq_with_gradients return the same acquisition values
     # both when the feasible best exists and when it does not
