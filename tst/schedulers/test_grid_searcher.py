@@ -10,13 +10,18 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.config_space import randint, uniform, choice
 from syne_tune.optimizer.schedulers.searchers import GridSearcher
+from tst.util_test import run_experiment_with_height
 
-config_space = {
+
+common_config_space = {
     "char_attr": choice(["a", "b"]),
     "int_attr": choice([1, 2]),
 }
+
+
 all_candidates_on_grid = [
     {"char_attr": "a", "int_attr": 1},
     {"char_attr": "b", "int_attr": 1},
@@ -47,14 +52,19 @@ def test_get_config():
 
 
 def test_generate_all_candidates_on_grid():
-    searcher = GridSearcher(config_space, metric="accuracy", points_to_evaluate=[])
+    searcher = GridSearcher(
+        common_config_space, metric="accuracy", points_to_evaluate=[]
+    )
     for i in range(len(all_candidates_on_grid)):
         assert searcher.get_config(trial_id=i) in all_candidates_on_grid
 
 
 def test_non_shuffle():
     searcher = GridSearcher(
-        config_space, metric="accuracy", shuffle_config=False, points_to_evaluate=[]
+        common_config_space,
+        metric="accuracy",
+        shuffle_config=False,
+        points_to_evaluate=[],
     )
     for i in range(len(all_candidates_on_grid)):
         config = searcher.get_config(trial_id=i)
@@ -63,7 +73,10 @@ def test_non_shuffle():
 
 def test_store_and_restore_state_without_initial_config():
     searcher = GridSearcher(
-        config_space, metric="accuracy", points_to_evaluate=[], shuffle_config=False
+        common_config_space,
+        metric="accuracy",
+        points_to_evaluate=[],
+        shuffle_config=False,
     )
     previous_config = searcher.get_config(trial_id=0)
     state = searcher.get_state()
@@ -80,7 +93,7 @@ def test_store_and_restore_state_with_initial_config():
         {"char_attr": "b", "int_attr": 2},
     ]
     searcher = GridSearcher(
-        config_space,
+        common_config_space,
         metric="accuracy",
         points_to_evaluate=inital_config,
         shuffle_config=False,
@@ -92,6 +105,59 @@ def test_store_and_restore_state_with_initial_config():
     for idx in [3, 1, 2]:
         new_config = new_searcher.get_config(trail_id=idx)
         assert new_config in all_candidates_on_grid
+
+
+def make_scheduler_continuous(
+    config_space, metric, mode, random_seed, resource_attr, max_resource_attr
+):
+    search_options = {
+        "debug_log": True,
+        "num_samples": {"width": 5, "height": 10},
+    }
+    return FIFOScheduler(
+        config_space,
+        searcher="grid",
+        search_options=search_options,
+        mode=mode,
+        metric=metric,
+        random_seed=random_seed,
+    )
+
+
+def test_grid_scheduler_continuous():
+    run_experiment_with_height(
+        make_scheduler=make_scheduler_continuous,
+        simulated=True,
+    )
+
+
+def make_scheduler_categorical(
+    config_space, metric, mode, random_seed, resource_attr, max_resource_attr
+):
+    search_options = {
+        "debug_log": True,
+        "num_samples": {"width": 5, "height": 10},
+    }
+    config_space = dict(
+        config_space,
+        width=choice([1, 5, 10, 15, 20]),
+        height=choice([30, 40, 50, 60, 70, 80]),
+    )
+    return FIFOScheduler(
+        config_space,
+        searcher="grid",
+        search_options=search_options,
+        mode=mode,
+        metric=metric,
+        random_seed=random_seed,
+    )
+
+
+def test_grid_scheduler_categorical():
+    run_experiment_with_height(
+        make_scheduler=make_scheduler_categorical,
+        simulated=True,
+    )
 
 
 def test_grid_config():

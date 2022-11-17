@@ -15,11 +15,14 @@ import pytest
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner
 from syne_tune.stopping_criterion import PlateauStopper
-from syne_tune.config_space import randint
-from syne_tune.util import script_height_example_path
 from syne_tune.backend.trial_status import Trial, Status
 from syne_tune.tuning_status import TuningStatus
-
+from syne_tune.util import script_height_example_path
+from examples.training_scripts.height_example.train_height import (
+    height_config_space,
+    METRIC_ATTR,
+    METRIC_MODE,
+)
 from tst.util_test import temporary_local_backend
 
 
@@ -29,21 +32,14 @@ def test_plateau_scheduler_integration():
     num_workers = 1
     random_seed = 382378624
 
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-        "sleep_time": 0.001,
-    }
-
+    config_space = height_config_space(max_steps, sleep_time=0.001)
     entry_point = str(script_height_example_path())
-    metric = "mean_loss"
-    mode = "min"
+    metric = METRIC_ATTR
+    mode = METRIC_MODE
 
     trial_backend = temporary_local_backend(entry_point=entry_point)
 
     search_options = {"debug_log": False, "num_init_random": num_workers}
-
     myscheduler = RandomSearch(
         config_space,
         search_options=search_options,

@@ -223,9 +223,9 @@ class SageMakerBackend(TrialBackend):
                 logger.warning(
                     "Your resource limit has been exceeded. Here are some hints:\n"
                     "- Choose Tuner.n_workers <= your limit for the instance type\n"
-                    "- Use Tuner.start_jobs_without_delay = False (default). Setting "
-                    "this to True means that more than Tuner.n_workers jobs will run "
-                    "at certain times"
+                    "- Use Tuner.start_jobs_without_delay = False. Setting this to "
+                    "True (default) means that more than Tuner.n_workers jobs "
+                    "will run at certain times"
                 )
             raise
         logger.info(f"scheduled {jobname} for trial-id {trial_id}")

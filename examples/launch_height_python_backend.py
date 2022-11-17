@@ -53,19 +53,21 @@ if __name__ == "__main__":
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
+    metric = "mean_loss"
+    mode = "min"
 
     scheduler = ASHA(
         config_space,
-        metric="mean_loss",
+        metric=metric,
         resource_attr="epoch",
         max_t=max_steps,
-        mode="min",
+        mode=mode,
     )
 
     trial_backend = PythonBackend(tune_function=train_height, config_space=config_space)
 
     stop_criterion = StoppingCriterion(
-        max_wallclock_time=10, min_metric_value={"mean_loss": -6.0}
+        max_wallclock_time=10, min_metric_value={metric: -6.0}
     )
     tuner = Tuner(
         trial_backend=trial_backend,
