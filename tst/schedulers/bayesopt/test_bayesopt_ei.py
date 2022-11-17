@@ -159,7 +159,7 @@ def test_sanity_check():
         assert acq[7] < acq[5] < acq[2], acq
 
 
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(10)
 def test_best_value():
     # test that the best value affects expected improvement
     for model in default_models():
@@ -194,7 +194,7 @@ def test_best_value():
 #
 # If the starting point is sampled in [0, 0.1]^2, the test works. The optimum
 # of EI is very close to the origin.
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(10)
 def test_optimization_improves():
     debug_output = False
     # Pick a random point, optimize and the expected improvement should be better:
@@ -240,7 +240,7 @@ def test_optimization_improves():
 
 # Changes from original version: Half of the time, we sample x in [0, 0.02]^2, where
 # the shape of EI is more interesting
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(10)
 def test_numerical_gradient():
     debug_output = False
     random = np.random.RandomState(42)
@@ -281,7 +281,7 @@ def test_numerical_gradient():
                 )
 
 
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(10)
 def test_value_same_as_with_gradient():
     # test that compute_acq and compute_acq_with_gradients return the same acquisition values
     for model in default_models():

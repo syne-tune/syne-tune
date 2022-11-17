@@ -52,6 +52,7 @@ class MadeUpPosteriorState:
         return result
 
 
+@pytest.mark.timeout(5)
 @pytest.mark.parametrize(
     "num_data, num_samples",
     [
