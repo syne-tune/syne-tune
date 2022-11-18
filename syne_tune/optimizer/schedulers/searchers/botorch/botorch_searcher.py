@@ -32,11 +32,9 @@ except ImportError:
 
 import syne_tune.config_space as cs
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
-
 from syne_tune.optimizer.schedulers.searchers.utils import (
     make_hyperparameter_ranges,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +43,14 @@ NOISE_LEVEL = 1e-3
 
 
 class BotorchSearcher(SearcherWithRandomSeed):
+    """
+    A searcher that suggest configurations using BOTORCH to build GP surrogate
+    and optimize acquisition function.
+
+    `qExpectedImprovement is used for the acquisition function, given that it
+    supports pending evaluations.
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -58,19 +64,21 @@ class BotorchSearcher(SearcherWithRandomSeed):
         **kwargs,
     ):
         """
-        A searcher that suggest configurations using BOTORCH to build GP surrogate and optimize acquisition function.
-        `qExpectedImprovement is used for the acquisition function given that it supports pending evaluations.
-        :param config_space: configuration space to optimize
-        :param metric: metric to optimize, should be present in reported results.
-        :param num_init_random: number of initial random draws, after this number the suggestion are obtained
-        from the GP surrogate model.
-        :param mode: 'min' or 'max'
-        :param points_to_evaluate: if passed, those configurations are evaluated first
-        :param fantasising: whether to fantasize pending evaluations by sampling from the GP posterior
-        :param max_num_observations: maximum number of observation to use when fitting the GP, if the number of
-        observations gets larger than this number, then data is subsampled. If None, then all data is used to fit the GP.
-        :param input_warping: whether to apply input warping when fitting the GP.
-        :param kwargs: additional arguments of SearcherWithRandomSeed
+        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
+
+        :param mode: "min" (default) or "max"
+        :param num_init_random: Number of initial random draws, after this
+            number the suggestion are obtained from the GP surrogate model.
+            Defaults to 3
+        :param no_fantasizing: If True, fantasizing is not done and pending
+            evaluations are ignored. This may lead to loss of diversity in
+            decisions. Defaults to False
+        :param max_num_observations: Maximum number of observation to use when
+            fitting the GP. If the number of observations gets larger than this
+            number, then data is subsampled. If None, then all data is used to
+            fit the GP. Defaults to 200
+        :param input_warping: Whether to apply input warping when fitting the GP.
+            Defaults to True
         """
         super(BotorchSearcher, self).__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
@@ -95,7 +103,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
         self.trial_observations[trial_id] = result[self.metric_name]
         self.pending_trials.remove(trial_id)
 
-    def clone_from_state(self, state):
+    def clone_from_state(self, state: dict):
         raise NotImplementedError
 
     def num_suggestions(self):
@@ -128,8 +136,10 @@ class BotorchSearcher(SearcherWithRandomSeed):
 
     def _sample_next_candidate(self) -> dict:
         """
-        :return: a next candidate to evaluate, if possible it is obtained by fitting a GP on past data and maximizing EI
-        if this fails because of numerical difficulties with non PSD matrices, then the candidate is sampled at random.
+        :return: A next candidate to evaluate, if possible it is obtained by
+            fitting a GP on past data and maximizing EI. If this fails because
+            of numerical difficulties with non PSD matrices, then the candidate
+            is sampled at random.
         """
         try:
             X = np.array(self._config_to_feature_matrix(self._configs_with_results()))

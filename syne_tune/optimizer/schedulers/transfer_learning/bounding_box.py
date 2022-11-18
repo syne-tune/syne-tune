@@ -30,6 +30,20 @@ from syne_tune.config_space import (
 
 
 class BoundingBox(TransferLearningMixin, TrialScheduler):
+    """
+    Simple baseline that computes a bounding-box of the best candidate found in
+    previous tasks to restrict the search space to only good candidates. The
+    bounding-box is obtained by restricting to the min-max of best numerical
+    hyperparameters and restricting to the set of best candidates on categorical
+    parameters.
+
+    Reference:
+    Learning search spaces for Bayesian optimization: Another view of
+        hyperparameter transfer learning.
+    Valerio Perrone, Huibin Shen, Matthias Seeger, Cédric Archambeau,
+        Rodolphe Jenatton. NeurIPS 2019.
+    """
+
     def __init__(
         self,
         scheduler_fun: Callable[[dict, str, str], TrialScheduler],
@@ -40,26 +54,26 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
         num_hyperparameters_per_task: int = 1,
     ):
         """
-        Simple baseline that computes a bounding-box of the best candidate found in previous tasks to restrict the
-         search space to only good candidates. The bounding-box is obtained by restricting to the min-max of best
-         numerical hyperparameters and restricting to the set of best candidates on categorical parameters.
+        `scheduler_fun` is used to create the scheduler to be used here, feeding
+        it with the modified config space. Any additional scheduler arguments
+        (such as `points_to_evaluate`) should be encoded inside this function.
 
-        Reference: Learning search spaces for Bayesian optimization: Another view of hyperparameter transfer learning.
-        Valerio Perrone, Huibin Shen, Matthias Seeger, Cédric Archambeau, Rodolphe Jenatton. Neurips 2019.
-
-        :param scheduler_fun: function that takes a configuration space (dict), a mode (str) and a metric (str)
-        and returns a scheduler. This is required since the final configuration space is known only after computing
-        a bounding-box. For instance,
-        `scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(new_config_space, metric, mode)`
-        will consider a random-search on the config-space is restricted to the bounding of best evaluations of previous
-        tasks.
-        :param config_space: initial search-space to consider, will be updated to the bounding of best evaluations of
-        previous tasks
-        :param metric: objective name to optimize, must be present in transfer learning evaluations.
-        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
-        :param mode: mode to be considered, default to min.
-        :param num_hyperparameters_per_task: number of best hyperparameter to take per task when computing the bounding
-        box, default to 1.
+        :param scheduler_fun: Maps tuple of configuration space (dict), mode (str),
+            metric (str) to a scheduler. This is required since the final
+            configuration space is known only after computing a bounding-box. For
+            instance:
+            `scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(new_config_space, metric, mode)`
+            will consider a random-search on the config-space is restricted to
+            the bounding of best evaluations of previous tasks.
+        :param config_space: Initial search-space to consider, will be updated
+            to the bounding of best evaluations of previous tasks
+        :param metric: Objective name to optimize, must be present in transfer
+            learning evaluations.
+        :param mode: Mode to be considered, default to "min".
+        :param transfer_learning_evaluations: Dictionary from task name to
+            offline evaluations.
+        :param num_hyperparameters_per_task: Number of best hyperparameter to
+            take per task when computing the bounding box, default to 1.
         """
         super().__init__(
             config_space=config_space,

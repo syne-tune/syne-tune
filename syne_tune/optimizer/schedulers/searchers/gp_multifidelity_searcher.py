@@ -39,13 +39,19 @@ logger = logging.getLogger(__name__)
 
 
 class GPMultiFidelitySearcher(GPFIFOSearcher):
-    """Gaussian process Bayesian optimization for Hyperband scheduler
+    """
+    Gaussian process Bayesian optimization for asynchronous Hyperband scheduler.
 
-    This searcher must be used with `HyperbandScheduler`. It provides a novel
+    This searcher must be used with :class:`HyperbandScheduler`. It provides a novel
     combination of Bayesian optimization, based on a Gaussian process surrogate
     model, with Hyperband scheduling. In particular, observations across
-    resource levels are modelled jointly. It is created along with the
-    scheduler, using `searcher='bayesopt'`:
+    resource levels are modelled jointly.
+
+    It is *not* recommended to create :class:`GPMultiFidelitySearcher` searcher
+    objects directly, but rather to create :class:`HyperbandScheduler` objects
+    with `searcher="bayesopt"`, and passing arguments here in `search_options`.
+    This will use the appropriate functions from `gp_searcher_factory.py` to
+    create components in a consistent way.
 
     Most of `GPFIFOSearcher` comments apply here as well.
     In multi-fidelity HPO, we optimize a function f(x, r), x the configuration,
@@ -69,101 +75,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     <= max_t, where we have seen >= dimension(x) metric values. If
     `resource_acq` == 'first', r is the first milestone which config x would
     reach when started.
-
-    Parameters
-    ----------
-    config_space : dict
-        Configuration space. Constant parameters are filtered out
-    metric : str
-        Name of reward attribute reported by evaluation function
-    points_to_evaluate: List[dict] or None
-        List of configurations to be evaluated initially (in that order).
-        Each config in the list can be partially specified, or even be an
-        empty dict. For each hyperparameter not specified, the default value
-        is determined using a midpoint heuristic.
-        If None (default), this is mapped to [dict()], a single default config
-        determined by the midpoint heuristic. If [] (empty list), no initial
-        configurations are specified.
-    random_seed_generator : RandomSeedGenerator (optional)
-        If given, the random_seed for `random_state` is obtained from there,
-        otherwise `random_seed` is used
-    random_seed : int (optional)
-        This is used if `random_seed_generator` is not given.
-    resource_attr : str
-        Name of resource attribute in reports, equal to `resource_attr` of
-        scheduler
-    debug_log : bool (default: False)
-        If True, both searcher and scheduler output an informative log, from
-        which the configs chosen and decisions being made can be traced.
-    cost_attr : str (optional)
-        Name of cost attribute in data obtained from reporter (e.g., elapsed
-        training time). Needed only by cost-aware searchers.
-    model : str
-        Selects surrogate model (learning curve model) to be used. Choices
-        are 'gp_multitask' (default), 'gp_independent', 'gp_issm',
-        'gp_expdecay'
-    num_init_random : int
-        See :class:`GPFIFOSearcher`
-    num_init_candidates : int
-        See :class:`GPFIFOSearcher`
-    num_fantasy_samples : int
-        See :class:`GPFIFOSearcher`
-    no_fantasizing : bool
-        See :class:`GPFIFOSearcher`
-    initial_scoring : str
-        See :class:`GPFIFOSearcher`
-    skip_local_optimization : str
-        See :class:`GPFIFOSearcher`
-    opt_nstarts : int
-        See :class:`GPFIFOSearcher`
-    opt_maxiter : int
-        See :class:`GPFIFOSearcher`
-    opt_warmstart : bool
-        See :class:`GPFIFOSearcher`
-    opt_verbose : bool
-        See :class:`GPFIFOSearcher`
-    opt_skip_init_length : int
-        See :class:`GPFIFOSearcher`
-    opt_skip_period : int
-        See `:class:GPFIFOSearcher`
-    map_reward : str or MapReward
-        See :class:`GPFIFOSearcher`
-    gp_resource_kernel : str
-        Only relevant for `model == 'gp_multitask'`.
-        Surrogate model over criterion function f(x, r), x the config, r the
-        resource. Note that x is encoded to be a vector with entries in [0, 1],
-        and r is linearly mapped to [0, 1], while the criterion data is
-        normalized to mean 0, variance 1. The reference above provides details
-        on the models supported here. For the exponential decay kernel, the
-        base kernel over x is Matern 5/2 ARD.
-        Values are 'matern52' (Matern 5/2 ARD kernel over [x, r]),
-        'matern52-res-warp' (Matern 5/2 ARD kernel over [x, r], with additional
-        warping on r),
-        'exp-decay-sum' (exponential decay kernel, with delta=0. This is the
-        additive kernel from Freeze-Thaw Bayesian Optimization),
-        'exp-decay-delta1' (exponential decay kernel, with delta=1),
-        'exp-decay-combined' (exponential decay kernel, with delta in [0, 1]
-        a hyperparameter).
-    resource_acq : str
-        Only relevant for `model in {'gp_multitask', 'gp_independent'}`
-        Determines how the EI acquisition function is used (see above).
-        Values: 'bohb', 'first'
-    opt_skip_num_max_resource : bool
-        Parameter for hyperparameter fitting, skip predicate. If True, and
-        number of observations above `opt_skip_init_length`, fitting is done
-        only when there is a new datapoint at r = max_t, and skipped otherwise.
-    issm_gamma_one : bool
-        Only relevant for `model == 'gp_issm'`.
-        If True, the gamma parameter of the ISSM is fixed to 1, otherwise it
-        is optimized over.
-    expdecay_normalize_inputs : bool
-        Only relevant for `model == 'gp_expdecay'`.
-        If True, resource values r are normalized to [0, 1] as input to the
-        exponential decay surrogate model.
-
-    See Also
-    --------
-    GPFIFOSearcher
     """
 
     def __init__(
@@ -173,6 +84,46 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
+        """
+        Additional arguments on top of parent class :class:`GPFIFOSearcher`.
+
+        :param model: Selects surrogate model (learning curve model) to be used.
+            Choices are:
+            * "gp_multitask" (default): GP multi-task surrogate model
+            * "gp_independent": Independent GPs for each rung level, sharing
+                an ARD kernel
+            * "gp_issm": Gaussian-additive model of ISSM type
+            * "gp_expdecay": Gaussian-additive model of exponential decay type
+                (as in "Freeze Thaw Bayesian Optimization")
+        :type model: str, optional
+        :param gp_resource_kernel: Only relevant for `model == "gp_multitask"`.
+            Surrogate model over criterion function f(x, r), x the config, r the
+            resource. Note that x is encoded to be a vector with entries in [0, 1],
+            and r is linearly mapped to [0, 1], while the criterion data is
+            normalized to mean 0, variance 1. The reference above provides details
+            on the models supported here. For the exponential decay kernel, the
+            base kernel over x is Matern 5/2 ARD.
+            See `SUPPORTED_RESOURCE_MODELS` fur supported choices.
+            Defaults to "exp-decay-sum"
+        :type gp_resource_kernel: str, optional
+        :param resource_acq: Only relevant for `model in {"gp_multitask",
+            "gp_independent"}`. Determines how the EI acquisition function is
+            used. Values: "bohb", "first". Defaults to "bohb"
+        :type resource_acq:
+        :param opt_skip_num_max_resource: Parameter for surrogate model fitting,
+            skip predicate. If True, and number of observations above
+            `opt_skip_init_length`, fitting is done only when there is a new
+             datapoint at `r = max_t`, and skipped otherwise. Defaults to False
+        :type opt_skip_num_max_resource: bool, optional
+        :param issm_gamma_one: Only relevant for `model == "gp_issm"`.
+            If True, the gamma parameter of the ISSM is fixed to 1, otherwise it
+            is optimized over. Defaults to False
+        :type issm_gamma_one: bool, optional
+        :param expdecay_normalize_inputs: Only relevant for `model ==
+            "gp_expdecay"`. If True, resource values r are normalized to [0, 1]
+            as input to the exponential decay surrogate model. Defaults to False
+        :type expdecay_normalize_inputs: bool, optional
+        """
         super().__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
@@ -207,8 +158,8 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         assert isinstance(
             scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
         ), (
-            "This searcher requires HyperbandScheduler scheduler or "
-            "SynchronousHyperbandScheduler scheduler"
+            "This searcher requires HyperbandScheduler or "
+            + "SynchronousHyperbandScheduler scheduler"
         )
         self._resource_attr = scheduler.resource_attr
         model_factory = self.state_transformer.model_factory
@@ -243,12 +194,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         config: Optional[dict] = None,
         milestone: Optional[int] = None,
     ):
-        """
-        Registers trial as pending for resource level `milestone`. This means
-        the corresponding evaluation task is running and should reach that
-        level later, when update is called for it.
-
-        """
         assert (
             milestone is not None
         ), "This searcher works with a multi-fidelity scheduler only"
@@ -273,9 +218,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         job for GP surrogate models. But if in subclasses, other surrogate
         models are involved, they need to get informed separately (see
         :class:`CostAwareGPMultiFidelitySearcher` for an example).
-
-        :param kwargs:
-        :return:
         """
         if self.resource_for_acquisition is not None:
             # Only have to do this for 'gp_multitask' or 'gp_independent' model
@@ -304,15 +246,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         self.state_transformer.mark_trial_failed(trial_id)
 
     def cleanup_pending(self, trial_id: str):
-        """
-        Removes all pending evaluations for a trial.
-        This should be called after an evaluation terminates. For various
-        reasons (e.g., termination due to convergence), pending candidates
-        for this evaluation may still be present.
-        It is also called for a failed evaluation.
-
-        """
-
         def filter_pred(x: PendingEvaluation) -> bool:
             return x.trial_id == trial_id
 

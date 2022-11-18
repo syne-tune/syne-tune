@@ -34,6 +34,13 @@ logger = logging.getLogger(__name__)
 
 
 class RemoteLauncher:
+    """
+    This class allows to launch a tuning job remotely. The remote tuning job may
+    use either the local backend (in which case the remote instance will be used
+    to evaluate trials) or the Sagemaker backend in which case the remote instance
+    will spawn one Sagemaker job per trial.
+    """
+
     def __init__(
         self,
         tuner: Tuner,
@@ -47,25 +54,27 @@ class RemoteLauncher:
         **estimator_kwargs,
     ):
         """
-        This class allows to launch a tuning job remotely
-        The remote tuning job may use either the local backend (in which case the remote
-        instance will be used to evaluate trials) or the Sagemaker backend in which case the remote instance
-        will spawn one Sagemaker job per trial.
-
-        :param tuner: Tuner that should be run remotely on a `instance_type` instance. Note that StoppingCriterion
-        should be used for the Tuner rather than a lambda function to ensure serialization.
-        :param role: sagemaker role to be used to launch the remote tuning instance.
-        :param instance_type: instance where the tuning is going to happen.
-        :param dependencies: list of folders that should be included as dependencies for the backend script to run
-        :param estimator_kwargs: Extra arguments for creating the SageMaker estimator for the tuning code.
-        :param store_logs_localbackend: whether to store logs of trials when using the local backend.
-            When using Sagemaker backend, logs are persisted by Sagemaker.
-        :param log_level: Logging level. Default is logging.INFO, while
-            logging.DEBUG gives more messages
-        :param s3_path: S3 base path used for checkpointing, outputs of tuning will be stored under
-        {s3_path}/{tuner_name}. The logs of the local backend are only stored if `store_logs_localbackend` is True.
-        :param no_tuner_logging: If True, the logging level for
-            syne_tune.tuner is set to ERROR
+        :param tuner: Tuner that should be run remotely on a `instance_type`
+            instance. Note that `StoppingCriterion` should be used for the `Tuner`
+            rather than a lambda function to ensure serialization.
+        :param role: SageMaker role to be used to launch the remote tuning instance.
+        :param instance_type: Instance where the tuning is going to happen.
+            Defaults to "ml.m5.xlarge"
+        :param dependencies: List of folders that should be included as
+            dependencies for the backend script to run
+        :param estimator_kwargs: Extra arguments for creating the SageMaker
+            estimator for the tuning code.
+        :param store_logs_localbackend: Whether to store logs of trials when
+            using the local backend. When using SageMaker backend, logs are
+            persisted by SageMaker. Defauls to False
+        :param log_level: Logging level. Default is `logging.INFO`, while
+            `logging.DEBUG` gives more messages
+        :param s3_path: S3 base path used for checkpointing, outputs of tuning
+            will be stored under `{s3_path}/{tuner_name}`. The logs of the local
+            backend are only stored if `store_logs_localbackend` is True.
+            Defaults to `s3_experiment_path()`
+        :param no_tuner_logging: If True, the logging level for `syne_tune.tuner`
+            is set to `logging.ERROR`. Defaults to False
         """
         assert not self.is_lambda(tuner.stop_criterion), (
             "remote launcher does not support using lambda functions for stopping criterion. Use StoppingCriterion, "
@@ -107,9 +116,9 @@ class RemoteLauncher:
         wait: bool = True,
     ):
         """
-        :param wait: Whether the call should wait until the job completes (default: True). If False the call returns
-        once the tuning job is scheduled on Sagemaker.
-        :return:
+        :param wait: Whether the call should wait until the job completes
+            (default: True). If False the call returns once the tuning job is
+            scheduled on SageMaker.
         """
         self.prepare_upload()
 
@@ -121,10 +130,9 @@ class RemoteLauncher:
 
     def prepare_upload(self):
         """
-        Prepares the files that needs to be uploaded by Sagemaker so that the Tuning job can happen.
-        This includes, 1) the entrypoint script of the backend and 2) the tuner that needs to run
-        remotely.
-        :return:
+        Prepares the files that needs to be uploaded by SageMaker so that the
+        tuning job can happen. This includes, 1) the entrypoint script of the
+        backend and 2) the tuner that needs to run remotely.
         """
         upload_dir = str(self.upload_dir())
         shutil.rmtree(upload_dir, ignore_errors=True)
@@ -177,7 +185,8 @@ class RemoteLauncher:
 
     def update_backend_with_remote_paths(self):
         """
-        Update the paths of the backend of the endpoint script and source dir with their remote location.
+        Update the paths of the backend of the endpoint script and source dir
+        with their remote location.
         """
         if self.is_source_dir_specified():
             # the source_dir is deployed to `upload_dir`
@@ -257,7 +266,8 @@ class RemoteLauncher:
 
     def syne_tune_image_uri(self) -> str:
         """
-        :return: syne tune docker uri, if not present try to build it and returns an error if this failed.
+        :return: syne tune docker uri, if not present try to build it and returns
+            an error if this failed.
         """
         docker_image_name = "syne-tune-cpu-py38"
         account_id = boto3.client("sts").get_caller_identity()["Account"]

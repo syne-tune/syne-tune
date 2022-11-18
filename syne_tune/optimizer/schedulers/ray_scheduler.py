@@ -23,6 +23,22 @@ logger = logging.getLogger(__name__)
 
 
 class RayTuneScheduler(TrialScheduler):
+    """
+    Allow to use Ray scheduler and searcher. Any searcher/scheduler should
+    work, except such which need access to `TrialRunner` (e.g., PBT), this
+    feature is not implemented in Syne Tune.
+
+    If `ray_searcher` is not given (defaults to random searcher), initial
+    configurations to evaluate can be passed in `points_to_evaluate`. If
+    `ray_searcher` is given, this argument is ignored (needs to be passed
+    to `ray_searcher` at construction). Note: Use
+
+    `syne_tune.optimizer.schedulers.searchers.impute_points_to_evaluate`
+
+    in order to preprocess `points_to_evaluate` specified by the user or
+    the benchmark.
+    """
+
     from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
     from ray.tune.search import Searcher as RT_Searcher
 
@@ -62,29 +78,7 @@ class RayTuneScheduler(TrialScheduler):
         points_to_evaluate: Optional[List[Dict]] = None,
     ):
         """
-        Allow to use Ray scheduler and searcher. Any searcher/scheduler should
-        work, except such which need access to TrialRunner (e.g., PBT), this
-        feature is not implemented yet.
-
-        If `ray_searcher` is not given (defaults to random searcher), initial
-        configurations to evaluate can be passed in `points_to_evaluate`. If
-        `ray_searcher` is given, this argument is ignored (needs to be passed
-        to `ray_searcher` at construction). Note: Use
-
-        syne_tune.optimizer.schedulers.searchers.impute_points_to_evaluate
-
-        in order to preprocess `points_to_evaluate` specified by the user or
-        the benchmark.
-
-        :param config_space: configuration of the sampled space, for instance
-        ```python
-        hyperparameters = {
-            "steps": max_steps,
-            "width": uniform(0, 20),
-            "height": uniform(-100, 100),
-            "activation": choice(["relu", "tanh"])
-        }
-        ```
+        :param config_space: Configuration space
         :param ray_scheduler: Ray scheduler, defaults to FIFO scheduler
         :param ray_searcher: Ray searcher, defaults to random search
         :param points_to_evaluate: See above

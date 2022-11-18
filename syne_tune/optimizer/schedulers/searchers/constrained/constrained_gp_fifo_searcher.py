@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import List, Optional
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
@@ -34,10 +34,8 @@ logger = logging.getLogger(__name__)
 
 class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
     """
-    Gaussian process-based constrained hyperparameter optimization (to be used with a FIFO scheduler).
-
-    The searcher requires a constraint metric, which is given by `constraint_attr`.
-
+    Gaussian process-based constrained hyperparameter optimization (to be used
+    with :class:`FIFOScheduler`).
     """
 
     def __init__(
@@ -47,6 +45,12 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
+        """
+        Additional arguments on top of parent class :class:`MultiModelGPFIFOSearcher`.
+
+        :param constraint_attr: Name of constraint metric in `report` passed to
+            `_update`.
+        """
         assert kwargs.get("constraint_attr") is not None, (
             "This searcher needs a constraint attribute. Please specify its "
             + "name in search_options['constraint_attr']"

@@ -30,6 +30,7 @@ from benchmarking.commons.utils import (
     find_or_create_requirements_txt,
     combine_requirements_txt,
 )
+from benchmarking.commons.baselines import MethodDefinitions
 from syne_tune.util import random_string
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,17 @@ def get_hyperparameters(
     benchmark: RealBenchmarkDefinition,
     map_extra_args: Optional[callable],
 ) -> Dict[str, Any]:
+    """Compose hyperparameters for SageMaker training job
+
+    :param seed: Seed of repetition
+    :param method: Method name
+    :param experiment_tag: Tag of experimment
+    :param args: Result from `parse_args`
+    :param benchmark: Benchmark definition
+    :param map_extra_args: Hyperparameters are updated with
+        `map_extra_args(args)`. Optional
+    :return: Dictionary of hyperparameters
+    """
     hyperparameters = {
         "experiment_tag": experiment_tag,
         "benchmark": args.benchmark,
@@ -61,11 +73,37 @@ def get_hyperparameters(
 
 def launch_remote(
     entry_point: Path,
-    methods: dict,
+    methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):
+    """
+    Launches sequence of SageMaker training jobs, each running an experiment
+    with the local back-end. The loop runs over methods selected from `methods`
+    and repetitions, both controlled by command line arguments.
+
+    Combination of `requirements.txt`: Dependencies for `entry_point` are the
+    union of Syne Tune dependencies and dependencies of the training script
+    (not contained in its SageMaker framework). For the former, we scan
+    `entry_point.parent` for a file named `requirements*.txt`. If this is not
+    found, we create a default one called `requirements-synetune.txt`. This is
+    then combined with the `requirements.txt` file for the training script
+    (if any), and the union is written to `requirements.txt` in
+    `entry_point.parent`.
+    If you like to control the Syne Tune requirements (the default ones are
+    `"extra"`, which can be a lot), place a file `requirements_synetune.txt` in
+    `entry_point.parent`.
+
+    :param entry_point: Script for running the experiment
+    :param methods: Dictionary with method constructors; one is selected from
+        command line arguments
+    :param benchmark_definitions: Definitions of benchmarks; one is selected from
+        command line arguments
+    :param extra_args: Extra arguments for command line parser, optional
+    :param map_extra_args: Maps `args` returned by `parse_args` to dictionary
+        for extra argument values. Needed only if `extra_args` given
+    """
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag
     suffix = random_string(4)

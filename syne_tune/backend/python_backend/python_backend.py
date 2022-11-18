@@ -32,6 +32,41 @@ def file_md5(filename: str) -> str:
 
 
 class PythonBackend(LocalBackend):
+    """
+    A backend that supports the tuning of Python functions (if you rather want to
+    tune an endpoint script such as "train.py", then you should use
+    :class:`LocalBackend`). The function `tune_function` should be serializable,
+    should not reference any global variable or module and should have as arguments
+    a subset of the keys of `config_space`. When deserializing, a md5 is checked to
+    ensure consistency.
+
+    For instance, the following function is a valid way of defining a backend on
+    top of a simple function:
+
+    ```python
+    from syne_tune.backend import PythonBackend
+    from syne_tune.config_space import uniform
+
+    def f(x, epochs):
+        import logging
+        import time
+        from syne_tune import Reporter
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        reporter = Reporter()
+        for i in range(epochs):
+            reporter(epoch=i + 1, y=x + i)
+
+    config_space = {
+        "x": uniform(-10, 10),
+        "epochs": 5,
+    }
+    backend = PythonBackend(tune_function=f, config_space=config_space)
+    ```
+
+    See `examples/launch_height_python_backend.py` for a complete example.
+    """
+
     def __init__(
         self,
         tune_function: Callable,
@@ -40,43 +75,13 @@ class PythonBackend(LocalBackend):
         delete_checkpoints: bool = False,
     ):
         """
-        A backend that supports the tuning of Python functions (if you rather want to tune an endpoint script such as
-        "train.py", then you should rather use `LocalBackend`). The function `tune_function` should be serializable,
-        should not reference any global variable or module and should have as arguments all the keys of `config_space`.
-        When deserializing, a md5 is checked to ensure consistency.
+        Additional arguments on top of parent class :class:`LocalBackend`:
 
-        For instance, the following function is a valid way of defining a backend on top of simple function:
-
-        ```python
-        def f(x):
-            import logging
-            import time
-            from syne_tune import Reporter
-            root = logging.getLogger()
-            root.setLevel(logging.DEBUG)
-            reporter = Reporter()
-            for i in range(5):
-                reporter(step=i + 1, y=x + i)
-
-
-        from syne_tune.backend.python_backend.python_backend import PythonBackend
-        from syne_tune.config_space import uniform
-
-        config_space = {"x": uniform(-10, 10)}
-        backend = PythonBackend(tune_function=f, config_space=config_space)
-        ```
-        See `examples/launch_height_python_backend.py` for a full example.
-        :param tune_function: a python function to be tuned, the function should call Syne Tune reporter to report
-        metrics and be serializable, imports should be performed inside the function body.
-        :param config_space: config_space used to in Syne Tune, it must corresponds to key words arguments of
-        `tune_function`.
-        :param rotate_gpus: in case several GPUs are present, each trial is
-            scheduled on a different GPU. A new trial is preferentially
-            scheduled on a free GPU, and otherwise the GPU with least prior
-            assignments is chosen. If False, then all GPUs are used at the same
-            time for all trials.
-        :param delete_checkpoints: If True, checkpoints of stopped or completed
-            trials are deleted
+        :param tune_function: Python function to be tuned. The function must call
+            Syne Tune reporter to report metrics and be serializable, imports should
+            be performed inside the function body.
+        :param config_space: Configuration space corresponding to arguments of
+            `tune_function`
         """
         super(PythonBackend, self).__init__(
             entry_point=str(Path(__file__).parent / "python_entrypoint.py"),
@@ -102,7 +107,7 @@ class PythonBackend(LocalBackend):
                 f"Path {self.local_path} already exists, make sure you have a unique tuner name."
             )
 
-    def _schedule(self, trial_id: int, config: Dict):
+    def _schedule(self, trial_id: int, config: dict):
         if not (self.tune_function_path / "tune_function.dill").exists():
             self.save_tune_function(self.tune_function)
         config = config.copy()

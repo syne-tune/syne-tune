@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     """
-    Adapts the KernelDensityEstimator to the multi-fidelity setting as proposed
+    Adapts :class:`KernelDensityEstimator` to the multi-fidelity setting as proposed
     by Falkner et al such that we can use it with Hyperband. Following Falkner
     et al, we fit the KDE only on the highest resource level where we have at
     least num_min_data_points. Code is based on the implementation by Falkner
@@ -32,53 +32,13 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     BOHB: Robust and Efficient Hyperparameter Optimization at Scale
     S. Falkner and A. Klein and F. Hutter
     Proceedings of the 35th International Conference on Machine Learning
-
-    Parameters
-    ----------
-    config_space: dict
-        Configuration space for trial evaluation function
-    metric : str
-        Name of metric to optimize, key in result's obtained via
-        `on_trial_result`
-    random_seed_generator : RandomSeedGenerator (optional)
-        If given, the random_seed for `random_state` is obtained from there,
-        otherwise `random_seed` is used
-    random_seed : int (optional)
-        This is used if `random_seed_generator` is not given.
-    mode : str
-        Mode to use for the metric given, can be 'min' or 'max', default to 'min'.
-    num_min_data_points: int
-        Minimum number of data points that we use to fit the KDEs. If set to None
-        than we set this to the number of hyperparameters.
-    top_n_percent: int
-        Determines how many datapoints we use use to fit the first KDE model for
-        modeling the well performing configurations.
-    min_bandwidth: float
-        The minimum bandwidth for the KDE models
-    num_candidates: int
-        Number of candidates that are sampled to optimize the acquisition function
-    bandwidth_factor: int
-        We sample continuous hyperparameter from a truncated Normal. This factor is
-        multiplied to the bandwidth to define the standard deviation of this
-        trunacted Normal.
-    random_fraction: float
-        Defines the fraction of configurations that are drawn uniformly at random
-        instead of sampling from the model
-    points_to_evaluate: List[Dict] or None
-        List of configurations to be evaluated initially (in that order).
-        Each config in the list can be partially specified, or even be an
-        empty dict. For each hyperparameter not specified, the default value
-        is determined using a midpoint heuristic.
-        If None (default), this is mapped to [dict()], a single default config
-        determined by the midpoint heuristic. If [] (empty list), no initial
-        configurations are specified.
     """
 
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         metric: str,
-        points_to_evaluate: Optional[List[Dict]] = None,
+        points_to_evaluate: Optional[List[dict]] = None,
         mode: Optional[str] = None,
         num_min_data_points: Optional[int] = None,
         top_n_percent: Optional[int] = None,
@@ -89,8 +49,14 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         resource_attr: Optional[str] = None,
         **kwargs
     ):
+        """
+        Additional arguments on top of parent class :class:`KernelDensityEstimator`.
+
+        :param resource_attr: Name of resource attribute. Defaults to
+            `scheduler.resource_attr` in `configure_scheduler`
+        """
         if min_bandwidth is None:
-            min_bandwidth = 0.1  # Different default value
+            min_bandwidth = 0.1
         super().__init__(
             config_space,
             metric=metric,
@@ -122,7 +88,6 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         self.resource_attr = scheduler.resource_attr
 
     def _train_kde(self, train_data, train_targets):
-
         # find the highest resource level we have at least num_min_data_points data points
         unique_resource_levels, counts = np.unique(
             self.resource_levels, return_counts=True

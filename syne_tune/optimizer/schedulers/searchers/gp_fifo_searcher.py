@@ -189,19 +189,24 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             logger.info(deb_msg)
 
     def _copy_kwargs_to_kwargs_int(self, kwargs_int: dict, kwargs: dict):
+        """Copies extra arguments not dealt with by `gp_fifo_searcher_factory`
+
+        :param kwargs_int: Output of factory, to be passed to `searcher_factory`
+        :param kwargs: Input arguments
+        """
         # Extra arguments not parsed in factory
         for k in ("init_state", "local_minimizer_class", "cost_attr", "resource_attr"):
             kwargs_int[k] = kwargs.get(k)
 
     def _hp_ranges_in_state(self):
         """
-        :return: HyperparameterRanges to be used in self.state_transformer.state
+        :return: `HyperparameterRanges` to be used in `self.state_transformer.state`
         """
         return self.hp_ranges
 
     def _hp_ranges_for_prediction(self):
         """
-        :return: HyperparameterRanges to be used in predictions and acquisition
+        :return: `HyperparameterRanges` to be used in predictions and acquisition
             functions
         """
         return self._hp_ranges_in_state()
@@ -237,6 +242,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
 
     def _update(self, trial_id: str, config: dict, result: dict):
         metric_val = result[self._metric]
+        # Transform to criterion to be minimized
         if self.map_reward is not None:
             crit_val = self.map_reward(metric_val)
         else:
@@ -264,7 +270,17 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def _get_config_modelbased(
         self, exclusion_candidates: ExclusionList, **kwargs
     ) -> Optional[Configuration]:
-        raise NotImplementedError()
+        """
+        Implements `get_config` part if the surrogate model is used, instead
+        of initial choices from `points_to_evaluate` or initial random
+        choices.
+
+        :param exclusion_candidates: Configs to be avoided
+        :param kwargs: Extra arguments
+        :return: Suggested configuration, or None if configuration space is
+            exhausted
+        """
+        raise NotImplementedError
 
     def _get_exclusion_candidates(self, **kwargs) -> ExclusionList:
         return ExclusionList(
@@ -273,6 +289,10 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         )
 
     def _should_pick_random_config(self, exclusion_candidates: ExclusionList) -> bool:
+        """
+        :param exclusion_candidates: Configs to be avoided
+        :return: Should config be drawn at random in `get_config`
+        """
         if len(exclusion_candidates) < self.num_initial_random_choices:
             return True
         # Determine whether there is any observed data after filtering
@@ -295,6 +315,8 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         model-based search. If False is returned, model-based search must be
         called.
 
+        :param exclusion_candidates: Configs to be avoided
+        :return: `(config, use_get_config_modelbased)`
         """
         self._assign_random_searcher()
         config = self._next_initial_config()  # Ask for initial config
@@ -423,7 +445,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def _assign_random_searcher(self, random_seed=None):
         if self._random_searcher is None:
             # Used for initial random configs (if any)
-            # We do not have to deal with points_to_evaluate
+            # We do not have to deal with `points_to_evaluate`
             if random_seed is None:
                 random_seed = self.random_state.randint(0, 2**32)
             self._random_searcher = RandomSearcher(
@@ -438,17 +460,24 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
 class GPFIFOSearcher(ModelBasedSearcher):
     """Gaussian process Bayesian optimization for FIFO scheduler
 
-    This searcher must be used with `FIFOScheduler`. It provides Bayesian
-    optimization, based on a Gaussian process surrogate model.
+    This searcher must be used with :class:`FIFOScheduler`. It provides
+    Bayesian optimization, based on a Gaussian process surrogate model.
 
-    NOTE: The searcher uses `map_reward` to map metric values to internal
-    criterion values, and *minimizes* the latter. If your metric is to be
-    maximized, you need to pass a strictly decreasing `map_reward`.
+    It is *not* recommended to create :class:`GPFIFOSearcher` searcher objects
+    directly, but rather to create :class:`FIFOScheduler` objects with
+    `searcher="bayesopt"`, and passing arguments here in `search_options`.
+    This will use the appropriate functions from `gp_searcher_factory.py` to
+    create components in a consistent way.
+
+    Note: The searcher uses `map_reward` to map metric values to internal
+    criterion values, and *minimizes* the latter. The default choice is
+    to multiply values by -1.
 
     Pending configurations (for which evaluation tasks are currently running)
     are dealt with by fantasizing (i.e., target values are drawn from the
     current posterior, and acquisition functions are averaged over this
     sample, see `num_fantasy_samples`).
+
     The GP surrogate model uses a Matern 5/2 covariance function with automatic
     relevance determination (ARD) of input attributes, and a constant mean
     function. The acquisition function is expected improvement (EI). All
@@ -457,134 +486,14 @@ class GPFIFOSearcher(ModelBasedSearcher):
     fitting is the most expensive part of a `get_config` call.
 
     The following happens in `get_config`. For the first `num_init_random` calls,
-    a config is drawn at random (the very first call results in the default
-    config of the space). Afterwards, Bayesian optimization is used, unless
-    there are no finished evaluations yet.
+    a config is drawn at random (after `points_to_evaluate`, which are included
+    in the `num_init_random` initial ones). Afterwards, Bayesian optimization
+    is used, unless there are no finished evaluations yet.
     First, model hyperparameter are refit. This step can be skipped (see
-    `opt_skip*` parameters). Next, `num_init_candidates` configs are sampled at
+    `opt_skip_*` parameters). Next, `num_init_candidates` configs are sampled at
     random, and ranked by a scoring function (`initial_scoring`). BFGS local
     optimization is then run starting from the top scoring config, where EI
-    is minimized.
-
-    Parameters
-    ----------
-    config_space : dict
-        Configuration space. Constant parameters are filtered out
-    metric : str
-        Name of metric reported by evaluation function.
-    points_to_evaluate: List[dict] or None
-        List of configurations to be evaluated initially (in that order).
-        Each config in the list can be partially specified, or even be an
-        empty dict. For each hyperparameter not specified, the default value
-        is determined using a midpoint heuristic.
-        If None (default), this is mapped to [dict()], a single default config
-        determined by the midpoint heuristic. If [] (empty list), no initial
-        configurations are specified.
-    random_seed_generator : RandomSeedGenerator (optional)
-        If given, the random_seed for `random_state` is obtained from there,
-        otherwise `random_seed` is used
-    random_seed : int (optional)
-        This is used if `random_seed_generator` is not given.
-    debug_log : bool (default: False)
-        If True, both searcher and scheduler output an informative log, from
-        which the configs chosen and decisions being made can be traced.
-    resource_attr : str (optional)
-        Name of resource attribute in reports. This is optional here, but
-        required for multi-fidelity searchers.
-        If `resource_attr` and `cost_attr` are given, cost values are read from
-        each report and stored in the state. This allows cost models to be fit
-        on more data.
-    cost_attr : str (optional)
-        Name of cost attribute in data obtained from reporter (e.g., elapsed
-        training time). Needed only by cost-aware searchers. Depending on
-        whether `resource_attr` is given, cost values are read from each
-        report or only at the end.
-    num_init_random : int
-        Number of initial `get_config` calls for which randomly sampled configs
-        are returned. Afterwards, Bayesian optimization is used
-    num_init_candidates : int
-        Number of initial candidates sampled at random in order to seed the
-        search for `get_config`
-    num_fantasy_samples : int
-        Number of samples drawn for fantasizing (latent target values for
-        pending evaluations)
-    no_fantasizing : bool
-        If True, fantasizing is not done and pending evaluations are ignored.
-        This may lead to loss of diversity in decisions
-    initial_scoring : str
-        Scoring function to rank initial candidates (local optimization of EI
-        is started from top scorer). Values are 'thompson_indep' (independent
-        Thompson sampling; randomized score, which can increase exploration),
-        'acq_func' (score is the same (EI) acquisition function which is afterwards
-        locally optimized).
-    skip_local_optimization : bool
-        If True, the local gradient-based optimization of the acquisition
-        function is skipped, and the top-tanked initial candidate is returned
-        instead. In this case, `initial_scoring='acq_func'` makes most sense,
-        otherwise the acquisition function will not be used.
-    opt_nstarts : int
-        Parameter for hyperparameter fitting. Number of random restarts
-    opt_maxiter : int
-        Parameter for hyperparameter fitting. Maximum number of iterations
-        per restart
-    opt_warmstart : bool
-        Parameter for hyperparameter fitting. If True, each fitting is started
-        from the previous optimum. Not recommended in general
-    opt_verbose : bool
-        Parameter for hyperparameter fitting. If True, lots of output
-    opt_skip_init_length : int
-        Parameter for hyperparameter fitting, skip predicate. Fitting is never
-        skipped as long as number of observations below this threshold
-    opt_skip_period : int
-        Parameter for hyperparameter fitting, skip predicate. If >1, and number
-        of observations above `opt_skip_init_length`, fitting is done only
-        K-th call, and skipped otherwise
-    map_reward : str or MapReward
-        If `mode == 'max'`, the scheduler maximizes reward, while
-        internally, Bayesian optimization is minimizing the criterion. States
-        how reward is mapped to criterion. If the mode is 'min', this
-        argument is ignored.
-        Built-in are `minus_x` (criterion = -reward) and `<a>_minus_x`, where
-        <a> is a constant (criterion = <a> - reward), for example `1_minus_x`.
-        From a technical standpoint, it does not matter what is chosen here,
-        because criterion is only used internally. Also note that criterion
-        data is always normalized to mean 0, variance 1 before fitted with a
-        GP.
-    transfer_learning_task_attr : str (optional)
-        Used to support transfer HPO, where the state contains observed data
-        from several tasks, one of which is the active one. To this end,
-        `config_space` must contain a categorical parameter of name
-        `transfer_learning_task_attr`, whose range are all task IDs. Also,
-        `transfer_learning_active_task` must denote the active task, and
-        `transfer_learning_active_config_space` is used as
-        `active_config_space` argument in :class:`HyperparameterRanges`. This
-        allows us to use a narrower search space for the active task than for
-        the union of all tasks (`config_space` must be that), which is needed
-        if some configurations of non-active tasks lie outside of the ranges
-        in `active_config_space`.
-        One of the implications is that `filter_observed_data` is selecting
-        configs of the active task, so that incumbents or exclusion lists are
-        restricted to data from the active task.
-    transfer_learning_active_task : str (optional)
-        See `transfer_learning_task_attr`.
-    transfer_learning_active_config_space : dict (optional)
-        See `transfer_learning_task_attr`. If not given, `config_space` is the
-        search space for the active task as well. This active config space need
-        not contain the `transfer_learning_task_attr` parameter. In fact, this
-        parameter is set to a categorical with `transfer_learning_active_task`
-        as single value, so that new configs are chosen for the active task
-        only.
-    transfer_learning_model : str (optional)
-        See `transfer_learning_task_attr`. Specifies the surrogate model to be
-        used for transfer lerning:
-        - 'matern52_product': Kernel is product of Matern 5/2 (not ARD) on
-            `transfer_learning_task_attr` and Matern 5/2 (ARD) on the rest.
-            Assumes that data from same task are more closely related than
-            data from different tasks
-        - 'matern52_same': Kernel is Matern 5/2 (ARD) on the rest of the
-            variables, `transfer_learning_task_attr` is ignored. Assumes
-            that data from all tasks can be merged together
-
+    is minimized (this is skipped if `skip_local_optimization=True`).
     """
 
     def __init__(
@@ -592,9 +501,131 @@ class GPFIFOSearcher(ModelBasedSearcher):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
-        clone_from_state=False,
+        clone_from_state: bool = False,
         **kwargs,
     ):
+        """
+         Note that the full logic of construction based on arguments is given in
+         `gp_searcher_factory.py`. In particular, see `gp_fifo_searcher_defaults`
+         for default values.
+
+         Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
+
+         :param clone_from_state: Internal argument, do not use
+         :type clone_from_state: bool
+         :param resource_attr: Name of resource attribute in reports. This is
+             optional here, but required for multi-fidelity searchers.
+             If `resource_attr` and `cost_attr` are given, cost values are read from
+             each report and stored in the state. This allows cost models to be fit
+             on more data.
+         :type resource_attr: str, optional
+         :param cost_attr: Name of cost attribute in data obtained from reporter
+             (e.g., elapsed training time). Needed only by cost-aware searchers.
+             Depending on whether `resource_attr` is given, cost values are read
+             from each report or only at the end.
+         :type cost_attr: str, optional
+         :param num_init_random: Number of initial `get_config` calls for which
+             randomly sampled configs are returned. Afterwards, the model-based
+             searcher is used. Defaults to `DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS`
+         :type num_init_random: int, optional
+         :param num_init_candidates: Number of initial candidates sampled at
+             random in order to seed the model-based search in `get_config`.
+             Defaults to `DEFAULT_NUM_INITIAL_CANDIDATES`
+         :type num_init_candidates: int, optional
+         :param num_fantasy_samples: Number of samples drawn for fantasizing
+             (latent target values for pending evaluations), defaults to 20
+         :type num_fantasy_samples: int, optional
+         :param no_fantasizing: If True, fantasizing is not done and pending
+             evaluations are ignored. This may lead to loss of diversity in
+             decisions
+         :type no_fantasizing: Defaults to False
+         :param initial_scoring: Scoring function to rank initial candidates
+             (local optimization of EI is started from top scorer):
+             * "thompson_indep": Independent Thompson sampling; randomized score,
+                 which can increase exploration
+             * "acq_func": score is the same (EI) acquisition function which is
+                 used for local optimization afterwards
+             Defaults to `DEFAULT_INITIAL_SCORING`
+         :type initial_scoring: str, optional
+         :param skip_local_optimization: If True, the local gradient-based
+             optimization of the acquisition function is skipped, and the
+             top-tanked initial candidate (after initial scoring) is returned
+             instead. In this case, `initial_scoring="acq_func"` makes most
+             sense, otherwise the acquisition function will not be used.
+             Defaults to False
+         :type skip_local_optimization: bool, optional
+         :param opt_nstarts: Parameter for surrogate model fitting. Number of
+             random restarts. Defaults to 2
+         :type opt_nstarts: int, optional
+         :param opt_maxiter: Parameter for surrogate model fitting. Maximum
+             number of iterations per restart. Defaults to 50
+         :type opt_maxiter: int, optional
+         :param opt_warmstart: Parameter for surrogate model fitting. If True,
+             each fitting is started from the previous optimum. Not recommended
+             in general. Defaults to False
+         :type opt_warmstart: bool, optional
+         :param opt_verbose: Parameter for surrogate model fitting. If True,
+             lots of output. Defaults to False
+         :type opt_verbose: bool, optional
+         :param opt_skip_init_length: Parameter for surrogate model fitting,
+             skip predicate. Fitting is never skipped as long as number of
+             observations below this threshold. Defaults to 150
+          :type opt_skip_init_length: int, optional
+        :param opt_skip_period: Parameter for surrogate model fitting, skip
+             predicate. If `>1`, and number of observations above
+             `opt_skip_init_length`, fitting is done only K-th call, and skipped
+             otherwise. Defaults to 1 (no skipping)
+         :type opt_skip_period: int, optional
+         :param map_reward: In the scheduler, the metric may be minimized or
+             maximized, but internally, Bayesian optimization is minimizing
+             the criterion. `map_reward` converts from metric to internal
+             criterion:
+             * "minus_x": `criterion = -metric`
+             * "<a>_minus_x": `criterion = <a> - metric`. For example "1_minus_x"
+                 maps accuracy to zero-one error
+             From a technical standpoint, it does not matter what is chosen here,
+             because criterion is only used internally. Also note that criterion
+             data is always normalized to mean 0, variance 1 before fitted with a
+             Gaussian process.
+             Defaults to "1_minus_x"
+         :type map_reward: str or :class:`MapReward`, optional
+         :param transfer_learning_task_attr: Used to support transfer HPO, where
+             the state contains observed data from several tasks, one of which
+             is the active one. To this end, `config_space` must contain a
+             categorical parameter of name `transfer_learning_task_attr`, whose
+             range are all task IDs. Also, `transfer_learning_active_task` must
+             denote the active task, and `transfer_learning_active_config_space`
+             is used as `active_config_space` argument in
+             :class:`HyperparameterRanges`. This allows us to use a narrower
+             search space for the active task than for the union of all tasks
+             (`config_space` must be that), which is needed if some configurations
+             of non-active tasks lie outside of the ranges in `active_config_space`.
+             One of the implications is that `filter_observed_data` is selecting
+             configs of the active task, so that incumbents or exclusion lists are
+             restricted to data from the active task.
+         :type transfer_learning_task_attr: str, optional
+         :param transfer_learning_active_task: See `transfer_learning_task_attr`.
+         :type transfer_learning_active_task: str, optional
+         :param transfer_learning_active_config_space:
+             See `transfer_learning_task_attr`. If not given, `config_space` is the
+             search space for the active task as well. This active config space need
+             not contain the `transfer_learning_task_attr` parameter. In fact, this
+             parameter is set to a categorical with `transfer_learning_active_task`
+             as single value, so that new configs are chosen for the active task
+             only.
+         :type transfer_learning_active_config_space: dict, optional
+         :param transfer_learning_model: See `transfer_learning_task_attr`.
+             Specifies the surrogate model to be used for transfer lerning:
+             * "matern52_product": Kernel is product of Matern 5/2 (not ARD) on
+                 `transfer_learning_task_attr` and Matern 5/2 (ARD) on the rest.
+                 Assumes that data from same task are more closely related than
+                 data from different tasks
+             * "matern52_same": Kernel is Matern 5/2 (ARD) on the rest of the
+                 variables, `transfer_learning_task_attr` is ignored. Assumes
+                 that data from all tasks can be merged together
+             Defaults to "matern52_product"
+         :type transfer_learning_model: str, optional
+        """
         super().__init__(
             config_space,
             metric=metric,
@@ -726,7 +757,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
         Asks for a batch of `batch_size` configurations to be suggested. This
         is roughly equivalent to calling `get_config` `batch_size` times,
         marking the suggested configs as pending in the state (but the state
-        is not modified here).
+        is not modified here). This means the batch is chosen sequentially,
+        at about the cost of calling `get_config` `batch_size` times.
+
         If `num_init_candidates_for_batch` is given, it is used instead
         of `num_init_candidates` for the selection of all but the first
         config in the batch. In order to speed up batch selection, choose
@@ -749,9 +782,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
             # `DebugLogWriter` does not support batch selection right now,
             # must be switched off
             assert self.debug_log is None, (
-                "get_batch_configs does not support debug_log right now. "
-                + "Please set debug_log=False in search_options argument "
-                + "of scheduler, or create your searcher with debug_log=False"
+                "`get_batch_configs` does not support debug_log right now. "
+                + "Please set `debug_log=False` in search_options argument "
+                + "of scheduler, or create your searcher with `debug_log=False`"
             )
             exclusion_candidates = self._get_exclusion_candidates(**kwargs)
             pick_random = True

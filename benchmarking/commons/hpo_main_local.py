@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable, Dict, Any
 
 import numpy as np
 import itertools
@@ -19,7 +19,7 @@ from tqdm import tqdm
 from syne_tune.backend import LocalBackend
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
-from benchmarking.commons.baselines import MethodArguments
+from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
 from benchmarking.commons.hpo_main_common import (
     parse_args as _parse_args,
@@ -43,7 +43,20 @@ def get_benchmark(
     return benchmark_definitions(**benchmark_kwargs)[args.benchmark]
 
 
-def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
+def parse_args(
+    methods: Dict[str, Any], extra_args: Optional[List[dict]] = None
+) -> (Any, List[str], List[int]):
+    """Parse command line arguments for local back-end experiments.
+
+    :param methods: If `--method` is not given, then `method_names` are the
+        keys of this dictionary
+    :param extra_args: List of dictionaries, containing additional arguments
+        to be passed. Must contain `name` for argument name (without leading
+        `"--"`), and other kwargs to `parser.add_argument`. Optional
+    :return: `(args, method_names, seeds)`, where `args` is result of
+        `parser.parse_known_args()`, `method_names` see `methods`, and
+        `seeds` are list of seeds specified by `--num_seeds` and `--start_seed`
+    """
     if extra_args is None:
         extra_args = []
     else:
@@ -75,11 +88,23 @@ def parse_args(methods: dict, extra_args: Optional[List[dict]] = None):
 
 
 def main(
-    methods: dict,
+    methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
 ):
+    """
+    Runs sequence of experiments with local back-end sequentially. The loop runs
+    over methods selected from `methods` and repetitions, both controlled by
+    command line arguments.
+
+    :param methods: Dictionary with method constructors
+    :param benchmark_definitions: Definitions of benchmarks; one is selected from
+        command line arguments
+    :param extra_args: Extra arguments for command line parser. Optional
+    :param map_extra_args: Maps `args` returned by `parse_args` to dictionary
+        for extra argument values. Needed if `extra_args` given
+    """
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag
     benchmark_name = args.benchmark

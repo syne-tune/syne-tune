@@ -140,64 +140,12 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
     differ slightly from the implementation of the authors.
 
     Main differences to synchronous Hyperband:
-
     * In DEHB, trials are not paused and potentially promoted (except in the
         very first bracket). Therefore, checkpointing is not used (except in
         the very first bracket, if `support_pause_resume` is True)
     * Only the initial configurations are drawn at random (or drawn from the
         searcher). Whenever possible, new configurations (in their internal
         encoding) are derived from earlier ones by way of differential evolution
-
-    Parameters
-    ----------
-    config_space : dict
-        Configuration space for trial evaluation function
-    rungs_first_bracket : List[Tuple[int, int]]
-        Determines rung level systems for each bracket, see
-        :class:`DifferentialEvolutionHyperbandBracketManager`
-    num_brackets_per_iteration : Optional[int]
-        Number of brackets per iteration. The algorithm cycles through
-        these brackets in one iteration. If not given, the maximum
-        number is used (i.e., `len(rungs_first_bracket)`)
-    searcher : str
-        Selects searcher. Passed to `searcher_factory`.
-        If searcher == "random_encoded", the encoded configs are
-        sampled directly, each entry independent from U([0, 1]).
-        This distribution has higher entropy than for "random" if
-        there are discrete hyperparameters in `config_space`. Note that
-        `points_to_evaluate` is stll used in this case.
-    search_options : dict
-        Passed to `searcher_factory`
-    metric : str
-        Name of metric to optimize, key in result's obtained via
-        `on_trial_result`
-    mode : str
-        Mode to use for the metric given, can be 'min' or 'max'
-    points_to_evaluate: list[dict] or None
-        See :class:`SynchronousHyperbandScheduler`.
-        Note that this list is only used for initial configurations. Once
-        DEHB starts to combine new configs from earlier ones, the list here
-        is ignored, even if it still contains entries.
-    random_seed : int
-        Master random seed. Generators used in the scheduler or searcher are
-        seeded using `RandomSeedGenerator`. If not given, the master random
-        seed is drawn at random here.
-    max_resource_attr : str
-        Key name in config for fixed attribute containing the maximum resource.
-        If given, trials need not be stopped, which can run more efficiently.
-    resource_attr : str
-        Name of resource attribute in result's obtained via `on_trial_result`.
-        Note: The type of resource must be int.
-    mutation_factor : float, in (0, 1]
-        Factor F used in the rand/1 mutation operation of DE
-    crossover_probability : float, in (0, 1)
-        Probability p used in crossover operation (child entries are chosen
-        with probability p)
-    support_pause_resume : bool
-        If True, `_suggest` supports pause and resume in the first bracket. If
-        the objective supports checkpointing, this is made use of.
-        Note: The resumed trial still gets assigned a new trial_id, but it
-        starts from the earlier checkpoint.
     """
 
     MAX_RETRIES = 50
@@ -209,6 +157,62 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         num_brackets_per_iteration: Optional[int] = None,
         **kwargs,
     ):
+        """
+         :param config_space: Configuration space for trial evaluation function
+         :param rungs_first_bracket: Determines rung level systems for each
+             bracket, see :class:`DifferentialEvolutionHyperbandBracketManager`
+         :param num_brackets_per_iteration: Number of brackets per iteration. The
+             algorithm cycles through these brackets in one iteration. If not
+             given, the maximum number is used (i.e., `len(rungs_first_bracket)`)
+         :param metric: Name of metric to optimize, key in result's obtained via
+             `on_trial_result`
+         :type metric: str
+         :param searcher: Selects searcher. Passed to `searcher_factory`.
+             Must be `str`, we do not accept a :class:`BaseSearcher` object here.
+             If searcher == "random_encoded" (default), the encoded configs are
+             sampled directly, each entry independently from U([0, 1]).
+             This distribution has higher entropy than for "random" if
+             there are discrete hyperparameters in `config_space`. Note that
+             `points_to_evaluate` is still used in this case.
+         :type searcher: str, optional
+         :param search_options: Passed to `searcher_factory`
+         :type search_options: dict, optional
+         :param mode: Mode to use for the metric given, can be "min" (default) or
+             "max"
+         :type mode: str, optional
+         :param points_to_evaluate: List of configurations to be evaluated
+             initially (in that order). Each config in the list can be partially
+             specified, or even be an empty dict. For each hyperparameter not
+             specified, the default value is determined using a midpoint heuristic.
+             If None (default), this is mapped to `[dict()]`, a single default config
+             determined by the midpoint heuristic. If `[]` (empty list), no initial
+             configurations are specified.
+         :type points_to_evaluate: `List[dict]`, optional
+         :param random_seed: Master random seed. Generators used in the scheduler
+             or searcher are seeded using :class:`RandomSeedGenerator`. If not
+             given, the master random seed is drawn at random here.
+         :type random_seed: int, optional
+         :param max_resource_attr: Key name in config for fixed attribute
+             containing the maximum resource. If given, trials need not be
+             stopped, which can run more efficiently.
+         :type max_resource_attr: str, optional
+         :param resource_attr: Name of resource attribute in results obtained via
+             `on_trial_result`. The type of resource must be int. Default to
+             "epoch"
+         :type resource_attr: str, optional
+         :param mutation_factor: In `(0, 1]`. Factor F used in the rand/1 mutation
+             operation of DE. Default to 0.5
+         :type mutation_factor: float, optional
+        :param crossover_probability: In `(0, 1)`. Probability p used in crossover
+             operation (child entries are chosen with probability p). Defaults to 0.5
+         :type crossover_probability: float, optional
+         :param support_pause_resume: If True, `_suggest` supports pause and resume
+             in the first bracket (this is the default). If the objective supports
+             checkpointing, this is made use of. Defaults to True.
+             Note: The resumed trial still gets assigned a new `trial_id`, but it
+             starts from the earlier checkpoint.
+         :type support_pause_resume: bool, optional
+        """
         super().__init__(config_space)
         self._create_internal(rungs_first_bracket, num_brackets_per_iteration, **kwargs)
 

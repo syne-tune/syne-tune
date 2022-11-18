@@ -28,6 +28,18 @@ logger = logging.getLogger(__name__)
 
 
 class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
+    """
+    A zero-shot transfer hyperparameter optimization method which jointly selects
+    configurations that minimize the average rank obtained on historic metadata
+    (`transfer_learning_evaluations`). This is a searcher which can be used
+    with :class:`FIFOScheduler`.
+
+    Reference:
+    Sequential Model-Free Hyperparameter Tuning.
+    Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
+    IEEE International Conference on Data Mining (ICDM) 2015.
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -39,21 +51,19 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
         **kwargs,
     ) -> None:
         """
-        A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
-        average rank obtained on historic metadata (transfer_learning_evaluations).
+        Additional arguments on top of parent class :class:`BaseSearcher`.
 
-        Reference: Sequential Model-Free Hyperparameter Tuning.
-        Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
-        IEEE International Conference on Data Mining (ICDM) 2015.
-
-        :param config_space: Configuration space for trial evaluation function.
-        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
-        :param metric: Objective name to optimize, must be present in transfer learning evaluations.
-        :param mode: Whether to minimize (min) or maximize (max)
-        :param sort_transfer_learning_evaluations: Use False if the hyperparameters for each task in
-        transfer_learning_evaluations Are already in the same order. If set to True, hyperparameters are sorted.
-        :param use_surrogates: If the same configuration is not evaluated on all tasks, set this to true. This will
-        generate a set of configurations and will impute their performance using surrogate models.
+        :param transfer_learning_evaluations: Dictionary from task name to
+            offline evaluations.
+        :param mode: Whether to minimize ("min", default) or maximize ("max")
+        :param sort_transfer_learning_evaluations: Use False if the
+            hyperparameters for each task in `transfer_learning_evaluations` are
+            already in the same order. If set to True, hyperparameters are sorted.
+            Defaults to True
+        :param use_surrogates: If the same configuration is not evaluated on all
+            tasks, set this to True. This will generate a set of configurations
+            and will impute their performance using surrogate models.
+            Defaults to False
         """
         super().__init__(
             config_space=config_space,
@@ -178,6 +188,3 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
 
     def _update(self, trial_id: str, config: dict, result: dict) -> None:
         pass
-
-    def clone_from_state(self, state: dict):
-        raise NotImplementedError

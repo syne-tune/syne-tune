@@ -10,12 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Union, Dict
+from typing import Optional, List, Union, Dict, Any
 import numpy as np
 import itertools
 from tqdm import tqdm
 
-from benchmarking.commons.baselines import MethodArguments
+from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import (
     SurrogateBenchmarkDefinition,
 )
@@ -108,10 +108,26 @@ def get_transfer_learning_evaluations(
 
 
 def parse_args(
-    methods: dict,
+    methods: Dict[str, Any],
     benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
-):
+) -> (Any, List[str], List[str], List[int]):
+    """Parse command line arguments for simulator back-end experiments.
+
+    :param methods: If `--method` is not given, then `method_names` are the
+        keys of this dictionary
+    :param benchmark_definitions: Dictionary with tabulated or surrogate
+        benchmarks. If `--benchmark` is not given, then `benchmark_names` are
+        keys of this dictionary.
+        Can be nested (only for internal use).
+    :param extra_args: List of dictionaries, containing additional arguments
+        to be passed. Must contain `name` for argument name (without leading
+        `"--"`), and other kwargs to `parser.add_argument`. Optional
+    :return: `(args, method_names, benchmark_names, seeds)`, where `args` is
+        result of `parser.parse_known_args()`, `method_names` see `methods`,
+        'benchmark_names` see `benchmark_definitions`, and `seeds` are list of
+        seeds specified by `--num_seeds` and `--start_seed`
+    """
     if extra_args is None:
         extra_args = []
     else:
@@ -177,12 +193,26 @@ def parse_args(
 
 
 def main(
-    methods: dict,
+    methods: MethodDefinitions,
     benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[callable] = None,
     use_transfer_learning: bool = False,
 ):
+    """
+    Runs sequence of experiments with simulator back-end sequentially. The loop
+    runs over methods selected from `methods`, repetitions and benchmarks
+    selected from `benchmark_definitions`, with the range being controlled by
+    command line arguments.
+
+    :param methods: Dictionary with method constructors
+    :param benchmark_definitions: Definitions of benchmarks
+    :param extra_args: Extra arguments for command line parser. Optional
+    :param map_extra_args: Maps `args` returned by `parse_args` to dictionary
+        for extra argument values. Needed if `extra_args` given
+    :param use_transfer_learning: If True, we use transfer tuning. Defaults to
+        False
+    """
     args, method_names, benchmark_names, seeds = parse_args(
         methods, benchmark_definitions, extra_args
     )

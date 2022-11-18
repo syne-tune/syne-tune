@@ -10,8 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
 import logging
+from typing import List, Optional
 
 from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
@@ -39,7 +39,6 @@ class MultiModelGPFIFOSearcher(GPFIFOSearcher):
     call `ModelBasedSearcher._create_internal` passing factory and
     skip_optimization predicate for the `INTERNAL_METRIC_NAME` model, then
     replace the state transformer by a multi-model one.
-
     """
 
     def _call_create_internal(self, kwargs_int):
@@ -69,7 +68,6 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
     If `resource_attr` is not given, cost values are read only at the end (just
     like the primary metric) and cost is modeled as c(x), using a default GP
     surrogate model.
-
     """
 
     def __init__(
@@ -77,8 +75,32 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
-        **kwargs
+        **kwargs,
     ):
+        """
+        Note: The presence or absence of `resource_attr` decides on which variant
+        is used here. If `resource_attr` is given, `cost_model` must be given
+        as well.
+
+        Additional arguments on top of parent class :class:`GPFIFOSearcher`.
+
+        :param cost_attr: Mandatory. Name of cost attribute in data obtained
+            from reporter (e.g., elapsed training time). Depending on whether
+            `resource_attr` is given, cost values are read from each report or
+            only at the end.
+        :type cost_attr: str
+        :param resource_attr: Name of resource attribute in reports, optional.
+            If this is given, cost values are read from each report and cost is
+            modeled as c(x, r), the cost model being given by `cost_model`.
+            If not given, cost values are read only at the end (just like the
+            primary metric) and cost is modeled as c(x), using a default GP
+            surrogate model.
+        :type resource_attr: str, optional
+        :param cost_model: Needed if `resource_attr` is given, model for
+            c(x, r). Ignored if `resource_attr` is not given, since c(x) is
+            represented by a default GP surrogate model.
+        :type :class:`CostModel`, optional
+        """
         assert kwargs.get("cost_attr") is not None, (
             "This searcher needs a cost attribute. Please specify its "
             + "name in search_options['cost_attr']"
@@ -118,7 +140,7 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
             **self._new_searcher_kwargs_for_clone(),
             output_model_factory=output_model_factory,
             init_state=init_state,
-            output_skip_optimization=output_skip_optimization
+            output_skip_optimization=output_skip_optimization,
         )
         new_searcher._restore_from_state(state)
         # Invalidate self (must not be used afterwards)

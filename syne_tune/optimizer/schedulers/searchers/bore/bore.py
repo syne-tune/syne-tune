@@ -32,6 +32,21 @@ logger = logging.getLogger(__name__)
 
 
 class Bore(SearcherWithRandomSeed):
+    """
+    Implements "Bayesian optimization by Density Ratio Estimation" as described
+    in the following paper:
+
+    BORE: Bayesian Optimization by Density-Ratio Estimation,
+    Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V.
+        and Archambeau, Cedric and Ramos, Fabio
+    Proceedings of the 38th International Conference on Machine Learning
+
+    Note: Bore only works in the non-parallel non-multi-fidelity setting. Make
+    sure that you use it with :class:`FIFOScheduler` and set `n_workers=1` in
+    :class:`Tuner`.
+
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -49,29 +64,26 @@ class Bore(SearcherWithRandomSeed):
         **kwargs,
     ):
         """
-        Implements "Bayesian optimization by Density Ratio Estimation" as described in the following paper:
+        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
 
-        BORE: Bayesian Optimization by Density-Ratio Estimation,
-        Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V. and Archambeau, Cedric and Ramos, Fabio
-        Proceedings of the 38th International Conference on Machine Learning
-
-
-        Note: Bore only works in the non-parallel non-multi-fideltiy setting. Make sure that you use it with the
-        FIFO scheduler and set num_workers to 1 in the backend.
-
-        :param config_space: Configuration space. Constant parameters are filtered out
-        :param metric: Name of metric reported by evaluation function.
-        :param points_to_evaluate:
-        :param gamma: Defines the percentile, i.e how many percent of configuration are used to model l(x).
-        :param calibrate: If set to true, we calibrate the predictions of the classifier via CV
-        :param classifier: The binary classifier to model the acquisition function.
-            Choices: {'mlp', 'gp', 'xgboost', 'rf}
-        :param random_seed: seed for the random number generator
-        :param acq_optimizer: The optimization method to maximize the acquisition function. Choices: {'de', 'rs'}
-        :param feval_acq: Maximum allowed function evaluations of the acquisition function.
-        :param random_prob: probability for returning a random configurations (epsilon greedy)
-        :param init_random: Number of initial random configurations before we start with the optimization.
-        :param classifier_kwargs: dict that contains all hyperparameters for the classifier
+        :param mode: Can be "min" (default) or "max".
+        :param gamma: Defines the percentile, i.e how many percent of configurations
+            are used to model l(x). Defaults to 0.25
+        :param calibrate: If set to true, we calibrate the predictions of the
+            classifier via CV. Defaults to False
+        :param classifier: The binary classifier to model the acquisition
+            function. Choices: `{"mlp", "gp", "xgboost", "rf", "logreg"}`.
+            Defaults to "xgboost"
+        :param acq_optimizer: The optimization method to maximize the acquisition
+            function. Choices: `{"de", "rs", "rs_with_replacement"}`. Defaults
+            to "rs"
+        :param feval_acq: Maximum allowed function evaluations of the acquisition
+            function. Defaults to 500
+        :param random_prob: probability for returning a random configurations
+            (epsilon greedy). Defaults to 0
+        :param init_random: Number of initial random configurations before we
+            start with the optimization. Defaults to 6
+        :param classifier_kwargs: Parameters for classifier. Optional
         """
 
         super().__init__(
@@ -153,22 +165,7 @@ class Bore(SearcherWithRandomSeed):
             return y[:, 1]  # return probability of class 1
 
     def get_config(self, **kwargs):
-        """Function to sample a new configuration
-
-        This function is called inside TaskScheduler to query a new
-        configuration.
-
-        Note: Query `_next_initial_config` for initial configs to return first.
-
-        Args:
-        kwargs:
-            Extra information may be passed from scheduler to searcher
-        returns: config
-            must return a valid configuration
-        """
-
         start_time = time.time()
-
         config = self._next_initial_config()
         if config is not None:
             return config
@@ -279,14 +276,8 @@ class Bore(SearcherWithRandomSeed):
         )
 
     def _update(self, trial_id: str, config: dict, result: dict):
-        """Update surrogate model with result
-
-        :param config: new configuration
-        :param result: observed results from the train function
-        """
-
         self.inputs.append(self._hp_ranges.to_ndarray(config))
         self.targets.append(result[self._metric])
 
-    def clone_from_state(self, state):
+    def clone_from_state(self, state: dict):
         raise NotImplementedError

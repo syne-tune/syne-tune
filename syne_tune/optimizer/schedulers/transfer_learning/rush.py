@@ -20,6 +20,22 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 
 
 class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
+    """
+    A transfer learning variation of Hyperband which uses previously
+    well-performing hyperparameter configurations as an initialization. The best
+    hyperparameter configuration of each individual task provided is evaluated.
+    The one among them which performs best on the current task will serve as a
+    hurdle and is used to prune other candidates. This changes the standard
+    successive halving promotion as follows. As usual, only the top-performing
+    fraction is promoted to the next rung level. However, these candidates need
+    to be at least as good as the hurdle configuration to be promoted. In practice
+    this means that much fewer candidates can be promoted.
+
+    Reference: A resource-efficient method for repeated HPO and NAS.
+    Giovanni Zappella, David Salinas, Cédric Archambeau.
+    AutoML workshop @ ICML 2021.
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -30,29 +46,21 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
         custom_rush_points: Optional[List[dict]] = None,
         num_hyperparameters_per_task: int = 1,
         **kwargs,
-    ) -> None:
+    ):
         """
-        A transfer learning variation of Hyperband which uses previously well-performing hyperparameter configurations
-        as an initialization. The best hyperparameter configuration of each individual task provided is evaluated.
-        The one among them which performs best on the current task will serve as a hurdle and is used to prune
-        other candidates. This changes the standard successive halving promotion as follows. As usual, only the top-
-        performing fraction is promoted to the next rung level. However, these candidates need to be at least as good
-        as the hurdle configuration to be promoted. In practice this means that much fewer candidates can be promoted.
+        Additional arguments on top of parent class :class:`HyperbandScheduler`.
 
-        Reference: A resource-efficient method for repeated HPO and NAS.
-        Giovanni Zappella, David Salinas, Cédric Archambeau. AutoML workshop @ ICML 2021.
-
-        :param config_space: configuration space for trial evaluation function.
-        :param transfer_learning_evaluations: dictionary from task name to offline evaluations.
-        :param metric: objective name to optimize, must be present in transfer learning evaluations.
-        :param type: scheduler type ('stopping' or 'promotion'). See :class:`HyperbandScheduler`.
-        :param points_to_evaluate: when points_to_evaluate is not None, these configurations are evaluated after
-        custom_rush_points and hyperparameter configurations inferred from transfer_learning_evaluations. These points
-        are not used to prune any configurations.
-        :param custom_rush_points: when custom_rush_points is not None, the provided configurations are evaluated first
-        in addition to top performing configurations from other tasks and also serve to preemptively prune
-        underperforming configurations
-        :param num_hyperparameters_per_task: the number of top hyperparameter configurations to consider per task.
+        :param transfer_learning_evaluations: Dictionary from task name to offline
+            evaluations.
+        :param points_to_evaluate: If given, these configurations are evaluated
+            after `custom_rush_points` and configurations inferred from
+            `transfer_learning_evaluations`. These points are not used to prune
+            any configurations.
+        :param custom_rush_points: If given, these configurations are evaluated
+            first, in addition to top performing configurations from other tasks
+            and also serve to preemptively prune underperforming configurations
+        :param num_hyperparameters_per_task: The number of top hyperparameter
+            configurations to consider per task. Defaults to 1
         """
         self._metric_names = [metric]
         assert type in ["stopping", "promotion"], f"Unknown scheduler type {type}"

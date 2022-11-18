@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Callable, Any, Optional
+from typing import Callable, Any, Optional
 import argparse
 import os
 
@@ -23,13 +23,13 @@ def add_checkpointing_to_argparse(parser: argparse.ArgumentParser):
     Arguments added here are optional. If checkpointing is not supported,
     they are simply not parsed.
 
-    :param parser:
+    :param parser: Parser to add extra arguments to
     """
     parser.add_argument(f"--{ST_CHECKPOINT_DIR}", type=str)
 
 
 def resume_from_checkpointed_model(
-    config: Dict, load_model_fn: Callable[[str], int]
+    config: dict, load_model_fn: Callable[[str], int]
 ) -> int:
     """
     Checks whether there is a checkpoint to be resumed from. If so, the
@@ -42,9 +42,10 @@ def resume_from_checkpointed_model(
     If checkpointing is not supported in `config`, or no checkpoint is
     found, resume_from = 0 is returned.
 
-    :param config:
-    :param load_model_fn:
-    :return: resume_from (0 if no checkpoint has been loaded)
+    :param config: Configuration the training script is called with
+    :param load_model_fn: See above, must return `resume_from`. See
+        `pytorch_load_save_functions` for an example
+    :return: `resume_from` (0 if no checkpoint has been loaded)
     """
     resume_from = 0
     local_path = config.get(ST_CHECKPOINT_DIR)
@@ -60,7 +61,7 @@ def resume_from_checkpointed_model(
 
 
 def checkpoint_model_at_rung_level(
-    config: Dict, save_model_fn: Callable[[str, int], Any], resource: int
+    config: dict, save_model_fn: Callable[[str, int], Any], resource: int
 ):
     """
     If checkpointing is supported, checks whether a checkpoint is to be
@@ -73,9 +74,10 @@ def checkpoint_model_at_rung_level(
     writing the checkpoint is expensive compared to the time needed to
     run one resource unit.
 
-    :param config:
-    :param save_model_fn:
-    :param resource:
+    :param config: Configuration the training script is called with
+    :param save_model_fn: See above. See `pytorch_load_save_functions` for an
+        example
+    :param resource: Current resource level (e.g., number of epochs done)
     """
     local_path = config.get(ST_CHECKPOINT_DIR)
     if local_path is not None:
@@ -110,7 +112,7 @@ def pytorch_load_save_functions(
     :param mutable_state: Optional. Additional dict with elementary value
         types
     :param fname: Name of local file (path is taken from config)
-    :return: load_model_fn, save_model_fn
+    :return: `load_model_fn, save_model_fn`
     """
     import torch
 

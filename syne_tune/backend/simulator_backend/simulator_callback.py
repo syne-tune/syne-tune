@@ -33,7 +33,7 @@ class SimulatorCallback(StoreResultsCallback):
 
     Second, we need to make sure that results written out are annotated by
     simulated time, not real time. This is already catered for by
-    `SimulatorBackend` adding ST_TUNER_TIME entries to each result it
+    `SimulatorBackend` adding `ST_TUNER_TIME` entries to each result it
     receives.
 
     Third (and most subtle), we need to make sure the stop criterion in
@@ -41,10 +41,9 @@ class SimulatorCallback(StoreResultsCallback):
     a decision based on `max_wallclock_time`. By default, `StoppingCriterion`
     takes `TuningStatus` as an input, which counts real time and knows nothing
     about simulated time. To this end, we modify `stop_criterion` of the tuner
-    to instead depend on the ST_TUNER_TIME fields in the results received.
+    to instead depend on the `ST_TUNER_TIME` fields in the results received.
     This allows us to keep both `Tuner` and `TuningStatus` independent of the
     time keeper.
-
     """
 
     def __init__(self):

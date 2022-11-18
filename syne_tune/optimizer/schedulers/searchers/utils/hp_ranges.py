@@ -26,52 +26,61 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import (
 )
 
 
-def _filter_constant_hyperparameters(config_space: Dict) -> Dict:
+def _filter_constant_hyperparameters(config_space: dict) -> dict:
     nonconst_keys = set(non_constant_hyperparameter_keys(config_space))
     return {k: v for k, v in config_space.items() if k in nonconst_keys}
 
 
 class HyperparameterRanges:
+    """
+    Wraps configuration space, provides services around encoding of
+    hyperparameters (mapping configurations to `[0, 1]` vectors and
+    vice versa).
+
+    If `name_last_pos` is given, the hyperparameter of that name is assigned
+    the final position in the vector returned by `to_ndarray`. This can be
+    used to single out the (time) resource for a GP model, where that
+    component has to come last.
+
+    If in this case (`name_last_pos` given), `value_for_last_pos` is also
+    given, some methods are modified:
+    * `random_config` samples a config as normal, but then overwrites the
+        `name_last_pos` component by `value_for_last_pos`
+    * `get_ndarray_bounds` works as normal, but returns bound `(a, a)` for
+        `name_last_pos component`, where a is the internal value corresponding
+        to `value_for_last_pos`
+    The use case is HPO with a resource attribute. This attribute should be
+    fixed when optimizing the acquisition function, but can take different
+    values in the evaluation data (coming from all previous searches).
+
+    If `active_config_space` is given, it contains a subset of non-constant
+    hyperparameters in `config_space`, and the range of each entry is a
+    subset of the range of the corresponding `config_space` entry. These
+    active ranges affect the choice of new configs (by sampling). While the
+    internal encoding is based on original ranges, search is restricted to
+    active ranges (e.g., optimization of surrogate model). This option is
+    required to implement transfer tuning, where domain ranges in
+    `config_space` may be narrower than what data from past tuning jobs
+    requires.
+    """
+
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         name_last_pos: Optional[str] = None,
         value_for_last_pos=None,
-        active_config_space: Optional[Dict] = None,
+        active_config_space: Optional[dict] = None,
         prefix_keys: Optional[List[str]] = None,
     ):
         """
-        If name_last_pos is given, the hyperparameter of that name is assigned
-        the final position in the vector returned by `to_ndarray`. This can be
-        used to single out the (time) resource for a GP model, where that
-        component has to come last.
-
-        If in this case (name_last_pos given), value_for_last_pos is also given,
-        some methods are modified:
-        - `random_config` samples a config as normal, but then overwrites the
-          name_last_pos component by value_for_last_pos
-        - `get_ndarray_bounds` works as normal, but returns bound (a, a) for
-          name_last_pos component, where a is the internal value corresponding
-          to value_for_last_pos
-        The use case is HPO with a resource attribute. This attribute should be
-        fixed when optimizing the acquisition function, but can take different
-        values in the evaluation data (coming from all previous searches).
-
-        If `active_config_space` is given, it contains a subset of non-constant
-        hyperparameters in `config_space`, and the range of each entry is a
-        subset of the range of the corresponding `config_space` entry. These
-        active ranges affect the choice of new configs (by sampling). While the
-        internal encoding is based on original ranges, search is restricted to
-        active ranges (e.g., optimization of surrogate model).
-
         :param config_space: Configuration space. Constant hyperparameters are
             filtered out here
-        :param name_last_pos: See above
-        :param value_for_last_pos: See above
-        :param active_config_space: See above
+        :param name_last_pos: See above, optional
+        :param value_for_last_pos: See above, optional
+        :param active_config_space: See above, optional
         :param prefix_keys: If given, these keys into `config_space` come first
             in the internal ordering, which determines the internal
-            encoding
+            encoding. Optional
         """
         self.config_space = _filter_constant_hyperparameters(config_space)
         self.name_last_pos = name_last_pos
@@ -96,7 +105,7 @@ class HyperparameterRanges:
             keys = keys[:pos] + keys[(pos + 1) :] + [self.name_last_pos]
         self._internal_keys = keys
 
-    def _set_active_config_space(self, active_config_space: Dict):
+    def _set_active_config_space(self, active_config_space: dict):
         if active_config_space is None:
             self.active_config_space = dict()
             self._config_space_for_sampling = self.config_space
@@ -107,7 +116,7 @@ class HyperparameterRanges:
                 self.config_space, **active_config_space
             )
 
-    def _assert_sub_config_space(self, active_config_space: Dict):
+    def _assert_sub_config_space(self, active_config_space: dict):
         for k, v in active_config_space.items():
             assert (
                 k in self.config_space
@@ -129,44 +138,57 @@ class HyperparameterRanges:
         return self._internal_keys
 
     @property
-    def config_space_for_sampling(self) -> Dict:
+    def config_space_for_sampling(self) -> dict:
         return self._config_space_for_sampling
 
     def to_ndarray(self, config: Configuration) -> np.ndarray:
-        """
-        Categorical values are one-hot encoded.
+        """Map configuration to `[0, 1]` encoded vector
 
-        :param config: Config to encode
-        :return: Encoded HP vector
+        :param config: Configuration to encode
+        :return: Encoded vector
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def to_ndarray_matrix(self, configs: Iterable[Configuration]) -> np.ndarray:
+        """
+        :param configs: Configurations to encode
+        :return: Matrix of encoded vectors (rows)
+        """
         return np.vstack([self.to_ndarray(config) for config in configs])
 
     @property
     def ndarray_size(self) -> int:
         """
-        :return: Dimensionality of encoded HP vector returned by `to_ndarray`
+        :return: Dimensionality of encoded vector returned by `to_ndarray`
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def from_ndarray(self, enc_config: np.ndarray) -> Configuration:
+        """Maps encoded vector back to configuration (can involve rounding)
+
+        The encoded vector `enc_config` need to be in the image of
+        `to_ndarray`. In fact, any `[0, 1]` valued vector of dimensionality
+        `ndarray_size` is allowed.
+
+        :param enc_config: Encoded vector
+        :return: Configuration corresponding to encoded vector
         """
-        Converts a config from internal ndarray representation (fed to the
-        GP) to its external (dict) representation. This typically involves
-        rounding.
-        """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def encoded_ranges(self) -> Dict[str, Tuple[int, int]]:
         """
-        :return: Ranges of HPs in the encoded ndarray representation
+        Encoded ranges are `[0, 1]` or closed subintervals thereof, in case
+        `active_config_space` is used.
+
+        :return: Ranges of hyperparameters in the encoded ndarray representation
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def is_attribute_fixed(self):
+        """
+        :return: Is last position attribute fixed?
+        """
         return (self.name_last_pos is not None) and (
             self.value_for_last_pos is not None
         )
@@ -186,6 +208,11 @@ class HyperparameterRanges:
         }
 
     def random_config(self, random_state: RandomState) -> Configuration:
+        """Draws random configuration
+
+        :param random_state: Random state
+        :return: Random configuration
+        """
         return self._transform_config(self._random_config(random_state))
 
     def _random_configs(
@@ -194,6 +221,12 @@ class HyperparameterRanges:
         return [self._random_config(random_state) for _ in range(num_configs)]
 
     def random_configs(self, random_state, num_configs: int) -> List[Configuration]:
+        """Draws random configurations
+
+        :param random_state: Random state
+        :param num_configs: Number of configurations to sample
+        :return: Random configurations
+        """
         return [
             self._transform_config(config)
             for config in self._random_configs(random_state, num_configs)
@@ -201,16 +234,16 @@ class HyperparameterRanges:
 
     def get_ndarray_bounds(self) -> List[Tuple[float, float]]:
         """
-        Returns (lower, upper) bounds for each dimension in ndarray vector
-        representation.
+        :return: List of `(lower, upper)` bounds for each dimension in
+            encoded vector representation.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __repr__(self) -> str:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __eq__(self, other: object) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __len__(self) -> int:
         return len(self.config_space)
@@ -220,9 +253,11 @@ class HyperparameterRanges:
     ) -> List[Configuration]:
         """
         If is_attribute_fixed, `configs` is filtered by removing
-        entries whose name_last_pos attribute value is different from
-        value_for_last_pos. Otherwise, it is returned unchanged.
+        entries whose `name_last_pos attribute` value is different from
+        `value_for_last_pos`. Otherwise, it is returned unchanged.
 
+        :param configs: List of configs to be filtered
+        :return: Filtered list of configs
         """
         if self.is_attribute_fixed():
             configs = [
@@ -233,14 +268,17 @@ class HyperparameterRanges:
         return configs
 
     def config_to_tuple(
-        self, config: Configuration, keys=None, skip_last: bool = False
+        self,
+        config: Configuration,
+        keys: Optional[List[str]] = None,
+        skip_last: bool = False,
     ) -> Tuple[Hyperparameter, ...]:
         """
         :param config: Configuration
         :param keys: Overrides `_internal_keys`
         :param skip_last: If True and `name_last_pos` is used, the
-            corresponding attribute is skipped, so that config and
-            tuple are non-extended
+            corresponding attribute is skipped, so that config and tuple
+            are non-extended
         :return: Tuple representation
         """
         if keys is None:
@@ -250,8 +288,21 @@ class HyperparameterRanges:
         return tuple(config[k] for k in keys)
 
     def tuple_to_config(
-        self, config_tpl: Tuple[Hyperparameter, ...], keys=None, skip_last: bool = False
+        self,
+        config_tpl: Tuple[Hyperparameter, ...],
+        keys: Optional[List[str]] = None,
+        skip_last: bool = False,
     ) -> Configuration:
+        """
+        Reverse of `config_to_tuple`.
+
+        :param config_tpl: Tuple representation
+        :param keys: Overrides `_internal_keys`
+        :param skip_last: If True and `name_last_pos` is used, the
+            corresponding attribute is skipped, so that config and tuple
+            are non-extended
+        :return: Configuration corresponding to `config_tpl`
+        """
         if keys is None:
             keys = self.internal_keys
             if skip_last and self.name_last_pos is not None:
@@ -259,18 +310,21 @@ class HyperparameterRanges:
         return dict(zip(keys, config_tpl))
 
     def config_to_match_string(
-        self, config: Configuration, keys=None, skip_last: bool = False
+        self,
+        config: Configuration,
+        keys: Optional[List[str]] = None,
+        skip_last: bool = False,
     ) -> str:
         """
-        Maps configuration to  match string, used to compare for approximate
+        Maps configuration to match string, used to compare for approximate
         equality. Two configurations are considered to be different if their
         match strings are not the same.
 
         :param config: Configuration
         :param keys: Overrides `_internal_keys`
         :param skip_last: If True and `name_last_pos` is used, the
-            corresponding attribute is skipped, so that config and
-            tuple are non-extended
+            corresponding attribute is skipped, so that config and match
+            string are non-extended
         :return: Match string
         """
         if keys is None:
