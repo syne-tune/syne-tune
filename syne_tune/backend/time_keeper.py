@@ -39,14 +39,14 @@ class TimeKeeper:
 
     def time_stamp(self) -> datetime:
         """
-        :return: Timestamp (datetime) corresponding to `time()`
+        :return: Timestamp (datetime) corresponding to :meth:`time`
         """
         raise NotImplementedError
 
     def advance(self, step: float):
         """
         Advance time by `step`. For real time, this means we sleep for
-        `step`.
+        `step` seconds.
         """
         raise NotImplementedError
 
@@ -56,8 +56,6 @@ class RealTimeKeeper(TimeKeeper):
         self._start_time = None
 
     def start_of_time(self):
-        # This can be called multiple times, if multiple experiments are
-        # run in sequence
         self._start_time = time.time()
 
     def _assert_has_started(self):

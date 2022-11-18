@@ -21,15 +21,24 @@ ObjectiveFunctionResult = Union[Dict[str, float], np.ndarray]
 
 
 class Blackbox:
+    """
+    Interface designed to be compatible with
+
+        | HPOBench
+        | https://github.com/automl/HPOBench
+
+    :param configuration_space: Configuration space of blackbox.
+    :param fidelity_space: Fidelity space for blackbox, optional.
+    :param objectives_names: Names of the metrics, by default consider all
+        metrics prefixed by `"metric_"` to be metrics
+    """
+
     def __init__(
         self,
         configuration_space: dict,
         fidelity_space: Optional[dict] = None,
         objectives_names: Optional[List[str]] = None,
     ):
-        """
-        Interface aiming at following [HPOBench](https://github.com/automl/HPOBench) for compatibility.
-        """
         self.configuration_space = configuration_space
         self.fidelity_space = fidelity_space
         self.objectives_names = objectives_names
@@ -42,11 +51,11 @@ class Blackbox:
     ) -> ObjectiveFunctionResult:
         """Returns an evaluation of the blackbox.
 
-        First perform data check and then call `_objective_function` that should
-        be overriden in the child class.
+        First perform data check and then call :meth:`_objective_function` that
+        should be overriden in the child class.
 
         :param configuration: configuration to be evaluated, should belong to
-            `self.configuration_space`
+            :attr:`configuration_space`
         :param fidelity: not passing a fidelity is possible if either the blackbox
             does not have a fidelity space or if it has a single fidelity in its
             fidelity space. In the latter case, all fidelities are returned in
@@ -88,16 +97,21 @@ class Blackbox:
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
     ) -> ObjectiveFunctionResult:
-        """
-        Override this function to provide your benchmark function.
+        """Override this method to provide your benchmark function.
+
+        :param configuration: configuration to be evaluated, should belong to
+            :attr:`configuration_space`
+        :param fidelity: not passing a fidelity is possible if either the blackbox
+            does not have a fidelity space or if it has a single fidelity in its
+            fidelity space. In the latter case, all fidelities are returned in
+            form of a tensor with shape `(num_fidelities, num_objectives)`.
+        :param seed: Only used if the blackbox defines multiple seeds
+        :return: dictionary of objectives evaluated or tensor with shape
+            `(num_fidelities, num_objectives)` if no fidelity was given.
         """
         pass
 
     def __call__(self, *args, **kwargs) -> ObjectiveFunctionResult:
-        """
-        Allows to call blackbox directly as a function rather than having to call the specific method.
-        :return:
-        """
         return self.objective_function(*args, **kwargs)
 
     def _check_keys(self, config, fidelity):
@@ -118,21 +132,21 @@ class Blackbox:
         self, predict_curves: bool = False
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        If `predict_curves` is False, the shape of X is
-        `(num_evals * num_seeds * num_fidelities, num_hps + 1)`, the shape of y
+        If `predict_curves` is False, the shape of `X` is
+        `(num_evals * num_seeds * num_fidelities, num_hps + 1)`, the shape of `y`
         is `(num_evals * num_seeds * num_fidelities, num_objectives)`.
         This can be reshaped to `(num_fidelities, num_seeds, num_evals, *)`.
-        The final column of X is the fidelity value (only a single fidelity
+        The final column of `X` is the fidelity value (only a single fidelity
         attribute is supported).
 
-        If `predict_curves` is True, the shape of X is
-        `(num_evals * num_seeds, num_hps)`, the shape of y is
+        If `predict_curves` is True, the shape of `X` is
+        `(num_evals * num_seeds, num_hps)`, the shape of `y` is
         `(num_evals * num_seeds, num_fidelities * num_objectives)`. The latter
         can be reshaped to `(num_seeds, num_evals, num_fidelities,
         num_objectives)`.
 
-        :return: a tuple of two dataframes (X, y), where X contains
-            hyperparameters values and y contains objective values, this is
+        :return: a tuple of two dataframes `(X, y)`, where `X` contains
+            hyperparameters values and `y` contains objective values, this is
             used when fitting a surrogate model.
         """
         pass
@@ -150,14 +164,17 @@ def from_function(
     eval_fun: Callable,
     fidelity_space: Optional[dict] = None,
     objectives_names: Optional[List[str]] = None,
-):
+) -> Blackbox:
     """
-    Helper to create a blackbox from a function, useful for test or to wrap-up real blackbox functions.
-    :param configuration_space:
-    :param eval_fun: function that returns dictionary of objectives given configuration and fidelity
-    :param fidelity_space:
-    :param objectives_names:
-    :return:
+    Helper to create a blackbox from a function, useful for test or to wrap-up
+    real blackbox functions.
+
+    :param configuration_space: Configuration space for blackbox
+    :param eval_fun: Function that returns dictionary of objectives given
+        configuration and fidelity
+    :param fidelity_space: Fidelity space for blackbox
+    :param objectives_names: Objectives returned by blackbox
+    :return: Resulting blackbox wrapping `eval_fun`
     """
 
     class BB(Blackbox):

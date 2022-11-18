@@ -94,8 +94,8 @@ class BlackBoxYAHPO(Blackbox):
         Even though YAHPO interpolates between fidelities, it can make sense
         to restrict them to the values which have really been acquired in the
         data. Note that this restricts multi-fidelity schedulers like
-        :class:`HyperbandScheduler`, in that all their rungs levels have to
-        be fidelity values.
+        :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`, in that all
+        their rungs levels have to be fidelity values.
 
         For example, for YAHPO `iaml`, the fidelity `trainsize` has been
         acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed

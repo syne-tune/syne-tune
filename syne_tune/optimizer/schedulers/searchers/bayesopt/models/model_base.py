@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class BaseSurrogateModel(SurrogateModel):
     """
     Base class for (most) SurrogateModel implementations, provides common code
-
     """
 
     def __init__(
@@ -80,7 +79,6 @@ class BaseSurrogateModel(SurrogateModel):
         """
         In some subclasses, 'current_best' is not computed over all (observed
         and pending) candidates: they need to implement this filter.
-
         """
         if self._filter_observed_data is None:
             return candidates  # Default: No filtering

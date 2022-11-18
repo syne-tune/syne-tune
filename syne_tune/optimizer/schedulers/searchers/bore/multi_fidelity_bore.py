@@ -22,20 +22,26 @@ logger = logging.getLogger(__name__)
 class MultiFidelityBore(Bore):
     """
     Adapts BORE (Tiao et al.) for the multi-fidelity Hyperband setting following
-    Falkner et al. Once we collected enough data points on the smallest resource
-    level, we fit a probabilistic classifier and sample from it until we have
+    BOHB (Falkner et al.). Once we collected enough data points on the smallest
+    resource level, we fit a probabilistic classifier and sample from it until we have
     a sufficient amount of data points for the next higher resource level. We then
-    refit the classifer on the data of this resource level. These steps are
-    iterated until we reach the highest resource level.
+    refit the classifier on the data of this resource level. These steps are
+    iterated until we reach the highest resource level. References:
 
-    BORE: Bayesian Optimization by Density-Ratio Estimation,
-    Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V.
-        and Archambeau, Cedric and Ramos, Fabio
-    Proceedings of the 38th International Conference on Machine Learning
+        | BORE: Bayesian Optimization by Density-Ratio Estimation,
+        | Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V. and Archambeau, Cedric and Ramos, Fabio
+        | Proceedings of the 38th International Conference on Machine Learning
 
-    BOHB: Robust and Efficient Hyperparameter Optimization at Scale
-    S. Falkner and A. Klein and F. Hutter
-    Proceedings of the 35th International Conference on Machine Learning
+    and
+
+        | BOHB: Robust and Efficient Hyperparameter Optimization at Scale
+        | S. Falkner and A. Klein and F. Hutter
+        | Proceedings of the 35th International Conference on Machine Learning
+
+    Additional arguments on top of parent class
+    :class:`syne_tune.optimizer.schedulers.searchers.bore.Bore`:
+
+    :param resource_attr: Name of resource attribute. Defaults to "epoch"
     """
 
     def __init__(
@@ -55,11 +61,6 @@ class MultiFidelityBore(Bore):
         resource_attr: str = "epoch",
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`Bore`.
-
-        :param resource_attr: Name of resource attribute. Defaults to "epoch"
-        """
         if acq_optimizer is None:
             acq_optimizer = "rs_with_replacement"
         super().__init__(

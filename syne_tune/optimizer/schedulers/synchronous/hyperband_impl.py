@@ -47,67 +47,74 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
     """
     Special case of :class:`SynchronousHyperbandScheduler` with rung system
     defined by geometric sequences (see
-    `SynchronousHyperbandRungSystem.geometric`). This is the most frequently
-    used case.
+    :meth:`SynchronousHyperbandRungSystem.geometric`). This is the most
+    frequently used case.
+
+    :param config_space: Configuration space for trial evaluation function
+    :param metric: Name of metric to optimize, key in result's obtained via
+        :meth:`on_trial_result`
+    :type metric: str
+    :param grace_period: Smallest (resource) rung level. Must be positive int.
+        Defaults to 1
+    :type grace_period: int, optional
+    :param reduction_factor: Approximate ratio of successive rung levels. Must
+        be >= 2. Defaults to 3
+    :type reduction_factor: float, optional
+    :param brackets: Number of brackets to be used. The default is to use the
+        maximum number of brackets per iteration. Pass 1 for successive halving.
+    :type brackets: int, optional
+    :param searcher: Selects searcher. Passed to
+        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        Defaults to "random"
+    :type searcher: str, optional
+    :param search_options: Passed to
+        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+    :type search_options: dict, optional
+    :param mode: Mode to use for the metric given, can be "min" (default) or
+        "max"
+    :type mode: str, optional
+    :param points_to_evaluate: List of configurations to be evaluated
+        initially (in that order). Each config in the list can be partially
+        specified, or even be an empty dict. For each hyperparameter not
+        specified, the default value is determined using a midpoint heuristic.
+        If None (default), this is mapped to `[dict()]`, a single default config
+        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        configurations are specified.
+    :type points_to_evaluate: `List[dict]`, optional
+    :param random_seed: Master random seed. Generators used in the scheduler
+        or searcher are seeded using
+        :class:`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
+        If not given, the master random seed is drawn at random here.
+    :type random_seed: int, optional
+    :param max_resource_level: Largest rung level, corresponds to `max_t` in
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
+        `grace_period`. If this is not given, it is inferred like in
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`.
+    :type max_resource_level: int, optional
+    :param max_resource_attr: Key name in config for fixed attribute
+        containing the maximum resource. If given, trials need not be
+        stopped, which can run more efficiently.
+    :type max_resource_attr: str, optional
+    :param resource_attr: Name of resource attribute in results obtained via
+        `:meth:`on_trial_result`. The type of resource must be int. Default to
+        "epoch"
+    :type resource_attr: str, optional
+    :param searcher_data: Relevant only if a model-based searcher is used.
+        Example: For NN tuning and `resource_attr == "epoch"`, we receive a
+        result for each epoch, but not all epoch values are also rung levels.
+        searcher_data determines which of these results are passed to the
+        searcher. As a rule, the more data the searcher receives, the better
+        its fit, but also the more expensive get_config may become. Choices:
+
+        * "rungs" (default): Only results at rung levels. Cheapest
+        * "all": All results. Most expensive
+
+        Note: For a Gaussian additive learning curve surrogate model, this
+        has to be set to "all".
+    :type searcher_data: str, optional
     """
 
     def __init__(self, config_space: dict, **kwargs):
-        """
-        :param config_space: Configuration space for trial evaluation function
-        :param grace_period: Smallest (resource) rung level. Must be positive int.
-        :param reduction_factor: Approximate ratio of successive rung levels. Must
-            be >= 2.
-        :param max_resource_level: Largest rung level, corresponds to `max_t` in
-            :class:`FIFOScheduler`. Must be positive int larger than
-            `grace_period`. If this is not given, it is inferred like in
-            :class:`FIFOScheduler`.
-        :param brackets: Number of brackets to be used. The default is to use the
-            maximum number of brackets per iteration. Pass 1 for successive halving.
-        :param metric: Name of metric to optimize, key in result's obtained via
-            `on_trial_result`
-        :type metric: str
-        :param searcher: Selects searcher. Passed to `searcher_factory`.
-            Must be `str`, we do not accept a :class:`BaseSearcher` object here.
-            Defaults to "random"
-        :type searcher: str, optional
-        :param search_options: Passed to `searcher_factory`
-        :type search_options: dict, optional
-        :param mode: Mode to use for the metric given, can be "min" (default) or
-            "max"
-        :type mode: str, optional
-        :param points_to_evaluate: List of configurations to be evaluated
-            initially (in that order). Each config in the list can be partially
-            specified, or even be an empty dict. For each hyperparameter not
-            specified, the default value is determined using a midpoint heuristic.
-            If None (default), this is mapped to `[dict()]`, a single default config
-            determined by the midpoint heuristic. If `[]` (empty list), no initial
-            configurations are specified.
-        :type points_to_evaluate: `List[dict]`, optional
-        :param random_seed: Master random seed. Generators used in the scheduler
-            or searcher are seeded using :class:`RandomSeedGenerator`. If not
-            given, the master random seed is drawn at random here.
-        :type random_seed: int, optional
-        :param max_resource_attr: Key name in config for fixed attribute
-            containing the maximum resource. If given, trials need not be
-            stopped, which can run more efficiently.
-        :type max_resource_attr: str, optional
-        :param resource_attr: Name of resource attribute in results obtained via
-            `on_trial_result`. The type of resource must be int. Default to
-            "epoch"
-        :type resource_attr: str, optional
-        :param searcher_data: Relevant only if a model-based searcher is used.
-            Example: For NN tuning and `resource_attr == epoch', we receive a
-            result for each epoch, but not all epoch values are also rung levels.
-            searcher_data determines which of these results are passed to the
-            searcher. As a rule, the more data the searcher receives, the better
-            its fit, but also the more expensive get_config may become. Choices:
-            * "rungs" (default): Only results at rung levels. Cheapest
-            * "all": All results. Most expensive
-            Note: For a Gaussian additive learning curve surrogate model, this
-            has to be set to "all".
-        :type searcher_data: str, optional
-
-        """
         TrialScheduler.__init__(self, config_space)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
@@ -141,69 +148,76 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
     Special case of :class:`DifferentialEvolutionHyperbandScheduler` with
     rung system defined by geometric sequences. This is the most frequently
     used case.
+
+    :param config_space: Configuration space for trial evaluation function
+    :param grace_period: Smallest (resource) rung level. Must be positive int.
+        Defaults to 1
+    :type grace_period: int, optional
+    :param reduction_factor: Approximate ratio of successive rung levels. Must
+        be >= 2. Defaults to 3
+    :type reduction_factor: float, optional
+    :param brackets: Number of brackets to be used. The default is to use the
+        maximum number of brackets per iteration. Pass 1 for successive halving.
+    :type brackets: int, optional
+    :param metric: Name of metric to optimize, key in result's obtained via
+        :meth:`on_trial_result`
+    :type metric: str
+    :param searcher: Selects searcher. Passed to
+        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`..
+        If `searcher == "random_encoded"` (default), the encoded configs are
+        sampled directly, each entry independently from U([0, 1]).
+        This distribution has higher entropy than for "random" if
+        there are discrete hyperparameters in `config_space`. Note that
+        `points_to_evaluate` is still used in this case.
+    :type searcher: str, optional
+    :param search_options: Passed to
+        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+    :type search_options: dict, optional
+    :param mode: Mode to use for the metric given, can be "min" (default) or
+        "max"
+    :type mode: str, optional
+    :param points_to_evaluate: List of configurations to be evaluated
+        initially (in that order). Each config in the list can be partially
+        specified, or even be an empty dict. For each hyperparameter not
+        specified, the default value is determined using a midpoint heuristic.
+        If None (default), this is mapped to `[dict()]`, a single default config
+        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        configurations are specified.
+    :type points_to_evaluate: `List[dict]`, optional
+    :param random_seed: Master random seed. Generators used in the scheduler
+        or searcher are seeded using
+        :class:`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
+        If not given, the master random seed is drawn at random here.
+    :type random_seed: int, optional
+    :param max_resource_level: Largest rung level, corresponds to `max_t` in
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
+        `grace_period`. If this is not given, it is inferred like in
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`.
+    :type max_resource_level: int, optional
+    :param max_resource_attr: Key name in config for fixed attribute
+        containing the maximum resource. If given, trials need not be
+        stopped, which can run more efficiently.
+    :type max_resource_attr: str, optional
+    :param resource_attr: Name of resource attribute in results obtained via
+        :meth:`on_trial_result`. The type of resource must be int. Default to
+        "epoch"
+    :type resource_attr: str, optional
+    :param mutation_factor: In :math:`(0, 1]`. Factor :math:`F` used in the rand/1
+        mutation operation of DE. Default to 0.5
+    :type mutation_factor: float, optional
+    :param crossover_probability: In :math:`(0, 1)`. Probability :math:`p` used
+        in crossover operation (child entries are chosen with probability
+        :math:`p`). Defaults to 0.5
+    :type crossover_probability: float, optional
+    :param support_pause_resume: If `True`, :meth:`_suggest` supports pause and
+        resume in the first bracket (this is the default). If the objective
+        supports checkpointing, this is made use of. Defaults to `True`.
+        Note: The resumed trial still gets assigned a new `trial_id`, but it
+        starts from the earlier checkpoint.
+    :type support_pause_resume: bool, optional
     """
 
     def __init__(self, config_space: dict, **kwargs):
-        """
-         :param config_space: Configuration space for trial evaluation function
-         :param grace_period: Smallest (resource) rung level. Must be positive int.
-         :param reduction_factor: Approximate ratio of successive rung levels. Must
-             be >= 2.
-         :param max_resource_level: Largest rung level, corresponds to `max_t` in
-             :class:`FIFOScheduler`. Must be positive int larger than
-             `grace_period`. If this is not given, it is inferred like in
-             :class:`FIFOScheduler`.
-         :param brackets: Number of brackets to be used. The default is to use the
-             maximum number of brackets per iteration. Pass 1 for successive halving.
-         :param metric: Name of metric to optimize, key in result's obtained via
-             `on_trial_result`
-         :type metric: str
-         :param searcher: Selects searcher. Passed to `searcher_factory`.
-             Must be `str`, we do not accept a :class:`BaseSearcher` object here.
-             If searcher == "random_encoded" (default), the encoded configs are
-             sampled directly, each entry independently from U([0, 1]).
-             This distribution has higher entropy than for "random" if
-             there are discrete hyperparameters in `config_space`. Note that
-             `points_to_evaluate` is still used in this case.
-         :type searcher: str, optional
-         :param search_options: Passed to `searcher_factory`
-         :type search_options: dict, optional
-         :param mode: Mode to use for the metric given, can be "min" (default) or
-             "max"
-         :type mode: str, optional
-         :param points_to_evaluate: List of configurations to be evaluated
-             initially (in that order). Each config in the list can be partially
-             specified, or even be an empty dict. For each hyperparameter not
-             specified, the default value is determined using a midpoint heuristic.
-             If None (default), this is mapped to `[dict()]`, a single default config
-             determined by the midpoint heuristic. If `[]` (empty list), no initial
-             configurations are specified.
-         :type points_to_evaluate: `List[dict]`, optional
-         :param random_seed: Master random seed. Generators used in the scheduler
-             or searcher are seeded using :class:`RandomSeedGenerator`. If not
-             given, the master random seed is drawn at random here.
-         :type random_seed: int, optional
-         :param max_resource_attr: Key name in config for fixed attribute
-             containing the maximum resource. If given, trials need not be
-             stopped, which can run more efficiently.
-         :type max_resource_attr: str, optional
-         :param resource_attr: Name of resource attribute in results obtained via
-             `on_trial_result`. The type of resource must be int. Default to
-             "epoch"
-         :type resource_attr: str, optional
-         :param mutation_factor: In `(0, 1]`. Factor F used in the rand/1 mutation
-             operation of DE. Default to 0.5
-         :type mutation_factor: float, optional
-        :param crossover_probability: In `(0, 1)`. Probability p used in crossover
-             operation (child entries are chosen with probability p). Defaults to 0.5
-         :type crossover_probability: float, optional
-         :param support_pause_resume: If True, `_suggest` supports pause and resume
-             in the first bracket (this is the default). If the objective supports
-             checkpointing, this is made use of. Defaults to True.
-             Note: The resumed trial still gets assigned a new `trial_id`, but it
-             starts from the earlier checkpoint.
-         :type support_pause_resume: bool, optional
-        """
         TrialScheduler.__init__(self, config_space)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(

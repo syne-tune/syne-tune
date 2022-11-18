@@ -78,9 +78,11 @@ class PopulationBasedTraining(FIFOScheduler):
 
     https://docs.ray.io/en/latest/tune/tutorials/tune-advanced-tutorial.html
 
-    PBT was original presented in the following paper:
+    PBT was originally presented in the following paper:
 
-    https://deepmind.com/blog/population-based-training-neural-networks
+        | Jaderberg et. al.
+        | Population Based Training of Neural Networks
+        | https://arxiv.org/abs/1711.09846
 
     Population based training (PBT) maintains a population of models spread across
     an asynchronous set of workers and dynamically adjust their hyperparameters
@@ -96,9 +98,39 @@ class PopulationBasedTraining(FIFOScheduler):
     decrement (multiply by 0.8) the value (probability 0.5 each). For categorical
     hyperparameters, the value is always resampled uniformly.
 
-    Note: While this is implemented as child of :class:`FIFOScheduler`, we
+    Note: While this is implemented as child of :class:`syne_tune.optimizer.schedulers.FIFOScheduler`, we
     require `searcher="random"` (default), since the current code only supports
     a random searcher.
+
+    Additional arguments on top of parent class :class:`syne_tune.optimizer.schedulers.FIFOScheduler`.
+
+    :param resource_attr: Name of resource attribute in results obtained
+        via `on_trial_result`, defaults to "time_total_s"
+    :type resource_attr: str
+    :param population_size: Size of the population, defaults to 4
+    :type population_size: int, optional
+    :param perturbation_interval: Models will be considered for perturbation
+        at this interval of `resource_attr`. Note that perturbation incurs
+        checkpoint overhead, so you shouldn't set this to be too frequent.
+        Defaults to 60
+    :type perturbation_interval: float, optional
+    :param quantile_fraction: Parameters are transferred from the top
+        `quantile_fraction` fraction of trials to the bottom
+        `quantile_fraction` fraction. Needs to be between 0 and 0.5. Setting
+        it to 0 essentially implies doing no exploitation at all.
+        Defaults to 0.25
+    :type quantile_fraction: float, optional
+    :param resample_probability: The probability of resampling from the
+        original distribution when applying :meth:`_explore`. If not
+        resampled, the value will be perturbed by a factor of 1.2 or 0.8 if
+        continuous, or changed to an adjacent value if discrete.
+        Defaults to 0.25
+    :type resample_probability: float, optional
+    :param custom_explore_fn: Custom exploration function. This
+        function is invoked as `f(config)` instead of the built-in perturbations,
+        and should return `config` updated as needed. If this is given,
+        `resample_probability` is not used
+    :type custom_explore_fn: function, optional
     """
 
     def __init__(
@@ -107,38 +139,6 @@ class PopulationBasedTraining(FIFOScheduler):
         custom_explore_fn: Optional[Callable[[dict], dict]] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`FIFOScheduler`.
-
-        :param resource_attr: Name of resource attribute in results obtained
-            via `on_trial_result`, defaults to "time_total_s"
-        :type resource_attr: str
-        :param population_size: Size of the population, defaults to 4
-        :type population_size: int, optional
-        :param perturbation_interval: Models will be considered for perturbation
-            at this interval of `resource_attr`. Note that perturbation incurs
-            checkpoint overhead, so you shouldn't set this to be too frequent.
-            Defaults to 60
-        :type perturbation_interval: float, optional
-        :param quantile_fraction: Parameters are transferred from the top
-            `quantile_fraction` fraction of trials to the bottom
-            `quantile_fraction` fraction. Needs to be between 0 and 0.5. Setting
-            it to 0 essentially implies doing no exploitation at all.
-            Defaults to 0.25
-        :type quantile_fraction: float, optional
-        :param resample_probability: The probability of resampling from the
-            original distribution when applying `hyperparam_mutations`. If not
-            resampled, the value will be perturbed by a factor of 1.2 or 0.8 if
-            continuous, or changed to an adjacent value if discrete.
-            Defaults to 0.25
-        :type resample_probability: float, optional
-        :param custom_explore_fn: Optional. Custom exploration function. This
-            function is invoked as `f(config)` after built-in perturbations from
-            `hyperparam_mutations` are applied, and should return `config` updated
-            as needed. You must specify at least one of `hyperparam_mutations` or
-            `custom_explore_fn`.
-        :type custom_explore_fn: function, optional
-        """
         # The current implementation only supports a random searcher
         searcher = kwargs.get("searcher")
         if searcher is not None:

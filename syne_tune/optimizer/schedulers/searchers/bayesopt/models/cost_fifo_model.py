@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     """
-    Wraps cost model c(x, r) of :class:`CostModel` to be used as
+    Wraps cost model :math:`c(x, r)` of :class:`CostModel` to be used as
     surrogate model, where predictions are done at r = `fixed_resource`.
 
     Note: For random cost models, we approximate expectations in `predict`
@@ -49,6 +49,11 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     such cost models, this wrapper should not be used, and `backward_gradient`
     should be implemented properly.
 
+    :param state: TuningJobSubState
+    :param model: Model parameters must have been fit
+    :param fixed_resource: :math:`c(x, r)` is predicted for this resource level r
+    :param num_samples: Number of samples drawn in `predict`. Use this for
+        random cost models only
     """
 
     def __init__(
@@ -58,14 +63,6 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
         fixed_resource: int,
         num_samples: int = 1,
     ):
-        """
-        :param state: TuningJobSubState
-        :param model: CostModel. Model parameters must have been fit
-        :param fixed_resource: c(x, r) is predicted for this resource level r
-        :param num_samples: Number of samples drawn in `predict`. Use this for
-            random cost models only
-
-        """
         super().__init__(state, active_metric=model.cost_metric_name)
         self._model = model
         self._fixed_resource = fixed_resource
@@ -119,16 +116,16 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
 
 
 class CostSurrogateModelFactory(TransformerModelFactory):
+    """
+    The name of the cost metric is `model.cost_metric_name`.
+
+    :param model: CostModel to be wrapped
+    :param fixed_resource: :math:`c(x, r)` is predicted for this resource level r
+    :param num_samples: Number of samples drawn in `predict`. Use this for
+        random cost models only
+    """
+
     def __init__(self, model: CostModel, fixed_resource: int, num_samples: int = 1):
-        """
-        The name of the cost metric is `model.cost_metric_name`.
-
-        :param model: CostModel to be wrapped
-        :param fixed_resource: c(x, r) is predicted for this resource level r
-        :param num_samples: Number of samples drawn in `predict`. Use this for
-            random cost models only
-
-        """
         self._model = model
         self._num_samples = num_samples
         self._fixed_resource = None

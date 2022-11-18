@@ -44,14 +44,12 @@ class SynchronousHyperbandBracketManager:
     first bracket which has a free slot. If none of the active brackets have
     a free slot, a new bracket is created.
 
+    :param bracket_rungs: Rungs for successive brackets, from largest to
+        smallest
+    :param mode: Criterion is minimized ('min') or maximized ('max')
     """
 
     def __init__(self, bracket_rungs: RungSystemsPerBracket, mode: str):
-        """
-        :param bracket_rungs: Rungs for successive brackets, from largest to
-            smallest
-        :param mode: Criterion is minimized ('min') or maximized ('max')
-        """
         self.num_bracket_offsets = len(bracket_rungs)
         assert self.num_bracket_offsets > 0
         assert mode in {"min", "max"}

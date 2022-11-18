@@ -25,7 +25,6 @@ class SimulatedTimeKeeper(TimeKeeper):
     scheduler). Namely, every method of :class:`SimulatorBackend` calls
     `mark_exit` before leaving, and `real_time_since_last_recent_exit` at the
     start, advancing the time counter accordingly.
-
     """
 
     def __init__(self):
@@ -36,8 +35,7 @@ class SimulatedTimeKeeper(TimeKeeper):
     @property
     def start_time_stamp(self) -> datetime:
         """
-        :return: Time stamp (datetime) of (last recent) call of
-        `start_of_time`
+        :return: Time stamp (datetime) of (last recent) call of `start_of_time`
         """
         self._assert_has_started()
         return self._start_time_stamp

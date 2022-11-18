@@ -21,9 +21,15 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class RungEntry:
-    level: int  # Rung level r_j
-    prom_quant: float  # Promotion quantile q_j
-    data: dict  # Data of all previous jobs reaching the level
+    """
+    :param level: Rung level :math:`r_j`
+    :param prom_quant: romotion quantile :math:`q_j`
+    :param data: Data of all previous jobs reaching the level
+    """
+
+    level: int
+    prom_quant: float
+    data: dict
 
 
 def quantile_cutoff(values, prom_quant, mode):
@@ -41,7 +47,14 @@ class RungSystem:
     scheduling decisions (stop, continue or pause, resume) are taken.
 
     For a running trial, the next rung level it will reach is called
-    its milestone.
+    its next milestone.
+
+    :param rung_levels: List of rung levels (positive int, increasing)
+    :param promote_quantiles: List of promotion quantiles at each rung
+        level
+    :param metric: Name of metric to optimize
+    :param mode: "min" or "max"
+    :param resource_attr: Name of resource attribute
     """
 
     def __init__(
@@ -52,14 +65,6 @@ class RungSystem:
         mode: str,
         resource_attr: str,
     ):
-        """
-        :param rung_levels: List of rung levels (positive int, increasing)
-        :param promote_quantiles: List of promotion quantiles at each rung
-            level
-        :param metric: Name of metric to optimize
-        :param mode: "min" or "max"
-        :param resource_attr: Name of resource attribute
-        """
         assert len(rung_levels) == len(promote_quantiles)
         self._metric = metric
         self._mode = mode
@@ -90,7 +95,7 @@ class RungSystem:
         """Called when new task is started.
 
         :param trial_id: ID of trial to be started
-        :param skip_rungs: This number of smallest rung levels are not
+        :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
         :param kwargs: Additional arguments
         """
@@ -99,14 +104,14 @@ class RungSystem:
     def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         """Called when a trial reports metric results.
 
-        Returns dict with `milestone_reached` (trial reaches its milestone),
-        `task_continues` (trial should continue; otherwise it is stopped or
-        paused), `next_milestone` (next milestone it will reach, or None).
-        For certain subclasses, there may be additional fields.
+        Returns dict with keys "milestone_reached" (trial reaches its milestone),
+        "task_continues" (trial should continue; otherwise it is stopped or
+        paused), "next_milestone" (next milestone it will reach, or None).
+        For certain subclasses, there may be additional entries.
 
         :param trial_id: ID of trial which reported results
         :param result: Reported metrics
-        :param skip_rungs: This number of smallest rung levels are not
+        :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
         :return: See above
         """
@@ -121,7 +126,7 @@ class RungSystem:
 
     def get_first_milestone(self, skip_rungs: int) -> int:
         """
-        :param skip_rungs: This number of smallest rung levels are not
+        :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
         :return: First milestone to be considered
         """
@@ -135,7 +140,7 @@ class RungSystem:
 
     def get_milestones(self, skip_rungs: int) -> List[int]:
         """
-         :param skip_rungs: This number of smallest rung levels are not
+        :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
         :return: All milestones to be considered
         """
@@ -147,7 +152,7 @@ class RungSystem:
         A snapshot is a list of rung levels with entries `(level, data)`,
         ordered from top to bottom (largest rung first).
 
-        :param skip_rungs: This number of smallest rung levels are not
+        :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
         :return: Snapshot (see above)
         """
@@ -165,13 +170,17 @@ class RungSystem:
 
 class StoppingRungSystem(RungSystem):
     """
-    The decision on whether a trial x continues or is stopped at a rung
-    level r, is taken in `on_task_report`. To this end, the metric value
-    f(x, r) is inserted into r.data. Then:
+    The decision on whether a trial :math:`\mathbf{x}` continues or is stopped
+    at a rung level :math:`r`, is taken in :meth:`on_task_report`. To this end,
+    the metric value :math:`f(\mathbf{x}, r)` is inserted into :math:`r.data`.
+    Then:
 
-        continues(x, r)  <==>  f(x, r) <= np.quantile(r.data, r.prom_quant)
+    .. math::
 
-    in case `mode == "min"`. See `_task_continues`.
+       \mathrm{continues}(\mathbf{x}, r)\; \Leftrightarrow\;
+       f(\mathbf{x}, r) \le \mathrm{np.quantile}(r.data, r.prom\_quant)
+
+    in case `mode == "min"`. See also :meth:`_task_continues`.
     """
 
     def _cutoff(self, recorded, prom_quant):
@@ -187,8 +196,10 @@ class StoppingRungSystem(RungSystem):
         resource: int,
     ) -> bool:
         """
-        :param metric_value: f(x, r) for trial x at rung r
-        :param recorded: Data for rung r (including r(x, r))
+        :param metric_value: :math:`f(\mathbf{x}, r)` for trial
+            :math:`\mathbf{x}` at rung :math:`r`
+        :param recorded: Data for rung :math:`r` (including
+            :math:`r(\mathbf{x}, r)`)
         :param prom_quant: Quantile threshold (for mode 'min')
         :param trial_id: ID of trial
         :param resource: Rung level

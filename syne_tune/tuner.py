@@ -47,6 +47,71 @@ class Tuner:
     Controller of tuning loop, manages interplay between scheduler and
     trial back-end. Also, stopping criterion and number of workers are
     maintained here.
+
+    :param trial_backend: Back-end for trial evaluations
+    :param scheduler: Tuning algorithm for making decisions about which
+        trials to start, stop, pause, or resume
+    :param stop_criterion: Tuning stops when this predicates returns `True`.
+        Called in each iteration with the current tuning status. It is
+        recommended to use :class:`StoppingCriterion`.
+    :param n_workers: Number of workers used here. Note that the back-end
+        needs to support (at least) this number of workers to be run
+        in parallel
+    :param sleep_time: Time to sleep when all workers are busy. Defaults to
+        :const:`DEFAULT_SLEEP_TIME`
+    :param results_update_interval: Frequency at which results are updated and
+        stored (in seconds). Defaults to 10.
+    :param print_update_interval: Frequency at which result table is printed.
+        Defaults to 30.
+    :param max_failures: This many trial execution failures are allowed before
+        the tuning loop is aborted. Defaults to 1
+    :param tuner_name: Name associated with the tuning experiment, default to
+        the name of the entrypoint. Must consists of alpha-digits characters,
+        possibly separated by '-'. A postfix with a date time-stamp is added
+        to ensure uniqueness.
+    :param asynchronous_scheduling: Whether to use asynchronous scheduling
+        when scheduling new trials. If `True`, trials are scheduled as soon as
+        a worker is available. If `False`, the tuner waits that all trials
+        are finished before scheduling a new batch of size `n_workers`.
+        Default to `True`.
+    :param wait_trial_completion_when_stopping: How to deal with running
+        trials when stopping criterion is met. If `True`, the tuner waits
+        until all trials are finished. If `False`, all trials are terminated.
+        Defaults to `False`.
+    :param callbacks: Called at certain times in the tuning loop, for example
+        when a result is seen. The default callback stores results every
+        `results_update_interval`.
+    :param metadata: Dictionary of user-metadata that will be persisted in
+        `{tuner_path}/metadata.json`, in addition to metadata provided by
+        the user. `SMT_TUNER_CREATION_TIMESTAMP` is always included which
+        measures the time-stamp when the tuner started to run.
+    :param suffix_tuner_name: If `True`, a timestamp is appended to the
+        provided `tuner_name` that ensures uniqueness, otherwise the name is
+        left unchanged and is expected to be unique. Defaults to `True`.
+    :param save_tuner: If `True`, the :class:`Tuner` object is serialized at
+        the end of tuning, including its dependencies (e.g., scheduler). This
+        allows all details of the experiment to be recovered. Defaults to
+        `True`.
+    :param start_jobs_without_delay: Defaults to `True`. If this is `True`, the tuner
+        starts new jobs depending on scheduler decisions communicated to the
+        backend. For example, if a trial has just been stopped (by calling
+        `backend.stop_trial`), the tuner may start a new one immediately, even
+        if the SageMaker training job is still busy due to stopping delays.
+        This can lead to faster experiment runtime, because the backend is
+        temporarily going over its budget.
+
+        If set to `False`, the tuner always asks the backend for the number of
+        busy workers, which guarantees that we never go over the `n_workers`
+        budget. This makes a difference for backends where stopping or pausing
+        trials is not immediate (e.g., :class:`SageMakerBackend`). Not going
+        over budget means that `n_workers` can be set up to the available quota,
+        without running the risk of an exception due to the quota being
+        exceeded. If you get such exceptions, we recommend to use
+        `start_jobs_without_delay=False`. Also, if the SageMaker warm pool
+        feature is used, it is recommended to set
+        `start_jobs_without_delay=False`, since otherwise more than `n_workers`
+        warm pools will be started, because existing ones are busy with
+        stopping when they should be reassigned.
     """
 
     def __init__(
@@ -68,68 +133,6 @@ class Tuner:
         save_tuner: bool = True,
         start_jobs_without_delay: bool = True,
     ):
-        """
-        Allows to run a tuning job, call `run` after initializing.
-
-        :param trial_backend: Back-end for trial evaluations
-        :param scheduler: Tuning algorithm for making decisions about which
-            trials to start, stop, pause, or resume
-        :param stop_criterion: Tuning stops when this predicates returns `True`.
-            Called in each iteration with the current tuning status. It is
-            recommended to use :class:`StoppingCriterion`.
-        :param n_workers: Number of workers used here. Note that the back-end
-            needs to support (at least) this number of workers to be run
-            in parallel
-        :param sleep_time: Time to sleep when all workers are busy
-        :param results_update_interval: Frequency at which results are updated and
-            stored (in seconds)
-        :param max_failures: This many trial execution failures are allowed before
-            the tuning loop is aborted
-        :param tuner_name: Name associated with the tuning experiment, default to
-            the name of the entrypoint. Must consists of alpha-digits characters,
-            possibly separated by '-'. A postfix with a date time-stamp is added
-            to ensure uniqueness.
-        :param asynchronous_scheduling: Whether to use asynchronous scheduling
-            when scheduling new trials. If `True`, trials are scheduled as soon as
-            a worker is available. If `False`, the tuner waits that all trials
-            are finished before scheduling a new batch of size `n_workers`.
-        :param wait_trial_completion_when_stopping: How to deal with running
-            trials when stopping criterion is met. If `True`, the tuner waits
-            until all trials are finished. If `False`, all trials are terminated.
-        :param callbacks: Called at certain times in the tuning loop, for example
-            when a result is seen. The default callback stores results every
-            `results_update_interval`.
-        :param metadata: Dictionary of user-metadata that will be persisted in
-            `{tuner_path}/metadata.json`, in addition to metadata provided by
-            the user. `SMT_TUNER_CREATION_TIMESTAMP` is always included which
-            measures the time-stamp when the tuner started to run.
-        :param suffix_tuner_name: If True, a timestamp is appended to the
-            provided `tuner_name` that ensures uniqueness, otherwise the name is
-            left unchanged and is expected to be unique.
-        :param save_tuner: If True, the `Tuner` object is serialized at the end
-            of tuning, including its dependencies (e.g., scheduler). This allows
-            all details of the experiment to be recovered
-        :param start_jobs_without_delay: Defaults to True. If this is True, the tuner
-            starts new jobs depending on scheduler decisions communicated to the
-            backend. For example, if a trial has just been stopped (by calling
-            `backend.stop_trial`), the tuner may start a new one immediately, even
-            if the SageMaker training job is still busy due to stopping delays.
-            This can lead to faster experiment runtime, because the backend is
-            temporarily going over its budget.
-
-            If set to False, the tuner always asks the backend for the number of
-            busy workers, which guarantees that we never go over the `n_workers`
-            budget. This makes a difference for backends where stopping or pausing
-            trials is not immediate (e.g., :class:`SageMakerBackend`). Not going
-            over budget means that `n_workers` can be set up to the available quota,
-            without running the risk of an exception due to the quota being
-            exceeded. If you get such exceptions, we recommend to use
-            `start_jobs_without_delay=False`. Also, if the SageMaker warm pool
-            feature is used, it is recommended to set
-            `start_jobs_without_delay=False`, since otherwise more than `n_workers`
-            warm pools will be started, because existing ones are busy with
-            stopping when they should be reassigned.
-        """
         self.trial_backend = trial_backend
         self.scheduler = scheduler
         self.n_workers = n_workers
@@ -522,13 +525,12 @@ class Tuner:
     ) -> TrialAndStatusInformation:
         """
         Updates schedulers with new results and sends decision to stop/pause
-        trials to the back-end.
+        trials to the back-end. Trials can be finished because:
 
-        Trials can be finished because:
         * the scheduler decided to stop or pause.
         * the trial failed.
         * the trial was stopped independently of the scheduler, e.g. due to a
-            timeout argument or a manual interruption.
+          timeout argument or a manual interruption.
         * the trial completed.
 
         :param trial_status_dict: Information on trials from

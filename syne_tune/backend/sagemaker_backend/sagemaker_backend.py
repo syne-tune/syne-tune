@@ -61,10 +61,22 @@ class SageMakerBackend(TrialBackend):
 
     This back-end allows to select the instance type and count for a trial
     evaluation, by passing values in the configuration, using names
-    `ST_INSTANCE_TYPE` and `ST_INSTANCE_COUNT`. If these are given in the
+    :const:`syne_tune.constants.ST_INSTANCE_TYPE` and
+    :const:`syne_tune.constants.ST_INSTANCE_COUNT`. If these are given in the
     configuration, they overwrite the default in `sm_estimator`. This allows
     for tuning instance type and count along with the hyperparameter
     configuration.
+
+    :param sm_estimator: SageMaker estimator for trial evaluations.
+    :param metrics_names: Names of metrics passed to `report`, used to plot
+        live curve in SageMaker (optional, only used for visualization)
+    :param s3_path: S3 base path used for checkpointing. The full path
+        also involves the tuner name and the `trial_id`. The default base
+        path is the S3 bucket associated with the SageMaker account
+    :param delete_checkpoints: Must be `False` at present!
+    :param sagemaker_fit_kwargs: Extra arguments that passed to
+        `sagemaker.estimator.Framework` when fitting the job, for instance
+        :code:`{'train': 's3://my-data-bucket/path/to/my/training/data'}`
     """
 
     def __init__(
@@ -75,19 +87,6 @@ class SageMakerBackend(TrialBackend):
         delete_checkpoints: bool = False,
         **sagemaker_fit_kwargs,
     ):
-        """
-        :param sm_estimator: SageMaker estimator for trial evaluations.
-        :param metrics_names: Names of metrics passed to `report`, used to plot
-            live curve in SageMaker (optional, only used for visualization)
-        :param s3_path: S3 base path used for checkpointing. The full path
-            also involves the tuner name and the `trial_id`. The default base
-            path is the S3 bucket associated with the SageMaker account
-        :param delete_checkpoints: Must be False at present!
-        :param sagemaker_fit_kwargs: Extra arguments that passed to
-            `sagemaker.estimator.Framework` when fitting the job, for instance
-            `{'train': 's3://my-data-bucket/path/to/my/training/data'}`
-        """
-
         assert (
             not delete_checkpoints
         ), "delete_checkpoints=True not yet supported for SageMaker backend"

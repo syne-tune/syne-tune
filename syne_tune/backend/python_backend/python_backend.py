@@ -43,28 +43,36 @@ class PythonBackend(LocalBackend):
     For instance, the following function is a valid way of defining a backend on
     top of a simple function:
 
-    ```python
-    from syne_tune.backend import PythonBackend
-    from syne_tune.config_space import uniform
+    .. code-block:: python
 
-    def f(x, epochs):
-        import logging
-        import time
-        from syne_tune import Reporter
-        root = logging.getLogger()
-        root.setLevel(logging.DEBUG)
-        reporter = Reporter()
-        for i in range(epochs):
-            reporter(epoch=i + 1, y=x + i)
+       from syne_tune.backend import PythonBackend
+       from syne_tune.config_space import uniform
 
-    config_space = {
-        "x": uniform(-10, 10),
-        "epochs": 5,
-    }
-    backend = PythonBackend(tune_function=f, config_space=config_space)
-    ```
+       def f(x, epochs):
+           import logging
+           import time
+           from syne_tune import Reporter
+           root = logging.getLogger()
+           root.setLevel(logging.DEBUG)
+           reporter = Reporter()
+           for i in range(epochs):
+               reporter(epoch=i + 1, y=x + i)
+
+       config_space = {
+           "x": uniform(-10, 10),
+           "epochs": 5,
+       }
+       backend = PythonBackend(tune_function=f, config_space=config_space)
 
     See `examples/launch_height_python_backend.py` for a complete example.
+
+    Additional arguments on top of parent class :class:`LocalBackend`:
+
+    :param tune_function: Python function to be tuned. The function must call
+        Syne Tune reporter to report metrics and be serializable, imports should
+        be performed inside the function body.
+    :param config_space: Configuration space corresponding to arguments of
+        `tune_function`
     """
 
     def __init__(
@@ -74,15 +82,6 @@ class PythonBackend(LocalBackend):
         rotate_gpus: bool = True,
         delete_checkpoints: bool = False,
     ):
-        """
-        Additional arguments on top of parent class :class:`LocalBackend`:
-
-        :param tune_function: Python function to be tuned. The function must call
-            Syne Tune reporter to report metrics and be serializable, imports should
-            be performed inside the function body.
-        :param config_space: Configuration space corresponding to arguments of
-            `tune_function`
-        """
         super(PythonBackend, self).__init__(
             entry_point=str(Path(__file__).parent / "python_entrypoint.py"),
             rotate_gpus=rotate_gpus,

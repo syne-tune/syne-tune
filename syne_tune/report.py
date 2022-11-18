@@ -43,22 +43,22 @@ class Reporter:
     Callback for reporting metric values from a training script back to Syne Tune.
     Example:
 
-    ```python
+    .. code-block:: python
 
-    from syne_tune import Reporter
+       from syne_tune import Reporter
 
-    report = Reporter()
-
-    for epoch in range(1, epochs + 1):
-        # ...
-        report(epoch=epoch, accuracy=accuracy)
-    ```
+       report = Reporter()
+       for epoch in range(1, epochs + 1):
+           # ...
+           report(epoch=epoch, accuracy=accuracy)
 
     :param add_time: If True (default), the time (in secs) since creation of the
-        `Reporter` object is reported automatically as `ST_WORKER_TIME`
+        :class:`Reporter` object is reported automatically as
+        :const:`syne_tune.constants.ST_WORKER_TIME`
     :param add_cost: If True (default), estimated dollar cost since creation of
-        `Reporter` object is reported automatically as `ST_WORKER_COST`. This is
-        available for SageMaker back-end only. Requires `add_time=True`.
+        :class:`Reporter` object is reported automatically as
+        :const:`syne_tune.constants.ST_WORKER_COST`. This is available for
+        SageMaker back-end only. Requires `add_time=True`.
     """
 
     add_time: bool = True
@@ -93,11 +93,12 @@ class Reporter:
     def __call__(self, **kwargs) -> None:
         """Report metric values from training function back to Syne Tune
 
-        A time stamp `ST_WORKER_TIMESTAMP` is added. See `add_time`, `add_cost`
-        comments for other automatically added metrics.
+        A time stamp :const:`syne_tune.constants.ST_WORKER_TIMESTAMP` is added.
+        See :attr:`add_time`, :attr:`add_cost` comments for other automatically
+        added metrics.
 
         :param kwargs: Keyword arguments for metrics to be reported, for instance
-            `report(epoch=1, loss=1.2)`. Values must be serializable with json,
+            :code:`report(epoch=1, loss=1.2)`. Values must be serializable with json,
             keys should not start with `st_` which is a reserved namespace for
             Syne Tune internals.
         """
@@ -149,7 +150,7 @@ def _serialize_report_dict(report_dict: dict) -> str:
 
 
 def retrieve(log_lines: List[str]) -> List[Dict[str, float]]:
-    """Retrieves metrics reported with `_report_logger` given log lines.
+    """Retrieves metrics reported with :func:`_report_logger` given log lines.
 
     :param log_lines: Lines in log file to be scanned for metric reports
     :return: list of metrics retrieved from the log lines.

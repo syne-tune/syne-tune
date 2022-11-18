@@ -52,6 +52,28 @@ logger = logging.getLogger(__name__)
 
 
 class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
+    """
+    Gaussian Process additive surrogate model, where model parameters are
+    fit by marginal likelihood maximization.
+
+    Note: `predict_mean_current_candidates` calls `predict` for all
+    observed and pending extended configs. This may not be exactly
+    correct, because `predict` is not meant to be used for configs
+    which have observations (it IS correct at r = r_max).
+
+    `fantasy_samples` contains the sampled (normalized) target values for
+    pending configs. Only `active_metric` target values are considered.
+    The target values for a pending config are a flat vector.
+
+    :param state: TuningJobSubState
+    :param gpmodel: Parameters must have been fit
+    :param fantasy_samples: See above
+    :param active_metric: See parent class
+    :param filter_observed_data: See parent class
+    :param normalize_mean: Mean used to normalize targets
+    :param normalize_std: Stddev used to normalize targets
+    """
+
     def __init__(
         self,
         state: TuningJobState,
@@ -62,28 +84,6 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
         normalize_mean: float = 0.0,
         normalize_std: float = 1.0,
     ):
-        """
-        Gaussian Process additive surrogate model, where model parameters are
-        fit by marginal likelihood maximization.
-
-        Note: `predict_mean_current_candidates` calls `predict` for all
-        observed and pending extended configs. This may not be exactly
-        correct, because `predict` is not meant to be used for configs
-        which have observations (it IS correct at r = r_max).
-
-        `fantasy_samples` contains the sampled (normalized) target values for
-        pending configs. Only `active_metric` target values are considered.
-        The target values for a pending config are a flat vector.
-
-        :param state: TuningJobSubState
-        :param gpmodel: GaussianProcessLearningCurveModel
-        :param fantasy_samples: See above
-        :param active_metric: See parent class
-        :param filter_observed_data: See parent class
-        :param normalize_mean: Mean used to normalize targets
-        :param normalize_std: Stddev used to normalize targets
-
-        """
         super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
         self.mean = normalize_mean
@@ -92,7 +92,7 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         """
-        Input features `inputs` are w.r.t. extended configs (x, r).
+        Input features `inputs` are w.r.t. extended configs `(x, r)`.
 
         :param inputs: Input features
         :return: Predictive means, stddevs

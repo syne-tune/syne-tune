@@ -33,15 +33,44 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
     """
     Simple baseline that computes a bounding-box of the best candidate found in
     previous tasks to restrict the search space to only good candidates. The
-    bounding-box is obtained by restricting to the min-max of best numerical
-    hyperparameters and restricting to the set of best candidates on categorical
-    parameters.
+    bounding-box is obtained by restricting to the min-max of the best numerical
+    hyperparameters and restricting to the set of the best candidates on categorical
+    parameters. Reference:
 
-    Reference:
-    Learning search spaces for Bayesian optimization: Another view of
-        hyperparameter transfer learning.
-    Valerio Perrone, Huibin Shen, Matthias Seeger, Cédric Archambeau,
-        Rodolphe Jenatton. NeurIPS 2019.
+        | Learning search spaces for Bayesian optimization: Another view of hyperparameter transfer learning.
+        | Valerio Perrone, Huibin Shen, Matthias Seeger, Cédric Archambeau, Rodolphe Jenatton.
+        | NeurIPS 2019.
+
+    `scheduler_fun` is used to create the scheduler to be used here, feeding
+    it with the modified config space. Any additional scheduler arguments
+    (such as `points_to_evaluate`) should be encoded inside this function.
+    Example:
+
+    .. code-block::
+
+       from syne_tune.optimizer.baselines import RandomSearch
+
+       def scheduler_fun(new_config_space: dict, mode: str, metric: str):
+           return RandomSearch(new_config_space, metric, mode)
+
+       bb_scheduler = BoundingBox(scheduler_fun, ...)
+
+    Here, `bb_scheduler` represents random search, where the hyperparameter
+    ranges are restricted to contain the best evalutions of previous tasks,
+    as provided by `transfer_learning_evaluations`.
+
+    :param scheduler_fun: Maps tuple of configuration space (dict), mode (str),
+        metric (str) to a scheduler. This is required since the final
+        configuration space is known only after computing a bounding-box.
+    :param config_space: Initial configuration space to consider, will be updated
+        to the bounding of the best evaluations of previous tasks
+    :param metric: Objective name to optimize, must be present in transfer
+        learning evaluations.
+    :param mode: Mode to be considered, default to "min".
+    :param transfer_learning_evaluations: Dictionary from task name to
+        offline evaluations.
+    :param num_hyperparameters_per_task: Number of the best configurations to
+        use per task when computing the bounding box, defaults to 1.
     """
 
     def __init__(
@@ -53,28 +82,6 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
         mode: Optional[str] = None,
         num_hyperparameters_per_task: int = 1,
     ):
-        """
-        `scheduler_fun` is used to create the scheduler to be used here, feeding
-        it with the modified config space. Any additional scheduler arguments
-        (such as `points_to_evaluate`) should be encoded inside this function.
-
-        :param scheduler_fun: Maps tuple of configuration space (dict), mode (str),
-            metric (str) to a scheduler. This is required since the final
-            configuration space is known only after computing a bounding-box. For
-            instance:
-            `scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(new_config_space, metric, mode)`
-            will consider a random-search on the config-space is restricted to
-            the bounding of best evaluations of previous tasks.
-        :param config_space: Initial search-space to consider, will be updated
-            to the bounding of best evaluations of previous tasks
-        :param metric: Objective name to optimize, must be present in transfer
-            learning evaluations.
-        :param mode: Mode to be considered, default to "min".
-        :param transfer_learning_evaluations: Dictionary from task name to
-            offline evaluations.
-        :param num_hyperparameters_per_task: Number of best hyperparameter to
-            take per task when computing the bounding box, default to 1.
-        """
         super().__init__(
             config_space=config_space,
             transfer_learning_evaluations=transfer_learning_evaluations,

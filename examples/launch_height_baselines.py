@@ -19,11 +19,6 @@ from syne_tune.optimizer.baselines import (
     ASHA,
 )
 
-# from syne_tune.optimizer.baselines import PASHA, BORE  # noqa: F401
-# from syne_tune.optimizer.schedulers.synchronous import \
-#    SynchronousGeometricHyperbandScheduler  # noqa: F401
-# from syne_tune.optimizer.schedulers import FIFOScheduler  # noqa: F401
-# from syne_tune.optimizer.schedulers.botorch import BotorchSearcher  # noqa: F401
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from syne_tune.try_import import try_import_gpsearchers_message
@@ -59,25 +54,6 @@ if __name__ == "__main__":
             max_t=max_steps,
             mode=mode,
         ),
-        # Commented as needs extra libraries or to save CI testing time. Since we are testing those baselines
-        # in our baseline, we keep the uncommented list of schedulers to a small number.
-        # PASHA(config_space, metric=metric, resource_attr='epoch', max_t=max_steps, mode=mode),
-        # BORE(config_space, metric=metric, mode=mode),
-        # SynchronousGeometricHyperbandScheduler(
-        #     config_space,
-        #     max_resource_level=max_steps,
-        #     brackets=3,
-        #     max_resource_attr='steps',
-        #     resource_attr='epoch',
-        #     batch_size=n_workers,
-        #     mode=mode,
-        #     metric=metric,
-        # ),
-        # FIFOScheduler(
-        #     config_space,
-        #     searcher=BotorchSearcher(config_space=config_space, metric=metric, mode='min'),
-        #     metric=metric
-        # ),
     ]
     try:
         from syne_tune.optimizer.baselines import BayesianOptimization

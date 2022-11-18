@@ -39,14 +39,14 @@ __all__ = [
 
 class LinearCostModel(CostModel):
     """
-    Deterministic cost model where both c0(x) and c1(x) are linear models of
+    Deterministic cost model where both `c0(x)` and `c1(x)` are linear models of
     the form
 
-        c0(x) = np.dot(features0(x), weights0),
-        c1(x) = np.dot(features1(x), weights1)
+        | `c0(x) = np.dot(features0(x), weights0)`,
+        | `c1(x) = np.dot(features1(x), weights1)`
 
-    The feature maps features0, features1 are supplied by subclasses.
-    The weights are fit by ridge regression, using scikit.learn RidgeCV, the
+    The feature maps `features0`, `features1` are supplied by subclasses.
+    The weights are fit by ridge regression, using `scikit.learn.RidgeCV`, the
     regularization constant is set by LOO cross-validation.
 
     """
@@ -66,7 +66,7 @@ class LinearCostModel(CostModel):
         Has to be supplied by subclasses
 
         :param candidates: List of n candidate configs (non-extended)
-        :return: Feature matrices features0 (n, dim0), features1 (n, dim1)
+        :return: Feature matrices `features0` `(n, dim0)`, `features1` `(n, dim1)`
         """
         raise NotImplementedError
 
@@ -127,8 +127,7 @@ class LinearCostModel(CostModel):
 
 class BiasOnlyLinearCostModel(LinearCostModel):
     """
-    Simple baseline: features0(x) = [1], features1(x) = [1]
-
+    Simple baseline: `features0(x) = [1], features1(x) = [1]`
     """
 
     def __init__(self):
@@ -145,6 +144,33 @@ class MLPLinearCostModel(LinearCostModel):
     """
     Deterministic linear cost model for multi-layer perceptron.
 
+    If config is a HP configuration, `num_hidden_layers(config)` is the
+    number of hidden layers, `hidden_layer_width(config, layer)` is the
+    number of units in hidden layer `layer` (0-based), `batch_size(config)`
+    is the batch size.
+
+    If `expected_hidden_layer_width` is given, it maps `layer` (0-based) to
+    expected layer width under random sampling. In this case, all MLP
+    features are normalized to expected value 1 under random sampling
+    (but ignoring `bs_exponent` if != 1).
+    Note: If needed, we could incorporate `bs_exponent` in general. If
+    `batch_size` was uniform between a and b:
+
+    .. math::
+
+       \text{E}\left[ bs^{bs_{exp} - 1} \right] =
+       \frac{ \text{b^{bs_{exp}} - a^{bs_{exp}} }{ (bs_{exp} * (b - a) }
+
+    :param num_inputs: Number of input nodes
+    :param num_outputs: Number of output nodes
+    :param num_hidden_layers: See above
+    :param hidden_layer_width: See above
+    :param batch_size: See above
+    :param bs_exponent: Main MLP feature is multiplied by
+        `power(batch_size, bs_exponent - 1)`
+    :param extra_mlp: Add additional "linear" MLP feature to `c1`?
+    :param c0_mlp_feature: Use main MLP feature in `c0` as well?
+    :param expected_hidden_layer_width: See above
     """
 
     def __init__(
@@ -159,32 +185,6 @@ class MLPLinearCostModel(LinearCostModel):
         c0_mlp_feature: bool = False,
         expected_hidden_layer_width: Optional[Callable[[int], float]] = None,
     ):
-        """
-        If config is a HP configuration, num_hidden_layers(config) is the
-        number of hidden layers, hidden_layer_width(config, layer) is the
-        number of units in hidden layer layer (0-based), batch_size(config)
-        is the batch size.
-
-        If expected_hidden_layer_width is given, it maps layer (0-based) to
-        expected layer width under random sampling. In this case, all MLP
-        features are normalized to expected value 1 under random sampling
-        (but ignoring bs_exponent if != 1).
-        Note: If needed, we could incorporate bs_exponent in general. If
-        batch_size was uniform between a and b:
-            E[ power(bs, bs_exp - 1) ] =
-            (power(b, bs_exp) - power(a, bs_exp)) / (bs_exp * (b - a))
-
-        :param num_inputs: Number of input nodes
-        :param num_outputs: Number of output nodes
-        :param num_hidden_layers: See above
-        :param hidden_layer_width: See above
-        :param batch_size: See above
-        :param bs_exponent: Main MLP feature is multiplied by
-            power(batch_size, bs_exponent - 1)
-        :param extra_mlp: Add additional "linear" MLP feature to c_1?
-        :param c0_mlp_feature: Use main MLP feature in c_0 as well?
-        :param expected_hidden_layer_width: See above
-        """
         super().__init__()
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
@@ -254,8 +254,7 @@ class MLPLinearCostModel(LinearCostModel):
 
 class FixedLayersMLPCostModel(MLPLinearCostModel):
     """
-    Linear cost model for MLP with num_hidden_layers hidden layers.
-
+    Linear cost model for MLP with `num_hidden_layers` hidden layers.
     """
 
     def __init__(
@@ -298,7 +297,7 @@ class FixedLayersMLPCostModel(MLPLinearCostModel):
         :param config_space: Configuration space
         :param num_units_keys: Keys into `config_space` for number of
             units of different layers
-        :return: expected_hidden_layer_width, exp_vals
+        :return: `expected_hidden_layer_width`, `exp_vals`
         """
         default_config = impute_points_to_evaluate(None, config_space)[0]
         exp_vals = [default_config[k] for k in num_units_keys]
@@ -311,13 +310,25 @@ class FixedLayersMLPCostModel(MLPLinearCostModel):
 
 class NASBench201LinearCostModel(LinearCostModel):
     """
-    Deterministic linear cost model for NASBench201.
+    Deterministic linear cost model for *NASBench201*.
 
     The cell graph is:
-        node1 = x0(node0)
-        node2 = x1(node0) + x2(node1)
-        node3 = x3(node0) + x4(node1) + x5(node2)
 
+        | `node1 = x0(node0)`
+        | `node2 = x1(node0) + x2(node1)`
+        | `node3 = x3(node0) + x4(node1) + x5(node2)`
+
+    `config_keys` contains attribute names of `x0, ..., x5` in a config, in
+    this ordering. `map_config_values` maps values in the config (for
+    fields corresponding to `x0, ..., x5`) to entries of `Op`.
+
+    :param config_keys: See above
+    :param map_config_values: See above
+    :param conv_separate_features: If True, we use separate features for
+        `nor_conv_1x1`, `nor_conv_3x3` (`c1` has 4 features). Otherwise, these
+        two are captured by a single features (`c1` has 3 features)
+    :param count_sum: If True, we use an additional feature for pointwise
+        sum operators inside a cell (there are between 0 and 3)
     """
 
     class Op(IntEnum):
@@ -334,20 +345,6 @@ class NASBench201LinearCostModel(LinearCostModel):
         conv_separate_features: bool,
         count_sum: bool,
     ):
-        """
-        `config_keys` contains attribute names of x0, ..., x5 in a config, in
-        this ordering. `map_config_values` maps values in the config (for
-        fields corresponding to x0, ..., x5) to entries of `Op`.
-
-        :param config_keys: See above
-        :param map_config_values: See above
-        :param conv_separate_features: If True, we use separate features for
-            nor_conv_1x1, nor_conv_3x3 (c1 has 4 features). Otherwise, these
-            two are captured by a single features (c1 has 3 features)
-        :param count_sum: If True, we use an additional feature for pointwise
-            sum operators inside a cell (there are between 0 and 3)
-
-        """
         super().__init__()
         self._config_keys = config_keys
         self._map_config_values = map_config_values

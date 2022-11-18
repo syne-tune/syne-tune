@@ -42,39 +42,89 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     """
     Gaussian process Bayesian optimization for asynchronous Hyperband scheduler.
 
-    This searcher must be used with :class:`HyperbandScheduler`. It provides a novel
-    combination of Bayesian optimization, based on a Gaussian process surrogate
-    model, with Hyperband scheduling. In particular, observations across
-    resource levels are modelled jointly.
+    This searcher must be used with
+    :class:`syne_tune,optimizer.schedulers.HyperbandScheduler`. It provides a
+    novel combination of Bayesian optimization, based on a Gaussian process
+    surrogate model, with Hyperband scheduling. In particular, observations
+    across resource levels are modelled jointly.
 
     It is *not* recommended to create :class:`GPMultiFidelitySearcher` searcher
-    objects directly, but rather to create :class:`HyperbandScheduler` objects
-    with `searcher="bayesopt"`, and passing arguments here in `search_options`.
-    This will use the appropriate functions from `gp_searcher_factory.py` to
+    objects directly, but rather to create
+    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
+    `searcher="bayesopt"`, and passing arguments here in `search_options`.
+    This will use the appropriate functions from
+    :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory` to
     create components in a consistent way.
 
-    Most of `GPFIFOSearcher` comments apply here as well.
-    In multi-fidelity HPO, we optimize a function f(x, r), x the configuration,
-    r the resource (or time) attribute. The latter must be a positive integer.
-    In most applications, `resource_attr` == 'epoch', and the resource is the
+    Most of :class:`syne_tune,optimizer.schedulers.searchers.GPFIFOSearcher`
+    comments apply here as well. In multi-fidelity HPO, we optimize a function
+    :math:`f(\mathbf{x}, r)`, :math:`\mathbf{x}` the configuration, :math:`r`
+    the resource (or time) attribute. The latter must be a positive integer.
+    In most applications, `resource_attr == "epoch"`, and the resource is the
     number of epochs already trained.
 
-    We model the function f(x, r) jointly over all resource levels r at which
-    it is observed (but see `searcher_data` in `HyperbandScheduler`). The kernel
-    and mean function of our surrogate model are over (x, r). The surrogate
-    model is selected by `gp_resource_kernel`. More details about the supported
-    kernels is in:
+    If `model == "gp_multitask"` (default), we model the function
+    :math:`f(\mathbf{x}, r)` jointly over all resource levels :math:`r` at
+    which it is observed (but see `searcher_data` in
+    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`). The kernel
+    and mean function of our surrogate model are over :math:`(\mathbf{x}, r)`.
+    The surrogate model is selected by `gp_resource_kernel`. More details about
+    the supported kernels is in:
 
-        Tiao, Klein, Lienart, Archambeau, Seeger (2020)
-        Model-based Asynchronous Hyperparameter and Neural Architecture Search
-        https://arxiv.org/abs/2003.10865
+        | Tiao, Klein, Lienart, Archambeau, Seeger (2020)
+        | Model-based Asynchronous Hyperparameter and Neural Architecture Search
+        | https://openreview.net/forum?id=a2rFihIU7i
 
-    The acquisition function (EI) which is optimized in `get_config`, is obtained
-    by fixing the resource level r to a value which is determined depending on
-    the current state. If `resource_acq` == 'bohb', r is the largest value
-    <= max_t, where we have seen >= dimension(x) metric values. If
-    `resource_acq` == 'first', r is the first milestone which config x would
-    reach when started.
+    The acquisition function (EI) which is optimized in :meth:`get_config`, is
+    obtained by fixing the resource level :math:`r` to a value which is
+    determined depending on the current state. If `resource_acq` == 'bohb',
+    :math:`r` is the largest value `<= max_t`, where we have seen
+    :math:`\ge \mathrm{dimension}(\mathbf{x})` metric values. If
+    `resource_acq == "first"`, :math:`r` is the first milestone which config
+    :math:`\mathbf{x}` would reach when started.
+
+    Additional arguments on top of parent class
+    :class:`syne_tune,optimizer.schedulers.searchers.GPFIFOSearcher`.
+
+    :param model: Selects surrogate model (learning curve model) to be used.
+        Choices are:
+
+        * "gp_multitask" (default): GP multi-task surrogate model
+        * "gp_independent": Independent GPs for each rung level, sharing
+          an ARD kernel
+        * "gp_issm": Gaussian-additive model of ISSM type
+        * "gp_expdecay": Gaussian-additive model of exponential decay type
+          (as in *Freeze Thaw Bayesian Optimization*)
+
+    :type model: str, optional
+    :param gp_resource_kernel: Only relevant for `model == "gp_multitask"`.
+        Surrogate model over criterion function :math:`f(\mathbf{x}, r)`,
+        :math:`\mathbf{x}` the config, :math:`r` the resource. Note that
+        :math:`\mathbf{x}` is encoded to be a vector with entries in `[0, 1]`,
+        and :math:`r` is linearly mapped to `[0, 1]`, while the criterion data
+        is normalized to mean 0, variance 1. The reference above provides details
+        on the models supported here. For the exponential decay kernel, the
+        base kernel over :math:`\mathbf{x}` is Matern 5/2 ARD. See
+        :const:`syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory.SUPPORTED_RESOURCE_MODELS`
+        for supported choices. Defaults to "exp-decay-sum"
+    :type gp_resource_kernel: str, optional
+    :param resource_acq: Only relevant for `model in
+        :code:`{"gp_multitask", "gp_independent"}`. Determines how the EI
+        acquisition function is used. Values: "bohb", "first". Defaults to "bohb"
+    :type resource_acq: str, optional
+    :param opt_skip_num_max_resource: Parameter for surrogate model fitting,
+        skip predicate. If `True`, and number of observations above
+        `opt_skip_init_length`, fitting is done only when there is a new
+        datapoint at `r = max_t`, and skipped otherwise. Defaults to `False`
+    :type opt_skip_num_max_resource: bool, optional
+    :param issm_gamma_one: Only relevant for `model == "gp_issm"`.
+        If `True`, the gamma parameter of the ISSM is fixed to 1, otherwise it
+        is optimized over. Defaults to `False`
+    :type issm_gamma_one: bool, optional
+    :param expdecay_normalize_inputs: Only relevant for `model ==
+        "gp_expdecay"`. If `True`, resource values r are normalized to `[0, 1]`
+        as input to the exponential decay surrogate model. Defaults to `False`
+    :type expdecay_normalize_inputs: bool, optional
     """
 
     def __init__(
@@ -84,46 +134,6 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`GPFIFOSearcher`.
-
-        :param model: Selects surrogate model (learning curve model) to be used.
-            Choices are:
-            * "gp_multitask" (default): GP multi-task surrogate model
-            * "gp_independent": Independent GPs for each rung level, sharing
-                an ARD kernel
-            * "gp_issm": Gaussian-additive model of ISSM type
-            * "gp_expdecay": Gaussian-additive model of exponential decay type
-                (as in "Freeze Thaw Bayesian Optimization")
-        :type model: str, optional
-        :param gp_resource_kernel: Only relevant for `model == "gp_multitask"`.
-            Surrogate model over criterion function f(x, r), x the config, r the
-            resource. Note that x is encoded to be a vector with entries in [0, 1],
-            and r is linearly mapped to [0, 1], while the criterion data is
-            normalized to mean 0, variance 1. The reference above provides details
-            on the models supported here. For the exponential decay kernel, the
-            base kernel over x is Matern 5/2 ARD.
-            See `SUPPORTED_RESOURCE_MODELS` fur supported choices.
-            Defaults to "exp-decay-sum"
-        :type gp_resource_kernel: str, optional
-        :param resource_acq: Only relevant for `model in {"gp_multitask",
-            "gp_independent"}`. Determines how the EI acquisition function is
-            used. Values: "bohb", "first". Defaults to "bohb"
-        :type resource_acq:
-        :param opt_skip_num_max_resource: Parameter for surrogate model fitting,
-            skip predicate. If True, and number of observations above
-            `opt_skip_init_length`, fitting is done only when there is a new
-             datapoint at `r = max_t`, and skipped otherwise. Defaults to False
-        :type opt_skip_num_max_resource: bool, optional
-        :param issm_gamma_one: Only relevant for `model == "gp_issm"`.
-            If True, the gamma parameter of the ISSM is fixed to 1, otherwise it
-            is optimized over. Defaults to False
-        :type issm_gamma_one: bool, optional
-        :param expdecay_normalize_inputs: Only relevant for `model ==
-            "gp_expdecay"`. If True, resource values r are normalized to [0, 1]
-            as input to the exponential decay surrogate model. Defaults to False
-        :type expdecay_normalize_inputs: bool, optional
-        """
         super().__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )

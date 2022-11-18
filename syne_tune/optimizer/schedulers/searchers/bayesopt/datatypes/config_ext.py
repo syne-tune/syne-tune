@@ -30,12 +30,11 @@ class ExtendedConfiguration:
     The config space hp_ranges is extended by an additional resource
     attribute. Note that this is not a hyperparameter we optimize over,
     but it is under the control of the scheduler.
-    Its allowed range is [1, resource_attr_range[1]], which can be larger than
-    [resource_attr_range[0], resource_attr_range[1]]. This is because extended
+    Its allowed range is `[1, resource_attr_range[1]]`, which can be larger than
+    `[resource_attr_range[0], resource_attr_range[1]]`. This is because extended
     configs with resource values outside of resource_attr_range may arise (for
     example, in the early stopping context, we may receive data from
-    epoch < resource_attr_range[0]).
-
+    `epoch < resource_attr_range[0]`).
     """
 
     def __init__(

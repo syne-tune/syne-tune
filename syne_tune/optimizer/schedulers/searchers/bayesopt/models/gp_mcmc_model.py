@@ -35,6 +35,20 @@ logger = logging.getLogger(__name__)
 
 
 class GaussProcMCMCModelFactory(GaussProcModelFactory):
+    """
+    We support pending evaluations via fantasizing. Note that state does
+    not contain the fantasy values, but just the pending configs. Fantasy
+    values are sampled here.
+
+    We draw one fantasy sample per MCMC sample here. This could be extended
+    by sampling >1 fantasy samples for each MCMC sample.
+
+    :param gpmodel: GPRegressionMCMC model
+    :param active_metric: Name of the metric to optimize.
+    :param normalize_targets: Normalize target values in
+        `state.trials_evaluations`?
+    """
+
     def __init__(
         self,
         gpmodel: GPRegressionMCMC,
@@ -45,20 +59,6 @@ class GaussProcMCMCModelFactory(GaussProcModelFactory):
         filter_observed_data: Optional[ConfigurationFilter] = None,
         hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
-        """
-        We support pending evaluations via fantasizing. Note that state does
-        not contain the fantasy values, but just the pending configs. Fantasy
-        values are sampled here.
-
-        We draw one fantasy sample per MCMC sample here. This could be extended
-        by sampling >1 fantasy samples for each MCMC sample.
-
-        :param gpmodel: GPRegressionMCMC model
-        :param active_metric: Name of the metric to optimize.
-        :param normalize_targets: Normalize target values in
-            state.trials_evaluations?
-
-        """
         super().__init__(
             gpmodel=gpmodel,
             active_metric=active_metric,

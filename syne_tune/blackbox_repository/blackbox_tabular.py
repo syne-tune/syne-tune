@@ -28,6 +28,25 @@ from syne_tune.blackbox_repository.serialize import (
 
 
 class BlackboxTabular(Blackbox):
+    """
+    Blackbox that contains tabular evaluations (e.g. all hyperparameters
+    evaluated on all fidelities). We use a separate class than
+    :class:`syne_tune.blackbox_repository.BlackboxOffline`, as performance
+    improvement can be made by avoiding to repeat hyperparameters and by storing
+    all evaluations in a single table.
+
+    Additional arguments on top of parent class
+    :class:`syne_tune.blackbox_repository.Blackbox`:
+
+    :param hyperparameters: dataframe of hyperparameters, shape
+        `(num_evals, num_hps)`, columns must match hyperparameter names of
+        `configuration_space`
+    :param objectives_evaluations: values of recorded objectives, must have
+        shape `(num_evals, num_seeds, num_fidelities, num_objectives)`
+    :param fidelity_values: values of the `num_fidelities` fidelities, default
+        to `[1, ..., num_fidelities]`
+    """
+
     def __init__(
         self,
         hyperparameters: pd.DataFrame,
@@ -37,19 +56,6 @@ class BlackboxTabular(Blackbox):
         fidelity_values: Optional[np.array] = None,
         objectives_names: Optional[List[str]] = None,
     ):
-        """
-        Blackbox that contains tabular evaluations (e.g. all hyperparameters evaluated on all fidelities).
-        We use a separate class as BlackboxOffline as performance improvement can be made by avoiding to repeat
-        hyperparameters and by storing all evaluations in a single table.
-        :param hyperparameters: dataframe of hyperparameters, shape (num_evals, num_hps), columns must match
-        hyperparameter names of configuration_space
-        :param configuration_space:
-        :param fidelity_space: only single fidelity supported for now
-        :param objectives_evaluations: values of recorded objectives, must have shape
-        (num_evals, num_seeds, num_fidelities, num_objectives)
-        :param fidelity_values: values of the `num_fidelities` fidelities, default to [1, ..., `num_fidelities`]
-        :param objectives_names:
-        """
         super(BlackboxTabular, self).__init__(
             configuration_space=configuration_space,
             fidelity_space=fidelity_space,
@@ -192,18 +198,21 @@ class BlackboxTabular(Blackbox):
         self, predict_curves: bool = False
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        If `predict_curves` is False, the shape of X is
-        `(num_evals * num_seeds * num_fidelities, num_hps + 1)`, the shape of y
+        If `predict_curves` is False, the shape of `X` is
+        `(num_evals * num_seeds * num_fidelities, num_hps + 1)`, the shape of `y`
         is `(num_evals * num_seeds * num_fidelities, num_objectives)`.
         This can be reshaped to `(num_fidelities, num_seeds, num_evals, *)`.
-        The final column of X is the fidelity value (only a single fidelity
+        The final column of `X` is the fidelity value (only a single fidelity
         attribute is supported).
 
-        If `predict_curves` is True, the shape of X is
-        `(num_evals * num_seeds, num_hps)`, the shape of y is
+        If `predict_curves` is True, the shape of `X` is
+        `(num_evals * num_seeds, num_hps)`, the shape of `y` is
         `(num_evals * num_seeds, num_fidelities * num_objectives)`. The latter
-        can be reshaped to `(num_seeds, num_evals, num_fidelities,
-        num_objectives)`.
+        can be reshaped to
+        `(num_seeds, num_evals, num_fidelities, num_objectives)`.
+
+        :param predict_curves: See above. Default is `False`
+        :return: Dataframes corresponding to `X` and `y`
         """
         objectives_evaluations = self.objectives_evaluations
         hyperparameters = self.hyperparameters
@@ -243,11 +252,13 @@ class BlackboxTabular(Blackbox):
             )
         return X, y
 
-    def rename_objectives(self, objective_name_mapping: Dict[str, str]):
+    def rename_objectives(
+        self, objective_name_mapping: Dict[str, str]
+    ) -> "BlackboxTabular":
         """
-        :param objective_name_mapping: dictionary from old objective name to new one, old objective name must be present
-        in the blackbox
-        :return: a blackbox with as many objectives as objective_name_mapping
+        :param objective_name_mapping: dictionary from old objective name to
+            new one, old objective name must be present in the blackbox
+        :return: a blackbox with as many objectives as `objective_name_mapping`
         """
         # todo add test
         for old_name in objective_name_mapping.keys():
@@ -348,10 +359,16 @@ def serialize(
 
 def deserialize(path: str) -> Dict[str, BlackboxTabular]:
     """
-    Deserialize blackboxes contained in a path that were saved with `serialize` above.
-    TODO: the API is currently dissonant with `serialize`, `deserialize` for BlackboxOffline as `serialize` is there a member.
-    A possible way to unify is to have serialize also be a free function for BlackboxOffline.
-    :param path: a path that contains blackboxes that were saved with `serialize`
+    Deserialize blackboxes contained in a path that were saved with :func:`serialize`
+    above.
+
+    TODO: the API is currently dissonant with :func:`serialize`,
+    :func:`deserialize` for :class:`syne_tune.blackbox_repository.BlackboxOffline`
+    as `serialize` is a member function there. A possible way to unify is to
+    have serialize also be a free function for `BlackboxOffline`.
+
+    :param path: a path that contains blackboxes that were saved with
+        :func:`serialize`
     :return: a dictionary from task name to blackbox
     """
     path = Path(path)

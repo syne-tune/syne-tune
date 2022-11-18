@@ -33,6 +33,15 @@ except ImportError:
 
 @dataclass
 class ExperimentResult:
+    """
+    Wraps results dataframe and provides retrieval services.
+
+    :param name: Name of experiment
+    :param results: Dataframe containing results of experiment
+    :param metadata: Metadata stored along with results
+    :param tuner: :class:`syne_tune.Tuner` object stored along with results
+    """
+
     name: str
     results: pd.DataFrame
     metadata: dict
@@ -46,14 +55,14 @@ class ExperimentResult:
 
     def creation_date(self):
         """
-        :return: Timestamp when `Tuner` was created
+        :return: Timestamp when :class:`syne_tune.Tuner` was created
         """
         return datetime.fromtimestamp(self.metadata[ST_TUNER_CREATION_TIMESTAMP])
 
     def plot(self, **plt_kwargs):
         """Plot best metric value as function of wallclock time
 
-        :param plt_kwargs: Arguments to `matplotlib.pyplot.plot`
+        :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
         """
         import matplotlib.pyplot as plt
 
@@ -85,8 +94,7 @@ class ExperimentResult:
     def best_config(self) -> dict:
         """
         Return the best config found for the first metric defined in the scheduler.
-        :param self:
-        :return:
+        :return: Configuration corresponding to best metric value
         """
         metric_names = self.metric_names()
         metric_mode = self.metric_mode()
@@ -148,12 +156,12 @@ def load_experiment(
     """Load results from an experiment
 
     :param tuner_name: Name of a tuning experiment previously run
-    :param download_if_not_found: If True, fetch resultsfrom S3 if not found locally
+    :param download_if_not_found: If True, fetch results from S3 if not found locally
     :param load_tuner: Whether to load the tuner in addition to metadata and results
     :param local_path: Path containing the experiment to load. If not specified,
         `~/{SYNE_TUNE_FOLDER}/` is used.
     :param experiment_name: If given, this is used as first directory.
-    :return: `ExperimentResult` object
+    :return: Result object
     """
     path = experiment_path(tuner_name, local_path)
     metadata_path = path / "metadata.json"
@@ -256,11 +264,11 @@ def list_experiments(
     :param path_filter: If passed then only experiments whose path matching
         the filter are kept. This allows rapid filtering in the presence of many
         experiments.
-    :param experiment_filter: Filter on `ExperimentResult`
-    :param root: Root path for experiment results. Default is
-        `experiment_path()`
+    :param experiment_filter: Filter on :class:`ExperimentResult`, optional
+    :param root: Root path for experiment results. Default is result of
+        :func:`experiment_path`
     :param load_tuner: Whether to load the tuner in addition to metadata and results
-    :return: List of `ExperimentResult` objects
+    :return: List of result objects
     """
     path_filter = _impute_filter(path_filter)
     experiment_filter = _impute_filter(experiment_filter)
@@ -295,23 +303,24 @@ def load_experiments_df(
     :param path_filter: If passed then only experiments whose path matching
         the filter are kept. This allows rapid filtering in the presence of many
         experiments.
-    :param experiment_filter: Filter on `ExperimentResult`
+    :param experiment_filter: Filter on :class:`ExperimentResult`
     :param root: Root path for experiment results. Default is
-        `experiment_path()`
+        :func:`experiment_path`
     :param load_tuner: Whether to load the tuner in addition to metadata and results
     :return: Dataframe that contains all evaluations reported by tuners according
-        to the filter given. The columns contains trial-id, hyperparameter
-        evaluated, metrics observed by `report`. metrics collected automatically
-        by syne-tune:
+        to the filter given. The columns contain trial-id, hyperparameter
+        evaluated, metrics reported via :class:`syne_tune.Reporter`. These metrics
+        are collected automatically:
+
         * `st_worker_time` (indicating time spent in the worker when report was
-            seen)
+          seen)
         * `time` (indicating wallclock time measured by the tuner)
         * `decision` decision taken by the scheduler when observing the result
         * `status` status of the trial that was shown to the tuner
-        * `config_{xx}` configuration value for the hyperparameter {xx}
+        * `config_{xx}` configuration value for the hyperparameter `{xx}`
         * `tuner_name` named passed when instantiating the Tuner
         * `entry_point_name`, `entry_point_path` name and path of the entry
-            point that was tuned
+          point that was tuned
     """
     dfs = []
     for experiment in list_experiments(

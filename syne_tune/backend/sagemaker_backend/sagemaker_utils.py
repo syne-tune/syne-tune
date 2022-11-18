@@ -35,8 +35,11 @@ logger = logging.getLogger(__name__)
 
 
 def default_config() -> Config:
-    # a default config that avoid throttling
-    # https://aws.amazon.com/premiumsupport/knowledge-center/sagemaker-python-throttlingexception/
+    """
+    https://aws.amazon.com/premiumsupport/knowledge-center/sagemaker-python-throttlingexception/
+
+    :return: Default config which avoids throttling
+    """
     return Config(
         connect_timeout=5,
         read_timeout=60,

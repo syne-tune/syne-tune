@@ -23,16 +23,19 @@ class PromotionRungSystem(RungSystem):
     Implements both the promotion and stopping logic for an asynchronous
     variant of Hyperband, known as ASHA:
 
-    https://arxiv.org/abs/1810.05934
+        | Li etal
+        | A System for Massively Parallel Hyperparameter Tuning
+        | https://arxiv.org/abs/1810.05934
 
     In ASHA, configs sit paused at milestones (rung levels) until they get
     promoted, which means that a free task picks up their evaluation until
     the next milestone.
 
     The rule to decide whether a paused trial is promoted (or remains
-    paused) is the same as in :class:`StoppingRungSystem`, except that
-    `continues` becomes `gets_promoted`. If several paused trials in a
-    rung can be promoted, the one with the best metric value is chosen.
+    paused) is the same as in
+    :class:`syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,
+    except that *continues* becomes *gets promoted*. If several paused trials
+    in a rung can be promoted, the one with the best metric value is chosen.
 
     Note: Say that an evaluation is resumed from level `resume_from`. If the
     trial evaluation function does not implement pause & resume, it needs to
@@ -40,9 +43,9 @@ class PromotionRungSystem(RungSystem):
     epoch, also those `< resume_from`. At least for some modes of fitting the
     searcher model to data, this would lead to duplicate target values for the
     same extended config `(x, r)`, which we want to avoid. The solution is to
-    maintain `resume_from` in the data for the terminator (see `self._running`).
-    Given this, we can report in `on_task_report` that the current metric data
-    should not be used for the searcher model (`ignore_data = True`), namely
+    maintain `resume_from` in the data for the terminator (see :attr:`_running`).
+    Given this, we can report in :meth:`on_task_report` that the current metric
+    data should not be used for the searcher model (`ignore_data = True`), namely
     as long as the evaluation has not yet gone beyond level `resume_from`.
     """
 
@@ -136,11 +139,12 @@ class PromotionRungSystem(RungSystem):
 
     def on_task_schedule(self) -> dict:
         """
-        Used to implement _promote_trial of scheduler. Searches through rungs
-        to find a trial which can be promoted. If one is found, we return the
-        trial_id and other info (current milestone, milestone to be promoted
-        to). We also mark the trial as being promoted at the rung level it sits
-        right now.
+        Used to implement
+        :meth:`syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`.
+        Searches through rungs to find a trial which can be promoted. If one is
+        found, we return the `trial_id` and other info (current milestone,
+        milestone to be promoted to). We also mark the trial as being promoted
+        at the rung level it sits right now.
         """
         trial_id = None
         next_milestone = self.max_t
@@ -171,13 +175,14 @@ class PromotionRungSystem(RungSystem):
 
     def on_task_add(self, trial_id: str, skip_rungs: int, **kwargs):
         """
-        Called when new task is started. Depending on kwargs['new_config'],
-        this could start an evaluation (True) or promote an existing config
-        to the next milestone (False). In the latter case, kwargs contains
-        additional information about the promotion (`milestone`, `resume_from`).
+        Called when new task is started. Depending on `kwargs["new_config"]`,
+        this could start an evaluation (`True`) or promote an existing config
+        to the next milestone (`False`). In the latter case, `kwargs` contains
+        additional information about the promotion (in "milestone",
+        "resume_from").
 
         :param trial_id: ID of trial to be started
-        :param skip_rungs: This number of smallest rung levels are not
+        :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
         :param kwargs: Additional arguments
         """
@@ -215,7 +220,7 @@ class PromotionRungSystem(RungSystem):
         since a trial is always paused at a milestone.
 
         `ignore_data` is True if a result is received from a resumed trial
-        at a level <= `resume_from`. This happens if checkpointing is not
+        at a level `<= resume_from`. This happens if checkpointing is not
         implemented (or not used), because resumed trials are started from
         scratch then. These metric values should in general be ignored.
 

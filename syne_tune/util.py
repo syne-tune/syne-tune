@@ -33,13 +33,12 @@ except ImportError:
 class RegularCallback:
     """
     Allows to call the callback function at most once every `call_seconds_frequency` seconds.
+
+    :param callback: `TunerCallback` object
+    :param call_seconds_frequency: Wait time between subsequent calls
     """
 
     def __init__(self, callback: callable, call_seconds_frequency: float):
-        """
-        :param callback: `TunerCallback` object
-        :param call_seconds_frequency: Wait time between subsequent calls
-        """
         self.time_last_recent_call = datetime.now()
         self.frequency = call_seconds_frequency
         self.callback = callback

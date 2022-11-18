@@ -21,13 +21,13 @@ def lcbench_benchmark(dataset_name, datasets=None):
     you use a more sophisticated surrogate, it is recommended to also
     define `add_surrogate_kwargs`, for example:
 
-    ```python
-    surrogate="RandomForestRegressor",
-    add_surrogate_kwargs={
-        "predict_curves": True,
-        "fit_differences": ["time"],
-    },
-    ```
+    .. code-block:: python
+
+       surrogate="RandomForestRegressor",
+       add_surrogate_kwargs={
+           "predict_curves": True,
+           "fit_differences": ["time"],
+       },
 
     :param dataset_name: Value for `dataset_name`
     :param datasets: Used for transfer learning

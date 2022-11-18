@@ -74,13 +74,13 @@ class TuningStatus:
     """
     Information of a tuning job to display as progress or to use to decide whether
     to stop the tuning job.
+
+    :param metric_names: Names of metrics reported
     """
 
     # TODO: `metric_names` not used for anything. Remove?
     def __init__(self, metric_names: List[str]):
-        """
-        :param metric_names: Names of metrics reported
-        """
+        """ """
         self.metric_names = metric_names
         self.start_time = time.perf_counter()
 
@@ -97,6 +97,10 @@ class TuningStatus:
     ):
         """
         Updates the tuning status given new statuses and results.
+
+        :param trial_status_dict: Dictionary mapping trial ID to
+            :class:`Trial` object and status
+        :param new_results: New results, along with trial IDs
         """
 
         self.last_trial_status_seen.update(
@@ -142,6 +146,9 @@ class TuningStatus:
 
     @property
     def num_trials_started(self):
+        """
+        :return: Number of trials which have been started
+        """
         return len(self.last_trial_status_seen)
 
     def _num_trials(self, status: Union[str, Set[str]]):
@@ -156,16 +163,23 @@ class TuningStatus:
 
     @property
     def num_trials_completed(self):
+        """
+        :return: Number of trials which have been completed
+        """
         return self._num_trials(status=Status.completed)
 
     @property
     def num_trials_failed(self):
+        """
+        :return: Number of trials which have failed
+        """
         return self._num_trials(status=Status.failed)
 
     @property
     def num_trials_finished(self):
         """
-        :return: number of trials that finished, e.g. that completed, were stopped or are stopping, or failed
+        :return: Number of trials that finished, e.g. that completed, were
+            stopped or are stopping, or failed
         """
         # note it may be inefficient to query several times the dataframe in case a very large number of jobs are
         #  present, we could query the dataframe only once
@@ -179,6 +193,10 @@ class TuningStatus:
 
     @property
     def num_trials_running(self):
+        """
+        :return: Number of trials currently running
+        """
+
         return self._num_trials(status=Status.in_progress)
 
     @property
@@ -217,6 +235,9 @@ class TuningStatus:
             return 0.0
 
     def get_dataframe(self) -> pd.DataFrame:
+        """
+        :return: Information about all trials as dataframe
+        """
         return pd.DataFrame(self.trial_rows.values())
 
     def __str__(self):

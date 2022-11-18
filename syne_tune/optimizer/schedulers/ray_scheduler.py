@@ -32,11 +32,14 @@ class RayTuneScheduler(TrialScheduler):
     configurations to evaluate can be passed in `points_to_evaluate`. If
     `ray_searcher` is given, this argument is ignored (needs to be passed
     to `ray_searcher` at construction). Note: Use
-
-    `syne_tune.optimizer.schedulers.searchers.impute_points_to_evaluate`
-
+    :func:`syne_tune.optimizer.schedulers.searchers.impute_points_to_evaluate`
     in order to preprocess `points_to_evaluate` specified by the user or
     the benchmark.
+
+    :param config_space: Configuration space
+    :param ray_scheduler: Ray scheduler, defaults to FIFO scheduler
+    :param ray_searcher: Ray searcher, defaults to random search
+    :param points_to_evaluate: See above
     """
 
     from ray.tune.schedulers import FIFOScheduler as RT_FIFOScheduler
@@ -77,12 +80,6 @@ class RayTuneScheduler(TrialScheduler):
         ray_searcher: Optional[RT_Searcher] = None,
         points_to_evaluate: Optional[List[Dict]] = None,
     ):
-        """
-        :param config_space: Configuration space
-        :param ray_scheduler: Ray scheduler, defaults to FIFO scheduler
-        :param ray_searcher: Ray searcher, defaults to random search
-        :param points_to_evaluate: See above
-        """
         super().__init__(config_space)
         if ray_scheduler is None:
             ray_scheduler = self.RT_FIFOScheduler()
@@ -175,8 +172,8 @@ class RayTuneScheduler(TrialScheduler):
         this is inclusive for us. On the other hand, `lograndint(lower, upper)`
         has inclusive `upper` in Ray Tune as well.
 
-        :param config_space:
-        :return:
+        :param config_space: Configuration space
+        :return: `config_space` converted into Ray Tune type
         """
         import ray.tune.search.sample as ray_sp
 

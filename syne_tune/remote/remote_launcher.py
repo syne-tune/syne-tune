@@ -39,6 +39,29 @@ class RemoteLauncher:
     use either the local backend (in which case the remote instance will be used
     to evaluate trials) or the Sagemaker backend in which case the remote instance
     will spawn one Sagemaker job per trial.
+
+    :param tuner: Tuner that should be run remotely on a `instance_type`
+        instance. Note that :class:`syne_tune.StoppingCriterion` should be used
+        for the :class:`syne_tune.Tuner` rather than a lambda function to ensure
+        serialization.
+    :param role: SageMaker role to be used to launch the remote tuning instance.
+    :param instance_type: Instance where the tuning is going to happen.
+        Defaults to "ml.m5.xlarge"
+    :param dependencies: List of folders that should be included as
+        dependencies for the backend script to run
+    :param estimator_kwargs: Extra arguments for creating the SageMaker
+        estimator for the tuning code.
+    :param store_logs_localbackend: Whether to store logs of trials when
+        using the local backend. When using SageMaker backend, logs are
+        persisted by SageMaker. Defauls to `False`
+    :param log_level: Logging level. Default is `logging.INFO`, while
+        `logging.DEBUG` gives more messages
+    :param s3_path: S3 base path used for checkpointing, outputs of tuning
+        will be stored under `{s3_path}/{tuner_name}`. The logs of the local
+        backend are only stored if `store_logs_localbackend` is True.
+        Defaults to :func:`syne_tune.util.s3_experiment_path`
+    :param no_tuner_logging: If `True`, the logging level for `syne_tune.tuner`
+        is set to `logging.ERROR`. Defaults to `False`
     """
 
     def __init__(
@@ -53,29 +76,6 @@ class RemoteLauncher:
         no_tuner_logging: bool = False,
         **estimator_kwargs,
     ):
-        """
-        :param tuner: Tuner that should be run remotely on a `instance_type`
-            instance. Note that `StoppingCriterion` should be used for the `Tuner`
-            rather than a lambda function to ensure serialization.
-        :param role: SageMaker role to be used to launch the remote tuning instance.
-        :param instance_type: Instance where the tuning is going to happen.
-            Defaults to "ml.m5.xlarge"
-        :param dependencies: List of folders that should be included as
-            dependencies for the backend script to run
-        :param estimator_kwargs: Extra arguments for creating the SageMaker
-            estimator for the tuning code.
-        :param store_logs_localbackend: Whether to store logs of trials when
-            using the local backend. When using SageMaker backend, logs are
-            persisted by SageMaker. Defauls to False
-        :param log_level: Logging level. Default is `logging.INFO`, while
-            `logging.DEBUG` gives more messages
-        :param s3_path: S3 base path used for checkpointing, outputs of tuning
-            will be stored under `{s3_path}/{tuner_name}`. The logs of the local
-            backend are only stored if `store_logs_localbackend` is True.
-            Defaults to `s3_experiment_path()`
-        :param no_tuner_logging: If True, the logging level for `syne_tune.tuner`
-            is set to `logging.ERROR`. Defaults to False
-        """
         assert not self.is_lambda(tuner.stop_criterion), (
             "remote launcher does not support using lambda functions for stopping criterion. Use StoppingCriterion, "
             "with Tuner if you want to use the remote launcher. See launch_height_sagemaker_remotely.py for"
@@ -103,8 +103,8 @@ class RemoteLauncher:
 
     def is_lambda(self, f):
         """
-        :param f:
-        :return: True iff f is a lambda function
+        :param f: Object to test
+        :return: True iff `f` is a lambda function
         """
         try:
             return callable(f) and f.__name__ == "<lambda>"
@@ -117,7 +117,7 @@ class RemoteLauncher:
     ):
         """
         :param wait: Whether the call should wait until the job completes
-            (default: True). If False the call returns once the tuning job is
+            (default: `True`). If False the call returns once the tuning job is
             scheduled on SageMaker.
         """
         self.prepare_upload()
