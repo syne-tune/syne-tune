@@ -18,7 +18,7 @@ with the code.
 
 
 # Table of Contents
-
+* [Concepts and Terminologies](concepts.md)
 * [Setting up the Problem](basics_setup.md)
 * [Random Search](basics_randomsearch.md)
 * [Bayesian Optimization](basics_bayesopt.md)
