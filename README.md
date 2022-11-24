@@ -7,15 +7,14 @@
 
 ![Alt Text](docs/synetune.gif)
 
-This package provides state-of-the-art distributed hyperparameter optimizers (HPO) with the following key features:
-* wide coverage (>20) of different HPO methods for asynchronous optimization with multiple workers, including:
-  * advanced multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER)
-  * transfer-learning optimizers that achieve better and better performance when used repeatedly
-  * multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency)
-* you can run HPO in different environments (locally, AWS, simulation) by changing one line of code
-* out-of-the-box tabulated benchmarks available for several domains with efficient simulations that allows you 
-  to get results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any
-  number of workers
+This package provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
+* Wide coverage (>20) of different HPO methods, including:
+  * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
+  * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
+  * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
+  * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
+* HPO can be run in different environments (locally, AWS, simulation) by changing just one line of code.
+* Out-of-the-box tabulated benchmarks that allows you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
 
 ## Installing
 
@@ -98,6 +97,11 @@ tuner.run()
 ```
 
 The above example runs ASHA with 4 asynchronous workers on a local machine.
+
+## Supported HPO methods
+
+The following hyperparameter optimization (HPO), which we refer to as schedulers, are available in Syne Tune:
+
 
 ## Examples
 
