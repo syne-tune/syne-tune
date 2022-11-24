@@ -102,29 +102,29 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
 
-Method | Reference | Asynchronous | Multi-fidelity | Transfer learning 
-:--- | :---: | :---: | :---: | :---: 
-GridSearch | Someone (sometime) | yes | no | no | no 
-RandSearch | Bergstra, et al. (2011) | yes | no | no | no 
-GP-BO | Snoek, et al. (2012) | yes | no | no 
-TPE | Bergstra, et al. (2011) | yes | no | no 
-REA | Real, et al. (2019) | yes | no | no 
-BORE | Tiao, et al. (2021) | yes | no | no 
-HyperTune | Li, et al. (2022) | yes | no 
-MSR | Golovin, et al. (2017) | yes | yes | no 
-BOHB | Falkner, et al. (2018) | yes | yes | no 
-ASHA | Li, et al. (2019) | yes | yes | no 
-MOB | Klein, et al. (2020) | yes | yes | no 
-PBT | Jaderberg, et al. (2017) | no | yes | no 
-SyncHyperband | Li, et al. (2018) | no | yes | no 
-SyncBOHB | Falkner, et al. (2018) | no | yes | no 
-DEHB | Awad, et al. (2021) | no | yes | no 
-ZS | Wistuba, et al. (2015) | yes | no | yes 
-ASHA-BB | Perrone, et al. (2019)| yes | yes | yes 
-AHSA-CTS | Salinas, et al. (2021)| yes | yes | yes 
-RUSH | Zappella, et al. (2021)| yes | yes | yes 
-CBO | Gardner, et al. (2014) | yes | no | no 
-MOASHA | Schmucker, et al. (2021) | yes | yes | no 
+Method | Reference | Asynchronous | Multi-fidelity | Transfer learning | Needs checkpointing
+:--- | :---: | :---: | :---: | :---: | :---: 
+GridSearch | Someone (sometime) | yes | no | no | no | dunno
+RandSearch | Bergstra, et al. (2011) | yes | no | no | no | dunno
+GP-BO | Snoek, et al. (2012) | yes | no | no | dunno
+TPE | Bergstra, et al. (2011) | yes | no | no | dunno
+REA | Real, et al. (2019) | yes | no | no | dunno
+BORE | Tiao, et al. (2021) | yes | no | no | dunno
+HyperTune | Li, et al. (2022) | yes | yes | no | dunno
+MSR | Golovin, et al. (2017) | yes | yes | no | dunno
+BOHB | Falkner, et al. (2018) | yes | yes | no | dunno
+ASHA | Li, et al. (2019) | yes | yes | no | dunno
+MOB | Klein, et al. (2020) | yes | yes | no | dunno
+PBT | Jaderberg, et al. (2017) | no | yes | no | dunno
+SyncHyperband | Li, et al. (2018) | no | yes | no | dunno
+SyncBOHB | Falkner, et al. (2018) | no | yes | no | dunno
+DEHB | Awad, et al. (2021) | no | yes | no | dunno
+ZS | Wistuba, et al. (2015) | yes | no | yes | dunno
+ASHA-BB | Perrone, et al. (2019)| yes | yes | yes | dunno
+AHSA-CTS | Salinas, et al. (2021)| yes | yes | yes | dunno
+RUSH | Zappella, et al. (2021)| yes | yes | yes | dunno
+CBO | Gardner, et al. (2014) | yes | no | no | dunno
+MOASHA | Schmucker, et al. (2021) | yes | yes | no | dunno
 
 ## Examples
 
