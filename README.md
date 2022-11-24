@@ -100,8 +100,36 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 ## Supported HPO methods
 
-The following hyperparameter optimization (HPO), which we refer to as schedulers, are available in Syne Tune:
+The following hyperparameter optimization (HPO) methods, which we refer to as schedulers, are available in Syne Tune:
 
+|Scheduler | Reference | Asynchronous | Multi-fidelity | Transfer learning |
+|:--- | :---: | :---: | :---: | :---: |
+|GridSearch | xyz | yes | no | no | no |
+|RandSearch | Bergstra, et al. (2011) | yes | no | no | no |
+|GP-BO | Snoek, et al. (2012) | yes | no | no |
+|TPE | Bergstra, et al. (2011) | yes | no | no |
+|REA | Real, et al. (2019) | yes | no | no |
+|BORE | Tiao, et al. (2021) | yes | no | no |
+|Hypertune | Li, et al. (2022) | yes | no |
+- - -
+MSR | Golovin, et al. (2017) | yes | yes | no |
+BOHB | Falkner, et al. (2018) | yes | yes | no |
+ASHA | Li, et al. (2019) | yes | yes | no |
+MOB | Klein, et al. (2020) | yes | yes | no |
+- - -
+PBT | Jaderberg, et al. (2017) | no | yes | no |
+SyncHyperband | Li, et al. (2018) | no | yes | no |
+SyncBOHB | Falkner, et al. (2018) | no | yes | no |
+DEHB | Awad, et al. (2021) | no | yes | no |
+- - -
+ZS | Wistuba, et al. (2015) | yes | no | yes |
+ASHA-BB | Perrone, et al. (2019)| yes | yes | yes |
+AHSA-CTS | Salinas, et al. (2021)| yes | yes | yes |
+RUSH | Zappella, et al. (2021)| yes | yes | yes |
+- - -
+CBO | Gardner, et al. (2014) | yes | no | no |
+MOASHA | Schmucker, et al. (2021) | yes | yes | no |
+- - -
 
 ## Examples
 
