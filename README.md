@@ -102,12 +102,11 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
 
-Method | Reference | Searcher | Asynchro-nous? | Multi-fidelity? | Transfer? | Check-pointing?
+Method | Reference | Searcher | Asyn-chronous? | Multi-fidelity? | Transfer? | Check-pointing?
 :--- | :---: | :---: | :---: | :---: | :---: | :---:
 Grid Search | Someone (sometime) | non-random | no | no | no | dunno
 Random Search | Bergstra, et al. (2011) | random | yes | no | no | dunno
 Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no | dunno
-TPE | Bergstra, et al. (2011) | model-based | yes | no | no | dunno
 BORE | Tiao, et al. (2021) | model-based | yes | no | no | dunno
 MedianStoppingRule | Golovin, et al. (2017) | any | yes | yes | no | dunno
 SyncHyperband | Li, et al. (2018) | random | no | yes | no | dunno
@@ -126,20 +125,18 @@ ASHABB | Perrone, et al. (2019)| random | yes | yes | yes | dunno
 AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes | dunno
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes | dunno
 
-The searchers fall into three broad categories, **non-random**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) or by applying an evolutionary algorithm.
+The searchers fall into three broad categories, **non-random**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function, or by applying an evolutionary algorithm.
 
 Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers.
 
-BLAH on checkpointing.
-
 ## Supported multi-objective optimization methods
 
-Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? | Checkpointing?
+Method | Reference | Searcher | Asyn-chronous? | Multi-fidelity? | Transfer?
 :--- | :---: | :---: | :---: | :---: | :---: | :---:
-Constrained Bayesian Optimization | Gardner, et al. (2014) | ?? | yes | no | no | dunno
-Non-dominated sorting
-MOASHA | Schmucker, et al. (2021) | random | yes | yes | no | dunno
+Constrained Bayesian Optimization | Gardner, et al. (2014) | model-based | yes | no | no
+MOASHA | Schmucker, et al. (2021) | random | yes | yes | no
 
+HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizers/schedulers/multiobjective/multiobjective_priority.py):
 
 ## Examples
 
