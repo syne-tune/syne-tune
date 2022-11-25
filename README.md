@@ -119,21 +119,24 @@ MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no | dunno
 DEHB | Awad, et al. (2021) | random | no | yes | no | dunno
 HyperTune | Li, et al. (2022) | model-based | yes | yes | no | dunno
 PASHA | Bohdal, et al. (2022)| random | yes | yes | no | dunno
-REA | Real, et al. (2019) | ?? | yes | no | no | dunno
-PBT | Jaderberg, et al. (2017) | random | no | yes | no | dunno
+REA | Real, et al. (2019) | model-based | yes | no | no | dunno
+PBT | Jaderberg, et al. (2017) | model-based | no | yes | no | dunno
 ZeroShotTransfer | Wistuba, et al. (2015) | non-random | yes | no | yes | dunno
 ASHABB | Perrone, et al. (2019)| random | yes | yes | yes | dunno
 AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes | dunno
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes | dunno
 
-The searchers fall into three broad categories, **non-random**, **random** or **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.).
+The searchers fall into three broad categories, **non-random**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) or by applying an evolutionary algorithm. Note that Syne Tune also supports ["BoTorch"](https://github.com/pytorch/botorch) searchers.
 
 BLAH on checkpointing.
 
 ## Supported multi-objective optimization methods
 
 Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? | Checkpointing?
+:--- | :---: | :---: | :---: | :---: | :---: | :---:
 Constrained Bayesian Optimization | Gardner, et al. (2014) | ?? | yes | no | no | dunno
+
+Non-dominated sorting
 MOASHA | Schmucker, et al. (2021) | random | yes | yes | no | dunno
 
 
@@ -217,7 +220,7 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 If you use Syne Tune in a scientific publication, please cite the following paper:
 
-["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning 2022
+["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning, 2022.
 
 
 ```bibtex
