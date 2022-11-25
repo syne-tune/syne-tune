@@ -102,29 +102,35 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
 
-Method | Reference | Asynchronous | Multi-fidelity | Transfer learning | Needs checkpointing
-:--- | :---: | :---: | :---: | :---: | :---: 
-GridSearch | Someone (sometime) | yes | no | no | no | dunno
-RandSearch | Bergstra, et al. (2011) | yes | no | no | no | dunno
-GP-BO | Snoek, et al. (2012) | yes | no | no | dunno
-TPE | Bergstra, et al. (2011) | yes | no | no | dunno
-REA | Real, et al. (2019) | yes | no | no | dunno
-BORE | Tiao, et al. (2021) | yes | no | no | dunno
-HyperTune | Li, et al. (2022) | yes | yes | no | dunno
-MSR | Golovin, et al. (2017) | yes | yes | no | dunno
-BOHB | Falkner, et al. (2018) | yes | yes | no | dunno
-ASHA | Li, et al. (2019) | yes | yes | no | dunno
-MOB | Klein, et al. (2020) | yes | yes | no | dunno
-PBT | Jaderberg, et al. (2017) | no | yes | no | dunno
-SyncHyperband | Li, et al. (2018) | no | yes | no | dunno
-SyncBOHB | Falkner, et al. (2018) | no | yes | no | dunno
-DEHB | Awad, et al. (2021) | no | yes | no | dunno
-ZS | Wistuba, et al. (2015) | yes | no | yes | dunno
-ASHA-BB | Perrone, et al. (2019)| yes | yes | yes | dunno
-AHSA-CTS | Salinas, et al. (2021)| yes | yes | yes | dunno
-RUSH | Zappella, et al. (2021)| yes | yes | yes | dunno
-CBO | Gardner, et al. (2014) | yes | no | no | dunno
-MOASHA | Schmucker, et al. (2021) | yes | yes | no | dunno
+Method | Reference | Searcher | Asynchronous | Multi-fidelity | Transfer learning | Needs checkpointing
+:--- | :---: | :---: | :---: | :---: | :---: | :---:
+GridSearch | Someone (sometime) | non-random | yes | no | no | no | dunno
+RandSearch | Bergstra, et al. (2011) | random | yes | no | no | no | dunno
+BayesianOptimization | Snoek, et al. (2012) | model-based | yes | no | no | dunno
+TPE | Bergstra, et al. (2011) | model-based | yes | no | no | dunno
+REA | Real, et al. (2019) | ?? | yes | no | no | dunno
+BORE | Tiao, et al. (2021) | model-based | yes | no | no | dunno
+HyperTune | Li, et al. (2022) | model-based | yes | yes | no | dunno
+MedianStoppingRule | Golovin, et al. (2017) | any | yes | yes | no | dunno
+BOHB | Falkner, et al. (2018) | model-based | yes | yes | no | dunno
+ASHA | Li, et al. (2019) | random | yes | yes | no | dunno
+MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no | dunno
+PBT | Jaderberg, et al. (2017) | random | no | yes | no | dunno
+SyncHyperband | Li, et al. (2018) | random | no | yes | no | dunno
+SyncBOHB | Falkner, et al. (2018) | model-based | no | yes | no | dunno
+SyncMOBSTER | Klein, et al. (2020) | model-based | no | yes | no | dunno
+DEHB | Awad, et al. (2021) | random | no | yes | no | dunno
+PASHA | Bohdal, et al. (2022)| random | yes | yes | no | dunno
+ZeroShotTransfer | Wistuba, et al. (2015) | non-random | yes | no | yes | dunno
+ASHA-BB | Perrone, et al. (2019)| random | yes | yes | yes | dunno
+AHSA-CTS | Salinas, et al. (2021)| random | yes | yes | yes | dunno
+RUSH | Zappella, et al. (2021)| random | yes | yes | yes | dunno
+CBO | Gardner, et al. (2014) | ?? | yes | no | no | dunno
+MOASHA | Schmucker, et al. (2021) | random | yes | yes | no | dunno
+
+The searchers fall into three broad categories, **non-random**, **random** or **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.).
+
+BLAH on checkpointing.
 
 ## Examples
 
