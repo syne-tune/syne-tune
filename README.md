@@ -125,12 +125,17 @@ ZeroShotTransfer | Wistuba, et al. (2015) | non-random | yes | no | yes | dunno
 ASHABB | Perrone, et al. (2019)| random | yes | yes | yes | dunno
 AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes | dunno
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes | dunno
-# CBO | Gardner, et al. (2014) | ?? | yes | no | no | dunno
-# MOASHA | Schmucker, et al. (2021) | random | yes | yes | no | dunno
 
 The searchers fall into three broad categories, **non-random**, **random** or **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.).
 
 BLAH on checkpointing.
+
+## Supported multi-objective optimization methods
+
+Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? | Checkpointing?
+Constrained Bayesian Optimization | Gardner, et al. (2014) | ?? | yes | no | no | dunno
+MOASHA | Schmucker, et al. (2021) | random | yes | yes | no | dunno
+
 
 ## Examples
 
