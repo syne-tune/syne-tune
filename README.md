@@ -102,7 +102,7 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
 
-Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? | Checkpointing?
+Method | Reference | Searcher | Asynchro-nous? | Multi-fidelity? | Transfer? | Check-pointing?
 :--- | :---: | :---: | :---: | :---: | :---: | :---:
 Grid Search | Someone (sometime) | non-random | no | no | no | dunno
 Random Search | Bergstra, et al. (2011) | random | yes | no | no | dunno
@@ -126,7 +126,9 @@ ASHABB | Perrone, et al. (2019)| random | yes | yes | yes | dunno
 AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes | dunno
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes | dunno
 
-The searchers fall into three broad categories, **non-random**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) or by applying an evolutionary algorithm. Note that Syne Tune also supports ["BoTorch"](https://github.com/pytorch/botorch) searchers.
+The searchers fall into three broad categories, **non-random**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) or by applying an evolutionary algorithm.
+
+Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers.
 
 BLAH on checkpointing.
 
@@ -135,7 +137,6 @@ BLAH on checkpointing.
 Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? | Checkpointing?
 :--- | :---: | :---: | :---: | :---: | :---: | :---:
 Constrained Bayesian Optimization | Gardner, et al. (2014) | ?? | yes | no | no | dunno
-
 Non-dominated sorting
 MOASHA | Schmucker, et al. (2021) | random | yes | yes | no | dunno
 
