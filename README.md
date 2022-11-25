@@ -102,7 +102,7 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
 
-Method | Reference | Searcher | Asyn-chronous? | Multi-fidelity? | Transfer? 
+Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? 
 :--- | :---: | :---: | :---: | :---: | :---: 
 Grid Search | Someone (sometime) | non-random | no | no | no 
 Random Search | Bergstra, et al. (2011) | random | yes | no | no 
@@ -130,12 +130,12 @@ Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers.
 
 ## Supported multi-objective optimization methods
 
-Method | Reference | Searcher | Asyn-chronous? | Multi-fidelity? | Transfer?
+Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer?
 :--- | :---: | :---: | :---: | :---: | :---: 
 Constrained Bayesian Optimization | Gardner, et al. (2014) | model-based | yes | no | no
 MOASHA | Schmucker, et al. (2021) | random | yes | yes | no
 
-HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizers/schedulers/multiobjective/multiobjective_priority.py):
+HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizers/schedulers/multiobjective/multiobjective_priority.py) for details.
 
 ## Examples
 
