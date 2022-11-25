@@ -102,23 +102,23 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
 
-Method | Reference | Searcher | Asynchronous | Multi-fidelity | Transfer learning | Needs checkpointing
+Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? | Checkpointing?
 :--- | :---: | :---: | :---: | :---: | :---: | :---:
-GridSearch | Someone (sometime) | non-random | yes | no | no | no | dunno
-RandSearch | Bergstra, et al. (2011) | random | yes | no | no | no | dunno
-BayesianOptimization | Snoek, et al. (2012) | model-based | yes | no | no | dunno
+Grid Search | Someone (sometime) | non-random | no | no | no | dunno
+Rand Search | Bergstra, et al. (2011) | random | yes | no | no | dunno
+Median Stopping Rule | Golovin, et al. (2017) | any | yes | yes | no | dunno
+Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no | dunno
 TPE | Bergstra, et al. (2011) | model-based | yes | no | no | dunno
-REA | Real, et al. (2019) | ?? | yes | no | no | dunno
 BORE | Tiao, et al. (2021) | model-based | yes | no | no | dunno
+SyncHyperband | Li, et al. (2018) | random | no | yes | no | dunno
 HyperTune | Li, et al. (2022) | model-based | yes | yes | no | dunno
-MedianStoppingRule | Golovin, et al. (2017) | any | yes | yes | no | dunno
 BOHB | Falkner, et al. (2018) | model-based | yes | yes | no | dunno
+SyncBOHB | Falkner, et al. (2018) | model-based | no | yes | no | dunno
 ASHA | Li, et al. (2019) | random | yes | yes | no | dunno
 MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no | dunno
-PBT | Jaderberg, et al. (2017) | random | no | yes | no | dunno
-SyncHyperband | Li, et al. (2018) | random | no | yes | no | dunno
-SyncBOHB | Falkner, et al. (2018) | model-based | no | yes | no | dunno
 SyncMOBSTER | Klein, et al. (2020) | model-based | no | yes | no | dunno
+REA | Real, et al. (2019) | ?? | yes | no | no | dunno
+PBT | Jaderberg, et al. (2017) | random | no | yes | no | dunno
 DEHB | Awad, et al. (2021) | random | no | yes | no | dunno
 PASHA | Bohdal, et al. (2022)| random | yes | yes | no | dunno
 ZeroShotTransfer | Wistuba, et al. (2015) | non-random | yes | no | yes | dunno
