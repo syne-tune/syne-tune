@@ -104,7 +104,7 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 
 Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? 
 :--- | :---: | :---: | :---: | :---: | :---: 
-Grid Search | Someone (sometime) | non-random | no | no | no 
+Grid Search | Someone (sometime) | deterministic | no | no | no 
 Random Search | Bergstra, et al. (2011) | random | yes | no | no 
 Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no 
 BORE | Tiao, et al. (2021) | model-based | yes | no | no 
@@ -120,11 +120,11 @@ HyperTune | Li, et al. (2022) | model-based | yes | yes | no
 PASHA | Bohdal, et al. (2022)| random | yes | yes | no 
 REA | Real, et al. (2019) | model-based | yes | no | no 
 PBT | Jaderberg, et al. (2017) | model-based | no | yes | no 
-ZeroShotTransfer | Wistuba, et al. (2015) | non-random | yes | no | yes 
+ZeroShotTransfer | Wistuba, et al. (2015) | deterministic | yes | no | yes 
 AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes 
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes 
 
-The searchers fall into three broad categories, **non-random**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function, or by applying an evolutionary algorithm.
+The searchers fall into three broad categories, **deterministic**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function, or by applying an evolutionary algorithm.
 
 Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers.
 
