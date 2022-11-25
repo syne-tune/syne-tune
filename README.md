@@ -102,28 +102,27 @@ The above example runs ASHA with 4 asynchronous workers on a local machine.
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
 
-Method | Reference | Searcher | Asyn-chronous? | Multi-fidelity? | Transfer? | Check-pointing?
-:--- | :---: | :---: | :---: | :---: | :---: | :---:
-Grid Search | Someone (sometime) | non-random | no | no | no | dunno
-Random Search | Bergstra, et al. (2011) | random | yes | no | no | dunno
-Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no | dunno
-BORE | Tiao, et al. (2021) | model-based | yes | no | no | dunno
-MedianStoppingRule | Golovin, et al. (2017) | any | yes | yes | no | dunno
-SyncHyperband | Li, et al. (2018) | random | no | yes | no | dunno
-SyncBOHB | Falkner, et al. (2018) | model-based | no | yes | no | dunno
-SyncMOBSTER | Klein, et al. (2020) | model-based | no | yes | no | dunno
-ASHA | Li, et al. (2019) | random | yes | yes | no | dunno
-BOHB | Falkner, et al. (2018) | model-based | yes | yes | no | dunno
-MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no | dunno
-DEHB | Awad, et al. (2021) | random | no | yes | no | dunno
-HyperTune | Li, et al. (2022) | model-based | yes | yes | no | dunno
-PASHA | Bohdal, et al. (2022)| random | yes | yes | no | dunno
-REA | Real, et al. (2019) | model-based | yes | no | no | dunno
-PBT | Jaderberg, et al. (2017) | model-based | no | yes | no | dunno
-ZeroShotTransfer | Wistuba, et al. (2015) | non-random | yes | no | yes | dunno
-ASHABB | Perrone, et al. (2019)| random | yes | yes | yes | dunno
-AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes | dunno
-RUSH | Zappella, et al. (2021)| random | yes | yes | yes | dunno
+Method | Reference | Searcher | Asyn-chronous? | Multi-fidelity? | Transfer? 
+:--- | :---: | :---: | :---: | :---: | :---: 
+Grid Search | Someone (sometime) | non-random | no | no | no 
+Random Search | Bergstra, et al. (2011) | random | yes | no | no 
+Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no 
+BORE | Tiao, et al. (2021) | model-based | yes | no | no 
+MedianStoppingRule | Golovin, et al. (2017) | any | yes | yes | no 
+SyncHyperband | Li, et al. (2018) | random | no | yes | no 
+SyncBOHB | Falkner, et al. (2018) | model-based | no | yes | no 
+SyncMOBSTER | Klein, et al. (2020) | model-based | no | yes | no 
+ASHA | Li, et al. (2019) | random | yes | yes | no 
+BOHB | Falkner, et al. (2018) | model-based | yes | yes | no 
+MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no 
+DEHB | Awad, et al. (2021) | random | no | yes | no 
+HyperTune | Li, et al. (2022) | model-based | yes | yes | no 
+PASHA | Bohdal, et al. (2022)| random | yes | yes | no 
+REA | Real, et al. (2019) | model-based | yes | no | no 
+PBT | Jaderberg, et al. (2017) | model-based | no | yes | no 
+ZeroShotTransfer | Wistuba, et al. (2015) | non-random | yes | no | yes 
+AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes 
+RUSH | Zappella, et al. (2021)| random | yes | yes | yes 
 
 The searchers fall into three broad categories, **non-random**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function, or by applying an evolutionary algorithm.
 
@@ -132,7 +131,7 @@ Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers.
 ## Supported multi-objective optimization methods
 
 Method | Reference | Searcher | Asyn-chronous? | Multi-fidelity? | Transfer?
-:--- | :---: | :---: | :---: | :---: | :---: | :---:
+:--- | :---: | :---: | :---: | :---: | :---: 
 Constrained Bayesian Optimization | Gardner, et al. (2014) | model-based | yes | no | no
 MOASHA | Schmucker, et al. (2021) | random | yes | yes | no
 
