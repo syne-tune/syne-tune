@@ -115,7 +115,7 @@ class MedianStoppingRule(TrialScheduler):
             return SchedulerDecision.STOP
 
     def grace_condition(self, time_step: float) -> bool:
-        # lets the trial continue when the time is bellow the grace time and when not sufficiently many observations
+        # lets the trial continue when the time is below the grace time and when not sufficiently many observations
         # are present for this time budget
         if (
             self.min_samples_required is not None

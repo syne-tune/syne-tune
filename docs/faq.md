@@ -1,42 +1,40 @@
 # Syne Tune FAQ
 
-## Table of contents
-
-* [Why should I use Syne Tune, and not Ray Tune, Optuna, ...?](#why-syne-tune)
-* [What are the different installations options supported?](#installations)
-* [How can I run on AWS and SageMaker?](#running-on-sagemaker)
-* [What are the metrics reported by default when calling the `Reporter`?](#reporter-metrics)
-* [How can I utilize multiple GPUs?](#multiple-gpus)
-* [What is the default mode when performing optimization?](#default-mode)
-* [How are trials evaluated on a local machine?](#trial-execution)
-* [What does the output of the tuning contain?](#tuning-output)
-* [Where can I find the output of the tuning?](#tuning-output-location)
-* [How can I enable trial checkpointing?](#trial-checkpointing)
-* [Which schedulers make use of checkpointing?](#schedulers-checkpointing)
-* [Is the tuner checkpointed?](#tuner-checkpointing)
-* [Where can I find the output of my trials?](#trial-output)
-* [How can I plot the results of a tuning?](#plotting-tuning)
-* [How can I specify additional tuning metadata?](#additional-metadata)
-* [How do I append additional information to the results which are stored?](#logging-additional-information) 
-* [I don’t want to wait, how can I launch the tuning on a remote machine?](#remote-tuning)
-* [How can I run many experiments in parallel?](#experiment-parallel)
-* [How can I access results after tuning remotely?](#results-remote-tuning)
-* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](#dependencies-remote)
-* [How can I benchmark experiments from the command line?](#benchmark-cli)
-* [What different schedulers do you support? What are the main differences between them?](#schedulers-supported)
-* [How do I define the search space?](#search-space) 
-* [How can I visualize the progress of my tuning experiment with Tensorboard?](#tensorboard)
-* [How can I add a new scheduler?](#add-scheduler)
-* [How can I add a new tabular or surrogate benchmark?](#add-blackbox)
+* [Why should I use Syne Tune?](#why-should-i-use-syne-tune)
+* [What are the different installations options supported?](#what-are-the-different-installations-options-supported)
+* [How can I run on AWS and SageMaker?](#how-can-i-run-on-aws-and-sagemaker)
+* [What are the metrics reported by default when calling the `Reporter`?](#what-are-the-metrics-reported-by-default-when-calling-the-reporter)
+* [How can I utilize multiple GPUs?](#how-can-i-utilize-multiple-gpus)
+* [What is the default mode when performing optimization?](#what-is-the-default-mode-when-performing-optimization)
+* [How are trials evaluated on a local machine?](#how-are-trials-evaluated-on-a-local-machine)
+* [What does the output of the tuning contain?](#what-does-the-output-of-the-tuning-contain)
+* [Where can I find the output of the tuning?](#where-can-i-find-the-output-of-the-tuning)
+* [How can I enable trial checkpointing?](#how-can-i-enable-trial-checkpointing)
+* [Which schedulers make use of checkpointing?](#which-schedulers-make-use-of-checkpointing)
+* [Is the tuner checkpointed?](#is-the-tuner-checkpointed)
+* [Where can I find the output of my trials?](#where-can-i-find-the-output-of-my-trials)
+* [How can I plot the results of a tuning?](#how-can-i-plot-the-results-of-a-tuning)
+* [How can I specify additional tuning metadata?](#how-can-i-specify-additional-tuning-metadata)
+* [How do I append additional information to the results which are stored?](#how-do-i-append-additional-information-to-the-results-which-are-stored) 
+* [I don’t want to wait, how can I launch the tuning on a remote machine?](#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine)
+* [How can I run many experiments in parallel?](#how-can-i-run-many-experiments-in-parallel)
+* [How can I access results after tuning remotely?](#how-can-i-access-results-after-tuning-remotely)
+* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](#how-can-i-specify-dependencies-to-remote-launcher-or-when-using-the-sagemaker-backend)
+* [How can I benchmark different methods?](#how-can-i-benchmark-different-methods)
+* [What different schedulers do you support? What are the main differences between them?](#what-different-schedulers-do-you-support-what-are-the-main-differences-between-them)
+* [How do I define the search space?](#how-do-i-define-the-search-space) 
+* [How can I visualize the progress of my tuning experiment with Tensorboard?](#how-can-i-visualize-the-progress-of-my-tuning-experiment-with-tensorboard)
+* [How can I add a new scheduler?](#how-can-i-add-a-new-scheduler)
+* [How can I add a new tabular or surrogate benchmark?](#how-can-i-add-a-new-tabular-or-surrogate-benchmark)
 
 
-### <a name="why-syne-tune"></a> Why should I use Syne Tune, and not Ray Tune, Optuna, ...?
+## Why should I use Syne Tune?
 
 HPO is an important problem since many years, with a healthy number of commercial
 and open source tools available. Notable examples for open source tools are
 [Ray Tyne](https://docs.ray.io/en/latest/tune/index.html) and
 [Optuna](https://optuna.readthedocs.io/en/stable/). Here are some reasons why you
-may prefer Syne Tune over these alternatives.
+may prefer Syne Tune over these alternatives:
 * Lightweight and platform-agnostic: Syne Tune is designed to work with different
   execution back-ends, so you are not locked into a particular distributed system
   architecture. Syne Tune runs with minimal dependencies.
@@ -65,7 +63,7 @@ the alternatives:
   service.
 
 
-### <a name="installations"></a> What are the different installations options supported?
+## What are the different installations options supported?
 
 To install Syne Tune with minimal dependencies from pip, you can simply do:
 
@@ -77,17 +75,18 @@ If you want in addition to install our own Gaussian process based optimizers, Ra
 you can run `pip install 'syne-tune[X]'` where `X` can be 
 * `gpsearchers`: For built-in Gaussian process based optimizers
 * `aws`: AWS SageMaker dependencies
-* `raytune`: For Ray Tune optimizers
+* `raytune`: For Ray Tune optimizers, installs all Ray Tune dependencies
 * `benchmarks`: For installing dependencies required to run all benchmarks
 * `blackbox-repository`: Blackbox repository for simulated tuning
 * `yahpo`: YAHPO Gym surrogate blackboxes
 * `kde`: For BOHB
 * `botorch`: Bayesian optimization from BOTorch
+* `dev`: For developers who want to extend Syne Tune
 * `extra`: For installing all the above
 * `bore`: For Bore optimizer
 
-For instance, `pip install 'syne-tune[gpsearchers]'` will install Syne Tune along with many built-in Gaussian process 
-optimizers.
+For instance, `pip install 'syne-tune[gpsearchers]'` will install Syne Tune
+along with many built-in Gaussian process optimizers.
 
 To install the latest version from git, run the following:
 
@@ -95,17 +94,26 @@ To install the latest version from git, run the following:
 pip install git+https://github.com/awslabs/syne-tune.git
 ```
 
-For local development, we recommend to use the following setup which will enable you to easily test your changes: 
+For local development, we recommend using the following setup which will enable
+you to easily test your changes:
 
 ```bash
-pip install --upgrade pip
 git clone https://github.com/awslabs/syne-tune.git
 cd syne-tune
+python3 -m venv st_venv
+. st_venv/bin/activate
+pip install --upgrade pip
 pip install -e '.[extra]'
 ```
 
+This installs everything in a virtual environment `st_venv`. Remember to activate
+this environment before working with Syne Tune. We also recommend building the
+virtual environment from scratch now and then, in particular when you pull a new
+release, as dependencies may have changed.
 
-### <a name="running-on-sagemaker"></a> How can I run on AWS and SageMaker?
+
+## How can I run on AWS and SageMaker?
+
 If you want to launch experiments on SageMaker rather than on your local machine, you will need access to AWS and SageMaker on your machine.
 Make sure that:
 
@@ -115,23 +123,24 @@ Make sure that:
 
 The following command should run without error if your credentials are available:
 
-```
+```bash
 python -c "import boto3; print(boto3.client('sagemaker').list_training_jobs(MaxResults=1))"
 ```
 
 You can also run the following example that evaluates trials on SageMaker to test your setup.
 
-```
+```bash
 python examples/launch_height_sagemaker.py
 ```
 
-### <a name="reporter-metrics"></a> What are the metrics reported by default when calling the `Reporter`?
+
+## What are the metrics reported by default when calling the `Reporter`?
 
 Whenever you call the reporter to log a result, the worker time-stamp, the worker time since the creation of the reporter and the number of times the reporter was called are logged under the fields `st_worker_timestamp`,  `st_worker_time`, and `st_worker_iter`. In addition, when running on SageMaker, a dollar-cost estimate is logged under the field `st_worker_cost`.
 
 To see this behavior, you can simply call the reporter to see those metrics:
 
-```
+```python
 from syne_tune.report import Reporter
 reporter = Reporter()
 for step in range(3):
@@ -142,31 +151,38 @@ for step in range(3):
 # [tune-metric]: {"step": 2, "metric": 0.6666666666666666, "st_worker_timestamp": 1644311849.60733, "st_worker_time": 0.00030723599996917983, "st_worker_iter": 2}
 ```
 
-### <a name="multiple-gpus"></a> How can I utilize multiple GPUs?
 
-To utilize multiple GPUs you can either use the backend `LocalBackend` which will run on the GPU available in a local machine. You can also run on a remote AWS machine with multiple GPUs using the local backend and the remote launcher, see [I don’t want to wait, how can I launch the tuning on a remote machine?](#remote-tuning) or run with the SageMaker backend which spins-up one training job per trial.
+## How can I utilize multiple GPUs?
+
+To utilize multiple GPUs you can either use the backend `LocalBackend` which
+will run on the GPU available in a local machine. You can also run on a remote
+AWS machine with multiple GPUs using the local backend and the remote launcher,
+see [here](#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine),
+or run with the SageMaker backend which spins-up one training job per trial.
 
 When evaluating trials on a local machine with `LocalBackend`, by default each trial is allocated to the least occupied GPU by setting `CUDA_VISIBLE_DEVICES` environment variable. 
 
-### <a name="default-mode"></a> What is the default mode when performing optimization?
 
-The default mode is min when performing optimization so the target metric is minimized. The mode can be configured when instantiating a scheduler.
+## What is the default mode when performing optimization?
 
-### <a name="trial-execution"></a> How are trials evaluated on a local machine?
+The default mode is `"min"` when performing optimization, so the target metric is minimized. The mode can be configured when instantiating a scheduler.
+
+
+## How are trials evaluated on a local machine?
 
 When trials are executed locally (e.g. when `LocalBackend` is used), each trial is evaluated as a different sub-process.
 As such the number of concurrent configurations evaluated at the same time (set by `n_workers`) should
 account for the capacity of the machine where the trials are executed.
 
-### <a name="tuning-output-location"></a> Where can I find the output of the tuning?
+
+## Where can I find the output of the tuning?
 
 When running locally, the output of the tuning is saved under `~/syne-tune/{tuner-name}/` by default. 
 When running remotely on SageMaker, the output of the tuning is saved under `/opt/ml/checkpoints/` by default and
 the tuning output is synced regularly to  `s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/`.
 
-If you run remote tuning via the CLI, the tuning output is synced to `s3://{sagemaker-default-bucket}/syne-tune/{experiment-name}/{tuner-name}/`, where `experiment-name` is the prefix of `tuner-name` without the datetime extension (in the example above, `experiment-name = 'train-height'`).
 
-### <a name="tuning-output-location"></a> How can I change the default output folder where tuning results are stored?
+## How can I change the default output folder where tuning results are stored?
 
 To change the path where tuning results are written, you can set the environment variable `SYNETUNE_FOLDER` to the 
 folder that you want.
@@ -184,11 +200,15 @@ You can also do the following for instance to permanently change the output fold
 echo 'export SYNETUNE_FOLDER="~/new-syne-tune-folder"' >> ~/.bashrc && source ~/.bashrc
 ```
 
-### <a name="tuning-output"></a> What does the output of the tuning contain?
 
-Syne Tune stores the following files `metadata.json`, `results.csv.zip`, and `tuner.dill` which are respectively metadata of the tuning job, results obtained at each time-step and state of the tuner.
+## What does the output of the tuning contain?
 
-### <a name="trial-checkpointing"></a> How can I enable trial checkpointing?
+Syne Tune stores the following files `metadata.json`, `results.csv.zip`, and `tuner.dill`
+which are respectively metadata of the tuning job, results obtained at each
+time-step and state of the tuner.
+
+
+## How can I enable trial checkpointing?
 
 Since trials may be paused and resumed (either by schedulers or when using
 spot-instances), the user may checkpoint intermediate results to avoid starting
@@ -235,7 +255,8 @@ Finally, the scheduler provides additional information about checkpointing in
 `config`. You don't have to worry about this:
 `add_checkpointing_to_argparse(parser)` adds corresponding arguments to the parser.
 
-### <a name="schedulers-checkpointing"></a> Which schedulers make use of checkpointing?
+
+## Which schedulers make use of checkpointing?
 
 Checkpointing means storing the state of a trial (i.e., model parameters, optimizer
 or learning rate scheduler parameters), so that it can be paused and potentially
@@ -257,20 +278,22 @@ The following schedulers make use of checkpointing:
   This code runs without checkpointing, but wastes effort in the same sense as
   promotion-based asynchronous Hyperband
 
-### <a name="tuner-checkpointing"></a> Is the tuner checkpointed?
+
+## Is the tuner checkpointed?
 
 Yes. When performing the tuning, the tuner state is regularly saved on the experiment path under `tuner.dill`
 (every 10 seconds which can be configured with `results_update_interval`).
 This allows to use spot-instances when running a tuning remotely with the remote launcher. It also allows to 
 resume a past experiment or analyse the state of scheduler at any point.
 
-### <a name="trial-output"></a> Where can I find the output of my trials?
+
+## Where can I find the output of my trials?
 
 When running  `LocalBackend` locally, results of trials are saved under `~/syne-tune/{tuner-name}/{trial-id}/` and contains the following files:
 
-* config.json: configuration that is being evaluated in the trial
-* std.err: standard error 
-* std.out: standard output
+* `config.json`: configuration that is being evaluated in the trial
+* `std.err`: standard error 
+* `std.out`: standard output
 
 In addition all checkpointing files used by a training script such as intermediate model checkpoint will also be located there.
 This is exemplified in the following example:
@@ -306,11 +329,12 @@ tree ~/syne-tune/train-height-2022-01-12-11-08-40-971/
 When running tuning remotely with the remote launcher, only `config.json`, `metadata.json`, `results.csv.zip` and `tuner.dill` 
 are synced with S3 unless `store_logs_localbackend` in which case the trial logs and informations are also persisted.
 
-### <a name="plotting-tuning"></a> How can I plot the results of a tuning?
+
+## How can I plot the results of a tuning?
 
 The easiest way to plot the result of a tuning experiment is to call the following:
 
-```
+```python
 tuner = Tuner(
     ...
     tuner_name="plot-results-demo",
@@ -322,12 +346,13 @@ tuning_experiment.plot()
 
 This generates a plot of the best value found over time. Note that this you can also plot the results while the experiment is running as results are updated continuously.
 
-### <a name="additional-metadata"></a> How can I specify additional tuning metadata?
+
+## How can I specify additional tuning metadata?
 
 By default, Syne Tune stores the time, the names and modes of the metric being tuner, the name of the entrypoint, the name backend and the scheduler name.
 You can also add custom metadata to your tuning job by setting `metadata` in `Tuner` as follow:
 
-```
+```python
 tuner = Tuner(
     ...
     tuner_name="plot-results-demo",
@@ -337,7 +362,8 @@ tuner = Tuner(
 
 All Syne Tune and user metadata are saved when the tuner starts under `metadata.json`.
 
-### <a name="logging-additional-information"></a> How do I append additional information to the results which are stored? 
+
+## How do I append additional information to the results which are stored? 
 
 Results are processed and stored by callbacks passed to `Tuner`, in particular see 
 [tuner_callback.py](../syne_tune/tuner_callback.py#L80). 
@@ -349,7 +375,8 @@ If you run experiments with tabulated benchmarks using the `SimulatorBackend`, a
 [launch_nasbench201_simulated.py](../examples/launch_nasbench201_simulated.py), results are stored by `SimulatorCallback` instead, and you need to inherit from this class, as shown in 
 [searcher_callback.py](../syne_tune/optimizer/schedulers/searchers/searcher_callback.py#L88).
 
-### <a name="remote-tuning"></a> I don’t want to wait, how can I launch the tuning on a remote machine?
+
+## I don’t want to wait, how can I launch the tuning on a remote machine?
 
 Remote launching of experiments has a number of advantages:
 * The machine you are working on is not blocked
@@ -369,7 +396,8 @@ Remote launching for benchmarking (i.e., running many remote experiments in orde
 to compare multiple methods) is detailed in
 [this tutorial](tutorials/benchmarking/README.md).
 
-### <a name="experiment-parallel"></a> How can I run many experiments in parallel?
+
+## How can I run many experiments in parallel?
 
 You can remotely launch any number of experiments, which will then run in parallel,
 as detailed in
@@ -380,24 +408,34 @@ as detailed in
 
 Another example is given in [benchmark_loop](../benchmarking/benchmark_loop).
 
-### <a name="results-remote-tuning"></a> How can I access results after tuning remotely?
+
+## How can I access results after tuning remotely?
 
 You can either call `load_experiment("{tuner-name}")` which will download files from s3 if the experiment is not found locally. You can also sync directly files from s3 under `~/syne-tune/` folder in batch for instance by running:
 
-```
+```bash
 aws s3 sync s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/ ~/syne-tune/  --include "*"  --exclude "*tuner.dill"
 ```
 
 To get all results without the tuner state (you can ommit the include and exclude if you also want to include the tuner state).
 
-### <a name="dependencies-remote"></a> How can I specify dependencies to remote launcher or when using the SageMaker backend?
 
-When you run remote code, you often need to install packages (e.g. scipy) or have custom code available.
+## How can I specify dependencies to remote launcher or when using the SageMaker backend?
 
-* To install packages, you can add a file `requirements.txt` in the same folder as your endpoint script. All those packages will be installed by SageMaker when docker container starts.
-* To include custom code (for instance a library that you are working on), you can set the parameter `dependencies` on the remote launcher or on a SageMaker framework to a list of folders. The folders indicated will be compressed, sent to s3 and added to the python path when the container starts. You can see [launch_remote.py](../benchmarking/benchmark_loop/launch_remote.py#L28) for an example setting dependencies in a SageMaker estimator.
+When you run remote code, you often need to install packages (e.g. `scipy`) or have custom code available.
 
-### <a name="benchmark-cli"></a> How can I benchmark different methods?
+* To install packages, you can add a file `requirements.txt` in the same folder
+  as your endpoint script. All those packages will be installed by SageMaker
+  when docker container starts.
+* To include custom code (for instance a library that you are working on), you
+  can set the parameter `dependencies` on the remote launcher or on a SageMaker
+  framework to a list of folders. The folders indicated will be compressed,
+  sent to s3 and added to the python path when the container starts. You can
+  see [launch_remote.py](../benchmarking/benchmark_loop/launch_remote.py#L28)
+  for an example setting dependencies in a SageMaker estimator.
+
+
+## How can I benchmark different methods?
 
 The most flexible way to do so is to write a custom launcher script, as detailed in
 [this tutorial](tutorials/benchmarking/README.md), see also these examples:
@@ -407,7 +445,8 @@ The most flexible way to do so is to write a custom launcher script, as detailed
 * Fine-tuning transformers: [launch_remote.py](../benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py)
 * Hyper-Tune: [launch_remote.py](../benchmarking/nursery/benchmark_hypertune/launch_remote.py)
 
-### <a name="schedulers-supported"></a> What different schedulers do you support? What are the main differences between them?
+
+## What different schedulers do you support? What are the main differences between them?
 
 We refer to HPO algorithms as *schedulers*. A scheduler decides which configurations
 to assign to new trials, but also when to stop a running or resume a paused trial.
@@ -440,9 +479,11 @@ Further schedulers provided by Syne Tune include:
 * [Transfer learning schedulers](../examples/launch_nas201_transfer_learning.py)
 * [Wrappers for Ray Tune schedulers](../examples/launch_height_ray.py)
 
-Most of those methods can be accessed with short names by from [baselines.py](../syne_tune/optimizer/baselines.py).
+Most of those methods can be accessed with short names by from
+[baselines.py](../syne_tune/optimizer/baselines.py).
 
-### <a name="search-space"></a> How do I define the search space? 
+
+## How do I define the search space? 
 
 While the training script defines the function to be optimized, some care needs
 to be taken to define the search space for the hyperparameter optimization
@@ -454,17 +495,17 @@ A powerful approach is to run experiments in parallel. Namely, split your
 hyperparameters into groups A, B, such that HPO over B is tractable. Draw a set
 of N configurations from A at random, then start N HPO experiments in parallel,
 where in each of them the search space is over B only, while the parameters in A
-are fixed. Syne Tune supports
-[massively parallel experimentation](command_line.md#launching-many-experiments),
-see [this tutorial](tutorials/benchmarking/README.md).
+are fixed. Syne Tune supports massively parallel experimentation, see
+[this tutorial](tutorials/benchmarking/README.md).
 
-### <a name="tensorboard"></a> How can I visualize the progress of my tuning experiment with Tensorboard?
+
+## How can I visualize the progress of my tuning experiment with Tensorboard?
 
 To visualize the progress of Syne Tune in
 [Tensorboard](https://www.tensorflow.org/tensorboard), you can pass the
 `TensorboardCallback` to the `Tuner` object:
 
-```
+```python
 from syne_tune.callbacks import TensorboardCallback
 
 tuner = Tuner(
@@ -472,35 +513,42 @@ tuner = Tuner(
     callbacks=[TensorboardCallback()],
 )
 ```
-Note that, you need to install [TensorboardX](https://github.com/lanpa/tensorboardX) to use this callback. You can install it by:
-```
+Note that, you need to install [TensorboardX](https://github.com/lanpa/tensorboardX)
+to use this callback. You can install it by:
+```bash
 pip install tensorboardX
 ```
-This will log all metrics that are reported in your training script via the report(...) function. Now, to open Tensorboard, run:
+This will log all metrics that are reported in your training script via the `report(...)`
+function. Now, to open Tensorboard, run:
 
-```
+```bash
 tensorboard --logdir ~/syne-tune/{tuner-name}/tensorboard_output
 ```
 
-If you want to plot the cumulative optimum of the metric you want to optimize, you can pass the `target_metric` argument to TensorboardCallback. This will also report the best found hyperparameter configuration over time.
+If you want to plot the cumulative optimum of the metric you want to optimize,
+you can pass the `target_metric` argument to `TensorboardCallback`. This will
+also report the best found hyperparameter configuration over time.
 
-### <a name="add-scheduler"></a> How can I add a new scheduler?
+
+## How can I add a new scheduler?
 
 This is explained in detail in [this tutorial](tutorials/developer/README.md).
 Please do consider [contributing back](../CONTRIBUTING.md) your efforts to the
 Syne Tune community, thanks!
 
-### <a name="add-blackbox"></a> How can I add a new tabular or surrogate benchmark?
 
-To add a new dataset of tabular evaluations, you need to 
-1) write a blackbox recipe able to regenerate it by extending
-[`BlackboxRecipe`](../syne_tune/blackbox_repository/conversion_scripts/BlackboxRecipe.py). 
-You need in particular to provide the name of the blackbox, the reference so that users are prompted to cite the appropriated paper and a code 
- that can generate it from scratch, see 
-[`lcbench.py`](../syne_tune/blackbox_repository/conversion_scripts/scripts/lcbench/lcbench.py) 
-for an example.
-2) add your new recipe class in 
-[`recipes`](../syne_tune/blackbox_repository/conversion_scripts/recipes.py) 
-to make it available in Syne Tune.
+## How can I add a new tabular or surrogate benchmark?
+
+To add a new dataset of tabular evaluations, you need to
+* write a blackbox recipe able to regenerate it by extending
+  [`BlackboxRecipe`](../syne_tune/blackbox_repository/conversion_scripts/blackbox_recipe.py). 
+  You need in particular to provide the name of the blackbox, the reference
+  so that users are prompted to cite the appropriated paper, and a code 
+  that can generate it from scratch. See
+  [`lcbench.py`](../syne_tune/blackbox_repository/conversion_scripts/scripts/lcbench/lcbench.py) 
+  for an example.
+* add your new recipe class in 
+  [`recipes.py`](../syne_tune/blackbox_repository/conversion_scripts/recipes.py) 
+  to make it available in Syne Tune.
 
 Further details are given [here](tutorials/benchmarking/bm_contributing.md#contributing-a-tabulated-benchmark).

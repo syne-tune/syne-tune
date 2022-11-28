@@ -28,20 +28,25 @@ pip install 'syne-tune[extra]'
 or to get the latest version from git: 
 
 ```bash
-pip install --upgrade pip
 git clone https://github.com/awslabs/syne-tune.git
 cd syne-tune
+python3 -m venv st_venv
+. st_venv/bin/activate
+pip install --upgrade pip
 pip install -e '.[extra]'
 ```
 
-When installing Syne Tune from sources, we recommend to use a virtual environment. You can see the FAQ [What are the different installations options supported?](docs/faq.md#installations) for more install options.
+This installs everything in a virtual environment `st_venv`. Remember to activate
+this environment before working with Syne Tune. We also recommend building the
+virtual environment from scratch now and then, in particular when you pull a new
+release, as dependencies may have changed.
 
 See our [change log](CHANGELOG.md) to see what changed in the latest version. 
 
 ## Getting started
 
 To enable tuning, you have to report metrics from a training script so that they can be communicated later to Syne Tune,
-this can be accomplished by just calling `report(epoch=epoch, loss=loss)` as shown in the example bellow:
+this can be accomplished by just calling `report(epoch=epoch, loss=loss)` as shown in the example below:
 
 ```python
 # train_height.py
@@ -137,32 +142,32 @@ employs an easy-to-use benchmark convention
 
 You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalities. 
 
-* [Why should I use Syne Tune, and not Ray Tune, Optuna, ...?](docs/faq.md#why-syne-tune)
-* [What are the different installations options supported?](docs/faq.md#installations)
-* [How can I run on AWS and SageMaker?](docs/faq.md#running-on-sagemaker)
-* [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md#reporter-metrics)
-* [How can I utilize multiple GPUs?](docs/faq.md#multiple-gpus)
-* [What is the default mode when performing optimization?](docs/faq.md#default-mode)
-* [How are trials evaluated on a local machine?](docs/faq.md#trial-execution)
-* [What does the output of the tuning contain?](docs/faq.md#tuning-output)
-* [Where can I find the output of the tuning?](docs/faq.md#tuning-output-location)
-* [How can I enable trial checkpointing?](docs/faq.md#trial-checkpointing)
-* [Which schedulers make use of checkpointing?](docs/faq.md#schedulers-checkpointing)
-* [Is the tuner checkpointed?](docs/faq.md#tuner-checkpointing)
-* [Where can I find the output of my trials?](docs/faq.md#trial-output)
-* [How can I plot the results of a tuning?](docs/faq.md#plotting-tuning)
-* [How can I specify additional tuning metadata?](docs/faq.md#additional-metadata)
-* [How do I append additional information to the results which are stored?](docs/faq.md#logging-additional-information) 
-* [I don’t want to wait, how can I launch the tuning on a remote machine?](docs/faq.md#remote-tuning)
-* [How can I run many experiments in parallel?](docs/faq.md#experiment-parallel)
-* [How can I access results after tuning remotely?](docs/faq.md#results-remote-tuning)
-* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](docs/faq.md#dependencies-remote)
-* [How can I benchmark experiments from the command line?](docs/faq.md#benchmark-cli)
-* [What different schedulers do you support? What are the main differences between them?](docs/faq.md#schedulers-supported)
-* [How do I define the search space?](docs/faq.md#search-space) 
-* [How can I visualize the progress of my tuning experiment with Tensorboard?](docs/faq.md#tensorboard) 
-* [How can I add a new scheduler?](docs/faq.md#add-scheduler)
-* [How can I add a new tabular or surrogate benchmark?](docs/faq.md#add-blackbox)
+* [Why should I use Syne Tune?](docs/faq.md#why-should-i-use-syne-tune)
+* [What are the different installations options supported?](docs/faq.md#what-are-the-different-installations-options-supported)
+* [How can I run on AWS and SageMaker?](docs/faq.md#how-can-i-run-on-aws-and-sagemaker)
+* [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md#what-are-the-metrics-reported-by-default-when-calling-the-reporter)
+* [How can I utilize multiple GPUs?](docs/faq.md#how-can-i-utilize-multiple-gpus)
+* [What is the default mode when performing optimization?](docs/faq.md#what-is-the-default-mode-when-performing-optimization)
+* [How are trials evaluated on a local machine?](docs/faq.md#how-are-trials-evaluated-on-a-local-machine)
+* [What does the output of the tuning contain?](docs/faq.md#what-does-the-output-of-the-tuning-contain)
+* [Where can I find the output of the tuning?](docs/faq.md#where-can-i-find-the-output-of-the-tuning)
+* [How can I enable trial checkpointing?](docs/faq.md#how-can-i-enable-trial-checkpointing)
+* [Which schedulers make use of checkpointing?](docs/faq.md#which-schedulers-make-use-of-checkpointing)
+* [Is the tuner checkpointed?](docs/faq.md#is-the-tuner-checkpointed)
+* [Where can I find the output of my trials?](docs/faq.md#where-can-i-find-the-output-of-my-trials)
+* [How can I plot the results of a tuning?](docs/faq.md#how-can-i-plot-the-results-of-a-tuning)
+* [How can I specify additional tuning metadata?](docs/faq.md#how-can-i-specify-additional-tuning-metadata)
+* [How do I append additional information to the results which are stored?](docs/faq.md#how-do-i-append-additional-information-to-the-results-which-are-stored) 
+* [I don’t want to wait, how can I launch the tuning on a remote machine?](docs/faq.md#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine)
+* [How can I run many experiments in parallel?](docs/faq.md#how-can-i-run-many-experiments-in-parallel)
+* [How can I access results after tuning remotely?](docs/faq.md#how-can-i-access-results-after-tuning-remotely)
+* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](docs/faq.md#how-can-i-specify-dependencies-to-remote-launcher-or-when-using-the-sagemaker-backend)
+* [How can I benchmark different methods?](docs/faq.md#how-can-i-benchmark-different-methods)
+* [What different schedulers do you support? What are the main differences between them?](docs/faq.md#what-different-schedulers-do-you-support-what-are-the-main-differences-between-them)
+* [How do I define the search space?](docs/faq.md#how-do-i-define-the-search-space) 
+* [How can I visualize the progress of my tuning experiment with Tensorboard?](docs/faq.md#how-can-i-visualize-the-progress-of-my-tuning-experiment-with-tensorboard)
+* [How can I add a new scheduler?](docs/faq.md#how-can-i-add-a-new-scheduler)
+* [How can I add a new tabular or surrogate benchmark?](docs/faq.md#how-can-i-add-a-new-tabular-or-surrogate-benchmark)
 
 Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](docs/tutorials/basics/README.md)
