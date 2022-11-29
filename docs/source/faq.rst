@@ -269,6 +269,14 @@ Finally, the scheduler provides additional information about checkpointing in
 this: ``add_checkpointing_to_argparse(parser)`` adds corresponding arguments to
 the parser.
 
+
+How can I retrieve the best checkpoint obtained after tuning?
+===========================================
+
+You can take a look at this example
+`examples/launch_checkpoint_example.py <examples.html#retrieving-the-best-checkpoint>`__
+which shows how to retrieve the best checkpoint obtained after tuning an XGBoost model.
+
 Which schedulers make use of checkpointing?
 ===========================================
 

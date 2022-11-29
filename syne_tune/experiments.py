@@ -46,6 +46,7 @@ class ExperimentResult:
     results: pd.DataFrame
     metadata: dict
     tuner: Tuner
+    path: Path
 
     def __str__(self):
         res = f"Experiment {self.name}"
@@ -198,6 +199,7 @@ def load_experiment(
         results=results,
         tuner=tuner,
         metadata=metadata,
+        path=path,
     )
 
 
