@@ -124,7 +124,6 @@ class BlackBoxYAHPO(Blackbox):
         # transform fidelity space for some of the YAHPO scenarios
         self._adjust_fidelity_space(fidelities)
 
-
     def _initialize_for_scenario(self):
         if self._is_iaml or self._is_rbv2:
             # For `iaml_`, the fidelity `trainsize` has been evaluated at values
@@ -169,8 +168,9 @@ class BlackBoxYAHPO(Blackbox):
     def active_hyperparameters(self, configuration: dict) -> List[str]:
         return self.benchmark.config_space.get_active_hyperparameters(
             ConfigSpace.Configuration(
-                self.benchmark.config_space, values=configuration,
-                allow_inactive_with_values=True
+                self.benchmark.config_space,
+                values=configuration,
+                allow_inactive_with_values=True,
             )
         )
 

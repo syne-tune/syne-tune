@@ -10,6 +10,15 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.optimizer.schedulers.searchers.constrained.constrained_gp_fifo_searcher import (  # noqa: F401
-    ConstrainedGPFIFOSearcher,
-)
+from syne_tune.try_import import try_import_gpsearchers_message
+
+__all__ = []
+
+try:
+    from syne_tune.optimizer.schedulers.searchers.constrained.constrained_gp_fifo_searcher import (  # noqa: F401
+        ConstrainedGPFIFOSearcher,
+    )
+
+    __all__.append("ConstrainedGPFIFOSearcher")
+except ImportError:
+    print(try_import_gpsearchers_message())

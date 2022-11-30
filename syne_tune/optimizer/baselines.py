@@ -38,6 +38,17 @@ from syne_tune.try_import import (
 
 
 class RandomSearch(FIFOScheduler):
+    """Random search.
+
+    See :class:`syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
     def __init__(self, config_space: dict, metric: str, **kwargs):
         super(RandomSearch, self).__init__(
             config_space=config_space,
@@ -48,6 +59,17 @@ class RandomSearch(FIFOScheduler):
 
 
 class GridSearch(FIFOScheduler):
+    """Grid search.
+
+    See :class:`syne_tune.optimizer.schedulers.searchers.GridSearcher`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
     def __init__(self, config_space: dict, metric: str, **kwargs):
         super(GridSearch, self).__init__(
             config_space=config_space,
@@ -58,6 +80,17 @@ class GridSearch(FIFOScheduler):
 
 
 class BayesianOptimization(FIFOScheduler):
+    """Gaussian process based Bayesian optimization.
+
+    See :class:`syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
     def __init__(self, config_space: dict, metric: str, **kwargs):
         super(BayesianOptimization, self).__init__(
             config_space=config_space,
@@ -74,13 +107,19 @@ def _assert_need_one(kwargs: dict, need_one: Optional[set] = None):
 
 
 class ASHA(HyperbandScheduler):
-    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
-        """
-        One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
-        `type='promotion'`, the latter is more useful, see also
-        :class:`HyperbandScheduler`.
+    """Asynchronous Sucessive Halving (ASHA).
 
-        """
+    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
+    `type="promotion"`, the latter is more useful, see also
+    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    """
+
+    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
         _assert_need_one(kwargs)
         super(ASHA, self).__init__(
             config_space=config_space,
@@ -92,18 +131,28 @@ class ASHA(HyperbandScheduler):
 
 
 class MOBSTER(HyperbandScheduler):
-    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
-        """
-        One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
-        `type='promotion'`, the latter is more useful, see also
-        :class:`HyperbandScheduler`.
+    """Model-based Asynchronous Multi-fidelity Optimizer (MOBSTER).
 
-        MOBSTER can be run with different surrogate models. The model is selected
-        by `search_options["model"]` in `kwargs`. The default is `"gp_multitask"`
-        (jointly dependent multi-task GP model), another useful choice is
-        `"gp_independent"` (independent GP models at each rung level, with shared
-        ARD kernel).
-        """
+    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
+    `type="promotion"`, the latter is more useful, see also
+    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    MOBSTER can be run with different surrogate models. The model is selected
+    by `search_options["model"]` in `kwargs`. The default is `"gp_multitask"`
+    (jointly dependent multi-task GP model), another useful choice is
+    `"gp_independent"` (independent GP models at each rung level, with shared
+    ARD kernel).
+
+    See :class:`syne_tune.optimizer.schedulers.searchers.GPMultifidelitySearcher`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    """
+
+    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
         _assert_need_one(kwargs)
         super(MOBSTER, self).__init__(
             config_space=config_space,
@@ -115,25 +164,36 @@ class MOBSTER(HyperbandScheduler):
 
 
 class HyperTune(HyperbandScheduler):
+    """
+    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
+    `type="promotion"`, the latter is more useful, see also
+    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    Hyper-Tune is a model-based variant of ASHA with more than one bracket.
+    It can be seen as extension of MOBSTER and can be used with
+    `search_options["model"]` in `kwargs` being `"gp_independent"` or
+    `"gp_multitask"`. It has a model-based way to sample the bracket for every
+    new trial, as well as an ensemble predictive distribution feeding into the
+    acquisition function. Our implementation is based on:
+
+        | Yang Li et al
+        | Hyper-Tune: Towards Efficient Hyper-parameter Tuning at Scale
+        | VLDB 2022
+        | https://arxiv.org/abs/2201.06834
+
+    See also
+    :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`,
+    and see
+    :class:`syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    """
+
     def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
-        """
-         One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
-         `type='promotion'`, the latter is more useful, see also
-         :class:`HyperbandScheduler`.
-
-         Hyper-Tune is a model-based variant of ASHA with more than one bracket.
-         It can be seen as extension of MOBSTER and can be used with the
-         "gp_independent" or "gp_multitask" model. It has a model-based way
-         to sample the bracket for every new trial, as well as an ensemble
-        predictive distribution. Our
-         implementation is based on:
-
-            Yang Li et al
-            Hyper-Tune: Towards Efficient Hyper-parameter Tuning at Scale
-            VLDB 2022
-
-        See also :class:`HyperTuneIndependentGPModel`.
-        """
         _assert_need_one(kwargs)
         kwargs = copy.deepcopy(kwargs)
         search_options = kwargs.get("search_options", dict())
@@ -160,11 +220,18 @@ class HyperTune(HyperbandScheduler):
 
 
 class PASHA(HyperbandScheduler):
+    """Progressive ASHA.
+
+    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. The latter is
+    more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    """
+
     def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
-        """
-        One of `max_t`, `max_resource_attr` needs to be in `kwargs`. The
-        latter is more useful, see also :class:`HyperbandScheduler`.
-        """
         _assert_need_one(kwargs)
         super(PASHA, self).__init__(
             config_space=config_space,
@@ -177,6 +244,18 @@ class PASHA(HyperbandScheduler):
 
 
 class SyncHyperband(SynchronousGeometricHyperbandScheduler):
+    """Synchronous Hyperband.
+
+    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -184,12 +263,6 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        """
-        One of `max_resource_level`, `max_resource_attr` needs to be in
-        `kwargs`. The latter is more useful, see also
-        :class:`HyperbandScheduler`.
-
-        """
         _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         super(SyncHyperband, self).__init__(
             config_space=config_space,
@@ -201,6 +274,21 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
 
 
 class SyncBOHB(SynchronousGeometricHyperbandScheduler):
+    """Synchronous BOHB.
+
+    Combines :class:`SyncHyperband` with TPE-like Bayesian optimization, using
+    kernel density estimators.
+
+    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -208,12 +296,6 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        """
-        One of `max_resource_level`, `max_resource_attr` needs to be in
-        `kwargs`. The latter is more useful, see also
-        :class:`HyperbandScheduler`.
-
-        """
         _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         super(SyncBOHB, self).__init__(
             config_space=config_space,
@@ -225,6 +307,20 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
 
 
 class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
+    """Differential Evolution Hyperband (DEHB).
+
+    Combines :class:`SyncHyperband` with ideas from evolutionary algorithms.
+
+    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -232,12 +328,6 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        """
-        One of `max_resource_level`, `max_resource_attr` needs to be in
-        `kwargs`. The latter is more useful, see also
-        :class:`HyperbandScheduler`.
-
-        """
         _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         super(DEHB, self).__init__(
             config_space=config_space,
@@ -249,6 +339,25 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
 
 
 class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
+    """Synchronous MOBSTER.
+
+    Combines :class:`SyncHyperband` with Gaussian process based Bayesian
+    optimization, just like :class:`MOBSTER` builds on top of :class:`ASHA` in
+    the asynchronous case.
+
+    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    The default surrogate model (`search_options["model"]` in `kwargs`) is
+    `"gp_independent"`, different to :class:`MOBSTER`.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -256,15 +365,6 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
         resource_attr: str,
         **kwargs,
     ):
-        """
-        One of `max_resource_level`, `max_resource_attr` needs to be in
-        `kwargs`. The latter is more useful, see also
-        :class:`HyperbandScheduler`.
-
-        The default surrogate model is "gp_independent", different to async
-        MOBSTER.
-
-        """
         _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         search_options = kwargs.get("search_options", dict())
         if "model" not in search_options:
@@ -280,6 +380,17 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
 
 class BORE(FIFOScheduler):
+    """Bayesian Optimization by Density-Ratio Estimation (BORE).
+
+    See :class:`syne_tune.optimizer.schedulers.searchers.bore.Bore`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
     def __init__(self, config_space: dict, metric: str, mode: str, **kwargs):
         try:
             from syne_tune.optimizer.schedulers.searchers.bore import Bore
@@ -299,6 +410,23 @@ class BORE(FIFOScheduler):
 
 
 class REA(FIFOScheduler):
+    """Regularized Evolution (REA).
+
+    See :class:`syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param population_size: See
+        :class:`syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        Defaults to 100
+    :param sample_size: See
+        :class:`syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        Defaults to 10
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -307,6 +435,11 @@ class REA(FIFOScheduler):
         sample_size: int = 10,
         **kwargs,
     ):
+        search_options = kwargs.get("search_options")
+        if search_options is None:
+            search_options = dict()
+        else:
+            del kwargs["search_options"]
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -315,13 +448,25 @@ class REA(FIFOScheduler):
                 metric=metric,
                 population_size=population_size,
                 sample_size=sample_size,
-                **kwargs,
+                **search_options,
             ),
             **kwargs,
         )
 
 
 class ConstrainedBayesianOptimization(FIFOScheduler):
+    """Constrained Bayesian Optimization.
+
+    See :class:`syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`
+    for `kwargs["search_options"]` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param constraint_attr: Name of constraint metric
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
     def __init__(self, config_space: dict, metric: str, constraint_attr: str, **kwargs):
         search_options = kwargs.get("search_options", dict())
         kwargs["search_options"] = dict(search_options, constraint_attr=constraint_attr)
@@ -334,6 +479,32 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
 
 
 class ZeroShotTransfer(FIFOScheduler):
+    """
+    A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
+    average rank obtained on historic metadata (transfer_learning_evaluations).
+    Reference:
+
+        | Sequential Model-Free Hyperparameter Tuning.
+        | Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
+        | IEEE International Conference on Data Mining (ICDM) 2015.
+
+    :param config_space: Configuration space for evaluation function
+    :param transfer_learning_evaluations: Dictionary from task name to offline
+        evaluations.
+    :param metric: Name of metric to optimize
+    :param mode: Whether to minimize (min) or maximize (max)
+    :param sort_transfer_learning_evaluations: Use `False` if the
+        hyperparameters for each task in `transfer_learning_evaluations` are
+        already in the same order. If set to `True`, hyperparameters are sorted.
+    :param use_surrogates: If the same configuration is not evaluated on all
+        tasks, set this to `True`. This will generate a set of configurations
+        and will impute their performance using surrogate models.
+    :param random_seed: Used for randomly sampling candidates. Only used if
+        `use_surrogates=True`.
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -345,24 +516,6 @@ class ZeroShotTransfer(FIFOScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
-        """
-        A zero-shot transfer hyperparameter optimization method which jointly selects configurations that minimize the
-        average rank obtained on historic metadata (transfer_learning_evaluations).
-
-        Reference: Sequential Model-Free Hyperparameter Tuning.
-        Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
-        IEEE International Conference on Data Mining (ICDM) 2015.
-
-        :param config_space: Configuration space for trial evaluation function.
-        :param transfer_learning_evaluations: Dictionary from task name to offline evaluations.
-        :param metric: Objective name to optimize, must be present in transfer learning evaluations.
-        :param mode: Whether to minimize (min) or maximize (max)
-        :param sort_transfer_learning_evaluations: Use False if the hyperparameters for each task in
-        transfer_learning_evaluations Are already in the same order. If set to True, hyperparameters are sorted.
-        :param use_surrogates: If the same configuration is not evaluated on all tasks, set this to true. This will
-        generate a set of configurations and will impute their performance using surrogate models.
-        :param random_seed: Used for randomly sampling candidates. Only used if use_surrogate is True.
-        """
         try:
             from syne_tune.optimizer.schedulers.transfer_learning import zero_shot
         except ImportError:
@@ -387,6 +540,30 @@ class ZeroShotTransfer(FIFOScheduler):
 
 
 class ASHACTS(HyperbandScheduler):
+    """
+    Runs ASHA where the searcher is done with the transfer-learning method:
+
+        | A Quantile-based Approach for Hyperparameter Transfer Learning.
+        | David Salinas, Huibin Shen, Valerio Perrone.
+        | ICML 2020.
+
+    This is the Copula Thompson Sampling approach described in the paper where
+    a surrogate is fitted on the transfer learning data to predict mean and
+    variance of configuration performance given a hyperparameter. The surrogate
+    is then sampled from, and the best configurations are returned as next
+    candidate to evaluate.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param transfer_learning_evaluations: Dictionary from task name to offline
+        evaluations.
+    :param mode: Whether to minimize (min) or maximize (max)
+    :param random_seed: Used for randomly sampling candidates
+    :param kwargs: Additional arguments to
+        :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    """
+
     def __init__(
         self,
         config_space: dict,
@@ -397,21 +574,6 @@ class ASHACTS(HyperbandScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
-        """
-        Runs ASHA where the searcher is done with the transfer-learning method:
-        A Quantile-based Approach for Hyperparameter Transfer Learning.
-        David Salinas, Huibin Shen, Valerio Perrone. ICML 2020.
-        This is the Copula Thompson Sampling approach described in the paper where a surrogate is fitted on the
-        transfer learning data to predict mean/variance of configuration performance given a hyperparameter.
-        The surrogate is then sampled from and the best configurations are returned as next candidate to evaluate.
-        :param config_space:
-        :param metric:
-        :param resource_attr:
-        :param transfer_learning_evaluations:
-        :param mode:
-        :param random_seed:
-        :param kwargs:
-        """
         try:
             from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
                 QuantileBasedSurrogateSearcher,
@@ -438,7 +600,8 @@ class ASHACTS(HyperbandScheduler):
         )
 
 
-# dictionary that allows to also list baselines who don't need a wrapper class such as PBT.
+# Dictionary that allows to also list baselines who don't need a wrapper class
+# such as :class:`PopulationBasedTraining`
 baselines_dict = {
     "Random Search": RandomSearch,
     "Grid Search": GridSearch,

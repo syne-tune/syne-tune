@@ -25,3 +25,13 @@ from syne_tune.optimizer.schedulers.searchers.utils.scaling import (  # noqa: F4
     ReverseLogScaling,
     get_scaling,
 )
+
+__all__ = [
+    "HyperparameterRanges",
+    "make_hyperparameter_ranges",
+    "HyperparameterRangesImpl",
+    "LinearScaling",
+    "LogScaling",
+    "ReverseLogScaling",
+    "get_scaling",
+]

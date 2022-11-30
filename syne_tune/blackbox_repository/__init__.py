@@ -23,3 +23,13 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (  # noqa: F
     BlackboxRepositoryBackend,
     UserBlackboxBackend,
 )
+
+__all__ = [
+    "BlackboxOffline",
+    "deserialize",
+    "load_blackbox",
+    "blackbox_list",
+    "add_surrogate",
+    "BlackboxRepositoryBackend",
+    "UserBlackboxBackend",
+]
