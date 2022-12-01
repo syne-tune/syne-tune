@@ -10,7 +10,21 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.optimizer.schedulers.searchers.bore.bore import Bore  # noqa: F401
-from syne_tune.optimizer.schedulers.searchers.bore.multi_fidelity_bore import (  # noqa: F401
-    MultiFidelityBore,
-)
+from syne_tune.try_import import try_import_bore_message
+
+__all__ = []
+
+try:
+    from syne_tune.optimizer.schedulers.searchers.bore.bore import Bore  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.bore.multi_fidelity_bore import (  # noqa: F401
+        MultiFidelityBore,
+    )
+
+    __all__.extend(
+        [
+            "Bore",
+            "MultiFidelityBore",
+        ]
+    )
+except ImportError:
+    print(try_import_bore_message())

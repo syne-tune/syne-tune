@@ -26,6 +26,16 @@ from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa:
     searcher_factory,
 )
 
+__all__ = [
+    "BaseSearcher",
+    "SearcherWithRandomSeed",
+    "RandomSearcher",
+    "GridSearcher",
+    "impute_points_to_evaluate",
+    "extract_random_seed",
+    "searcher_factory",
+]
+
 try:
     from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (  # noqa: F401
         ModelBasedSearcher,
@@ -33,6 +43,14 @@ try:
     )
     from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (  # noqa: F401
         GPMultiFidelitySearcher,
+    )
+
+    __all__.extend(
+        [
+            "ModelBasedSearcher",
+            "GPFIFOSearcher",
+            "GPMultiFidelitySearcher",
+        ]
     )
 except ImportError:
     logging.info(try_import_gpsearchers_message())

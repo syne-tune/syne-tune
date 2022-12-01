@@ -10,14 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
-__all__ = [
-    "SynchronousHyperbandScheduler",
-    "SynchronousGeometricHyperbandScheduler",
-    "DifferentialEvolutionHyperbandScheduler",
-    "GeometricDifferentialEvolutionHyperbandScheduler",
-]
-
 from syne_tune.optimizer.schedulers.synchronous.hyperband import (
     SynchronousHyperbandScheduler,
 )
@@ -28,3 +20,10 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_impl import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
 )
+
+__all__ = [
+    "SynchronousHyperbandScheduler",
+    "SynchronousGeometricHyperbandScheduler",
+    "DifferentialEvolutionHyperbandScheduler",
+    "GeometricDifferentialEvolutionHyperbandScheduler",
+]
