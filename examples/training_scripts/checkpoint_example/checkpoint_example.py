@@ -69,4 +69,4 @@ if __name__ == "__main__":
         current_value = (current_value + 1) * args.multiplier
         if checkpoint_path is not None:
             save_checkpoint(checkpoint_path, current_epoch, current_value)
-        report(train_acc=current_value, epoch=current_epoch, step=current_epoch - 1)
+        report(train_acc=current_value, epoch=current_epoch)
