@@ -39,6 +39,7 @@ if __name__ == "__main__":
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
+    print("*** I AM HERE ***")
     parser = argparse.ArgumentParser()
     parser.add_argument("--num-epochs", type=int, required=True)
     parser.add_argument("--multiplier", type=float, default=1)
@@ -50,10 +51,12 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     num_epochs = args.num_epochs
+    print(f"*** num_epochs = {num_epochs}")
     checkpoint_path = None
     start_epoch = 1
     current_value = 0
     checkpoint_dir = args.get(ST_CHECKPOINT_DIR)
+    print(f"**** {checkpoint_dir}")
     if checkpoint_dir is not None:
         checkpoint_path = Path(checkpoint_dir) / "checkpoint.json"
         if checkpoint_path.exists():
@@ -69,4 +72,4 @@ if __name__ == "__main__":
         current_value = (current_value + 1) * args.multiplier
         if checkpoint_path is not None:
             save_checkpoint(checkpoint_path, current_epoch, current_value)
-        report(train_acc=current_value, epoch=current_epoch)
+        report(train_acc=current_value, epoch=current_epoch, step=current_epoch - 1)
