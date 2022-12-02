@@ -19,7 +19,6 @@ jobs:
         python-version: 3.8
     - name: Install dependencies
       run: |
-        SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True \
         python -m pip install .[extra] --upgrade pip
     - name: Lint with flake8
       run: |
