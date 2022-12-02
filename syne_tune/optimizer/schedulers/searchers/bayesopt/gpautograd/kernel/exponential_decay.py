@@ -36,18 +36,17 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
     Variant of the kernel function for modeling exponentially decaying
     learning curves, proposed in:
 
-        Swersky, K., Snoek, J., & Adams, R. P. (2014).
-        Freeze-Thaw Bayesian Optimization.
-        ArXiv:1406.3896 [Cs, Stat).
-        Retrieved from http://arxiv.org/abs/1406.3896
+        | Swersky, K., Snoek, J., & Adams, R. P. (2014).
+        | Freeze-Thaw Bayesian Optimization.
+        | https://arxiv.org/abs/1406.3896
 
     The argument in that paper actually justifies using a non-zero mean
     function (see ExponentialDecayResourcesMeanFunction) and centralizing
     the kernel proposed there. This is done here. Details in:
 
-        Tiao, Klein, Archambeau, Seeger (2020)
-        Model-based Asynchronous Hyperparameter Optimization
-        https://arxiv.org/abs/2003.10865
+        | Tiao, Klein, Archambeau, Seeger (2020)
+        | Model-based Asynchronous Hyperparameter Optimization
+        | https://arxiv.org/abs/2003.10865
 
     We implement a new family of kernel functions, for which the additive
     Freeze-Thaw kernel is one instance (delta = 0).

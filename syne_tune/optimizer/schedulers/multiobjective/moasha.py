@@ -31,18 +31,41 @@ logger = logging.getLogger(__name__)
 class MOASHA(TrialScheduler):
     """
     Implements MultiObjective Asynchronous Successive HAlving with different
-    multiobjective sort options.
+    multiobjective sort options. References:
 
-    References:
-    A multi-objective perspective on jointly tuning hardware and hyperparameters
-    David Salinas, Valerio Perrone, Cedric Archambeau and Olivier Cruchant
-    NAS workshop, ICLR2021.
+        | A multi-objective perspective on jointly tuning hardware and hyperparameters
+        | David Salinas, Valerio Perrone, Cedric Archambeau and Olivier Cruchant
+        | NAS workshop, ICLR2021.
 
     and
 
-    Multi-objective multi-fidelity hyperparameter optimization with application
-        to fairness
-    Robin Schmucker, Michele Donini, Valerio Perrone, Cédric Archambeau
+        | Multi-objective multi-fidelity hyperparameter optimization with application to fairness
+        | Robin Schmucker, Michele Donini, Valerio Perrone, Cédric Archambeau
+
+    :param config_space: Configuration space
+    :param metrics: List of metric names MOASHA optimizes over
+    :param mode: One of :code:`{"min", "max"}` or a list of these values (same
+        size as `metrics`). Determines whether objectives are minimized or
+        maximized. Defaults to "min"
+    :param time_attr: A training result attr to use for comparing time.
+        Note that you can pass in something non-temporal such as
+        `training_iteration` as a measure of progress, the only requirement
+        is that the attribute should increase monotonically.
+        Defaults to "training_iteration"
+    :param multiobjective_priority: The multiobjective priority that is used
+        to sort multiobjective candidates. We support several choices such
+        as non-dominated sort or linear scalarization, default is
+        non-dominated sort.
+    :param max_t: max time units per trial. Trials will be stopped after
+        `max_t` time units (determined by `time_attr`) have passed.
+        Defaults to 100
+    :param grace_period: Only stop trials at least this old in time.
+        The units are the same as the attribute named by `time_attr`.
+        Defaults to 1
+    :param reduction_factor: Used to set halving rate and amount. This
+        is simply a unit-less scalar. Defaults to 3
+    :param brackets: Number of brackets. Each bracket has a different
+        `grace_period` and number of rung levels. Defaults to 1
     """
 
     def __init__(
@@ -57,37 +80,11 @@ class MOASHA(TrialScheduler):
         reduction_factor: float = 3,
         brackets: int = 1,
     ):
-        """
-        :param config_space: Configuration space
-        :param metrics: List of metric names MOASHA optimizes over
-        :param mode: One of `{"min", "max"}` or a list of these values (same
-            size as `metrics`. Determines whether objectives are minimized or
-            maximized. Defaults to "min"
-        :param time_attr: A training result attr to use for comparing time.
-            Note that you can pass in something non-temporal such as
-            `training_iteration` as a measure of progress, the only requirement
-            is that the attribute should increase monotonically.
-            Defaults to "training_iteration"
-        :param multiobjective_priority: The multiobjective priority that is used
-            to sort multiobjectives candidates. We support several choices such
-            as non-dominated sort or linear scalarization, default is
-            non-dominated sort.
-        :param max_t: max time units per trial. Trials will be stopped after
-            `max_t` time units (determined by `time_attr`) have passed.
-            Defaults to 100
-        :param grace_period: Only stop trials at least this old in time.
-            The units are the same as the attribute named by `time_attr`.
-            Defaults to 1
-        :param reduction_factor: Used to set halving rate and amount. This
-            is simply a unit-less scalar. Defaults to 3
-        :param brackets: Number of brackets. Each bracket has a different
-            `grace_period` and number of rung levels. Defaults to 1
-        """
         super(MOASHA, self).__init__(config_space=config_space)
         assert max_t > 0, "Max (time_attr) not valid!"
         assert max_t >= grace_period, "grace_period must be <= max_t!"
         assert grace_period > 0, "grace_period must be positive!"
-        assert reduction_factor > 1, "Reduction Factor not valid!"
+        assert reduction_factor > 1, "reduction factor not valid!"
         assert brackets > 0, "brackets must be positive!"
         if mode:
             if isinstance(mode, List):

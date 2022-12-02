@@ -5,7 +5,7 @@ numpy
 pandas
 fastparquet
 s3fs
-sklearn
+scikit-learn
 h5py # note: only needed for fcnet
 botorch
 xgboost

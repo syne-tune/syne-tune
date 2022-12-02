@@ -1,4 +1,12 @@
 pytest
 pytest-timeout
-black==22.1.0
+# 22.1.0 fails with sphinx:
+# https://github.com/psf/black/issues/2964
+black==22.3.0
 flake8
+sphinx
+sphinx-rtd-theme
+sphinx-autodoc-typehints
+myst-parser
+sphinx_copybutton
+sphinxcontrib-bibtex

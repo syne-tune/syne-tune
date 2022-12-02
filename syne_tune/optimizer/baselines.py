@@ -412,7 +412,7 @@ class BORE(FIFOScheduler):
 class REA(FIFOScheduler):
     """Regularized Evolution (REA).
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`
+    See :class:`syne_tune.optimizer.schedulers.searchers.regularized_evolution.RegularizedEvolution`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function

@@ -17,11 +17,11 @@ from syne_tune.optimizer.scheduler import TrialScheduler
 
 class BracketDistribution:
     """
-    Configures multi-fidelity schedulers such as :class:`HyperbandScheduler` with
+    Configures asynchronous multi-fidelity schedulers such as
+    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
     distribution over brackets. This distribution can be fixed up front, or
-    change adaptively during the course of an experiment.
-
-    TODO: Support for adaptive update (needed for Hyper-Tune)
+    change adaptively during the course of an experiment. It has an effect
+    only if the scheduler is run with more than one bracket.
     """
 
     def __call__(self) -> np.ndarray:
@@ -35,7 +35,7 @@ class BracketDistribution:
         This method is called in by the scheduler just after
         `self.searcher.configure_scheduler`. The searcher must be accessible
         via `self.searcher`.
-        The `__call__` method cannot be used before this method has been
+        The :meth:`__call__` method cannot be used before this method has been
         called.
         """
         raise NotImplementedError

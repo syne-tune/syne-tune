@@ -318,7 +318,7 @@ def hypertune_ranking_losses(
     :param poster_state: Posterior state over rung levels
     :param data: Training data
     :param num_samples: Number of independent loss samples
-    :param resource_attr_range: (r_min, r_max)
+    :param resource_attr_range: `(r_min, r_max)`
     :param random_state: PRNG state
     :return: See above
     """
@@ -402,12 +402,12 @@ def number_supported_levels_and_data_highest_level(
 ) -> Tuple[int, dict]:
     """
     Finds `num_supp_levels` as maximum such that
-    rung levels up to there have >= 6 labeled datapoints. The set
+    rung levels up to there have `>= 6` labeled datapoints. The set
     of labeled datapoints of level `num_supp_levels - 1` is
     returned as well.
 
     If 'num_supp_levels == 1`, no level except for the lowest
-    has >= 6 datapoints. In this case, `data_max_resource` returned
+    has `>= 6` datapoints. In this case, `data_max_resource` returned
     is invalid.
 
     :param rung_levels: Rung levels

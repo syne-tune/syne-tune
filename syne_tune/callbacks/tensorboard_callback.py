@@ -24,6 +24,14 @@ class TensorboardCallback(TunerCallback):
     """
     Logs relevant metrics reported from trial evaluations, so they can be
     visualized with Tensorboard.
+
+    :param ignore_metrics: Defines which metrics should be ignored. If None,
+        all metrics are reported to Tensorboard.
+    :param target_metric: Defines the metric we aim to optimize. If this
+        argument is set, we report the cumulative optimum of this metric as
+        well as the optimal hyperparameters we have found so far.
+    :param mode: Determined whether we maximize ("max") or minimize ("min")
+        the target metric.
     """
 
     def __init__(
@@ -32,15 +40,6 @@ class TensorboardCallback(TunerCallback):
         target_metric: Optional[str] = None,
         mode: Optional[str] = None,
     ):
-        """
-        :param ignore_metrics: Defines which metrics should be ignored. If None,
-            all metrics are reported to Tensorboard.
-        :param target_metric: Defines the metric we aim to optimize. If this
-            argument is set, we report the cumulative optimum of this metric as
-            well as the optimal hyperparameters we have found so far.
-        :param mode: Determined whether we maximize ("max") or minimize ("min")
-            the target metric.
-        """
         if mode is None:
             mode = "min"
         else:

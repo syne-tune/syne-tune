@@ -31,15 +31,24 @@ class RegularizedEvolution(SearcherWithRandomSeed):
     """
     Implements the regularized evolution algorithm. The original implementation
     only considers categorical hyperparameters. For integer and float parameters
-    we sample a new value uniformly at random.
+    we sample a new value uniformly at random. Reference:
 
-    Real, E., Aggarwal, A., Huang, Y., and Le, Q. V.
-    Regularized Evolution for Image Classifier Architecture Search.
-    In Proceedings of the Conference on Artificial Intelligence (AAAI’19)
+        | Real, E., Aggarwal, A., Huang, Y., and Le, Q. V.
+        | Regularized Evolution for Image Classifier Architecture Search.
+        | In Proceedings of the Conference on Artificial Intelligence (AAAI’19)
 
     The code is based one the original regularized evolution open-source
     implementation:
     https://colab.research.google.com/github/google-research/google-research/blob/master/evolution/regularized_evolution_algorithm/regularized_evolution.ipynb
+
+    Additional arguments on top of parent class
+    :class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+
+    :param mode: Mode to use for the metric given, can be "min" or "max",
+        defaults to "min"
+    :param population_size: Size of the population, defaults to 100
+    :param sample_size: Size of the candidate set to obtain a parent for the
+        mutation, defaults to 10
     """
 
     def __init__(
@@ -52,16 +61,6 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         sample_size: int = 10,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
-
-        :param mode: Mode to use for the metric given, can be "min" or "max",
-            defaults to "min"
-        :param population_size: Size of the population, defaults to 100
-        :param sample_size: Size of the candidate set to obtain a parent for the
-            mutation, defaults to 10
-        """
-
         super(RegularizedEvolution, self).__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )

@@ -32,15 +32,15 @@ TrialIdAndResultList = List[Tuple[int, dict]]
 class TrialBackend:
     """
     Interface for back-end to execute evaluations of trials.
+
+    :param delete_checkpoints: If `True`, the checkpoints written by a trial
+        are deleted once the trial is stopped or is registered as
+        completed. Also, as part of `stop_all` called at the end of the
+        tuning loop, all remaining checkpoints are deleted. Defaults to
+        `False`.
     """
 
     def __init__(self, delete_checkpoints: bool = False):
-        """
-        :param delete_checkpoints: If True, the checkpoints written by a trial
-            are deleted once the trial is stopped or is registered as
-            completed. Also, as part of `stop_all` called at the end of the
-            tuning loop, all remaining checkpoints are deleted.
-        """
         self.delete_checkpoints = delete_checkpoints
         self.trial_ids = []
         self._trial_dict = dict()
@@ -56,7 +56,7 @@ class TrialBackend:
         :param config: Configuration for new trial
         :param checkpoint_trial_id: If given, the new trial starts from the
             checkpoint written by this previous trial
-        :return: `TrialResult` for new trial, which includes new trial ID
+        :return: New trial, which includes new trial ID
         """
         trial_id = self.new_trial_id()
         if checkpoint_trial_id is not None:
@@ -116,8 +116,7 @@ class TrialBackend:
         )
 
     def _resume_trial(self, trial_id: int):
-        """
-        Called in `resume_trial`, before job is scheduled.
+        """Called in :meth:`resume_trial`, before job is scheduled.
 
         :param trial_id: See `resume_trial`
         """
@@ -128,7 +127,7 @@ class TrialBackend:
 
         Checks that the operation is valid and calls backend internal
         implementation to actually pause the trial.
-        If the status is queried after this function, it should be `paused`.
+        If the status is queried after this function, it should be `"paused"`.
 
         :param trial_id: ID of trial to pause
         :param result: Result dict based on which scheduler decided to pause the
@@ -139,7 +138,7 @@ class TrialBackend:
         self._pause_trial(trial_id=trial_id, result=result)
 
     def _pause_trial(self, trial_id: int, result: Optional[dict]):
-        """Implements `pause_trial`.
+        """Implements :meth:`pause_trial`.
 
         :param trial_id: ID of trial to pause
         :param result: Result dict based on which scheduler decided to pause the
@@ -152,7 +151,7 @@ class TrialBackend:
 
         Checks that the operation is valid and calls backend internal
         implementation to actually stop the trial. f the status is queried after
-        this function, it should be `stopped`.
+        this function, it should be `"stopped"`.
 
         :param trial_id: ID of trial to stop
         :param result: Result dict based on which scheduler decided to stop the
@@ -166,8 +165,7 @@ class TrialBackend:
             self.delete_checkpoint(trial_id=trial_id)  # checkpoint not needed anymore
 
     def _stop_trial(self, trial_id: int, result: Optional[dict]):
-        """
-        Backend specific operation that stops the trial.
+        """Backend specific operation that stops the trial.
 
         :param trial_id: ID of trial to stop
         :param result: Result dict based on which scheduler decided to stop the
@@ -181,7 +179,7 @@ class TrialBackend:
     def _schedule(self, trial_id: int, config: dict):
         """Schedules job for trial evaluation.
 
-        Called by `start_trial`, `resume_trial`.
+        Called by :meth:`start_trial`, :meth:`resume_trial`.
 
         :param trial_id: ID of trial to schedule
         :param config: Configuration for this trial
@@ -251,17 +249,19 @@ class TrialBackend:
     def busy_trial_ids(self) -> List[Tuple[int, str]]:
         """Returns list of ids for currently busy trials
 
-        A trial is busy if its status is `Status.in_progress` or `Status.stopping`.
+        A trial is busy if its status is
+        :const:`syne_tune.backend.trial_status.Status.in_progress` or
+        :const:`syne_tune.backend.trial_status.Status.stopping`.
         If the execution setup is able to run `n_workers` jobs in parallel,
         then if this method returns a list of size `n`, the tuner may start
         `n_workers - n` new jobs.
 
         :return: List of `(trial_id, status)`
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def stdout(self, trial_id: int) -> List[str]:
-        """Fetch stdout log for trial
+        """Fetch `stdout` log for trial
 
         :param trial_id: ID of trial
         :return: Lines of the log of the trial (stdout)
@@ -269,7 +269,7 @@ class TrialBackend:
         raise NotImplementedError
 
     def stderr(self, trial_id: int) -> List[str]:
-        """Fetch stderr log for trial
+        """Fetch `stderr` log for trial
 
         :param trial_id: ID of trial
         :return: Lines of the log of the trial (stderr)
@@ -292,12 +292,13 @@ class TrialBackend:
         self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
     ):
         """
-        :param results_root: The local folder that should contains the results of
-            the tuning experiment. Used by `Tuner` to indicate a desired path
-            where the results should be written to. This is used to unify the
-            location of backend files and Tuner results when possible (in the local
-            backend). By default, the backend does not do anything since not all
-            backends may be able to unify their files locations.
+        :param results_root: The local folder that should contain the results of
+            the tuning experiment. Used by :class:`syne_tune.Tuner` to indicate
+            a desired path where the results should be written to. This is used
+            to unify the location of backend files and `Tuner` results when
+            possible (in the local backend). By default, the backend does not do
+            anything since not all backends may be able to unify their files
+            locations.
         :param tuner_name: Name of the tuner, can be used for instance to save
             checkpoints on remote storage.
         """
@@ -318,6 +319,6 @@ class TrialBackend:
 
     def on_tuner_save(self):
         """
-        Called by :class:`Tuner` at the end of `save`
+        Called at the end of :meth:`syne_tune.Tuner.save`.
         """
         pass

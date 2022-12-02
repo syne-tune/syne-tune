@@ -26,7 +26,7 @@ class DifferentialEvolutionHyperbandBracket(SynchronousBracket):
     Hyperband (:class:`SynchronousHyperbandBracket`):
 
     * `on_result`: `result.trial_id` overwrites `trial_id` in rung even if
-        latter is not None.
+      latter is not None.
     * Promotions are not triggered automatically when a rung is complete
     * Some additional methods
     """

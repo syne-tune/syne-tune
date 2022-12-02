@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class StoppingCriterion:
     """
     Stopping criterion that can be used in a Tuner, for instance
-    `Tuner(stop_criterion=StoppingCriterion(max_wallclock_time=3600), ...)`.
+    :code:`Tuner(stop_criterion=StoppingCriterion(max_wallclock_time=3600), ...)`.
 
     If several arguments are used, the combined criterion is true whenever
     one of the atomic criteria is true.

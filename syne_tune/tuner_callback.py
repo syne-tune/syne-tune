@@ -28,22 +28,22 @@ logger = logging.getLogger(__name__)
 
 class TunerCallback:
     """
-    Allows user of :class:`Tuner` to monitor progress, store additional results,
-    etc.
+    Allows user of :class:`syne_tune.Tuner` to monitor progress, store
+    additional results, etc.
     """
 
     def on_tuning_start(self, tuner):
         """Called at start of tuning loop
 
-        :param tuner: `Tuner` object
+        :param tuner: :class:`syne_tune.Tuner` object
         """
         pass
 
     def on_tuning_end(self):
         """Called once the tuning loop terminates
 
-        This is called before `Tuner` object is serialized (optionally), and
-        also before running jobs are stopped.
+        This is called before :class:`syne_tune.Tuner` object is serialized
+        (optionally), and also before running jobs are stopped.
         """
         pass
 
@@ -112,16 +112,16 @@ class StoreResultsCallback(TunerCallback):
     """
     Default implementation of :class:`TunerCallback` which records all
     reported results, and allows to store them as CSV file.
+
+    :param add_wallclock_time: If True, wallclock time since call of
+        `on_tuning_start` is stored as
+        :const:`syne_tune.constants.ST_TUNER_TIME`.
     """
 
     def __init__(
         self,
         add_wallclock_time: bool = True,
     ):
-        """
-        :param add_wallclock_time: If True, wallclock time since call of
-            `on_tuning_start` is stored as `ST_TUNER_TIME`.
-        """
         self.results = []
         self.csv_file = None
         self.save_results_at_frequency = None

@@ -31,6 +31,20 @@ def is_continue_decision(trial_decision: str) -> bool:
 
 
 class NeuralbandScheduler(NeuralbandSchedulerBase):
+    """
+    NeuralBand is a neural-bandit based HPO algorithm for the multi-fidelity setting. It uses a budget-aware neural
+    network together with a feedback perturbation to efficiently explore the input space across fidelities.
+    NeuralBand uses a novel configuration selection criterion to actively choose the configuration in each trial
+    and incrementally exploits the knowledge of every past trial.
+
+    :param config_space:
+    :param gamma: Control aggressiveness of configuration selection criterion
+    :param nu: Control aggressiveness of perturbing feedback for exploration
+    :param step_size: How many trials we train network once
+    :param max_while_loop: Maximal number of times we can draw a configuration from configuration space
+    :param kwargs:
+    """
+
     def __init__(
         self,
         config_space: Dict,
@@ -40,19 +54,6 @@ class NeuralbandScheduler(NeuralbandSchedulerBase):
         max_while_loop: int = 100,
         **kwargs,
     ):
-        """
-        NeuralBand is a neural-bandit based HPO algorithm for the multi-fidelity setting. It uses a budget-aware neural
-        network together with a feedback perturbation to efficiently explore the input space across fidelities.
-        NeuralBand uses a novel configuration selection criterion to actively choose the configuration in each trial
-        and incrementally exploits the knowledge of every past trial.
-
-        :param config_space:
-        :param gamma: Control aggressiveness of configuration selection criterion
-        :param nu: Control aggressiveness of perturbing feedback for exploration
-        :param step_size: How many trials we train network once
-        :param max_while_loop: Maximal number of times we can draw a configuration from configuration space
-        :param kwargs:
-        """
         super(NeuralbandScheduler, self).__init__(
             config_space, step_size, max_while_loop, **kwargs
         )

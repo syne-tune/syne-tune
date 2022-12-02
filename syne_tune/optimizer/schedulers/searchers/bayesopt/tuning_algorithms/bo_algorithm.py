@@ -52,33 +52,34 @@ logger = logging.getLogger(__name__)
 class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     """
     Core logic of the Bayesian optimization algorithm
+
     :param initial_candidates_generator: generator of candidates
     :param initial_scoring_function: scoring function used to rank the initial
         candidates.
-        Note: If a batch is selected in one go (num_requested_candidates > 1,
-        greedy_batch_selection = False), this function should encourage
+        Note: If a batch is selected in one go (`num_requested_candidates > 1`,
+        `greedy_batch_selection == False`), this function should encourage
         diversity among its top scorers. In general, greedy batch selection
         is recommended.
     :param num_initial_candidates: how many initial candidates to generate, if
         possible
     :param num_initial_candidates_for_batch: This is used only if
-        num_requested_candidates > 1 and greedy_batch_selection is True. In
-        this case, num_initial_candidates_for_batch overrides
-        num_initial_candidates when selecting all but the first candidate for
-        the batch. Typically, num_initial_candidates is larger than
-        num_initial_candidates_for_batch in this case, which speeds up
-        selecting large batches, but still select the first candidate very
+        `num_requested_candidates > 1` and `greedy_batch_selection == True`. In
+        this case, `num_initial_candidates_for_batch` overrides
+        `num_initial_candidates` when selecting all but the first candidate for
+        the batch. Typically, `num_initial_candidates` is larger than
+        `num_initial_candidates_for_batch` in this case, which speeds up
+        selecting large batches, but still select the first candidate
         thoroughly
     :param local_optimizer: local optimizer which starts from score minimizer.
         If a batch is selected in one go (not greedily), then local
-        optimizations are started from the top num_requested_candidates ranked
+        optimizations are started from the top `num_requested_candidates` ranked
         candidates (after scoring)
     :param pending_candidate_state_transformer: Once a candidate is selected, it
         becomes pending, and the state is transformed by appending information.
         This is done by the transformer.
-        This is object is needed only if next_candidates goes through > 1 outer
-        iterations (i.e., if greedy_batch_selection is True and
-        num_requested_candidates > 1. Otherwise, None can be passed here.
+        This is object is needed only if :meth:`next_candidates` goes through
+        more than one outer iterations (i.e., if `greedy_batch_selection == True`
+        and `num_requested_candidates > 1`. Otherwise, None can be passed here.
         Note: Model updates (by the state transformer) for batch candidates beyond
         the first do not involve fitting hyperparameters, so they are usually
         cheap.
@@ -86,20 +87,19 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         returned, because they are already labeled, currently pending, or have
         failed
     :param num_requested_candidates: number of candidates to return
-    :param greedy_batch_selection: If True and num_requested_candidates > 1, we
+    :param greedy_batch_selection: If True and `num_requested_candidates > 1`, we
         generate, order, and locally optimize for each single candidate to be
-        selected. Otherwise (False), this is done just once, and
-        num_requested_candidates are extracted in one go.
-        Note: If this is True, pending_candidate_state_transformer is needed.
+        selected. Otherwise, this is done just once, and
+        `num_requested_candidates` are extracted in one go.
+        Note: If this is True, `pending_candidate_state_transformer` is needed.
     :param duplicate_detector: used to make sure no candidates equal to already
         evaluated ones is returned
     :param profiler: If given, this is used for profiling parts in the code
     :param sample_unique_candidates: If True, we check that initial candidates
         sampled at random are unique and disjoint from the exclusion list.
         See below.
-    :param debug_log: If a DebugLogPrinter is passed here, it is used to write
-        log messages
-
+    :param debug_log: If a :class:`DebugLogPrinter` object is passed here, it is
+        used to write log messages
     """
 
     initial_candidates_generator: CandidateGenerator

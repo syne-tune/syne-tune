@@ -47,6 +47,15 @@ class LocalBackend(TrialBackend):
     A backend running locally by spawning sub-process concurrently. Note that
     no resource management is done so the concurrent number of trials should
     be adjusted to the machine capacity.
+
+    :param entry_point: Path to Python main file to be tuned
+    :param delete_checkpoints: If `True`, checkpoints of stopped or completed
+        trials are deleted. Defaults to `False`
+    :param rotate_gpus: In case several GPUs are present, each trial is
+        scheduled on a different GPU. A new trial is preferentially
+        scheduled on a free GPU, and otherwise the GPU with least prior
+        assignments is chosen. If `False`, then all GPUs are used at the same
+        time for all trials. Defaults to `True`.
     """
 
     def __init__(
@@ -55,16 +64,6 @@ class LocalBackend(TrialBackend):
         delete_checkpoints: bool = False,
         rotate_gpus: bool = True,
     ):
-        """
-        :param entry_point: Path to Python main file to be tuned
-        :param delete_checkpoints: If True, checkpoints of stopped or completed
-            trials are deleted
-        :param rotate_gpus: In case several GPUs are present, each trial is
-            scheduled on a different GPU. A new trial is preferentially
-            scheduled on a free GPU, and otherwise the GPU with least prior
-            assignments is chosen. If False, then all GPUs are used at the same
-            time for all trials.
-        """
         super(LocalBackend, self).__init__(delete_checkpoints)
 
         assert Path(

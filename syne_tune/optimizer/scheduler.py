@@ -31,10 +31,10 @@ class TrialSuggestion:
     """Suggestion returned by a scheduler.
 
     :param spawn_new_trial_id: Whether a new `trial_id` should be used.
-    :param checkpoint_trial_id: Optional. Checkpoint of this trial ID should
-        be used to resume from. If `spawn_new_trial_id` is False, then the
+    :param checkpoint_trial_id: Checkpoint of this trial ID should
+        be used to resume from. If `spawn_new_trial_id` is `False`, then the
         trial `checkpoint_trial_id` is resumed with its previous checkpoint.
-    :param config: Optional. The configuration which should be evaluated.
+    :param config: The configuration which should be evaluated.
     """
 
     spawn_new_trial_id: bool = True
@@ -58,7 +58,7 @@ class TrialSuggestion:
         """Suggestion to start new trial
 
         :param config: Configuration to use for the new trial.
-        :param checkpoint_trial_id: Optional. Use checkpoint of this trial
+        :param checkpoint_trial_id: Use checkpoint of this trial
             when starting the new trial (otherwise, it is started from
             scratch).
         :return: A trial decision that consists in starting a new trial (which
@@ -77,7 +77,7 @@ class TrialSuggestion:
         """Suggestion to resume a paused trial
 
         :param trial_id: ID of trial to be resumed (from its checkpoint)
-        :param config: Optional. Configuration to use for resumed trial
+        :param config: Configuration to use for resumed trial
         :return: A trial decision that consists in resuming trial `trial-id`
             with `config` if provided, or the previous configuration used if
             not provided.
@@ -102,36 +102,34 @@ class TrialScheduler:
 
     Some schedulers support pausing and resuming trials. In this case, they
     also drive the decision when to restart a paused trial.
+
+    :param config_space: Configuration spoce
     """
 
     def __init__(self, config_space: dict):
-        """
-        :param config_space: Configuration spoce
-        """
-
         self.config_space = config_space
         self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
 
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         """Returns a suggestion for a new trial, or one to be resumed
 
-        This method returns `suggestion` of type `TrialSuggestion` (unless
+        This method returns `suggestion` of type :class:`TrialSuggestion` (unless
         there is no config left to explore, and None is returned).
 
-        If `suggestion.spawn_new_trial_id` is True, a new trial is to be
+        If `suggestion.spawn_new_trial_id` is `True`, a new trial is to be
         started with config `suggestion.config`. Typically, this new trial
         is started from scratch. But if `suggestion.checkpoint_trial_id` is
         given, the trial is to be (warm)started from the checkpoint written
         for the trial with this ID. The new trial has ID `trial_id`.
 
-        If `suggestion.spawn_new_trial_id` is False, an existing and currently
+        If `suggestion.spawn_new_trial_id` is `False`, an existing and currently
         paused trial is to be resumed, whose ID is
         `suggestion.checkpoint_trial_id`. If this trial has a checkpoint, we
         start from there. In this case, `suggestion.config` is optional. If not
         given (default), the config of the resumed trial does not change.
         Otherwise, its config is overwritten by `suggestion.config` (see
-        :class:`HyperbandScheduler` with type 'promotion' for an example why
-        this can be useful).
+        :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+        `type="promotion"` for an example why this can be useful).
 
         Apart from the HP config, additional fields can be appended to the
         dict, these are passed to the trial function as well.
@@ -155,11 +153,10 @@ class TrialScheduler:
     def _postprocess_config(self, config: dict) -> dict:
         """Post-processes a config as returned by a searcher
 
-        This involves:
         * Adding parameters which are constant, therefore do not feature
-            in the config space of the searcher
+          in the config space of the searcher
         * Casting values to types (float, int, str) according to `config_space`
-            value types
+          value types
 
         :param config: Config returned by searcher
         :return: Post-processed config
@@ -171,11 +168,10 @@ class TrialScheduler:
     def _preprocess_config(self, config: dict) -> dict:
         """Pre-processes a config before passing it to a searcher
 
-        This involves:
         * Removing parameters which are constant in `config_space` (these do
-            not feature in the config space used by the searcher)
+          not feature in the config space used by the searcher)
         * Casting values to types (float, int, str) according to
-            `config_space` value types
+          `config_space` value types
 
         :param config: Config coming from the tuner
         :return: Pre-processed config, can be passed to searcher
@@ -190,8 +186,8 @@ class TrialScheduler:
 
         Note that the config returned here may also contain values for constant
         parameters in the config space. If so, these values take precedence.
-        See :class:`HyperbandScheduler` with `type = 'promotion'` for an
-        example how this is used.
+        See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+        `type="promotion"` for an example how this is used.
 
         :param trial_id: ID for new trial to be started (ignored if existing
             trial to be resumed)
@@ -220,8 +216,9 @@ class TrialScheduler:
         """Called on each intermediate result reported by a trial.
 
         At this point, the trial scheduler can make a decision by returning
-        one of CONTINUE, PAUSE, and STOP. This will only be called when the
-        trial is in the RUNNING state.
+        one of :const:`SchedulerDecision.CONTINUE`,
+        :const:`SchedulerDecision.PAUSE`, or :const:`SchedulerDecision.STOP`.
+        This will only be called when the trial is currently running.
 
         :param trial: Trial for which results are reported
         :param result: Result dictionary
@@ -232,9 +229,9 @@ class TrialScheduler:
     def on_trial_complete(self, trial: Trial, result: dict):
         """Notification for the completion of trial.
 
-        Note that `on_trial_result` is called with the same result before.
+        Note that :meth:`on_trial_result` is called with the same result before.
         However, if the scheduler only uses one final report from each
-        trial, it may ignore `on_trial_result` and just use `result` here.
+        trial, it may ignore :meth:`on_trial_result` and just use `result` here.
 
         :param trial: Trial which is completing
         :param result: Result dictionary
@@ -245,7 +242,7 @@ class TrialScheduler:
         """Called to remove trial.
 
         This is called when the trial is in PAUSED or PENDING state. Otherwise,
-        call `on_trial_complete`.
+        call :meth:`on_trial_complete`.
 
         :param trial: Trial to be removed
         """

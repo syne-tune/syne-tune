@@ -35,7 +35,6 @@ class TrialEvaluations:
     For each fixed k, `metrics[k]` is either a single value or a dict. The
     latter is used, for example, for multi-fidelity schedulers, where
     `metrics[k][str(r)]` is the value at resource level r.
-
     """
 
     trial_id: str
@@ -101,7 +100,6 @@ class FantasizedPendingEvaluation(PendingEvaluation):
     """
     Here, latent target values are integrated out by Monte Carlo samples,
     also called "fantasies".
-
     """
 
     def __init__(
