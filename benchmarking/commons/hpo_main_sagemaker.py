@@ -102,11 +102,21 @@ def parse_args(
                     "feature not working optimal."
                 ),
             ),
+            dict(
+                name="delete_checkpoints",
+                type=int,
+                default=1,
+                help=(
+                    "If 1, checkpoints files on S3 are removed at the end "
+                    "of the experiment."
+                ),
+            ),
         ]
     )
     args, method_names, seeds = _parse_args(methods, extra_args)
     args.warm_pool = bool(args.warm_pool)
     args.start_jobs_without_delay = bool(args.start_jobs_without_delay)
+    args.delete_checkpoints = bool(args.delete_checkpoints)
     return args, method_names, seeds
 
 
@@ -168,6 +178,7 @@ def main(
         sm_estimator=sagemaker_estimator[benchmark.framework](**sm_args),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example
+        delete_checkpoints=args.delete_checkpoints,
         metrics_names=[benchmark.metric],
     )
 

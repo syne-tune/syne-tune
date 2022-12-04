@@ -180,6 +180,34 @@ before being able to use the SageMaker backend. More details are provided
 in `this tutorial <tutorials/basics/basics_backend.html>`__.
 
 
+SageMaker Backend and Checkpointing
+===================================
+
+.. literalinclude:: ../../examples/launch_height_sagemaker_checkpoints.py
+   :caption: examples/launch_height_sagemaker_checkpoints.py
+   :lines: 13-
+
+This launcher script is using the following `train_height_checkpoint.py`
+training script:
+
+.. literalinclude:: ../../examples/training_scripts/checkpoint_example/train_height_checkpoint.py
+   :name: train_height_checkpoint_script
+   :caption: examples/training_scripts/checkpoint_example/train_height_checkpoint.py
+   :lines: 13-
+
+Note that :class:`syne_tune.backend.SageMakerBackend` is configured to use
+SageMaker managed warm pools:
+
+* `keep_alive_period_in_seconds=300` in the definition of the SageMaker
+  estimator
+* `start_jobs_without_delay=False` when creating :class:`syne_tune.Tuner`
+
+Managed warm pools reduce both start-up and stop delays substantially, they
+are strongly recommended for multi-fidelity HPO with the SageMaker backend.
+More details are found in
+`this tutorial <tutorials/benchmarking/bm_sagemaker.rst#using-sageMaker-managed-warm-pools>`__.
+
+
 Launch with SageMaker Backend and Custom Docker Image
 =====================================================
 

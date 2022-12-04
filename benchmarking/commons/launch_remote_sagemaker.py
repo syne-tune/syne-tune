@@ -91,6 +91,7 @@ def launch_remote(
         )
         hyperparameters["max_failures"] = args.max_failures
         hyperparameters["warm_pool"] = int(args.warm_pool)
+        hyperparameters["delete_checkpoints"] = int(args.delete_checkpoints)
         sm_args["hyperparameters"] = hyperparameters
         print(
             f"{experiment_tag}-{tuner_name}\n"

@@ -36,7 +36,7 @@ MAX_RESOURCE_ATTR = "steps"
 
 
 def train_height(step: int, width: float, height: float) -> float:
-    return 1.0 / (0.1 + width * step / 100) + 0.1 * height
+    return 100 / (10 + width * step) + 0.1 * height
 
 
 def height_config_space(max_steps: int, sleep_time: Optional[float] = None) -> dict:
@@ -63,7 +63,8 @@ if __name__ == "__main__":
 
     width = args.width
     height = args.height
-    for step in range(args.steps):
+    num_steps = getattr(args, MAX_RESOURCE_ATTR)
+    for step in range(num_steps):
         # Sleep first, since results are returned at end of "epoch"
         time.sleep(args.sleep_time)
         # Feed the score back to Syne Tune.

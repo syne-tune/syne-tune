@@ -63,10 +63,12 @@ if __name__ == "__main__":
                 instance_count=1,
                 role=get_execution_role(),
                 max_run=10 * 60,
-                framework_version="1.6",
+                framework_version="1.7.1",
                 py_version="py3",
                 base_job_name="hpo-height",
                 sagemaker_session=default_sagemaker_session(),
+                disable_profiler=True,
+                debugger_hook_config=False,
             ),
         )
     else:

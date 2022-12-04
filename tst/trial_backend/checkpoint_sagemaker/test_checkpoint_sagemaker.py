@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 
 class TestCopyCheckpointScheduler(TrialScheduler):
     """
-    Scheduler for `test_copy_checkpoint_sagemaker_backend`.
-
+    Scheduler for :func:`test_copy_checkpoint_sagemaker_backend`.
     """
 
     def __init__(self, config_space: Dict):
