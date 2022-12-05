@@ -141,7 +141,6 @@ class TrialBackend:
             trial
         """
         assert trial_id < len(self.trial_ids), f"Invalid trial_id = {trial_id}"
-        status = self._trial_dict[trial_id].status
         self._trial_dict[trial_id].status = Status.paused
         self._pause_trial(trial_id=trial_id, result=result)
 
