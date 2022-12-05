@@ -24,7 +24,7 @@ from syne_tune.backend.trial_backend import (
     TrialAndStatusInformation,
     TrialIdAndResultList,
 )
-from syne_tune.backend.trial_status import Status, Trial
+from syne_tune.backend.trial_status import Status, Trial, TrialResult
 from syne_tune.config_space import config_space_to_json_dict
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
@@ -175,6 +175,7 @@ class Tuner:
 
         self.tuning_status = None
         self.tuner_saver = None
+        self.status_printer = None
 
     def run(self):
         """Launches the tuning."""
@@ -185,14 +186,14 @@ class Tuner:
                 self.tuning_status = TuningStatus(
                     metric_names=self.scheduler.metric_names()
                 )
-            # prints the status every print_update_interval seconds
+            # prints the status every `print_update_interval` seconds
             self.status_printer = RegularCallback(
-                call_seconds_frequency=self.print_update_interval,
                 callback=lambda tuning_status: logger.info(
                     "tuning status (last metric is reported)\n" + str(tuning_status)
                 ),
+                call_seconds_frequency=self.print_update_interval,
             )
-            # saves the tuner every results_update_interval seconds
+            # saves the tuner every `results_update_interval` seconds
             if self.save_tuner:
                 self.tuner_saver = RegularCallback(
                     callback=lambda tuner: tuner.save(),
@@ -453,18 +454,23 @@ class Tuner:
                 running_trials_ids = set(x[0] for x in busy_trial_ids)
             # Schedule as many trials as we have free workers
             for _ in range(self.n_workers - num_busy_workers):
-                trial_id = self._schedule_new_task()
+                trial = self._schedule_new_task()
+                trial_id = trial.trial_id
                 running_trials_ids.add(trial_id)
+                # Update tuning status
+                self.tuning_status.update(
+                    trial_status_dict={trial_id: (trial, Status.in_progress)},
+                    new_results=[],
+                )
 
-    def _schedule_new_task(self) -> Optional[int]:
+    def _schedule_new_task(self) -> Optional[TrialResult]:
         """Schedules a new task according to scheduler suggestion.
 
-        :return: The trial-id of the task suggested, None if the scheduler does
+        :return: Information for the trial suggested, `None` if the scheduler does
             not suggest a new configuration (this can happen if its configuration
             space is exhausted)
         """
-        trial_id = self.trial_backend.new_trial_id()
-        suggestion = self.scheduler.suggest(trial_id=trial_id)
+        suggestion = self.scheduler.suggest(trial_id=self.trial_backend.new_trial_id())
         if suggestion is None:
             logger.info("Searcher ran out of candidates, tuning job is stopping.")
             raise StopIteration
@@ -476,18 +482,18 @@ class Tuner:
                 checkpoint_trial_id=suggestion.checkpoint_trial_id,
             )
             self.scheduler.on_trial_add(trial=trial)
-            logger.info(f"(trial {trial_id}) - scheduled {suggestion}")
-            return trial_id
+            logger.info(f"(trial {trial.trial_id}) - scheduled {suggestion}")
+            return trial
         else:
             # suggestion is a trial_id to resume, with possibly a new configuration
             log_msg = f"Resuming trial {suggestion.checkpoint_trial_id}"
             if suggestion.config is not None:
                 log_msg += f" with new_config = {suggestion.config}"
             logger.info(log_msg)
-            self.trial_backend.resume_trial(
+            trial = self.trial_backend.resume_trial(
                 trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config
             )
-            return suggestion.checkpoint_trial_id
+            return trial
 
     def _handle_failure(self, done_trials_statuses: Dict[int, Tuple[Trial, str]]):
         logger.error(f"Stopped as {self.max_failures} failures were reached")
@@ -587,14 +593,20 @@ class Tuner:
                     or done_trials[trial_id][1] != Status.paused
                 ):
                     logger.info(f"Trial trial_id {trial_id} completed.")
+                # If scheduler marks trial as `Status.paused`, this must not be
+                # flipped back to `Status.completed`
+                done_trial = done_trials.get(trial_id)
+                if done_trial is not None and done_trial[1] == Status.paused:
+                    status = Status.paused
                 assert (
                     trial_id in self.last_seen_result_per_trial
                 ), f"trial {trial_id} completed and no metrics got observed"
                 last_result = self.last_seen_result_per_trial[trial_id]
-                if not trial_id in done_trials:
+                if done_trial is None:
                     self.scheduler.on_trial_complete(trial, last_result)
-                for callback in callbacks:
-                    callback.on_trial_complete(trial, last_result)
+                if status == Status.completed:
+                    for callback in callbacks:
+                        callback.on_trial_complete(trial, last_result)
                 done_trials[trial_id] = (trial, status)
 
             if status == Status.failed:
