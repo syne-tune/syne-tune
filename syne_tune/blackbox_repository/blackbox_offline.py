@@ -29,12 +29,14 @@ from syne_tune.blackbox_repository.serialize import (
 
 class BlackboxOffline(Blackbox):
     """
-    A blackbox obtained given offline evaluations each row of the dataframe should contain one evaluation given a
-    fixed configuration, fidelity and seed. The columns must corresponds the provided configuration and fidelity
-    space, by default all columns that are prefixed by `"metric_"` are assumed to be metrics but this can be overrided
-    by providing metric columns.
+    A blackbox obtained given offline evaluations. Each row of the dataframe
+    should contain one evaluation given a fixed configuration, fidelity and
+    seed. The columns must correspond to the provided configuration and fidelity
+    space, by default all columns that are prefixed by `"metric_"` are assumed
+    to be metrics but this can be overridden by providing metric columns.
 
-    Additional arguments on top of parent class :class:`Blackbox`:
+    Additional arguments on top of parent class
+    :class:`syne_tune.blackbox_repository.Blackbox`:
 
     :param df_evaluations: Data frame with evaluations data
     :param seed_col: optional, can be used when multiple seeds are recorded

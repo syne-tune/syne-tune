@@ -101,7 +101,7 @@ How to choose the domain for a given hyperparameter? Obviously, we want to
 avoid illegal values: learning rates should be positive, probabilities lie
 in ``[0, 1]``. Apart from this, the choice of domain is not always obvious,
 and different choices can affect search performance significantly in some
-cases. Here, we provide some recommendations.
+cases. Here, we provide some recommendations:
 
 * **Avoid using choice (categorical) for numerical parameters.**
   Many HPO algorithms make very good use of the information that a

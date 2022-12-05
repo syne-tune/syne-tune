@@ -31,8 +31,8 @@ In the examples above, Syne Tune is installed with the union of all its
 dependencies, which can be a lot. If you only need specific features, you may
 be able to use `partial dependencies <faq.html#what-are-the-different-installations-options-supported>`__.
 
-Getting Started
-===============
+First Example
+=============
 
 To enable tuning, you have to report metrics from a training script so that they
 can be communicated later to Syne Tune, this can be accomplished by just

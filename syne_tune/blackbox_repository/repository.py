@@ -67,9 +67,9 @@ def load_blackbox(
     ignore_hash: bool = False,
 ) -> Union[Dict[str, Blackbox], Blackbox]:
     """
-    :param name: name of a blackbox present in the repository, see blackbox_list() to
-        get list of available blackboxes. Syne Tune currently provides the following
-        blackboxes evaluations:
+    :param name: name of a blackbox present in the repository, see
+        :func:`blackbox_list` to get list of available blackboxes. Syne Tune
+        currently provides the following blackboxes evaluations:
 
         * "nasbench201": 15625 multi-fidelity configurations of computer vision
           architectures evaluated on 3 datasets.

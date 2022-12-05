@@ -40,14 +40,13 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
 
 class KernelFunction(MeanFunction):
     """
-    Base class of kernel (or covariance) functions
+    Base class of kernel (or covariance) function math:`k(x, x')`
+
+    :param dimension: Dimensionality of input points after encoding into
+        `ndarray`
     """
 
     def __init__(self, dimension: int, **kwargs):
-        """
-        :param dimension: Dimensionality of input points after encoding into
-            ndarray
-        """
         super().__init__(**kwargs)
         self._dimension = dimension
 
@@ -60,16 +59,16 @@ class KernelFunction(MeanFunction):
 
     def diagonal(self, X):
         """
-        :param X: Input data, shape (n, d)
-        :return: Diagonal of K(X, X), shape (n,)
+        :param X: Input data, shape `(n, d)`
+        :return: Diagonal of :math:`k(X, X)`, shape `(n,)`
         """
         raise NotImplementedError
 
     def diagonal_depends_on_X(self):
         """
-        For stationary kernels, diagonal does not depend on X
+        For stationary kernels, diagonal does not depend on `X`
 
-        :return: Does diagonal(X) depend on X?
+        :return: Does :meth:`diagonal` depend on `X`?
         """
         raise NotImplementedError
 
@@ -82,18 +81,31 @@ class SquaredDistance(Block):
     Block that is responsible for the computation of matrices of squared
     distances. The distances can possibly be weighted (e.g., ARD
     parametrization). For instance:
-        X1 with size (n1,d)
-        X2 with size (n2,d)
-        inverse_bandwidths with size (1,d)
-        results in a matrix of size (n1,n2) with i,j entry equal to
-            sum_{k=1}^d (X1[i,k] - X2[j,k])^2 * inverse_bandwidths[k]^2
 
-    if ARD == False, inverse_bandwidths is equal to a scalar broadcast to the
-    d components (with d=dimension, i.e., the number of features in X)
-    otherwise, inverse_bandwidths is (1,d)
+    .. math::
+
+       m_{i j} = \sum_{k=1}^d ib_k^2 (x_{1: i k} - x_{2: j k})^2
+
+       \mathbf{X}_1 = [x_{1: i j}],\quad \mathbf{X}_2 = [x_{2: i j}]
+
+    Here, :math:`[ib_k]` is the vector :attr:`inverse_bandwidth`.
+    if `ARD == False`, `inverse_bandwidths` is equal to a scalar broadcast to the
+    d components (with `d = dimension`, i.e., the number of features in `X`).
+
+    :param dimension: Dimensionality :math:`d` of input vectors
+    :param ARD: Automatic relevance determination (`inverse_bandwidth` vector
+        of size `d`)? Defaults to `False`
+    :param encoding_type: Encoding for `inverse_bandwidth`. Defaults to
+        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING`
     """
 
-    def __init__(self, dimension, ARD=False, encoding_type=DEFAULT_ENCODING, **kwargs):
+    def __init__(
+        self,
+        dimension: int,
+        ARD: bool = False,
+        encoding_type: str = DEFAULT_ENCODING,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.ARD = ARD
         inverse_bandwidths_dimension = 1 if not ARD else dimension
@@ -118,11 +130,10 @@ class SquaredDistance(Block):
         return encode_unwrap_parameter(self.inverse_bandwidths_internal, self.encoding)
 
     def forward(self, X1, X2):
-        """
-        Actual computation of the matrix of squared distances (see details above)
+        """Computes matrix of squared distances
 
-        :param X1: input data of size (n1,d)
-        :param X2: input data of size (n2,d)
+        :param X1: input matrix, shape `(n1,d)`
+        :param X2: input matrix, shape `(n2,d)`
         """
         # In case inverse_bandwidths if of size (1, dimension), dimension>1,
         # ARD is handled by broadcasting
@@ -147,8 +158,8 @@ class SquaredDistance(Block):
 
     def get_params(self):
         """
-        Parameter keys are inv_bw<k> if dimension > 1, and inv_bw if
-        dimension == 1.
+        Parameter keys are "inv_bw<k> "if `dimension > 1`, and "inv_bw" if
+        `dimension == 1`.
         """
         inverse_bandwidths = anp.reshape(self._inverse_bandwidths(), (-1,))
         if inverse_bandwidths.size == 1:
@@ -175,28 +186,26 @@ class SquaredDistance(Block):
 
 class Matern52(KernelFunction):
     """
-    Block that is responsible for the computation of Matern52 kernel
-    matrices. For instance:
-        X1 with size (n1,d)
-        X2 with size (n2,d)
-    results in a matrix of size (n1,n2) with i,j entry equal to the
-    Matern52 kernel at (X1[i,:], X2[j,:]).
+    Block that is responsible for the computation of Matern 5/2 kernel.
 
-    If ARD == False, inverse_bandwidths is equal to a scalar broadcast to the
-    d components (with d=dimension, i.e., the number of features in X)
-    otherwise (ARD == True), inverse_bandwidths is (1,d)
+    if `ARD == False`, `inverse_bandwidths` is equal to a scalar broadcast to the
+    d components (with `d = dimension`, i.e., the number of features in `X`).
+
+    Arguments on top of base class :class:`SquaredDistance`:
+
+    :param has_covariance_scale: Kernel has covariance scale parameter? Defaults
+        to `True`
     """
 
     def __init__(
         self,
-        dimension,
-        ARD=False,
-        encoding_type=DEFAULT_ENCODING,
-        has_covariance_scale=True,
+        dimension: int,
+        ARD: bool = False,
+        encoding_type: str = DEFAULT_ENCODING,
+        has_covariance_scale: bool = True,
         **kwargs
     ):
         super(Matern52, self).__init__(dimension, **kwargs)
-        self.ARD = ARD
         self.has_covariance_scale = has_covariance_scale
         self.squared_distance = SquaredDistance(
             dimension=dimension, ARD=ARD, encoding_type=encoding_type
@@ -224,11 +233,10 @@ class Matern52(KernelFunction):
             return 1.0
 
     def forward(self, X1, X2):
-        """
-        Actual computation of the Matern52 kernel matrix (see details above)
+        """Computes Matern 5/2 kernel matrix
 
-        :param X1: input data of size (n1, d)
-        :param X2: input data of size (n2, d)
+        :param X1: input matrix, shape `(n1,d)`
+        :param X2: input matrix, shape `(n2,d)`
         """
         covariance_scale = self._covariance_scale()
         X1 = self._check_input_shape(X1)

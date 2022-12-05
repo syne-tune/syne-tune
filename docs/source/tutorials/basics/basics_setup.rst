@@ -8,7 +8,7 @@ For most of this tutorial, we will be concerned with one running example:
 tuning some hyperparameters of a two-layer perceptron on the FashionMNIST
 dataset.
 
-.. |image1| image:: https://github.com/zalandoresearch/fashion-mnist/blob/master/doc/img/fashion-mnist-sprite.png
+.. |image1| image:: https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/master/doc/img/fashion-mnist-sprite.png
 .. |image2| image:: https://upload.wikimedia.org/wikipedia/commons/2/2e/Neural_network.png
 
 +-----------------------------------+-----------------------------------+
