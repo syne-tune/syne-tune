@@ -45,11 +45,12 @@ This package provides state-of-the-art distributed hyperparameter optimizers
    getting_started
 
 .. toctree::
-   :name: Frequently Asked Questions
-   :caption: Frequently Asked Questions
+   :name: Next Steps
+   :caption: Next Steps
    :maxdepth: 1
 
-   faq
+   faq_toc
+   examples_toc
 
 .. toctree::
    :name: Tutorials
@@ -62,13 +63,6 @@ This package provides state-of-the-art distributed hyperparameter optimizers
    tutorials/multifidelity/README
    tutorials/benchmarking/README
    tutorials/developer/README
-
-.. toctree::
-   :name: Examples of Syne Tune
-   :caption: Examples
-   :maxdepth: 1
-
-   examples
 
 .. toctree::
    :name: API docs
