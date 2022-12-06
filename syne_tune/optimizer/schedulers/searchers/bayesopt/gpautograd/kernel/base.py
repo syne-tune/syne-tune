@@ -224,6 +224,10 @@ class Matern52(KernelFunction):
                     self.params, "covariance_scale", self.encoding
                 )
 
+    @property
+    def ARD(self) -> float:
+        return self.squared_distance.ARD
+
     def _covariance_scale(self):
         if self.has_covariance_scale:
             return encode_unwrap_parameter(
