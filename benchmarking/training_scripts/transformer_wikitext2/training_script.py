@@ -207,7 +207,6 @@ def objective(config):
 
     train_data = batchify(corpus.train, config["batch_size"], device)
     val_data = batchify(corpus.valid, eval_batch_size, device)
-    test_data = batchify(corpus.test, eval_batch_size, device)
 
     #######################################################################
     # Build the model
@@ -455,7 +454,7 @@ if __name__ == "__main__":
             super(TransformerModel, self).__init__()
             try:
                 from torch.nn import TransformerEncoder, TransformerEncoderLayer
-            except:
+            except ImportError:
                 raise ImportError(
                     "TransformerEncoder module does not exist in PyTorch 1.1 or lower."
                 )
@@ -470,7 +469,8 @@ if __name__ == "__main__":
 
             self.init_weights()
 
-        def _generate_square_subsequent_mask(self, sz):
+        @staticmethod
+        def _generate_square_subsequent_mask(sz):
             mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
             mask = (
                 mask.float()
