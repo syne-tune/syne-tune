@@ -593,8 +593,9 @@ class Tuner:
                     or done_trials[trial_id][1] != Status.paused
                 ):
                     logger.info(f"Trial trial_id {trial_id} completed.")
-                # If scheduler marks trial as `Status.paused`, this must not be
-                # flipped back to `Status.completed`
+                # If scheduler marks trial as `Status.paused`, this overrides
+                # `Status.completed` (which was assigned because the job
+                # completed)
                 done_trial = done_trials.get(trial_id)
                 if done_trial is not None and done_trial[1] == Status.paused:
                     status = Status.paused
@@ -602,7 +603,7 @@ class Tuner:
                     trial_id in self.last_seen_result_per_trial
                 ), f"trial {trial_id} completed and no metrics got observed"
                 last_result = self.last_seen_result_per_trial[trial_id]
-                if done_trial is None:
+                if trial_id not in done_trials:
                     self.scheduler.on_trial_complete(trial, last_result)
                 if status == Status.completed:
                     for callback in callbacks:
