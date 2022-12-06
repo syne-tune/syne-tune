@@ -171,11 +171,10 @@ def objective(config):
 
     # Set the random seed manually for reproducibility.
     torch.manual_seed(config["seed"])
-    if torch.cuda.is_available() and not config["use_cuda"]:
-        print(
-            "WARNING: You have a CUDA device, so you should probably run with --use-cuda"
-        )
-    device = config["device"] = torch.device("cuda" if config["use_cuda"] else "cpu")
+    use_cuda = config["use_cuda"]
+    if torch.cuda.is_available() and not use_cuda:
+        print("WARNING: You have a CUDA device, so you should run with --use-cuda 1")
+    device = torch.device("cuda" if use_cuda else "cpu")
 
     #######################################################################
     # Load data
@@ -212,14 +211,16 @@ def objective(config):
     # Build the model
     #######################################################################
     ntokens = len(corpus.dictionary)
+    bptt = config["bptt"]
+    precision = config["precision"]
 
     def evaluate(data_source):
         # Turn on evaluation mode which disables dropout.
         model.eval()
         total_loss = 0.0
         with torch.no_grad():
-            for i in range(0, data_source.size(0) - 1, config["bptt"]):
-                data, targets = get_batch(data_source, i, config["bptt"])
+            for i in range(0, data_source.size(0) - 1, bptt):
+                data, targets = get_batch(data_source, i, bptt)
                 output = model(data)
                 output = output.view(-1, ntokens)
                 total_loss += len(data) * criterion(output, targets).item()
@@ -232,8 +233,8 @@ def objective(config):
         epoch_loss = 0.0
         start_time = time.time()
         first_loss = None
-        for batch, i in enumerate(range(0, train_data.size(0) - 1, config["bptt"])):
-            data, targets = get_batch(train_data, i, config["bptt"])
+        for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
+            data, targets = get_batch(train_data, i, bptt)
             # Starting each batch, we detach the hidden state from how it was previously produced.
             # If we didn't, the model would try backpropagating all the way to start of the dataset.
 
@@ -243,36 +244,38 @@ def objective(config):
             loss = criterion(output, targets)
             if torch.isnan(loss):
                 exit(0)
-            if config["precision"] == "half":
+            if precision == "half":
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
                     scaled_loss.backward()
             else:
                 loss.backward()
 
-            if config["clip"] > 0:
+            clip = config["clip"]
+            if clip > 0:
                 # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-                if config["precision"] == "half":
+                if precision == "half":
                     params = amp.master_params(optimizer)
                 else:
                     params = model.parameters()
-                torch.nn.utils.clip_grad_norm_(params, config["clip"])
+                torch.nn.utils.clip_grad_norm_(params, clip)
 
             optimizer.step()
 
             total_loss += loss.item()
             epoch_loss += len(data) * loss.item()
 
-            if batch % config["log_interval"] == 0 and batch > 0:
-                cur_loss = total_loss / config["log_interval"]
+            log_interval = config["log_interval"]
+            if batch % log_interval == 0 and batch > 0:
+                cur_loss = total_loss / log_interval
                 elapsed = time.time() - start_time
                 print(
                     "| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.5f} | ms/batch {:5.2f} | "
                     "loss {:5.2f} | ppl {:8.2f}".format(
                         epoch,
                         batch,
-                        len(train_data) // config["bptt"],
+                        len(train_data) // bptt,
                         config["lr"],
-                        elapsed * 1000 / config["log_interval"],
+                        elapsed * 1000 / log_interval,
                         cur_loss,
                         np.exp(cur_loss),
                     )
@@ -284,17 +287,18 @@ def objective(config):
 
         return epoch_loss / (len(train_data) - 1), first_loss
 
+    d_model = config["d_model"]
     model = TransformerModel(
         ntokens,
-        ninp=config["d_model"],
+        ninp=d_model,
         nhead=config["nhead"],
-        nhid=config["d_model"] * config["ffn_ratio"],
+        nhid=d_model * config["ffn_ratio"],
         nlayers=config["nlayers"],
         dropout=config["dropout"],
     )
 
     model = model.to(device)
-    model = setprec(model, config["precision"])
+    model = setprec(model, precision)
     criterion = nn.NLLLoss()
 
     if config["optimizer_name"] == "sgd":
@@ -313,7 +317,7 @@ def objective(config):
         raise ValueError()
 
     # half-precision black magic
-    if config["precision"] == "half":
+    if precision == "half":
         model, optimizer = amp.initialize(
             model, optimizer, opt_level="O1", min_loss_scale=0.0001, verbosity=0
         )
@@ -322,13 +326,13 @@ def objective(config):
     # Note that `best_val_loss` and `logs` are also part of the state to be
     # checkpointed. In order for things to work out, we keep them in a
     # dict (otherwise, they'd not be mutable in `load_model_fn`,
-    # `save_model_fn`.
+    # `save_model_fn`).
     mutable_state = {"best_val_loss": None, "logs": []}
     state_dict_objects = {
         "model": model,
         "optimizer": optimizer,
     }
-    if config["precision"] == "half":
+    if precision == "half":
         state_dict_objects["amp"] = amp
 
     load_model_fn, save_model_fn = pytorch_load_save_functions(
@@ -510,21 +514,26 @@ if __name__ == "__main__":
     parser.add_argument(
         "--" + MAX_RESOURCE_ATTR, type=int, default=40, help="upper epoch limit"
     )
-    parser.add_argument("--use_cuda", type=bool, default=True)
+    parser.add_argument("--use_cuda", type=int, default=1)
     parser.add_argument(
         "--input_data_dir",
         type=str,
         default="./",
         help="location of the data corpus",
     )
-    parser.add_argument("--optimizer_name", default="sgd", choices=["sgd", "adam"])
+    parser.add_argument(
+        "--optimizer_name", type=str, default="sgd", choices=["sgd", "adam"]
+    )
     parser.add_argument("--bptt", type=int, default=35, help="sequence length")
     parser.add_argument("--seed", type=int, default=1111, help="random seed")
     parser.add_argument(
         "--precision", type=str, default="float", help="float | double | half"
     )
     parser.add_argument(
-        "--log_interval", type=int, default=200, metavar="N", help="report interval"
+        "--log_interval",
+        type=int,
+        default=200,
+        help="report interval",
     )
     # These could become hyperparameters as well (more like NAS)
     parser.add_argument("--d_model", type=int, default=256, help="width of the model")
@@ -542,5 +551,6 @@ if __name__ == "__main__":
     add_checkpointing_to_argparse(parser)
 
     args, _ = parser.parse_known_args()
+    args.use_cuda = bool(args.use_cuda)
 
     objective(config=vars(args))
