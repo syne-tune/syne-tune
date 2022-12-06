@@ -35,7 +35,7 @@ class TrialBackend:
 
     :param delete_checkpoints: If `True`, the checkpoints written by a trial
         are deleted once the trial is stopped or is registered as
-        completed. Also, as part of `stop_all` called at the end of the
+        completed. Also, as part of :meth:`stop_all` called at the end of the
         tuning loop, all remaining checkpoints are deleted. Defaults to
         `False`.
     """
@@ -84,7 +84,7 @@ class TrialBackend:
         :param src_trial_id: Source trial ID (copy from)
         :param tgt_trial_id: Target trial ID (copy to)
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def delete_checkpoint(self, trial_id: int):
         """
@@ -93,20 +93,25 @@ class TrialBackend:
 
         :param trial_id: ID of trial for which checkpoint files are deleted
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def resume_trial(self, trial_id: int, new_config: Optional[dict] = None):
+    def resume_trial(
+        self, trial_id: int, new_config: Optional[dict] = None
+    ) -> TrialResult:
         """Resume paused trial
 
         :param trial_id: ID of (paused) trial to be resumed
         :param new_config: If given, the config maintained in `trial.config` is
             replaced by `new_config`
+        :return: Information for resumed trial
         """
         assert trial_id < len(
             self.trial_ids
         ), "cannot resume a trial id that is not present"
-        # todo assert that status is not running
         trial = self._trial_dict[trial_id]
+        assert (
+            trial.status == Status.paused
+        ), f"Cannot resume trial_id {trial_id} from status '{trial.status}', must be '{Status.paused}'"
         self._resume_trial(trial_id)
         if new_config is not None:
             trial.config = new_config
@@ -114,6 +119,8 @@ class TrialBackend:
             trial_id=trial_id,
             config=trial.config,
         )
+        trial.status = Status.in_progress
+        return trial
 
     def _resume_trial(self, trial_id: int):
         """Called in :meth:`resume_trial`, before job is scheduled.
@@ -133,8 +140,8 @@ class TrialBackend:
         :param result: Result dict based on which scheduler decided to pause the
             trial
         """
-        # todo assert trial_id is valid
-        # todo assert trial_id has not been stopped or paused before
+        assert trial_id < len(self.trial_ids), f"Invalid trial_id = {trial_id}"
+        self._trial_dict[trial_id].status = Status.paused
         self._pause_trial(trial_id=trial_id, result=result)
 
     def _pause_trial(self, trial_id: int, result: Optional[dict]):
@@ -223,12 +230,6 @@ class TrialBackend:
                     position_last_seen = self._last_metric_seen_index[trial_id]
                     new_metrics = trial_result.metrics[position_last_seen:]
                     self._last_metric_seen_index[trial_id] += len(new_metrics)
-                    if (
-                        self.delete_checkpoints
-                        and trial_result.status == Status.completed
-                    ):
-                        logger.info(f"Removing checkpoints for trial_id = {trial_id}")
-                        self.delete_checkpoint(trial_id=trial_id)
                 for new_metric in new_metrics:
                     results.append((trial_id, new_metric))
 
@@ -284,6 +285,8 @@ class TrialBackend:
                 self.stop_trial(trial_id=trial.trial_id)
         if self.delete_checkpoints:
             # Delete all remaining checkpoints (e.g., of paused trials)
+            # We loop over all trials here, but `delete_checkpoints` does nothing
+            # if the checkpoint has already been deleted before
             logger.info("Removing all remaining checkpoints of trials")
             for trial_id in self.trial_ids:
                 self.delete_checkpoint(trial_id=trial_id)
