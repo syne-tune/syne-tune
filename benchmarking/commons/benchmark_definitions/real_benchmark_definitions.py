@@ -25,6 +25,9 @@ from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
 from benchmarking.commons.benchmark_definitions.distilbert_on_imdb import (
     distilbert_imdb_benchmark,
 )
+from benchmarking.commons.benchmark_definitions.transformer_wikitext2 import (
+    transformer_wikitext2_benchmark,
+)
 
 
 def real_benchmark_definitions(
@@ -35,4 +38,7 @@ def real_benchmark_definitions(
         "lstm_wikitext2": lstm_wikitext2_benchmark(sagemaker_backend, **kwargs),
         "mlp_fashionmnist": mlp_fashionmnist_benchmark(sagemaker_backend, **kwargs),
         "distilbert_imdb": distilbert_imdb_benchmark(sagemaker_backend, **kwargs),
+        "transformer_wikitext2": transformer_wikitext2_benchmark(
+            sagemaker_backend, **kwargs
+        ),
     }
