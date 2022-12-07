@@ -118,10 +118,10 @@ class TrialInformation:
     """
     The scheduler maintains information about all trials it has been dealing
     with so far. `trial_decision` is the current status of the trial.
-    `keep_case` is relevant only if `searcher_data == 'rungs_and_last'`.
+    `keep_case` is relevant only if `searcher_data == "rungs_and_last"`.
     `largest_update_resource` is the largest resource level for which the
     searcher was updated, or None.
-    `reported_result` caontains the last recent reported result, or None
+    `reported_result` contains the last recent reported result, or None
     (task was started, but did not report anything yet). Only contains
     attributes `self.metric` and `self._resource_attr`.
     """
@@ -163,7 +163,7 @@ class HyperbandScheduler(FIFOScheduler):
     .. note::
        This scheduler requires both `metric` and `resource_attr` to be
        returned by the reporter. Here, resource values must be positive int.
-       If `resource_attr == 'epoch'`, this should be the number of epochs done,
+       If `resource_attr == "epoch"`, this should be the number of epochs done,
        starting from 1 (not the epoch number, starting from 0).
 
     **Rung levels and promotion quantiles**

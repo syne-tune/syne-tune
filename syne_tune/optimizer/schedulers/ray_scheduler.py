@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class RayTuneScheduler(TrialScheduler):
     """
-    Allow to use Ray scheduler and searcher. Any searcher/scheduler should
+    Allow using Ray scheduler and searcher. Any searcher/scheduler should
     work, except such which need access to `TrialRunner` (e.g., PBT), this
     feature is not implemented in Syne Tune.
 

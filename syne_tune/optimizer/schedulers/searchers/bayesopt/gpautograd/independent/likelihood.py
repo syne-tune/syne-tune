@@ -55,12 +55,26 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import (
 
 class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
     """
-    Marginal likelihood for GP multi-fidelity model over f(x, r), where for
-    each r, f(x, r) is represented by an independent GP. The different
-    processes share the same kernel, but have their own mean functions mu_r
-    and covariance scales c_r.
-    If `separate_noise_variances` is True, each process has its own noise
+    Marginal likelihood for GP multi-fidelity model over :msth:`f(x, r)`,
+    where for each :math:`r`, :math:`f(x, r)` is represented by an independent
+    GP. The different processes share the same kernel, but have their own mean
+    functions :math:`\mu_r` and covariance scales :math:`c_r`.
+    If `separate_noise_variances == True`, each process has its own noise
     variance, otherwise all processes share the same noise variance.
+
+    :param kernel: Shared kernel function :math:`k(x, x')`
+    :param mean: Maps rung level :math:`r` to mean function :math:`\mu_r`
+    :param resource_attr_range: :math:`(r_{min}, r_{max})`
+    :param separate_noise_variances: See above. Defaults to `False`
+    :param initial_noise_variance: Initial value for noise variance(s).
+        Defaults to
+        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_NOISE_VARIANCE`
+    :param initial_covariance_scale: Initial value for covariance scales.
+        Defaults to
+        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_COVARIANCE_SCALE`
+    :param encoding_type: Encoding used for noise variance(s) and covariance
+        scales. Defaults to
+        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING`
     """
 
     def __init__(
@@ -69,9 +83,9 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         mean: Dict[int, MeanFunction],
         resource_attr_range: Tuple[int, int],
         separate_noise_variances: bool = False,
-        initial_noise_variance=None,
-        initial_covariance_scale=None,
-        encoding_type=None,
+        initial_noise_variance: Optional[float] = None,
+        initial_covariance_scale: Optional[float] = None,
+        encoding_type: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)

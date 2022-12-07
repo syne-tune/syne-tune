@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Optional
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 
@@ -41,53 +42,55 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         | https://arxiv.org/abs/1406.3896
 
     The argument in that paper actually justifies using a non-zero mean
-    function (see ExponentialDecayResourcesMeanFunction) and centralizing
-    the kernel proposed there. This is done here. Details in:
+    function (see :class:`ExponentialDecayResourcesMeanFunction`) and
+    centralizing the kernel proposed there. This is done here. Details in:
 
         | Tiao, Klein, Archambeau, Seeger (2020)
         | Model-based Asynchronous Hyperparameter Optimization
         | https://arxiv.org/abs/2003.10865
 
     We implement a new family of kernel functions, for which the additive
-    Freeze-Thaw kernel is one instance (delta = 0).
-    The kernel has parameters alpha, mean_lam, gamma > 0, and delta in [0, 1].
-    Note that beta = alpha / mean_lam is used in the Freeze-Thaw paper (the
-    Gamma distribution over lambda is parameterized differently).
-    The additive Freeze-Thaw kernel is obtained for delta = 0 (use
-    delta_fixed_value = 0).
+    Freeze-Thaw kernel is one instance (`delta == 0`).
+    The kernel has parameters `alpha`, `mean_lam`, `gamma > 0`, and
+    `0 <= delta <= 1`.
+    Note that `beta = alpha / mean_lam` is used in the Freeze-Thaw paper (the
+    Gamma distribution over `lambda` is parameterized differently).
+    The additive Freeze-Thaw kernel is obtained for `delta == 0` (use
+    `delta_fixed_value = 0`).
 
     In fact, this class is configured with a kernel and a mean function over
-    inputs x (dimension d) and represents a kernel (and mean function) over
-    inputs (x, r) (dimension d + 1), where the resource attribute r >= 0 is
-    last.
+    inputs `x` (dimension `d`) and represents a kernel (and mean function) over
+    inputs `(x, r)` (dimension `d + 1`), where the resource attribute `r >= 0`
+    is last.
     """
 
     def __init__(
         self,
         kernel_x: KernelFunction,
         mean_x: MeanFunction,
-        encoding_type=DEFAULT_ENCODING,
-        alpha_init=1.0,
-        mean_lam_init=0.5,
-        gamma_init=0.5,
-        delta_fixed_value=None,
-        delta_init=0.5,
-        max_metric_value=1.0,
+        encoding_type: str = DEFAULT_ENCODING,
+        alpha_init: float = 1.0,
+        mean_lam_init: float = 0.5,
+        gamma_init: float = 0.5,
+        delta_fixed_value: Optional[float] = None,
+        delta_init: float = 0.5,
+        max_metric_value: float = 1.0,
         **kwargs
     ):
         """
-        :param kernel_x: Kernel k_x(x, x') over configs
-        :param mean_x: Mean function mu_x(x) over configs
-        :param encoding_type: Encoding used for alpha, mean_lam, gamma (positive
-            values)
-        :param alpha_init: Initial value alpha
-        :param mean_lam_init: Initial value mean_lam
-        :param gamma_init: Initial value gamma
-        :param delta_fixed_value: If not None, delta is fixed to this value, and
-            does not become a free parameter
-        :param delta_init: Initial value delta (if delta_fixed_value is None)
+        :param kernel_x: Kernel :math:`k_x(x, x')` over configs
+        :param mean_x: Mean function :math:`\mu_x(x)` over configs
+        :param encoding_type: Encoding used for `alpha`, `mean_lam`, `gamma`
+            (positive values). Defaults to
+            :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING`
+        :param alpha_init: Initial value `alpha`, defaults to 1
+        :param mean_lam_init: Initial value `mean_lam`, defaults to 0.5
+        :param gamma_init: Initial value `gamma`, defaults to 0.5
+        :param delta_fixed_value: If not `None`, `delta` is fixed to this value,
+            and does not become a free parameter. Defaults to `None`
+        :param delta_init: Initial value `delta`, defaults to 1
         :param max_metric_value: Maximum value which metric can attend. This is
-            used as upper bound on gamma
+            used as upper bound on `gamma`. Defaults to 1
         """
         super().__init__(dimension=kernel_x.dimension + 1, **kwargs)
         self.kernel_x = kernel_x
@@ -272,11 +275,11 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
 
         return anp.add(mean, anp.multiply(kappa, kr_pref))
 
-    def get_params(self):
+    def get_params(self) -> dict:
         """
-        Parameter keys are alpha, mean_lam, gamma, delta (only if not fixed
-        to delta_fixed_value), as well as those of self.kernel_x (prefix
-        'kernelx_') and of self.mean_x (prefix 'meanx_').
+        Parameter keys are "alpha", "mean_lam", "gamma", "delta" (only if not
+        fixed to `delta_fixed_value`), as well as those of `self.kernel_x` (prefix
+        "kernelx_") and of `self.mean_x` (prefix "meanx_").
         """
         values = list(self._get_params(None))
         keys = ["alpha", "mean_lam", "gamma", "delta"]

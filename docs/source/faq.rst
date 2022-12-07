@@ -1,8 +1,9 @@
 Why should I use Syne Tune?
 ===========================
 
-HPO is an important problem since many years, with a healthy number of
-commercial and open source tools available. Notable examples for open source
+Hyperparameter Optimization (HPO) has been an important problem for many years,
+and a variety of commercial and open-source tools are available to help
+practitioners run HPO efficiently. Notable examples for open source
 tools are `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`__ and
 `Optuna <https://optuna.readthedocs.io/en/stable/>`__. Here are some reasons
 why you may prefer Syne Tune over these alternatives:

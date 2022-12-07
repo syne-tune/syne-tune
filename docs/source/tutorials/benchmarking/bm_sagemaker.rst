@@ -112,13 +112,6 @@ The warm pool feature is most useful with multi-fidelity HPO methods (such as
   to request warm pool quota increases for instance types you would like to
   use. For our example, you need to have quotas for (at least) four
   ``ml.g4dn.xlarge`` instances, **both** for training and warm pool usage.
-* As of today, warm pools decrease start-up times, but stopping a SageMaker
-  training job still has a sizable delay. It is therefore recommended to use
-  ``type="promotion"`` with the asynchronous HPO methods in Syne Tune (e.g.,
-  ``ASHA``, ``MOBSTER``, ``HyperTune``), as they do not use stop signals (the
-  default is ``type="stopping"``). The synchronous multi-fidelity methods
-  (e.g., ``SyncHyperband``, ``SyncBOHB``, ``DEHB``, ``SyncMOBSTER``) don’t do
-  this either.
 * As a sanity check, you can watch the training jobs in the console. You
   should see ``InUse`` and ``Reused`` in the *Warm pool status* column.
   Running the example above, the first 4 jobs should complete in about 7 to 8

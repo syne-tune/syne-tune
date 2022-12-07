@@ -93,7 +93,7 @@ has to be modified once more, by replacing ``objective`` with this code:
        # Evaluate objective and report results to Syne Tune
        objective(config=vars(args))
 
-Checkpointing needs to do two things:
+Checkpointing requires you to implement the following:
 
 * [1] A checkpoint has to be written at the end of each epoch. The precise content
   of the checkpoint depends on the training script, but it has to contain the
