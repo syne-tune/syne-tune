@@ -109,6 +109,7 @@ def plot_ei_mean_std(model, eipu, max_grid=1.0):
 
 # Note: This test fails when run with GP MCMC model. There, acq[5] > acq[7], and acq[8] > acq[5]
 # ==> Need to look into GP MCMC model
+@pytest.mark.timeout(10)
 def test_sanity_check():
     # - test that values are negative as we should be returning *minus* expected improvement
     # - test that values that are further from evaluated candidates have higher expected improvement
