@@ -435,26 +435,28 @@ class SageMakerBackend(TrialBackend):
             )
 
     def delete_checkpoint(self, trial_id: int):
-        if trial_id not in self._trial_ids_deleted_checkpoints:
-            s3_path = self._checkpoint_s3_uri_for_trial(trial_id)
-            result = s3_delete_files_recursively(s3_path)
-            self._trial_ids_deleted_checkpoints.add(trial_id)
-            num_action_calls = result["num_action_calls"]
-            if num_action_calls > 0:
-                num_successful_action_calls = result["num_successful_action_calls"]
-                if num_successful_action_calls == num_action_calls:
-                    logger.info(
-                        f"Deleted {num_action_calls} checkpoint files for "
-                        f"trial_id {trial_id} from {s3_path}"
-                    )
-                else:
-                    logger.warning(
-                        f"Successfully deleted {num_successful_action_calls} "
-                        f"checkpoint files for trial_id {trial_id} from "
-                        f"{s3_path}, but failed to delete "
-                        f"{num_action_calls - num_successful_action_calls} "
-                        "files. Error:\n" + result["first_error_message"]
-                    )
+        if trial_id in self._trial_ids_deleted_checkpoints:
+            return
+        s3_path = self._checkpoint_s3_uri_for_trial(trial_id)
+        result = s3_delete_files_recursively(s3_path)
+        self._trial_ids_deleted_checkpoints.add(trial_id)
+        num_action_calls = result["num_action_calls"]
+        if num_action_calls <= 0:
+            return
+        num_successful_action_calls = result["num_successful_action_calls"]
+        if num_successful_action_calls == num_action_calls:
+            logger.info(
+                f"Deleted {num_action_calls} checkpoint files for "
+                f"trial_id {trial_id} from {s3_path}"
+            )
+        else:
+            logger.warning(
+                f"Successfully deleted {num_successful_action_calls} "
+                f"checkpoint files for trial_id {trial_id} from "
+                f"{s3_path}, but failed to delete "
+                f"{num_action_calls - num_successful_action_calls} "
+                "files. Error:\n" + result["first_error_message"]
+            )
 
     def set_path(
         self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
