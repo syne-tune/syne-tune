@@ -208,18 +208,13 @@ More details are found in
 `this tutorial <tutorials/benchmarking/bm_sagemaker.rst#using-sageMaker-managed-warm-pools>`__.
 
 Retrieving the best checkpoint
-=================================
+==============================
 
-.. literalinclude:: ../../examples/launch_standalone_bayesian_optimization.py
-   :caption: examples/launch_standalone_bayesian_optimization.py
+.. literalinclude:: ../../examples/launch_checkpoint_example.py
+   :caption: examples/launch_checkpoint_example.py
    :lines: 13-
 
-Syne Tune combines a scheduler (HPO algorithm) with a backend to provide a
-complete HPO solution. If you already have a system in place for job
-scheduling and managing the state of the tuning problem, you may want to
-call the scheduler on its own. This example demonstrates how to do this
-for Gaussian process based Bayesian optimization.
-
+Example showing how to retrieve the best checkpoint obtained after tuning.
 
 Launch with SageMaker Backend and Custom Docker Image
 =====================================================

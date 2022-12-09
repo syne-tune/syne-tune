@@ -40,6 +40,7 @@ class ExperimentResult:
     :param results: Dataframe containing results of experiment
     :param metadata: Metadata stored along with results
     :param tuner: :class:`syne_tune.Tuner` object stored along with results
+    :param path: local path where the experiment is stored
     """
 
     name: str

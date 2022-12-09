@@ -1,8 +1,3 @@
-"""
-An example showing how to retrieve the best checkpoint of an XGBoost model.
-The script being tuned `xgboost_checkpoint.py` stores the checkpoint obtained after each trial evaluation.
-After the tuning is done, this example loads the best checkpoint and evaluate the model.
-"""
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License").
@@ -15,6 +10,12 @@ After the tuning is done, this example loads the best checkpoint and evaluate th
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+"""
+An example showing how to retrieve the best checkpoint of an XGBoost model.
+The script being tuned `xgboost_checkpoint.py` stores the checkpoint obtained after each trial evaluation.
+After the tuning is done, this example loads the best checkpoint and evaluate the model.
+"""
+
 import logging
 from pathlib import Path
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
     exp = load_experiment(tuner.name)
     best_config = exp.best_config()
-    checkpoint = exp.path / str(best_config["trial_id"]) / "checkpoints"
+    checkpoint = trial_backend.checkpoint_trial_path(best_config['trial_id'])
     assert checkpoint.exists()
 
     print(f"Best config found {best_config} checkpointed at {checkpoint}")
