@@ -179,6 +179,7 @@ class Tuner:
 
     def run(self):
         """Launches the tuning."""
+        done_trials_statuses = OrderedDict()
         try:
             logger.info(f"results of trials will be saved on {self.tuner_path}")
 
@@ -209,7 +210,6 @@ class Tuner:
 
             self._save_metadata()
 
-            done_trials_statuses = OrderedDict()
             # `running_trial_ids` contains the ids of all trials currently running,
             # whether they were started from scratch or were resumed from a pausing
             # state

@@ -235,7 +235,9 @@ When using SageMaker backend or tuning remotely, we use the
 `SageMaker checkpoint mechanism <https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html>`__
 under the hood to sync local checkpoints to s3. Checkpoints are synced to
 ``s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/``,
-where ``sagemaker-default-bucket`` is the default bucket for SageMaker.
+where ``sagemaker-default-bucket`` is the default bucket for SageMaker. A
+complete example is given by
+`examples/launch_height_sagemaker_checkpoints.py <examples.html#sageMaker-backend-and-checkpointing>`__.
 
 There are some convenience functions which help you to implement checkpointing
 for your training script. Have a look at

@@ -87,6 +87,8 @@ if __name__ == "__main__":
             role=get_execution_role(),
             dependencies=[str(Path(__file__).parent.parent / "benchmarking")],
             sagemaker_session=default_sagemaker_session(),
+            disable_profiler=True,
+            debugger_hook_config=False,
         ),
     )
 

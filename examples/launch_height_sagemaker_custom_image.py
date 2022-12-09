@@ -66,6 +66,8 @@ if __name__ == "__main__":
             max_run=10 * 60,
             job_name_prefix="hpo-hyperband",
             sagemaker_session=default_sagemaker_session(),
+            disable_profiler=True,
+            debugger_hook_config=False,
         ),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example
