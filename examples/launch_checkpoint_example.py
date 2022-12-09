@@ -1,6 +1,7 @@
 """
 An example showing how to retrieve the best checkpoint of an XGBoost model.
 The script being tuned `xgboost_checkpoint.py` stores the checkpoint obtained after each trial evaluation.
+After the tuning is done, this example loads the best checkpoint and evaluate the model.
 """
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
