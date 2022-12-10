@@ -22,8 +22,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from syne_tune.backend.trial_backend import TrialBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import BUSY_STATUS
+from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.num_gpu import get_num_gpus
 from syne_tune.report import retrieve
 from syne_tune.backend.trial_status import TrialResult, Status
