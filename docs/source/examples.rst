@@ -207,6 +207,14 @@ are strongly recommended for multi-fidelity HPO with the SageMaker backend.
 More details are found in
 `this tutorial <tutorials/benchmarking/bm_sagemaker.rst#using-sageMaker-managed-warm-pools>`__.
 
+Retrieving the best checkpoint
+==============================
+
+.. literalinclude:: ../../examples/launch_checkpoint_example.py
+   :caption: examples/launch_checkpoint_example.py
+   :lines: 13-
+
+Example showing how to retrieve the best checkpoint obtained after tuning.
 
 Launch with SageMaker Backend and Custom Docker Image
 =====================================================

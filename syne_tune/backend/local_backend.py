@@ -89,16 +89,16 @@ class LocalBackend(TrialBackend):
     def trial_path(self, trial_id: int) -> Path:
         return self.local_path / str(trial_id)
 
-    def _checkpoint_trial_path(self, trial_id: int):
+    def checkpoint_trial_path(self, trial_id: int):
         return self.trial_path(trial_id) / "checkpoints"
 
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
-        src_checkpoint_path = self._checkpoint_trial_path(src_trial_id)
-        tgt_checkpoint_path = self._checkpoint_trial_path(tgt_trial_id)
+        src_checkpoint_path = self.checkpoint_trial_path(src_trial_id)
+        tgt_checkpoint_path = self.checkpoint_trial_path(tgt_trial_id)
         shutil.copytree(src_checkpoint_path, tgt_checkpoint_path)
 
     def delete_checkpoint(self, trial_id: int):
-        checkpoint_path = self._checkpoint_trial_path(trial_id)
+        checkpoint_path = self.checkpoint_trial_path(trial_id)
         shutil.rmtree(checkpoint_path, ignore_errors=True)
 
     def _prepare_for_schedule(self, num_gpus=None):

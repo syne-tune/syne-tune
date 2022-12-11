@@ -353,6 +353,7 @@ class Tuner:
         self._set_metadata(res, "metric_mode", self.scheduler.metric_mode())
         self._set_metadata(res, "entrypoint", self.trial_backend.entrypoint_path().stem)
         self._set_metadata(res, "backend", str(type(self.trial_backend).__name__))
+
         self._set_metadata(
             res, "scheduler_name", str(self.scheduler.__class__.__name__)
         )
@@ -599,9 +600,18 @@ class Tuner:
                 done_trial = done_trials.get(trial_id)
                 if done_trial is not None and done_trial[1] == Status.paused:
                     status = Status.paused
-                assert (
-                    trial_id in self.last_seen_result_per_trial
-                ), f"trial {trial_id} completed and no metrics got observed"
+                if trial_id not in self.last_seen_result_per_trial:
+                    logger.error(
+                        f"trial {trial_id} completed and no metrics got observed, corresponding log:"
+                    )
+                    stdout = "".join(self.trial_backend.stdout(trial_id))
+                    stderr = "".join(self.trial_backend.stderr(trial_id))
+                    logger.error(stdout)
+                    logger.error(stderr)
+                    raise ValueError(
+                        f"trial {trial_id} completed and no metrics got observed"
+                    )
+
                 last_result = self.last_seen_result_per_trial[trial_id]
                 if trial_id not in done_trials:
                     self.scheduler.on_trial_complete(trial, last_result)
