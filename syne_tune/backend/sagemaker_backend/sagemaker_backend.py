@@ -23,7 +23,7 @@ import time
 from sagemaker import LocalSession
 from sagemaker.estimator import Framework
 
-from syne_tune.backend.trial_backend import TrialBackend
+from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_CHECKPOINT_DIR
 from syne_tune.util import s3_experiment_path
 from syne_tune.backend.trial_status import TrialResult, Status
@@ -42,9 +42,6 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 
 
 logger = logging.getLogger(__name__)
-
-
-BUSY_STATUS = {Status.in_progress, Status.stopping}
 
 
 class SageMakerBackend(TrialBackend):

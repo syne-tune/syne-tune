@@ -29,6 +29,9 @@ TrialAndStatusInformation = Dict[int, Tuple[Trial, str]]
 TrialIdAndResultList = List[Tuple[int, dict]]
 
 
+BUSY_STATUS = {Status.in_progress, Status.stopping}
+
+
 class TrialBackend:
     """
     Interface for back-end to execute evaluations of trials.

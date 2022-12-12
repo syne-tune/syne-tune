@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Optional
 
 
 def try_import_gpsearchers_message() -> str:
@@ -60,19 +61,21 @@ def try_import_yahpo_message() -> str:
     )
 
 
-def try_import_backend_message(backend_type: str) -> str:
-    return (
-        f"{backend_type} is not imported"
-        + " since dependencies are missing. You can install them with\n"
-        + "   pip install 'syne-tune[extra]'"
+def try_import_backends_message() -> str:
+    return _try_import_message(
+        "LocalBackend / PythonBackend are not imported", tag=None
     )
 
 
-def _try_import_message(message_text: str, tag: str) -> str:
+def _try_import_message(message_text: str, tag: Optional[str]) -> str:
+    if tag is None:
+        insert = ""
+    else:
+        insert = "[" + tag + "]"
     return (
         message_text
         + " since dependencies are missing. You can install them with\n"
-        + f"   pip install 'syne-tune[{tag}]'\n"
+        + f"   pip install 'syne-tune{insert}'\n"
         + "or (for everything)\n"
         + "   pip install 'syne-tune[extra]'"
     )
