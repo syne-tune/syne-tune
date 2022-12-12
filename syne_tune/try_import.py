@@ -60,11 +60,21 @@ def try_import_yahpo_message() -> str:
     )
 
 
-def _try_import_message(message_text: str, tag: str) -> str:
+def try_import_backends_message() -> str:
+    return _try_import_message(
+        "LocalBackend / PythonBackend are not imported", tag=None
+    )
+
+
+def _try_import_message(message_text: str, tag: Optional[str]) -> str:
+    if tag is None:
+        insert = ""
+    else:
+        insert = "[" + tag + "]"
     return (
         message_text
         + " since dependencies are missing. You can install them with\n"
-        + f"   pip install 'syne-tune[{tag}]'\n"
+        + f"   pip install 'syne-tune{insert}'\n"
         + "or (for everything)\n"
         + "   pip install 'syne-tune[extra]'"
     )

@@ -11,13 +11,21 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-__all__ = ["LocalBackend", "PythonBackend"]
+__all__ = []
 
 import logging
 
-from syne_tune.try_import import try_import_aws_message
-from syne_tune.backend.local_backend import LocalBackend  # noqa: F401
-from syne_tune.backend.python_backend.python_backend import PythonBackend  # noqa: F401
+from syne_tune.try_import import try_import_aws_message, try_import_backends_message
+
+try:
+    from syne_tune.backend.local_backend import LocalBackend  # noqa: F401
+    from syne_tune.backend.python_backend.python_backend import (
+        PythonBackend,
+    )  # noqa: F401
+
+    __all__ = ["LocalBackend", "PythonBackend"]
+except ImportError:
+    logging.info(try_import_backends_message())
 
 try:
     from syne_tune.backend.sagemaker_backend.sagemaker_backend import (  # noqa: F401
