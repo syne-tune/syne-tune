@@ -23,7 +23,7 @@ experimental. Here is an incomplete overview:
   reinforcement learning, where optimization hyperparameters like learning rate
   can be changed at certain points during the training. An example is at
   ``examples/launch_pbt.py``, see also
-  :class:`syne_tune.optimizer.schedulers.PopulationBasedTraining`. Note that
+  :class:`~syne_tune.optimizer.schedulers.PopulationBasedTraining`. Note that
   `checkpointing <basics_promotion.html#pause-and-resume-checkpointing-of-trials>`__
   is mandatory for PBT.
 * **Constrained HPO**: In many applications, more than a single metric play a
@@ -37,7 +37,7 @@ experimental. Here is an incomplete overview:
   as ``constraint_attr`` in ``search_options``. More details on constrained HPO
   and methodology adopted in Syne Tune can be found
   `here <https://arxiv.org/abs/1910.07003>`__, see also
-  :class:`syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`.
+  :class:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`.
 * **Multi-objective HPO**: Another way to approach tuning problems with multiple
   metrics is trying to sample the Pareto frontier, i.e. identifying
   configurations whose performance along one metric cannot be improved without
@@ -45,4 +45,4 @@ experimental. Here is an incomplete overview:
   in this direction. An example is at ``examples/launch_height_moasha.py``.
   More details on multi-objective HPO and methodology adopted in Syne Tune can
   be found `here <https://arxiv.org/abs/2106.12639>`__, see also
-  :class:`syne_tune.optimizer.schedulers.multiobjective.MOASHA`.
+  :class:`~syne_tune.optimizer.schedulers.multiobjective.MOASHA`.

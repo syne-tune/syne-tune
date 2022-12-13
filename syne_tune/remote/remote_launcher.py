@@ -41,8 +41,8 @@ class RemoteLauncher:
     will spawn one Sagemaker job per trial.
 
     :param tuner: Tuner that should be run remotely on a `instance_type`
-        instance. Note that :class:`syne_tune.StoppingCriterion` should be used
-        for the :class:`syne_tune.Tuner` rather than a lambda function to ensure
+        instance. Note that :class:`~`syne_tune.StoppingCriterion` should be used
+        for the :class:`~`syne_tune.Tuner` rather than a lambda function to ensure
         serialization.
     :param role: SageMaker role to be used to launch the remote tuning instance.
     :param instance_type: Instance where the tuning is going to happen.
@@ -59,7 +59,7 @@ class RemoteLauncher:
     :param s3_path: S3 base path used for checkpointing, outputs of tuning
         will be stored under `{s3_path}/{tuner_name}`. The logs of the local
         backend are only stored if `store_logs_localbackend` is True.
-        Defaults to :func:`syne_tune.util.s3_experiment_path`
+        Defaults to :func:`~syne_tune.util.s3_experiment_path`
     :param no_tuner_logging: If `True`, the logging level for `syne_tune.tuner`
         is set to `logging.ERROR`. Defaults to `False`
     """

@@ -36,9 +36,9 @@ logger = logging.getLogger(__name__)
 class MultiModelGPFIFOSearcher(GPFIFOSearcher):
     """
     Superclass for multi-model extensions of
-    :class:`syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`. We first
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`. We first
     call
-    :meth:`syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher._create_internal`
+    :meth:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher._create_internal`
     passing factory and `skip_optimization` predicate for the `INTERNAL_METRIC_NAME`
     model, then replace the state transformer by a multi-model one.
     """
@@ -61,7 +61,7 @@ class MultiModelGPFIFOSearcher(GPFIFOSearcher):
 class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
     """
     Gaussian process-based cost-aware hyperparameter optimization (to be used
-    with :class:`syne_tune.optimizer.schedulers.FIFOScheduler`). The searcher
+    with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`). The searcher
     requires a cost metric, which is given by `cost_attr`.
 
     Implements two different variants. If `resource_attr` is given, cost values
@@ -77,7 +77,7 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
     as well.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`:
 
     :param cost_attr: Mandatory. Name of cost attribute in data obtained
         from reporter (e.g., elapsed training time). Depending on whether
@@ -95,7 +95,7 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
         :math:`c(x, r)`. Ignored if `resource_attr` is not given, since
         :math:`c(x)` is represented by a default GP surrogate model.
     :type cost_model:
-        :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`, optional
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`, optional
     """
 
     def __init__(

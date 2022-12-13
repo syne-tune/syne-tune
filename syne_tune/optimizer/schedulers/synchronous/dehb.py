@@ -148,7 +148,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
     :param config_space: Configuration space for trial evaluation function
     :param rungs_first_bracket: Determines rung level systems for each
         bracket, see
-        :class:`syne_tune.optimizer.schedulers.synchronous.dehb_bracket_manager.DifferentialEvolutionHyperbandBracketManager`
+        :class:`~syne_tune.optimizer.schedulers.synchronous.dehb_bracket_manager.DifferentialEvolutionHyperbandBracketManager`
     :param num_brackets_per_iteration: Number of brackets per iteration. The
         algorithm cycles through these brackets in one iteration. If not
         given, the maximum number is used (i.e., `len(rungs_first_bracket)`)
@@ -156,7 +156,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         :meth:`on_trial_result`
     :type metric: str
     :param searcher: Selects searcher. Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`..
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`..
         If `searcher == "random_encoded"` (default), the encoded configs are
         sampled directly, each entry independently from U([0, 1]).
         This distribution has higher entropy than for "random" if
@@ -164,7 +164,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         `points_to_evaluate` is still used in this case.
     :type searcher: str, optional
     :param search_options: Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
     :type search_options: dict, optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
@@ -179,7 +179,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
     :type points_to_evaluate: `List[dict]`, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
-        :class:`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
+        :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
     :param max_resource_attr: Key name in config for fixed attribute

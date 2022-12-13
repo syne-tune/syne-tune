@@ -31,7 +31,7 @@ grid search is particularly inefficient if some HPs are more important for the
 objective values than others. For all of these reasons, grid search is not a
 recommended baseline for HPO, unless very few parameters have to be tuned.
 Nevertheless, Syne provides an implementation in
-:class:`syne_tune.optimizer.schedulers.searchers.GridSearcher`.
+:class:`~syne_tune.optimizer.schedulers.searchers.GridSearcher`.
 
 In *random search*, the sequence of configurations is chosen by independent
 sampling. In the simple case of interest here, each value in a configuration is
@@ -229,8 +229,8 @@ Let us walk through the script, keeping this special case in mind:
   configurations for new trials, and also to make scheduling decisions about
   running trials. Most schedulers supported in Syne Tune can be imported from
   :mod:`syne_tune.optimizer.baselines`. In our example, we use
-  :class:`syne_tune.optimizer.baselines.RandomSearch`, see also
-  :class:`syne_tune.optimizer.schedulers.searchers.RandomSearcher`.
+  :class:`~syne_tune.optimizer.baselines.RandomSearch`, see also
+  :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`.
 
   Schedulers need to know how the target metric is referred to in the ``report``
   call of the training script (``metric``), and whether this criterion is to
@@ -239,7 +239,7 @@ Let us walk through the script, keeping this special case in mind:
 
 * [5] Finally, we need to specify a stopping criterion. In our example, we run
   random search for ``max_wallclock_time`` seconds, the default being 3 hours.
-  :class:`syne_tune.StoppingCriterion` can also use other attributes, such as
+  :class:`~syne_tune.StoppingCriterion` can also use other attributes, such as
   ``max_num_trials_started`` or ``max_num_trials_completed``. If several
   attributes are used, you get the *or* combination.
 * Everything comes together in the ``Tuner``. Here, we can also specify
@@ -287,7 +287,7 @@ Recommendations
 ---------------
 
 One important parameter of
-:class:`syne_tune.optimizers.schedulers.searchers.RandomSearcher` (and the
+:class:`~syne_tune.optimizers.schedulers.searchers.RandomSearcher` (and the
 other schedulers we use in this tutorial) we did not use is
 ``points_to_evaluate``, which allows specifying initial configurations to
 suggest first. For example:

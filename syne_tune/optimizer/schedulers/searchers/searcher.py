@@ -54,13 +54,13 @@ def _impute_default_config(
     """Imputes missing values in `default_config` by mid-point rule
 
     For numerical types, the mid-point in the range is chosen (in normal
-    or log). For :class:`syne_tune.config_space.Categorical`, we pick the first
+    or log). For :class:`~`syne_tune.config_space.Categorical`, we pick the first
     entry of `categories`.
 
     :param default_config: Configuration to be imputed
     :param config_space: Configuration space
     :return: Imputed configuration. If `default_config` has entries with
-        values not being :class:`syne_tune.config_space.Domain`, they are not
+        values not being :class:`~`syne_tune.config_space.Domain`, they are not
         included
     """
     new_config = dict()
@@ -135,7 +135,7 @@ def impute_points_to_evaluate(
 ) -> List[dict]:
     """
     Transforms `points_to_evaluate` argument to
-    :class:`syne_tune.optimizer.schedulers.searchers.BaseSearcher`. Each
+    :class:`~`syne_tune.optimizer.schedulers.searchers.BaseSearcher`. Each
     config in the list can be partially specified, or even be an empty dict.
     For each hyperparameter not specified, the default value is determined
     using a midpoint heuristic. Also, duplicate entries are filtered out.
@@ -144,7 +144,7 @@ def impute_points_to_evaluate(
     configurations are specified.
 
     :param points_to_evaluate: Argument to
-        :class:`syne_tune.optimizer.schedulers.searchers.BaseSearcher`
+        :class:`~`syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param config_space: Configuration space
     :return: List of fully specified initial configs
     """
@@ -166,11 +166,11 @@ def impute_points_to_evaluate(
 class BaseSearcher:
     """
     Base class of searchers, which are components of schedulers responsible for
-    implementing :meth:`get_config`.
+    implementing :meth:`~get_config`.
 
     :param config_space: Configuration space
-    :param metric: Name of metric passed to :meth:`update`. Can be obtained from
-        scheduler in :meth:`configure_scheduler`
+    :param metric: Name of metric passed to :meth:`~update`. Can be obtained from
+        scheduler in :meth:`~configure_scheduler`
     :param points_to_evaluate: List of configurations to be evaluated
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
@@ -200,7 +200,7 @@ class BaseSearcher:
         This method has to be called before the searcher can be used.
 
         :param scheduler: Scheduler the searcher is used with.
-        :type scheduler: :class:`syne_tune.optimizer.schedulers.TrialScheduler`
+        :type scheduler: :class:`~`syne_tune.optimizer.schedulers.TrialScheduler`
         """
         from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
@@ -244,9 +244,9 @@ class BaseSearcher:
         It can be overwritten by searchers which also react to intermediate
         results.
 
-        :param trial_id: See :meth:`syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param config: See :meth:`syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param result: See :meth:`syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param result: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param update: Should surrogate model be updated?
         """
         if update:
@@ -255,9 +255,9 @@ class BaseSearcher:
     def _update(self, trial_id: str, config: dict, result: dict):
         """Update surrogate model with result
 
-        :param trial_id: See :meth:`syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param config: See :meth:`syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
-        :param result: See :meth:`syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param result: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         """
         raise NotImplementedError
 
@@ -360,8 +360,8 @@ class BaseSearcher:
     def debug_log(self) -> Optional[DebugLogPrinter]:
         """
         Some subclasses support writing a debug log, using
-        :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log.DebugLogPrinter`.
-        See :class:`syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+        :class:`~`syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log.DebugLogPrinter`.
+        See :class:`~`syne_tune.optimizer.schedulers.searchers.RandomSearcher`
         for an example.
 
         :return: `debug_log` object` or None (not supported)
@@ -395,7 +395,7 @@ class SearcherWithRandomSeed(BaseSearcher):
     Additional arguments on top of parent class :class:`BaseSearcher`.
 
     :param random_seed_generator: If given, random seed is drawn from there
-    :type random_seed_generator: :class:`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`, optional
+    :type random_seed_generator: :class:`~`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`, optional
     :param random_seed: Used if `random_seed_generator` is not given.
     :type random_seed: int, optional
     """

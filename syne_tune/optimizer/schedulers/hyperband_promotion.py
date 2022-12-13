@@ -33,7 +33,7 @@ class PromotionRungSystem(RungSystem):
 
     The rule to decide whether a paused trial is promoted (or remains
     paused) is the same as in
-    :class:`syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,
+    :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,
     except that *continues* becomes *gets promoted*. If several paused trials
     in a rung can be promoted, the one with the best metric value is chosen.
 
@@ -140,7 +140,7 @@ class PromotionRungSystem(RungSystem):
     def on_task_schedule(self) -> dict:
         """
         Used to implement
-        :meth:`syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`.
+        :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`.
         Searches through rungs to find a trial which can be promoted. If one is
         found, we return the `trial_id` and other info (current milestone,
         milestone to be promoted to). We also mark the trial as being promoted

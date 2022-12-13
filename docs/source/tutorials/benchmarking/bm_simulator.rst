@@ -50,7 +50,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   the Hyper-Tune methods only. Apart from ``extra_args``, you also need to
   define ``map_extra_args``, which maps these command line arguments
   to class:`benchmarking.commons.baselines.MethodArguments` entries. Finally,
-  :func:`benchmarking.commons.hpo_main_simulator.main` is called with your
+  :func:`~benchmarking.commons.hpo_main_simulator.main` is called with your
   ``methods`` and ``benchmark_definitions`` dictionaries, and (optionally) with
   ``extra_args`` and ``map_extra_args``. We will see shortly how the launcher
   is called, and what happens inside.

@@ -31,12 +31,12 @@ class BlackboxTabular(Blackbox):
     """
     Blackbox that contains tabular evaluations (e.g. all hyperparameters
     evaluated on all fidelities). We use a separate class than
-    :class:`syne_tune.blackbox_repository.BlackboxOffline`, as performance
+    :class:`~syne_tune.blackbox_repository.BlackboxOffline`, as performance
     improvement can be made by avoiding to repeat hyperparameters and by storing
     all evaluations in a single table.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.blackbox_repository.Blackbox`:
+    :class:`~syne_tune.blackbox_repository.Blackbox`:
 
     :param hyperparameters: dataframe of hyperparameters, shape
         `(num_evals, num_hps)`, columns must match hyperparameter names of
@@ -363,7 +363,7 @@ def deserialize(path: str) -> Dict[str, BlackboxTabular]:
     above.
 
     TODO: the API is currently dissonant with :func:`serialize`,
-    :func:`deserialize` for :class:`syne_tune.blackbox_repository.BlackboxOffline`
+    :func:`deserialize` for :class:`~syne_tune.blackbox_repository.BlackboxOffline`
     as `serialize` is a member function there. A possible way to unify is to
     have serialize also be a free function for `BlackboxOffline`.
 

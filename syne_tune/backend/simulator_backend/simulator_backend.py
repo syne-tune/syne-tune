@@ -115,7 +115,7 @@ class SimulatorBackend(LocalBackend):
        metrics by looking them up or running a surrogate. This is flexible,
        but has the overhead of loading a table at every call. For fast and
        convenient simulations, use
-       ::class:`syne_tune.blackbox_repository.BlackboxRepositoryBackend` after
+       ::class:`~syne_tune.blackbox_repository.BlackboxRepositoryBackend` after
        bringing your tabulated data or surrogate benchmark into the blackbox
        repository.
 
@@ -125,9 +125,9 @@ class SimulatorBackend(LocalBackend):
     :param elapsed_time_attr: See above
     :param simulator_config: Parameters for simulator, optional
     :param tuner_sleep_time: Effective sleep time in
-        :meth:`syne_tune.Tuner.run`. This information is needed in
-        :class:`syne_tune.backend.simulator_backend.SimulatorCallback`.
-        Defaults to :const:`syne_tune.tuner.DEFAULT_SLEEP_TIME`
+        :meth:`~syne_tune.Tuner.run`. This information is needed in
+        :class:`~syne_tune.backend.simulator_backend.SimulatorCallback`.
+        Defaults to :const:`~syne_tune.tuner.DEFAULT_SLEEP_TIME`
     """
 
     def __init__(

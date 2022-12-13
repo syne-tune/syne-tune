@@ -122,11 +122,11 @@ What are the metrics reported by default when calling the ``Reporter``?
 Whenever you call the reporter to log a result, the worker time-stamp, the
 worker time since the creation of the reporter and the number of times the
 reporter was called are logged under the fields
-:const:`syne_tune.constants.ST_WORKER_TIMESTAMP`,
-:const:`syne_tune.constants.ST_WORKER_TIME`, and
-:const:`syne_tune.constants.ST_WORKER_ITER`. In addition, when running on
+:const:`~syne_tune.constants.ST_WORKER_TIMESTAMP`,
+:const:`~syne_tune.constants.ST_WORKER_TIME`, and
+:const:`~syne_tune.constants.ST_WORKER_ITER`. In addition, when running on
 SageMaker, a dollar-cost estimate is logged under the field
-:const:`syne_tune.constants.ST_WORKER_COST`.
+:const:`~syne_tune.constants.ST_WORKER_COST`.
 
 To see this behavior, you can simply call the reporter to see those
 metrics:
@@ -146,15 +146,15 @@ How can I utilize multiple GPUs?
 ================================
 
 To utilize multiple GPUs you can either use the backend
-:class:`syne_tune.backend.LocalBackend`, which will run on the GPU available
+:class:`~syne_tune.backend.LocalBackend`, which will run on the GPU available
 in a local machine. You can also run on a remote AWS instance with multiple GPUs
 using the local backend and the remote launcher, see
 `here <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__,
-or run with the :class:`syne_tune.backend.SageMakerBackend` which spins-up one
+or run with the :class:`~syne_tune.backend.SageMakerBackend` which spins-up one
 training job per trial.
 
 When evaluating trials on a local machine with
-:class:`syne_tune.backend.LocalBackend`, by default each trial is allocated to
+:class:`~syne_tune.backend.LocalBackend`, by default each trial is allocated to
 the least occupied GPU by setting ``CUDA_VISIBLE_DEVICES`` environment
 variable.
 
@@ -168,10 +168,10 @@ How are trials evaluated on a local machine?
 ============================================
 
 When trials are executed locally (e.g., when
-:class:`syne_tune.backend.LocalBackend` is used), each trial is evaluated as a
+:class:`~syne_tune.backend.LocalBackend` is used), each trial is evaluated as a
 different sub-process. As such the number of concurrent configurations evaluated
 at the same time (set by ``n_workers`` when creating the
-:class:`syne_tune.Tuner`) should account for the capacity of the machine where
+:class:`~syne_tune.Tuner`) should account for the capacity of the machine where
 the trials are executed.
 
 Where can I find the output of the tuning?
@@ -210,7 +210,7 @@ What does the output of the tuning contain?
 Syne Tune stores the following files ``metadata.json``, ``results.csv.zip``,
 and ``tuner.dill`` which are respectively metadata of the tuning job, results
 obtained at each time-step and state of the tuner. If you create the
-:class:`syne_tune.Tuner` with ``save_tuner=False``, the ``tuner.dill`` file is
+:class:`~syne_tune.Tuner` with ``save_tuner=False``, the ``tuner.dill`` file is
 not written.
 
 How can I enable trial checkpointing?
@@ -220,7 +220,7 @@ Since trials may be paused and resumed (either by schedulers or when using
 spot-instances), the user may checkpoint intermediate results to avoid starting
 computation from scratch. Model outputs and checkpoints must be written into a
 specific local path given by the command line argument
-:const:`syne_tune.constants.ST_CHECKPOINT_DIR`. Saving/loading model checkpoint
+:const:`~syne_tune.constants.ST_CHECKPOINT_DIR`. Saving/loading model checkpoint
 from this directory enables to save/load the state when the job is
 stopped/resumed (setting the folder correctly and uniquely per trial is the
 responsibility of the backend). Here is an example of a tuning script with
@@ -265,7 +265,7 @@ include the model, the optimizer, and the learning rate scheduler.
 
 Finally, the scheduler provides additional information about checkpointing in
 ``config`` (most importantly, the path in
-:const:`syne_tune.constants.ST_CHECKPOINT_DIR`). You don’t have to worry about
+:const:`~syne_tune.constants.ST_CHECKPOINT_DIR`). You don’t have to worry about
 this: ``add_checkpointing_to_argparse(parser)`` adds corresponding arguments to
 the parser.
 
@@ -286,7 +286,7 @@ potentially resumed at a later point in time, without having to start training
 from scratch. The following schedulers make use of checkpointing:
 
 * Promotion-based asynchronous Hyperband:
-  :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
   `type="promotion"`, as well as other asynchronous multi-fidelity schedulers.
   The code runs without checkpointing, but in this case, any trial which is
   resumed is started from scratch. For example, if a trial was paused after 9
@@ -296,10 +296,10 @@ from scratch. The following schedulers make use of checkpointing:
   differently. It is not recommended running promotion-based Hyperband
   without checkpointing.
 * Population-based training (PBT):
-  :class:`syne_tune.optimizer.schedulers.PopulationBasedTraining` does not
+  :class:`~syne_tune.optimizer.schedulers.PopulationBasedTraining` does not
   work without checkpointing.
 * Synchronous Hyperband:
-  :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`,
+  :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`,
   as well as other synchronous multi-fidelity schedulers. This code runs
   without checkpointing, but wastes effort in the same sense as
   promotion-based asynchronous Hyperband
@@ -309,7 +309,7 @@ Is the tuner checkpointed?
 
 Yes. When performing the tuning, the tuner state is regularly saved on the
 experiment path under ``tuner.dill`` (every 10 seconds, which can be configured
-with ``results_update_interval`` when creating the :class:`syne_tune.Tuner`).
+with ``results_update_interval`` when creating the :class:`~syne_tune.Tuner`).
 This allows to use spot-instances when running a tuning remotely with the remote
 launcher. It also allows to resume a past experiment or analyse the state of
 scheduler at any point.
@@ -448,7 +448,7 @@ in parallel, as detailed in
 How can I access results after tuning remotely?
 ===============================================
 
-You can either call :func:`syne_tune.experiments.load_experiment`, which will
+You can either call :func:`~syne_tune.experiments.load_experiment`, which will
 download files from S3 if the experiment is not found locally. You can also
 sync directly files from s3 under ``~/syne-tune/`` folder in batch for instance
 by running:

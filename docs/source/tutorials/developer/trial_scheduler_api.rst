@@ -2,7 +2,7 @@ The TrialScheduler API
 ======================
 
 In this section, we have a closer look at the
-:class:`syne_tune.optimizer.scheduler.TrialScheduler` API, and how a scheduler
+:class:`~syne_tune.optimizer.scheduler.TrialScheduler` API, and how a scheduler
 interacts with the trial back-end.
 
 Interaction between TrialScheduler and TrialBackend
@@ -28,11 +28,11 @@ pause-and-resume scheduling is done via
 code to write and load checkpoints locally must be provided by the training
 script, the back-end makes them available when needed. There are two basic
 events which happen repeatedly during an HPO experiment, as orchestrated by the
-:class:`syne_tune.Tuner`:
+:class:`~syne_tune.Tuner`:
 
 * The ``Tuner`` polls the back-end, which signals that one or more workers are
   available. For each free worker, it calls
-  :meth:`syne_tune.optimizer.scheduler.TrialScheduler.suggest`, asking for
+  :meth:`~syne_tune.optimizer.scheduler.TrialScheduler.suggest`, asking for
   what to do next. As already seen in our
   `first example <first_example.html#first-example>`__, the scheduler will
   typically suggest a configuration for a new trial to be started. On the
@@ -42,7 +42,7 @@ events which happen repeatedly during an HPO experiment, as orchestrated by the
   back-end to start a new trial, or to resume an existing one.
 * The ``Tuner`` polls the back-end for new results, having been reported since
   the last recent poll. For each such result,
-  :meth:`syne_tune.optimizer.scheduler.TrialScheduler.on_trial_result`
+  :meth:`~syne_tune.optimizer.scheduler.TrialScheduler.on_trial_result`
   is called. The scheduler makes a decision of what to do with the reporting
   trial. Based on this decision, the ``Tuner`` asks the back-end to stop or
   pause the trial (or does nothing, in case the trial is to continue).
@@ -60,20 +60,20 @@ TrialScheduler API
 ------------------
 
 We now discuss additional aspects of the
-:class:`syne_tune.optimizer.scheduler.TrialScheduler` API, beyond what has
+:class:`~syne_tune.optimizer.scheduler.TrialScheduler` API, beyond what has
 already been covered `here <first_example.html#first-example>`__:
 
 * ``suggest`` returns a
-  :class:`syne_tune.optimizer.scheduler.TrialSuggestion` object with fields
+  :class:`~syne_tune.optimizer.scheduler.TrialSuggestion` object with fields
   ``spawn_new_trial_id``, ``checkpoint_trial_id``, ``config``. Here,
-  :meth:`syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion` has
+  :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion` has
   ``spawn_new_trial_id=True`` and requires ``config``. A new trial is to be
   started with configuration ``config``. Typically, this trial starts training
   from scratch. However, some specific schedulers allow the trial to warm-start
   from a checkpoint written for a different trial (an example is
   class:`syne_tune.optimizer.schedulers.PopulationBasedTraining`).
   A pause-and-resume scheduler may also return
-  :meth:`syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`,
+  :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`,
   where ``spawn_new_trial_id=False`` and ``checkpoint_trial_id`` is mandatory.
   In this case, a currently paused trial with ID ``checkpoint_trial_id`` is to
   be resumed. Typically, the configuration of the trial does not change, but if
@@ -89,7 +89,7 @@ already been covered `here <first_example.html#first-example>`__:
   used when interfacing with a searcher. Namely, the configuration space
   (member ``config_space``) may contain any number of fixed attributes
   alongside the hyperparameters to be tuned (the latter have values of type
-  :class:`syne_tune.config_space.Domain`), and each hyperparameter has a
+  :class:`~syne_tune.config_space.Domain`), and each hyperparameter has a
   specific ``value_type`` (mostly ``float``, ``int`` or ``str``). Searchers
   require clean configurations, containing only hyperparameters with the
   correct value types, which is ensured by ``_preprocess_config``. Also,
@@ -98,7 +98,7 @@ already been covered `here <first_example.html#first-example>`__:
 * ``on_trial_add``: This method is called by ``Tuner`` once a new trial has
   been scheduled to be started. In general, a scheduler may assume that if
   ``suggest`` returns
-  :meth:`syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`, the
+  :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`, the
   corresponding trial is going to be started, so ``on_trial_add`` is not
   mandatory.
 * ``on_trial_error``: This method is called by ``Tuner`` if the back-end

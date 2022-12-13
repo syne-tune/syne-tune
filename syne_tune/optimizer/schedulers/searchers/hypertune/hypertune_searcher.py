@@ -29,9 +29,9 @@ logger = logging.getLogger(__name__)
 class HyperTuneSearcher(GPMultiFidelitySearcher):
     """
     Implements Hyper-Tune as extension of
-    :class:`syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`,
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`,
     see
-    :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`
     for references. Two modifications:
 
     * New brackets are sampled from a model-based distribution :math:`[w_k]`
@@ -40,7 +40,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
 
     It is *not* recommended to create :class:`HyperTuneSearcher` searcher
     objects directly, but rather to create
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
     `searcher="hypertune"`, and passing arguments here in `search_options`.
     This will use the appropriate functions from
     :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory` to
@@ -51,7 +51,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
     `expdecay_normalize_inputs`.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`:
 
     :param model: Selects surrogate model (learning curve model) to be used.
         Choices are:

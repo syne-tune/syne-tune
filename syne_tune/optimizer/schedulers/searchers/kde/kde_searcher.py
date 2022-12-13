@@ -50,7 +50,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         | https://arxiv.org/abs/1807.01774
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param mode: Mode to use for the metric given, can be "min" or "max". Is
         obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"

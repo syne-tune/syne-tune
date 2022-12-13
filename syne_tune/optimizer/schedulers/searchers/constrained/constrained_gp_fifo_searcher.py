@@ -35,10 +35,10 @@ logger = logging.getLogger(__name__)
 class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
     """
     Gaussian process-based constrained hyperparameter optimization (to be used
-    with :class:`syne_tune.optimizer.schedulers.FIFOScheduler`).
+    with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher.MultiModelGPFIFOSearcher`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher.MultiModelGPFIFOSearcher`:
 
     :param constraint_attr: Name of constraint metric in `report` passed to
         :meth:`_update`.

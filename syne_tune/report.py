@@ -54,10 +54,10 @@ class Reporter:
 
     :param add_time: If True (default), the time (in secs) since creation of the
         :class:`Reporter` object is reported automatically as
-        :const:`syne_tune.constants.ST_WORKER_TIME`
+        :const:`~syne_tune.constants.ST_WORKER_TIME`
     :param add_cost: If True (default), estimated dollar cost since creation of
         :class:`Reporter` object is reported automatically as
-        :const:`syne_tune.constants.ST_WORKER_COST`. This is available for
+        :const:`~syne_tune.constants.ST_WORKER_COST`. This is available for
         SageMaker back-end only. Requires `add_time=True`.
     """
 
@@ -93,7 +93,7 @@ class Reporter:
     def __call__(self, **kwargs) -> None:
         """Report metric values from training function back to Syne Tune
 
-        A time stamp :const:`syne_tune.constants.ST_WORKER_TIMESTAMP` is added.
+        A time stamp :const:`~syne_tune.constants.ST_WORKER_TIMESTAMP` is added.
         See :attr:`add_time`, :attr:`add_cost` comments for other automatically
         added metrics.
 

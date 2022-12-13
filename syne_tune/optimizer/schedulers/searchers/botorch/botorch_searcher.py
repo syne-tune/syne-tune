@@ -51,7 +51,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
     supports pending evaluations.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param mode: "min" (default) or "max"
     :param num_init_random: Number of initial random draws, after this

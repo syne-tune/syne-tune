@@ -58,8 +58,8 @@ class SageMakerBackend(TrialBackend):
 
     This back-end allows to select the instance type and count for a trial
     evaluation, by passing values in the configuration, using names
-    :const:`syne_tune.constants.ST_INSTANCE_TYPE` and
-    :const:`syne_tune.constants.ST_INSTANCE_COUNT`. If these are given in the
+    :const:`~syne_tune.constants.ST_INSTANCE_TYPE` and
+    :const:`~syne_tune.constants.ST_INSTANCE_COUNT`. If these are given in the
     configuration, they overwrite the default in `sm_estimator`. This allows
     for tuning instance type and count along with the hyperparameter
     configuration.

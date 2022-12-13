@@ -40,13 +40,13 @@ from syne_tune.try_import import (
 class RandomSearch(FIFOScheduler):
     """Random search.
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, **kwargs):
@@ -61,13 +61,13 @@ class RandomSearch(FIFOScheduler):
 class GridSearch(FIFOScheduler):
     """Grid search.
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.GridSearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.GridSearcher`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, **kwargs):
@@ -82,13 +82,13 @@ class GridSearch(FIFOScheduler):
 class BayesianOptimization(FIFOScheduler):
     """Gaussian process based Bayesian optimization.
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, **kwargs):
@@ -111,12 +111,12 @@ class ASHA(HyperbandScheduler):
 
     One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
     `type="promotion"`, the latter is more useful, see also
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
-    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
@@ -135,7 +135,7 @@ class MOBSTER(HyperbandScheduler):
 
     One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
     `type="promotion"`, the latter is more useful, see also
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     MOBSTER can be run with different surrogate models. The model is selected
     by `search_options["model"]` in `kwargs`. The default is `"gp_multitask"`
@@ -143,13 +143,13 @@ class MOBSTER(HyperbandScheduler):
     `"gp_independent"` (independent GP models at each rung level, with shared
     ARD kernel).
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.GPMultifidelitySearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.GPMultifidelitySearcher`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
-    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
@@ -167,7 +167,7 @@ class HyperTune(HyperbandScheduler):
     """
     One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
     `type="promotion"`, the latter is more useful, see also
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     Hyper-Tune is a model-based variant of ASHA with more than one bracket.
     It can be seen as extension of MOBSTER and can be used with
@@ -182,15 +182,15 @@ class HyperTune(HyperbandScheduler):
         | https://arxiv.org/abs/2201.06834
 
     See also
-    :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`,
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`,
     and see
-    :class:`syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
+    :class:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
-    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
     def __init__(self, config_space: Dict, metric: str, resource_attr: str, **kwargs):
@@ -223,12 +223,12 @@ class PASHA(HyperbandScheduler):
     """Progressive ASHA.
 
     One of `max_t`, `max_resource_attr` needs to be in `kwargs`. The latter is
-    more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
-    :param kwargs: Additional arguments to :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
@@ -247,13 +247,13 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
     """Synchronous Hyperband.
 
     One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
-    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+        :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
     """
 
     def __init__(
@@ -280,13 +280,13 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
     kernel density estimators.
 
     One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
-    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+        :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
     """
 
     def __init__(
@@ -312,13 +312,13 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
     Combines :class:`SyncHyperband` with ideas from evolutionary algorithms.
 
     One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
-    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+        :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
     """
 
     def __init__(
@@ -346,7 +346,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
     the asynchronous case.
 
     One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
-    The latter is more useful, see also :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     The default surrogate model (`search_options["model"]` in `kwargs`) is
     `"gp_independent"`, different to :class:`MOBSTER`.

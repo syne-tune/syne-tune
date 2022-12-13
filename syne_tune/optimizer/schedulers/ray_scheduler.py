@@ -32,7 +32,7 @@ class RayTuneScheduler(TrialScheduler):
     configurations to evaluate can be passed in `points_to_evaluate`. If
     `ray_searcher` is given, this argument is ignored (needs to be passed
     to `ray_searcher` at construction). Note: Use
-    :func:`syne_tune.optimizer.schedulers.searchers.impute_points_to_evaluate`
+    :func:`~syne_tune.optimizer.schedulers.searchers.impute_points_to_evaluate`
     in order to preprocess `points_to_evaluate` specified by the user or
     the benchmark.
 

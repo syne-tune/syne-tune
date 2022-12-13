@@ -73,7 +73,7 @@ _CONSTRAINTS = {
 class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     """
     Synchronous Hyperband. Compared to
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`, this is also
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, this is also
     scheduling jobs asynchronously, but decision-making is synchronized,
     in that trials are only promoted to the next milestone once the rung they
     are currently paused at, is completely occupied.
@@ -86,16 +86,16 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
 
     :param config_space: Configuration space for trial evaluation function
     :param bracket_rungs: Determines rung level systems for each bracket, see
-        :class:`syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager.SynchronousHyperbandBracketManager`
+        :class:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager.SynchronousHyperbandBracketManager`
     :param metric: Name of metric to optimize, key in result's obtained via
         :meth:`on_trial_result`
     :type metric: str
     :param searcher: Selects searcher. Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
         Defaults to "random"
     :type searcher: str, optional
     :param search_options: Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
     :type search_options: dict, optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
@@ -110,7 +110,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     :type points_to_evaluate: `List[dict]`, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
-        :class:`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
+        :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
     :param max_resource_attr: Key name in config for fixed attribute

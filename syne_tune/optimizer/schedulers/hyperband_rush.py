@@ -30,7 +30,7 @@ class RUSHDecider:
         | AutoML workshop @ ICML 2021.
 
     For a more detailed description, refer to
-    :class:`syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+    :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
 
     :param num_threshold_candidates: Number of threshold candidates
     :param mode: "min" or "max"
@@ -87,7 +87,7 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
     Implementation for RUSH algorithm, stopping variant.
 
     Additional arguments on top of base class
-    :class:`syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`:
+    :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`:
 
     :param num_threshold_candidates: Number of threshold candidates
     """
@@ -125,7 +125,7 @@ class RUSHPromotionRungSystem(PromotionRungSystem):
     Implementation for RUSH algorithm, promotion variant.
 
     Additional arguments on top of base class
-    :class:`syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`:
+    :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`:
 
     :param num_threshold_candidates: Number of threshold candidates
     """

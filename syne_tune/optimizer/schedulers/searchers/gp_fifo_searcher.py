@@ -461,12 +461,12 @@ class GPFIFOSearcher(ModelBasedSearcher):
     """Gaussian process Bayesian optimization for FIFO scheduler
 
     This searcher must be used with
-    :class:`syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
+    :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
     Bayesian optimization, based on a Gaussian process surrogate model.
 
     It is *not* recommended creating :class:`GPFIFOSearcher` searcher objects
     directly, but rather to create
-    :class:`syne_tune.optimizer.schedulers.FIFOScheduler` objects with
+    :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` objects with
     `searcher="bayesopt"`, and passing arguments here in `search_options`.
     This will use the appropriate functions from
     :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory` to
@@ -507,11 +507,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
     Note that the full logic of construction based on arguments is given in
     :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`. In
     particular, see
-    :func:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory.gp_fifo_searcher_defaults`
+    :func:`~syne_tune.optimizer.schedulers.searchers.gp_searcher_factory.gp_fifo_searcher_defaults`
     for default values.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param clone_from_state: Internal argument, do not use
     :type clone_from_state: bool
@@ -529,7 +529,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :param num_init_random: Number of initial :meth:`get_config` calls for which
         randomly sampled configs are returned. Afterwards, the model-based
         searcher is used. Defaults to
-        :const:`syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS`
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS`
     :type num_init_random: int, optional
     :param num_init_candidates: Number of initial candidates sampled at
         random in order to seed the model-based search in `get_config`.
@@ -551,7 +551,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
           used for local optimization afterwards
 
         Defaults to
-        :const:`syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_INITIAL_SCORING`
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_INITIAL_SCORING`
     :type initial_scoring: str, optional
     :param skip_local_optimization: If `True`, the local gradient-based
         optimization of the acquisition function is skipped, and the
@@ -603,7 +603,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         range are all task IDs. Also, `transfer_learning_active_task` must
         denote the active task, and `transfer_learning_active_config_space`
         is used as `active_config_space` argument in
-        :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`.
+        :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`.
         This allows us to use a narrower search space for the active task than
         for the union of all tasks (`config_space` must be that), which is
         needed if some configurations of non-active tasks lie outside of the

@@ -42,11 +42,11 @@ class Bore(SearcherWithRandomSeed):
         | https://arxiv.org/abs/2102.09009
 
     Note: Bore only works in the non-parallel non-multi-fidelity setting. Make
-    sure that you use it with :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
-    and set `n_workers=1` in :class:`syne_tune.Tuner`.
+    sure that you use it with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    and set `n_workers=1` in :class:`~syne_tune.Tuner`.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param mode: Can be "min" (default) or "max".
     :param gamma: Defines the percentile, i.e how many percent of configurations

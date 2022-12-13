@@ -18,7 +18,7 @@ from syne_tune.optimizer.scheduler import TrialScheduler
 class BracketDistribution:
     """
     Configures asynchronous multi-fidelity schedulers such as
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
     distribution over brackets. This distribution can be fixed up front, or
     change adaptively during the course of an experiment. It has an effect
     only if the scheduler is run with more than one bracket.

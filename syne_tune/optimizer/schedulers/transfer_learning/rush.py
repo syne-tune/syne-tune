@@ -36,7 +36,7 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
         | AutoML workshop @ ICML 2021.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param transfer_learning_evaluations: Dictionary from task name to offline
         evaluations.

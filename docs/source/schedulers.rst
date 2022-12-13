@@ -23,9 +23,9 @@ from evaluations.
    There are two ways to create many of the schedulers of Syne Tune:
 
    * Import wrapper class from :mod:`syne_tune.optimizer.baselines`, for example
-     :class:`syne_tune.optimizer.baselines.RandomSearch` for random search
-   * Use template classes :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
-     or :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` together with
+     :class:`~syne_tune.optimizer.baselines.RandomSearch` for random search
+   * Use template classes :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+     or :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` together with
      the ``searcher`` argument, for example ``FIFOScheduler`` with
      ``searcher="random"`` for random search
 
@@ -49,7 +49,7 @@ supports:
 * Bore [``searcher="bore"``]
 
 We will only consider the first two searchers in this tutorial. Here is a
-launcher script using :class:`syne_tune.optimizer.schedulers.FIFOScheduler`:
+launcher script using :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
 
 .. code-block:: python
 
@@ -120,7 +120,7 @@ What happens in this launcher script?
   well as the stopping criterion for the experiment (stop after 120 seconds)
   and the number of workers. The experiment is started by ``tuner.run()``.
 
-:class:`syne_tune.optimizer.schedulers.FIFOScheduler` provides the full range
+:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` provides the full range
 of arguments. Here, we list the most important ones:
 
 * ``config_space``: Hyperparameter search space. This argument is mandatory.
@@ -155,7 +155,7 @@ Random Search
 
 The simplest HPO baseline is **random search**, which you obtain with
 ``searcher="random"``, or by using
-:class:`syne_tune.optimizer.baselines.RandomSearch` instead of
+:class:`~syne_tune.optimizer.baselines.RandomSearch` instead of
 ``FIFOScheduler``. Search decisions are not based on past data, a new
 configuration is chosen by sampling attribute values at random, from
 distributions specified in ``config_space``. These distributions are detailed
@@ -172,13 +172,13 @@ Bayesian Optimization
 ~~~~~~~~~~~~~~~~~~~~~
 
 **Bayesian optimization** is obtained by ``searcher='bayesopt'``, or by using
-:class:`syne_tune.optimizer.baselines.BayesianOptimization` instead of
+:class:`~syne_tune.optimizer.baselines.BayesianOptimization` instead of
 ``FIFOScheduler``. More information about Bayesian optimization is provided
 `here <tutorials/basics/basics_bayesopt.html>`__.
 
 Options for configuring the searcher are given in ``search_options``. These
 include options for the random searcher.
-:class:`syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher` provides the
+:class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher` provides the
 full range of arguments. We list the most important ones:
 
 * ``num_init_random``: Number of initial configurations chosen at random (or
@@ -215,7 +215,7 @@ details about synchronous and asynchronous variants of successive halving and
 Hyperband.
 
 Here is a launcher script using
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler`:
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`:
 
 .. code-block:: python
 
@@ -271,7 +271,7 @@ Here is a launcher script using
        tuner.run()
 
 Much of this launcher script is the same as for ``FIFOScheduler``, but
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler` comes with a number
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` comes with a number
 of extra arguments we will explain in the sequel (``type``,
 ``max_resource_attr``, ``grace_period``, ``reduction_factor``,
 ``resource_attr``). The ``mlp_fashionmnist`` benchmark trains a two-layer MLP
@@ -290,7 +290,7 @@ While ``metric="accuracy"`` is the criterion to be optimized,
 ``resource_attr="epoch"`` is the resource attribute. In the schedulers
 discussed here, the resource attribute must be a positive integer.
 
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler` maintains reported
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` maintains reported
 metrics for all trials at certain **rung levels** (levels of resource attribute
 ``epoch`` at which scheduling decisions are done). When a trial reports
 ``(epoch, accuracy)`` for a rung level ``== epoch``, the scheduler makes a

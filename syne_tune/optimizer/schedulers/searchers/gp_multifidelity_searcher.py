@@ -43,20 +43,20 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     Gaussian process Bayesian optimization for asynchronous Hyperband scheduler.
 
     This searcher must be used with
-    :class:`syne_tune,optimizer.schedulers.HyperbandScheduler`. It provides a
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. It provides a
     novel combination of Bayesian optimization, based on a Gaussian process
     surrogate model, with Hyperband scheduling. In particular, observations
     across resource levels are modelled jointly.
 
     It is *not* recommended to create :class:`GPMultiFidelitySearcher` searcher
     objects directly, but rather to create
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
     `searcher="bayesopt"`, and passing arguments here in `search_options`.
     This will use the appropriate functions from
     :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory` to
     create components in a consistent way.
 
-    Most of :class:`syne_tune,optimizer.schedulers.searchers.GPFIFOSearcher`
+    Most of :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
     comments apply here as well. In multi-fidelity HPO, we optimize a function
     :math:`f(\mathbf{x}, r)`, :math:`\mathbf{x}` the configuration, :math:`r`
     the resource (or time) attribute. The latter must be a positive integer.
@@ -66,7 +66,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     If `model == "gp_multitask"` (default), we model the function
     :math:`f(\mathbf{x}, r)` jointly over all resource levels :math:`r` at
     which it is observed (but see `searcher_data` in
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`). The kernel
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`). The kernel
     and mean function of our surrogate model are over :math:`(\mathbf{x}, r)`.
     The surrogate model is selected by `gp_resource_kernel`. More details about
     the supported kernels is in:
@@ -84,7 +84,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     :math:`\mathbf{x}` would reach when started.
 
     Additional arguments on top of parent class
-    :class:`syne_tune,optimizer.schedulers.searchers.GPFIFOSearcher`.
+    :class:`~syne_tune,optimizer.schedulers.searchers.GPFIFOSearcher`.
 
     :param model: Selects surrogate model (learning curve model) to be used.
         Choices are:
@@ -105,7 +105,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         is normalized to mean 0, variance 1. The reference above provides details
         on the models supported here. For the exponential decay kernel, the
         base kernel over :math:`\mathbf{x}` is Matern 5/2 ARD. See
-        :const:`syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory.SUPPORTED_RESOURCE_MODELS`
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory.SUPPORTED_RESOURCE_MODELS`
         for supported choices. Defaults to "exp-decay-sum"
     :type gp_resource_kernel: str, optional
     :param resource_acq: Only relevant for `model in
