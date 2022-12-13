@@ -32,84 +32,6 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES_CANDIDATES_EN_BULK = 20
 
 
-class CandidateGenerator:
-    """
-    Class to generate candidates from which to start the local minimization,
-    typically random candidate or some form of more uniformly spaced variation,
-    such as latin hypercube or Sobol sequence.
-    """
-
-    def generate_candidates(self) -> Iterator[Configuration]:
-        raise NotImplementedError
-
-    def generate_candidates_en_bulk(
-        self, num_cands: int, exclusion_list: Optional[ExclusionList] = None
-    ) -> List[Configuration]:
-        """
-        :param num_cands: Number of candidates to generate
-        :param exclusion_list: If given, these candidates must not be returned
-        :return: List of `num_cands` candidates. If `exclusion_list` is given,
-            the number of candidates returned can be `< num_cands`
-        """
-        raise NotImplementedError
-
-
-class RandomStatefulCandidateGenerator(CandidateGenerator):
-    """
-    This generator maintains a random state, so if :meth:`generate_candidates`
-    is called several times, different sequences are returned.
-
-    :param hp_ranges: Feature generator for configurations
-    :param random_state: PRN generator
-    """
-
-    def __init__(
-        self, hp_ranges: HyperparameterRanges, random_state: np.random.RandomState
-    ):
-        self.hp_ranges = hp_ranges
-        self.random_state = random_state
-
-    def generate_candidates(self) -> Iterator[Configuration]:
-        while True:
-            yield self.hp_ranges.random_config(self.random_state)
-
-    def generate_candidates_en_bulk(
-        self, num_cands: int, exclusion_list=None
-    ) -> List[Configuration]:
-        if exclusion_list is None:
-            return self.hp_ranges.random_configs(self.random_state, num_cands)
-        else:
-            assert isinstance(
-                exclusion_list, ExclusionList
-            ), "exclusion_list must be of type ExclusionList"
-            configs = []
-            num_done = 0
-            for i in range(MAX_RETRIES_CANDIDATES_EN_BULK):
-                # From iteration 1, we request more than what is still
-                # needed, because the config space seems to not have
-                # enough configs left
-                num_requested = min(num_cands, (num_cands - num_done) * (i + 1))
-                new_configs = [
-                    config
-                    for config in self.hp_ranges.random_configs(
-                        self.random_state, num_requested
-                    )
-                    if not exclusion_list.contains(config)
-                ]
-                num_new = min(num_cands - num_done, len(new_configs))
-                configs += new_configs[:num_new]
-                num_done += num_new
-                if num_done == num_cands:
-                    break
-            if num_done < num_cands:
-                logger.warning(
-                    f"Could only sample {num_done} candidates where "
-                    f"{num_cands} were requested. len(exclusion_list) = "
-                    f"{len(exclusion_list)}"
-                )
-            return configs
-
-
 class ExclusionList:
     """
     Maintains exclusion list of configs, to avoid choosing configs several
@@ -190,6 +112,84 @@ class ExclusionList:
         return (self.configspace_size is not None) and len(
             self.excl_set
         ) >= self.configspace_size
+
+
+class CandidateGenerator:
+    """
+    Class to generate candidates from which to start the local minimization,
+    typically random candidate or some form of more uniformly spaced variation,
+    such as latin hypercube or Sobol sequence.
+    """
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        raise NotImplementedError
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list: Optional[ExclusionList] = None
+    ) -> List[Configuration]:
+        """
+        :param num_cands: Number of candidates to generate
+        :param exclusion_list: If given, these candidates must not be returned
+        :return: List of `num_cands` candidates. If `exclusion_list` is given,
+            the number of candidates returned can be `< num_cands`
+        """
+        raise NotImplementedError
+
+
+class RandomStatefulCandidateGenerator(CandidateGenerator):
+    """
+    This generator maintains a random state, so if :meth:`generate_candidates`
+    is called several times, different sequences are returned.
+
+    :param hp_ranges: Feature generator for configurations
+    :param random_state: PRN generator
+    """
+
+    def __init__(
+        self, hp_ranges: HyperparameterRanges, random_state: np.random.RandomState
+    ):
+        self.hp_ranges = hp_ranges
+        self.random_state = random_state
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        while True:
+            yield self.hp_ranges.random_config(self.random_state)
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list=None
+    ) -> List[Configuration]:
+        if exclusion_list is None:
+            return self.hp_ranges.random_configs(self.random_state, num_cands)
+        else:
+            assert isinstance(
+                exclusion_list, ExclusionList
+            ), "exclusion_list must be of type ExclusionList"
+            configs = []
+            num_done = 0
+            for i in range(MAX_RETRIES_CANDIDATES_EN_BULK):
+                # From iteration 1, we request more than what is still
+                # needed, because the config space seems to not have
+                # enough configs left
+                num_requested = min(num_cands, (num_cands - num_done) * (i + 1))
+                new_configs = [
+                    config
+                    for config in self.hp_ranges.random_configs(
+                        self.random_state, num_requested
+                    )
+                    if not exclusion_list.contains(config)
+                ]
+                num_new = min(num_cands - num_done, len(new_configs))
+                configs += new_configs[:num_new]
+                num_done += num_new
+                if num_done == num_cands:
+                    break
+            if num_done < num_cands:
+                logger.warning(
+                    f"Could only sample {num_done} candidates where "
+                    f"{num_cands} were requested. len(exclusion_list) = "
+                    f"{len(exclusion_list)}"
+                )
+            return configs
 
 
 MAX_RETRIES_ON_DUPLICATES = 10000
