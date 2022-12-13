@@ -34,6 +34,9 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    ExclusionList,
+)
 
 
 def assign_active_metric(model, active_metric):
@@ -61,20 +64,21 @@ def assign_active_metric(model, active_metric):
 
 class NextCandidatesAlgorithm:
     def next_candidates(self) -> List[Configuration]:
-        raise NotImplemented("Abstract method")
+        raise NotImplementedError
 
 
 class CandidateGenerator:
     """
-    Class to generate candidates from which to start the local minimization, typically random candidate
-    or some form of more uniformly spaced variation, such as latin hypercube or sobol sequence
+    Class to generate candidates from which to start the local minimization,
+    typically random candidate or some form of more uniformly spaced variation,
+    such as latin hypercube or Sobol sequence.
     """
 
     def generate_candidates(self) -> Iterator[Configuration]:
         raise NotImplementedError
 
     def generate_candidates_en_bulk(
-        self, num_cands: int, exclusion_list=None
+        self, num_cands: int, exclusion_list: Optional[ExclusionList] = None
     ) -> List[Configuration]:
         """
         :param num_cands: Number of candidates to generate
@@ -82,11 +86,19 @@ class CandidateGenerator:
         :return: List of `num_cands` candidates. If `exclusion_list` is given,
             the number of candidates returned can be `< num_cands`
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class SurrogateModel:
-    def __init__(self, state: TuningJobState, active_metric: str = None):
+    """
+    Base class of surrogate models for Bayesian optimization. A surrogate model
+    supports marginal predictions feeding into an acquisition function, as well
+    as suppport to compute gradients of an acquisition function w.r.t. inputs.
+
+    :param state: Tuning job state
+    :param active_metric: Name of internal objective
+    """
+    def __init__(self, state: TuningJobState, active_metric: Optional[str] = None):
         self.state = state
         if active_metric is None:
             active_metric = INTERNAL_METRIC_NAME
@@ -94,44 +106,51 @@ class SurrogateModel:
 
     @staticmethod
     def keys_predict() -> Set[str]:
-        """
-        Keys of signals returned by 'predict'.
-        Note: In order to work with 'AcquisitionFunction' implementations,
+        """Keys of signals returned by :meth:`predict`.
+
+        Note: In order to work with :class:`AcquisitionFunction` implementations,
         the following signals are required:
 
-        - 'mean': Predictive mean
-        - 'std': Predictive standard deviation
+        * "mean": Predictive mean
+        * "std": Predictive standard deviation
 
-        :return:
+        :return: Set of keys for `dict` returned by :meth:`predict`
         """
         return {"mean", "std"}
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         """
-        Given (n, d) matrix of encoded input points, returns signals which are
-        statistics of the predictive distribution at these inputs. By default,
-        signals are:
+        Returns signals which are statistics of the predictive distribution at
+        input points `inputs`. By default:
 
-        - 'mean': Predictive means. If the model supports fantasizing with a
-            number nf of fantasies, this has shape (n, nf), otherwise (n,)
-        - 'std': Predictive stddevs, shape (n,)
+        * "mean": Predictive means. If the model supports fantasizing with a
+            number `nf` of fantasies, this has shape `(n, nf)`, otherwise `(n,)`
+        - "std": Predictive stddevs, shape `(n,)`
 
         If the hyperparameters of the surrogate model are being optimized (e.g.,
         by empirical Bayes), the returned list has length 1. If its
         hyperparameters are averaged over by MCMC, the returned list has one
         entry per MCMC sample.
+
+        :param inputs: Input points, shape `(n, d)`
+        :return: List of `dict` with keys :meth:`keys_predict`, of length the
+            number of MCMC samples, or length 1 for empirical Bayes
         """
         raise NotImplementedError
 
     def hp_ranges_for_prediction(self) -> HyperparameterRanges:
+        """
+        :return: Feature generator to be used for `inputs` in :meth:`predict`
+        """
         return self.state.hp_ranges
 
     def predict_candidates(
         self, candidates: Iterable[Configuration]
     ) -> List[Dict[str, np.ndarray]]:
-        """
-        Convenience variant of 'predict', where the input is a list of n
-        candidates, which are encoded to input points here.
+        """Convenience variant of :meth:`predict`
+
+        :param candidates: List of configurations
+        :return: Same as :meth:`predict`
         """
         return self.predict(
             self.hp_ranges_for_prediction().to_ndarray_matrix(candidates)
@@ -141,7 +160,7 @@ class SurrogateModel:
         """
         Returns the so-called incumbent, to be used in acquisition functions
         such as expected improvement. This is the minimum of predictive means
-        (signal with key 'mean') at all current candidate locations (both
+        (signal with key "mean") at all current candidate locations (both
         state.trials_evaluations and state.pending_evaluations).
         Normally, a scalar is returned, but if the model supports fantasizing
         and the state contains pending evaluations, there is one incumbent
@@ -152,7 +171,7 @@ class SurrogateModel:
         hyperparameters are averaged over by MCMC, the returned list has one
         entry per MCMC sample.
 
-        :return: Incumbent
+        :return: Incumbent, see above
         """
         raise NotImplementedError
 
@@ -160,20 +179,20 @@ class SurrogateModel:
         self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> List[np.ndarray]:
         """
-        Computes the gradient nabla_x f of an acquisition function f(x),
-        where x is a single input point. This is using reverse mode
-        differentiation, the head gradients are passed by the acquisition
-        function.
+        Computes the gradient :math:`\nabla f(x)` for an acquisition
+        function :math:`f(x)`, where :math:`x` is a single input point. This
+        is using reverse mode differentiation, the head gradients are passed
+        by the acquisition function. The head gradients are
+        :math:`\partial_k f`, where :math:`k` runs over the statistics
+        returned by :meth:`predict` for the single input point :math:`x`.
+        The shape of head gradients is the same as the shape of the
+        statistics.
 
-        If p = p(x) denotes the output of 'predict' for a single input point,
-        'head_gradients' contains the head gradients nabla_p f. Its shape is
-        that of p (where n=1).
+        Lists have `> 1` entry if MCMC is used, otherwise they are all size 1.
 
-        Lists have >1 entry if MCMC is used, otherwise they are all size 1.
-
-        :param input: Single input point x, shape (d,)
+        :param input: Single input point :math:`x`, shape `(d,)`
         :param head_gradients: See above
-        :return: Gradient nabla_x f (several if MCMC is used)
+        :return: Gradient :math:`\nabla f(x)` (several if MCMC is used)
         """
         raise NotImplementedError
 
@@ -187,10 +206,8 @@ SurrogateOutputModel = Union[SurrogateModel, Dict[str, SurrogateModel]]
 
 class ScoringFunction:
     """
-    Class to score candidates, typically combine an acquisition function with
-    potentially Thompson sampling
-
-    NOTE: it will be minimized, i.e. lower is better
+    Class to score candidates. As opposed to acquisition functions, scores do
+    not support gradient computation. Note that scores are always minimized.
     """
 
     def score(
@@ -199,15 +216,24 @@ class ScoringFunction:
         model: Optional[SurrogateOutputModel] = None,
     ) -> List[float]:
         """
-        Requires multiple candidates, is this can be much quicker: we can use matrix operations
-
-        lower is better
+        :param candidates: Configurations for which scores are to be computed
+        :param model: Overrides default surrogate model
+        :return: List of score values, length of `candidates`
         """
         raise NotImplementedError
 
 
 class AcquisitionFunction(ScoringFunction):
-    def __init__(self, model: SurrogateOutputModel, active_metric: str = None):
+    """
+    Base class for acquisition functions :math:`f(x)`.
+
+    :param model: Surrogate model providing predictive statistics (e.g.,
+        mean, variance)
+    :param active_metric: Name of internal metric
+    """
+    def __init__(
+        self, model: SurrogateOutputModel, active_metric: Optional[str] = None
+    ):
         self.model = model
         if active_metric is None:
             active_metric = INTERNAL_METRIC_NAME
@@ -217,11 +243,11 @@ class AcquisitionFunction(ScoringFunction):
         self, inputs: np.ndarray, model: Optional[SurrogateOutputModel] = None
     ) -> np.ndarray:
         """
-        Note: If inputs has shape (d,), it is taken to be (1, d)
+        Note: If inputs has shape `(d,)`, it is taken to be `(1, d)`
 
-        :param inputs: Encoded input points, shape (n, d)
-        :param model: If given, overrides self.model
-        :return: Acquisition function values, shape (n,)
+        :param inputs: Encoded input points, shape `(n, d)`
+        :param model: If given, overrides `self.model`
+        :return: Acquisition function values, shape `(n,)`
         """
         raise NotImplementedError
 
@@ -229,12 +255,12 @@ class AcquisitionFunction(ScoringFunction):
         self, input: np.ndarray, model: Optional[SurrogateOutputModel] = None
     ) -> Tuple[float, np.ndarray]:
         """
-        For a single input point x, compute acquisition function value f(x)
-        and gradient nabla_x f.
+        For a single input point :math:`x`, compute acquisition function value
+        :math:`f(x)` and gradient :math:`\nabla f(x)`.
 
-        :param input: Single input point x, shape (d,)
-        :param model: If given, overrides self.model
-        :return: f(x), nabla_x f
+        :param input: Single input point :math:`x`, shape `(d,)`
+        :param model: If given, overrides `self.model`
+        :return: :math:`(f(x), \nabla f(x))`
         """
         raise NotImplementedError
 
@@ -276,9 +302,13 @@ class LocalOptimizer:
 
     `acquisition_class` contains the type of the acquisition function
     (subclass of :class:`AcquisitionFunction`). It can also be a tuple of the
-    form (type, kwargs), where kwargs are extra arguments to the class
+    form `(type, kwargs)`, where `kwargs` are extra arguments to the class
     constructor.
 
+    :param hp_ranges: Feature generator for configurations
+    :param model: Surrogate model for acquisition function
+    :param acquisition_class: See above
+    :param active_metric: Name of internal metric
     """
 
     def __init__(
@@ -286,7 +316,7 @@ class LocalOptimizer:
         hp_ranges: HyperparameterRanges,
         model: SurrogateOutputModel,
         acquisition_class: AcquisitionClassAndArgs,
-        active_metric: str = None,
+        active_metric: Optional[str] = None,
     ):
         self.hp_ranges = hp_ranges
         self.model = model
@@ -301,12 +331,10 @@ class LocalOptimizer:
     def optimize(
         self, candidate: Configuration, model: Optional[SurrogateOutputModel] = None
     ) -> Configuration:
-        """
-        Run local optimization, starting from candidate.
-        If model is given, it overrides self.model.
+        """Run local optimization, starting from `candidate`
 
         :param candidate: Starting point
-        :param model: See above
+        :param model: Overrides `self.model`
         :return: Configuration found by local optimization
         """
         raise NotImplementedError

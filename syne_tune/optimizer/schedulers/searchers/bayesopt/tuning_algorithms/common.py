@@ -37,9 +37,11 @@ MAX_RETRIES_CANDIDATES_EN_BULK = 20
 
 class RandomStatefulCandidateGenerator(CandidateGenerator):
     """
-    This generator maintains a random state, so if generate_candidates is
-    called several times, different sequences are returned.
+    This generator maintains a random state, so if :meth:`generate_candidates`
+    is called several times, different sequences are returned.
 
+    :param hp_ranges: Feature generator for configurations
+    :param random_state: PRN generator
     """
 
     def __init__(
@@ -92,12 +94,15 @@ class RandomStatefulCandidateGenerator(CandidateGenerator):
 class ExclusionList:
     """
     Maintains exclusion list of configs, to avoid choosing configs several
-    times.
+    times. In fact, `self.excl_set` maintains a set of match strings.
 
     The exclusion list contains non-extended configs, but it can be fed with
     and queried with extended configs. In that case, the resource attribute
     is removed from the config.
 
+    :param state: Either tuning job state, or a `dict` containing the members
+        to be used (copy constructor)
+    :param filter_observed_data: Filter on observed data, optional
     """
 
     def __init__(

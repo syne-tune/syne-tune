@@ -17,7 +17,9 @@ from scipy.special import erfc
 
 def get_quantiles(acquisition_par, fmin, m, s):
     """
-    Quantiles of the Gaussian distribution useful to determine the acquisition function values
+    Quantiles of the Gaussian distribution, useful to determine the acquisition
+    function values.
+
     :param acquisition_par: parameter of the acquisition function
     :param fmin: current minimum.
     :param m: vector of means.

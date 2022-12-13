@@ -34,11 +34,14 @@ logger = logging.getLogger(__name__)
 
 class IndependentThompsonSampling(ScoringFunction):
     """
-    Note: This is not Thompson sampling, but rather a variant called
+    Note: This is *not* Thompson sampling, but rather a variant called
     "independent Thompson sampling", where means and variances are drawn
     from the marginal rather than the joint distribution. This is cheap,
-    but incorrect.
+    but incorrect. In fact, the larger the number of candidates, the more
+    likely the winning configuration is arising from pure chance.
 
+    :param model: Surrogate model for statistics of predictive distribution
+    :param random_state: PRN generator
     """
 
     def __init__(
@@ -119,8 +122,9 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
             # Clip to avoid situation where result is small epsilon out of bounds
             a_min, a_max = zip(*bounds)
             optimized_x = np.clip(res[0], a_min, a_max)
-            # Make sure the above clipping does really just fix numerical rounding issues in LBFGS
-            # if any bigger change was made there is a bug and we want to throw an exception
+            # Make sure the above clipping does really just fix numerical
+            # rounding issues in L-BFGS if any bigger change was made there is
+            # a bug and we want to throw an exception
             assert np.linalg.norm(res[0] - optimized_x) < 1e-6, (
                 res[0],
                 optimized_x,

@@ -43,23 +43,36 @@ To install Syne Tune with minimal dependencies from pip, you can simply do:
 
 .. code:: bash
 
-   pip install 'syne-tune[core]'
+   pip install 'syne-tune'
 
 If you want in addition to install our own Gaussian process based optimizers,
 Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
 ``X`` can be:
 
-* ``gpsearchers``: For built-in Gaussian process based optimizers
-* ``aws``: AWS SageMaker dependencies
-* ``raytune``: For Ray Tune optimizers, installs all Ray Tune dependencies
+* ``gpsearchers``: For built-in Gaussian process based optimizers (such as
+  :class:`~syne_tune.optimizer.baselines.BayesianOptimization`,
+  :class:`~syne_tune.optimizer.baselines.MOBSTER`, or
+  :class:`~syne_tune.optimizer.baselines.HyperTune`)
+* ``aws``: AWS SageMaker dependencies. These are required for
+  `remote launching <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__
+  or for the :class:`~syne_tune.backend.SageMakerBackend`
+* ``raytune``: For Ray Tune optimizers (see
+  :class:`~syne_tune.optimizer.schedulers.RayTuneScheduler`), installs all Ray
+  Tune dependencies
 * ``benchmarks``: For installing dependencies required to run all benchmarks
+  locally (not needed for remote launching or
+  :class:`~syne_tune.backend.SageMakerBackend`)
 * ``blackbox-repository``: Blackbox repository for simulated tuning
 * ``yahpo``: YAHPO Gym surrogate blackboxes
-* ``kde``: For BOHB
-* ``botorch``: Bayesian optimization from BOTorch
-* ``dev``: For developers who want to extend Syne Tune
+* ``kde``: For BOHB (such as :class:`~syne_tune.optimizer.baselines.SyncBOHB`,
+  or :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` or
+  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
+  `searcher="kde"`)
+* ``botorch``: Bayesian optimization from BOTorch (see
+  :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BotorchSearcher`)
+* ``dev``: For developers who would like to extend Syne Tune
 * ``extra``: For installing all the above
-* ``bore``: For Bore optimizer
+* ``bore``: For Bore optimizer (see :class:`~syne_tune.optimizer.baselines.BORE`)
 
 For instance, ``pip install 'syne-tune[gpsearchers]'`` will install Syne
 Tune along with many built-in Gaussian process optimizers.
