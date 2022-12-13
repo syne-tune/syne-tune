@@ -36,8 +36,8 @@ class TuningJobState:
     `trials_evaluations` may store values for different metrics in each
     record, and each such value may be a dict (see:class:`TrialEvaluations`).
     For example, for multi-fidelity schedulers,
-    `trials_evaluations[i].metrics[k][str(r)]` is the value for metric k
-    and trial `trials_evaluations[i].trial_id` observed at resource level
+    :code:`trials_evaluations[i].metrics[k][str(r)]` is the value for metric k
+    and trial :code:`trials_evaluations[i].trial_id` observed at resource level
     r.
     """
 
@@ -132,7 +132,7 @@ class TuningJobState:
         is already contained there, the corresponding `eval.metrics` is
         returned. Otherwise, a new entry `new_eval` is appended to
         `trials_evaluations` and its `new_eval.metrics` is returned
-        (empty dict). In the latter case, `config` needs to be passed,
+        (empty `dict`). In the latter case, `config` needs to be passed,
         because it may not yet feature in `config_for_trial`.
 
         """

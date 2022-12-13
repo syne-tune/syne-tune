@@ -323,7 +323,7 @@ no better than the best 1/3 of previous values (the list includes the current
 
 Further details about ``HyperbandScheduler`` and multi-fidelity HPO methods
 are given in `this tutorial <tutorials/multifidelity/README.html>`__.
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler` provides the full
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` provides the full
 range of arguments. Here, we list the most important ones:
 
 * ``max_resource_attr``, ``grace_period``, ``reduction_factor``: As detailed
@@ -361,7 +361,7 @@ We will only consider the first two searchers in this tutorial.
 Asynchronous Hyperband (ASHA)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` is configured
+If :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` is configured
 with a random searcher, we obtain ASHA, as proposed in
 `A System for Massively Parallel Hyperparameter Tuning <https://arxiv.org/abs/1810.05934>`__.
 More details are provided `here <tutorials/multifidelity/mf_asha.html>`__.
@@ -371,7 +371,7 @@ arguments are the same as for random search with ``FIFOScheduler``.
 Model-based Asynchronous Hyperband (MOBSTER)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` is configured with
+If :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` is configured with
 a Bayesian optimization searcher, we obtain MOBSTER, as proposed in
 `Model-based Asynchronous Hyperparameter and Neural Architecture Search <https://openreview.net/forum?id=a2rFihIU7i>`__.
 By default, MOBSTER uses a multi-task Gaussian process surrogate model for
@@ -385,9 +385,9 @@ Finally, we provide some general recommendations on how to use our built-in
 schedulers.
 
 * If you can afford it for your problem, random search is a useful baseline
-  (:class:`syne_tune.optimizer.baselines.RandomSearch`). However, if even a
+  (:class:`~syne_tune.optimizer.baselines.RandomSearch`). However, if even a
   single full evaluation takes a long time, try ASHA
-  (:class:`syne_tune.optimizer.baselines.ASHA`) instead. The default for ASHA
+  (:class:`~syne_tune.optimizer.baselines.ASHA`) instead. The default for ASHA
   is ``type="stopping"``, but you should consider ``type="promotion"`` as well
   (more details on this choice are given
   `here <tutorials/multifidelity/mf_asha.html#asynchronous-successive-halving-promotion-variant>`__.
@@ -404,9 +404,9 @@ schedulers.
   parameter: an evaluation up to ``2 * r`` should be roughly twice as
   expensive as one up to ``r``.
 * If your problem has a resource parameter, always make sure to try
-  :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`, which in many
+  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, which in many
   cases runs much faster than
-  :class:`syne_tune.optimizer.schedulers.FIFOScheduler`.
+  :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
 * If you end up tuning the same ML algorithm or neural network model on
   different datasets, make sure to set ``points_to_evaluate`` appropriately. If
   the model comes from frequently used open source code, its built-in defaults
@@ -415,7 +415,7 @@ schedulers.
   than choosing the first configuration at random, this may not be very good.
 * In general, the defaults should work well if your tuning problem is expensive
   enough (at least a minute per unit of ``r``). In such cases, MOBSTER
-  (:class:`syne_tune.optimizer.baselines.MOBSTER`) can outperform ASHA
+  (:class:`~syne_tune.optimizer.baselines.MOBSTER`) can outperform ASHA
   substantially. However, if your problem is cheap, so you can afford a lot of
   evaluation, the searchers based on GP surrogate models may end up expensive.
   With ASHA your baseline, you can try to speed up MOBSTER by changing

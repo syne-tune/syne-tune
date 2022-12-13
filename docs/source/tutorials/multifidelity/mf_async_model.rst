@@ -146,7 +146,7 @@ Why is the surrogate model in MOBSTER-JOINT fit to the data at rung levels
 only? After all, training scripts tend to report validation errors after each
 epoch, why not use all this data? Syne Tune allows to do so (for the
 ``"gp_multitask"`` model), by passing ``searcher_data="all"`` when creating
-the :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` (another
+the :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` (another
 intermediate is ``searcher_data="rungs_and_last"``). However, while this may
 lead to a more accurate model, it also becomes more expensive to fit, and does
 not tend to make a difference, so the default ``searcher_data="rungs"`` is
@@ -155,7 +155,7 @@ recommended.
 Finally, we can also combine ASHA with
 `BOHB <mf_sync_model.html#synchronous-bohb>`__ decision-making, by choosing
 ``searcher="kde"`` in
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler`. This is an
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. This is an
 asynchronous version of BOHB.
 
 MOBSTER-INDEP
@@ -174,7 +174,7 @@ MOBSTER and Hyperband
 
 Just like `ASHA can be run with multiple brackets <mf_asha.html#asynchronous-hyperband>`__,
 so can MOBSTER, simply by selecting ``brackets`` when creating
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler`. In our experience so
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. In our experience so
 far, just like with ASHA, MOBSTER tends to work best with a single bracket.
 
 Hyper-Tune
@@ -210,7 +210,7 @@ Hyper-Tune with Multiple Brackets
 
 Just like ASHA and MOBSTER, Hyper-Tune can also be run with multiple brackets,
 simply by using the ``brackets`` argument of
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler`. If ``brackets > 1``,
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. If ``brackets > 1``,
 Hyper-Tune samples the bracket for a new trial from an adaptive distribution
 closely related to the ensemble distribution used for acquisitions. Our
 `launcher script <mf_setup.html#the-launcher-script>`__ runs Hyper-Tune with 4

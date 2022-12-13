@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 MIN_COST = 1e-12  # For numerical stability when dividing EI / cost
+
 MIN_STD_CONSTRAINT = (
     1e-12  # For numerical stability when computing the constraint probability in CEI
 )
@@ -132,6 +133,7 @@ class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
     Lower confidence bound (LCB) acquisition function:
 
     .. math::
+
        h(\mu, \sigma) = \mu - \kappa * \sigma
     """
 
@@ -176,10 +178,13 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
 
     This is defined as
 
-        EIpu(x) = EI(x) / power(cost(x), exponent_cost),
+    .. math::
 
-    where EI(x) is expected improvement, cost(x) is the predictive mean of
-    a cost model, and `exponent_cost` is an exponent in (0, 1].
+       \mathrm{EIpu}(x) = \frac{\mathrm{EI(x)}}{\mathrm{power}(\mathrm{cost}(x), \mathrm{exponent_cost})},
+
+    where :math:`\mathrm{EI}(x)` is expected improvement, :math:`\mathrm{cost}(x)`
+    is the predictive mean of a cost model, and `exponent_cost` is an exponent in
+    :math:`(0, 1]`.
 
     `exponent_cost` scales the influence of the cost term on the acquisition
     function. See also:
@@ -189,14 +194,20 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
         | https://arxiv.org/abs/2003.10870
 
     Note: two metrics are expected in the model output: the main objective and the cost.
-    The main objective needs to be indicated as active_metric when initializing EIpuAcquisitionFunction.
+    The main objective needs to be indicated as `active_metric` when initializing
+    :class:`EIpuAcquisitionFunction`.
     The cost is automatically assumed to be the other metric.
+
+    :param model: Surrogate models for main objective and cost
+    :param active_metric: Name of main objective
+    :param exponent_cost: Exponent for cost in denominator. Defaults to 1
+    :param jitter: Jitter factor, must be positive. Defaults to 0.01
     """
 
     def __init__(
         self,
         model: SurrogateOutputModel,
-        active_metric: str = None,
+        active_metric: Optional[str] = None,
         exponent_cost: float = 1.0,
         jitter: float = 0.01,
     ):
@@ -246,8 +257,9 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
         current_best: Optional[np.ndarray],
     ) -> HeadWithGradient:
         """
-        Returns minus cost-aware expected improvement and, for each output model, the gradients
-        with respect to the mean and standard deviation of that model.
+        Returns minus cost-aware expected improvement and, for each output
+        model, the gradients with respect to the mean and standard deviation of
+        that model.
         """
         assert current_best is not None
         mean, std = self._extract_mean_and_std(output_to_predictions)
@@ -289,9 +301,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
 
 class ConstraintCurrentBestProvider(CurrentBestProvider):
     """
-    Here, `current_best` depends on two models, for active and
-    constraint metric.
-
+    Here, `current_best` depends on two models, for active and constraint metric.
     """
 
     def __init__(self, current_best_list: List[np.ndarray], num_samples_active: int):
@@ -312,27 +322,40 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
     Minus constrained expected improvement acquisition function.
     (minus because the convention is to always minimize the acquisition function)
 
-    This is defined as CEI(x) = EI(x) * P(c(x) <= 0), where EI is the standard expected improvement with respect
-    to the current *feasible best*, and P(c(x) <= 0) is the probability that the hyperparameter
-    configuration x satisfies the constraint modeled by c(x).
+    This is defined as `CEI(x) = EI(x) * P(c(x) <= 0)`, where `EI` is the
+    standard expected improvement with respect to the current *feasible best*,
+    and `P(c(x) <= 0)` is the probability that the hyperparameter configuration
+    `x` satisfies the constraint modeled by `c(x)`.
 
-    If there are no feasible hyperparameters yet, the current feasible best is undefined. Thus, CEI is
-    reduced to the P(c(x) <= 0) term until a feasible configuration is found.
+    If there are no feasible hyperparameters yet, the current feasible best is
+    undefined. Thus, `CEI` is reduced to the `P(c(x) <= 0)` term until a feasible
+    configuration is found.
 
-    Two metrics are expected in the model output: the main objective and the constraint metric.
-    The main objective needs to be indicated as active_metric when initializing CEIAcquisitionFunction.
+    Two metrics are expected in the model output: the main objective and the
+    constraint metric. The main objective needs to be indicated as `active_metric`
+    when initializing :class:`CEIAcquisitionFunction`.
     The constraint is automatically assumed to be the other metric.
 
-    References on CEI:
-    Gardner et al., Bayesian Optimization with Inequality Constraints. In ICML, 2014.
-    Gelbart et al., Bayesian Optimization with Unknown Constraints. In UAI, 2014.
+    References on `CEI`:
 
+        | Gardner et al.
+        | Bayesian Optimization with Inequality Constraints
+        | ICML 2014
+    and
+
+        | Gelbart et al.
+        | Bayesian Optimization with Unknown Constraints
+        | UAI 2014.
+
+    :param model: Surrogate models for main objective and cost
+    :param active_metric: Name of main objective
+    :param jitter: Jitter factor, must be positive. Defaults to 0.01
     """
 
     def __init__(
         self,
         model: SurrogateOutputModel,
-        active_metric: str = None,
+        active_metric: Optional[str] = None,
         jitter: float = 0.01,
     ):
         super().__init__(model, active_metric)

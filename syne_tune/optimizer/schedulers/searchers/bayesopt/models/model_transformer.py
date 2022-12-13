@@ -49,8 +49,9 @@ def _assert_same_keys(dict1, dict2):
 class TransformerModelFactory:
     """
     Interface for model factories used in :class:`ModelStateTransformer`. A model
-    factory provides access to tunable model parameters, and `model` creates
-    :class:`SurrogateModel` instances.
+    factory provides access to tunable model parameters, and :meth:`model` creates
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`
+    instances.
     """
 
     def get_params(self) -> Dict:
@@ -67,17 +68,19 @@ class TransformerModelFactory:
 
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
         """
-        Creates a :class:`SurrogateModel` based on data in `state`. This involves
-        fitting model parameters if `fit_params` is True. Otherwise, the current
-        model parameters are not changed (so may be stale, given that `state`
-        has changed). The idea is that often, model fitting is much more
-        expensive than just creating the final :class:`SurrogateModel` (posterior
-        state). It then makes sense to partly work with stale model parameters.
+        Creates a
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`
+        object based on data in `state`. This involves fitting model parameters
+        if `fit_params == True`. Otherwise, the current model parameters are not
+        changed (so may be stale, given that `state` has changed). The idea is that
+        often, model fitting is much more expensive than just creating the final
+        :class:`SurrogateModel` (posterior state). It then makes sense to partly
+        work with stale model parameters.
 
         :param state: Current data model parameters are to be fit on, and the
             posterior state is to be computed from
         :param fit_params: See above
-        :return: SurrogateModel, wrapping the posterior state for predictions
+        :return: Fitted model, wrapping the posterior state for predictions
         """
         raise NotImplementedError()
 
@@ -91,7 +94,7 @@ class TransformerModelFactory:
 
     def configure_scheduler(self, scheduler):
         """
-        Called by `configure_scheduler` of searchers which make use of a
+        Called by :meth:`configure_scheduler` of searchers which make use of a
         class:`TransformerModelFactory`. Allows the factory to depend on
         parameters of the scheduler.
 
@@ -113,28 +116,34 @@ SkipOptimizationOutputPredicate = Union[
 
 class ModelStateTransformer:
     """
-    This class maintains the :class:`TuningJobState` alongside an HPO
-    experiment, and manages the reaction to changes of this state.
-    In particular, it provides a :class:`SurrogateModel` on demand, which
-    encapsulates the GP posterior.
+    This class maintains the
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state.TuningJobState`
+    object alongside an HPO experiment, and manages the reaction to changes of
+    this state. In particular, it provides a fitted surrogate model on demand,
+    which encapsulates the GP posterior.
 
     The state transformer is generic, it uses :class:`TransformerModelFactory`
     for anything specific to the model type.
 
     `skip_optimization` is a predicate depending on the state, determining
-    what is done at the next recent call of `model`. If False, the model
+    what is done at the next recent call of `model`. If `False`, the model
     parameters are refit, otherwise the current ones are not changed (which
     is usually faster, but risks stale-ness).
 
     We also track the observed data `state.trials_evaluations`. If this
-    did not change since the last recent `model` call, we do not refit the
+    did not change since the last recent :meth:`model` call, we do not refit the
     model parameters. This is based on the assumption that model parameter
     fitting only depends on `state.trials_evaluations` (observed data),
     not on other fields (e.g., pending evaluations).
 
-    Note that model_factory and skip_optimization can also be a dictionary mapping
+    Note that `model_factory` and `skip_optimization` can also be a dictionary mapping
     output names to models. In that case, the state is shared but the models for each
     output metric are updated independently.
+
+    :param model_factory: Factory for surrogate models, given tuning job state
+    :param init_state: Initial tuning job state
+    :param skip_optimization: Skip optimization predicate (see above). Defaults to
+        `None` (fitting is never skipped)
     """
 
     def __init__(
@@ -218,9 +227,9 @@ class ModelStateTransformer:
         If skip_optimization is given, it overrides the `self._skip_optimization`
         predicate.
 
-        :return: SurrogateModel for current state in the standard single
+        :return: Fitted surrogate model for current state in the standard single
             model case; in the multi-model case, it returns a dictionary mapping
-            output names to SurrogateModel instances for current state (shared
+            output names to surrogate model instances for current state (shared
             across models).
         """
         if self._model is None:
@@ -251,7 +260,7 @@ class ModelStateTransformer:
         """
         Appends new pending evaluation to the state.
 
-        :param trial_id:
+        :param trial_id: ID of trial
         :param config: Must be given if this trial does not yet feature in the
             state
         :param resource: Must be given in the multi-fidelity case, to specify
@@ -267,7 +276,7 @@ class ModelStateTransformer:
         Drop pending evaluation from state. If it is not listed as pending,
         nothing is done
 
-        :param trial_id:
+        :param trial_id: ID of trial
         :param resource: Must be given in the multi-fidelity case, to specify
             at which resource level the evaluation is pending
 
@@ -275,15 +284,17 @@ class ModelStateTransformer:
         return self._state.remove_pending(trial_id, resource)
 
     def remove_observed_case(
-        self, trial_id: str, metric_name: str = INTERNAL_METRIC_NAME, key: str = None
+        self,
+        trial_id: str,
+        metric_name: str = INTERNAL_METRIC_NAME,
+        key: Optional[str] = None,
     ):
         """
         Removes specific observation from the state.
 
-        :param trial_id:
-        :param metric_name:
+        :param trial_id: ID of trial
+        :param metric_name: Name of internal metric
         :param key: Must be given in the multi-fidelity case
-
         """
         pos = self._state._find_labeled(trial_id)
         assert pos != -1, f"Trial trial_id = {trial_id} has no observations"
@@ -315,7 +326,6 @@ class ModelStateTransformer:
         `config` must be passed if the trial has not yet been registered in
         the state (this happens normally with the `append_trial` call). If
         already registered, `config` is ignored.
-
         """
         # Drop pending candidate if it exists
         trial_id = data.trial_id
@@ -343,10 +353,9 @@ class ModelStateTransformer:
         self, filter_pred: Callable[[PendingEvaluation], bool]
     ):
         """
-        Filters state.pending_evaluations with filter_pred.
+        Filters `state.pending_evaluations` with `filter_pred`.
 
-        :param filter_pred Filtering predicate
-
+        :param filter_pred: Filtering predicate
         """
         new_pending_evaluations = list(
             filter(filter_pred, self._state.pending_evaluations)

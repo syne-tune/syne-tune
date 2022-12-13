@@ -26,8 +26,8 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
 * `benchmarking/nursery/benchmark_hypertune/baselines.py <../../benchmarking/benchmark_hypertune.html#id1>`__:
   Defines the HPO methods to take part in the experiment, in the form of a
   dictionary ``methods`` which maps method names to factory functions, which in
-  turn map :class:`benchmarking.commons.baselines.MethodArguments` to scheduler
-  objects. The :class:`benchmarking.commons.baselines.MethodArguments` class
+  turn map :class:`~benchmarking.commons.baselines.MethodArguments` to scheduler
+  objects. The :class:`~benchmarking.commons.baselines.MethodArguments` class
   contains the union of attributes needed to configure schedulers. Note that if
   you like to compare different variants of a method, you need to create
   different entries in ``methods``, for example ``Methods.MOBSTER_JOINT`` and
@@ -35,7 +35,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
 * `benchmarking/nursery/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`__:
   Defines the benchmarks to be considered in this experiment, in the form of a
   dictionary ``benchmark_definitions`` with values of type
-  :class:`benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
+  :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
   In general, you will just pick definitions from
   :mod:`benchmarking.commons.benchmark_definitions`. But you can also modify
   parameters, for example ``surrogate`` and ``surrogate_kwargs`` in order to
@@ -224,10 +224,10 @@ contain:
 
 * Functions named ``*_benchmark``, which map arguments (such as ``dataset_name``)
   to the benchmark definition
-  :class:`benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`
+  :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`
   and ``*`` being the name of the blackbox (or scenario).
 * Dictionaries named ``*_benchmark_definitions`` with
-  :class:`benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`
+  :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`
   values. If a blackbox has a lot of datasets, we also define a dictionary
   ``*_selected_benchmark_definitions``, which selects benchmarks which are
   interesting (e.g., not all baselines achieving the same performance rapidly).

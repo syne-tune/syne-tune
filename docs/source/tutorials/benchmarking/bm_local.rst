@@ -101,7 +101,7 @@ you may safely skip this subsection.
 For ``resnet_cifar10``, this selects
 :func:`~benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`,
 which returns meta-data for the benchmark as a
-:class:`benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
+:class:`~benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
 object. Here, the argument ``sagemaker_backend`` is ``False`` in our case,
 since we use the local back-end, and additional ``**kwargs`` override arguments
 of ``RealBenchmarkDefinition``. Important arguments are:

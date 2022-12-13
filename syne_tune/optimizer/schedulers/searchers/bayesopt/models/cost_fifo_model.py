@@ -52,7 +52,7 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     :param state: TuningJobSubState
     :param model: Model parameters must have been fit
     :param fixed_resource: :math:`c(x, r)` is predicted for this resource level r
-    :param num_samples: Number of samples drawn in `predict`. Use this for
+    :param num_samples: Number of samples drawn in :meth:`predict`. Use this for
         random cost models only
     """
 
@@ -121,7 +121,7 @@ class CostSurrogateModelFactory(TransformerModelFactory):
 
     :param model: CostModel to be wrapped
     :param fixed_resource: :math:`c(x, r)` is predicted for this resource level r
-    :param num_samples: Number of samples drawn in `predict`. Use this for
+    :param num_samples: Number of samples drawn in :meth:`predict`. Use this for
         random cost models only
     """
 

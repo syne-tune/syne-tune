@@ -317,7 +317,7 @@ scheduler at any point.
 Where can I find the output of my trials?
 =========================================
 
-When running :class:`syne_tune.backend.LocalBackend` locally, results of trials
+When running :class:`~syne_tune.backend.LocalBackend` locally, results of trials
 are saved under ``~/syne-tune/{tuner-name}/{trial-id}/`` and contains the
 following files:
 
@@ -359,14 +359,14 @@ in the following example:
 
 When running tuning remotely with the remote launcher, only ``config.json``,
 ``metadata.json``, ``results.csv.zip`` and ``tuner.dill`` are synced with S3
-unless ``store_logs_localbackend=True`` when creating :class:`syne_tune.Tuner`,
+unless ``store_logs_localbackend=True`` when creating :class:`~syne_tune.Tuner`,
 in which case the trial logs and informations are also persisted.
 
 How can I plot the results of a tuning?
 =======================================
 
 Some basic plots can be obtained via
-:class:`syne_tune.experiments.ExperimentResult`. An example is given in
+:class:`~syne_tune.experiments.ExperimentResult`. An example is given in
 `examples/launch_plot_results.py <examples.html#plot-results-of-tuning-experiment>`__.
 
 How can I specify additional tuning metadata?
@@ -375,7 +375,7 @@ How can I specify additional tuning metadata?
 By default, Syne Tune stores the time, the names and modes of the metric being
 tuned, the name of the entrypoint, the name backend and the scheduler name. You
 can also add custom metadata to your tuning job by setting ``metadata`` in
-:class:`syne_tune.Tuner` as follow:
+:class:`~syne_tune.Tuner` as follow:
 
 .. code:: python
 
@@ -394,18 +394,18 @@ How do I append additional information to the results which are stored?
 =======================================================================
 
 Results are processed and stored by callbacks passed to
-:class:`syne_tune.Tuner``, in particular see
-:class:`syne_tune.tuner_callback.StoreResultsCallback`. In order to add more
+:class:`~syne_tune.Tuner``, in particular see
+:class:`~syne_tune.tuner_callback.StoreResultsCallback`. In order to add more
 information, you can inherit from this class. An example is given in
-:class:`syne_tune.optimizer.schedulers.searchers.searcher_callback.StoreResultsAndModelParamsCallback`.
+:class:`~syne_tune.optimizer.schedulers.searchers.searcher_callback.StoreResultsAndModelParamsCallback`.
 
 If you run experiments with tabulated benchmarks using the
-:class:`syne_tune.blackbox_repository.BlackboxRepositoryBackend`, as demonstrated in
+:class:`~syne_tune.blackbox_repository.BlackboxRepositoryBackend`, as demonstrated in
 `launch_nasbench201_simulated.py <examples.html#launch-hpo-experiment-with-simulator-backend>`__,
 results are stored by
-:class:`syne_tune.backend.simulator_backend.simulator_callback.SimulatorCallback`
+:class:`~syne_tune.backend.simulator_backend.simulator_callback.SimulatorCallback`
 instead, and you need to inherit from this class. An example is given in
-:class:`syne_tune.optimizer.schedulers.searchers.searcher_callback.SimulatorAndModelParamsCallback`.
+:class:`~syne_tune.optimizer.schedulers.searchers.searcher_callback.SimulatorAndModelParamsCallback`.
 
 I don’t want to wait, how can I launch the tuning on a remote machine?
 ======================================================================
@@ -419,8 +419,8 @@ Remote launching of experiments has a number of advantages:
   setup CUDA, etc.
 
 You can use the remote launcher to launch an experiment on a remote machine.
-The remote launcher supports both :class:`syne_tune.backend.LocalBackend` and
-:class:`syne_tune.backend.SageMakerBackend`. In the former case, multiple
+The remote launcher supports both :class:`~syne_tune.backend.LocalBackend` and
+:class:`~syne_tune.backend.SageMakerBackend`. In the former case, multiple
 trials will be evaluated on the remote machine (one use-case being to use a
 beefy machine), in the latter case trials will be evaluated as separate
 SageMaker training jobs. An example for running the remote launcher is
@@ -504,8 +504,8 @@ a *searcher*. The most important differences between schedulers in the
 single-objective case are:
 
 * Does the scheduler stop trials early or pause and resume trials
-  (:class:`syne_tune.optimizer.schedulers.HyperbandScheduler`) or not
-  (:class:`syne_tune.optimizer.schedulers.FIFOScheduler`). The former
+  (:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`) or not
+  (:class:`~syne_tune.optimizer.schedulers.FIFOScheduler`). The former
   requires a resource dimension (e.g., number of epochs; size of
   training set) and slightly more elaborate reporting (e.g., evaluation
   after every epoch), but can outperform the latter by a large margin.
@@ -525,10 +525,10 @@ Further schedulers provided by Syne Tune include:
 * `Multi-objective asynchronous successive halving (MOASHA) <examples.html#multi-objective-asynchronous-successive-halving-moasha>`__
 * `Constrained Bayesian optimization <examples.html#constrained-bayesian-optimization>`__
 * Bayesian optimization by density-ratio estimation:
-  :class:`syne_tune.optimizer.baselines.BORE`
-* Regularized evolution: :class:`syne_tune.optimizer.baselines.REA`
+  :class:`~syne_tune.optimizer.baselines.BORE`
+* Regularized evolution: :class:`~syne_tune.optimizer.baselines.REA`
 * Median stopping rule:
-  :class:`syne_tune.optimizer.schedulers.median_stopping_rule.MedianStoppingRule`
+  :class:`~syne_tune.optimizer.schedulers.median_stopping_rule.MedianStoppingRule`
 * `Synchronous Hyperband <tutorials/multifidelity/mf_syncsh.html>`__
 * `Differential Evolution Hyperband (DEHB) <tutorials/multifidelity/mf_sync_model.html#differential-evolution-hyperband>`__
 * `Hyper-Tune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__
@@ -560,8 +560,8 @@ How can I visualize the progress of my tuning experiment with Tensorboard?
 
 To visualize the progress of Syne Tune in
 `Tensorboard <https://www.tensorflow.org/tensorboard>`__, you can pass
-the :class:`syne_tune.callbacks.TensorboardCallback` to the
-:class:`syne_tune.Tuner` object:
+the :class:`~syne_tune.callbacks.TensorboardCallback` to the
+:class:`~syne_tune.Tuner` object:
 
 .. code:: python
 
@@ -609,7 +609,7 @@ How can I add a new tabular or surrogate benchmark?
 To add a new dataset of tabular evaluations, you need to:
 
 * write a blackbox recipe able to regenerate it by extending
-  :class:`syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe.BlackboxRecipe`.
+  :class:`~syne_tune.blackbox_repository.conversion_scripts.blackbox_recipe.BlackboxRecipe`.
   You need in particular to provide the name of the blackbox, the reference so
   that users are prompted to cite the appropriated paper, and a code that can
   generate it from scratch. See

@@ -71,8 +71,10 @@ GPModel = Union[
 class GaussProcSurrogateModel(BaseSurrogateModel):
     """
     Gaussian process surrogate model, where model parameters are either fit by
-    marginal likelihood maximization (:class:`GaussianProcessRegression`), or
-    integrated out by MCMC sampling (:class:`GPRegressionMCMC`).
+    marginal likelihood maximization
+    (e.g., :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression.GaussianProcessRegression`),
+    or integrated out by MCMC sampling
+    (e.g., :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc.GPRegressionMCMC`).
 
     Both `state` and `gpmodel` are immutable. If parameters of the latter
     are to be fit, this has to be done before.
@@ -226,6 +228,23 @@ def get_internal_candidate_evaluations(
 
 
 class GaussProcModelFactory(TransformerModelFactory):
+    """
+    We support pending evaluations via fantasizing. Note that state does
+    not contain the fantasy values, but just the pending configs. Fantasy
+    values are sampled here.
+
+    :param gpmodel: Internal model
+    :param active_metric: Name of the metric to optimize.
+    :param normalize_targets: Normalize observed target values?
+    :param debug_log: DebugLogPrinter (optional)
+    :param filter_observed_data: Filter for observed data before
+        computing incumbent
+    :param no_fantasizing: If True, pending evaluations in the state are
+        simply ignored, fantasizing is not done (not recommended)
+    :param hp_ranges_for_prediction: If given, :class:`GaussProcSurrogateModel`
+        should use this instead of `state.hp_ranges`
+    """
+
     def __init__(
         self,
         gpmodel: GPModel,
@@ -237,23 +256,6 @@ class GaussProcModelFactory(TransformerModelFactory):
         no_fantasizing: bool = False,
         hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
-        """
-        We support pending evaluations via fantasizing. Note that state does
-        not contain the fantasy values, but just the pending configs. Fantasy
-        values are sampled here.
-
-        :param gpmodel: GPModel model
-        :param active_metric: Name of the metric to optimize.
-        :param normalize_targets: Normalize observed target values?
-        :param debug_log: DebugLogPrinter (optional)
-        :param filter_observed_data: Filter for observed data before
-            computing incumbent
-        :param no_fantasizing: If True, pending evaluations in the state are
-            simply ignored, fantasizing is not done (not recommended)
-        :param hp_ranges_for_prediction: If given, `GaussProcSurrogateModel`
-            should use this instead of `state.hp_ranges`
-
-        """
         self._gpmodel = gpmodel
         self.active_metric = active_metric
         self.normalize_targets = normalize_targets
@@ -283,9 +285,10 @@ class GaussProcModelFactory(TransformerModelFactory):
         requires `state` to contain labeled examples.
 
         If self.state.pending_evaluations is not empty, we proceed as follows:
-        - Compute posterior for state without pending evals
-        - Draw fantasy values for pending evals
-        - Recompute posterior (without fitting)
+
+        * Compute posterior for state without pending evals
+        * Draw fantasy values for pending evals
+        * Recompute posterior (without fitting)
 
         """
         if self._debug_log is not None:
@@ -336,11 +339,11 @@ class GaussProcModelFactory(TransformerModelFactory):
     ):
         """
         Computes posterior for state.
-        If fit_params and state.pending_evaluations is empty, we first
+        If `fit_params` and `state.pending_evaluations` is empty, we first
         optimize the model parameters.
-        If state.pending_evaluations are given, these must be
-        FantasizedPendingEvaluations, i.e. the fantasy values must have been
-        sampled.
+        If `state.pending_evaluations` are given, these must be of type
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common.FantasizedPendingEvaluations`,
+        i.e. the fantasy values must have been sampled.
         """
         assert state.num_observed_cases(self.active_metric) > 0, (
             "Cannot compute posterior: state has no labeled datapoints "
@@ -387,15 +390,15 @@ class GaussProcModelFactory(TransformerModelFactory):
     def _draw_fantasy_values(self, state: TuningJobState) -> TuningJobState:
         """
         Note: The fantasy values need not be de-normalized, because they are
-        only used internally here (e.g., get_internal_candidate_evaluations).
+        only used internally here (e.g., :meth:`get_internal_candidate_evaluations`).
 
         Note: A complication is that if the sampling methods of _gpmodel
         are called when there are no pending candidates (with fantasies) yet,
-        they do return a single sample (instead of num_fantasy_samples). This
-        is because GaussianProcessRegression knows about num_fantasy_samples
-        only due to the form of the posterior state (bad design!).
-        In this case, we draw num_fantasy_samples i.i.d.
-
+        they do return a single sample (instead of `num_fantasy_samples`). This
+        is because
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression.GaussianProcessRegression`
+        knows about `num_fantasy_samples` only due to the form of the posterior
+        state. In this case, we draw `num_fantasy_samples` i.i.d.
         """
         if state.pending_evaluations:
             configs = state.pending_configurations()
@@ -450,6 +453,18 @@ class GaussProcModelFactory(TransformerModelFactory):
 
 
 class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
+    """
+    We support pending evaluations via fantasizing. Note that state does
+    not contain the fantasy values, but just the pending configs. Fantasy
+    values are sampled here.
+
+    :param gpmodel: :class:`GaussianProcessRegression` model
+    :param num_fantasy_samples: See above
+    :param active_metric: Name of the metric to optimize.
+    :param normalize_targets: Normalize target values in
+        `state.candidate_evaluations`?
+    """
+
     def __init__(
         self,
         gpmodel: GPModel,
@@ -462,18 +477,6 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         no_fantasizing: bool = False,
         hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
-        """
-        We support pending evaluations via fantasizing. Note that state does
-        not contain the fantasy values, but just the pending configs. Fantasy
-        values are sampled here.
-
-        :param gpmodel: GaussianProcessRegression model
-        :param num_fantasy_samples: See above
-        :param active_metric: Name of the metric to optimize.
-        :param normalize_targets: Normalize target values in
-            state.candidate_evaluations?
-
-        """
         assert num_fantasy_samples > 0
         super().__init__(
             gpmodel=gpmodel,

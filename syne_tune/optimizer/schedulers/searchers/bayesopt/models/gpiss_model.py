@@ -56,10 +56,10 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
     Gaussian Process additive surrogate model, where model parameters are
     fit by marginal likelihood maximization.
 
-    Note: `predict_mean_current_candidates` calls `predict` for all
+    Note: :meth:`predict_mean_current_candidates` calls :meth:`predict` for all
     observed and pending extended configs. This may not be exactly
-    correct, because `predict` is not meant to be used for configs
-    which have observations (it IS correct at r = r_max).
+    correct, because :meth:`predict` is not meant to be used for configs
+    which have observations (it IS correct at :math:`r = r_{max}`).
 
     `fantasy_samples` contains the sampled (normalized) target values for
     pending configs. Only `active_metric` target values are considered.
@@ -139,6 +139,22 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
 
 
 class GaussProcAdditiveModelFactory(TransformerModelFactory):
+    """
+    If `num_fantasy_samples > 0`, we draw this many fantasy targets
+    independently, while each sample is dependent over all pending
+    evaluations. If `num_fantasy_samples == 0`, pending evaluations
+    in `state` are ignored.
+
+    :param gpmodel: GaussianProcessLearningCurveModel
+    :param num_fantasy_samples: See above
+    :param active_metric: Name of the metric to optimize.
+    :param config_space_ext: ExtendedConfiguration
+    :param normalize_targets: Normalize observed target values?
+    :param debug_log: DebugLogPrinter (optional)
+    :param filter_observed_data: Filter for observed data before
+        computing incumbent
+    """
+
     def __init__(
         self,
         gpmodel: GaussianProcessLearningCurveModel,
@@ -150,22 +166,6 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
     ):
-        """
-        If `num_fantasy_samples > 0`, we draw this many fantasy targets
-        independently, while each sample is dependent over all pending
-        evaluations. If `num_fantasy_samples == 0`, pending evaluations
-        in `state` are ignored.
-
-        :param gpmodel: GaussianProcessLearningCurveModel
-        :param num_fantasy_samples: See above
-        :param active_metric: Name of the metric to optimize.
-        :param config_space_ext: ExtendedConfiguration
-        :param normalize_targets: Normalize observed target values?
-        :param debug_log: DebugLogPrinter (optional)
-        :param filter_observed_data: Filter for observed data before
-            computing incumbent
-
-        """
         self._gpmodel = gpmodel
         self.active_metric = active_metric
         r_min, r_max = config_space_ext.resource_attr_range

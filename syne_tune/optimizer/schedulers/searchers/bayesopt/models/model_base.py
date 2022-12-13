@@ -27,13 +27,15 @@ logger = logging.getLogger(__name__)
 
 class BaseSurrogateModel(SurrogateModel):
     """
-    Base class for (most) SurrogateModel implementations, provides common code
+    Base class for (most)
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`
+    implementations, provides common code.
     """
 
     def __init__(
         self,
         state: TuningJobState,
-        active_metric: str = None,
+        active_metric: Optional[str] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
     ):
         super().__init__(state, active_metric)

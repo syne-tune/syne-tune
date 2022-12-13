@@ -263,7 +263,7 @@ Let us have a walk through this script, assuming it is called with the default
 * [1] We first select the benchmark and create the simulator backend linked
   with this benchmark. Relevant properties of supported benchmarks are
   collected in :mod:`benchmarking.commons.benchmark_definitions`, using
-  :class:`benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
+  :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
   Some properties are tied to the benchmark and must not be changed
   (``elapsed_time_attr``, ``metric``, ``mode``, ``blackbox_name``,
   ``max_resource_attr``). Other properties are default values suggested for the
@@ -274,7 +274,7 @@ Let us have a walk through this script, assuming it is called with the default
   ``surrogate_kwargs`` need to be considered. However, NASBench-201 comes with
   a finite configuration space, which has been sampled exhaustively.
 * [1] We then create the
-  :class:`syne_tune.blackbox_repository.simulated_tabular_backend.BlackboxRepositoryBackend`.
+  :class:`~syne_tune.blackbox_repository.simulated_tabular_backend.BlackboxRepositoryBackend`.
   Instead of a training script, this backend needs information about the
   blackbox used for the simulation. ``elapsed_time_attr`` is the name of the
   *elapsed time* metric of the blackbox (time from start of training until end
@@ -316,7 +316,7 @@ Let us have a walk through this script, assuming it is called with the default
   backend. Namely, since time is simulated, the ``Tuner`` does not really have
   to sleep between its iterations (simulated time will be increased in distinct
   steps). Second,
-  :class:`syne_tune.backend.simulator_backend.simulator_callback.SimulatorCallback`
+  :class:`~syne_tune.backend.simulator_backend.simulator_callback.SimulatorCallback`
   is needed for simulation of time. It is fine to add additional callbacks here,
   as long as ``SimulatorCallback`` is one of them.
 
