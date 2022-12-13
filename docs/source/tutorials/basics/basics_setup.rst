@@ -246,7 +246,7 @@ script for our experiments, to be introduced below:
 
 The configuration space is a dictionary with key names corresponding to command
 line input parameters of our training script. For each parameter you would like
-to tune, you need to specify a :class:`syne_tune.config_space.Domain`, imported
+to tune, you need to specify a :class:`~syne_tune.config_space.Domain`, imported
 from :mod:`syne_tune.config_space`. A domain consists of a type (float, int,
 categorical), a range (inclusive on both ends), and an encoding (linear or
 logarithmic). In our example, ``n_units_1``, ``n_units_2``, ``batch_size`` are

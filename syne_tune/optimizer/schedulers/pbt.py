@@ -98,11 +98,11 @@ class PopulationBasedTraining(FIFOScheduler):
     decrement (multiply by 0.8) the value (probability 0.5 each). For categorical
     hyperparameters, the value is always resampled uniformly.
 
-    Note: While this is implemented as child of :class:`syne_tune.optimizer.schedulers.FIFOScheduler`, we
+    Note: While this is implemented as child of :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, we
     require `searcher="random"` (default), since the current code only supports
     a random searcher.
 
-    Additional arguments on top of parent class :class:`syne_tune.optimizer.schedulers.FIFOScheduler`.
+    Additional arguments on top of parent class :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
 
     :param resource_attr: Name of resource attribute in results obtained
         via `on_trial_result`, defaults to "time_total_s"

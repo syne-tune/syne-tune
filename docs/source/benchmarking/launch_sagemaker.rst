@@ -2,7 +2,7 @@ Code in benchmarking/nursery/launch_sagemaker
 =============================================
 
 Comparison of baseline methods on real benchmark, using the
-:class:`syne_tune.backend.SageMakerBackend`.
+:class:`~syne_tune.backend.SageMakerBackend`.
 
 .. literalinclude:: ../../../benchmarking/nursery/launch_sagemaker/baselines.py
    :caption: benchmarking/nursery/launch_sagemaker/baselines.py

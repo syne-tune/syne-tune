@@ -139,7 +139,7 @@ runs promotion-based ASHA with the argument ``--method ASHA-PROM``, and
 promotion-based MOBSTER with ``--method MOBSTER-PROM``:
 
 * Recall that the argument ``max_resource_attr`` for
-  :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` allows the
+  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` allows the
   scheduler to infer the maximum resource level ``r_max``. For
   promotion-based scheduling, this argument has a second function. Namely, it
   allows the scheduler to inform the training script until which epoch it has

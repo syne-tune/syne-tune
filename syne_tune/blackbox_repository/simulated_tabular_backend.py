@@ -227,7 +227,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
     .. note::
        If the blackbox maintains cumulative time (elapsed_time), this is
        different from what
-       :class:`syne_tune.backend.simulator_backend.SimulatorBackend` requires
+       :class:`~syne_tune.backend.simulator_backend.SimulatorBackend` requires
        for `elapsed_time_attr`, if a pause-and-resume scheduler is used. Namely,
        the back-end requires the time since the start of the last recent
        resume. This conversion is done here internally in
@@ -236,7 +236,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
        from the blackbox table, but instead what the back-end needs.
 
     `max_resource_attr` plays the same role as in
-    :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
     If given, it is the key in a configuration `config` for the maximum
     resource. This is used by schedulers which limit each evaluation by
     setting this argument (e.g., promotion-based Hyperband).
@@ -272,7 +272,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         `surrogate="KNeighborsRegressor"` is chosen.
         If `blackbox_name` is a YAHPO blackbox, then `surrogate_kwargs` is passed
         as `yahpo_kwargs` to
-        :func:`syne_tune.blackbox_repository.load_blackbox`. In this case,
+        :func:`~syne_tune.blackbox_repository.load_blackbox`. In this case,
         `surrogate` is ignored (YAHPO always uses surrogates).
     :param config_space_surrogate: If `surrogate` is given, this is the
         configuration space for the surrogate blackbox. If not given, the
@@ -280,7 +280,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         have finite domains (categorical or ordinal), which is usually not what
         we want for a surrogate.
     :param simulatorbackend_kwargs: Additional arguments to parent
-        :class:`syne_tune.backend.simulator_backend.SimulatorBackend`
+        :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`
     """
 
     def __init__(

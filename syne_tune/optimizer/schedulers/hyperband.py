@@ -229,7 +229,7 @@ class HyperbandScheduler(FIFOScheduler):
     evaluations in one go.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.FIFOScheduler`:
+    :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
 
     :param resource_attr: Name of resource attribute in results obtained
         via `on_trial_result`, defaults to "epoch"
@@ -253,22 +253,22 @@ class HyperbandScheduler(FIFOScheduler):
     :type brackets: int, optional
     :param type: Type of Hyperband scheduler. Defaults to "stopping".
         Supported values (see also subclasses of
-        :class:`syne_tune.optimizer.schedulers.hyperband_stopping.RungSystem`):
+        :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.RungSystem`):
 
         * stopping: A config eval is executed by a single task. The task is
           stopped at a milestone if its metric is worse than a fraction
           of those who reached the milestone earlier, otherwise it
           continues. See
-          :class:`syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`.
+          :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`.
         * promotion: A config eval may be associated with multiple tasks
           over its lifetime. It is never terminated, but may be paused.
           Whenever a task becomes available, it may promote a config to
           the next milestone, if better than a fraction of others who
           reached the milestone. If no config can be promoted, a new one
           is chosen. See
-          :class:`syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`.
+          :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`.
         * cost_promotion: This is a cost-aware variant of 'promotion', see
-          :class:`syne_tune.optimizer.schedulers.hyperband_cost_promotion.CostPromotionRungSystem`
+          :class:`~syne_tune.optimizer.schedulers.hyperband_cost_promotion.CostPromotionRungSystem`
           for details. In this case, costs must be reported under the name
           `rung_system_kwargs["cost_attr"]` in results.
         * pasha: Similar to promotion type Hyperband, but it progressively
@@ -279,11 +279,11 @@ class HyperbandScheduler(FIFOScheduler):
           `rung_system_kwargs["num_threshold_candidates"]` of
           `points_to_evaluate` will enforce stricter rules on which task is
           continued. See
-          :class:`syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`
+          :class:`~`syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`
           and
-          :class:`syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+          :class:`~`syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
         * rush_promotion: Same as `rush_stopping` but for promotion, see
-          :class:`syne_tune.optimizer.schedulers.hyperband_rush.RUSHPromotionRungSystem`
+          :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHPromotionRungSystem`
 
     :type type: str, optional
     :param cost_attr: Required if the scheduler itself uses a cost metric
@@ -354,7 +354,7 @@ class HyperbandScheduler(FIFOScheduler):
           "rush_stopping"]`. The first `num_threshold_candidates` in
           `points_to_evaluate` enforce stricter requirements to the
           continuation of training tasks. See
-          :class:`syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+          :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
 
     :type rung_system_kwargs: dict, optional
     """
@@ -490,11 +490,11 @@ class HyperbandScheduler(FIFOScheduler):
         `kwargs` being used here:
 
         * elapsed_time: Time from start of experiment, set in
-          :meth:`syne_tune.optimizer.schedulers.FIFOScheduler._suggest`
+          :meth:`~syne_tune.optimizer.schedulers.FIFOScheduler._suggest`
         * bracket: Bracket in which new trial is started, set in
-          :meth:`syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`
+          :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`
         * milestone: First milestone the new trial will reach, set in
-          :meth:`syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`
+          :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`
 
         :param config: New config suggested for `trial_id`
         :param trial_id: Input to `_suggest`
@@ -894,9 +894,9 @@ def hyperband_rung_levels(
     """Creates `rung_levels` from `grace_period`, `reduction_factor`
 
     :param rung_levels: If given, this is returned
-    :param grace_period: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param reduction_factor: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param max_t: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param grace_period: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param reduction_factor: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param max_t: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     :return: List of rung levels
     """
     if rung_levels is not None:
@@ -949,8 +949,8 @@ class HyperbandBracketManager:
     on `scheduler_type` manifest themselves mostly at the level of the rung
     level system itself.
 
-    :param scheduler_type: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
-    :param resource_attr: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param scheduler_type: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param resource_attr: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
     :param metric: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
     :param mode: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
     :param max_t: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.

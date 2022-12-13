@@ -254,8 +254,8 @@ class TrialBackend:
         """Returns list of ids for currently busy trials
 
         A trial is busy if its status is
-        :const:`syne_tune.backend.trial_status.Status.in_progress` or
-        :const:`syne_tune.backend.trial_status.Status.stopping`.
+        :const:`~syne_tune.backend.trial_status.Status.in_progress` or
+        :const:`~syne_tune.backend.trial_status.Status.stopping`.
         If the execution setup is able to run `n_workers` jobs in parallel,
         then if this method returns a list of size `n`, the tuner may start
         `n_workers - n` new jobs.
@@ -299,7 +299,7 @@ class TrialBackend:
     ):
         """
         :param results_root: The local folder that should contain the results of
-            the tuning experiment. Used by :class:`syne_tune.Tuner` to indicate
+            the tuning experiment. Used by :class:`~syne_tune.Tuner` to indicate
             a desired path where the results should be written to. This is used
             to unify the location of backend files and `Tuner` results when
             possible (in the local backend). By default, the backend does not do
@@ -325,6 +325,6 @@ class TrialBackend:
 
     def on_tuner_save(self):
         """
-        Called at the end of :meth:`syne_tune.Tuner.save`.
+        Called at the end of :meth:`~syne_tune.Tuner.save`.
         """
         pass

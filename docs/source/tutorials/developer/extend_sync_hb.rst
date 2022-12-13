@@ -26,12 +26,12 @@ asynchronously. This requirement poses slight additional challenges for an
 implementation, over what is said in
 `published work <https://jmlr.org/papers/v18/16-558.html>`__. We start with an
 overview of
-:class:`syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
+:class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
 Concepts such as resource, rung, bracket, grace period :math:`r_{min}`,
 reduction factor :math:`\eta` are detailed in
 `this tutorial <../multifidelity/README.html>`__.
 
-:class:`syne_tune.optimizer.schedulers.synchronous.hyperband_bracket.SynchronousHyperbandBracket`
+:class:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket.SynchronousHyperbandBracket`
 represents a bracket, consisting of a list of rungs, where each rung is
 defined by ``(rung_size, level)``, ``rung_size`` is the number of slots,
 ``level`` the resource level. Any system of rungs is admissible, as long
@@ -59,7 +59,7 @@ increasing.
   assigned to ``None`` at the beginning, they are set by the caller (using
   new ``trial_id`` values provided by the back-end).
 
-:class:`syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager.SynchronousHyperbandBracketManager`
+:class:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager.SynchronousHyperbandBracketManager`
 maintains all brackets during an experiment. It is configured by a list
 of brackets, where each bracket has one less rungs than its predecessor.
 The Hyperband algorithm cycles through this ``RungSystemsPerBracket`` in
@@ -74,15 +74,15 @@ first bracket which is not yet complete, is the *primary bracket*.
   bracket can take the job, a new bracket is created.
 
 Given these classes,
-:class:`syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
+:class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
 is straightforward. It is a pause-and-resume scheduler.
 
 * ``_suggest`` polls ``self.bracket_manager.next_job()``. If the ``SlotInRung``
   returned has ``trial_id`` assigned, it corresponds to a trial to be
   promoted, so the decision is
-  :meth:`syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`
+  :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`
   Otherwise, the scheduler decides for
-  :meth:`syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`
+  :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`
   with a new ``trial_id``, which also updates the ``SlotInRung.trial_id`` field.
   In any case, the scheduler maintains the curently pending slots in
   ``self._trial_to_pending_slot``.
@@ -101,7 +101,7 @@ trials are chosen by evolutionary computations (mutation, cross-over,
 selection). This example is more advanced than the
 `one above <extend_async_hb.html>`__, in that we need to do more than
 furnishing
-:class:`syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
+:class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
 with a new searcher. The only time when a searcher suggests configurations is
 at the very start, when the first rung of the first bracket is filled. All
 further configurations are obtained by evolutionary means.
@@ -154,7 +154,7 @@ Once this is done, we can map mutation and cross-over to ``suggest``,
 and selection to ``on_trial_report``. It becomes clear that we can use
 most of the infrastructure for synchronous Hyperband without change.
 
-:class:`syne_tune.optimizer.schedulers.synchronous.dehb_bracket.DifferentialEvolutionHyperbandBracket`
+:class:`~syne_tune.optimizer.schedulers.synchronous.dehb_bracket.DifferentialEvolutionHyperbandBracket`
 has only minor differences to ``SynchronousHyperbandBracket``. First,
 ``_promote_trials_at_rung_complete`` does nothing, because promotion
 (i.e., determining the trials for a rung from the one above) is a more
@@ -185,7 +185,7 @@ are not allowed to wait.
   changes between cross-over and selection. Also, in rare cases, the target may
   not have a metric at selection time. In this case, the candidate wins.
 
-:class:`syne_tune.optimizer.schedulers.synchronous.dehb_bracket_manager.DifferentialEvolutionHyperbandBracketManager`
+:class:`~syne_tune.optimizer.schedulers.synchronous.dehb_bracket_manager.DifferentialEvolutionHyperbandBracketManager`
 is very similar to ``SynchronousHyperbandBracketManager``. Differences include:
 
 * The system of brackets is more rigid in DEHB, in that subsequent brackets are
@@ -196,7 +196,7 @@ is very similar to ``SynchronousHyperbandBracketManager``. Differences include:
 * ``trial_id_from_parent_slot`` selects the ``trial_id`` for the target for
   cross-over and selection.
 
-:class:`syne_tune.optimizer.schedulers.synchronous.DifferentialEvolutionHyperbandScheduler`
+:class:`~syne_tune.optimizer.schedulers.synchronous.DifferentialEvolutionHyperbandScheduler`
 implements the DEHB scheduler.
 
 * On top of ``SynchronousHyperbandScheduler``, it also maps ``trial_id`` to
@@ -208,7 +208,7 @@ implements the DEHB scheduler.
   because many encoded vectors map to the same configuration. In this
   case, we retry and may ultimately draw encoded configs at random. Except
   for a special case in the very first bracket, we return with
-  :meth:`syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`.
+  :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`.
 * New encoded configurations are chosen only for the first rung of the first
   bracket. Our implementation allows a searcher to be specified for this choice.
   However, the default is to sample the new vector uniformly at random, see

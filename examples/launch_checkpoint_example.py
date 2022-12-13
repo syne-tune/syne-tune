@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     exp = load_experiment(tuner.name)
     best_config = exp.best_config()
-    checkpoint = trial_backend.checkpoint_trial_path(best_config['trial_id'])
+    checkpoint = trial_backend.checkpoint_trial_path(best_config["trial_id"])
     assert checkpoint.exists()
 
     print(f"Best config found {best_config} checkpointed at {checkpoint}")

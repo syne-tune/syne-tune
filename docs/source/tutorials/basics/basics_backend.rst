@@ -4,7 +4,7 @@ SageMaker Back-end
 Limitations of the Local Back-end
 ---------------------------------
 
-We have been using the local back-end :class:`syne_tune.backend.LocalBackend`
+We have been using the local back-end :class:`~syne_tune.backend.LocalBackend`
 in this tutorial so far. Due to its simplicity and very low overheads for
 starting, stopping, or resuming trials, this is the preferred choice for
 getting started. But with models and datasets getting larger, some
@@ -28,7 +28,7 @@ Launcher Script for SageMaker Back-end
 --------------------------------------
 
 Syne Tune offers the SageMaker back-end
-:class:`syne_tune.backend.SageMakerBackend` as alternative to the local one.
+:class:`~syne_tune.backend.SageMakerBackend` as alternative to the local one.
 Using it requires some preparation, as is detailed
 `here <../../faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
 
@@ -58,7 +58,7 @@ differently:
        metrics_names=[metric],
    )
 
-In essence, the :class:`syne_tune.backend.SageMakerBackend` is parameterized
+In essence, the :class:`~syne_tune.backend.SageMakerBackend` is parameterized
 with a SageMaker estimator, which executes the training script. In our example,
 we use the ``PyTorch`` SageMaker framework as a pre-built container for the
 dependencies our training scripts requires. However, any other type of

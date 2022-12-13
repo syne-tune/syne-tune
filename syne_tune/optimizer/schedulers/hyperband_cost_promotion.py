@@ -23,7 +23,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
     Cost-aware extension of promotion-based asynchronous Hyperband (ASHA).
 
     This code is equivalent with base
-    :class:`syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`,
+    :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`,
     except the "promotable" condition in :meth:`_find_promotable_trial` is
     replaced.
 
@@ -52,7 +52,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
 
     Note that costs :math:`c(\mathbf{x}, r)` reported via `cost_attr` need to
     be total costs of a trial. If the trial is paused and resumed, partial costs
-    have to be added up. See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+    have to be added up. See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     for how this works.
     """
 

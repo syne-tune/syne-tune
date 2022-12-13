@@ -59,7 +59,7 @@ GPU with PyTorch being installed):
   ``~/syne-tune/{experiment_tag}/*/{experiment_tag}-*/``. This name should
   confirm to S3 conventions (alphanumerical and ``-``; no underscores).
 * ``benchmark``: Selects benchmark from keys of
-  :func:`benchmarking.commons.benchmark_definitions.real_benchmark_definitions`.
+  :func:`~benchmarking.commons.benchmark_definitions.real_benchmark_definitions`.
   The default is ``resnet_cifar10``.
 * ``method``: Selects HPO method to run from keys of ``methods``. If this is
   not given, experiments for all keys in ``methods`` are run in sequence.
@@ -93,13 +93,13 @@ Benchmark Definitions
 
 In the example above, we select a benchmark via ``--benchmark resnet_cifar10``.
 All currently supported real benchmarks are collected in
-:func:`benchmarking.commons.benchmark_definitions.real_benchmark_definitions`,
+:func:`~benchmarking.commons.benchmark_definitions.real_benchmark_definitions`,
 a function which returns the dictionary of real benchmarks, configured by some
 extra arguments. If you are happy with selecting one of these existing benchmarks,
 you may safely skip this subsection.
 
 For ``resnet_cifar10``, this selects
-:func:`benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`,
+:func:`~benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`,
 which returns meta-data for the benchmark as a
 :class:`benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
 object. Here, the argument ``sagemaker_backend`` is ``False`` in our case,

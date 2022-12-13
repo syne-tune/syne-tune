@@ -51,7 +51,7 @@ class Blackbox:
     ) -> ObjectiveFunctionResult:
         """Returns an evaluation of the blackbox.
 
-        First perform data check and then call :meth:`_objective_function` that
+        First perform data check and then call :meth:`~_objective_function` that
         should be overriden in the child class.
 
         :param configuration: configuration to be evaluated, should belong to

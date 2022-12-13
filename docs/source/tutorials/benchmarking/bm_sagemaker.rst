@@ -31,12 +31,12 @@ Syne Tune dependencies need to be specified in
 
 In terms of benchmarks, the same definitions can be used for the SageMaker
 back-end, in particular you can select from
-:func:`benchmarking.commons.benchmark_definitions.real_benchmark_definitions`.
+:func:`~benchmarking.commons.benchmark_definitions.real_benchmark_definitions`.
 However, the functions there are called with ``sagemaker_backend=True``, which
 can lead to different values in
 :class:`benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`.
 For example,
-:func:`benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`
+:func:`~benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`
 returns ``instance_type=ml.g4dn.xlarge`` for the SageMaker back-end (1 GPU per
 instance), but ``instance_type=ml.g4dn.12xlarge`` for the local back-end (4 GPUs
 per instance). This is because for the local back-end to support ``n_workers=4``,

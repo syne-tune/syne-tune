@@ -39,7 +39,7 @@ class MultiFidelityBore(Bore):
         | Proceedings of the 35th International Conference on Machine Learning
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.bore.Bore`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`:
 
     :param resource_attr: Name of resource attribute. Defaults to "epoch"
     """

@@ -10,8 +10,8 @@ would make sure that the same configuration is not suggested twice.
 In this section, we walk through the Syne Tune implementation of random search,
 thereby discussing some additional concepts. This will also be a first example
 of the modular concept just described: random search is implemented as generic
-:class:`syne_tune.optimizer.schedulers.FIFOScheduler` configured by a
-:class:`syne_tune.optimizer.schedulers.searchers.RandomSearcher`.
+:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` configured by a
+:class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`.
 A self-contained implementation of random search would be shorter. On the other
 hand, as seen in
 :mod:`syne_tune.optimizer.baselines`, ``FIFOScheduler`` also powers GP-based
@@ -24,8 +24,8 @@ FIFOScheduler and RandomSearcher
 --------------------------------
 
 We will have a close look at
-:class:`syne_tune.optimizer.schedulers.FIFOScheduler` and
-:class:`syne_tune.optimizer.schedulers.searchers.RandomSearcher`. Let us first
+:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` and
+:class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`. Let us first
 consider the arguments of ``FIFOScheduler``:
 
 * ``searcher``, ``search_options``: These are used to configure the scheduler
@@ -33,12 +33,12 @@ consider the arguments of ``FIFOScheduler``:
   arguments can be passed via ``search_options``. In this case, the searcher is
   created by a factory, as detailed `below <new_searcher.html>`__. Alternatively,
   ``searcher`` can also be a
-  :class:`syne_tune.optimizer.schedulers.searchers.BaseSearcher` object.
+  :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher` object.
 * ``metric``, ``mode``: As discussed `above <first_example.html#first-example>`__
   in ``SimpleScheduler``.
 * ``random_seed``: Several pseudo-random number generators may be used in
   scheduler and searcher. Seeds for these are drawn from a random seed generator
-  maintained in :class:`syne_tune.optimizer.schedulers.FIFOScheduler`, whose
+  maintained in :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, whose
   seed can be passed here. As a general rule, all schedulers and searchers
   implemented in Syne Tune carefully manage such generators (and contributed
   schedulers are strongly encourage to adopt this pattern).
@@ -54,7 +54,7 @@ consider the arguments of ``FIFOScheduler``:
 
 The most important use case is to configure ``FIFOScheduler`` with a new
 searcher, and we will concentrate on this one. First, the base class of all
-searchers is :class:`syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
+searchers is :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
 
 * ``points_to_evaluate``: A list of configurations to be suggested first. This
   is initialized and (possibly) imputed in the base class, but needs to be used
@@ -96,21 +96,21 @@ searchers is :class:`syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
   ``FIFOScheduler`` and the Syne Tune searchers.
 
 Below ``BaseSearcher``, there is
-:class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`, which
+:class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`, which
 should be used by all searchers which make random decisions. It maintains a PRN
 generator and provides methods to serialize and de-serialize its state.
 
 Finally, let us walk through
-:class:`syne_tune.optimizer.schedulers.searchers.RandomSearcher`:
+:class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`:
 
 * There are a few features beyond ``SimpleScheduler`` above. The searcher does
   not suggest the same configuration twice, and also warns if a finite
   configuration space has been exhausted. It also uses
-  :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`
+  :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`
   for random sampling and comparing configurations (to spot duplicates). This
   is a useful helper class, also for encoding configurations as vectors.
   Detecting duplicates is done by a
-  :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common.ExclusionList`.
+  :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common.ExclusionList`.
   Finally, ``debug_log`` is used for diagnostic logs.
 * ``get_config`` first asks for another entry from ``points_to_evaluate`` by
   way of ``_next_initial_config``. It then samples a new configuration at

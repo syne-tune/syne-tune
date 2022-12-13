@@ -128,7 +128,7 @@ class TrialScheduler:
         start from there. In this case, `suggestion.config` is optional. If not
         given (default), the config of the resumed trial does not change.
         Otherwise, its config is overwritten by `suggestion.config` (see
-        :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+        :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
         `type="promotion"` for an example why this can be useful).
 
         Apart from the HP config, additional fields can be appended to the
@@ -186,7 +186,7 @@ class TrialScheduler:
 
         Note that the config returned here may also contain values for constant
         parameters in the config space. If so, these values take precedence.
-        See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+        See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
         `type="promotion"` for an example how this is used.
 
         :param trial_id: ID for new trial to be started (ignored if existing

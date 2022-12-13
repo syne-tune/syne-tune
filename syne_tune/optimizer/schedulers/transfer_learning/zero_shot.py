@@ -32,14 +32,14 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
     A zero-shot transfer hyperparameter optimization method which jointly selects
     configurations that minimize the average rank obtained on historic metadata
     (`transfer_learning_evaluations`). This is a searcher which can be used
-    with :class:`syne_tune.optimizer.schedulers.FIFOScheduler`. Reference:
+    with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Reference:
 
         | Sequential Model-Free Hyperparameter Tuning.
         | Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
         | IEEE International Conference on Data Mining (ICDM) 2015.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param transfer_learning_evaluations: Dictionary from task name to
         offline evaluations.

@@ -107,31 +107,31 @@ the following script, which can be found in
        tuner.run()
 
 All schedulers are subclasses of
-:class:`syne_tune.optimizer.scheduler.TrialScheduler`. Important methods
+:class:`~syne_tune.optimizer.scheduler.TrialScheduler`. Important methods
 include:
 
 * Constructor: Needs to be passed the configuration space. Most schedulers also
   have ``metric`` (name of metric to be optimized) and ``mode`` (whether metric
   is to be minimized or maximized; default is ``"min"``).
 * ``_suggest`` (internal version of ``suggest``): Called by the
-  :class:``syne_tune.Tuner`` whenever a worker is available. Returns trial to
+  :class:`~`syne_tune.Tuner`` whenever a worker is available. Returns trial to
   execute next, which in most cases will start a new configuration using
   trial ID ``trial_id`` (as
-  :const:`syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`).
+  :const:`~syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`).
   Some schedulers may also suggest to resume a paused trial (as
-  :const:`syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`).
+  :const:`~syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`).
   Our ``SimpleScheduler`` simply draws a new configuration at random from the
   configuration space.
-* ``on_trial_result``: Called by the :class:`syne_tune.Tuner` whenever a new
+* ``on_trial_result``: Called by the :class:`~syne_tune.Tuner` whenever a new
   result reported
   by a running trial has been received. Here, ``trial`` provides information
   about the trial (most important is ``trial.trial_id``), and ``result``
-  contains the arguments passed to :class:`syne_tune.Reporter` by the
+  contains the arguments passed to :class:`~syne_tune.Reporter` by the
   underlying training script. All but the simplest schedulers maintain a
   state which is modified based on this information. The scheduler also
   decides what to do with this trial, returning a
-  :class:`syne_tune.optimizer.scheduler.SchedulerDecision` to the
-  :class:`syne_tune.Tuner`, which in turn relays this decision to the back-end.
+  :class:`~syne_tune.optimizer.scheduler.SchedulerDecision` to the
+  :class:`~syne_tune.Tuner`, which in turn relays this decision to the back-end.
   Our ``SimpleScheduler`` maintains a sorted list of all metric values
   reported in ``self.sorted_results``. Whenever a trial reports a metric
   value which is worse than 4/5 of all previous reports (across all trials),
@@ -147,7 +147,7 @@ include:
   ``on_trial_result``.
 
 There are further methods in
-:class:`syne_tune.optimizer.scheduler.TrialScheduler`, which will be discussed
+:class:`~syne_tune.optimizer.scheduler.TrialScheduler`, which will be discussed
 in detail `below <trial_scheduler_api.html>`__. This simple scheduler is also
 missing the ``points_to_evaluate`` argument, which we recommend every new
 scheduler to support, and which is discussed in more detail
@@ -158,7 +158,7 @@ Basic Concepts
 
 Recall from `Basics of Syne Tune <../basics/README.html>`__ that an HPO
 experiment is run as interplay between a *back-end* and a *scheduler*, which is
-orchestrated by the :class:`syne_tune.Tuner`. The back-end starts, stops,
+orchestrated by the :class:`~syne_tune.Tuner`. The back-end starts, stops,
 pauses, or resumes training jobs and relays their reports. A *trial* abstracts
 the evaluation of a hyperparameter *configuration*. There is a diverse range of
 schedulers which can be implemented in Syne Tune, some examples are:
@@ -166,18 +166,18 @@ schedulers which can be implemented in Syne Tune, some examples are:
 * Simple “full evaluation” schedulers. These suggest configurations for new
   trials, but do not try to interact with running trials, even if the latter
   post intermediate results. A basic example is
-  :class:`syne_tune.optimizer.schedulers.FIFOScheduler`, to be discussed
+  :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, to be discussed
   `below <random_search.html#fifoscheduler-and-randomsearcher>`__.
 * Early-stopping schedulers. These require trials to post intermediate results
   (e.g., validation errors after every epoch), and their ``on_trial_result``
   may stop underperforming trials early. An example is
-  :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
   ``type="stopping"``.
 * Pause-and-resume schedulers. These require trials to post intermediate
   results (e.g., validation errors after every epoch). Their ``on_trial_result``
   may pause trials at certain points in time, and their ``_suggest`` may decide
   to resume a paused trial instead of starting a new one. An example is
-  :class:`syne_tune.optimizer.schedulers.HyperbandScheduler` with
+  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
   ``type="promotion"``.
 
 Asynchronous Job Execution
@@ -238,7 +238,7 @@ Syne Tune is this: **be lazy!**
 * Does your idea involve changing the stop/continue or pause/resume decisions
   in asynchronous successive halving or Hyperband? All you need to do is to
   implement a new
-  :class:`syne_tune.optimizer.schedulers.hyperband_stopping.RungSystem`.
+  :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.RungSystem`.
   Examples:
   :class:`syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,
   :class:`syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`,

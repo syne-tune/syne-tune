@@ -74,8 +74,8 @@ Visualize Tuning Progress with Tensorboard
 Makes use of :ref:`train_height.py <train_height_script>`.
 
 Tensorboard visualization works by using a callback, for example
-:class:`syne_tune.callbacks.tensorboard_callback.TensorboardCallback`,
-which is passed to the :class:`syne_tune.Tuner`. In order to visualize
+:class:`~syne_tune.callbacks.tensorboard_callback.TensorboardCallback`,
+which is passed to the :class:`~syne_tune.Tuner`. In order to visualize
 other metrics, you may have to modify this callback.
 
 
@@ -105,7 +105,7 @@ SageMaker Hugging Face framework in order to fine-tune a DistilBERT
 model on the IMDB sentiment classification task:
 
 * Instead of optimizing a single objective, we use
-  :class:`syne_tune.optimizer.schedulers.multiobjective.MOASHA` in order
+  :class:`~syne_tune.optimizer.schedulers.multiobjective.MOASHA` in order
   to sample the Pareto frontier w.r.t. three objectives
 * We not only tune hyperparameters such as learning rate and weight
   decay, but also the AWS instance type to be used for training. Here,
@@ -195,12 +195,12 @@ training script:
    :caption: examples/training_scripts/checkpoint_example/train_height_checkpoint.py
    :lines: 13-
 
-Note that :class:`syne_tune.backend.SageMakerBackend` is configured to use
+Note that :class:`~syne_tune.backend.SageMakerBackend` is configured to use
 SageMaker managed warm pools:
 
 * `keep_alive_period_in_seconds=300` in the definition of the SageMaker
   estimator
-* `start_jobs_without_delay=False` when creating :class:`syne_tune.Tuner`
+* `start_jobs_without_delay=False` when creating :class:`~syne_tune.Tuner`
 
 Managed warm pools reduce both start-up and stop delays substantially, they
 are strongly recommended for multi-fidelity HPO with the SageMaker backend.

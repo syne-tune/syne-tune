@@ -2,7 +2,7 @@ Code in benchmarking/nursery/launch_local
 =========================================
 
 Comparison of baseline methods on real benchmark, using the
-:class:`syne_tune.backend.LocalBackend`.
+:class:`~syne_tune.backend.LocalBackend`.
 
 .. literalinclude:: ../../../benchmarking/nursery/launch_local/baselines.py
    :caption: benchmarking/nursery/launch_local/baselines.py

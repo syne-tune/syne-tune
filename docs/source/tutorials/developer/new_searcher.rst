@@ -34,19 +34,19 @@ name. For example:
   :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`.
 
 It is the purpose of
-:func:`syne_tune.optimizer.schedulers.searchers.searcher_factory.searcher_factory`
+:func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.searcher_factory`
 to create the correct
-:class:`syne_tune.optimizer.schedulers.searchers.BaseSearcher` object for given
+:class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher` object for given
 scheduler arguments, including ``searcher`` (name) and ``search_options``. Let
 us have a look how the constructor of
-:class:`syne_tune.optimizer.schedulers.FIFOScheduler` calls the factory. We see
+:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` calls the factory. We see
 how scheduler arguments like ``metric``, ``mode``, ``points_to_evaluate`` are
 just passed through to the factory. We also need to set
 ``search_options["scheduler"]`` in order to tell ``searcher_factory`` which
 generic scheduler is calling it.
 
 The
-:func:`syne_tune.optimizer.schedulers.searchers.searcher_factory.searcher_factory`
+:func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.searcher_factory`
 code should be straightforward to understand and extend. Pick a name for your
 new searcher and set ``searcher_cls`` and ``supported_schedulers`` (the latter
 can be left to ``None`` if your searcher works with all generic schedulers). The

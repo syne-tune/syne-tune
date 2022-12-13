@@ -252,7 +252,7 @@ class HyperparameterRangeInteger(HyperparameterRange):
 class HyperparameterRangeFiniteRange(HyperparameterRange):
     """
     Finite range numerical hyperparameter, see
-    :class:`syne_tune.config_space.FiniteRange`. Internally, we use an `int`
+    :class:`~syne_tune.config_space.FiniteRange`. Internally, we use an `int`
     with linear scaling.
 
     Note: Different to :class:`HyperparameterRangeContinuous`, we require that
@@ -513,7 +513,7 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
 class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
     """
     Ordinal hyperparameter, equal distance encoding. See also
-    :class:`syne_tune.config_space.Ordinal`.
+    :class:`~syne_tune.config_space.Ordinal`.
 
     :param name: Name of hyperparameter
     :param choices: Values parameter can take
@@ -550,7 +550,7 @@ class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
 class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
     """
     Ordinal hyperparameter, nearest neighbour encoding. See also
-    :class:`syne_tune.config_space.OrdinalNearestNeighbor`.
+    :class:`~syne_tune.config_space.OrdinalNearestNeighbor`.
 
     :param name: Name of hyperparameter
     :param choices: Values parameter can take (numerical values, strictly
@@ -601,7 +601,7 @@ class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
 class HyperparameterRangesImpl(HyperparameterRanges):
     """
     Basic implementation of
-    :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`.
+    :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`.
 
     :param config_space: Configuration space
     :param name_last_pos: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional

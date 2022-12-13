@@ -36,7 +36,7 @@ class BlackboxOffline(Blackbox):
     to be metrics but this can be overridden by providing metric columns.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.blackbox_repository.Blackbox`:
+    :class:`~syne_tune.blackbox_repository.Blackbox`:
 
     :param df_evaluations: Data frame with evaluations data
     :param seed_col: optional, can be used when multiple seeds are recorded

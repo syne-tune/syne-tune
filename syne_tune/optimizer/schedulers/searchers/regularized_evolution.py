@@ -42,7 +42,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
     https://colab.research.google.com/github/google-research/google-research/blob/master/evolution/regularized_evolution_algorithm/regularized_evolution.ipynb
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param mode: Mode to use for the metric given, can be "min" or "max",
         defaults to "min"

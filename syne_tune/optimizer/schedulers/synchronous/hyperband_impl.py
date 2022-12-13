@@ -64,11 +64,11 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
         maximum number of brackets per iteration. Pass 1 for successive halving.
     :type brackets: int, optional
     :param searcher: Selects searcher. Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
         Defaults to "random"
     :type searcher: str, optional
     :param search_options: Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
     :type search_options: dict, optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
@@ -83,13 +83,13 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
     :type points_to_evaluate: `List[dict]`, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
-        :class:`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
+        :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
     :param max_resource_level: Largest rung level, corresponds to `max_t` in
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
         `grace_period`. If this is not given, it is inferred like in
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`.
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
     :type max_resource_level: int, optional
     :param max_resource_attr: Key name in config for fixed attribute
         containing the maximum resource. If given, trials need not be
@@ -163,7 +163,7 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
         :meth:`on_trial_result`
     :type metric: str
     :param searcher: Selects searcher. Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`..
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`..
         If `searcher == "random_encoded"` (default), the encoded configs are
         sampled directly, each entry independently from U([0, 1]).
         This distribution has higher entropy than for "random" if
@@ -171,7 +171,7 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
         `points_to_evaluate` is still used in this case.
     :type searcher: str, optional
     :param search_options: Passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
     :type search_options: dict, optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
@@ -186,13 +186,13 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
     :type points_to_evaluate: `List[dict]`, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
-        :class:`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
+        :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
     :param max_resource_level: Largest rung level, corresponds to `max_t` in
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
         `grace_period`. If this is not given, it is inferred like in
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`.
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
     :type max_resource_level: int, optional
     :param max_resource_attr: Key name in config for fixed attribute
         containing the maximum resource. If given, trials need not be

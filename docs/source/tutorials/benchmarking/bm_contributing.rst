@@ -41,7 +41,7 @@ to be done:
 
   * Your script needs to report relevant metrics back to Syne Tune at the end
     of each epoch (or only once, at the end, if your script does not support
-    multi-fidelity tuning), using an instance of :class:`syne_tune.Reporter`.
+    multi-fidelity tuning), using an instance of :class:`~syne_tune.Reporter`.
   * We strongly recommend your script to support checkpointing, and the
     ``resnet_cifar10`` script is a good example for how to do this with
     ``PyTorch`` training scripts. If checkpointing is not supported, all
@@ -53,7 +53,7 @@ to be done:
   You need to define some meta-data for your benchmark in
   :mod:`benchmarking.commons.benchmark_definitions`. This should be a
   function returning a
-  :class:`benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
+  :class:`~benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
   object. Arguments should be a flag ``sagemaker_backend`` (``True`` for
   SageMaker back-end experiment, ``False`` otherwise), and ``**kwargs``
   overwriting values in ``RealBenchmarkDefinition``. Hints:

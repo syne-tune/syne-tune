@@ -123,10 +123,10 @@ class FIFOScheduler(ResourceLevelsScheduler):
         are passed to `searcher_factory` along with `search_options` and
         extra information. Defaults to "random" (i.e., random search)
     :type searcher: str or
-        :class:`syne_tune.optimizer.schedulers.searchers.BaseSearcher`
+        :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param search_options: If searcher is `str`, these arguments are
         passed to
-        :func:`syne_tune.optimizer.schedulers.searchers.searcher_factory`
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`
     :type search_options: dict, optional
     :param metric: Name of metric to optimize, key in results obtained via
         `on_trial_result`
@@ -160,7 +160,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
         schedulers which make use of intermediate reports via
         `on_trial_result`. If this is not given, we try to infer its value
         from `config_space` (see
-        :class:`syne_tune.optimizer.schedulers.ResourceLevelsScheduler`).
+        :class:`~syne_tune.optimizer.schedulers.ResourceLevelsScheduler`).
         checking `config_space["epochs"]`, `config_space["max_t"]`, and
         `config_space["max_epochs"]`. If `max_resource_attr` is given, we use
         the value `config_space[max_resource_attr]`. But if `max_t` is given
@@ -172,9 +172,9 @@ class FIFOScheduler(ResourceLevelsScheduler):
         which is started with the first call to :meth:`_suggest`. Can also be set
         after construction, with :meth:`set_time_keeper`.
         Note: If you use
-        :class:`syne_tune.backend.simulator_backend.SimulatorBackend`, you need
+        :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`, you need
         to pass its `time_keeper` here.
-    :type time_keeper: :class:`syne_tune.backend.time_keeper.TimeKeeper`,
+    :type time_keeper: :class:`~syne_tune.backend.time_keeper.TimeKeeper`,
         optional
     """
 

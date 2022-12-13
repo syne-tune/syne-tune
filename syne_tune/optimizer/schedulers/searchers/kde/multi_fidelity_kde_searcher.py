@@ -34,7 +34,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         | Proceedings of the 35th International Conference on Machine Learning
 
     Additional arguments on top of parent class
-    :class:`syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`:
 
     :param resource_attr: Name of resource attribute. Defaults to
         `scheduler.resource_attr` in :meth:`configure_scheduler`

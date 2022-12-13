@@ -83,7 +83,7 @@ GP-based Bayesian optimization is run by our
 `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
 with the argument ``--method BO``. Many options can be specified via
 ``search_options``, but we use the defaults here. See
-:class:`syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher` for all
+:class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher` for all
 details. In our example, we set ``num_init_random`` to ``n_workers + 2``, which
 is the number of initial decisions made by random search, before switching
 over to maximizing the acquisition function.

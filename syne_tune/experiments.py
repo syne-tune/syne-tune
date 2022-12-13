@@ -39,7 +39,7 @@ class ExperimentResult:
     :param name: Name of experiment
     :param results: Dataframe containing results of experiment
     :param metadata: Metadata stored along with results
-    :param tuner: :class:`syne_tune.Tuner` object stored along with results
+    :param tuner: :class:`~syne_tune.Tuner` object stored along with results
     :param path: local path where the experiment is stored
     """
 
@@ -57,7 +57,7 @@ class ExperimentResult:
 
     def creation_date(self):
         """
-        :return: Timestamp when :class:`syne_tune.Tuner` was created
+        :return: Timestamp when :class:`~syne_tune.Tuner` was created
         """
         return datetime.fromtimestamp(self.metadata[ST_TUNER_CREATION_TIMESTAMP])
 
@@ -312,7 +312,7 @@ def load_experiments_df(
     :param load_tuner: Whether to load the tuner in addition to metadata and results
     :return: Dataframe that contains all evaluations reported by tuners according
         to the filter given. The columns contain trial-id, hyperparameter
-        evaluated, metrics reported via :class:`syne_tune.Reporter`. These metrics
+        evaluated, metrics reported via :class:`~syne_tune.Reporter`. These metrics
         are collected automatically:
 
         * `st_worker_time` (indicating time spent in the worker when report was

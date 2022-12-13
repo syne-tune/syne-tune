@@ -84,7 +84,7 @@ rung requires a single trial to train for 54 epochs, while all other workers
 are idle. This can be compensated to some extent by free workers running
 trials for the next iteration already, but scheduling becomes rather complex at
 this point. Syne Tune provides synchronous Hyperband as
-:class:`syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
+:class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
 However, we can usually do much better with asynchronous scheduling.
 
 Asynchronous Successive Halving

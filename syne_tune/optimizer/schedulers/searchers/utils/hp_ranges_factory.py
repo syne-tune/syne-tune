@@ -33,10 +33,10 @@ def make_hyperparameter_ranges(
     """Default method to create :class:`HyperparameterRanges` from `config_space`
 
     :param config_space: Configuration space
-    :param name_last_pos: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
-    :param value_for_last_pos: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
-    :param active_config_space: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
-    :param prefix_keys: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param name_last_pos: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param value_for_last_pos: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param active_config_space: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param prefix_keys: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
     :return: New object
     """
     hp_ranges = HyperparameterRangesImpl(

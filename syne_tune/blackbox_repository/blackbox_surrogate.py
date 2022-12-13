@@ -82,7 +82,7 @@ class BlackboxSurrogate(Blackbox):
     fidelities.
 
     Additional arguments on top of parent class
-    :class:`syne_tune.blackbox_repository.Blackbox`:
+    :class:`~syne_tune.blackbox_repository.Blackbox`:
 
     :param X: dataframe containing hyperparameters values. Shape is
         `(num_seeds * num_evals, num_hps)` if `predict_curves` is `True`,
@@ -101,7 +101,7 @@ class BlackboxSurrogate(Blackbox):
         The model is fit on top of pipeline that applies basic feature-processing
         to convert rows in `X` to vectors. We use the configuration_space
         hyperparameters types to deduce the types of columns in `X` (for instance,
-        :class:`syne_tune.config_space.Categorical` values are one-hot encoded).
+        :class:`~syne_tune.config_space.Categorical` values are one-hot encoded).
     :param predict_curves: See above. Default is `False` (backwards compatible)
     :param num_seeds: See above
     :param fit_differences: See above
@@ -445,7 +445,7 @@ def add_surrogate(
     for supporting interpolation/extrapolation.
 
     :param blackbox: the blackbox must implement
-        :meth:`syne_tune.blackbox_repository.Blackbox.hyperparameter_objectives_values`
+        :meth:`~syne_tune.blackbox_repository.Blackbox.hyperparameter_objectives_values`
         so that input/output are passed to estimate the model
     :param surrogate: the model that is fitted to predict objectives given any
         configuration. Possible examples: :code:`KNeighborsRegressor(n_neighbors=1)`,
@@ -462,7 +462,7 @@ def add_surrogate(
         as input. The latter can lead to inconsistent predictions along
         fidelity and is typically more expensive.
         If not given, the default value is `False` if `blackbox` is of type
-        :class:`syne_tune.blackbox_repository.BlackboxOffline`, otherwise `True`.
+        :class:`~syne_tune.blackbox_repository.BlackboxOffline`, otherwise `True`.
     :param separate_seeds: If `True`, seeds in `blackbox` map to seeds in the
         surrogate blackbox, which fits different models to each seed. If `False`,
         the data from `blackbox` is merged for all seeds, and the surrogate
