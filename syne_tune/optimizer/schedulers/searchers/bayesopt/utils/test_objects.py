@@ -58,11 +58,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import
     WarpedKernel,
     Warping,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    CandidateGenerator,
-)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     ExclusionList,
+    CandidateGenerator,
 )
 
 

@@ -14,9 +14,6 @@ from typing import Iterator, List, Union, Optional
 import numpy as np
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    CandidateGenerator,
-)
 from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Configuration,
     ConfigurationFilter,
@@ -33,6 +30,28 @@ logger = logging.getLogger(__name__)
 
 
 MAX_RETRIES_CANDIDATES_EN_BULK = 20
+
+
+class CandidateGenerator:
+    """
+    Class to generate candidates from which to start the local minimization,
+    typically random candidate or some form of more uniformly spaced variation,
+    such as latin hypercube or Sobol sequence.
+    """
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        raise NotImplementedError
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list: Optional[ExclusionList] = None
+    ) -> List[Configuration]:
+        """
+        :param num_cands: Number of candidates to generate
+        :param exclusion_list: If given, these candidates must not be returned
+        :return: List of `num_cands` candidates. If `exclusion_list` is given,
+            the number of candidates returned can be `< num_cands`
+        """
+        raise NotImplementedError
 
 
 class RandomStatefulCandidateGenerator(CandidateGenerator):

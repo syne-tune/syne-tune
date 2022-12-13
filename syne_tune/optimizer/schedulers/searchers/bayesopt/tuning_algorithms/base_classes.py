@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from typing import (
     List,
-    Iterator,
     Iterable,
     Tuple,
     Type,
@@ -33,9 +32,6 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
 )
 
 
@@ -67,28 +63,6 @@ class NextCandidatesAlgorithm:
         raise NotImplementedError
 
 
-class CandidateGenerator:
-    """
-    Class to generate candidates from which to start the local minimization,
-    typically random candidate or some form of more uniformly spaced variation,
-    such as latin hypercube or Sobol sequence.
-    """
-
-    def generate_candidates(self) -> Iterator[Configuration]:
-        raise NotImplementedError
-
-    def generate_candidates_en_bulk(
-        self, num_cands: int, exclusion_list: Optional[ExclusionList] = None
-    ) -> List[Configuration]:
-        """
-        :param num_cands: Number of candidates to generate
-        :param exclusion_list: If given, these candidates must not be returned
-        :return: List of `num_cands` candidates. If `exclusion_list` is given,
-            the number of candidates returned can be `< num_cands`
-        """
-        raise NotImplementedError
-
-
 class SurrogateModel:
     """
     Base class of surrogate models for Bayesian optimization. A surrogate model
@@ -98,6 +72,7 @@ class SurrogateModel:
     :param state: Tuning job state
     :param active_metric: Name of internal objective
     """
+
     def __init__(self, state: TuningJobState, active_metric: Optional[str] = None):
         self.state = state
         if active_metric is None:
@@ -231,6 +206,7 @@ class AcquisitionFunction(ScoringFunction):
         mean, variance)
     :param active_metric: Name of internal metric
     """
+
     def __init__(
         self, model: SurrogateOutputModel, active_metric: Optional[str] = None
     ):

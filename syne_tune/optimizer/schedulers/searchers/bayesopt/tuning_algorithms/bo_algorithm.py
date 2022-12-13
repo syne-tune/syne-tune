@@ -25,7 +25,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     NextCandidatesAlgorithm,
-    CandidateGenerator,
     ScoringFunction,
     LocalOptimizer,
     SurrogateModel,
@@ -36,6 +35,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     generate_unique_candidates,
     ExclusionList,
+    CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
