@@ -82,15 +82,17 @@ where all resources of an instance (or several ones) are used for training. On t
 
 
 Note that Syne Tune is agnostic to execution backend, 
-and users can effortlessly change between backends by modifying input argument `trial_backend` in instantiating `Tuner`. 
-See [launch_randomsearch.py](scripts/launch_randomsearch.py) for an example of local backend where `entry_point` is the training script.
+and users can effortlessly change between backends by modifying input argument ``trial_backend`` in instantiating `Tuner`.
+See `launch_randomsearch.py <scripts/launch_randomsearch.py>`__
+for an example of local backend where ``entry_point`` is the training script.
 
-See [launch_height_python_backend.py](scripts/launch_height_python_backend.py) for an example of Python backend, where the training script is
-just a training function (in this example train_height() function) located in the tuner script.
+See `launch_height_python_backend.py <scripts/launch_height_python_backend.py>`__
+for an example of Python backend, where the training script is
+just a training function (in this example ``train_height()`` function) located in the tuner script.
 
 
-See [launch_sagemaker_backend.py](scripts/launch_sagemaker_backend.py) for an example of SageMaker backend, where
-a PyTorch container on `ml.m4.xlarge` instance is picked to run the training script (i.e.`entry_point`).
+See `launch_sagemaker_backend.py <scripts/launch_sagemaker_backend.py>`__ for an example of SageMaker backend, where
+a PyTorch container on ``ml.m4.xlarge`` instance is picked to run the training script (i.e.`entry_point`).
 
 [TODO] simulated backend
 
