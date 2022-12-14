@@ -86,23 +86,24 @@ realistic experiments on a single CPU instance, and only paying time for the dec
 Syne Tune uses a time keeper to manage simulated time and a priority
 queue of time-stamped events (e.g., reporting metric values for running trials), which work together
 to ensure that interactions between trials and scheduler happen in the right ordering, whatever the
-experimental setup may be.
+experimental setup may be. See `launch_simulated_benchmark.py <../../examples/launch_simulated_benchmark.py>`__
+for an example of simulated backend.
 
 
 Note that Syne Tune is agnostic to execution backend,
 and users can effortlessly change between backends by modifying input argument ``trial_backend`` in instantiating `Tuner`.
-See `launch_randomsearch.py <scripts/launch_randomsearch.py>`__
+See `launch_height_baselines.py <../../examples/launch_height_baselines.py>`__
 for an example of local backend where ``entry_point`` is the training script.
-See `launch_height_python_backend.py <scripts/launch_height_python_backend.py>`__
+See `launch_height_python_backend.py <../../examples/launch_height_python_backend.py>`__
 for an example of Python backend, where the training script is
 just a training function (in this example ``train_height()`` function) located in the tuner script.
-See `launch_sagemaker_backend.py <scripts/launch_sagemaker_backend.py>`__ for an example of SageMaker backend, where
-a PyTorch container on ``ml.m4.xlarge`` instance is picked to run the training script (i.e.``entry_point``).
+See `launch_height_sagemaker.py <../../examples/launch_height_sagemaker.py>`__ for an example of SageMaker backend, where
+a PyTorch container on ``ml.m4.xlarge`` instance is picked to run the training script (i.e. ``entry_point``).
 
 Benchmarking
 ------------
 A benchmark is a collection of meta-datasets from different configuration spaces, where the exact
 dataset split, the evaluation protocol, and the performance measures are well-specified.
 Benchmarking allows for experimental reproducibility and assist us in comparing HPO methods on the specified configurations.
-Refer to `Benchmarking in Syne Tune <../tutorials/benchmarking>`__ for a complete guide on benchmarking in Syne Tune.
+Refer to `Benchmarking in Syne Tune <../benchmarking>`__ for a complete guide on benchmarking in Syne Tune.
 
