@@ -74,9 +74,37 @@ def _check_whether_rbv2(benchmark: BenchmarkSet) -> bool:
     return benchmark.config.config_id.startswith("rbv2_")
 
 
+def _check_whether_nb301(benchmark: BenchmarkSet) -> bool:
+    return benchmark.config.config_id == "nb301"
+
+
+NB301_ATTRIBUTE_NAME_PREFIX = "NetworkSelectorDatasetInfo_COLON_darts_COLON_"
+
+
 class BlackBoxYAHPO(Blackbox):
     """
     A wrapper that allows putting a 'YAHPO' BenchmarkInstance into a Blackbox.
+
+    If `fidelities` is given, it restricts `fidelity_values` to these values.
+    The sequence must be positive int and increasing. This works only if there
+    is a single fidelity attribute with integer values (but note that for
+    some specific YAHPO benchmarks, a fractional fidelity is transformed to
+    an integer one).
+
+    Even though YAHPO interpolates between fidelities, it can make sense
+    to restrict them to the values which have really been acquired in the
+    data. Note that this restricts multi-fidelity schedulers like
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, in that all
+    their rungs levels have to be fidelity values.
+
+    For example, for YAHPO `iaml`, the fidelity `trainsize` has been
+    acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed
+    to [1, 2, 4, 8, 12, 16, 20]. By default, the fidelity is
+    represented by `cs.randint(1, 20)`, but if `fidelities` is passed,
+    it uses `cs.ordinal(fidelities)`.
+
+    :param benchmark: YAHPO `BenchmarkSet`
+    :param fidelities: See above
     """
 
     def __init__(
@@ -84,28 +112,6 @@ class BlackBoxYAHPO(Blackbox):
         benchmark: BenchmarkSet,
         fidelities: Optional[List[int]] = None,
     ):
-        """
-        If `fidelities` is given, it restricts `fidelity_values` to these values.
-        The sequence must be positive int and increasing. This works only if there
-        is a single fidelity attribute with integer values (but note that for
-        some specific YAHPO benchmarks, a fractional fidelity is transformed to
-        an integer one).
-
-        Even though YAHPO interpolates between fidelities, it can make sense
-        to restrict them to the values which have really been acquired in the
-        data. Note that this restricts multi-fidelity schedulers like
-        :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, in that all
-        their rungs levels have to be fidelity values.
-
-        For example, for YAHPO `iaml`, the fidelity `trainsize` has been
-        acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed
-        to [1, 2, 4, 8, 12, 16, 20]. By default, the fidelity is
-        represented by `cs.randint(1, 20)`, but if `fidelities` is passed,
-        it uses `cs.ordinal(fidelities)`.
-
-        :param benchmark: YAHPO `BenchmarkSet`
-        :param fidelities: See above
-        """
         self.benchmark = benchmark
         super(BlackBoxYAHPO, self).__init__(
             configuration_space=cs_to_synetune(
@@ -117,6 +123,7 @@ class BlackBoxYAHPO(Blackbox):
         self.num_seeds = 1
         self._is_iaml = _check_whether_iaml(benchmark)
         self._is_rbv2 = _check_whether_rbv2(benchmark)
+        self._is_nb301 = _check_whether_nb301(benchmark)
         if self._is_rbv2:
             self.configuration_space["repl"] = 10
         self._initialize_for_scenario()
@@ -146,6 +153,20 @@ class BlackBoxYAHPO(Blackbox):
                 assert len(self.fidelity_space) == 2
                 assert "repl" in self.fidelity_space
                 del self.fidelity_space["repl"]
+        elif self._is_nb301:
+            # Shorten overly long attribute names by removing the
+            # common prefix
+            len_prefix = len(NB301_ATTRIBUTE_NAME_PREFIX)
+
+            def map_key(k: str) -> str:
+                if k.startswith(NB301_ATTRIBUTE_NAME_PREFIX):
+                    return k[len_prefix:]
+                else:
+                    return k
+
+            self.configuration_space = {
+                map_key(k): v for k, v in self.configuration_space.items()
+            }
 
     def _adjust_fidelity_space(self, fidelities: Optional[List[int]]):
         assert len(self.fidelity_space) == 1, "Only one fidelity is supported"
