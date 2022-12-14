@@ -40,14 +40,14 @@ and in right figure scripts are executed on a SageMaker instance in cloud.
 
 
 .. |image1| image:: img/local1.png
-            :width: 400
+            :width: 200
 .. |image2| image:: img/local2.png
             :width: 530
-+-----------------------------------+-------------------------------------------------------------+
-| |image1|                          | |image2|                                                    |
-+===================================+=============================================================+
-| Local backend on a local machine  | Local backend when running on a SageMaker instance on cloud |
-+-----------------------------------+-------------------------------------------------------------+
++----------------------------------------------------------+-------------------------------------------------------------+
+| |image1|                                                 | |image2|                                                    |
++==========================================================+=============================================================+
+| Local backend on a local machine                         | Local backend when running on a SageMaker instance on cloud |
++----------------------------------------------------------+-------------------------------------------------------------+
 
 
 Local backend evaluates trials concurrently on a single machine by using subprocesses.
