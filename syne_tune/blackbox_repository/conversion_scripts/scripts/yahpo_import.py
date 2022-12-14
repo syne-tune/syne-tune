@@ -126,6 +126,7 @@ class BlackBoxYAHPO(Blackbox):
         self._is_nb301 = _check_whether_nb301(benchmark)
         if self._is_rbv2:
             self.configuration_space["repl"] = 10
+        self._shortened_keys = None
         self._initialize_for_scenario()
         # Has to be called after `_initialize_for_scenario`, in order to
         # transform fidelity space for some of the YAHPO scenarios
@@ -157,16 +158,20 @@ class BlackBoxYAHPO(Blackbox):
             # Shorten overly long attribute names by removing the
             # common prefix
             len_prefix = len(NB301_ATTRIBUTE_NAME_PREFIX)
+            shortened_keys = []
 
             def map_key(k: str) -> str:
                 if k.startswith(NB301_ATTRIBUTE_NAME_PREFIX):
-                    return k[len_prefix:]
+                    new_key = k[len_prefix:]
+                    shortened_keys.append(new_key)
+                    return new_key
                 else:
                     return k
 
             self.configuration_space = {
                 map_key(k): v for k, v in self.configuration_space.items()
             }
+            self._shortened_keys = set(shortened_keys)
 
     def _adjust_fidelity_space(self, fidelities: Optional[List[int]]):
         assert len(self.fidelity_space) == 1, "Only one fidelity is supported"
@@ -186,7 +191,20 @@ class BlackBoxYAHPO(Blackbox):
             self._fidelity_values = np.array(fidelities)
             self.fidelity_space[self._fidelity_name] = cs.ordinal(fidelities.copy())
 
-    def active_hyperparameters(self, configuration: dict) -> List[str]:
+    def _map_configuration(self, config: dict) -> dict:
+        if self._is_nb301:
+
+            def map_key(k: str) -> str:
+                if k in self._shortened_keys:
+                    return NB301_ATTRIBUTE_NAME_PREFIX + k
+                else:
+                    return k
+
+            return {map_key(k): v for k, v in config.items()}
+        else:
+            return config
+
+    def _active_hyperparameters(self, configuration: dict) -> List[str]:
         return self.benchmark.config_space.get_active_hyperparameters(
             ConfigSpace.Configuration(
                 self.benchmark.config_space,
@@ -201,7 +219,7 @@ class BlackBoxYAHPO(Blackbox):
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
     ) -> dict:
-        configuration = configuration.copy()
+        configuration = self._map_configuration(configuration.copy())
 
         if fidelity is not None:
             if self._is_iaml or self._is_rbv2:
@@ -215,7 +233,7 @@ class BlackBoxYAHPO(Blackbox):
                 ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
                 fidelity = {k: fidelity_value / 20}
             configuration.update(fidelity)
-            active_hps = self.active_hyperparameters(configuration)
+            active_hps = self._active_hyperparameters(configuration)
             configuration = {k: v for k, v in configuration.items() if k in active_hps}
             return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
