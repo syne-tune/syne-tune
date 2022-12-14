@@ -604,10 +604,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
     :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`.
 
     :param config_space: Configuration space
-    :param name_last_pos: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
-    :param value_for_last_pos: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
-    :param active_config_space: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
-    :param prefix_keys: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param name_last_pos: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param value_for_last_pos: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param active_config_space: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param prefix_keys: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
     """
 
     def __init__(
@@ -757,7 +757,7 @@ def decode_extended_features(
 ) -> (np.ndarray, np.ndarray):
     """
     Given matrix of features from extended configs, corresponding to
-    :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext.ExtendedConfiguration`,
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext.ExtendedConfiguration`,
     split into feature matrix from normal configs and resource values.
 
     :param features_ext: Matrix of features from extended configs

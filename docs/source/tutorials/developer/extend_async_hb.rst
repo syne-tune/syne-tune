@@ -149,6 +149,6 @@ stop/continue or pause/resume as part of ``on_trial_report``. Examples for this
 are found in
 :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,
 :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`,
-:class:`syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`,
-:class:`syne_tune.optimizer.schedulers.hyperband_pasha.PASHARungSystem`,
-:class:`syne_tune.optimizer.schedulers.hyperband_cost_promotion.CostPromotionRungSystem`.
+:class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`,
+:class:`~syne_tune.optimizer.schedulers.hyperband_pasha.PASHARungSystem`,
+:class:`~syne_tune.optimizer.schedulers.hyperband_cost_promotion.CostPromotionRungSystem`.

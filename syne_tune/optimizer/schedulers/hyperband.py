@@ -951,12 +951,12 @@ class HyperbandBracketManager:
 
     :param scheduler_type: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
     :param resource_attr: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
-    :param metric: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
-    :param mode: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
-    :param max_t: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
-    :param rung_levels: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
-    :param brackets: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
-    :param rung_system_per_bracket: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param metric: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param mode: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param max_t: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param rung_levels: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param brackets: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param rung_system_per_bracket: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
     :param cost_attr: Overrides entry in `rung_system_kwargs`
     :param random_seed: Random seed for bracket sampling
     :param rung_system_kwargs: Arguments passed to the rung system

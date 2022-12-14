@@ -25,7 +25,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     NextCandidatesAlgorithm,
-    CandidateGenerator,
     ScoringFunction,
     LocalOptimizer,
     SurrogateModel,
@@ -36,6 +35,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     generate_unique_candidates,
     ExclusionList,
+    CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
@@ -62,14 +62,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         is recommended.
     :param num_initial_candidates: how many initial candidates to generate, if
         possible
-    :param num_initial_candidates_for_batch: This is used only if
-        `num_requested_candidates > 1` and `greedy_batch_selection == True`. In
-        this case, `num_initial_candidates_for_batch` overrides
-        `num_initial_candidates` when selecting all but the first candidate for
-        the batch. Typically, `num_initial_candidates` is larger than
-        `num_initial_candidates_for_batch` in this case, which speeds up
-        selecting large batches, but still select the first candidate
-        thoroughly
     :param local_optimizer: local optimizer which starts from score minimizer.
         If a batch is selected in one go (not greedily), then local
         optimizations are started from the top `num_requested_candidates` ranked
@@ -83,9 +75,8 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         Note: Model updates (by the state transformer) for batch candidates beyond
         the first do not involve fitting hyperparameters, so they are usually
         cheap.
-    :param exclusion_candidates: set of tuples, candidates that should not be
-        returned, because they are already labeled, currently pending, or have
-        failed
+    :param exclusion_candidates: set of candidates that should not be returned,
+        because they are already labeled, currently pending, or have failed
     :param num_requested_candidates: number of candidates to return
     :param greedy_batch_selection: If True and `num_requested_candidates > 1`, we
         generate, order, and locally optimize for each single candidate to be
@@ -94,12 +85,21 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         Note: If this is True, `pending_candidate_state_transformer` is needed.
     :param duplicate_detector: used to make sure no candidates equal to already
         evaluated ones is returned
+    :param num_initial_candidates_for_batch: This is used only if
+        `num_requested_candidates > 1` and `greedy_batch_selection == True`. In
+        this case, `num_initial_candidates_for_batch` overrides
+        `num_initial_candidates` when selecting all but the first candidate for
+        the batch. Typically, `num_initial_candidates` is larger than
+        `num_initial_candidates_for_batch` in this case, which speeds up
+        selecting large batches, but still select the first candidate
+        thoroughly
     :param profiler: If given, this is used for profiling parts in the code
-    :param sample_unique_candidates: If True, we check that initial candidates
+    :param sample_unique_candidates: If `True`, we check that initial candidates
         sampled at random are unique and disjoint from the exclusion list.
-        See below.
-    :param debug_log: If a :class:`DebugLogPrinter` object is passed here, it is
-        used to write log messages
+        This can be expensive. Defaults to `False`
+    :param debug_log: If a
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log.DebugLogPrinter`
+        object is passed here, it is used to write log messages
     """
 
     initial_candidates_generator: CandidateGenerator
@@ -111,8 +111,8 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     num_requested_candidates: int
     greedy_batch_selection: bool
     duplicate_detector: DuplicateDetector
-    num_initial_candidates_for_batch: int = None
-    profiler: SimpleProfiler = None
+    num_initial_candidates_for_batch: Optional[int] = None
+    profiler: Optional[SimpleProfiler] = None
     sample_unique_candidates: bool = False
     debug_log: Optional[DebugLogPrinter] = None
 
@@ -331,10 +331,10 @@ def _lazily_locally_optimize(
             yield cand, local_optimizer.optimize(cand, model=model)
 
 
-# Note: If duplicate_detector is at least DuplicateDetectorIdentical, it will
-# filter out candidates in exclusion_candidates here. Such can in principle
-# arise if sample_unique_candidates == False.
-# This does not work if duplicate_detector is DuplicateDetectorNoDetection.
+# Note: If `duplicate_detector` is at least :class:`DuplicateDetectorIdentical`,
+# it will filter out candidates in exclusion_candidates here. Such can in
+# principle arise if `sample_unique_candidates == False`. This does not work
+# if `duplicate_detector` is of type :class:`DuplicateDetectorNoDetection`.
 def _pick_from_locally_optimized(
     candidates_with_optimization: Iterator[Tuple[Configuration, Configuration]],
     exclusion_candidates: ExclusionList,

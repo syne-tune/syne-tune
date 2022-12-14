@@ -30,11 +30,11 @@ class ExtendedConfiguration:
     The config space hp_ranges is extended by an additional resource
     attribute. Note that this is not a hyperparameter we optimize over,
     but it is under the control of the scheduler.
-    Its allowed range is `[1, resource_attr_range[1]]`, which can be larger than
-    `[resource_attr_range[0], resource_attr_range[1]]`. This is because extended
+    Its allowed range is :code:`[1, resource_attr_range[1]]`, which can be larger than
+    :code:`[resource_attr_range[0], resource_attr_range[1]]`. This is because extended
     configs with resource values outside of resource_attr_range may arise (for
     example, in the early stopping context, we may receive data from
-    `epoch < resource_attr_range[0]`).
+    :code:`epoch < resource_attr_range[0]`).
     """
 
     def __init__(
@@ -67,8 +67,8 @@ class ExtendedConfiguration:
         """
         Create extended config with resource added.
 
-        :param config:
-        :param resource:
+        :param config: Non-extended config
+        :param resource: Resource value
         :return: Extended config
         """
         values = copy.copy(config)
@@ -81,7 +81,7 @@ class ExtendedConfiguration:
         `config_ext` is already normal, it is returned as is.
 
         :param config_ext: Extended config
-        :return: config_ext without resource attribute
+        :return: `config_ext` without resource attribute
         """
         if self.resource_attr_name in config_ext:
             config = {
@@ -96,7 +96,7 @@ class ExtendedConfiguration:
         Split extended config into normal config and resource value.
 
         :param config_ext: Extended config
-        :return: (config, resource_value)
+        :return: `(config, resource_value)`
         """
         x_res = copy.copy(config_ext)
         resource_value = int(x_res[self.resource_attr_name])

@@ -51,8 +51,8 @@ class HeadWithGradient:
 class CurrentBestProvider:
     """
     Helper class for :class:`MeanStdAcquisitionFunction`.
-    The `current_best` values required in `compute_acq` and
-    `compute_acq_with_gradient` may depend on the MCMC sample index for each
+    The `current_best` values required in :meth:`compute_acq` and
+    :meth:`compute_acq_with_gradient` may depend on the MCMC sample index for each
     model (if none of the models use MCMC, this index is always
     `(0, 0, ..., 0)`).
     """
@@ -89,15 +89,21 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
     mean and stddev. Subclasses have to implement the head and its derivatives
     w.r.t. mean and std:
 
-        f(x, model) = h(mean, std, model.current_best())
+    .. math::
 
-    If model is a SurrogateModel, then active_metric is ignored. If model is a Dict mapping output names to models,
+       f(x, \mathrm{model}) = h(\mathrm{mean}, \mathrm{std}, \mathrm{model.current_best}())
+
+    If model is a
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`,
+    then active_metric is ignored. If model is a `dict` mapping output names to models,
     then active_metric must be given.
 
     Note that acquisition functions will always be *minimized*!
     """
 
-    def __init__(self, model: SurrogateOutputModel, active_metric: str = None):
+    def __init__(
+        self, model: SurrogateOutputModel, active_metric: Optional[str] = None
+    ):
         super().__init__(model, active_metric)
         if isinstance(model, SurrogateModel):
             # Ignore active_metric
@@ -120,7 +126,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
     def _output_to_keys_predict(self) -> Dict[str, Set[str]]:
         """
         Required `keys_predict` for each output model. The default requires
-        each output model to return 'mean' and 'std'.
+        each output model to return "mean" and "std".
         """
         mean_and_std = {"mean", "std"}
         return {k: mean_and_std for k in self.model_output_names}
@@ -181,7 +187,6 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
         Note: The resulting current_bests is redetermined every time, since
         `model` may change.
-
         """
         active_metric_current_best = model[self.active_metric].current_best()
         return ActiveMetricCurrentBestProvider(active_metric_current_best)
@@ -327,16 +332,15 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         current_best: Optional[np.ndarray],
     ) -> np.ndarray:
         """
-        If mean has nf > 1 columns, both std and current_best are supposed to
-        be broadcasted, and the return value is averaged over this dimension.
+        If mean has `nf > 1` columns, both `std` and `current_best` are supposed to
+        be broadcast, and the return value is averaged over this dimension.
 
         :param output_to_predictions: Dictionary mapping each output to a
             dict containing predictive moments, keys as in
-            `_output_to_keys_predict`. 'mean' has shape (n, nf), 'std' has
-            shape (n, 1)
-        :param current_best: Incumbent, shape (1, nf)
-        :return: h(predictions, current_best), shape (n,)
-
+            `_output_to_keys_predict`. "mean" entry has shape `(n, nf)`,
+            "std" entry has shape `(n, 1)`
+        :param current_best: Incumbent, shape `(1, nf)`
+        :return: `h(predictions, current_best)`, shape `(n,)`
         """
         raise NotImplementedError
 
@@ -350,12 +354,10 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
         :param: output_to_predictions: Dictionary mapping each output to a
             dict containing predictive moments, keys as in
-            `_output_to_keys_predict`. 'mean' has shape (nf,), 'std' has shape
-            (1,)
-        :param current_best: Incumbent, shape (nf,)
-        :return: HeadWithGradient containing hval and head gradients for
-            each output model. All HeadWithGradient values have the same
-            shape as the corresponding predictions
-
+            `_output_to_keys_predict`.  "mean" entry has shape `(nf,)`,
+            "std" entry has shape `(1,)`.
+        :param current_best: Incumbent, shape `(nf,)`
+        :return: `hval` and head gradients (in `gradient`) for each output model.
+            All values have the same shape as the corresponding predictions
         """
         raise NotImplementedError

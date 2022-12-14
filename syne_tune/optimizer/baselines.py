@@ -355,7 +355,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
     :param metric: Name of metric to optimize
     :param resource_attr: Name of resource attribute
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+        :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
     """
 
     def __init__(
@@ -382,13 +382,13 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 class BORE(FIFOScheduler):
     """Bayesian Optimization by Density-Ratio Estimation (BORE).
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.bore.Bore`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, mode: str, **kwargs):
@@ -412,19 +412,19 @@ class BORE(FIFOScheduler):
 class REA(FIFOScheduler):
     """Regularized Evolution (REA).
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.regularized_evolution.RegularizedEvolution`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.regularized_evolution.RegularizedEvolution`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param population_size: See
-        :class:`syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
         Defaults to 100
     :param sample_size: See
-        :class:`syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
         Defaults to 10
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
     def __init__(
@@ -457,14 +457,14 @@ class REA(FIFOScheduler):
 class ConstrainedBayesianOptimization(FIFOScheduler):
     """Constrained Bayesian Optimization.
 
-    See :class:`syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`
     for `kwargs["search_options"]` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
     :param constraint_attr: Name of constraint metric
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
     def __init__(self, config_space: dict, metric: str, constraint_attr: str, **kwargs):
@@ -502,7 +502,7 @@ class ZeroShotTransfer(FIFOScheduler):
     :param random_seed: Used for randomly sampling candidates. Only used if
         `use_surrogates=True`.
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.FIFOScheduler`
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
     def __init__(
@@ -561,7 +561,7 @@ class ASHACTS(HyperbandScheduler):
     :param mode: Whether to minimize (min) or maximize (max)
     :param random_seed: Used for randomly sampling candidates
     :param kwargs: Additional arguments to
-        :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`
+        :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
     def __init__(

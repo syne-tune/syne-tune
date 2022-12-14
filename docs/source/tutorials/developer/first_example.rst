@@ -240,8 +240,8 @@ Syne Tune is this: **be lazy!**
   implement a new
   :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.RungSystem`.
   Examples:
-  :class:`syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,
-  :class:`syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`,
-  :class:`syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`,
-  :class:`syne_tune.optimizer.schedulers.hyperband_pasha.PASHARungSystem`,
-  :class:`syne_tune.optimizer.schedulers.hyperband_cost_promotion.CostPromotionRungSystem`.
+  :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`,
+  :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`,
+  :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`,
+  :class:`~syne_tune.optimizer.schedulers.hyperband_pasha.PASHARungSystem`,
+  :class:`~syne_tune.optimizer.schedulers.hyperband_cost_promotion.CostPromotionRungSystem`.

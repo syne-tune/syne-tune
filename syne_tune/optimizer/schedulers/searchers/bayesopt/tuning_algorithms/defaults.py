@@ -19,6 +19,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
 
 
 DEFAULT_ACQUISITION_FUNCTION = EIAcquisitionFunction
+
 DEFAULT_LOCAL_OPTIMIZER_CLASS = LBFGSOptimizeAcquisition
+
 DEFAULT_NUM_INITIAL_CANDIDATES = 250
+
 DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS = 3

@@ -34,7 +34,7 @@ back-end, in particular you can select from
 :func:`~benchmarking.commons.benchmark_definitions.real_benchmark_definitions`.
 However, the functions there are called with ``sagemaker_backend=True``, which
 can lead to different values in
-:class:`benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`.
+:class:`~benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`.
 For example,
 :func:`~benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`
 returns ``instance_type=ml.g4dn.xlarge`` for the SageMaker back-end (1 GPU per

@@ -32,9 +32,9 @@ MetricValues = Union[float, Dict[str, float]]
 @dataclass
 class TrialEvaluations:
     """
-    For each fixed k, `metrics[k]` is either a single value or a dict. The
+    For each fixed k, :code:`metrics[k]` is either a single value or a dict. The
     latter is used, for example, for multi-fidelity schedulers, where
-    `metrics[k][str(r)]` is the value at resource level r.
+    :code:`metrics[k][str(r)]` is the value at resource level ``r``.
     """
 
     trial_id: str

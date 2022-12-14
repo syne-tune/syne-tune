@@ -66,7 +66,7 @@ backends, the turn-around time for this process may be slow, in which case the
 promotion type can be more attractive. In this context, it is important to
 understand the relevance of passing ``max_resource_attr`` to the scheduler
 (and, in our case, also to the
-:class:`syne_tune.blackbox_repository.simulated_tabular_backend.BlackboxRepositoryBackend`).
+:class:`~syne_tune.blackbox_repository.simulated_tabular_backend.BlackboxRepositoryBackend`).
 Recall the discussion `here <mf_setup.html#the-launcher-script>`__. If the
 configuration space contains an entry with the maximum resource, whose key is
 passed to the scheduler as ``max_resource_attr``, the latter can modify this
@@ -101,6 +101,6 @@ trial, :math:`r_{min}` is sampled to be equal to one of the rung levels, which
 means the trial does not have to compete with others at rung levels
 :math:`r < r_{min}`. The other variant is activated by passing
 ``rung_system_per_bracket=True`` to
-:class:`syne_tune.optimizer.schedulers.HyperbandScheduler`. In this case, each
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. In this case, each
 bracket has its own rung system, and trials started in one bracket only have
 to compete with others in the same bracket.

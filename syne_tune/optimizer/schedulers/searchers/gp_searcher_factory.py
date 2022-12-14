@@ -557,7 +557,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
     scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     :param kwargs: `search_options` coming from scheduler
-    :return: `kwargs` for :meth:`syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`
+    :return: `kwargs` for :meth:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`
     """
     assert (
         kwargs["scheduler"] == "fifo"
@@ -603,7 +603,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
 def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     """
     Returns `kwargs` for
-    :meth:`syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
     scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`).
 
@@ -611,7 +611,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     together with metric values and are given a GP surrogate model.
 
     :param kwargs: `search_options` coming from scheduler
-    :return: `kwargs` for :meth:`syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`
+    :return: `kwargs` for :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`
     """
     assert (
         kwargs["scheduler"] == "fifo"
@@ -659,7 +659,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
 def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
     """
     Returns `kwargs` for
-    :meth:`syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
     scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`).
 
@@ -669,7 +669,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
     surrogate model.
 
     :param kwargs: `search_options` coming from scheduler
-    :return: `kwargs` for :meth:`syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`
+    :return: `kwargs` for :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`
     """
     assert kwargs["scheduler"] in [
         "fifo"
@@ -723,12 +723,12 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
 def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> dict:
     """
     Returns `kwargs` for
-    :meth:`syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`,
+    :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`).
 
     :param kwargs: `search_options` coming from scheduler
-    :return: `kwargs` for :meth:`syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`
+    :return: `kwargs` for :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`
     """
     supp_schedulers = {
         "hyperband_stopping",
