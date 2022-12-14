@@ -24,16 +24,14 @@ from benchmarking.training_scripts.transformer_wikitext2.training_script import 
 def transformer_wikitext2_default_params(sagemaker_backend: bool) -> dict:
     if sagemaker_backend:
         instance_type = "ml.g4dn.xlarge"
-        num_workers = 8
     else:
         # For local backend, GPU cores serve different workers, so we
         # need more memory
         instance_type = "ml.g4dn.12xlarge"
-        num_workers = 4
     return {
         "max_resource_level": 40,
         "instance_type": instance_type,
-        "num_workers": num_workers,
+        "num_workers": 4,
         "dataset_path": "./",
     }
 
@@ -52,7 +50,7 @@ def transformer_wikitext2_benchmark(sagemaker_backend: bool = False, **kwargs):
         / "transformer_wikitext2"
         / "training_script.py",
         config_space=config_space,
-        max_wallclock_time=6 * 3600,
+        max_wallclock_time=5 * 3600,
         n_workers=params["num_workers"],
         instance_type=params["instance_type"],
         metric=METRIC_NAME,
