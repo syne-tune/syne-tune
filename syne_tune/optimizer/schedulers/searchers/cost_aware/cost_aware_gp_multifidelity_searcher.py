@@ -40,10 +40,12 @@ logger = logging.getLogger(__name__)
 
 class MultiModelGPMultiFidelitySearcher(GPMultiFidelitySearcher):
     """
-    Superclass for multi-model extensions of :class:`GPMultiFidelitySearcher`.
-    We first call `ModelBasedSearcher._create_internal` passing factory and
-    skip_optimization predicate for the `INTERNAL_METRIC_NAME` model, then
-    replace the state transformer by a multi-model one.
+    Superclass for multi-model extensions of
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`.
+    We first call
+    :meth:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher._create_internal`
+    passing factory and `skip_optimization` predicate for the `INTERNAL_METRIC_NAME`
+    model, then replace the state transformer by a multi-model one.
     """
 
     def _call_create_internal(self, kwargs_int):
@@ -64,15 +66,33 @@ class MultiModelGPMultiFidelitySearcher(GPMultiFidelitySearcher):
 class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
     """
     Gaussian process-based cost-aware multi-fidelity hyperparameter
-    optimization (to be used with `HyperbandScheduler`). The searcher requires
-    a cost metric, which is given by `cost_attr`.
+    optimization (to be used with
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`). The searcher
+    requires a cost metric, which is given by `cost_attr`.
 
     The acquisition function used here is the same as in
-    :class:`GPMultiFidelitySearcher`, but expected improvement (EI) is replaced
-    by EIpu (see :class:`EIpuAcquisitionFunction`).
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`,
+    but expected improvement (EI) is replaced by EIpu (see
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl.EIpuAcquisitionFunction`).
 
-    Cost values are read from each report and cost is modeled as c(x, r), the
-    cost model being given by `kwargs['cost_model']`.
+    Cost values are read from each report and cost is modeled as :math:`c(x, r)`,
+    the cost model being given by `kwargs["cost_model"]`.
+
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`:
+
+    :param cost_attr: Mandatory. Name of cost attribute in data obtained
+        from reporter (e.g., elapsed training time). Depending on whether
+        `resource_attr` is given, cost values are read from each report or
+        only at the end.
+    :type cost_attr: str
+    :param resource_attr: Name of resource attribute in reports.
+        Cost values are read from each report and cost is modeled as
+        :math:`c(x, r)`, the cost model being given by `cost_model`.
+    :type resource_attr: str
+    :param cost_model: Model for :math:`c(x, r)`
+    :type cost_model:
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`, optional
     """
 
     def __init__(
@@ -82,21 +102,6 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`GPMultiFidelitySearcher`.
-
-        :param cost_attr: Mandatory. Name of cost attribute in data obtained
-            from reporter (e.g., elapsed training time). Depending on whether
-            `resource_attr` is given, cost values are read from each report or
-            only at the end.
-        :type cost_attr: str
-        :param resource_attr: Name of resource attribute in reports.
-            Cost values are read from each report and cost is modeled as
-            c(x, r), the cost model being given by `cost_model`.
-        :type resource_attr: str
-        :param cost_model: Model for c(x, r).
-        :type :class:`CostModel`
-        """
         assert kwargs.get("cost_attr") is not None, (
             "This searcher needs a cost attribute. Please specify its "
             + "name in search_options['cost_attr']"

@@ -36,15 +36,36 @@ class Bore(SearcherWithRandomSeed):
     Implements "Bayesian optimization by Density Ratio Estimation" as described
     in the following paper:
 
-    BORE: Bayesian Optimization by Density-Ratio Estimation,
-    Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V.
-        and Archambeau, Cedric and Ramos, Fabio
-    Proceedings of the 38th International Conference on Machine Learning
+        | BORE: Bayesian Optimization by Density-Ratio Estimation,
+        | Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V. and Archambeau, Cedric and Ramos, Fabio
+        | Proceedings of the 38th International Conference on Machine Learning
+        | https://arxiv.org/abs/2102.09009
 
     Note: Bore only works in the non-parallel non-multi-fidelity setting. Make
-    sure that you use it with :class:`FIFOScheduler` and set `n_workers=1` in
-    :class:`Tuner`.
+    sure that you use it with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    and set `n_workers=1` in :class:`~syne_tune.Tuner`.
 
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+
+    :param mode: Can be "min" (default) or "max".
+    :param gamma: Defines the percentile, i.e how many percent of configurations
+        are used to model :math:`l(x)`. Defaults to 0.25
+    :param calibrate: If set to true, we calibrate the predictions of the
+        classifier via CV. Defaults to False
+    :param classifier: The binary classifier to model the acquisition
+        function. Choices: :code:`{"mlp", "gp", "xgboost", "rf", "logreg"}`.
+        Defaults to "xgboost"
+    :param acq_optimizer: The optimization method to maximize the acquisition
+        function. Choices: :code:`{"de", "rs", "rs_with_replacement"}`. Defaults
+        to "rs"
+    :param feval_acq: Maximum allowed function evaluations of the acquisition
+        function. Defaults to 500
+    :param random_prob: probability for returning a random configurations
+        (epsilon greedy). Defaults to 0
+    :param init_random: Number of initial random configurations before we
+        start with the optimization. Defaults to 6
+    :param classifier_kwargs: Parameters for classifier. Optional
     """
 
     def __init__(
@@ -63,29 +84,6 @@ class Bore(SearcherWithRandomSeed):
         classifier_kwargs: Optional[dict] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
-
-        :param mode: Can be "min" (default) or "max".
-        :param gamma: Defines the percentile, i.e how many percent of configurations
-            are used to model l(x). Defaults to 0.25
-        :param calibrate: If set to true, we calibrate the predictions of the
-            classifier via CV. Defaults to False
-        :param classifier: The binary classifier to model the acquisition
-            function. Choices: `{"mlp", "gp", "xgboost", "rf", "logreg"}`.
-            Defaults to "xgboost"
-        :param acq_optimizer: The optimization method to maximize the acquisition
-            function. Choices: `{"de", "rs", "rs_with_replacement"}`. Defaults
-            to "rs"
-        :param feval_acq: Maximum allowed function evaluations of the acquisition
-            function. Defaults to 500
-        :param random_prob: probability for returning a random configurations
-            (epsilon greedy). Defaults to 0
-        :param init_random: Number of initial random configurations before we
-            start with the optimization. Defaults to 6
-        :param classifier_kwargs: Parameters for classifier. Optional
-        """
-
         super().__init__(
             config_space=config_space,
             metric=metric,

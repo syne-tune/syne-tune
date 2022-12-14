@@ -35,7 +35,13 @@ logger = logging.getLogger(__name__)
 class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
     """
     Gaussian process-based constrained hyperparameter optimization (to be used
-    with :class:`FIFOScheduler`).
+    with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
+
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher.MultiModelGPFIFOSearcher`:
+
+    :param constraint_attr: Name of constraint metric in `report` passed to
+        :meth:`_update`.
     """
 
     def __init__(
@@ -45,12 +51,6 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`MultiModelGPFIFOSearcher`.
-
-        :param constraint_attr: Name of constraint metric in `report` passed to
-            `_update`.
-        """
         assert kwargs.get("constraint_attr") is not None, (
             "This searcher needs a constraint attribute. Please specify its "
             + "name in search_options['constraint_attr']"

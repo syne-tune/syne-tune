@@ -54,8 +54,7 @@ class CurrentBestProvider:
     The `current_best` values required in `compute_acq` and
     `compute_acq_with_gradient` may depend on the MCMC sample index for each
     model (if none of the models use MCMC, this index is always
-    (0, 0, ..., 0)).
-
+    `(0, 0, ..., 0)`).
     """
 
     def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
@@ -71,7 +70,6 @@ class ActiveMetricCurrentBestProvider(CurrentBestProvider):
     """
     Default implementation in which `current_best` depends on the
     active metric only.
-
     """
 
     def __init__(self, active_metric_current_best: List[np.ndarray]):
@@ -96,8 +94,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
     If model is a SurrogateModel, then active_metric is ignored. If model is a Dict mapping output names to models,
     then active_metric must be given.
 
-    NOTE that acquisition functions will always be *minimized*!
-
+    Note that acquisition functions will always be *minimized*!
     """
 
     def __init__(self, model: SurrogateOutputModel, active_metric: str = None):
@@ -124,7 +121,6 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         """
         Required `keys_predict` for each output model. The default requires
         each output model to return 'mean' and 'std'.
-
         """
         mean_and_std = {"mean", "std"}
         return {k: mean_and_std for k in self.model_output_names}

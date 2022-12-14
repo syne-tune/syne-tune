@@ -2,6 +2,6 @@ numpy
 pandas
 fastparquet
 s3fs
-sklearn
+scikit-learn
 xgboost
 h5py # note: only needed for fcnet

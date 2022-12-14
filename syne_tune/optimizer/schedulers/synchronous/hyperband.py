@@ -72,8 +72,9 @@ _CONSTRAINTS = {
 
 class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     """
-    Synchronous Hyperband. Compared to :class:`HyperbandScheduler`, this is
-    still scheduling jobs asynchronously, but decision-making is synchronized,
+    Synchronous Hyperband. Compared to
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, this is also
+    scheduling jobs asynchronously, but decision-making is synchronized,
     in that trials are only promoted to the next milestone once the rung they
     are currently paused at, is completely occupied.
 
@@ -82,60 +83,63 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     This means that at any point in time, several brackets can be active, but
     jobs are preferentially assigned to the first one (the "primary" active
     bracket).
+
+    :param config_space: Configuration space for trial evaluation function
+    :param bracket_rungs: Determines rung level systems for each bracket, see
+        :class:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager.SynchronousHyperbandBracketManager`
+    :param metric: Name of metric to optimize, key in result's obtained via
+        :meth:`on_trial_result`
+    :type metric: str
+    :param searcher: Selects searcher. Passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        Defaults to "random"
+    :type searcher: str, optional
+    :param search_options: Passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+    :type search_options: dict, optional
+    :param mode: Mode to use for the metric given, can be "min" (default) or
+        "max"
+    :type mode: str, optional
+    :param points_to_evaluate: List of configurations to be evaluated
+        initially (in that order). Each config in the list can be partially
+        specified, or even be an empty dict. For each hyperparameter not
+        specified, the default value is determined using a midpoint heuristic.
+        If None (default), this is mapped to `[dict()]`, a single default config
+        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        configurations are specified.
+    :type points_to_evaluate: `List[dict]`, optional
+    :param random_seed: Master random seed. Generators used in the scheduler
+        or searcher are seeded using
+        :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
+        If not given, the master random seed is drawn at random here.
+    :type random_seed: int, optional
+    :param max_resource_attr: Key name in config for fixed attribute
+        containing the maximum resource. If given, trials need not be
+        stopped, which can run more efficiently.
+    :type max_resource_attr: str, optional
+    :param resource_attr: Name of resource attribute in results obtained via
+        `:meth:`on_trial_result`. The type of resource must be int. Default to
+        "epoch"
+    :type resource_attr: str, optional
+    :param searcher_data: Relevant only if a model-based searcher is used.
+        Example: For NN tuning and `resource_attr == "epoch"`, we receive a
+        result for each epoch, but not all epoch values are also rung levels.
+        searcher_data determines which of these results are passed to the
+        searcher. As a rule, the more data the searcher receives, the better
+        its fit, but also the more expensive get_config may become. Choices:
+
+        * "rungs" (default): Only results at rung levels. Cheapest
+        * "all": All results. Most expensive
+
+        Note: For a Gaussian additive learning curve surrogate model, this
+        has to be set to "all".
+    :type searcher_data: str, optional
     """
 
     def __init__(
         self, config_space: dict, bracket_rungs: RungSystemsPerBracket, **kwargs
     ):
-        """
-        :param config_space: Configuration space for trial evaluation function
-        :param bracket_rungs: :class:`RungSystemsPerBracket`. Determines rung
-            level systems for each bracket, see
-            :class:`SynchronousHyperbandBracketManager`
-        :param metric: Name of metric to optimize, key in result's obtained via
-            `on_trial_result`
-        :type metric: str
-        :param searcher: Selects searcher. Passed to `searcher_factory`.
-            Must be `str`, we do not accept a :class:`BaseSearcher` object here.
-            Defaults to "random"
-        :type searcher: str, optional
-        :param search_options: Passed to `searcher_factory`
-        :type search_options: dict, optional
-        :param mode: Mode to use for the metric given, can be "min" (default) or
-            "max"
-        :type mode: str, optional
-        :param points_to_evaluate: List of configurations to be evaluated
-            initially (in that order). Each config in the list can be partially
-            specified, or even be an empty dict. For each hyperparameter not
-            specified, the default value is determined using a midpoint heuristic.
-            If None (default), this is mapped to `[dict()]`, a single default config
-            determined by the midpoint heuristic. If `[]` (empty list), no initial
-            configurations are specified.
-        :type points_to_evaluate: `List[dict]`, optional
-        :param random_seed: Master random seed. Generators used in the scheduler
-            or searcher are seeded using :class:`RandomSeedGenerator`. If not
-            given, the master random seed is drawn at random here.
-        :type random_seed: int, optional
-        :param max_resource_attr: Key name in config for fixed attribute
-            containing the maximum resource. If given, trials need not be
-            stopped, which can run more efficiently.
-        :type max_resource_attr: str, optional
-        :param resource_attr: Name of resource attribute in results obtained via
-            `on_trial_result`. The type of resource must be int. Default to
-            "epoch"
-        :type resource_attr: str, optional
-        :param searcher_data: Relevant only if a model-based searcher is used.
-            Example: For NN tuning and `resource_attr == epoch', we receive a
-            result for each epoch, but not all epoch values are also rung levels.
-            searcher_data determines which of these results are passed to the
-            searcher. As a rule, the more data the searcher receives, the better
-            its fit, but also the more expensive get_config may become. Choices:
-            * "rungs" (default): Only results at rung levels. Cheapest
-            * "all": All results. Most expensive
-            Note: For a Gaussian additive learning curve surrogate model, this
-            has to be set to "all".
-        :type searcher_data: str, optional
-        """
+        """ """
         super().__init__(config_space)
         self._create_internal(bracket_rungs, **kwargs)
 

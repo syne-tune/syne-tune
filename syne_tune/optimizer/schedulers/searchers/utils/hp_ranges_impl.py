@@ -84,6 +84,14 @@ class HyperparameterRangeContinuous(HyperparameterRange):
     feasible interval for values of new configs is reduced, but data can
     still contain configs with values in `[lower_bound, upper_bound]`, and
     internal encoding is done w.r.t. this original range.
+
+    :param name: Name of hyperparameter
+    :param lower_bound: Lower bound (included)
+    :param upper_bound: Upper bound (included)
+    :param scaling: Determines internal representation, whereby
+        `parameter = scaling(internal)`.
+    :param active_lower_bound: See above
+    :param active_upper_bound: See above
     """
 
     def __init__(
@@ -95,15 +103,6 @@ class HyperparameterRangeContinuous(HyperparameterRange):
         active_lower_bound: float = None,
         active_upper_bound: float = None,
     ):
-        """
-        :param name: Name of hyperparameter
-        :param lower_bound: Lower bound (included)
-        :param upper_bound: Upper bound (included)
-        :param scaling: Determines internal representation, whereby
-            `parameter = scaling(internal)`.
-        :param active_lower_bound: See above
-        :param active_upper_bound: See above
-        """
         super().__init__(name)
         assert lower_bound <= upper_bound
         self.lower_bound = lower_bound
@@ -173,8 +172,16 @@ class HyperparameterRangeInteger(HyperparameterRange):
     """
     Integer valued hyperparameter.
     Both bounds are *included* in the valid values. Under the hood generates
-    a continuous range from lower_bound - 0.5 to upper_bound + 0.5.
+    a continuous range from `lower_bound - 0.5` to `upper_bound + 0.5`.
     See docs for continuous hyperparameter for more information.
+
+    :param name: Name of hyperparameter
+    :param lower_bound: Lower bound (integer, included)
+    :param upper_bound: Upper bound (integer, included)
+    :param scaling: Determines internal representation, whereby
+        `parameter = scaling(internal)`.
+    :param active_lower_bound: See above
+    :param active_upper_bound: See above
     """
 
     def __init__(
@@ -186,15 +193,6 @@ class HyperparameterRangeInteger(HyperparameterRange):
         active_lower_bound: int = None,
         active_upper_bound: int = None,
     ):
-        """
-        :param name: Name of hyperparameter
-        :param lower_bound: Lower bound (integer, included)
-        :param upper_bound: Upper bound (integer, included)
-        :param scaling: Determines internal representation, whereby
-            `parameter = scaling(internal)`.
-        :param active_lower_bound: See above
-        :param active_upper_bound: See above
-        """
         super().__init__(name)
         assert lower_bound <= upper_bound
         self.lower_bound = int(lower_bound)
@@ -253,12 +251,20 @@ class HyperparameterRangeInteger(HyperparameterRange):
 
 class HyperparameterRangeFiniteRange(HyperparameterRange):
     """
-    Finite range numerical hyperparameter, see :class:`FiniteRange` in
-    `syne_tune/config_space.py`.
+    Finite range numerical hyperparameter, see
+    :class:`~syne_tune.config_space.FiniteRange`. Internally, we use an `int`
+    with linear scaling.
 
-    Internally, we use an `int` with linear scaling.
-    Note: Different to `HyperparameterRangeContinuous`, we require that
+    Note: Different to :class:`HyperparameterRangeContinuous`, we require that
     `lower_bound < upper_bound` and `size >=2`.
+
+    :param name: Name of hyperparameter
+    :param lower_bound: Lower bound (included)
+    :param upper_bound: Upper bound (included)
+    :param size: Number of values in range
+    :param scaling: Determines internal representation, whereby
+        `parameter = scaling(internal)`.
+    :param cast_int: If True, values are cast to `int`
     """
 
     def __init__(
@@ -270,15 +276,6 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
         scaling: Scaling,
         cast_int: bool = False,
     ):
-        """
-        :param name: Name of hyperparameter
-        :param lower_bound: Lower bound (included)
-        :param upper_bound: Upper bound (included)
-        :param size: Number of values in range
-        :param scaling: Determines internal representation, whereby
-            `parameter = scaling(internal)`.
-        :param cast_int: If True, values are cast to `int`
-        """
         super().__init__(name)
         assert lower_bound <= upper_bound
         assert size >= 1
@@ -357,13 +354,12 @@ class HyperparameterRangeFiniteRange(HyperparameterRange):
 class HyperparameterRangeCategorical(HyperparameterRange):
     """
     Base class for categorical hyperparameter.
+
+    :param name: Name of hyperparameter
+    :param choices: Values parameter can take
     """
 
     def __init__(self, name: str, choices: Tuple[Any, ...]):
-        """
-        :param name: Name of hyperparameter
-        :param choices: Values parameter can take
-        """
         super().__init__(name)
         self._assert_choices(choices)
         self.choices = list(choices)
@@ -401,6 +397,10 @@ class HyperparameterRangeCategoricalNonBinary(HyperparameterRangeCategorical):
     Can take on discrete set of values. We use one-hot encoding internally.
     If the value range has size 2, it is more efficient to use
     :class:`HyperparameterRangeCategoricalBinary`.
+
+    :param name: Name of hyperparameter
+    :param choices: Values parameter can take
+    :param active_choices: If given, must be nonempty subset of `choices`.
     """
 
     def __init__(
@@ -409,11 +409,6 @@ class HyperparameterRangeCategoricalNonBinary(HyperparameterRangeCategorical):
         choices: Tuple[Any, ...],
         active_choices: Tuple[Any, ...] = None,
     ):
-        """
-        :param name: Name of hyperparameter
-        :param choices: Values parameter can take
-        :param active_choices: If given, must be nonempty subset of `choices`.
-        """
         super().__init__(name, choices)
         if active_choices is None:
             if self.num_choices > 1:
@@ -459,6 +454,10 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
     """
     Here, the value range must be of size 2. The internal encoding is a
     single int, so 1 instead of 2 dimensions.
+
+    :param name: Name of hyperparameter
+    :param choices: Values parameter can take (must be size 2)
+    :param active_choices: If given, must be nonempty subset of `choices`.
     """
 
     def __init__(
@@ -467,11 +466,6 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
         choices: Tuple[Any, ...],
         active_choices: Tuple[Any, ...] = None,
     ):
-        """
-        :param name: Name of hyperparameter
-        :param choices: Values parameter can take (must be size 2)
-        :param active_choices: If given, must be nonempty subset of `choices`.
-        """
         assert len(choices) == 2, (
             f"len(choices) = {len(choices)}, must be 2. Use "
             + "HyperparameterRangeCategoricalNonBinary instead"
@@ -519,14 +513,13 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
 class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
     """
     Ordinal hyperparameter, equal distance encoding. See also
-    :class:`Ordinal` in `syne_tune/config_space.py`.
+    :class:`~syne_tune.config_space.Ordinal`.
+
+    :param name: Name of hyperparameter
+    :param choices: Values parameter can take
     """
 
     def __init__(self, name: str, choices: Tuple[Any, ...]):
-        """
-        :param name: Name of hyperparameter
-        :param choices: Values parameter can take
-        """
         super().__init__(name, choices)
         self._range_int = HyperparameterRangeInteger(
             name=name + "_INTERNAL",
@@ -557,17 +550,16 @@ class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
 class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
     """
     Ordinal hyperparameter, nearest neighbour encoding. See also
-    :class:`OrdinalNearestNeighbor` in `syne_tune/config_space.py`.
+    :class:`~syne_tune.config_space.OrdinalNearestNeighbor`.
+
+    :param name: Name of hyperparameter
+    :param choices: Values parameter can take (numerical values, strictly
+        increasing, size `>= 2`)
+    :param log_scale: If `True`, nearest neighbour done in log (`choices` must
+        be positive)
     """
 
     def __init__(self, name: str, choices: Tuple[Any, ...], log_scale: bool = False):
-        """
-        :param name: Name of hyperparameter
-        :param choices: Values parameter can take (numerical values, strictly
-            increasing, size >= 2)
-        :param log_scale: If True, nearest neighbour done in log (`choices` must
-            be positive)
-        """
         assert len(choices) > 1, "Use HyperparameterRangeOrdinalEqual"
         super().__init__(name, choices)
         self._domain_int = OrdinalNearestNeighbor(choices, log_scale=log_scale)
@@ -608,7 +600,14 @@ class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
 
 class HyperparameterRangesImpl(HyperparameterRanges):
     """
-    Basic implementation of :class:`HyperparameterRanges`.
+    Basic implementation of
+    :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`.
+
+    :param config_space: Configuration space
+    :param name_last_pos: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param value_for_last_pos: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param active_config_space: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
+    :param prefix_keys: See :class:`syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional
     """
 
     def __init__(
@@ -619,13 +618,6 @@ class HyperparameterRangesImpl(HyperparameterRanges):
         active_config_space: Dict = None,
         prefix_keys: Optional[List[str]] = None,
     ):
-        """
-        :param config_space: Configuration space
-        :param name_last_pos: See :class:`HyperparameterRanges`, optional
-        :param value_for_last_pos: See :class:`HyperparameterRanges`, optional
-        :param active_config_space: See :class:`HyperparameterRanges`, optional
-        :param prefix_keys: See :class:`HyperparameterRanges`, optional
-        """
         super().__init__(
             config_space,
             name_last_pos,
@@ -765,8 +757,8 @@ def decode_extended_features(
 ) -> (np.ndarray, np.ndarray):
     """
     Given matrix of features from extended configs, corresponding to
-    `ExtendedConfiguration`, split into feature matrix from normal
-    configs and resource values.
+    :class:`syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext.ExtendedConfiguration`,
+    split into feature matrix from normal configs and resource values.
 
     :param features_ext: Matrix of features from extended configs
     :param resource_attr_range: `(r_min, r_max)`

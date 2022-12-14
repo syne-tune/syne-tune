@@ -46,7 +46,7 @@ def pbt_function(config):
     faster convergence. Training will not converge without PBT.
     """
     lr = config["lr"]
-    checkpoint_dir = config.get("st_checkpoint_dir")
+    checkpoint_dir = config.get(ST_CHECKPOINT_DIR)
     accuracy = 0.0  # end = 1000
     start = 1
     if checkpoint_dir and os.path.isdir(checkpoint_dir):
@@ -68,8 +68,7 @@ def pbt_function(config):
         else:
             optimal_lr = 0.01 - 0.01 * (accuracy - midpoint) / midpoint
         optimal_lr = min(0.01, max(0.001, optimal_lr))
-
-        # compute accuracy increase
+        # Compute accuracy increase
         q_err = max(lr, optimal_lr) / min(lr, optimal_lr)
         if q_err < q_tolerance:
             accuracy += (1.0 / q_err) * random.random()
@@ -77,12 +76,9 @@ def pbt_function(config):
             accuracy -= (q_err - q_tolerance) * random.random()
         accuracy += noise_level * np.random.normal()
         accuracy = max(0, accuracy)
-
-        # if step % 3 == 0:
-
+        # Save checkpoint
         if checkpoint_dir is not None:
             os.makedirs(os.path.join(checkpoint_dir), exist_ok=True)
-
             path = os.path.join(checkpoint_dir, "checkpoint.json")
             with open(path, "w") as f:
                 f.write(json.dumps({"acc": accuracy, "step": step}))

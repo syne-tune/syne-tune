@@ -26,6 +26,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import
 from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import encode_state
 
+
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 

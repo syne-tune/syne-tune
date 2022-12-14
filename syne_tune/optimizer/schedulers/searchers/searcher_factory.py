@@ -18,6 +18,7 @@ from syne_tune.try_import import (
     try_import_bore_message,
 )
 from syne_tune.optimizer.schedulers.searchers import (
+    BaseSearcher,
     RandomSearcher,
     GridSearcher,
 )
@@ -36,14 +37,19 @@ _OUR_MULTIFIDELITY_SCHEDULERS = {
 }
 
 
-def searcher_factory(searcher_name, **kwargs):
+def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
     """Factory for searcher objects
 
     This function creates searcher objects from string argument name and
     additional kwargs. It is typically called in the constructor of a
-    scheduler (see :class:`FIFOScheduler`), which provides most of the required
-    kwargs.
+    scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`),
+    which provides most of the required `kwargs`.
 
+    :param searcher_name: Value of `searcher` argument to scheduler (see
+        :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`)
+    :param kwargs: Argument to
+        :class:`~`syne_tune.optimizer.schedulers.searchers.BaseSearcher` constructor
+    :return: New searcher object
     """
     supported_schedulers = None
     scheduler = kwargs.get("scheduler")

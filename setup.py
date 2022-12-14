@@ -72,6 +72,7 @@ setup(
         "blackbox-repository": required_blackbox_repository,
         "aws": required_aws,
         "yahpo": required_yahpo,
+        "dev": required_dev,
         "extra": required_extra,
     },
     install_requires=required_core,

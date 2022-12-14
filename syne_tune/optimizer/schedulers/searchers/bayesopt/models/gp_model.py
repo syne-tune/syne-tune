@@ -71,8 +71,25 @@ GPModel = Union[
 class GaussProcSurrogateModel(BaseSurrogateModel):
     """
     Gaussian process surrogate model, where model parameters are either fit by
-    marginal likelihood maximization (`GaussianProcessRegression`), or
-    integrated out by MCMC sampling (`GPRegressionMCMC`).
+    marginal likelihood maximization (:class:`GaussianProcessRegression`), or
+    integrated out by MCMC sampling (:class:`GPRegressionMCMC`).
+
+    Both `state` and `gpmodel` are immutable. If parameters of the latter
+    are to be fit, this has to be done before.
+
+    `fantasy_samples` contains the sampled (normalized) target values for
+    pending configs. Only `active_metric` target values are considered.
+    The target values for a pending config are a flat vector. If MCMC is
+    used, its length is a multiple of the number of MCMC samples,
+    containing the fantasy values for MCMC sample 0, sample 1, ...
+
+    :param state: TuningJobSubState
+    :param gpmodel: Model parameters must have been fit and/or posterior states
+        been computed
+    :param fantasy_samples: See above
+    :param active_metric: Name of the metric to optimize.
+    :param normalize_mean: Mean used to normalize targets
+    :param normalize_std: Stddev used to normalize targets
     """
 
     def __init__(
@@ -86,24 +103,6 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         filter_observed_data: Optional[ConfigurationFilter] = None,
         hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
     ):
-        """
-        Both `state` and `gpmodel` are immutable. If parameters of the latter
-        are to be fit, this has to be done before.
-
-        `fantasy_samples` contains the sampled (normalized) target values for
-        pending configs. Only `active_metric` target values are considered.
-        The target values for a pending config are a flat vector. If MCMC is
-        used, its length is a multiple of the number of MCMC samples,
-        containing the fantasy values for MCMC sample 0, sample 1, ...
-
-        :param state: TuningJobSubState
-        :param gpmodel: GPModel. Model parameters must have been fit and/or
-            posterior states been computed
-        :param fantasy_samples: See above
-        :param active_metric: Name of the metric to optimize.
-        :param normalize_mean: Mean used to normalize targets
-        :param normalize_std: Stddev used to normalize targets
-        """
         super().__init__(state, active_metric, filter_observed_data)
         self._gpmodel = gpmodel
         self.mean = normalize_mean

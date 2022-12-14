@@ -33,48 +33,9 @@ logger = logging.getLogger(__name__)
 
 class _BlackboxSimulatorBackend(SimulatorBackend):
     """
-    Allows to simulate any blackbox from blackbox-repository, can be either a
-    blackbox from a registered tabulated benchmark (in this case, you should use
-    :class:`BlackboxRepositoryBackend`) or a blackbox given from custom code (in
-    this case, you should use :class:`UserBlackboxBackend`), see
-    `examples/launch_simulated_benchmark.py` for an example on how to use.
-
-    In each result reported to the simulator back-end, the value for key
-    `elapsed_time_attr` must be the time since the start of the
-    evaluation. For example, if resource (or fidelity) equates to epochs
-    trained, this would be the time from start of training until the end
-    of the epoch. If the blackbox contains this information in a column,
-    `elapsed_time_attr` should be its key.
-
-    If this backend is used with pause-and-resume multi-fidelity
-    scheduling, it needs to track at which resource level each trial is
-    paused. Namely, once a trial is resumed, all results for resources
-    smaller or equal to that level are ignored, which simulates the
-    situation that training is resumed from a checkpoint. This feature
-    relies on `result` to be passed to `pause_trial`. If this is not
-    done, the backend cannot know from which resource level to resume
-    a trial, so it starts the trial from scratch (which is equivalent to
-    no checkpointing). The same happens if `support_checkpointing` is
-    False.
-
-    ATTENTION: If the blackbox maintains cumulative time (elapsed_time),
-    this is different from what :class:`SimulatorBackend` requires for
-    `elapsed_time_attr`, if a pause-and-resume scheduler is used.
-    Namely, the back-end requires the time since the start of the last recent
-    resume. This conversion is done here internally in
-    `_run_job_and_collect_results`, which is called for each resume. This
-    means that the field `elapsed_time_attr` is not what is received from
-    the blackbox table, but instead what the back-end needs.
-
-    `max_resource_attr` plays the same role as in :class:`HyperbandScheduler`.
-    If given, it is the key in a configuration `config` for the maximum
-    resource. This is used by schedulers which limit each evaluation by
-    setting this argument (e.g., promotion-based Hyperband).
-
-    If `seed` is given, entries of the blackbox are queried for this
-    seed. Otherwise, a seed is drawn at random for every trial, but the
-    same seed is used for all `_run_job_and_collect_results` calls for the
-    same trial. This is important for pause and resume scheduling.
+    Shared parent of :class:`BlackboxRepositoryBackend` and
+    :class:`UserBlackboxBackend`, see comments of
+    :class:`BlackboxRepositoryBackend`.
     """
 
     def __init__(
@@ -85,17 +46,6 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
         support_checkpointing: bool = True,
         **simulatorbackend_kwargs,
     ):
-        """
-        :param elapsed_time_attr: Name of the column containing cumulative time
-        :param max_resource_attr: See above
-        :param seed: If given, this seed is used for all trial evaluations.
-            Otherwise, seed is sampled at random for each trial. Only relevant
-            for blackboxes with multiple seeds
-        :param support_checkpointing: If False, the simulation does not do
-            checkpointing, so resumed trials are started from scratch
-        :param simulatorbackend_kwargs: Additional arguments to parent
-            :class:`SimulatorBackend`
-        """
         super().__init__(
             entry_point=str(Path(__file__)),  # Dummy value
             elapsed_time_attr=elapsed_time_attr,
@@ -215,15 +165,15 @@ def make_surrogate(
 
     :param surrogate: A model that is fitted to predict objectives given any
         configuration. Possible examples: "KNeighborsRegressor", MLPRegressor",
-        "XGBRegressor" which would enable using the corresponding scikit-learn
+        "XGBRegressor", which would enable using the corresponding scikit-learn
         estimator.
         The model is fit on top of pipeline that applies basic feature-processing
         to convert hyperparameters rows in X to vectors. The `configuration_space`
         hyperparameters types are used to deduce the types of columns in X (for
         instance, categorical hyperparameters are one-hot encoded).
     :param surrogate_kwargs: Arguments for the scikit-learn estimator, for
-        instance {"n_neighbors": 1} can be used if `surrogate="KNeighborsRegressor"`
-        is chosen.
+        instance :code:`{"n_neighbors": 1}` can be used if
+        `surrogate="KNeighborsRegressor"` is chosen.
     :return: Scikit-learn estimator representing surrogate model
     """
     if surrogate is None:
@@ -251,12 +201,86 @@ def make_surrogate(
 
 class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
     """
-    Version of :class:`_BlackboxSimulatorBackend`, where the blackbox is
-    selected (by name `blackbox_name`) from the blackbox repository.
+    Allows to simulate a blackbox from blackbox-repository, selected by
+    `blackbox_name`. See `examples/launch_simulated_benchmark.py` for an
+    example on how to use. If you want to add a new dataset, see the *Adding a
+    new dataset* section of `syne_tune/blackbox_repository/README.md`.
 
-    See `examples/launch_simulated_benchmark.py` for an example on how to use.
-    If you want to add a new dataset, see the section `Adding a new dataset
-    section` of `blackbox_repository/README.md`.
+    In each result reported to the simulator back-end, the value for key
+    `elapsed_time_attr` must be the time since the start of the
+    evaluation. For example, if resource (or fidelity) equates to epochs
+    trained, this would be the time from start of training until the end
+    of the epoch. If the blackbox contains this information in a column,
+    `elapsed_time_attr` should be its key.
+
+    If this backend is used with pause-and-resume multi-fidelity
+    scheduling, it needs to track at which resource level each trial is
+    paused. Namely, once a trial is resumed, all results for resources
+    smaller or equal to that level are ignored, which simulates the
+    situation that training is resumed from a checkpoint. This feature
+    relies on `result` to be passed to :meth:`pause_trial`. If this is not
+    done, the backend cannot know from which resource level to resume
+    a trial, so it starts the trial from scratch (which is equivalent to
+    no checkpointing). The same happens if `support_checkpointing` is
+    False.
+
+    .. note::
+       If the blackbox maintains cumulative time (elapsed_time), this is
+       different from what
+       :class:`~syne_tune.backend.simulator_backend.SimulatorBackend` requires
+       for `elapsed_time_attr`, if a pause-and-resume scheduler is used. Namely,
+       the back-end requires the time since the start of the last recent
+       resume. This conversion is done here internally in
+       :meth:`_run_job_and_collect_results`, which is called for each resume.
+       This means that the field `elapsed_time_attr` is not what is received
+       from the blackbox table, but instead what the back-end needs.
+
+    `max_resource_attr` plays the same role as in
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    If given, it is the key in a configuration `config` for the maximum
+    resource. This is used by schedulers which limit each evaluation by
+    setting this argument (e.g., promotion-based Hyperband).
+
+    If `seed` is given, entries of the blackbox are queried for this
+    seed. Otherwise, a seed is drawn at random for every trial, but the
+    same seed is used for all :meth:`_run_job_and_collect_results` calls for
+    the same trial. This is important for pause and resume scheduling.
+
+    :param blackbox_name: Name of a blackbox, must have been registered in
+        blackbox repository.
+    :param elapsed_time_attr: Name of the column containing cumulative time
+    :param max_resource_attr: See above
+    :param seed: If given, this seed is used for all trial evaluations.
+        Otherwise, seed is sampled at random for each trial. Only relevant
+        for blackboxes with multiple seeds
+    :param support_checkpointing: If `False`, the simulation does not do
+        checkpointing, so resumed trials are started from scratch. Defaults
+        to `True`
+    :param dataset: Selects different versions of the blackbox (typically, the
+        same ML model has been trained on different datasets)
+    :param surrogate: Optionally, a model that is fitted to predict objectives
+        given any configuration.
+        Examples: "KNeighborsRegressor", "MLPRegressor", "XGBRegressor",
+        which would enable using the corresponding scikit-learn estimator, see
+        also :func:`make_surrogate`.
+        The model is fit on top of pipeline that applies basic feature-processing
+        to convert hyperparameter rows in X to vectors. The `configuration_space`
+        hyperparameter types are used to deduce the types of columns in X (for
+        instance, categorical hyperparameters are one-hot encoded).
+    :param surrogate_kwargs: Arguments for the scikit-learn estimator, for
+        instance :code:`{"n_neighbors": 1}` can be used if
+        `surrogate="KNeighborsRegressor"` is chosen.
+        If `blackbox_name` is a YAHPO blackbox, then `surrogate_kwargs` is passed
+        as `yahpo_kwargs` to
+        :func:`~syne_tune.blackbox_repository.load_blackbox`. In this case,
+        `surrogate` is ignored (YAHPO always uses surrogates).
+    :param config_space_surrogate: If `surrogate` is given, this is the
+        configuration space for the surrogate blackbox. If not given, the
+        space of the original blackbox is used. However, its numerical parameters
+        have finite domains (categorical or ordinal), which is usually not what
+        we want for a surrogate.
+    :param simulatorbackend_kwargs: Additional arguments to parent
+        :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`
     """
 
     def __init__(
@@ -273,33 +297,6 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         config_space_surrogate: Optional[dict] = None,
         **simulatorbackend_kwargs,
     ):
-        """
-        Additional arguments on top of parent :class:`_BlackboxSimulatorBackend`:
-
-        :param blackbox_name: Name of a blackbox, must have been registered in
-            blackbox repository.
-        :param dataset: Selects different versions of the blackbox (typically, the
-            same ML model has been trained on different datasets)
-        :param surrogate: Optionally, a model that is fitted to predict objectives
-            given any configuration.
-            Possible examples: "KNeighborsRegressor", "MLPRegressor", "XGBRegressor"
-            which would enable using the corresponding scikit-learn estimator.
-            The model is fit on top of pipeline that applies basic feature-processing
-            to convert hyperparameters rows in X to vectors. The `configuration_space`
-            hyperparameters types are used to deduce the types of columns in X (for
-            instance, categorical hyperparameters are one-hot encoded).
-        :param surrogate_kwargs: Arguments for the scikit-learn estimator, for
-            instance {"n_neighbors": 1} can be used if `surrogate="KNeighborsRegressor"`
-            is chosen.
-            If `blackbox_name` is a YAHPO blackbox, then `surrogate_kwargs` is passed
-            as `yahpo_kwargs` to `load_blackbox`. In this case, `surrogate` is
-            ignored (YAHPO always uses surrogates).
-        :param config_space_surrogate: If `surrogate` is given, this is the
-            configuration space for the surrogate blackbox. If not given, the
-            space of the original blackbox is used. However, its numerical parameters
-            have finite domains (categorical or ordinal), which is usually not what
-            we want for a surrogate.
-        """
         assert (
             config_space_surrogate is None or surrogate is not None
         ), "config_space_surrogate only together with surrogate"
@@ -403,8 +400,11 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
     """
     Version of :class:`_BlackboxSimulatorBackend`, where the blackbox is
     given as explicit :class:`Blackbox` object.
-
     See `examples/launch_simulated_benchmark.py` for an example on how to use.
+
+    Additional arguments on top of parent :class:`_BlackboxSimulatorBackend`:
+
+    :param blackbox: Blackbox to be used for simulation
     """
 
     def __init__(
@@ -416,11 +416,6 @@ class UserBlackboxBackend(_BlackboxSimulatorBackend):
         support_checkpointing: bool = True,
         **simulatorbackend_kwargs,
     ):
-        """
-        Additional arguments on top of parent :class:`_BlackboxSimulatorBackend`:
-
-        :param blackbox: Blackbox to be used for simulation
-        """
         super().__init__(
             elapsed_time_attr=elapsed_time_attr,
             max_resource_attr=max_resource_attr,

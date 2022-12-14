@@ -118,10 +118,10 @@ class TrialInformation:
     """
     The scheduler maintains information about all trials it has been dealing
     with so far. `trial_decision` is the current status of the trial.
-    `keep_case` is relevant only if `searcher_data == 'rungs_and_last'`.
+    `keep_case` is relevant only if `searcher_data == "rungs_and_last"`.
     `largest_update_resource` is the largest resource level for which the
     searcher was updated, or None.
-    `reported_result` caontains the last recent reported result, or None
+    `reported_result` contains the last recent reported result, or None
     (task was started, but did not report anything yet). Only contains
     attributes `self.metric` and `self._resource_attr`.
     """
@@ -142,214 +142,224 @@ class TrialInformation:
 
 
 class HyperbandScheduler(FIFOScheduler):
-    r"""Implements different variants of asynchronous Hyperband
+    """Implements different variants of asynchronous Hyperband
 
-    See 'type' for the different variants. One implementation detail is when
-    using multiple brackets, task allocation to bracket is done randomly,
+    See `type` for the different variants. One implementation detail is
+    when using multiple brackets, task allocation to bracket is done randomly,
     based on a distribution which can be configured.
 
     For definitions of concepts (bracket, rung, milestone), see
 
-        Li, Jamieson, Rostamizadeh, Gonina, Hardt, Recht, Talwalkar (2018)
-        A System for Massively Parallel Hyperparameter Tuning
-        https://arxiv.org/abs/1810.05934
+        | Li, Jamieson, Rostamizadeh, Gonina, Hardt, Recht, Talwalkar (2018)
+        | A System for Massively Parallel Hyperparameter Tuning
+        | https://arxiv.org/abs/1810.05934
 
     or
 
-        Tiao, Klein, Lienart, Archambeau, Seeger (2020)
-        Model-based Asynchronous Hyperparameter and Neural Architecture Search
-        https://arxiv.org/abs/2003.10865
+        | Tiao, Klein, Lienart, Archambeau, Seeger (2020)
+        | Model-based Asynchronous Hyperparameter and Neural Architecture Search
+        | https://arxiv.org/abs/2003.10865
 
-    Note: This scheduler requires both `metric` and `resource_attr` to be
-    returned by the reporter. Here, resource values must be positive int. If
-    resource_attr == 'epoch', this should be the number of epochs done,
-    starting from 1 (not the epoch number, starting from 0).
+    .. note::
+       This scheduler requires both `metric` and `resource_attr` to be
+       returned by the reporter. Here, resource values must be positive int.
+       If `resource_attr == "epoch"`, this should be the number of epochs done,
+       starting from 1 (not the epoch number, starting from 0).
 
-    Rung levels and promotion quantiles:
+    **Rung levels and promotion quantiles**
 
     Rung levels are values of the resource attribute at which stop/go decisions
     are made for jobs, comparing their metric against others at the same level.
     These rung levels (positive, strictly increasing) can be specified via
     `rung_levels`, the largest must be `<= max_resource_level`.
     If `rung_levels` is not given, they are specified by `grace_period`
-    and `reduction_factor`:
-
-        [round(grace_period * (reduction_factor ** j))], j = 0, 1, ...
-
+    and `reduction_factor`. If :math:`r_{min}` is `grace_period`,
+    :math:`\eta` is `reduction_factor`, then rung levels are
+    :math:`\mathrm{round}(r_{min} \eta^j), j=0, 1, \dots`.
     This is the default choice for successive halving (Hyperband).
     Note: If `rung_levels` is given, then `grace_period`, `reduction_factor`
     are ignored. If they are given, a warning is logged.
 
     The rung levels determine the quantiles to be used in the stop/go
-    decisions. If rung levels are r_0, r_1, ..., define
+    decisions. If rung levels are :math:`r_j`, define
+    :math:`q_j = r_j / r_{j+1}`.
+    :math:`q_j` is the promotion quantile at rung level :math:`r_j`. On
+    average, a fraction of :math:`q_j` jobs can continue, the remaining ones
+    are stopped (or paused). In the default successive halving case, we have
+    :math:`q_j = 1/\eta` for all :math:`j`.
 
-        q_j = r_j / r_{j+1}
+    **Cost-aware schedulers or searchers**
 
-    q_j is the promotion quantile at rung level r_j. On average, a fraction
-    of q_j jobs can continue, the remaining ones are stopped (or paused).
-    In the default successive halving case:
-
-        q_j = 1 / reduction_factor    for all j
-
-    Cost-aware schedulers or searchers:
-
-    Some schedulers (e.g., type == 'cost_promotion') or searchers may depend
+    Some schedulers (e.g., `type == 'cost_promotion'`) or searchers may depend
     on cost values (with key `cost_attr`) reported alongside the target metric.
     For promotion-based scheduling, a trial may pause and resume several times.
     The cost received in `on_trial_result` only counts the cost since the last
-    resume. We maintain the sum of such costs in `_cost_offset`, and append
+    resume. We maintain the sum of such costs in :meth:`_cost_offset`, and append
     a new entry to `result` in `on_trial_result` with the total cost.
     If the evaluation function does not implement checkpointing, once a trial
     is resumed, it has to start from scratch. We detect this in
     `on_trial_result` and reset the cost offset to 0 (if the trial runs from
     scratch, the cost reported needs no offset added).
-    NOTE: This process requires `cost_attr` to be set!
 
-    Pending evaluations:
+    .. note::
+       This process requires `cost_attr` to be set
+
+    **Pending evaluations**
 
     The searcher is notified, by `searcher.register_pending` calls, of
     (trial, resource) pairs for which evaluations are running, and a result
     is expected in the future. These pending evaluations can be used by the
     searcher in order to direct sampling elsewhere.
+
     The choice of pending evaluations depends on `searcher_data`. If equal
-    to `'rungs'`, pending evaluations sit only at rung levels, because
+    to "rungs", pending evaluations sit only at rung levels, because
     observations are only used there. In the other cases, pending evaluations
     sit at all resource levels for which observations are obtained. For
-    example, if a trial is at rung level `r` and continues towards the next
-    rung level `r_next`, if `searcher_data == 'rungs'`,
-    `searcher.register_pending` is called for `r_next` only, while for other
-    `searcher_data` values, pending evaluations are registered for
-    `r + 1, r + 2, ..., r_next`.
+    example, if a trial is at rung level :math:`r` and continues towards the
+    next rung level :math:`r_{next}`, if `searcher_data == "rungs"`,
+    `searcher.register_pending` is called for :math:`r_{next}` only, while for
+    other `searcher_data` values, pending evaluations are registered for
+    :math:`r + 1, r + 2, \dots, r_{next}`.
     However, if in this case, `register_pending_myopic` is True, we instead
-    call `searcher.register_pending` for `r + 1` when each observation is
+    call `searcher.register_pending` for :math:`r + 1` when each observation is
     obtained (not just at a rung level). This leads to less pending
     evaluations at any one time. On the other hand, when a trial is continued
     at a rung level, we already know it will emit observations up to the next
     rung level, so it seems more "correct" to register all these pending
     evaluations in one go.
+
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
+
+    :param resource_attr: Name of resource attribute in results obtained
+        via `on_trial_result`, defaults to "epoch"
+    :type resource_attr: str, optional
+    :param grace_period: Minimum resource to be used for a job. Ignored
+        if `rung_levels` is given. Defaults to 1
+    :type grace_period: int, optional
+    :param reduction_factor: Parameter to determine rung levels. Ignored
+        if `rung_levels` is given. Must be :math:`\ge 2`, defaults to 3
+    :type reduction_factor: float, optional
+    :param rung_levels: If given, prescribes the set of rung levels to
+        be used. Must contain positive integers, strictly increasing.
+        This information overrides `grace_period` and `reduction_factor`.
+        Note that the stop/promote rule in the successive halving scheduler
+        is set based on the ratio of successive rung levels.
+    :type rung_levels: `List[int]`, optional
+    :param brackets: Number of brackets to be used in Hyperband. Each
+        bracket has a different grace period, all share `max_resource_level`
+        and `reduction_factor`. If `brackets == 1` (default), we run
+        asynchronous successive halving.
+    :type brackets: int, optional
+    :param type: Type of Hyperband scheduler. Defaults to "stopping".
+        Supported values (see also subclasses of
+        :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.RungSystem`):
+
+        * stopping: A config eval is executed by a single task. The task is
+          stopped at a milestone if its metric is worse than a fraction
+          of those who reached the milestone earlier, otherwise it
+          continues. See
+          :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`.
+        * promotion: A config eval may be associated with multiple tasks
+          over its lifetime. It is never terminated, but may be paused.
+          Whenever a task becomes available, it may promote a config to
+          the next milestone, if better than a fraction of others who
+          reached the milestone. If no config can be promoted, a new one
+          is chosen. See
+          :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`.
+        * cost_promotion: This is a cost-aware variant of 'promotion', see
+          :class:`~syne_tune.optimizer.schedulers.hyperband_cost_promotion.CostPromotionRungSystem`
+          for details. In this case, costs must be reported under the name
+          `rung_system_kwargs["cost_attr"]` in results.
+        * pasha: Similar to promotion type Hyperband, but it progressively
+          expands the available resources until the ranking of
+          configurations stabilizes.
+        * rush_stopping: A variation of the stopping scheduler which requires
+          passing `rung_system_kwargs` and `points_to_evaluate`. The first
+          `rung_system_kwargs["num_threshold_candidates"]` of
+          `points_to_evaluate` will enforce stricter rules on which task is
+          continued. See
+          :class:`~`syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`
+          and
+          :class:`~`syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+        * rush_promotion: Same as `rush_stopping` but for promotion, see
+          :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHPromotionRungSystem`
+
+    :type type: str, optional
+    :param cost_attr: Required if the scheduler itself uses a cost metric
+        (i.e., `type="cost_promotion"`), or if the searcher uses a cost
+        metric. See also header comment.
+    :type cost_attr: str, optional
+    :param searcher_data: Relevant only if a model-based searcher is used.
+        Example: For NN tuning and `resource_attr == "epoch"', we receive a
+        result for each epoch, but not all epoch values are also rung levels.
+        searcher_data determines which of these results are passed to the
+        searcher. As a rule, the more data the searcher receives, the better
+        its fit, but also the more expensive get_config may become. Choices:
+
+        * "rungs" (default): Only results at rung levels. Cheapest
+        * "all": All results. Most expensive
+        * "rungs_and_last": Results at rung levels, plus the most recent
+          result. This means that in between rung levels, only the most
+          recent result is used by the searcher. This is in between
+
+        Note: For a Gaussian additive learning curve surrogate model, this
+        has to be set to 'all'.
+    :type searcher_data: str, optional
+    :param register_pending_myopic: See above. Used only if `searcher_data !=
+        "rungs"`. Defaults to `False`
+    :type register_pending_myopic: bool, optional
+    :param rung_system_per_bracket: This concerns Hyperband with
+        `brackets > 1`. Defaults to `False`.
+        When starting a job for a new config, it is assigned a randomly
+        sampled bracket. The larger the bracket, the larger the grace period
+        for the config.
+        If `rung_system_per_bracket == True`, we maintain separate rung level
+        systems for each bracket, so that configs only compete with others
+        started in the same bracket.
+        If `rung_system_per_bracket == False`, we use a single rung level system,
+        so that all configs compete with each other. In this case, the bracket
+        of a config only determines the initial grace period, i.e. the first
+        milestone at which it starts competing with others. This is the
+        default.
+        The concept of brackets in Hyperband is meant to hedge against overly
+        aggressive filtering in successive halving, based on low fidelity
+        criteria. In practice, successive halving (i.e., `brackets = 1`) often
+        works best in the asynchronous case (as implemented here). If
+        `brackets > 1`, the hedging is stronger if `rung_system_per_bracket`
+        is `True`.
+    :type rung_system_per_bracket: bool, optional
+    :param do_snapshots: Support snapshots? If `True`, a snapshot of all running
+        tasks and rung levels is returned by :meth:`_promote_config`. This
+        snapshot is passed to `searcher.get_config`. Defaults to `False`.
+        Note: Currently, only the stopping variant supports snapshots.
+    :type do_snapshots: bool, optional
+    :param rung_system_kwargs: Arguments passed to the rung system:
+
+        * ranking_criterion: Used if `type == "pasha"`. Specifies what strategy
+          to use for deciding if the ranking is stable and if to increase the
+          resource. Available options are soft_ranking, soft_ranking_std,
+          soft_ranking_median_dst and soft_ranking_mean_dst. The simplest
+          soft_ranking accepts a manually specified value of epsilon and
+          groups configurations with similar performance within the given range
+          of objective values. The other strategies calculate the value of epsilon
+          automatically, with the option to rescale it using `epsilon_scaling`.
+        * epsilon: Used if `type == "pasha"`. Parameter for soft ranking in
+          PASHA to say which configurations should be grouped together based on
+          the similarity of their performance.
+        * epsilon_scaling: Used if `type == "pasha"`. When epsilon for soft
+          ranking in PASHA is calculated automatically, it is possible to
+          rescale it using `epsilon_scaling`.
+        * num_threshold_candidates: Used if `type in ["rush_promotion",
+          "rush_stopping"]`. The first `num_threshold_candidates` in
+          `points_to_evaluate` enforce stricter requirements to the
+          continuation of training tasks. See
+          :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+
+    :type rung_system_kwargs: dict, optional
     """
 
     def __init__(self, config_space, **kwargs):
-        """
-        Additional arguments on top of parent class :class:`FIFOScheduler`.
-
-        :param resource_attr: Name of resource attribute in results obtained
-            via `on_trial_result`, defaults to "epoch"
-        :type resource_attr: str, optional
-        :param grace_period: Minimum resource to be used for a job. Ignored
-            if `rung_levels` is given. Defaults to 1
-        :type grace_period: int, optional
-        :param reduction_factor: Parameter to determine rung levels. Ignored
-            if `rung_levels` is given. Must be `>= 2`, defaults to 3
-        :type reduction_factor: float, optional
-        :param rung_levels: If given, prescribes the set of rung levels to
-            be used. Must contain positive integers, strictly increasing.
-            This information overrides `grace_period` and `reduction_factor`.
-            Note that the stop/promote rule in the successive halving scheduler
-            is set based on the ratio of successive rung levels.
-        :type rung_levels: `List[int]`, optional
-        :param brackets: Number of brackets to be used in Hyperband. Each
-            bracket has a different grace period, all share `max_resource_level`
-            and `reduction_factor`. If `brackets == 1` (default), we run
-            asynchronous successive halving.
-        :type brackets: int, optional
-        :param type: Type of Hyperband scheduler. Defaults to "stopping".
-            Supported values (see also subclasses of :class:`RungSystem`):
-            * stopping: A config eval is executed by a single task. The task is
-                stopped at a milestone if its metric is worse than a fraction
-                of those who reached the milestone earlier, otherwise it
-                continues. See :class:`StoppingRungSystem`.
-            * promotion: A config eval may be associated with multiple tasks
-                over its lifetime. It is never terminated, but may be paused.
-                Whenever a task becomes available, it may promote a config to
-                the next milestone, if better than a fraction of others who
-                reached the milestone. If no config can be promoted, a new one
-                is chosen. As proposed in this paper (termed ASHA):
-                https://arxiv.org/abs/1810.05934
-                See :class:`PromotionRungSystem`.
-            * cost_promotion: This is a cost-aware variant of 'promotion', see
-                :class:`CostPromotionRungSystem` for details. In this case,
-                costs must be reported under the name
-                `rung_system_kwargs['cost_attr']` in results.
-            * pasha: Similar to promotion type Hyperband, but it progressively
-                expands the available resources until the ranking of
-                configurations stabilizes.
-            * rush_stopping: A variation of the stopping scheduler which requires
-                passing `rung_system_kwargs` (see `num_threshold_candidates`)
-                and `points_to_evaluate`. The first `num_threshold_candidates` of
-                `points_to_evaluate` will enforce stricter rules on which task is
-                continued. See :class:`RUSHStoppingRungSystem` and
-                :class:`RUSHScheduler`.
-            * rush_promotion: Same as `rush_stopping` but for promotion, see
-                :class:`RUSHPromotionRungSystem`
-        :type type: str, optional
-        :param cost_attr: Required if the scheduler itself uses a cost metric
-            (i.e., `type='cost_promotion'`), or if the searcher uses a cost
-            metric. See also header comment.
-        :type cost_attr: str, optional
-        :param searcher_data: Relevant only if a model-based searcher is used.
-            Example: For NN tuning and `resource_attr == epoch', we receive a
-            result for each epoch, but not all epoch values are also rung levels.
-            searcher_data determines which of these results are passed to the
-            searcher. As a rule, the more data the searcher receives, the better
-            its fit, but also the more expensive get_config may become. Choices:
-            * 'rungs' (default): Only results at rung levels. Cheapest
-            * 'all': All results. Most expensive
-            * 'rungs_and_last': Results at rung levels, plus the most recent
-                result. This means that in between rung levels, only the most
-                recent result is used by the searcher. This is in between
-            Note: For a Gaussian additive learning curve surrogate model, this
-            has to be set to 'all'.
-        :type searcher_data: str, optional
-        :param register_pending_myopic: See above. Used only if `searcher_data !=
-            'rungs'`. Defaults to False
-        :type register_pending_myopic: bool, optional
-        :param rung_system_per_bracket: This concerns Hyperband with
-            `brackets > 1`. Defaults to False.
-            When starting a job for a new config, it is assigned a randomly
-            sampled bracket. The larger the bracket, the larger the grace period
-            for the config.
-            If `rung_system_per_bracket = True`, we maintain separate rung level
-            systems for each bracket, so that configs only compete with others
-            started in the same bracket.
-            If `rung_system_per_bracket = False`, we use a single rung level system,
-            so that all configs compete with each other. In this case, the bracket
-            of a config only determines the initial grace period, i.e. the first
-            milestone at which it starts competing with others. This is the
-            default.
-            The concept of brackets in Hyperband is meant to hedge against overly
-            aggressive filtering in successive halving, based on low fidelity
-            criteria. In practice, successive halving (i.e., `brackets = 1`) often
-            works best in the asynchronous case (as implemented here). If
-            `brackets > 1`, the hedging is stronger if `rung_system_per_bracket`
-            is True.
-        :type rung_system_per_bracket: bool, optional
-        :param do_snapshots: Support snapshots? If True, a snapshot of all running
-            tasks and rung levels is returned by `_promote_config`. This snapshot
-            is passed to the searcher in `get_config`. Defaults to False.
-            Note: Currently, only the stopping variant supports snapshots.
-        :type do_snapshots: bool, optional
-        :param rung_system_kwargs: Arguments passed to the rung system:
-            * ranking_criterion: Used if `type == "pasha"`. Specifies what strategy
-                to use for deciding if the ranking is stable and if to increase the
-                resource. Available options are soft_ranking, soft_ranking_std,
-                soft_ranking_median_dst and soft_ranking_mean_dst. The simplest
-                soft_ranking accepts a manually specified value of epsilon and
-                groups configurations with similar performance within the given range
-                of objective values. The other strategies calculate the value of epsilon
-                automatically, with the option to rescale it using `epsilon_scaling`.
-            * epsilon: Used if `type == "pasha"`. Parameter for soft ranking in
-                PASHA to say which configurations should be group together based on
-                the similarity of their performance.
-            * epsilon_scaling: Used if `type == "pasha"`. When epsilon for soft
-                ranking in PASHA is calculated automatically, it is possible to
-                rescale it using `epsilon_scaling`.
-            * num_threshold_candidates: Used if `type in ["rush_promotion",
-                "rush_stopping"]`. The first `num_threshold_candidates` in
-                `points_to_evaluate` enforce stricter requirements to the
-                continuation of training tasks. See :class:`RUSHScheduler`.
-         :type rung_system_kwargs: dict, optional
-        """
         # Before we can call the superclass constructor, we need to set a few
         # members (see also `_extend_search_options`).
         # To do this properly, we first check values and impute defaults for
@@ -478,12 +488,13 @@ class HyperbandScheduler(FIFOScheduler):
     def _on_config_suggest(self, config: dict, trial_id: str, **kwargs) -> dict:
         """
         `kwargs` being used here:
+
         * elapsed_time: Time from start of experiment, set in
-            `FIFOScheduler._suggest`
+          :meth:`~syne_tune.optimizer.schedulers.FIFOScheduler._suggest`
         * bracket: Bracket in which new trial is started, set in
-            `HyperbandScheduler._promote_trial`
+          :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`
         * milestone: First milestone the new trial will reach, set in
-            `HyperbandScheduler._promote_trial`
+          :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`
 
         :param config: New config suggested for `trial_id`
         :param trial_id: Input to `_suggest`
@@ -538,19 +549,20 @@ class HyperbandScheduler(FIFOScheduler):
         """
         If `self.do_snapshots`, a snapshot is written to
         `extra_kwargs["snapshot"]`:
+
         * max_resource
         * reduction_factor
         * tasks: Info about running tasks in bracket bracket_id (or, if
-            brackets share the same rung level system, all running tasks):
-            `dict(task_id) -> dict`:
+          brackets share the same rung level system, all running tasks):
+          `dict(task_id) -> dict`:
         * config: `config` as dict
         * time: Time when task was started, or when last recent result was
          reported
         * level: Level of last recent result report, or 0 if no reports yet
         * rungs: Metric values at rung levels in bracket bracket_id:
-            List of `(rung_level, metric_dict)`, where `metric_dict` has entries
-            `task_id: metric_value`. Note that entries are sorted in decreasing
-            order w.r.t. `rung_level`.
+          List of `(rung_level, metric_dict)`, where `metric_dict` has entries
+          :code:`task_id: metric_value`. Note that entries are sorted in
+          decreasing order w.r.t. `rung_level`.
 
         :return: `(trial_id, extra_kwargs)`
         """
@@ -637,7 +649,8 @@ class HyperbandScheduler(FIFOScheduler):
         Called for trials which are stopped or paused. The trial is still kept
         in the records.
 
-        :param trial_id:
+        :param trial_id: ID of trial
+        :param trial_decision: Decision taken for this trial
         """
         self.terminator.on_task_remove(trial_id)
         if trial_id in self._active_trials:
@@ -881,9 +894,9 @@ def hyperband_rung_levels(
     """Creates `rung_levels` from `grace_period`, `reduction_factor`
 
     :param rung_levels: If given, this is returned
-    :param grace_period: See :class:`HyperbandScheduler`
-    :param reduction_factor: See :class:`HyperbandScheduler`
-    :param max_t: See :class:`HyperbandScheduler`
+    :param grace_period: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param reduction_factor: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param max_t: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     :return: List of rung levels
     """
     if rung_levels is not None:
@@ -935,37 +948,36 @@ class HyperbandBracketManager:
     Maintains rung level systems for range of brackets. Differences depending
     on `scheduler_type` manifest themselves mostly at the level of the rung
     level system itself.
+
+    :param scheduler_type: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param resource_attr: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param metric: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param mode: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param max_t: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param rung_levels: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param brackets: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param rung_system_per_bracket: See :class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    :param cost_attr: Overrides entry in `rung_system_kwargs`
+    :param random_seed: Random seed for bracket sampling
+    :param rung_system_kwargs: Arguments passed to the rung system
+    :param scheduler: The scheduler is needed in order to sample a bracket
     """
 
     def __init__(
         self,
-        scheduler_type,
-        resource_attr,
-        metric,
-        mode,
-        max_t,
-        rung_levels,
-        brackets,
-        rung_system_per_bracket,
-        cost_attr,
-        random_seed,
-        rung_system_kwargs,
-        scheduler,
+        scheduler_type: str,
+        resource_attr: str,
+        metric: str,
+        mode: str,
+        max_t: int,
+        rung_levels: List[int],
+        brackets: int,
+        rung_system_per_bracket: bool,
+        cost_attr: str,
+        random_seed: int,
+        rung_system_kwargs: dict,
+        scheduler: HyperbandScheduler,
     ):
-        """
-        :param scheduler_type: See :class:`HyperbandScheduler`.
-        :param resource_attr: See :class:`HyperbandScheduler`.
-        :param metric: See :class:`HyperbandScheduler`.
-        :param mode: See :class:`HyperbandScheduler`.
-        :param max_t: See :class:`HyperbandScheduler`.
-        :param rung_levels: See :class:`HyperbandScheduler`.
-        :param brackets: See :class:`HyperbandScheduler`.
-        :param rung_system_per_bracket: See :class:`HyperbandScheduler`.
-        :param cost_attr: Overrides entry in `rung_system_kwargs`
-        :param random_seed: Random seed for bracket sampling
-        :param rung_system_kwargs: Arguments passed to the rung system
-        :param scheduler: The scheduler is needed in order to sample a bracket
-        """
         self._scheduler_type = scheduler_type
         self._resource_attr = resource_attr
         self._max_t = max_t
@@ -1044,13 +1056,13 @@ class HyperbandBracketManager:
 
         Since the bracket has already been sampled, not much is done here.
         We return the list of milestones for this bracket in reverse
-        (decreasing) order. The first entry is max_t, even if it is
+        (decreasing) order. The first entry is `max_t`, even if it is
         not a milestone in the bracket. This list contains the resource
-        levels the task would reach if it ran to max_t without being stopped.
+        levels the task would reach if it ran to `max_t` without being stopped.
 
         :param trial_id: ID of trial
         :param kwargs: Further arguments passed to `rung_sys.on_task_add`
-        :return: List of milestones in decreasing order, where max_t is first
+        :return: List of milestones in decreasing order, where` max_t` is first
         """
         assert "bracket" in kwargs
         bracket_id = kwargs["bracket"]
@@ -1066,12 +1078,13 @@ class HyperbandBracketManager:
         """
         This method is called whenever a new report is received. It returns a
         dictionary with all the information needed for making decisions
-        (e.g., stop / continue task, update model, etc)
-        * task_continues: Should task continue or stop/pause?
-        * milestone_reached: True if rung level (or max_t) is hit
-        * next_milestone: If hit rung level < max_t, this is the subsequent
-            rung level (otherwise: None)
-        * bracket_id: Bracket in which the task is running
+        (e.g., stop / continue task, update model, etc). Keys are:
+
+        * `task_continues`: Should task continue or stop/pause?
+        * `milestone_reached`: True if rung level (or `max_t`) is hit
+        * `next_milestone`: If hit `rung level < max_t`, this is the subsequent
+          rung level (otherwise: None)
+        * `bracket_id`: Bracket in which the task is running
 
         :param trial_id: ID of trial
         :param result: Results reported

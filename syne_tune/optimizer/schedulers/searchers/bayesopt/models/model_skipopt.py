@@ -20,9 +20,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 
 class SkipOptimizationPredicate:
     """
-    Interface for skip_optimization predicate in
-    :class:`ModelStateTransformer`.
-
+    Interface for skip_optimization predicate in :class:`ModelStateTransformer`.
     """
 
     def reset(self):
@@ -42,7 +40,6 @@ class SkipOptimizationPredicate:
 class NeverSkipPredicate(SkipOptimizationPredicate):
     """
     Hyperparameter optimization is never skipped.
-
     """
 
     def __call__(self, state: TuningJobState) -> bool:
@@ -52,7 +49,6 @@ class NeverSkipPredicate(SkipOptimizationPredicate):
 class AlwaysSkipPredicate(SkipOptimizationPredicate):
     """
     Hyperparameter optimization is always skipped.
-
     """
 
     def __call__(self, state: TuningJobState) -> bool:
@@ -66,7 +62,6 @@ class SkipPeriodicallyPredicate(SkipOptimizationPredicate):
     we increase a counter whenever N is larger than in the previous
     call. With respect to this counter, optimizations are done every
     period times, in between they are skipped.
-
     """
 
     def __init__(
@@ -116,7 +111,6 @@ class SkipNoMaxResourcePredicate(SkipOptimizationPredicate):
 
     This means that as long as the dataset only grows w.r.t. cases at lower
     resources than max_resource, this does not trigger HP optimization.
-
     """
 
     def __init__(

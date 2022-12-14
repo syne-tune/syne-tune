@@ -67,26 +67,30 @@ def load_blackbox(
     ignore_hash: bool = False,
 ) -> Union[Dict[str, Blackbox], Blackbox]:
     """
-    :param name: name of a blackbox present in the repository, see blackbox_list() to get list of available blackboxes.
-    Syne Tune currently provides the following blackboxes evaluations:
-    * "nasbench201": 15625 multi-fidelity configurations of computer vision architectures evaluated on 3 datasets.
-    NAS-Bench-201: Extending the scope of reproducible neural architecture search.
-    Dong, X. and Yang, Y. 2020.
-    * "fcnet": 62208 multi-fidelity configurations of MLP evaluated on 4 datasets.
-    Tabular benchmarks for joint architecture and hyperparameter optimization.
-    Klein, A. and Hutter, F. 2019.
-    * "lcbench": 2000 multi-fidelity Pytorch model configurations evaluated on many datasets.
-    Reference: Auto-PyTorch: Multi-Fidelity MetaLearning for Efficient and Robust AutoDL.
-    Lucas Zimmer, Marius Lindauer, Frank Hutter. 2020.
-    * "icml-deepar": 2420 single-fidelity configurations of DeepAR forecasting algorithm evaluated on 10 datasets.
-    A quantile-based approach for hyperparameter transfer learning.
-    Salinas, D., Shen, H., and Perrone, V. 2021.
-    * "icml-xgboost": 5O00 single-fidelity configurations of XGBoost evaluated on 9 datasets.
-    A quantile-based approach for hyperparameter transfer learning.
-    Salinas, D., Shen, H., and Perrone, V. 2021.
-    * "yahpo-*": Number of different benchmarks from YAHPO Gym. Note that these
-        blackboxes come with surrogates already, so no need to wrap them into
-        :class:`SurrogateBlackbox`
+    :param name: name of a blackbox present in the repository, see
+        :func:`blackbox_list` to get list of available blackboxes. Syne Tune
+        currently provides the following blackboxes evaluations:
+
+        * "nasbench201": 15625 multi-fidelity configurations of computer vision
+          architectures evaluated on 3 datasets.
+          NAS-Bench-201: Extending the scope of reproducible neural architecture search.
+          Dong, X. and Yang, Y. 2020.
+        * "fcnet": 62208 multi-fidelity configurations of MLP evaluated on 4 datasets.
+          Tabular benchmarks for joint architecture and hyperparameter optimization.
+          Klein, A. and Hutter, F. 2019.
+        * "lcbench": 2000 multi-fidelity Pytorch model configurations evaluated on many datasets.
+          Reference: Auto-PyTorch: Multi-Fidelity MetaLearning for Efficient and Robust AutoDL.
+          Lucas Zimmer, Marius Lindauer, Frank Hutter. 2020.
+        * "icml-deepar": 2420 single-fidelity configurations of DeepAR forecasting algorithm evaluated on 10 datasets.
+          A quantile-based approach for hyperparameter transfer learning.
+          Salinas, D., Shen, H., and Perrone, V. 2021.
+        * "icml-xgboost": 5O00 single-fidelity configurations of XGBoost evaluated on 9 datasets.
+          A quantile-based approach for hyperparameter transfer learning.
+          Salinas, D., Shen, H., and Perrone, V. 2021.
+        * "yahpo-*": Number of different benchmarks from YAHPO Gym. Note that these
+          blackboxes come with surrogates already, so no need to wrap them into
+          :class:`SurrogateBlackbox`
+
     :param skip_if_present: skip the download if the file locally exists
     :param s3_root: S3 root directory for blackbox repository. Defaults to
         S3 bucket name of SageMaker session
@@ -94,8 +98,9 @@ def load_blackbox(
         or on S3, should it be generated using its conversion script?
     :param yahpo_kwargs: For a YAHPO blackbox (`name == "yahpo-*"`), these are
         additional arguments to `instantiate_yahpo`
-    :param ignore_hash: do not check if hash of currently stored files matches the pre-computed hash. Be careful with
-    this option. If hashes do not match, results might not be reproducible.
+    :param ignore_hash: do not check if hash of currently stored files matches the
+        pre-computed hash. Be careful with this option. If hashes do not match, results
+        might not be reproducible.
     :return: blackbox with the given name, download it if not present.
     """
     tgt_folder = blackbox_local_path(name)

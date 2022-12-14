@@ -94,8 +94,8 @@ class BlackBoxYAHPO(Blackbox):
         Even though YAHPO interpolates between fidelities, it can make sense
         to restrict them to the values which have really been acquired in the
         data. Note that this restricts multi-fidelity schedulers like
-        :class:`HyperbandScheduler`, in that all their rungs levels have to
-        be fidelity values.
+        :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, in that all
+        their rungs levels have to be fidelity values.
 
         For example, for YAHPO `iaml`, the fidelity `trainsize` has been
         acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed
@@ -117,6 +117,8 @@ class BlackBoxYAHPO(Blackbox):
         self.num_seeds = 1
         self._is_iaml = _check_whether_iaml(benchmark)
         self._is_rbv2 = _check_whether_rbv2(benchmark)
+        if self._is_rbv2:
+            self.configuration_space["repl"] = 10
         self._initialize_for_scenario()
         # Has to be called after `_initialize_for_scenario`, in order to
         # transform fidelity space for some of the YAHPO scenarios
@@ -163,6 +165,15 @@ class BlackBoxYAHPO(Blackbox):
             self._fidelity_values = np.array(fidelities)
             self.fidelity_space[self._fidelity_name] = cs.ordinal(fidelities.copy())
 
+    def active_hyperparameters(self, configuration: dict) -> List[str]:
+        return self.benchmark.config_space.get_active_hyperparameters(
+            ConfigSpace.Configuration(
+                self.benchmark.config_space,
+                values=configuration,
+                allow_inactive_with_values=True,
+            )
+        )
+
     def _objective_function(
         self,
         configuration: dict,
@@ -170,8 +181,7 @@ class BlackBoxYAHPO(Blackbox):
         seed: Optional[int] = None,
     ) -> dict:
         configuration = configuration.copy()
-        if self._is_rbv2:
-            configuration["repl"] = 10
+
         if fidelity is not None:
             if self._is_iaml or self._is_rbv2:
                 k = "trainsize"
@@ -184,6 +194,8 @@ class BlackBoxYAHPO(Blackbox):
                 ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
                 fidelity = {k: fidelity_value / 20}
             configuration.update(fidelity)
+            active_hps = self.active_hyperparameters(configuration)
+            configuration = {k: v for k, v in configuration.items() if k in active_hps}
             return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
             """

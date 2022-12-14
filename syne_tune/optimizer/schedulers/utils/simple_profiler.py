@@ -39,7 +39,6 @@ class SimpleProfiler:
     therefore lists of durations.
 
     Tags can have multiple levels of prefixes, corresponding to brackets.
-
     """
 
     def __init__(self):

@@ -159,7 +159,6 @@ class ResourceForAcquisitionMap:
     for multi-fidelity HPO, we need to decide at which `r_acq` we would like
     to evaluate the AF, w.r.t. the posterior distribution over `f(x, r=r_acq)`.
     This decision can depend on the current state.
-
     """
 
     def __call__(self, state: TuningJobState, **kwargs) -> int:
@@ -172,7 +171,6 @@ class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
     largest `r` such that we have at least `threshold` observations at
     `r`. If there are less than `threshold` observations at all levels,
     the smallest level is returned.
-
     """
 
     def __init__(self, threshold: int, active_metric: str = INTERNAL_METRIC_NAME):
@@ -208,7 +206,6 @@ class ResourceForAcquisitionFirstMilestone(ResourceForAcquisitionMap):
     """
     Here, `r_acq` is the smallest rung level to be attained by a config
     started from scratch.
-
     """
 
     def __call__(self, state: TuningJobState, **kwargs) -> int:
@@ -223,7 +220,6 @@ class ResourceForAcquisitionFirstMilestone(ResourceForAcquisitionMap):
 class ResourceForAcquisitionFinal(ResourceForAcquisitionMap):
     """
     Here, `r_acq = r_max` is the largest resource level.
-
     """
 
     def __init__(self, r_max: int):

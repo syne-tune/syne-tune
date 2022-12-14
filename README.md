@@ -4,8 +4,11 @@
 [![Python Version](https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
+[![Documentation](https://readthedocs.org/projects/syne-tune/badge/?version=latest)](https://syne-tune.readthedocs.io)
 
-![Alt Text](docs/synetune.gif)
+![Alt Text](docs/source/synetune.gif)
+
+[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)
 
 This package provides state-of-the-art distributed hyperparameter optimizers (HPO) with the following key features:
 * wide coverage (>20) of different HPO methods for asynchronous optimization with multiple workers, including:
@@ -28,20 +31,25 @@ pip install 'syne-tune[extra]'
 or to get the latest version from git: 
 
 ```bash
-pip install --upgrade pip
 git clone https://github.com/awslabs/syne-tune.git
 cd syne-tune
+python3 -m venv st_venv
+. st_venv/bin/activate
+pip install --upgrade pip
 pip install -e '.[extra]'
 ```
 
-When installing Syne Tune from sources, we recommend to use a virtual environment. You can see the FAQ [What are the different installations options supported?](docs/faq.md#installations) for more install options.
+This installs everything in a virtual environment `st_venv`. Remember to activate
+this environment before working with Syne Tune. We also recommend building the
+virtual environment from scratch now and then, in particular when you pull a new
+release, as dependencies may have changed.
 
 See our [change log](CHANGELOG.md) to see what changed in the latest version. 
 
 ## Getting started
 
 To enable tuning, you have to report metrics from a training script so that they can be communicated later to Syne Tune,
-this can be accomplished by just calling `report(epoch=epoch, loss=loss)` as shown in the example bellow:
+this can be accomplished by just calling `report(epoch=epoch, loss=loss)` as shown in the example below:
 
 ```python
 # train_height.py
@@ -105,7 +113,7 @@ You will find the following examples in [examples/](examples/) folder illustrati
 by Syne Tune:
 * [launch_height_baselines.py](examples/launch_height_baselines.py):
   launches HPO locally, tuning a simple script 
-   [train_height_example.py](examples/training_scripts/height_example/train_height.py) for several baselines  
+  [train_height_example.py](examples/training_scripts/height_example/train_height.py) for several baselines  
 * [launch_height_ray.py](examples/launch_height_ray.py):
   launches HPO locally with [Ray Tune](https://docs.ray.io/en/master/tune/index.html)
   scheduler
@@ -135,42 +143,43 @@ employs an easy-to-use benchmark convention
 
 ## FAQ and Tutorials
 
-You can check our [FAQ](docs/faq.md), to learn more about Syne Tune functionalities. 
+You can check our [FAQ](https://syne-tune.readthedocs.io/en/latest/faq.html), to
+learn more about Syne Tune functionalities.
 
-* [Why should I use Syne Tune, and not Ray Tune, Optuna, ...?](docs/faq.md#why-syne-tune)
-* [What are the different installations options supported?](docs/faq.md#installations)
-* [How can I run on AWS and SageMaker?](docs/faq.md#running-on-sagemaker)
-* [What are the metrics reported by default when calling the `Reporter`?](docs/faq.md#reporter-metrics)
-* [How can I utilize multiple GPUs?](docs/faq.md#multiple-gpus)
-* [What is the default mode when performing optimization?](docs/faq.md#default-mode)
-* [How are trials evaluated on a local machine?](docs/faq.md#trial-execution)
-* [What does the output of the tuning contain?](docs/faq.md#tuning-output)
-* [Where can I find the output of the tuning?](docs/faq.md#tuning-output-location)
-* [How can I enable trial checkpointing?](docs/faq.md#trial-checkpointing)
-* [Which schedulers make use of checkpointing?](docs/faq.md#schedulers-checkpointing)
-* [Is the tuner checkpointed?](docs/faq.md#tuner-checkpointing)
-* [Where can I find the output of my trials?](docs/faq.md#trial-output)
-* [How can I plot the results of a tuning?](docs/faq.md#plotting-tuning)
-* [How can I specify additional tuning metadata?](docs/faq.md#additional-metadata)
-* [How do I append additional information to the results which are stored?](docs/faq.md#logging-additional-information) 
-* [I don’t want to wait, how can I launch the tuning on a remote machine?](docs/faq.md#remote-tuning)
-* [How can I run many experiments in parallel?](docs/faq.md#experiment-parallel)
-* [How can I access results after tuning remotely?](docs/faq.md#results-remote-tuning)
-* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](docs/faq.md#dependencies-remote)
-* [How can I benchmark experiments from the command line?](docs/faq.md#benchmark-cli)
-* [What different schedulers do you support? What are the main differences between them?](docs/faq.md#schedulers-supported)
-* [How do I define the search space?](docs/faq.md#search-space) 
-* [How can I visualize the progress of my tuning experiment with Tensorboard?](docs/faq.md#tensorboard) 
-* [How can I add a new scheduler?](docs/faq.md#add-scheduler)
-* [How can I add a new tabular or surrogate benchmark?](docs/faq.md#add-blackbox)
+* [Why should I use Syne Tune?](https://syne-tune.readthedocs.io/en/latest/faq.html#why-should-i-use-syne-tune)
+* [What are the different installations options supported?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-are-the-different-installations-options-supported)
+* [How can I run on AWS and SageMaker?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-run-on-aws-and-sagemaker)
+* [What are the metrics reported by default when calling the `Reporter`?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-are-the-metrics-reported-by-default-when-calling-the-reporter)
+* [How can I utilize multiple GPUs?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-utilize-multiple-gpus)
+* [What is the default mode when performing optimization?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-is-the-default-mode-when-performing-optimization)
+* [How are trials evaluated on a local machine?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-are-trials-evaluated-on-a-local-machine)
+* [What does the output of the tuning contain?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-does-the-output-of-the-tuning-contain)
+* [Where can I find the output of the tuning?](https://syne-tune.readthedocs.io/en/latest/faq.html#where-can-i-find-the-output-of-the-tuning)
+* [How can I enable trial checkpointing?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-enable-trial-checkpointing)
+* [Which schedulers make use of checkpointing?](https://syne-tune.readthedocs.io/en/latest/faq.html#which-schedulers-make-use-of-checkpointing)
+* [Is the tuner checkpointed?](https://syne-tune.readthedocs.io/en/latest/faq.html#is-the-tuner-checkpointed)
+* [Where can I find the output of my trials?](https://syne-tune.readthedocs.io/en/latest/faq.html#where-can-i-find-the-output-of-my-trials)
+* [How can I plot the results of a tuning?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-plot-the-results-of-a-tuning)
+* [How can I specify additional tuning metadata?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-specify-additional-tuning-metadata)
+* [How do I append additional information to the results which are stored?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-do-i-append-additional-information-to-the-results-which-are-stored) 
+* [I don’t want to wait, how can I launch the tuning on a remote machine?](https://syne-tune.readthedocs.io/en/latest/faq.html#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine)
+* [How can I run many experiments in parallel?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-run-many-experiments-in-parallel)
+* [How can I access results after tuning remotely?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-access-results-after-tuning-remotely)
+* [How can I specify dependencies to remote launcher or when using the SageMaker backend?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-specify-dependencies-to-remote-launcher-or-when-using-the-sagemaker-backend)
+* [How can I benchmark different methods?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-benchmark-different-methods)
+* [What different schedulers do you support? What are the main differences between them?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-different-schedulers-do-you-support-what-are-the-main-differences-between-them)
+* [How do I define the search space?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-do-i-define-the-search-space) 
+* [How can I visualize the progress of my tuning experiment with Tensorboard?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-visualize-the-progress-of-my-tuning-experiment-with-tensorboard)
+* [How can I add a new scheduler?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-add-a-new-scheduler)
+* [How can I add a new tabular or surrogate benchmark?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-add-a-new-tabular-or-surrogate-benchmark)
 
 Do you want to know more? Here are a number of tutorials.
-* [Basics of Syne Tune](docs/tutorials/basics/README.md)
-* [Multi-Fidelity Hyperparameter Optimization](docs/tutorials/multifidelity/README.md)
-* [How to Contribute a New Scheduler](docs/tutorials/developer/README.md)
-* [Benchmarking in Syne Tune](docs/tutorials/benchmarking/README.md)
-* [Choosing a Configuration Space](docs/search_space.md)
-* [Using the Built-in Schedulers](docs/schedulers.md)
+* [Basics of Syne Tune](https://syne-tune.readthedocs.io/en/latest/tutorials/basics/README.html)
+* [Multi-Fidelity Hyperparameter Optimization](https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/README.html)
+* [How to Contribute a New Scheduler](https://syne-tune.readthedocs.io/en/latest/tutorials/developer/README.html)
+* [Benchmarking in Syne Tune](https://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html)
+* [Choosing a Configuration Space](https://syne-tune.readthedocs.io/en/latest/search_space.html)
+* [Using the Built-in Schedulers](https://syne-tune.readthedocs.io/en/latest/schedulers.html)
 
 ## Security
 

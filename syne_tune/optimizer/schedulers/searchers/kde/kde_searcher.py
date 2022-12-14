@@ -37,14 +37,39 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
     Code is based on the implementation by Falkner et al:
     https://github.com/automl/HpBandSter/tree/master/hpbandster
 
-    Algorithms for Hyper-Parameter Optimization
-    J. Bergstra and R. Bardenet and Y. Bengio and B. K{\'e}gl
-    Proceedings of the 24th International Conference on Advances in Neural
-    Information Processing Systems
+        | Algorithms for Hyper-Parameter Optimization
+        | J. Bergstra and R. Bardenet and Y. Bengio and B. K{\'e}gl
+        | Proceedings of the 24th International Conference on Advances in Neural Information Processing Systems
+        | https://papers.nips.cc/paper/2011/hash/86e8f7ab32cfd12577bc2619bc635690-Abstract.html
 
-    BOHB: Robust and Efficient Hyperparameter Optimization at Scale
-    S. Falkner and A. Klein and F. Hutter
-    Proceedings of the 35th International Conference on Machine Learning
+    and
+
+        | BOHB: Robust and Efficient Hyperparameter Optimization at Scale
+        | S. Falkner and A. Klein and F. Hutter
+        | Proceedings of the 35th International Conference on Machine Learning
+        | https://arxiv.org/abs/1807.01774
+
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+
+    :param mode: Mode to use for the metric given, can be "min" or "max". Is
+        obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"
+    :param num_min_data_points: Minimum number of data points that we use to fit
+        the KDEs. If set to `None`, we set this to the number of hyperparameters.
+        Defaults to `None`.
+    :param top_n_percent: Determines how many datapoints we use to fit the first
+        KDE model for modeling the well performing configurations.
+        Defaults to 15
+    :param min_bandwidth: The minimum bandwidth for the KDE models. Defaults
+        to 1e-3
+    :param num_candidates: Number of candidates that are sampled to optimize
+        the acquisition function. Defaults to 64
+    :param bandwidth_factor: We sample continuous hyperparameter from a
+        truncated Normal. This factor is multiplied to the bandwidth to define
+        the standard deviation of this truncated Normal. Defaults to 3
+    :param random_fraction: Defines the fraction of configurations that are
+        drawn uniformly at random instead of sampling from the model.
+        Defaults to 0.33
     """
 
     def __init__(
@@ -61,28 +86,6 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         random_fraction: Optional[float] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
-
-        :param mode: Mode to use for the metric given, can be "min" or "max". Is
-            obtained from scheduler in `configure_scheduler`. Defaults to "min"
-        :param num_min_data_points: Minimum number of data points that we use to fit
-            the KDEs. If set to None, we set this to the number of hyperparameters.
-            Defaults to None.
-        :param top_n_percent: Determines how many datapoints we use to fit the first
-            KDE model for modeling the well performing configurations.
-            Defaults to 15
-        :param min_bandwidth: The minimum bandwidth for the KDE models. Defaults
-            to 1e-3
-        :param num_candidates: Number of candidates that are sampled to optimize
-            the acquisition function. Defaults to 64
-        :param bandwidth_factor: We sample continuous hyperparameter from a
-            truncated Normal. This factor is multiplied to the bandwidth to define
-            the standard deviation of this truncated Normal. Defaults to 3
-        :param random_fraction: Defines the fraction of configurations that are
-            drawn uniformly at random instead of sampling from the model.
-            Defaults to 0.33
-        """
         super().__init__(
             config_space=config_space,
             metric=metric,

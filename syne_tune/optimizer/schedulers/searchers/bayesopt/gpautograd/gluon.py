@@ -34,7 +34,7 @@ def _indent(s_, numSpaces):
 
 def shape_is_known(shape):
     """Check whether a shape is completely known with or without np semantics.
-    Please see the doc of is_np_shape for more details.
+    Please see the doc of :func:`is_np_shape` for more details.
     """
     if shape is None:
         return False

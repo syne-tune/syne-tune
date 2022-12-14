@@ -22,31 +22,38 @@ class CostPromotionRungSystem(PromotionRungSystem):
     """
     Cost-aware extension of promotion-based asynchronous Hyperband (ASHA).
 
-    This code is equivalent with base :class:`PromotionRungSystem`, except
-    the "promotable" condition in `_find_promotable_config` is replaced.
+    This code is equivalent with base
+    :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`,
+    except the "promotable" condition in :meth:`_find_promotable_trial` is
+    replaced.
 
-    When a config x reaches rung level r, the result includes a metric
-    m(x, r), but also a cost c(x, r). The latter is the cost (e.g., training
-    time) spent to reach level r.
+    When a config :math:`\mathbf{x}` reaches rung level :math:`r`, the result
+    includes a metric :math:`f(\mathbf{x}, r)`, but also a cost
+    :math:`c(\mathbf{x}, r)`. The latter is the cost (e.g., training time) spent
+    to reach level :math:`r`.
 
-    Consider all trials who reached rung level r (whether promoted from there
-    or still paused there), ordered w.r.t. m(x, r), best first, and let their
-    number be N. Define
+    Consider all trials who reached rung level :math:`r` (whether promoted from
+    there or still paused there), ordered w.r.t. :math:`f(\mathbf{x}, r)`, best
+    first, and let their number be :math:`N`. Define
 
-        C(r, k) = sum( c(x_i, r) | i <= k)
+    .. math::
 
-    For a promotion quantile q, define
+       C(r, k) = \sum_{i\le k} c(\mathbf{x}_i, r)
 
-        K = max_k [ C(r, k) <= q * C(r, N) ]
+    For a promotion quantile :math:`q`, define
 
-    Any trial not yet promoted and ranked <= K can be promoted.
+    .. math::
 
+        K = \max_k \mathrm{I}[ C(r, k) \le q  C(r, N) ]
+
+    Any trial not yet promoted and ranked :math:`\le K` can be promoted.
     As usual, we scan rungs from the top. If several trials are promotable,
     the one with the best metric value is promoted.
 
-    Note that costs c(x, r) reported via `cost_attr` need to be total costs of
-    a trial. If the trial is paused and resumed, partial costs have to be added
-    up. See :class:`HyperbandScheduler` for how this works.
+    Note that costs :math:`c(\mathbf{x}, r)` reported via `cost_attr` need to
+    be total costs of a trial. If the trial is paused and resumed, partial costs
+    have to be added up. See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+    for how this works.
     """
 
     def __init__(

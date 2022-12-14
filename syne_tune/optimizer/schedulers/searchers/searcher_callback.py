@@ -61,11 +61,10 @@ def _extended_result(searcher, result):
 
 class StoreResultsAndModelParamsCallback(StoreResultsCallback):
     """
-    Extends :class:`StoreResultsCallback` by also storing the current
-    surrogate model parameters in `on_trial_result`. This works for
-    schedulers with model-based searchers. For other schedulers, this
-    callback behaves the same as the superclass.
-
+    Extends :class:`~syne_tune.tuner_callback.StoreResultsCallback` by also
+    storing the current surrogate model parameters in :meth:`on_trial_result`.
+    This works for schedulers with model-based searchers. For other schedulers,
+    this callback behaves the same as the superclass.
     """
 
     def __init__(
@@ -86,11 +85,11 @@ class StoreResultsAndModelParamsCallback(StoreResultsCallback):
 
 class SimulatorAndModelParamsCallback(SimulatorCallback):
     """
-    Extends :class:`SimulatorCallback` by also storing the current
-    surrogate model parameters in `on_trial_result`. This works for
-    schedulers with model-based searchers. For other schedulers, this
-    callback behaves the same as the superclass.
-
+    Extends
+    :class:`~syne_tune.backend.simulator_backend.simulator_callback.SimulatorCallback`
+    by also storing the current surrogate model parameters in
+    :meth:`on_trial_result`. This works for schedulers with model-based searchers.
+    For other schedulers, this callback behaves the same as the superclass.
     """
 
     def __init__(self):

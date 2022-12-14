@@ -48,6 +48,70 @@ def _default_surrogate(surrogate):
 
 
 class BlackboxSurrogate(Blackbox):
+    """
+    Fits a blackbox surrogates that can be evaluated anywhere, which can be
+    useful for supporting interpolation/extrapolation. To wrap an existing
+    blackbox with a surrogate estimator, use :func:`add_surrogate` which
+    automatically extract `X`, `y` matrices from available blackbox evaluations.
+
+    The surrogate regression model is provided by `surrogate`, it has to
+    conform to the scikit-learn fit-predict API. If `predict_curves` is `True`,
+    the model maps features of the configuration to the whole curve over
+    fidelities, separate for each metric and seed. This has several advantages.
+    First, predictions are consistent: if all curves in the data respect a certain
+    property which is retained under convex combinations, predictions have this
+    property as well (examples: positivity, monotonicity). This is important for
+    `elapsed_time` metrics. The regression models are also fairly compact, and
+    prediction is fast, `max_fit_samples` is normally not needed.
+
+    If `predict_curves` is `False,` the model maps features from configuration and
+    fidelity to metric values (univariate regression). In this case, properties
+    like monotonicity are not retained. Also, training can take long and the
+    trained models can be large.
+
+    This difference only matters if there are fidelities. Otherwise, regression
+    is always univariate.
+
+    If `num_seeds` is given, we maintain different surrogate models for each
+    seed. Otherwise, a single surrogate model is fit to data across all seeds.
+
+    If `fit_differences` is given, it contains names of objectives which
+    are cumulative sums. For these objectives, the `y` data is transformed
+    to finite differences before fitting the model. This is recommended for
+    `elapsed_time` objectives. This feature only matters if there are
+    fidelities.
+
+    Additional arguments on top of parent class
+    :class:`~syne_tune.blackbox_repository.Blackbox`:
+
+    :param X: dataframe containing hyperparameters values. Shape is
+        `(num_seeds * num_evals, num_hps)` if `predict_curves` is `True`,
+        `(num_fidelities * num_seeds * num_evals, num_hps)` otherwise
+    :param y: dataframe containing objectives values. Shape is
+        `(num_seeds * num_evals, num_fidelities * num_objectives)` if
+        `predict_curves` is `True`, and
+        `(num_fidelities * num_seeds * num_evals, num_objectives)` otherwise
+    :param surrogate: the model that is fitted to predict objectives given any
+        configuration, default to KNeighborsRegressor(n_neighbors=1). If
+        `predict_curves` is `True`, this must be multi-variate regression, i.e.
+        accept target matrices in `fit`, where columns correspond to fidelities.
+        Regression models from scikit-learn allow for that.
+        Possible examples: :code:`KNeighborsRegressor(n_neighbors=1)`,
+        :code:`MLPRegressor()` or any estimator obeying Scikit-learn API.
+        The model is fit on top of pipeline that applies basic feature-processing
+        to convert rows in `X` to vectors. We use the configuration_space
+        hyperparameters types to deduce the types of columns in `X` (for instance,
+        :class:`~syne_tune.config_space.Categorical` values are one-hot encoded).
+    :param predict_curves: See above. Default is `False` (backwards compatible)
+    :param num_seeds: See above
+    :param fit_differences: See above
+    :param max_fit_samples: maximum number of samples to be fed to the surrogate
+        estimator, if the more data points than this number are passed, then they
+        are subsampled without replacement. If `num_seeds` is used, this is a
+        limit on the data per seed
+    :param name:
+    """
+
     def __init__(
         self,
         X: pd.DataFrame,
@@ -63,67 +127,6 @@ class BlackboxSurrogate(Blackbox):
         max_fit_samples: Optional[int] = None,
         name: Optional[str] = None,
     ):
-        """
-        Fits a blackbox surrogates that can be evaluated anywhere, which can be useful for supporting
-        interpolation/extrapolation. To wrap an existing blackbox with a surrogate estimator, use `add_surrogate`
-        which automatically extract X, y matrices from available blackbox evaluations.
-
-        The surrogate regression model is provided by `surrogate`, it has to
-        conform to the scikit-learn fit-predict API. If `predict_curves` is True,
-        the model maps features of the configuration to the whole curve over
-        fidelities, separate for each metric and seed. This has several advantages.
-        First, predictions are consistent: if all curves in the data respect a certain
-        property which is retained under convex combinations, predictions have this
-        property as well (examples: positivity, monotonicity). This is important for
-        `elapsed_time` metrics. The regression models are also fairly compact, and
-        prediction is fast, `max_fit_samples` is normally not needed.
-
-        If `predict_curves` is False, the model maps features from configuration and
-        fidelity to metric values (univariate regression). In this case, properties
-        like monotonicity are not retained. Also, training can take long and the
-        trained models can be large.
-
-        This difference only matters if there are fidelities. Otherwise, regression
-        is always univariate.
-
-        If `num_seeds` is given, we maintain different surrogate models for each
-        seed. Otherwise, a single surrogate model is fit to data across all seeds.
-
-        If `fit_differences` is given, it contains names of objectives which
-        are cumulative sums. For these objectives, the `y` data is transformed
-        to finite differences before fitting the model. This is recommended for
-        `elapsed_time` objectives. This feature only matters if there are
-        fidelities.
-
-        :param X: dataframe containing hyperparameters values. Shape is
-            `(num_seeds * num_evals, num_hps)` if `predict_curves` is True,
-            `(num_fidelities * num_seeds * num_evals, num_hps)` otherwise
-        :param y: dataframe containing objectives values. Shape is
-            `(num_seeds * num_evals, num_fidelities * num_objectives)` if
-            `predict_curves` is True, and
-            `(num_fidelities * num_seeds * num_evals, num_objectives)` otherwise
-        :param configuration_space:
-        :param fidelity_space:
-        :param surrogate: the model that is fitted to predict objectives given any
-            configuration, default to KNeighborsRegressor(n_neighbors=1). If
-            `predict_curves` is True, this must be multi-variate regression, i.e.
-            accept target matrices in `fit`, where columns correspond to fidelities.
-            Regression models from scikit-learn allow for that.
-            Possible examples: KNeighborsRegressor(n_neighbors=1),
-            MLPRegressor() or any estimator obeying Scikit-learn API.
-            The model is fit on top of pipeline that applies basic feature-processing
-            to convert rows in X to vectors. We use the configuration_space
-            hyperparameters types to deduce the types of columns in X (for instance
-            CategoricalHyperparameter are one-hot encoded).
-        :param predict_curves: See above. Default is False (backwards compatible)
-        :param num_seeds: See above
-        :param fit_differences: See above
-        :param max_fit_samples: maximum number of samples to be fed to the surrogate
-            estimator, if the more data points than this number are passed, then they
-            are subsampled without replacement. If `num_seeds` is used, this is a
-            limit on the data per seed
-        :param name:
-        """
         super(BlackboxSurrogate, self).__init__(
             configuration_space=configuration_space,
             fidelity_space=fidelity_space,
@@ -311,10 +314,10 @@ class BlackboxSurrogate(Blackbox):
 
     def _transform_from_finite_differences(self, prediction: np.ndarray) -> np.ndarray:
         """
-        Note: `fidelity_values` need not be contiguous (1, 2, 3, ...). We use
+        Note: `fidelity_values` need not be contiguous (`1, 2, 3, ...`). We use
         generalized weighted finite differences to account for that.
 
-        :param prediction: Shape (num_fidelities, num_objectives)
+        :param prediction: Shape `(num_fidelities, num_objectives)`
         :return:
         """
         num_fidelities = self.num_fidelities
@@ -441,15 +444,15 @@ def add_surrogate(
     Fits a blackbox surrogates that can be evaluated anywhere, which can be useful
     for supporting interpolation/extrapolation.
 
-    :param blackbox: the blackbox must implement `hyperparameter_objectives_values`
-        so that input/output are passed to estimate the model, see `BlackboxOffline`
-        or `BlackboxTabular
+    :param blackbox: the blackbox must implement
+        :meth:`~syne_tune.blackbox_repository.Blackbox.hyperparameter_objectives_values`
+        so that input/output are passed to estimate the model
     :param surrogate: the model that is fitted to predict objectives given any
-        configuration. Possible examples: `KNeighborsRegressor(n_neighbors=1)`,
-        `MLPRegressor()` or any estimator obeying Scikit-learn API.
+        configuration. Possible examples: :code:`KNeighborsRegressor(n_neighbors=1)`,
+        :code:`MLPRegressor()` or any estimator obeying Scikit-learn API.
         The model is fit on top of pipeline that applies basic feature-processing
-        to convert rows in X to vectors. We use `config_space` to deduce the types
-        of columns in X (categorical parameters are 1-hot encoded).
+        to convert rows in `X` to vectors. We use `configuration_space` to deduce
+        the types of columns in `X` (categorical parameters are one-hot encoded).
     :param configuration_space: configuration space for the resulting blackbox
         surrogate. The default is `blackbox.configuration_space`. But note that
         if `blackbox` is tabular, the domains in `blackbox.configuration_space`
@@ -458,14 +461,14 @@ def add_surrogate(
         to predict metric curves over fidelities. If False, fidelity is used
         as input. The latter can lead to inconsistent predictions along
         fidelity and is typically more expensive.
-        If not given, the default value is False if `blackbox` is of type
-        :class:`BlackboxOffline`, otherwise True.
-    :param separate_seeds: If True, seeds in `blackbox` map to seeds in the
-        surrogate blackbox, which fits different models to each seed. If False,
+        If not given, the default value is `False` if `blackbox` is of type
+        :class:`~syne_tune.blackbox_repository.BlackboxOffline`, otherwise `True`.
+    :param separate_seeds: If `True`, seeds in `blackbox` map to seeds in the
+        surrogate blackbox, which fits different models to each seed. If `False`,
         the data from `blackbox` is merged for all seeds, and the surrogate
         represents a single seed. The latter provides more data for the surrogate
         model to be fit, but the variation between seeds is lost in the
-        surrogate
+        surrogate. Defaults to `False`.
     :param fit_differences: Names of objectives which are cumulative sums. For
         these objectives, the `y` data is transformed to finite differences
         before fitting the model. This is recommended for `elapsed_time`

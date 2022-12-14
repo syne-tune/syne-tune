@@ -25,11 +25,12 @@ logger = logging.getLogger(__name__)
 class SimulatorCallback(StoreResultsCallback):
     """
     Callback to be used in `Tuner.run` in order to support the
-    :class:`SimulatorBackend`.
+    :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`.
 
-    This is doing two things. First, `on_tuning_sleep` is advancing the
+    This is doing two things. First, :meth:`on_tuning_sleep` is advancing the
     `time_keeper` of the simulator back-end by `tuner_sleep_time` (also
-    defined in the back-end). The real sleep time in `Tuner` must be 0.
+    defined in the back-end). The real sleep time in :class:`~syne_tune.Tuner`
+    must be 0.
 
     Second, we need to make sure that results written out are annotated by
     simulated time, not real time. This is already catered for by
@@ -38,12 +39,13 @@ class SimulatorCallback(StoreResultsCallback):
 
     Third (and most subtle), we need to make sure the stop criterion in
     `Tuner.run` is using simulated time instead of real time when making
-    a decision based on `max_wallclock_time`. By default, `StoppingCriterion`
-    takes `TuningStatus` as an input, which counts real time and knows nothing
-    about simulated time. To this end, we modify `stop_criterion` of the tuner
-    to instead depend on the `ST_TUNER_TIME` fields in the results received.
-    This allows us to keep both `Tuner` and `TuningStatus` independent of the
-    time keeper.
+    a decision based on `max_wallclock_time`. By default,
+    :class:`~syne_tune.StoppingCriterion` takes `TuningStatus` as an input,
+    which counts real time and knows nothing about simulated time. To this
+    end, we modify `stop_criterion` of the tuner to instead depend on the
+    `ST_TUNER_TIME` fields in the results received. This allows us to keep
+    both :class:`~syne_tune.Tuner` and `TuningStatus` independent of the time
+    keeper.
     """
 
     def __init__(self):

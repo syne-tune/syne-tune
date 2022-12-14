@@ -53,7 +53,6 @@ if __name__ == "__main__":
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
-        # tune for 3 minutes
         stop_criterion=stop_criterion,
         n_workers=2,
     )

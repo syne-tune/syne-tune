@@ -26,7 +26,7 @@ def check_metrics(metrics_observed, metrics_expected):
         metrics_observed, metrics_expected
     ):
         assert trial_id1 == trial_id2
-        for key in ["step", "train_acc"]:
+        for key in ["epoch", "train_acc"]:
             assert result1[key] == result2[key]
 
 
@@ -55,8 +55,8 @@ def test_local_backend_checkpoint(caplog):
     check_metrics(
         new_metrics,
         [
-            (trial_id, {"step": 0, "train_acc": 1}),
-            (trial_id, {"step": 1, "train_acc": 2}),
+            (trial_id, {"epoch": 1, "train_acc": 1}),
+            (trial_id, {"epoch": 2, "train_acc": 2}),
         ],
     )
     busy_trial_ids = backend.busy_trial_ids()
@@ -117,8 +117,8 @@ def test_resume_config_local_backend(caplog):
     check_metrics(
         new_metrics,
         [
-            (trial_id, {"step": 0, "train_acc": 1}),
-            (trial_id, {"step": 1, "train_acc": 2}),
+            (trial_id, {"epoch": 1, "train_acc": 1}),
+            (trial_id, {"epoch": 2, "train_acc": 2}),
         ],
     )
 
@@ -132,8 +132,8 @@ def test_resume_config_local_backend(caplog):
     check_metrics(
         new_metrics,
         [
-            (trial_id, {"step": 2, "train_acc": 3}),
-            (trial_id, {"step": 3, "train_acc": 4}),
+            (trial_id, {"epoch": 3, "train_acc": 3}),
+            (trial_id, {"epoch": 4, "train_acc": 4}),
         ],
     )
 

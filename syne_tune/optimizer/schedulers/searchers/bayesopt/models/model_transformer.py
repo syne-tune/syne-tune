@@ -67,11 +67,11 @@ class TransformerModelFactory:
 
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
         """
-        Creates a `SurrogateModel` based on data in `state`. This involves
+        Creates a :class:`SurrogateModel` based on data in `state`. This involves
         fitting model parameters if `fit_params` is True. Otherwise, the current
         model parameters are not changed (so may be stale, given that `state`
         has changed). The idea is that often, model fitting is much more
-        expensive than just creating the final `SurrogateModel` (posterior
+        expensive than just creating the final :class:`SurrogateModel` (posterior
         state). It then makes sense to partly work with stale model parameters.
 
         :param state: Current data model parameters are to be fit on, and the
@@ -92,8 +92,8 @@ class TransformerModelFactory:
     def configure_scheduler(self, scheduler):
         """
         Called by `configure_scheduler` of searchers which make use of a
-        `TransformerModelFactory`. Allows the factory to depend on parameters
-        of the scheduler.
+        class:`TransformerModelFactory`. Allows the factory to depend on
+        parameters of the scheduler.
 
         :param scheduler: Scheduler object
         """
@@ -135,7 +135,6 @@ class ModelStateTransformer:
     Note that model_factory and skip_optimization can also be a dictionary mapping
     output names to models. In that case, the state is shared but the models for each
     output metric are updated independently.
-
     """
 
     def __init__(
@@ -216,12 +215,13 @@ class ModelStateTransformer:
 
     def model(self, **kwargs) -> SurrogateOutputModel:
         """
-        If skip_optimization is given, it overrides the self._skip_optimization
+        If skip_optimization is given, it overrides the `self._skip_optimization`
         predicate.
 
-        :return: SurrogateModel for current state in the standard single model case;
-                 in the multi-model case, it returns a dictionary mapping output names
-                 to SurrogateModel instances for current state (shared across models).
+        :return: SurrogateModel for current state in the standard single
+            model case; in the multi-model case, it returns a dictionary mapping
+            output names to SurrogateModel instances for current state (shared
+            across models).
         """
         if self._model is None:
             skip_optimization = kwargs.get("skip_optimization")
@@ -256,7 +256,6 @@ class ModelStateTransformer:
             state
         :param resource: Must be given in the multi-fidelity case, to specify
             at which resource level the evaluation is pending
-
         """
         self._model = None  # Invalidate
         self._state.append_pending(trial_id, config=config, resource=resource)

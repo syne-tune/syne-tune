@@ -59,9 +59,13 @@ class PosteriorStateClampedResource(
     PosteriorStateWithSampleJoint, ExtendFeaturesByResourceMixin
 ):
     """
-    Converts posterior state of :class:`GaussPosteriorStateWithSampleJoint`
+    Converts posterior state of :class:`PosteriorStateWithSampleJoint`
     over extended inputs into posterior state over non-extended inputs, where
     the resource attribute is clamped to a fixed value.
+
+    :param poster_state_extended: Posterior state over extended inputs
+    :param resource: Value to which resource attribute is clamped
+    :param resource_attr_range: :math:`(r_{min}, r_{max})`
     """
 
     def __init__(
@@ -306,7 +310,7 @@ def hypertune_ranking_losses(
     supported by at least 6 labeled datapoints.
 
     The loss values depend on the cases in `data` at the level
-    `poster_state.rung_levels[num_supp_levels - 1]`. We must have
+    :code:`poster_state.rung_levels[num_supp_levels - 1]`. We must have
     `num_supp_levels >= 2`.
 
     Loss values at this highest supported level are estimated by
@@ -318,7 +322,7 @@ def hypertune_ranking_losses(
     :param poster_state: Posterior state over rung levels
     :param data: Training data
     :param num_samples: Number of independent loss samples
-    :param resource_attr_range: (r_min, r_max)
+    :param resource_attr_range: `(r_min, r_max)`
     :param random_state: PRNG state
     :return: See above
     """
@@ -402,12 +406,12 @@ def number_supported_levels_and_data_highest_level(
 ) -> Tuple[int, dict]:
     """
     Finds `num_supp_levels` as maximum such that
-    rung levels up to there have >= 6 labeled datapoints. The set
+    rung levels up to there have `>= 6` labeled datapoints. The set
     of labeled datapoints of level `num_supp_levels - 1` is
     returned as well.
 
-    If 'num_supp_levels == 1`, no level except for the lowest
-    has >= 6 datapoints. In this case, `data_max_resource` returned
+    If `num_supp_levels == 1`, no level except for the lowest
+    has `>= 6` datapoints. In this case, `data_max_resource` returned
     is invalid.
 
     :param rung_levels: Rung levels
@@ -464,7 +468,7 @@ def _losses_for_maximum_rung_by_cross_validation(
     """
     Estimates loss samples at highest rung by K-fold cross-validation, where
     `K <= 5` is chosen such that each fold has at least 2 points (since
-    `len(data_max_resource) >= 6`, we have `K >= 3`).
+    :code:`len(data_max_resource) >= 6`, we have `K >= 3`).
 
     `poster_state_for_fold` maps training data `(features, targets)` to
     posterior state.

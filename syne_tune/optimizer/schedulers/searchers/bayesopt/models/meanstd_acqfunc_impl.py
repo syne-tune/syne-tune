@@ -46,7 +46,6 @@ def _extract_active_and_secondary_metric(model_output_names, active_metric):
     """
     Returns the active metric and the secondary metric (such as the cost or constraint metric) from model_output_names.
     """
-
     assert len(model_output_names) == 2, (
         f"The model should consist of exactly 2 outputs, "
         f"while the current outputs are {model_output_names}"
@@ -80,7 +79,6 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
     """
     Minus expected improvement acquisition function
     (minus because the convention is to always minimize acquisition functions)
-
     """
 
     def __init__(
@@ -133,8 +131,8 @@ class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
     """
     Lower confidence bound (LCB) acquisition function:
 
-        h(mean, std) = mean - kappa * std
-
+    .. math::
+       h(\mu, \sigma) = \mu - \kappa * \sigma
     """
 
     def __init__(
@@ -186,14 +184,13 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     `exponent_cost` scales the influence of the cost term on the acquisition
     function. See also:
 
-        Lee etal.
-        Cost-aware Bayesian Optimization
-        https://arxiv.org/abs/2003.10870
+        | Lee etal.
+        | Cost-aware Bayesian Optimization
+        | https://arxiv.org/abs/2003.10870
 
     Note: two metrics are expected in the model output: the main objective and the cost.
     The main objective needs to be indicated as active_metric when initializing EIpuAcquisitionFunction.
     The cost is automatically assumed to be the other metric.
-
     """
 
     def __init__(

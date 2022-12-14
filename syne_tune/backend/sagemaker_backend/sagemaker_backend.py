@@ -23,7 +23,7 @@ import time
 from sagemaker import LocalSession
 from sagemaker.estimator import Framework
 
-from syne_tune.backend.trial_backend import TrialBackend
+from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_CHECKPOINT_DIR
 from syne_tune.util import s3_experiment_path
 from syne_tune.backend.trial_status import TrialResult, Status
@@ -44,9 +44,6 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 logger = logging.getLogger(__name__)
 
 
-BUSY_STATUS = {Status.in_progress, Status.stopping}
-
-
 class SageMakerBackend(TrialBackend):
     """
     This back-end executes each trial evaluation as a separate SageMaker
@@ -61,10 +58,26 @@ class SageMakerBackend(TrialBackend):
 
     This back-end allows to select the instance type and count for a trial
     evaluation, by passing values in the configuration, using names
-    `ST_INSTANCE_TYPE` and `ST_INSTANCE_COUNT`. If these are given in the
+    :const:`~syne_tune.constants.ST_INSTANCE_TYPE` and
+    :const:`~syne_tune.constants.ST_INSTANCE_COUNT`. If these are given in the
     configuration, they overwrite the default in `sm_estimator`. This allows
     for tuning instance type and count along with the hyperparameter
     configuration.
+
+    :param sm_estimator: SageMaker estimator for trial evaluations.
+    :param metrics_names: Names of metrics passed to `report`, used to plot
+        live curve in SageMaker (optional, only used for visualization)
+    :param s3_path: S3 base path used for checkpointing. The full path
+        also involves the tuner name and the `trial_id`. The default base
+        path is the S3 bucket associated with the SageMaker account
+    :param delete_checkpoints: If `True`, the checkpoints written by a trial
+        are deleted once the trial is stopped or is registered as
+        completed. Also, as part of :meth:`stop_all` called at the end of the
+        tuning loop, all remaining checkpoints are deleted. Defaults to
+        `False`.
+    :param sagemaker_fit_kwargs: Extra arguments that passed to
+        `sagemaker.estimator.Framework` when fitting the job, for instance
+        :code:`{'train': 's3://my-data-bucket/path/to/my/training/data'}`
     """
 
     def __init__(
@@ -75,23 +88,7 @@ class SageMakerBackend(TrialBackend):
         delete_checkpoints: bool = False,
         **sagemaker_fit_kwargs,
     ):
-        """
-        :param sm_estimator: SageMaker estimator for trial evaluations.
-        :param metrics_names: Names of metrics passed to `report`, used to plot
-            live curve in SageMaker (optional, only used for visualization)
-        :param s3_path: S3 base path used for checkpointing. The full path
-            also involves the tuner name and the `trial_id`. The default base
-            path is the S3 bucket associated with the SageMaker account
-        :param delete_checkpoints: Must be False at present!
-        :param sagemaker_fit_kwargs: Extra arguments that passed to
-            `sagemaker.estimator.Framework` when fitting the job, for instance
-            `{'train': 's3://my-data-bucket/path/to/my/training/data'}`
-        """
-
-        assert (
-            not delete_checkpoints
-        ), "delete_checkpoints=True not yet supported for SageMaker backend"
-        super(SageMakerBackend, self).__init__()
+        super(SageMakerBackend, self).__init__(delete_checkpoints)
         self.sm_estimator = sm_estimator
 
         # edit the sagemaker estimator so that metrics of the user can be plotted over time by sagemaker and so that
@@ -135,6 +132,9 @@ class SageMakerBackend(TrialBackend):
         # Note: Trials with a very short stop delay may be missed. This is fine,
         # because we mainly want to highlight long stop delays.
         self._stopping_time = dict()
+        # Collects trial IDs for which checkpoints have been deleted (see
+        # :meth:`delete_checkpoint`)
+        self._trial_ids_deleted_checkpoints = set()
 
     @property
     def sm_client(self):
@@ -432,22 +432,28 @@ class SageMakerBackend(TrialBackend):
             )
 
     def delete_checkpoint(self, trial_id: int):
+        if trial_id in self._trial_ids_deleted_checkpoints:
+            return
         s3_path = self._checkpoint_s3_uri_for_trial(trial_id)
         result = s3_delete_files_recursively(s3_path)
+        self._trial_ids_deleted_checkpoints.add(trial_id)
         num_action_calls = result["num_action_calls"]
-        if num_action_calls > 0:
-            num_successful_action_calls = result["num_successful_action_calls"]
-            if num_successful_action_calls == num_action_calls:
-                logger.info(
-                    f"Deleted {num_action_calls} checkpoint files from {s3_path}"
-                )
-            else:
-                logger.warning(
-                    f"Successfully deleted {num_successful_action_calls} "
-                    f"checkpoint files from {s3_path}, but failed to delete "
-                    f"{num_action_calls - num_successful_action_calls} files. "
-                    "Error:\n" + result["first_error_message"]
-                )
+        if num_action_calls <= 0:
+            return
+        num_successful_action_calls = result["num_successful_action_calls"]
+        if num_successful_action_calls == num_action_calls:
+            logger.info(
+                f"Deleted {num_action_calls} checkpoint files for "
+                f"trial_id {trial_id} from {s3_path}"
+            )
+        else:
+            logger.warning(
+                f"Successfully deleted {num_successful_action_calls} "
+                f"checkpoint files for trial_id {trial_id} from "
+                f"{s3_path}, but failed to delete "
+                f"{num_action_calls - num_successful_action_calls} "
+                "files. Error:\n" + result["first_error_message"]
+            )
 
     def set_path(
         self, results_root: Optional[str] = None, tuner_name: Optional[str] = None

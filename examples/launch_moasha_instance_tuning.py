@@ -24,7 +24,11 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
-from syne_tune.constants import ST_WORKER_TIME, ST_WORKER_COST
+from syne_tune.constants import (
+    ST_WORKER_TIME,
+    ST_WORKER_COST,
+    ST_INSTANCE_TYPE,
+)
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.remote.remote_launcher import RemoteLauncher
 from syne_tune import StoppingCriterion, Tuner
@@ -44,7 +48,7 @@ if __name__ == "__main__":
 
     # define a search space that contains hyperparameters (learning-rate, weight-decay) and instance-type.
     config_space = {
-        "st_instance_type": choice(instance_types),
+        ST_INSTANCE_TYPE: choice(instance_types),
         "learning_rate": loguniform(1e-6, 1e-4),
         "weight_decay": loguniform(1e-5, 1e-2),
         "epochs": epochs,
@@ -73,7 +77,7 @@ if __name__ == "__main__":
         sm_estimator=HuggingFace(
             entry_point=str(entry_point),
             base_job_name="hpo-transformer",
-            # instance-type given here are override by Syne Tune with values sampled from `st_instance_type`.
+            # instance-type given here are override by Syne Tune with values sampled from ST_INSTANCE_TYPE.
             instance_type="ml.m5.large",
             instance_count=1,
             transformers_version="4.4",
@@ -83,6 +87,8 @@ if __name__ == "__main__":
             role=get_execution_role(),
             dependencies=[str(Path(__file__).parent.parent / "benchmarking")],
             sagemaker_session=default_sagemaker_session(),
+            disable_profiler=True,
+            debugger_hook_config=False,
         ),
     )
 

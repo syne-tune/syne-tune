@@ -32,12 +32,26 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
     A zero-shot transfer hyperparameter optimization method which jointly selects
     configurations that minimize the average rank obtained on historic metadata
     (`transfer_learning_evaluations`). This is a searcher which can be used
-    with :class:`FIFOScheduler`.
+    with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Reference:
 
-    Reference:
-    Sequential Model-Free Hyperparameter Tuning.
-    Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
-    IEEE International Conference on Data Mining (ICDM) 2015.
+        | Sequential Model-Free Hyperparameter Tuning.
+        | Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.
+        | IEEE International Conference on Data Mining (ICDM) 2015.
+
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+
+    :param transfer_learning_evaluations: Dictionary from task name to
+        offline evaluations.
+    :param mode: Whether to minimize ("min", default) or maximize ("max")
+    :param sort_transfer_learning_evaluations: Use `False` if the
+        hyperparameters for each task in `transfer_learning_evaluations` are
+        already in the same order. If set to `True`, hyperparameters are sorted.
+        Defaults to `True`
+    :param use_surrogates: If the same configuration is not evaluated on all
+        tasks, set this to `True`. This will generate a set of configurations
+        and will impute their performance using surrogate models.
+        Defaults to `False`
     """
 
     def __init__(
@@ -50,21 +64,6 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
         use_surrogates: bool = False,
         **kwargs,
     ) -> None:
-        """
-        Additional arguments on top of parent class :class:`BaseSearcher`.
-
-        :param transfer_learning_evaluations: Dictionary from task name to
-            offline evaluations.
-        :param mode: Whether to minimize ("min", default) or maximize ("max")
-        :param sort_transfer_learning_evaluations: Use False if the
-            hyperparameters for each task in `transfer_learning_evaluations` are
-            already in the same order. If set to True, hyperparameters are sorted.
-            Defaults to True
-        :param use_surrogates: If the same configuration is not evaluated on all
-            tasks, set this to True. This will generate a set of configurations
-            and will impute their performance using surrogate models.
-            Defaults to False
-        """
         super().__init__(
             config_space=config_space,
             metric=metric,

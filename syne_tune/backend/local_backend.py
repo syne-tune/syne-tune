@@ -22,8 +22,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from syne_tune.backend.trial_backend import TrialBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_backend import BUSY_STATUS
+from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.num_gpu import get_num_gpus
 from syne_tune.report import retrieve
 from syne_tune.backend.trial_status import TrialResult, Status
@@ -47,6 +46,15 @@ class LocalBackend(TrialBackend):
     A backend running locally by spawning sub-process concurrently. Note that
     no resource management is done so the concurrent number of trials should
     be adjusted to the machine capacity.
+
+    :param entry_point: Path to Python main file to be tuned
+    :param delete_checkpoints: If `True`, checkpoints of stopped or completed
+        trials are deleted. Defaults to `False`
+    :param rotate_gpus: In case several GPUs are present, each trial is
+        scheduled on a different GPU. A new trial is preferentially
+        scheduled on a free GPU, and otherwise the GPU with least prior
+        assignments is chosen. If `False`, then all GPUs are used at the same
+        time for all trials. Defaults to `True`.
     """
 
     def __init__(
@@ -55,16 +63,6 @@ class LocalBackend(TrialBackend):
         delete_checkpoints: bool = False,
         rotate_gpus: bool = True,
     ):
-        """
-        :param entry_point: Path to Python main file to be tuned
-        :param delete_checkpoints: If True, checkpoints of stopped or completed
-            trials are deleted
-        :param rotate_gpus: In case several GPUs are present, each trial is
-            scheduled on a different GPU. A new trial is preferentially
-            scheduled on a free GPU, and otherwise the GPU with least prior
-            assignments is chosen. If False, then all GPUs are used at the same
-            time for all trials.
-        """
         super(LocalBackend, self).__init__(delete_checkpoints)
 
         assert Path(
@@ -90,16 +88,16 @@ class LocalBackend(TrialBackend):
     def trial_path(self, trial_id: int) -> Path:
         return self.local_path / str(trial_id)
 
-    def _checkpoint_trial_path(self, trial_id: int):
+    def checkpoint_trial_path(self, trial_id: int):
         return self.trial_path(trial_id) / "checkpoints"
 
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
-        src_checkpoint_path = self._checkpoint_trial_path(src_trial_id)
-        tgt_checkpoint_path = self._checkpoint_trial_path(tgt_trial_id)
+        src_checkpoint_path = self.checkpoint_trial_path(src_trial_id)
+        tgt_checkpoint_path = self.checkpoint_trial_path(tgt_trial_id)
         shutil.copytree(src_checkpoint_path, tgt_checkpoint_path)
 
     def delete_checkpoint(self, trial_id: int):
-        checkpoint_path = self._checkpoint_trial_path(trial_id)
+        checkpoint_path = self.checkpoint_trial_path(trial_id)
         shutil.rmtree(checkpoint_path, ignore_errors=True)
 
     def _prepare_for_schedule(self, num_gpus=None):

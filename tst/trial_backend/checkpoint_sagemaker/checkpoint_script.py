@@ -57,10 +57,9 @@ if __name__ == "__main__":
     error_msg = None
 
     # Try to load checkpoint (may not be present)
-    checkpoint1_path = Path(getattr(args, ST_CHECKPOINT_DIR)) / "checkpoint1.json"
-    checkpoint2_path = (
-        Path(getattr(args, ST_CHECKPOINT_DIR)) / "subdir" / "checkpoint2.json"
-    )
+    checkpoint_dir = getattr(args, ST_CHECKPOINT_DIR)
+    checkpoint1_path = Path(checkpoint_dir) / "checkpoint1.json"
+    checkpoint2_path = Path(checkpoint_dir) / "subdir" / "checkpoint2.json"
     old_checkpoint1 = load_checkpoint(checkpoint1_path)
     old_checkpoint2 = dict()
     if old_checkpoint1:

@@ -29,9 +29,15 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     least num_min_data_points. Code is based on the implementation by Falkner
     et al: https://github.com/automl/HpBandSter/tree/master/hpbandster
 
-    BOHB: Robust and Efficient Hyperparameter Optimization at Scale
-    S. Falkner and A. Klein and F. Hutter
-    Proceedings of the 35th International Conference on Machine Learning
+        | BOHB: Robust and Efficient Hyperparameter Optimization at Scale
+        | S. Falkner and A. Klein and F. Hutter
+        | Proceedings of the 35th International Conference on Machine Learning
+
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`:
+
+    :param resource_attr: Name of resource attribute. Defaults to
+        `scheduler.resource_attr` in :meth:`configure_scheduler`
     """
 
     def __init__(
@@ -49,12 +55,6 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         resource_attr: Optional[str] = None,
         **kwargs
     ):
-        """
-        Additional arguments on top of parent class :class:`KernelDensityEstimator`.
-
-        :param resource_attr: Name of resource attribute. Defaults to
-            `scheduler.resource_attr` in `configure_scheduler`
-        """
         if min_bandwidth is None:
             min_bandwidth = 0.1
         super().__init__(

@@ -43,6 +43,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
 from itertools import product
 
 logger = logging.getLogger(__name__)
+
+
 DEFAULT_NSAMPLE = 5
 
 
@@ -52,12 +54,14 @@ def _impute_default_config(
     """Imputes missing values in `default_config` by mid-point rule
 
     For numerical types, the mid-point in the range is chosen (in normal
-    or log). For `Categorical`, we pick the first entry of `categories`.
+    or log). For :class:`~`syne_tune.config_space.Categorical`, we pick the first
+    entry of `categories`.
 
     :param default_config: Configuration to be imputed
-    :param config_space:  Configuration space
+    :param config_space: Configuration space
     :return: Imputed configuration. If `default_config` has entries with
-        values not being `Domain`, they are not included
+        values not being :class:`~`syne_tune.config_space.Domain`, they are not
+        included
     """
     new_config = dict()
     for name, hp_range in config_space.items():
@@ -130,15 +134,17 @@ def impute_points_to_evaluate(
     points_to_evaluate: Optional[List[dict]], config_space: dict
 ) -> List[dict]:
     """
-    Transforms `points_to_evaluate` argument to :class:`BaseSearcher`. Each
+    Transforms `points_to_evaluate` argument to
+    :class:`~`syne_tune.optimizer.schedulers.searchers.BaseSearcher`. Each
     config in the list can be partially specified, or even be an empty dict.
     For each hyperparameter not specified, the default value is determined
     using a midpoint heuristic. Also, duplicate entries are filtered out.
-    If None (default), this is mapped to [dict()], a single default config
-    determined by the midpoint heuristic. If [] (empty list), no initial
+    If None (default), this is mapped to `[dict()]`, a single default config
+    determined by the midpoint heuristic. If `[]` (empty list), no initial
     configurations are specified.
 
-    :param points_to_evaluate: Argument to `BaseSearcher`
+    :param points_to_evaluate: Argument to
+        :class:`~`syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param config_space: Configuration space
     :return: List of fully specified initial configs
     """
@@ -159,8 +165,19 @@ def impute_points_to_evaluate(
 
 class BaseSearcher:
     """
-    Base class of searchers, which are components of schedulers resposible for
-    implementing `get_config`.
+    Base class of searchers, which are components of schedulers responsible for
+    implementing :meth:`~get_config`.
+
+    :param config_space: Configuration space
+    :param metric: Name of metric passed to :meth:`~update`. Can be obtained from
+        scheduler in :meth:`~configure_scheduler`
+    :param points_to_evaluate: List of configurations to be evaluated
+        initially (in that order). Each config in the list can be partially
+        specified, or even be an empty dict. For each hyperparameter not
+        specified, the default value is determined using a midpoint heuristic.
+        If `None` (default), this is mapped to `[dict()]`, a single default config
+        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        configurations are specified.
     """
 
     def __init__(
@@ -169,18 +186,6 @@ class BaseSearcher:
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
     ):
-        """
-        :param config_space: Configuration space
-        :param metric: Name of metric passed to `update`. Can be obtained from
-            scheduler in `configure_scheduler`
-        :param points_to_evaluate: List of configurations to be evaluated
-            initially (in that order). Each config in the list can be partially
-            specified, or even be an empty dict. For each hyperparameter not
-            specified, the default value is determined using a midpoint heuristic.
-            If None (default), this is mapped to [dict()], a single default config
-            determined by the midpoint heuristic. If [] (empty list), no initial
-            configurations are specified.
-        """
         self.config_space = config_space
         assert metric is not None, "Argument 'metric' is required"
         self._metric = metric
@@ -195,7 +200,7 @@ class BaseSearcher:
         This method has to be called before the searcher can be used.
 
         :param scheduler: Scheduler the searcher is used with.
-        :type scheduler: :class:`TrialScheduler`
+        :type scheduler: :class:`~`syne_tune.optimizer.schedulers.TrialScheduler`
         """
         from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
@@ -215,7 +220,8 @@ class BaseSearcher:
     def get_config(self, **kwargs) -> Optional[dict]:
         """Suggest a new configuration.
 
-        Note: Query `_next_initial_config` for initial configs to return first.
+        Note: Query :meth:`_next_initial_config` for initial configs to return
+        first.
 
         :param kwargs: Extra information may be passed from scheduler to
             searcher
@@ -230,17 +236,17 @@ class BaseSearcher:
     def on_trial_result(self, trial_id: str, config: dict, result: dict, update: bool):
         """Inform searcher about result
 
-        The scheduler passes every result. If `update` is True, the searcher
+        The scheduler passes every result. If `update == True`, the searcher
         should update its surrogate model (if any), otherwise `result` is an
         intermediate result not modelled.
 
-        The default implementation calls self._update if `update` is True. It
-        can be overwritten by searchers which also react to intermediate
+        The default implementation calls :meth:`_update` if `update == True`.
+        It can be overwritten by searchers which also react to intermediate
         results.
 
-        :param trial_id: See `TrialScheduler.on_trial_result`
-        :param config: See `TrialScheduler.on_trial_result`
-        :param result: See `TrialScheduler.on_trial_result`
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param result: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         :param update: Should surrogate model be updated?
         """
         if update:
@@ -249,9 +255,9 @@ class BaseSearcher:
     def _update(self, trial_id: str, config: dict, result: dict):
         """Update surrogate model with result
 
-        :param trial_id: See `TrialScheduler.on_trial_result`
-        :param config: See `TrialScheduler.on_trial_result`
-        :param result: See `TrialScheduler.on_trial_result`
+        :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param config: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
+        :param result: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
         """
         raise NotImplementedError
 
@@ -262,9 +268,9 @@ class BaseSearcher:
         milestone: Optional[int] = None,
     ):
         """
-        Signals to searcher that evaluation for trial has started, but not
-        yet finished, which allows model-based searchers to register this
-        evaluation as pending.
+        Signals to searcher that evaluation for trial has started, but not yet
+        finished, which allows model-based searchers to register this evaluation
+        as pending.
 
         :param trial_id: ID of trial to be registered as pending evaluation
         :param config: If `trial_id` has not been registered with the
@@ -277,7 +283,7 @@ class BaseSearcher:
         pass
 
     def remove_case(self, trial_id: str, **kwargs):
-        """Remove data case previously appended by `_update`
+        """Remove data case previously appended by :meth:`_update`
 
         For searchers which maintain the dataset of all cases (reports) passed
         to update, this method allows to remove one case from the dataset.
@@ -324,9 +330,8 @@ class BaseSearcher:
 
     def get_state(self) -> dict:
         """
-        Together with `clone_from_state`, this is needed in order to store and
-        re-create the mutable state of the searcher.
-
+        Together with :meth:`clone_from_state`, this is needed in order to
+        store and re-create the mutable state of the searcher.
         The state returned here must be pickle-able.
 
         :return: Pickle-able mutable state of searcher
@@ -335,12 +340,12 @@ class BaseSearcher:
 
     def clone_from_state(self, state: dict):
         """
-        Together with get_state, this is needed in order to store and
+        Together with :meth:`get_state`, this is needed in order to store and
         re-create the mutable state of the searcher.
 
-        Given state as returned by get_state, this method combines the
+        Given state as returned by :meth:`get_state`, this method combines the
         non-pickle-able part of the immutable state from self with state
-        and returns the corresponding searcher clone. Afterwards, self is
+        and returns the corresponding searcher clone. Afterwards, `self` is
         not used anymore.
 
         :param state: See above
@@ -352,12 +357,14 @@ class BaseSearcher:
         self._points_to_evaluate = state["points_to_evaluate"].copy()
 
     @property
-    def debug_log(self):
+    def debug_log(self) -> Optional[DebugLogPrinter]:
         """
-        Some BaseSearcher subclasses support writing a debug log, using
-        DebugLogPrinter. See RandomSearcher for an example.
+        Some subclasses support writing a debug log, using
+        :class:`~`syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log.DebugLogPrinter`.
+        See :class:`~`syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+        for an example.
 
-        :return: DebugLogPrinter; or None (not supported)
+        :return: `debug_log` object` or None (not supported)
         """
         return None
 
@@ -382,9 +389,15 @@ class SearcherWithRandomSeed(BaseSearcher):
     Base class of searchers which use random decisions. Creates the
     `random_state` member, which must be used for all random draws.
 
-    Making proper use of this interface allows us to run experiments
-    with control of random seeds, e.g. for paired comparisons or
-    integration testing.
+    Making proper use of this interface allows us to run experiments with
+    control of random seeds, e.g. for paired comparisons or integration testing.
+
+    Additional arguments on top of parent class :class:`BaseSearcher`.
+
+    :param random_seed_generator: If given, random seed is drawn from there
+    :type random_seed_generator: :class:`~`syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`, optional
+    :param random_seed: Used if `random_seed_generator` is not given.
+    :type random_seed: int, optional
     """
 
     def __init__(
@@ -394,13 +407,6 @@ class SearcherWithRandomSeed(BaseSearcher):
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`BaseSearcher`.
-
-        :param random_seed_generator: :class:`RandomSeedGenerator`, optional.
-            If given, random seed is drawn from there
-        :param random_seed: Used if `random_seed_generator` is not given.
-        """
         super().__init__(
             config_space, metric=metric, points_to_evaluate=points_to_evaluate
         )
@@ -419,6 +425,16 @@ class SearcherWithRandomSeed(BaseSearcher):
 class RandomSearcher(SearcherWithRandomSeed):
     """
     Searcher which randomly samples configurations to try next.
+
+    Additional arguments on top of parent class :class:`SearcherWithRandomSeed`:
+
+    :param debug_log: If `True`, debug log printing is activated.
+        Logs which configs are chosen when, and which metric values are
+        obtained. Defaults to `False`
+    :type debug_log: bool, optional
+    :param resource_attr: Optional. Key in `result` passed to :meth:`_update`
+        for resource value (for multi-fidelity schedulers)
+    :type resource_attr: str, optional
     """
 
     MAX_RETRIES = 100
@@ -430,17 +446,6 @@ class RandomSearcher(SearcherWithRandomSeed):
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
-
-        :param debug_log: If True, debug log printing is activated.
-            Logs which configs are chosen when, and which metric values are
-            obtained. Defaults to False
-        :type debug_log: bool, optional
-        :param resource_attr: Optional. Key in `result` passed to `_update`
-            for resource value (for multi-fidelity schedulers)
-        :type resource_attr: str, optional
-        """
         super().__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
@@ -539,6 +544,20 @@ class GridSearcher(SearcherWithRandomSeed):
 
     It first evaluates configurations defined in points_to_evaluate and then
     continues with the remaining points from the grid.
+
+    Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
+
+    :param num_samples: Dictionary, optional. Number of samples per
+        hyperparameter. This is required for hyperparameters of type float,
+        optional for integer hyperparameters, and will be ignored for
+        other types (categorical, scalar). If left unspecified, a default
+        value of :const:`DEFAULT_NSAMPLE` will be used for float parameters, and
+        the smallest of :const:`DEFAULT_NSAMPLE` and integer range will be used
+        for integer parameters.
+    :param shuffle_config: If `True` (default), the order of configurations
+        suggested after those specified in `points_to_evaluate` is
+        shuffled. Otherwise, the order will follow the Cartesian product
+        of the configurations.
     """
 
     def __init__(
@@ -550,21 +569,6 @@ class GridSearcher(SearcherWithRandomSeed):
         shuffle_config: bool = True,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class :class:`BaseSearcher`.
-
-        :param num_samples: Dictionary, optional. Number of samples per
-            hyperparameter. This is required for hyperparameters of type float,
-            optional for integer hyperparameters, and will be ignored for
-            other types (categorical, scalar). If left unspecified, a default
-            value of `DEFAULT_NSAMPLE` will be used for float parameters, and
-            the smallest of `DEFAULT_NSAMPLE` and integer range will be used
-            for integer parameters.
-        :param shuffle_config: If True (default), the order of configurations
-            suggested after those specified in `points_to_evaluate` is
-            shuffled. Otherwise, the order will follow the Cartesian product
-            of the configurations.
-        """
         super().__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
@@ -667,14 +671,13 @@ class GridSearcher(SearcherWithRandomSeed):
 
     def get_config(self, **kwargs) -> Optional[dict]:
         """Select the next configuration from the grid.
+
         This is done without replacement, so previously returned configs are
         not suggested again.
 
-        Returns
-        -------
-        A new configuration that is valid, or None if no new config can be
-        suggested. The returned configuration is a dictionary that maps
-        hyperparameters to its values.
+        :return: A new configuration that is valid, or None if no new config
+            can be suggested. The returned configuration is a dictionary that
+            maps hyperparameters to its values.
         """
 
         new_config = self._next_initial_config()
@@ -702,10 +705,8 @@ class GridSearcher(SearcherWithRandomSeed):
 
     def _next_candidate_on_grid(self) -> Optional[tuple]:
         """
-        Returns:
-            Next configuration from the set of grid candidates
-            or None if no candidate is left. The returned configuration
-            is a tuple of hyperparameter values.
+        :return: Next configuration from the set of grid candidates
+            or None if no candidate is left.
         """
 
         if self._next_index < len(self.hp_values_combinations):

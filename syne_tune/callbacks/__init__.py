@@ -11,3 +11,5 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from syne_tune.callbacks.tensorboard_callback import TensorboardCallback  # noqa: F401
+
+__all__ = ["TensorboardCallback"]

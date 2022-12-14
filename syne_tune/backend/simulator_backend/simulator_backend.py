@@ -51,17 +51,17 @@ class SimulatorConfig:
     Configures the simulator:
 
     :param delay_on_trial_result: Time from `report` called on worker to result
-        registered at back-end, defaults to `DEFAULT_DELAY`
+        registered at back-end, defaults to :const:`DEFAULT_DELAY`
     :param delay_complete_after_final_report: Time from final `report` called
         on worker to job completion being registered at back-end. Defaults to
-        `DEFAULT_DELAY`
+        :const:`DEFAULT_DELAY`
     :param delay_complete_after_stop: Time from stop signal received at worker
         to job completion being registered at back-end. Defaults to
-        `DEFAULT_DELAY`
+        `:const:DEFAULT_DELAY`
     :param delay_start: Time from start command being sent at back-end and job
-        starting on the worker (which is free). Defaults to `DEFAULT_DELAY`
+        starting on the worker (which is free). Defaults to :const:`DEFAULT_DELAY`
     :param delay_stop: Time from stop signal being sent at back-end to signal
-        received at worker (which is running). Defaults to `DEFAULT_DELAY`
+        received at worker (which is running). Defaults to :const:`DEFAULT_DELAY`
     """
 
     delay_on_trial_result: float = DEFAULT_DELAY
@@ -82,13 +82,14 @@ class SimulatorConfig:
 
 class SimulatorBackend(LocalBackend):
     """
-    Note: In order to simulate tuning from a tabulated or surrogate
-    blackbox, use :class:`BlackboxRepositoryBackend`.
-
     This simulator back-end drives experiments with tabulated training
     evaluation functions, which return their computation time rather than
     spend it. To this end, time (on the tuning instance) is simulated using
-    a `time_keeper` and an event priority queue in `_simulator_state`.
+    a :attr:`time_keeper` and an event priority queue in :attr:`_simulator_state`.
+
+    .. note::
+       In order to simulate tuning from a tabulated or surrogate blackbox, use
+       .
 
     Time is advanced both by `Tuner.run` waiting, and by non-negligible
     computations during the tuning loop (in particular, we take care of
@@ -108,12 +109,25 @@ class SimulatorBackend(LocalBackend):
     `simulator_state` are processed whose time is before the current time
     in `time_keeper`. The method ends by `time_keeper.mark_exit()`.
 
-    Note: In this basic version of the simulator back-end, we still call a
-    Python main function as a subprocess, which returns the requested
-    metrics by looking them up or running a surrogate. This is flexible,
-    but has the overhead of loading a table at every call. For faster
-    simulations, use :class:`BlackboxRepositoryBackend` after bringing your
-    tabulated data or surrogate benchmark into the blackbox repository.
+    .. note::
+       In this basic version of the simulator back-end, we still call a
+       Python main function as a subprocess, which returns the requested
+       metrics by looking them up or running a surrogate. This is flexible,
+       but has the overhead of loading a table at every call. For fast and
+       convenient simulations, use
+       ::class:`~syne_tune.blackbox_repository.BlackboxRepositoryBackend` after
+       bringing your tabulated data or surrogate benchmark into the blackbox
+       repository.
+
+    :param entry_point: Python main file to be tuned (this should
+        return all results directly, and report elapsed time in the
+        `elapsed_time_attr` field
+    :param elapsed_time_attr: See above
+    :param simulator_config: Parameters for simulator, optional
+    :param tuner_sleep_time: Effective sleep time in
+        :meth:`~syne_tune.Tuner.run`. This information is needed in
+        :class:`~syne_tune.backend.simulator_backend.SimulatorCallback`.
+        Defaults to :const:`~syne_tune.tuner.DEFAULT_SLEEP_TIME`
     """
 
     def __init__(
@@ -124,16 +138,6 @@ class SimulatorBackend(LocalBackend):
         tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
         debug_resource_attr: Optional[str] = None,
     ):
-        """
-        :param entry_point: Python main file to be tuned (this should
-            return all results directly, and report elapsed time in the
-            `elapsed_time_attr` field
-        :param elapsed_time_attr: See above
-        :param simulator_config: Parameters for simulator, optional
-        :param tuner_sleep_time: Effective sleep time in `Tuner.run`. This
-            information is needed in :class:`SimulatorCallback`. Defaults
-            to `DEFAULT_SLEEP_TIME`
-        """
         super().__init__(entry_point=entry_point, rotate_gpus=False)
         self.elapsed_time_attr = elapsed_time_attr
         if simulator_config is None:

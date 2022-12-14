@@ -112,69 +112,73 @@ class ResourceLevelsScheduler(TrialScheduler):
 
 
 class FIFOScheduler(ResourceLevelsScheduler):
-    r"""Scheduler which executes trials in submission order.
+    """Scheduler which executes trials in submission order.
 
     This is the most basic scheduler template. It can be configured to
     many use cases by choosing `searcher` along with `search_options`.
+
+    :param config_space: Configuration space for evaluation function
+    :type config_space: dict
+    :param searcher: Searcher for `get_config` decisions. String values
+        are passed to `searcher_factory` along with `search_options` and
+        extra information. Defaults to "random" (i.e., random search)
+    :type searcher: str or
+        :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
+    :param search_options: If searcher is `str`, these arguments are
+        passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`
+    :type search_options: dict, optional
+    :param metric: Name of metric to optimize, key in results obtained via
+        `on_trial_result`
+    :type metric: str
+    :param mode: "min" if `metric` is minimized, "max" if `metric` is
+        maximized, defaults to "min"
+    :type mode: str, optional
+    :param points_to_evaluate: List of configurations to be evaluated
+        initially (in that order). Each config in the list
+        can be partially specified, or even be an empty dict. For each
+        hyperparameter not specified, the default value is determined using
+        a midpoint heuristic.
+        If not given, this is mapped to `[dict()]`, a single default config
+        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        configurations are specified.
+        Note: If `searcher` is of type :class:`BaseSearcher`,
+        `points_to_evaluate` must be set there.
+    :type points_to_evaluate: `List[dict]`, optional
+    :param random_seed: Master random seed. Generators used in the
+        scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
+        If not given, the master random seed is drawn at random here.
+    :type random_seed: int, optional
+    :param max_resource_attr: Key name in config for fixed attribute
+        containing the maximum resource. If this is given, `max_t` is not
+        needed. We recommend to use `max_resource_attr` over `max_t`.
+        If given, we use it to infer `max_resource_level`. It is also
+        used to limit trial executions in promotion-based multi-fidelity
+        schedulers (see class:`HyperbandScheduler`, `type="promotion"`).
+    :type max_resource_attr: str, optional
+    :param max_t: Value for `max_resource_level`. Needed for
+        schedulers which make use of intermediate reports via
+        `on_trial_result`. If this is not given, we try to infer its value
+        from `config_space` (see
+        :class:`~syne_tune.optimizer.schedulers.ResourceLevelsScheduler`).
+        checking `config_space["epochs"]`, `config_space["max_t"]`, and
+        `config_space["max_epochs"]`. If `max_resource_attr` is given, we use
+        the value `config_space[max_resource_attr]`. But if `max_t` is given
+        here, it takes precedence.
+    :type max_t: int, optional
+    :param time_keeper: This will be used for timing here (see
+        `_elapsed_time`). The time keeper has to be started at the beginning
+        of the experiment. If not given, we use a local time keeper here,
+        which is started with the first call to :meth:`_suggest`. Can also be set
+        after construction, with :meth:`set_time_keeper`.
+        Note: If you use
+        :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`, you need
+        to pass its `time_keeper` here.
+    :type time_keeper: :class:`~syne_tune.backend.time_keeper.TimeKeeper`,
+        optional
     """
 
     def __init__(self, config_space: dict, **kwargs):
-        """
-        :param config_space: Configuration space for evaluation function
-        :type config_space: dict
-        :param searcher: Searcher for `get_config` decisions. String values
-            are passed to `searcher_factory` along with `search_options` and
-            extra information. Defaults to `random` (i.e., random search)
-        :type searcher: str or :class:`BaseSearcher`
-        :param search_options: If searcher is `str`, these arguments are
-            passed to `searcher_factory`
-        :type search_options: dict, optional
-        :param metric: Name of metric to optimize, key in results obtained via
-            `on_trial_result`
-        :type metric: str
-        :param mode: "min" if `metric` is minimized, "max" if `metric` is
-            maximized, defaults to "min"
-        :type mode: str, optional
-        :param points_to_evaluate: List of configurations to be evaluated
-            initially (in that order). Each config in the list
-            can be partially specified, or even be an empty dict. For each
-            hyperparameter not specified, the default value is determined using
-            a midpoint heuristic.
-            If not given, this is mapped to `[dict()]`, a single default config
-            determined by the midpoint heuristic. If `[]` (empty list), no initial
-            configurations are specified.
-            Note: If `searcher` is of type :class:`BaseSearcher`,
-            `points_to_evaluate` must be set there.
-        :type points_to_evaluate: `List[dict]`, optional
-        :param random_seed: Master random seed. Generators used in the
-            scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
-            If not given, the master random seed is drawn at random here.
-        :type random_seed: int, optional
-        :param max_resource_attr: Key name in config for fixed attribute
-            containing the maximum resource. If this is given, `max_t` is not
-            needed. We recommend to use `max_resource_attr` over `max_t`.
-            If given, we use it to infer `max_resource_level`. It is also
-            used to limit trial executions in promotion-based multi-fidelity
-            schedulers (see class:`HyperbandScheduler`, type 'promotion').
-        :type max_resource_attr: str, optional
-        :param max_t: Value for `max_resource_level`. Needed for
-            schedulers which make use of intermediate reports via
-            `on_trial_result`. If this is not given, we try to infer its value
-            from `config_space` (see :class:`ResourceLevelsScheduler`).
-            checking `config_space['epochs']`, `config_space['max-t']`, and
-            `config_space['max-epochs']`. If `max_resource_attr` is given, we use
-            the value `config_space[max_resource_attr]`. But if `max_t` is given
-            here, it takes precedence.
-        :type max_t: int, optional
-        :param time_keeper: This will be used for timing here (see
-            `_elapsed_time`). The time keeper has to be started at the beginning
-            of the experiment. If not given, we use a local time keeper here,
-            which is started with the first call to `_suggest`. Can also be set
-            after construction, with `set_time_keeper`.
-            Note: If you use :class:`SimulatorBackend`, you need to pass its
-            `time_keeper` here.
-        :type time_keeper: :class:`TimeKeeper`, optional
-        """
         super().__init__(config_space)
         # Check values and impute default values
         assert_no_invalid_options(kwargs, _ARGUMENT_KEYS, name="FIFOScheduler")
@@ -335,12 +339,13 @@ class FIFOScheduler(ResourceLevelsScheduler):
 
         The second return argument, `extra_kwargs`, plays different roles
         depending on the first return argument:
+
         * If `trial_id is None` (no promotion): `extra_kwargs` are args to be
-            passed to `get_config` call of searcher.
+          passed to `get_config` call of searcher.
         * If `trial_id not None` (promotion): `extra_kwargs` may be None or a
-            dict. If a dict, `extra_kwargs` is used to update the config of the
-            trial to be promoted. In this case, `suggest` will return the
-            tuple `(trial_id, extra_kwargs)`.
+          dict. If a dict, `extra_kwargs` is used to update the config of the
+          trial to be promoted. In this case, `suggest` will return the
+          tuple `(trial_id, extra_kwargs)`.
 
         :return: `(trial_id, extra_kwargs)`
         """

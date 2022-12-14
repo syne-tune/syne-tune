@@ -23,20 +23,20 @@ class RUSHDecider:
     """
     Implements the additional decision logic according to the RUSH algorithm.
     It is used as part of :class:`RUSHStoppingRungSystem` and
-    :class:`RUSHPromotionRungSystem`.
+    :class:`RUSHPromotionRungSystem`. Reference:
 
-    Reference: A resource-efficient method for repeated HPO and NAS.
-    Giovanni Zappella, David Salinas, Cédric Archambeau.
-    AutoML workshop @ ICML 2021.
+        | A resource-efficient method for repeated HPO and NAS.
+        | Giovanni Zappella, David Salinas, Cédric Archambeau.
+        | AutoML workshop @ ICML 2021.
 
-    For a more detailed description, refer to :class:`RUSHScheduler`.
+    For a more detailed description, refer to
+    :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+
+    :param num_threshold_candidates: Number of threshold candidates
+    :param mode: "min" or "max"
     """
 
     def __init__(self, num_threshold_candidates: int, mode: str):
-        """
-        :param num_threshold_candidates: Number of threshold candidates
-        :param mode: "min" or "max"
-        """
         if num_threshold_candidates <= 0:
             logger.warning(
                 "No threshold candidates provided. 'rush_stopping' will behave exactly like 'stopping'."
@@ -85,6 +85,11 @@ class RUSHDecider:
 class RUSHStoppingRungSystem(StoppingRungSystem):
     """
     Implementation for RUSH algorithm, stopping variant.
+
+    Additional arguments on top of base class
+    :class:`~syne_tune.optimizer.schedulers.hyperband_stopping.StoppingRungSystem`:
+
+    :param num_threshold_candidates: Number of threshold candidates
     """
 
     def __init__(
@@ -118,6 +123,11 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
 class RUSHPromotionRungSystem(PromotionRungSystem):
     """
     Implementation for RUSH algorithm, promotion variant.
+
+    Additional arguments on top of base class
+    :class:`~syne_tune.optimizer.schedulers.hyperband_promotion.PromotionRungSystem`:
+
+    :param num_threshold_candidates: Number of threshold candidates
     """
 
     def __init__(
