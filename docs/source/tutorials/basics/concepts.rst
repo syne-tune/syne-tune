@@ -40,7 +40,7 @@ and in right figure scripts are executed on a SageMaker instance in cloud.
 
 
 .. |image1| image:: img/local1.png
-            :width: 200
+            :width: 400
 .. |image2| image:: img/local2.png
             :width: 530
 +-----------------------------------+-------------------------------------------------------------+
@@ -85,14 +85,11 @@ Note that Syne Tune is agnostic to execution backend,
 and users can effortlessly change between backends by modifying input argument ``trial_backend`` in instantiating `Tuner`.
 See `launch_randomsearch.py <scripts/launch_randomsearch.py>`__
 for an example of local backend where ``entry_point`` is the training script.
-
 See `launch_height_python_backend.py <scripts/launch_height_python_backend.py>`__
 for an example of Python backend, where the training script is
 just a training function (in this example ``train_height()`` function) located in the tuner script.
-
-
 See `launch_sagemaker_backend.py <scripts/launch_sagemaker_backend.py>`__ for an example of SageMaker backend, where
-a PyTorch container on ``ml.m4.xlarge`` instance is picked to run the training script (i.e.`entry_point`).
+a PyTorch container on ``ml.m4.xlarge`` instance is picked to run the training script (i.e.``entry_point``).
 
 [TODO] simulated backend
 
