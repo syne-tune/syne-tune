@@ -10,6 +10,17 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+"""
+This is an example on how to use syne-tune in the ask-tell mode.
+In this setup the tuning loop and experiments are disentangled. The AskTell Scheduler suggests new configurations
+and the users themselves perform experiments to test the performance of each configuration.
+Once done, user feeds the result into the Scheduler which uses the data to suggest better configurations.
+
+
+In some cases, experiments needed for function evaluations can be very complex and require extra orchestration
+(example vary from setting up jobs on non-aws clusters to runnig physical lab experiments) in which case this
+interface provides all the necessary flexibility
+"""
 import datetime
 import logging
 from pathlib import Path
@@ -41,7 +52,9 @@ class AskTellScheduler:
         """
         trial_suggestion = self.bscheduler.suggest(self.trial_counter)
         trial = Trial(
-            trial_id=self.trial_counter, config=trial_suggestion.config, creation_time=datetime.datetime.now()
+            trial_id=self.trial_counter,
+            config=trial_suggestion.config,
+            creation_time=datetime.datetime.now(),
         )
         self.trial_counter += 1
         return trial
@@ -54,7 +67,9 @@ class AskTellScheduler:
         :param experiment_result: {metric: value} dictionary with experiment results
         """
         trial_result = trial.add_results(
-            metrics=experiment_result, status=Status.completed, training_end_time=datetime.datetime.now()
+            metrics=experiment_result,
+            status=Status.completed,
+            training_end_time=datetime.datetime.now(),
         )
         self.bscheduler.on_trial_complete(trial=trial, result=experiment_result)
         self.completed_experiments[trial_result.trial_id] = trial_result
@@ -69,32 +84,9 @@ class AskTellScheduler:
             sign = -1.0
 
         return max(
-            [value for key, value in self.completed_experiments.items()], key=lambda trial: sign * trial.metrics[metris]
+            [value for key, value in self.completed_experiments.items()],
+            key=lambda trial: sign * trial.metrics[metris],
         )
-
-    def save(self, output_path: Optional[Union[str, Path]] = None) -> Path:
-        """
-        Save the scheduler to a given path
-        :param output_path: Complete output path for the scheduler,
-            defaults to ask_tell_scheduler-after-trial={self.trial_counter}.dill
-        :return: output path
-        """
-        if output_path is None:
-            output_path = f"ask_tell_scheduler-after-trial={self.trial_counter}.dill"
-
-        with open(output_path, "wb") as f:
-            dill.dump(self, f)
-        return output_path
-
-    @staticmethod
-    def from_file(output_path: Union[str, Path]) -> "AskTellScheduler":
-        """
-        Load the scheduler from path
-        :param output_path: Complete output path for the scheduler
-        """
-        with open(output_path, "rb") as f:
-            scheduler = dill.load(f)
-        return scheduler
 
 
 def target_function(x, noise: bool = True):
@@ -117,7 +109,7 @@ def get_objective():
     return metric, mode, config_space, max_iterations
 
 
-def inspect_objective():
+def plot_objective():
     """
     In this function, we will inspect the objective by plotting the target function
     :return:
@@ -156,9 +148,14 @@ def save_restart_with_gp() -> TrialResult:
         test_result = target_function(**trial_suggestion.config)
         scheduler.tell(trial_suggestion, {metric: test_result})
 
-    scheduler.save("scheduler-checkpoint.dill")
-    # --- Break the experimental loop and return to the tuning later
-    scheduler = AskTellScheduler.from_file("scheduler-checkpoint.dill")
+    # --- The scheduler can be written to disk to pause experiment
+    output_path = "scheduler-checkpoint.dill"
+    with open(output_path, "wb") as f:
+        dill.dump(scheduler, f)
+
+    # --- The Scheduler can be read from disk at a later time to resume experiments
+    with open(output_path, "rb") as f:
+        scheduler = dill.load(f)
 
     for iter in range(int(max_iterations / 2)):
         trial_suggestion = scheduler.ask()
@@ -179,7 +176,7 @@ def tune_with_gp() -> TrialResult:
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.WARN)
-    # inspect_objective()
+    # plot_objective() # Please uncomment this to plot the objective
     print("Random:", tune_with_random_search())
     print("GP with restart:", save_restart_with_gp())
     print("GP:", tune_with_gp())

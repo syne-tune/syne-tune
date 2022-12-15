@@ -10,19 +10,31 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import datetime
-import logging
-from pathlib import Path
-from typing import Optional, Union, Tuple
 
-import dill
+"""
+This is an example on how to use syne-tune in the ask-tell mode.
+In this setup the tuning loop and experiments are disentangled. The AskTell Scheduler suggests new configurations
+and the users themselves perform experiments to test the performance of each configuration.
+Once done, user feeds the result into the Scheduler which uses the data to suggest better configurations.
+
+
+In some cases, experiments needed for function evaluations can be very complex and require extra orchestration
+(example vary from setting up jobs on non-aws clusters to runnig physical lab experiments) in which case this
+interface provides all the necessary flexibility
+
+This is an extension of launch_ask_tell_scheduler.py to run multi-fidelity methods such as Hyperband
+"""
+
+import logging
+from typing import Tuple
+
 import numpy as np
 
 from examples.launch_ask_tell_scheduler import AskTellScheduler
-from syne_tune.backend.trial_status import Trial, Status, TrialResult
-from syne_tune.config_space import randint, uniform
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA
-from syne_tune.optimizer.scheduler import TrialScheduler, SchedulerDecision
+from syne_tune.backend.trial_status import Trial, TrialResult
+from syne_tune.config_space import uniform
+from syne_tune.optimizer.baselines import ASHA
+from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
 def target_function(x, step: int = None, noise: bool = True):
@@ -48,6 +60,17 @@ def get_objective():
     return metric, mode, config_space, max_iterations
 
 
+def run_hyperband_step(
+    scheduler: AskTellScheduler, trial_suggestion: Trial, max_steps: int, metric: str
+) -> Tuple[float, float]:
+    for step in range(1, max_steps):
+        test_result = target_function(**trial_suggestion.config, step=step)
+        decision = scheduler.bscheduler.on_trial_result(trial_suggestion, {metric: test_result, "epoch": step})
+        if decision == SchedulerDecision.STOP:
+            break
+    return step, test_result
+
+
 def tune_with_hyperband() -> TrialResult:
     metric, mode, config_space, max_iterations = get_objective()
     max_steps = 100
@@ -66,17 +89,6 @@ def tune_with_hyperband() -> TrialResult:
         final_step, test_result = run_hyperband_step(scheduler, trial_suggestion, max_steps, metric)
         scheduler.tell(trial_suggestion, {metric: test_result, "epoch": final_step})
     return scheduler.best_trial(metric)
-
-
-def run_hyperband_step(
-    scheduler: AskTellScheduler, trial_suggestion: Trial, max_steps: int, metric: str
-) -> Tuple[float, float]:
-    for step in range(1, max_steps):
-        test_result = target_function(**trial_suggestion.config, step=step)
-        decision = scheduler.bscheduler.on_trial_result(trial_suggestion, {metric: test_result, "epoch": step})
-        if decision == SchedulerDecision.STOP:
-            break
-    return step, test_result
 
 
 if __name__ == "__main__":
