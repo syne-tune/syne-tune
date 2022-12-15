@@ -35,7 +35,6 @@ def run_apidoc(app):
         "../../githooks*",
         "../../tst*",
         "../../syne_tune.egg-info*",
-        "../../benchmarking/benchmark_loop*",
         "../../benchmarking/nursery/benchmark_automl*",
     ]
 
