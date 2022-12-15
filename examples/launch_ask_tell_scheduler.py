@@ -132,7 +132,9 @@ def plot_objective():
 
 def tune_with_random_search() -> TrialResult:
     metric, mode, config_space, max_iterations = get_objective()
-    scheduler = AskTellScheduler(base_scheduler=RandomSearch(config_space, metric=metric, mode=mode))
+    scheduler = AskTellScheduler(
+        base_scheduler=RandomSearch(config_space, metric=metric, mode=mode)
+    )
     for iter in range(max_iterations):
         trial_suggestion = scheduler.ask()
         test_result = target_function(**trial_suggestion.config)
@@ -142,7 +144,9 @@ def tune_with_random_search() -> TrialResult:
 
 def save_restart_with_gp() -> TrialResult:
     metric, mode, config_space, max_iterations = get_objective()
-    scheduler = AskTellScheduler(base_scheduler=BayesianOptimization(config_space, metric=metric, mode=mode))
+    scheduler = AskTellScheduler(
+        base_scheduler=BayesianOptimization(config_space, metric=metric, mode=mode)
+    )
     for iter in range(int(max_iterations / 2)):
         trial_suggestion = scheduler.ask()
         test_result = target_function(**trial_suggestion.config)
@@ -166,7 +170,9 @@ def save_restart_with_gp() -> TrialResult:
 
 def tune_with_gp() -> TrialResult:
     metric, mode, config_space, max_iterations = get_objective()
-    scheduler = AskTellScheduler(base_scheduler=BayesianOptimization(config_space, metric=metric, mode=mode))
+    scheduler = AskTellScheduler(
+        base_scheduler=BayesianOptimization(config_space, metric=metric, mode=mode)
+    )
     for iter in range(max_iterations):
         trial_suggestion = scheduler.ask()
         test_result = target_function(**trial_suggestion.config)
