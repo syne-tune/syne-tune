@@ -318,3 +318,30 @@ complete HPO solution. If you already have a system in place for job
 scheduling and managing the state of the tuning problem, you may want to
 call the scheduler on its own. This example demonstrates how to do this
 for Gaussian process based Bayesian optimization.
+
+
+Ask Tell interface
+=================================
+
+.. literalinclude:: ../../examples/launch_ask_tell_scheduler.py
+   :caption: examples/launch_ask_tell_scheduler.py
+   :lines: 13-
+
+This is an example on how to use syne-tune in the ask-tell mode.
+In this setup the tuning loop and experiments are disentangled. The AskTell Scheduler suggests new configurations
+and the users themselves perform experiments to test the performance of each configuration.
+Once done, user feeds the result into the Scheduler which uses the data to suggest better configurations.
+
+
+In some cases, experiments needed for function evaluations can be very complex and require extra orchestration
+(example vary from setting up jobs on non-aws clusters to runnig physical lab experiments) in which case this
+interface provides all the necessary flexibility
+
+Ask Tell interface for Hyperband
+=================================
+
+.. literalinclude:: ../../examples/launch_ask_tell_scheduler_hyperband.py
+   :caption: examples/launch_ask_tell_scheduler_hyperband.py
+   :lines: 13-
+
+This is an extension of launch_ask_tell_scheduler.py to run multi-fidelity methods such as Hyperband

@@ -23,16 +23,14 @@ interface provides all the necessary flexibility
 """
 import datetime
 import logging
-from pathlib import Path
-from typing import Optional, Union
 
 import dill
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial, Status, TrialResult
-from syne_tune.config_space import randint, uniform
-from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization, ASHA
-from syne_tune.optimizer.scheduler import TrialScheduler, SchedulerDecision
+from syne_tune.config_space import uniform
+from syne_tune.optimizer.baselines import RandomSearch, BayesianOptimization
+from syne_tune.optimizer.scheduler import TrialScheduler
 
 
 class AskTellScheduler:
