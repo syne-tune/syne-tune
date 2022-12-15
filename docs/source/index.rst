@@ -16,25 +16,17 @@ Syne Tune: Large-Scale and Reproducible Hyperparameter Optimization
 
 .. image:: synetune.gif
 
-This package provides state-of-the-art distributed hyperparameter optimizers
-(HPO) with the following key features:
+This package provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
 
-* Wide coverage (>20) of different HPO methods for asynchronous optimization
-  with multiple workers, including:
+* Wide coverage (>20) of different HPO methods, including:
 
-  * Advanced multi-fidelity methods supporting model-based decisions (including
-    ASHA, BOHB, MOBSTER, DEHB, Hyper-Tune)
-  * Transfer-learning optimizers that achieve better and better performance when
-    used repeatedly
-  * Multi-objective optimizers that can tune multiple objectives simultaneously
-    (such as accuracy and latency)
+  * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
+  * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
+  * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
+  * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
 
-* You can run HPO in different environments (locally, AWS, simulation) by
-  changing one line of code. You can run many experiments in parallel on AWS
-* Out-of-the-box tabulated benchmarks are available for several domains with very
-  efficient simulations, which allows you to obtain results in mere seconds,
-  while preserving the real dynamics of asynchronous or synchronous HPO with any
-  number of workers
+* HPO can be run in different environments (locally, AWS, simulation) by changing just one line of code.
+* Out-of-the-box tabulated benchmarks that allows you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
 
 
 .. toctree::
