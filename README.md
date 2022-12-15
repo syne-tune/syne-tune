@@ -104,7 +104,7 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 
 Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? 
 :--- | :---: | :---: | :---: | :---: | :---: 
-Grid Search | Someone (sometime) | deterministic | no | no | no 
+Grid Search |  | deterministic | yes | no | no 
 Random Search | Bergstra, et al. (2011) | random | yes | no | no 
 Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no 
 BORE | Tiao, et al. (2021) | model-based | yes | no | no 
