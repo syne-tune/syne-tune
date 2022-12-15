@@ -121,7 +121,7 @@ PASHA | Bohdal, et al. (2022)| random | yes | yes | no
 REA | Real, et al. (2019) | model-based | yes | no | no 
 PBT | Jaderberg, et al. (2017) | model-based | no | yes | no 
 ZeroShotTransfer | Wistuba, et al. (2015) | deterministic | yes | no | yes 
-AHSACTS | Salinas, et al. (2021)| random | yes | yes | yes 
+ASHA-CTS | Salinas, et al. (2021)| random | yes | yes | yes 
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes 
 
 The searchers fall into three broad categories, **deterministic**, **random**, and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function, or by applying an evolutionary algorithm.
