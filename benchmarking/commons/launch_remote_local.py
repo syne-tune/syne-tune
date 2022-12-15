@@ -17,7 +17,6 @@ import itertools
 import logging
 
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
-from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
@@ -41,7 +40,6 @@ def get_hyperparameters(
     method: str,
     experiment_tag: str,
     args,
-    benchmark: RealBenchmarkDefinition,
     map_extra_args: Optional[callable],
 ) -> Dict[str, Any]:
     """Compose hyperparameters for SageMaker training job
@@ -50,7 +48,6 @@ def get_hyperparameters(
     :param method: Method name
     :param experiment_tag: Tag of experimment
     :param args: Result from `parse_args`
-    :param benchmark: Benchmark definition
     :param map_extra_args: Hyperparameters are updated with
         `map_extra_args(args)`. Optional
     :return: Dictionary of hyperparameters
@@ -62,10 +59,11 @@ def get_hyperparameters(
         "save_tuner": int(args.save_tuner),
         "num_seeds": seed + 1,
         "start_seed": seed,
-        "n_workers": benchmark.n_workers,
-        "max_wallclock_time": benchmark.max_wallclock_time,
-        "instance_type": benchmark.instance_type,
     }
+    for k in ("n_workers", "max_wallclock_time", "instance_type"):
+        v = getattr(args, k)
+        if v is not None:
+            hyperparameters[k] = v
     if map_extra_args is not None:
         hyperparameters.update(filter_none(map_extra_args(args)))
     return hyperparameters
@@ -124,7 +122,7 @@ def launch_remote(
             benchmark=benchmark,
         )
         hyperparameters = get_hyperparameters(
-            seed, method, experiment_tag, args, benchmark, map_extra_args
+            seed, method, experiment_tag, args, map_extra_args
         )
         hyperparameters["verbose"] = int(args.verbose)
         sm_args["hyperparameters"] = hyperparameters

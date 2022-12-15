@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Dict, Any
 from pathlib import Path
 from tqdm import tqdm
 import itertools
@@ -27,7 +27,47 @@ from benchmarking.commons.utils import (
     find_or_create_requirements_txt,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
+
 from syne_tune.util import random_string
+
+
+def get_hyperparameters(
+    seed: int,
+    method: str,
+    experiment_tag: str,
+    args,
+    map_extra_args: Optional[callable],
+) -> Dict[str, Any]:
+    """Compose hyperparameters for SageMaker training job
+
+    :param seed: Seed of repetition
+    :param method: Method name
+    :param experiment_tag: Tag of experimment
+    :param args: Result from `parse_args`
+    :param map_extra_args: Hyperparameters are updated with
+        `map_extra_args(args)`. Optional
+    :return: Dictionary of hyperparameters
+    """
+    hyperparameters = {
+        "experiment_tag": experiment_tag,
+        "method": method,
+        "save_tuner": int(args.save_tuner),
+    }
+    if seed is not None:
+        hyperparameters["num_seeds"] = seed + 1
+        hyperparameters["start_seed"] = seed
+    else:
+        hyperparameters["num_seeds"] = args.num_seeds
+        hyperparameters["start_seed"] = args.start_seed
+    if args.benchmark is not None:
+        hyperparameters["benchmark"] = args.benchmark
+    for k in ("n_workers", "max_wallclock_time"):
+        v = getattr(args, k)
+        if v is not None:
+            hyperparameters[k] = v
+    if map_extra_args is not None:
+        hyperparameters.update(filter_none(map_extra_args(args)))
+    return hyperparameters
 
 
 def launch_remote(
@@ -101,24 +141,11 @@ def launch_remote(
             experiment_tag=args.experiment_tag,
             tuner_name=tuner_name,
         )
-        hyperparameters = {
-            "experiment_tag": experiment_tag,
-            "method": method,
-            "support_checkpointing": int(args.support_checkpointing),
-            "save_tuner": int(args.save_tuner),
-            "verbose": int(args.verbose),
-        }
-        if extra_args is not None:
-            assert map_extra_args is not None
-            hyperparameters.update(filter_none(map_extra_args(args)))
-        if seed is not None:
-            hyperparameters["num_seeds"] = seed + 1
-            hyperparameters["start_seed"] = seed
-        else:
-            hyperparameters["num_seeds"] = args.num_seeds
-            hyperparameters["start_seed"] = args.start_seed
-        if args.benchmark is not None:
-            hyperparameters["benchmark"] = args.benchmark
+        hyperparameters = get_hyperparameters(
+            seed, method, experiment_tag, args, map_extra_args
+        )
+        hyperparameters["support_checkpointing"] = int(args.support_checkpointing)
+        hyperparameters["verbose"] = int(args.verbose)
         if benchmark_key is not None:
             hyperparameters["benchmark_key"] = benchmark_key
         sm_args["hyperparameters"] = hyperparameters

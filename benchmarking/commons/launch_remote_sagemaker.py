@@ -87,7 +87,7 @@ def launch_remote(
         )
         sm_args["environment"] = environment
         hyperparameters = get_hyperparameters(
-            seed, method, experiment_tag, args, benchmark, map_extra_args
+            seed, method, experiment_tag, args, map_extra_args
         )
         hyperparameters["max_failures"] = args.max_failures
         hyperparameters["warm_pool"] = int(args.warm_pool)

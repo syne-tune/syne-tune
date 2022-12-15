@@ -74,9 +74,37 @@ def _check_whether_rbv2(benchmark: BenchmarkSet) -> bool:
     return benchmark.config.config_id.startswith("rbv2_")
 
 
+def _check_whether_nb301(benchmark: BenchmarkSet) -> bool:
+    return benchmark.config.config_id == "nb301"
+
+
+NB301_ATTRIBUTE_NAME_PREFIX = "NetworkSelectorDatasetInfo_COLON_darts_COLON_"
+
+
 class BlackBoxYAHPO(Blackbox):
     """
     A wrapper that allows putting a 'YAHPO' BenchmarkInstance into a Blackbox.
+
+    If `fidelities` is given, it restricts `fidelity_values` to these values.
+    The sequence must be positive int and increasing. This works only if there
+    is a single fidelity attribute with integer values (but note that for
+    some specific YAHPO benchmarks, a fractional fidelity is transformed to
+    an integer one).
+
+    Even though YAHPO interpolates between fidelities, it can make sense
+    to restrict them to the values which have really been acquired in the
+    data. Note that this restricts multi-fidelity schedulers like
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, in that all
+    their rungs levels have to be fidelity values.
+
+    For example, for YAHPO `iaml`, the fidelity `trainsize` has been
+    acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed
+    to [1, 2, 4, 8, 12, 16, 20]. By default, the fidelity is
+    represented by `cs.randint(1, 20)`, but if `fidelities` is passed,
+    it uses `cs.ordinal(fidelities)`.
+
+    :param benchmark: YAHPO `BenchmarkSet`
+    :param fidelities: See above
     """
 
     def __init__(
@@ -84,28 +112,6 @@ class BlackBoxYAHPO(Blackbox):
         benchmark: BenchmarkSet,
         fidelities: Optional[List[int]] = None,
     ):
-        """
-        If `fidelities` is given, it restricts `fidelity_values` to these values.
-        The sequence must be positive int and increasing. This works only if there
-        is a single fidelity attribute with integer values (but note that for
-        some specific YAHPO benchmarks, a fractional fidelity is transformed to
-        an integer one).
-
-        Even though YAHPO interpolates between fidelities, it can make sense
-        to restrict them to the values which have really been acquired in the
-        data. Note that this restricts multi-fidelity schedulers like
-        :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, in that all
-        their rungs levels have to be fidelity values.
-
-        For example, for YAHPO `iaml`, the fidelity `trainsize` has been
-        acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed
-        to [1, 2, 4, 8, 12, 16, 20]. By default, the fidelity is
-        represented by `cs.randint(1, 20)`, but if `fidelities` is passed,
-        it uses `cs.ordinal(fidelities)`.
-
-        :param benchmark: YAHPO `BenchmarkSet`
-        :param fidelities: See above
-        """
         self.benchmark = benchmark
         super(BlackBoxYAHPO, self).__init__(
             configuration_space=cs_to_synetune(
@@ -117,8 +123,10 @@ class BlackBoxYAHPO(Blackbox):
         self.num_seeds = 1
         self._is_iaml = _check_whether_iaml(benchmark)
         self._is_rbv2 = _check_whether_rbv2(benchmark)
+        self._is_nb301 = _check_whether_nb301(benchmark)
         if self._is_rbv2:
             self.configuration_space["repl"] = 10
+        self._shortened_keys = None
         self._initialize_for_scenario()
         # Has to be called after `_initialize_for_scenario`, in order to
         # transform fidelity space for some of the YAHPO scenarios
@@ -146,6 +154,24 @@ class BlackBoxYAHPO(Blackbox):
                 assert len(self.fidelity_space) == 2
                 assert "repl" in self.fidelity_space
                 del self.fidelity_space["repl"]
+        elif self._is_nb301:
+            # Shorten overly long attribute names by removing the
+            # common prefix
+            len_prefix = len(NB301_ATTRIBUTE_NAME_PREFIX)
+            shortened_keys = []
+
+            def map_key(k: str) -> str:
+                if k.startswith(NB301_ATTRIBUTE_NAME_PREFIX):
+                    new_key = k[len_prefix:]
+                    shortened_keys.append(new_key)
+                    return new_key
+                else:
+                    return k
+
+            self.configuration_space = {
+                map_key(k): v for k, v in self.configuration_space.items()
+            }
+            self._shortened_keys = set(shortened_keys)
 
     def _adjust_fidelity_space(self, fidelities: Optional[List[int]]):
         assert len(self.fidelity_space) == 1, "Only one fidelity is supported"
@@ -165,7 +191,20 @@ class BlackBoxYAHPO(Blackbox):
             self._fidelity_values = np.array(fidelities)
             self.fidelity_space[self._fidelity_name] = cs.ordinal(fidelities.copy())
 
-    def active_hyperparameters(self, configuration: dict) -> List[str]:
+    def _map_configuration(self, config: dict) -> dict:
+        if self._is_nb301:
+
+            def map_key(k: str) -> str:
+                if k in self._shortened_keys:
+                    return NB301_ATTRIBUTE_NAME_PREFIX + k
+                else:
+                    return k
+
+            return {map_key(k): v for k, v in config.items()}
+        else:
+            return config
+
+    def _active_hyperparameters(self, configuration: dict) -> List[str]:
         return self.benchmark.config_space.get_active_hyperparameters(
             ConfigSpace.Configuration(
                 self.benchmark.config_space,
@@ -180,7 +219,7 @@ class BlackBoxYAHPO(Blackbox):
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
     ) -> dict:
-        configuration = configuration.copy()
+        configuration = self._map_configuration(configuration.copy())
 
         if fidelity is not None:
             if self._is_iaml or self._is_rbv2:
@@ -194,7 +233,7 @@ class BlackBoxYAHPO(Blackbox):
                 ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
                 fidelity = {k: fidelity_value / 20}
             configuration.update(fidelity)
-            active_hps = self.active_hyperparameters(configuration)
+            active_hps = self._active_hyperparameters(configuration)
             configuration = {k: v for k, v in configuration.items() if k in active_hps}
             return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
