@@ -10,15 +10,14 @@
 
 [Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)
 
-This package provides state-of-the-art distributed hyperparameter optimizers (HPO) with the following key features:
-* wide coverage (>20) of different HPO methods for asynchronous optimization with multiple workers, including:
-  * advanced multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER)
-  * transfer-learning optimizers that achieve better and better performance when used repeatedly
-  * multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency)
-* you can run HPO in different environments (locally, AWS, simulation) by changing one line of code
-* out-of-the-box tabulated benchmarks available for several domains with efficient simulations that allows you 
-  to get results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any
-  number of workers
+This package provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
+* Wide coverage (>20) of different HPO methods, including:
+  * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
+  * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
+  * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
+  * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
+* HPO can be run in different environments (locally, AWS, simulation) by changing just one line of code.
+* Out-of-the-box tabulated benchmarks that allows you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
 
 ## Installing
 
@@ -107,6 +106,45 @@ tuner.run()
 
 The above example runs ASHA with 4 asynchronous workers on a local machine.
 
+## Supported HPO methods
+
+The following hyperparameter optimization (HPO) methods are available in Syne Tune:
+
+Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer? 
+:--- | :---: | :---: | :---: | :---: | :---: 
+Grid Search |  | deterministic | yes | no | no 
+Random Search | Bergstra, et al. (2011) | random | yes | no | no 
+Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no 
+BORE | Tiao, et al. (2021) | model-based | yes | no | no 
+MedianStoppingRule | Golovin, et al. (2017) | any | yes | yes | no 
+SyncHyperband | Li, et al. (2018) | random | no | yes | no 
+SyncBOHB | Falkner, et al. (2018) | model-based | no | yes | no 
+SyncMOBSTER | Klein, et al. (2020) | model-based | no | yes | no 
+ASHA | Li, et al. (2019) | random | yes | yes | no 
+BOHB | Falkner, et al. (2018) | model-based | yes | yes | no 
+MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no 
+DEHB | Awad, et al. (2021) | evolutionary | no | yes | no 
+HyperTune | Li, et al. (2022) | model-based | yes | yes | no 
+PASHA | Bohdal, et al. (2022)| random | yes | yes | no 
+REA | Real, et al. (2019) | evolutionary | yes | no | no 
+PBT | Jaderberg, et al. (2017) | evolutionary | no | yes | no 
+ZeroShotTransfer | Wistuba, et al. (2015) | deterministic | yes | no | yes 
+ASHA-CTS | Salinas, et al. (2021)| random | yes | yes | yes 
+RUSH | Zappella, et al. (2021)| random | yes | yes | yes 
+
+The searchers fall into four broad categories, **deterministic**, **random**, **evalutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
+
+Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers.
+
+## Supported multi-objective optimization methods
+
+Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer?
+:--- | :---: | :---: | :---: | :---: | :---: 
+Constrained Bayesian Optimization | Gardner, et al. (2014) | model-based | yes | no | no
+MOASHA | Schmucker, et al. (2021) | random | yes | yes | no
+
+HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizers/schedulers/multiobjective/multiobjective_priority.py) for details.
+
 ## Examples
 
 You will find the following examples in [examples/](examples/) folder illustrating different functionalities provided
@@ -189,7 +227,7 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 If you use Syne Tune in a scientific publication, please cite the following paper:
 
-["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning 2022
+["Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"](https://openreview.net/forum?id=BVeGJ-THIg9&referrer=%5BAuthor%20Console%5D(%2Fgroup%3Fid%3Dautoml.cc%2FAutoML%2F2022%2FTrack%2FMain%2FAuthors%23your-submissions)) First Conference on Automated Machine Learning, 2022.
 
 
 ```bibtex
