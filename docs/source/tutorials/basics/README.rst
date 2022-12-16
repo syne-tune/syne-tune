@@ -9,6 +9,7 @@ work for your setup.
    :name: Basics of Syne Tune Sections
    :maxdepth: 1
 
+   concepts
    basics_setup
    basics_randomsearch
    basics_bayesopt

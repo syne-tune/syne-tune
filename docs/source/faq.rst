@@ -510,6 +510,9 @@ also these examples:
 What different schedulers do you support? What are the main differences between them?
 =====================================================================================
 
+A succinct overview of supported schedulers is provided
+`here <getting_started.html#supported-hpo-methods>`__.
+
 We refer to HPO algorithms as *schedulers*. A scheduler decides which
 configurations to assign to new trials, but also when to stop a running
 or resume a paused trial. Some schedulers delegate the first decision to
