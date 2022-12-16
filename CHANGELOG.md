@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 
-## [0.3.3] - 2022-12-??
+## [0.3.3] - 2022-12-19
 
 We release 0.3.3 version which you can install with `pip install syne-tune[extra]`.
 
@@ -17,6 +17,7 @@ Thanks to all contributors (sorted by chronological commit order):
 ### Added
 * Revamped documentation hosted at https://syne-tune.readthedocs.io
 * New tutorial: Benchmarking in Syne Tune
+* Added section on backends in Basics of Syne Tune tutorial
 * Control of re-creating of blackboxes by checking and storing hash codes
 * New benchmark: Transformer on WikiText-2
 * Support SageMaker managed warm pools in SageMaker backend
