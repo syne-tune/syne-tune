@@ -281,11 +281,6 @@ def main(
                 resource_attr=resource_attr,
                 verbose=args.verbose,
                 fcnet_ordinal=args.fcnet_ordinal,
-                transfer_learning_evaluations=get_transfer_learning_evaluations(
-                    blackbox_name=benchmark.blackbox_name,
-                    test_task=benchmark.dataset_name,
-                    datasets=benchmark.datasets,
-                ),
                 use_surrogates="lcbench" in benchmark_name,
                 **method_kwargs,
             )
