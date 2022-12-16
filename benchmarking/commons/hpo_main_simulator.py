@@ -239,14 +239,14 @@ def main(
 
         max_resource_attr = benchmark.max_resource_attr
         backend = BlackboxRepositoryBackend(
+            blackbox_name=benchmark.blackbox_name,
             elapsed_time_attr=benchmark.elapsed_time_attr,
             max_resource_attr=max_resource_attr,
-            blackbox_name=benchmark.blackbox_name,
+            support_checkpointing=args.support_checkpointing,
             dataset=benchmark.dataset_name,
             surrogate=benchmark.surrogate,
             surrogate_kwargs=benchmark.surrogate_kwargs,
             add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
-            support_checkpointing=args.support_checkpointing,
         )
 
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
@@ -263,7 +263,7 @@ def main(
         if extra_args is not None:
             assert map_extra_args is not None
             extra_args = map_extra_args(args)
-            method_kwargs.update(extra_args)
+            method_kwargs["scheduler_kwargs"] = extra_args
         if use_transfer_learning:
             method_kwargs["transfer_learning_evaluations"] = (
                 get_transfer_learning_evaluations(
@@ -281,11 +281,6 @@ def main(
                 resource_attr=resource_attr,
                 verbose=args.verbose,
                 fcnet_ordinal=args.fcnet_ordinal,
-                transfer_learning_evaluations=get_transfer_learning_evaluations(
-                    blackbox_name=benchmark.blackbox_name,
-                    test_task=benchmark.dataset_name,
-                    datasets=benchmark.datasets,
-                ),
                 use_surrogates="lcbench" in benchmark_name,
                 **method_kwargs,
             )

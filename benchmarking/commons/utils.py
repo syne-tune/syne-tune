@@ -49,20 +49,20 @@ def basic_cpu_instance_sagemaker_estimator(**kwargs):
     :param kwargs: Extra arguments to SageMaker estimator
     :return: SageMaker estimator
     """
-    return SKLearn(
-        instance_type="ml.c5.4xlarge",
-        instance_count=1,
-        py_version="py3",
-        framework_version="1.0-1",
-        **kwargs,
-    )
-    # return PyTorch(
+    # return SKLearn(
     #     instance_type="ml.c5.4xlarge",
     #     instance_count=1,
-    #     py_version="py38",
-    #     framework_version="1.12.1",
+    #     py_version="py3",
+    #     framework_version="1.0-1",
     #     **kwargs,
     # )
+    return PyTorch(
+        instance_type="ml.c5.4xlarge",
+        instance_count=1,
+        py_version="py38",
+        framework_version="1.12.1",
+        **kwargs,
+    )
 
 
 def filter_none(a: dict) -> dict:
