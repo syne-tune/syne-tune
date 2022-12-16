@@ -149,8 +149,8 @@ of sufficient complexity to match the real problem of interest.
 
 
 Importantly, Syne Tune is agnostic to which execution backend is being used. You
-can switch between backends effortlessly, just by changing the ``trial_backend``
-srgument in :class:`~syne_tune.Tuner`:
+can easily switch between backends by changing the ``trial_backend`` argument
+in :class:`~syne_tune.Tuner`:
 
 * `launch_height_baselines.py <../../examples.html#launch-hpo-experiment-locally>`__
   provides an example for launching experiments with the local backend
