@@ -88,7 +88,7 @@ def run_experiment_with_height(
     if "num_workers" in kwargs:
         num_workers = kwargs["num_workers"]
 
-    # It is possible to pass `config_space` other than the default one
+    # It is possible to pass ``config_space`` other than the default one
     if config_space is None:
         config_space = height_config_space(
             max_steps, sleep_time=script_sleep_time if not simulated else None

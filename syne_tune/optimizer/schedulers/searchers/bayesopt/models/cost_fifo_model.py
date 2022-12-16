@@ -35,23 +35,23 @@ logger = logging.getLogger(__name__)
 
 class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     """
-    Wraps cost model :math:`c(x, r)` of :class:`CostModel` to be used as
-    surrogate model, where predictions are done at r = `fixed_resource`.
+    Wraps cost model :math:``c(x, r)`` of :class:`CostModel` to be used as
+    surrogate model, where predictions are done at r = ``fixed_resource``.
 
-    Note: For random cost models, we approximate expectations in `predict`
-    by resampling `num_samples` times (should be 1 for deterministic cost
+    Note: For random cost models, we approximate expectations in ``predict``
+    by resampling ``num_samples`` times (should be 1 for deterministic cost
     models).
 
-    Note: Since this is a generic wrapper, we assume for `backward_gradient`
+    Note: Since this is a generic wrapper, we assume for ``backward_gradient``
     that the gradient contribution through the cost model vanishes. For special
     cost models, the mapping from encoded input to predictive means may be
-    differentiable, and prediction code in `autograd` may be available. For
-    such cost models, this wrapper should not be used, and `backward_gradient`
+    differentiable, and prediction code in ``autograd`` may be available. For
+    such cost models, this wrapper should not be used, and ``backward_gradient``
     should be implemented properly.
 
     :param state: TuningJobSubState
     :param model: Model parameters must have been fit
-    :param fixed_resource: :math:`c(x, r)` is predicted for this resource level r
+    :param fixed_resource: :math:``c(x, r)`` is predicted for this resource level r
     :param num_samples: Number of samples drawn in :meth:`predict`. Use this for
         random cost models only
     """
@@ -75,7 +75,7 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         # Inputs are encoded. For cost models, need to decode them back
         # to candidates (not necessarily differentiable)
-        # Note: Both `inputs` and `hp_ranges` may correspond to extended
+        # Note: Both ``inputs`` and ``hp_ranges`` may correspond to extended
         # configs (where one attribute is the resource level). This is not
         # a problem, since the resource attribute is simply ignored by the
         # cost model.
@@ -117,10 +117,10 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
 
 class CostSurrogateModelFactory(TransformerModelFactory):
     """
-    The name of the cost metric is `model.cost_metric_name`.
+    The name of the cost metric is ``model.cost_metric_name``.
 
     :param model: CostModel to be wrapped
-    :param fixed_resource: :math:`c(x, r)` is predicted for this resource level r
+    :param fixed_resource: :math:``c(x, r)`` is predicted for this resource level r
     :param num_samples: Number of samples drawn in :meth:`predict`. Use this for
         random cost models only
     """
@@ -148,7 +148,7 @@ class CostSurrogateModelFactory(TransformerModelFactory):
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
         """
         Models of type :class:`CostModel` do not have hyperparameters to be
-        fit, so `fit_params` is ignored here (TODO?).
+        fit, so ``fit_params`` is ignored here (TODO?).
 
         """
         self._model.update(state)

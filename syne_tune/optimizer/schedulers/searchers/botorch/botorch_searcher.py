@@ -47,7 +47,7 @@ class BotorchSearcher(SearcherWithRandomSeed):
     A searcher that suggest configurations using BOTORCH to build GP surrogate
     and optimize acquisition function.
 
-    `qExpectedImprovement` is used for the acquisition function, given that it
+    ``qExpectedImprovement`` is used for the acquisition function, given that it
     supports pending evaluations.
 
     Additional arguments on top of parent class
@@ -57,15 +57,15 @@ class BotorchSearcher(SearcherWithRandomSeed):
     :param num_init_random: Number of initial random draws, after this
         number the suggestion are obtained from the GP surrogate model.
         Defaults to 3
-    :param no_fantasizing: If `True`, fantasizing is not done and pending
+    :param no_fantasizing: If ``True``, fantasizing is not done and pending
         evaluations are ignored. This may lead to loss of diversity in
-        decisions. Defaults to `False`
+        decisions. Defaults to ``False``
     :param max_num_observations: Maximum number of observation to use when
         fitting the GP. If the number of observations gets larger than this
-        number, then data is subsampled. If `None`, then all data is used to
+        number, then data is subsampled. If ``None``, then all data is used to
         fit the GP. Defaults to 200
     :param input_warping: Whether to apply input warping when fitting the GP.
-        Defaults to `True`
+        Defaults to ``True``
     """
 
     def __init__(
@@ -226,8 +226,8 @@ class BotorchSearcher(SearcherWithRandomSeed):
         """
         :param acq:
         :param num_samples:
-        :return: Samples `num_samples` candidates and return the one maximizing
-            the acquisitition function `acq` that was not seen earlier, if all
+        :return: Samples ``num_samples`` candidates and return the one maximizing
+            the acquisitition function ``acq`` that was not seen earlier, if all
             samples were seen, return a random sample instead.
         """
         configs_candidates = [self._sample_random() for _ in range(num_samples)]

@@ -30,10 +30,10 @@ class SchedulerDecision:
 class TrialSuggestion:
     """Suggestion returned by a scheduler.
 
-    :param spawn_new_trial_id: Whether a new `trial_id` should be used.
+    :param spawn_new_trial_id: Whether a new ``trial_id`` should be used.
     :param checkpoint_trial_id: Checkpoint of this trial ID should
-        be used to resume from. If `spawn_new_trial_id` is `False`, then the
-        trial `checkpoint_trial_id` is resumed with its previous checkpoint.
+        be used to resume from. If ``spawn_new_trial_id`` is ``False``, then the
+        trial ``checkpoint_trial_id`` is resumed with its previous checkpoint.
     :param config: The configuration which should be evaluated.
     """
 
@@ -78,8 +78,8 @@ class TrialSuggestion:
 
         :param trial_id: ID of trial to be resumed (from its checkpoint)
         :param config: Configuration to use for resumed trial
-        :return: A trial decision that consists in resuming trial `trial-id`
-            with `config` if provided, or the previous configuration used if
+        :return: A trial decision that consists in resuming trial ``trial-id``
+            with ``config`` if provided, or the previous configuration used if
             not provided.
         """
         return TrialSuggestion(
@@ -113,23 +113,23 @@ class TrialScheduler:
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         """Returns a suggestion for a new trial, or one to be resumed
 
-        This method returns `suggestion` of type :class:`TrialSuggestion` (unless
+        This method returns ``suggestion`` of type :class:`TrialSuggestion` (unless
         there is no config left to explore, and None is returned).
 
-        If `suggestion.spawn_new_trial_id` is `True`, a new trial is to be
-        started with config `suggestion.config`. Typically, this new trial
-        is started from scratch. But if `suggestion.checkpoint_trial_id` is
+        If ``suggestion.spawn_new_trial_id`` is ``True``, a new trial is to be
+        started with config ``suggestion.config``. Typically, this new trial
+        is started from scratch. But if ``suggestion.checkpoint_trial_id`` is
         given, the trial is to be (warm)started from the checkpoint written
-        for the trial with this ID. The new trial has ID `trial_id`.
+        for the trial with this ID. The new trial has ID ``trial_id``.
 
-        If `suggestion.spawn_new_trial_id` is `False`, an existing and currently
+        If ``suggestion.spawn_new_trial_id`` is ``False``, an existing and currently
         paused trial is to be resumed, whose ID is
-        `suggestion.checkpoint_trial_id`. If this trial has a checkpoint, we
-        start from there. In this case, `suggestion.config` is optional. If not
+        ``suggestion.checkpoint_trial_id``. If this trial has a checkpoint, we
+        start from there. In this case, ``suggestion.config`` is optional. If not
         given (default), the config of the resumed trial does not change.
-        Otherwise, its config is overwritten by `suggestion.config` (see
+        Otherwise, its config is overwritten by ``suggestion.config`` (see
         :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
-        `type="promotion"` for an example why this can be useful).
+        ``type="promotion"`` for an example why this can be useful).
 
         Apart from the HP config, additional fields can be appended to the
         dict, these are passed to the trial function as well.
@@ -155,7 +155,7 @@ class TrialScheduler:
 
         * Adding parameters which are constant, therefore do not feature
           in the config space of the searcher
-        * Casting values to types (float, int, str) according to `config_space`
+        * Casting values to types (float, int, str) according to ``config_space``
           value types
 
         :param config: Config returned by searcher
@@ -168,10 +168,10 @@ class TrialScheduler:
     def _preprocess_config(self, config: dict) -> dict:
         """Pre-processes a config before passing it to a searcher
 
-        * Removing parameters which are constant in `config_space` (these do
+        * Removing parameters which are constant in ``config_space`` (these do
           not feature in the config space used by the searcher)
         * Casting values to types (float, int, str) according to
-          `config_space` value types
+          ``config_space`` value types
 
         :param config: Config coming from the tuner
         :return: Pre-processed config, can be passed to searcher
@@ -182,12 +182,12 @@ class TrialScheduler:
         )
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        """Implements `suggest`, except for basic postprocessing of config.
+        """Implements ``suggest``, except for basic postprocessing of config.
 
         Note that the config returned here may also contain values for constant
         parameters in the config space. If so, these values take precedence.
         See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
-        `type="promotion"` for an example how this is used.
+        ``type="promotion"`` for an example how this is used.
 
         :param trial_id: ID for new trial to be started (ignored if existing
             trial to be resumed)
@@ -199,7 +199,7 @@ class TrialScheduler:
     def on_trial_add(self, trial: Trial):
         """Called when a new trial is added to the trial runner.
 
-        Additions are normally triggered by `suggest`.
+        Additions are normally triggered by ``suggest``.
 
         :param trial: Trial to be added
         """
@@ -231,7 +231,7 @@ class TrialScheduler:
 
         Note that :meth:`on_trial_result` is called with the same result before.
         However, if the scheduler only uses one final report from each
-        trial, it may ignore :meth:`on_trial_result` and just use `result` here.
+        trial, it may ignore :meth:`on_trial_result` and just use ``result`` here.
 
         :param trial: Trial which is completing
         :param result: Result dictionary

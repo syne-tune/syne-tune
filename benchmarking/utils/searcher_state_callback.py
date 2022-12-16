@@ -24,13 +24,13 @@ from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import ModelBased
 class StoreSearcherStatesCallback(TunerCallback):
     """
     Stores list of searcher states alongside a tuning run. The list
-    is extended by a new state whenever the `TuningJobState` has changed
+    is extended by a new state whenever the ``TuningJobState`` has changed
     compared to the last recently added one.
 
     This callback is useful to create meaningful unit tests, by sampling
     a given searcher alongside a realistic experiment.
 
-    Works only for `ModelBasedSearcher` searchers. For other searchers, nothing
+    Works only for ``ModelBasedSearcher`` searchers. For other searchers, nothing
     is stored.
 
     """

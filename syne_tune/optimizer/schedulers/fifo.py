@@ -66,7 +66,7 @@ _CONSTRAINTS = {
 
 class ResourceLevelsScheduler(TrialScheduler):
     """
-    Implements helper method to infer value for `max_resource_level`.
+    Implements helper method to infer value for ``max_resource_level``.
     """
 
     def _infer_max_resource_level_getval(self, name):
@@ -78,12 +78,12 @@ class ResourceLevelsScheduler(TrialScheduler):
     def _infer_max_resource_level(
         self, max_resource_level: Optional[int], max_resource_attr: Optional[str]
     ):
-        """Infer `max_resource_level` if not explicitly given.
+        """Infer ``max_resource_level`` if not explicitly given.
 
         :param max_resource_level: Value explicitly provided, or None
         :param max_resource_attr: Name of max resource attribute in
-            `self.config_space` (optional)
-        :return: Inferred value for `max_resource_level`
+            ``self.config_space`` (optional)
+        :return: Inferred value for ``max_resource_level``
         """
         inferred_max_t = None
         names = ("epochs", "max_t", "max_epochs")
@@ -115,23 +115,23 @@ class FIFOScheduler(ResourceLevelsScheduler):
     """Scheduler which executes trials in submission order.
 
     This is the most basic scheduler template. It can be configured to
-    many use cases by choosing `searcher` along with `search_options`.
+    many use cases by choosing ``searcher`` along with ``search_options``.
 
     :param config_space: Configuration space for evaluation function
     :type config_space: dict
-    :param searcher: Searcher for `get_config` decisions. String values
-        are passed to `searcher_factory` along with `search_options` and
+    :param searcher: Searcher for ``get_config`` decisions. String values
+        are passed to ``searcher_factory`` along with ``search_options`` and
         extra information. Defaults to "random" (i.e., random search)
     :type searcher: str or
         :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
-    :param search_options: If searcher is `str`, these arguments are
+    :param search_options: If searcher is ``str``, these arguments are
         passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`
     :type search_options: dict, optional
     :param metric: Name of metric to optimize, key in results obtained via
-        `on_trial_result`
+        ``on_trial_result``
     :type metric: str
-    :param mode: "min" if `metric` is minimized, "max" if `metric` is
+    :param mode: "min" if ``metric`` is minimized, "max" if ``metric`` is
         maximized, defaults to "min"
     :type mode: str, optional
     :param points_to_evaluate: List of configurations to be evaluated
@@ -139,41 +139,41 @@ class FIFOScheduler(ResourceLevelsScheduler):
         can be partially specified, or even be an empty dict. For each
         hyperparameter not specified, the default value is determined using
         a midpoint heuristic.
-        If not given, this is mapped to `[dict()]`, a single default config
-        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        If not given, this is mapped to ``[dict()]``, a single default config
+        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
-        Note: If `searcher` is of type :class:`BaseSearcher`,
-        `points_to_evaluate` must be set there.
-    :type points_to_evaluate: `List[dict]`, optional
+        Note: If ``searcher`` is of type :class:`BaseSearcher`,
+        ``points_to_evaluate`` must be set there.
+    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the
         scheduler or searcher are seeded using :class:`RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
     :param max_resource_attr: Key name in config for fixed attribute
-        containing the maximum resource. If this is given, `max_t` is not
-        needed. We recommend to use `max_resource_attr` over `max_t`.
-        If given, we use it to infer `max_resource_level`. It is also
+        containing the maximum resource. If this is given, ``max_t`` is not
+        needed. We recommend to use ``max_resource_attr`` over ``max_t``.
+        If given, we use it to infer ``max_resource_level``. It is also
         used to limit trial executions in promotion-based multi-fidelity
-        schedulers (see class:`HyperbandScheduler`, `type="promotion"`).
+        schedulers (see class:``HyperbandScheduler``, ``type="promotion"``).
     :type max_resource_attr: str, optional
-    :param max_t: Value for `max_resource_level`. Needed for
+    :param max_t: Value for ``max_resource_level``. Needed for
         schedulers which make use of intermediate reports via
-        `on_trial_result`. If this is not given, we try to infer its value
-        from `config_space` (see
+        ``on_trial_result``. If this is not given, we try to infer its value
+        from ``config_space`` (see
         :class:`~syne_tune.optimizer.schedulers.ResourceLevelsScheduler`).
-        checking `config_space["epochs"]`, `config_space["max_t"]`, and
-        `config_space["max_epochs"]`. If `max_resource_attr` is given, we use
-        the value `config_space[max_resource_attr]`. But if `max_t` is given
+        checking ``config_space["epochs"]``, ``config_space["max_t"]``, and
+        ``config_space["max_epochs"]``. If ``max_resource_attr`` is given, we use
+        the value ``config_space[max_resource_attr]``. But if ``max_t`` is given
         here, it takes precedence.
     :type max_t: int, optional
     :param time_keeper: This will be used for timing here (see
-        `_elapsed_time`). The time keeper has to be started at the beginning
+        ``_elapsed_time``). The time keeper has to be started at the beginning
         of the experiment. If not given, we use a local time keeper here,
         which is started with the first call to :meth:`_suggest`. Can also be set
         after construction, with :meth:`set_time_keeper`.
         Note: If you use
         :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`, you need
-        to pass its `time_keeper` here.
+        to pass its ``time_keeper`` here.
     :type time_keeper: :class:`~syne_tune.backend.time_keeper.TimeKeeper`,
         optional
     """
@@ -228,10 +228,10 @@ class FIFOScheduler(ResourceLevelsScheduler):
             )
             if self.max_t is not None:
                 search_options["max_epochs"] = self.max_t
-            # Subclasses may extend `search_options`
+            # Subclasses may extend ``search_options``
             search_options = self._extend_search_options(search_options)
             # Adjoin scheduler info to search_options, if not already done by
-            # subclass (via `_extend_search_options`)
+            # subclass (via ``_extend_search_options``)
             if "scheduler" not in search_options:
                 search_options["scheduler"] = "fifo"
             self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
@@ -239,7 +239,7 @@ class FIFOScheduler(ResourceLevelsScheduler):
             assert isinstance(searcher, BaseSearcher)
             self.searcher: BaseSearcher = searcher
 
-        self._start_time = None  # Will be set at first `suggest`
+        self._start_time = None  # Will be set at first ``suggest``
         self._searcher_initialized = False
         # Time keeper
         time_keeper = kwargs.get("time_keeper")
@@ -263,10 +263,10 @@ class FIFOScheduler(ResourceLevelsScheduler):
         self.time_keeper = time_keeper
 
     def _extend_search_options(self, search_options: dict) -> dict:
-        """Allows child classes to extend `search_options`.
+        """Allows child classes to extend ``search_options``.
 
         :param search_options: Original dict of options
-        :return: Extended dict, to use instead of `search_options`
+        :return: Extended dict, to use instead of ``search_options``
         """
         return search_options
 
@@ -277,11 +277,11 @@ class FIFOScheduler(ResourceLevelsScheduler):
             self._searcher_initialized = True
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        """Implements `suggest`, except for basic postprocessing of config.
+        """Implements ``suggest``, except for basic postprocessing of config.
 
         We first check whether a paused trial can be promoted (by calling
-        `_promote_trial`). If this is not possible, we ask the searcher to
-        suggest a config (by `get_config`) for the new trial `trial_id`.
+        ``_promote_trial``). If this is not possible, we ask the searcher to
+        suggest a config (by ``get_config``) for the new trial ``trial_id``.
 
         :param trial_id: ID for new trial to be started (ignored if existing
             trial to be resumed)
@@ -312,17 +312,17 @@ class FIFOScheduler(ResourceLevelsScheduler):
         return config
 
     def _on_config_suggest(self, config: dict, trial_id: str, **kwargs) -> dict:
-        """Called by `suggest` to allow scheduler to register a new config.
+        """Called by ``suggest`` to allow scheduler to register a new config.
 
-        We register the config here, not in `on_trial_add`. While this risks
+        We register the config here, not in ``on_trial_add``. While this risks
         registering a config which is not successfully started, this is the
-        right thing to do for batch suggestions. There, `suggest` is called
+        right thing to do for batch suggestions. There, ``suggest`` is called
         multiple times in a row, and the batch trials are started together.
         If we did not register pending configs after being suggested (but
         before getting started), fantasizing would not be used for them.
 
-        :param config: New config suggested for `trial_id`
-        :param trial_id: Input to `_suggest`
+        :param config: New config suggested for ``trial_id``
+        :param trial_id: Input to ``_suggest``
         :param kwargs: Optional. Additional args
         :return: Configuration, potentially modified
         """
@@ -337,24 +337,24 @@ class FIFOScheduler(ResourceLevelsScheduler):
 
         Has to be implemented by pause/resume schedulers.
 
-        The second return argument, `extra_kwargs`, plays different roles
+        The second return argument, ``extra_kwargs``, plays different roles
         depending on the first return argument:
 
-        * If `trial_id is None` (no promotion): `extra_kwargs` are args to be
-          passed to `get_config` call of searcher.
-        * If `trial_id not None` (promotion): `extra_kwargs` may be None or a
-          dict. If a dict, `extra_kwargs` is used to update the config of the
-          trial to be promoted. In this case, `suggest` will return the
-          tuple `(trial_id, extra_kwargs)`.
+        * If ``trial_id is None`` (no promotion): ``extra_kwargs`` are args to be
+          passed to ``get_config`` call of searcher.
+        * If ``trial_id not None`` (promotion): ``extra_kwargs`` may be None or a
+          dict. If a dict, ``extra_kwargs`` is used to update the config of the
+          trial to be promoted. In this case, ``suggest`` will return the
+          tuple ``(trial_id, extra_kwargs)``.
 
-        :return: `(trial_id, extra_kwargs)`
+        :return: ``(trial_id, extra_kwargs)``
         """
         return None, dict()
 
     def _elapsed_time(self):
         """
         :return: Time elapsed since start of experiment, as measured by
-            `self.time_keeper`
+            ``self.time_keeper``
         """
         assert self.time_keeper is not None, "Experiment has not been started yet"
         return self.time_keeper.time()
@@ -377,8 +377,8 @@ class FIFOScheduler(ResourceLevelsScheduler):
 
     def on_trial_result(self, trial: Trial, result: dict) -> str:
         """
-        We simply relay `result` to the searcher. Other decisions are done
-        in `on_trial_complete`.
+        We simply relay ``result`` to the searcher. Other decisions are done
+        in ``on_trial_complete``.
         """
         self._check_result(result)
         trial_id = str(trial.trial_id)

@@ -77,18 +77,18 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to `[dict()]`, a single default config
-        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        If None (default), this is mapped to ``[dict()]``, a single default config
+        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
-    :type points_to_evaluate: `List[dict]`, optional
+    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
         :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
-    :param max_resource_level: Largest rung level, corresponds to `max_t` in
+    :param max_resource_level: Largest rung level, corresponds to ``max_t`` in
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
-        `grace_period`. If this is not given, it is inferred like in
+        ``grace_period``. If this is not given, it is inferred like in
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
     :type max_resource_level: int, optional
     :param max_resource_attr: Key name in config for fixed attribute
@@ -96,11 +96,11 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
         stopped, which can run more efficiently.
     :type max_resource_attr: str, optional
     :param resource_attr: Name of resource attribute in results obtained via
-        `:meth:`on_trial_result`. The type of resource must be int. Default to
+        ``:meth:`on_trial_result`. The type of resource must be int. Default to
         "epoch"
     :type resource_attr: str, optional
     :param searcher_data: Relevant only if a model-based searcher is used.
-        Example: For NN tuning and `resource_attr == "epoch"`, we receive a
+        Example: For NN tuning and ``resource_attr == "epoch"``, we receive a
         result for each epoch, but not all epoch values are also rung levels.
         searcher_data determines which of these results are passed to the
         searcher. As a rule, the more data the searcher receives, the better
@@ -164,11 +164,11 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
     :type metric: str
     :param searcher: Selects searcher. Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`..
-        If `searcher == "random_encoded"` (default), the encoded configs are
+        If ``searcher == "random_encoded"`` (default), the encoded configs are
         sampled directly, each entry independently from U([0, 1]).
         This distribution has higher entropy than for "random" if
-        there are discrete hyperparameters in `config_space`. Note that
-        `points_to_evaluate` is still used in this case.
+        there are discrete hyperparameters in ``config_space``. Note that
+        ``points_to_evaluate`` is still used in this case.
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
@@ -180,18 +180,18 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to `[dict()]`, a single default config
-        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        If None (default), this is mapped to ``[dict()]``, a single default config
+        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
-    :type points_to_evaluate: `List[dict]`, optional
+    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
         :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
-    :param max_resource_level: Largest rung level, corresponds to `max_t` in
+    :param max_resource_level: Largest rung level, corresponds to ``max_t`` in
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
-        `grace_period`. If this is not given, it is inferred like in
+        ``grace_period``. If this is not given, it is inferred like in
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
     :type max_resource_level: int, optional
     :param max_resource_attr: Key name in config for fixed attribute
@@ -202,17 +202,17 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
         :meth:`on_trial_result`. The type of resource must be int. Default to
         "epoch"
     :type resource_attr: str, optional
-    :param mutation_factor: In :math:`(0, 1]`. Factor :math:`F` used in the rand/1
+    :param mutation_factor: In :math:``(0, 1]``. Factor :math:``F`` used in the rand/1
         mutation operation of DE. Default to 0.5
     :type mutation_factor: float, optional
-    :param crossover_probability: In :math:`(0, 1)`. Probability :math:`p` used
+    :param crossover_probability: In :math:``(0, 1)``. Probability :math:``p`` used
         in crossover operation (child entries are chosen with probability
-        :math:`p`). Defaults to 0.5
+        :math:``p``). Defaults to 0.5
     :type crossover_probability: float, optional
-    :param support_pause_resume: If `True`, :meth:`_suggest` supports pause and
+    :param support_pause_resume: If ``True``, :meth:`_suggest` supports pause and
         resume in the first bracket (this is the default). If the objective
-        supports checkpointing, this is made use of. Defaults to `True`.
-        Note: The resumed trial still gets assigned a new `trial_id`, but it
+        supports checkpointing, this is made use of. Defaults to ``True``.
+        Note: The resumed trial still gets assigned a new ``trial_id``, but it
         starts from the earlier checkpoint.
     :type support_pause_resume: bool, optional
     """

@@ -27,13 +27,13 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
 class TuningJobState:
     """
     Collects all data determining the state of a tuning experiment. Trials
-    are indexed by `trial_id`. The configurations associated with trials are
-    listed in `config_for_trial`.
-    `trials_evaluations` contains observations, `failed_trials` lists
-    trials for which evaluations have failed, `pending_evaluations` lists
+    are indexed by ``trial_id``. The configurations associated with trials are
+    listed in ``config_for_trial``.
+    ``trials_evaluations`` contains observations, ``failed_trials`` lists
+    trials for which evaluations have failed, ``pending_evaluations`` lists
     trials for which observations are pending.
 
-    `trials_evaluations` may store values for different metrics in each
+    ``trials_evaluations`` may store values for different metrics in each
     record, and each such value may be a dict (see:class:`TrialEvaluations`).
     For example, for multi-fidelity schedulers,
     :code:`trials_evaluations[i].metrics[k][str(r)]` is the value for metric k
@@ -128,17 +128,17 @@ class TuningJobState:
         self, trial_id: str, config: Optional[Configuration] = None
     ) -> MetricValues:
         """
-        Helper for inserting new entry into `trials_evaluations`. If `trial_id`
-        is already contained there, the corresponding `eval.metrics` is
-        returned. Otherwise, a new entry `new_eval` is appended to
-        `trials_evaluations` and its `new_eval.metrics` is returned
-        (empty `dict`). In the latter case, `config` needs to be passed,
-        because it may not yet feature in `config_for_trial`.
+        Helper for inserting new entry into ``trials_evaluations``. If ``trial_id``
+        is already contained there, the corresponding ``eval.metrics`` is
+        returned. Otherwise, a new entry ``new_eval`` is appended to
+        ``trials_evaluations`` and its ``new_eval.metrics`` is returned
+        (empty ``dict``). In the latter case, ``config`` needs to be passed,
+        because it may not yet feature in ``config_for_trial``.
 
         """
-        # NOTE: If `trial_id` exists in `config_for_trial` and `config` is
-        # given, we do not check that `config` is correct. In fact, we ignore
-        # `config` in this case.
+        # NOTE: If ``trial_id`` exists in ``config_for_trial`` and ``config`` is
+        # given, we do not check that ``config`` is correct. In fact, we ignore
+        # ``config`` in this case.
         self._register_config_for_trial(trial_id, config)
         pos = self._find_labeled(trial_id)
         if pos != -1:
@@ -157,16 +157,16 @@ class TuningJobState:
         self, metric_name: str = INTERNAL_METRIC_NAME, resource_attr_name: str = None
     ) -> (List[Configuration], List[float]):
         """
-        Extracts datapoints from `trials_evaluations` for particular
-        metric `metric_name`, in the form of a list of configs and a list of
+        Extracts datapoints from ``trials_evaluations`` for particular
+        metric ``metric_name``, in the form of a list of configs and a list of
         metric values.
-        If `metric_name` is a dict-valued metric, the dict keys must be
+        If ``metric_name`` is a dict-valued metric, the dict keys must be
         resource values, and the returned configs are extended. Here, the
-        name of the resource attribute can be passed in `resource_attr_name`
-        (if not given, it can be obtained from `hp_ranges` if this is extended).
+        name of the resource attribute can be passed in ``resource_attr_name``
+        (if not given, it can be obtained from ``hp_ranges`` if this is extended).
 
         Note: Implements the default behaviour, namely to return extended
-        configs for dict-valued metrics, which also require `hp_ranges` to be
+        configs for dict-valued metrics, which also require ``hp_ranges`` to be
         extended. This is not correct for some specific multi-fidelity
         surrogate models, which should access the data directly.
 
@@ -205,8 +205,8 @@ class TuningJobState:
         resource: Optional[int] = None,
     ) -> bool:
         """
-        Checks whether `trial_id` has observed data under `metric_name`. If
-        `resource` is given, the observation must be at that resource level.
+        Checks whether ``trial_id`` has observed data under ``metric_name``. If
+        ``resource`` is given, the observation must be at that resource level.
 
         """
         pos = self._find_labeled(trial_id)
@@ -228,7 +228,7 @@ class TuningJobState:
     ):
         """
         Appends new pending evaluation. If the trial has not been registered
-        here, `config` must be given. Otherwise, it is ignored.
+        here, ``config`` must be given. Otherwise, it is ignored.
 
         """
         self._register_config_for_trial(trial_id, config)

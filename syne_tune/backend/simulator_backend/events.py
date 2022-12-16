@@ -28,8 +28,8 @@ class Event:
 @dataclass
 class StartEvent(Event):
     """
-    Start training evaluation function for `trial_id`. In fact, the function
-    is run completely, and `OnTrialResultEvent` events and one `CompleteEvent`
+    Start training evaluation function for ``trial_id``. In fact, the function
+    is run completely, and ``OnTrialResultEvent`` events and one ``CompleteEvent``
     are generated.
 
     """
@@ -38,7 +38,7 @@ class StartEvent(Event):
 @dataclass
 class CompleteEvent(Event):
     """
-    Job for trial `trial_id` completes with status `status`. This is registered
+    Job for trial ``trial_id`` completes with status ``status``. This is registered
     at the back-end.
 
     """
@@ -49,8 +49,8 @@ class CompleteEvent(Event):
 @dataclass
 class StopEvent(Event):
     """
-    Job for trial `trial_id` is stopped. This leads to all later events for
-    `trial_id` to be deleted, and a new `CompleteEvent`.
+    Job for trial ``trial_id`` is stopped. This leads to all later events for
+    ``trial_id`` to be deleted, and a new ``CompleteEvent``.
 
     """
 
@@ -73,10 +73,10 @@ class SimulatorState:
     """
     Maintains the state of the simulator, in particular the event heap.
 
-    `event_heap` is the priority queue for events, the key being `(time, cnt)`,
-    where `time` is the event time, and `cnt` is a non-negative int used to
-    break ties. When an event is added, the `cnt` value is taken from
-    `events_added`. This means that ties are broken first_in_first_out.
+    ``event_heap`` is the priority queue for events, the key being ``(time, cnt)``,
+    where ``time`` is the event time, and ``cnt`` is a non-negative int used to
+    break ties. When an event is added, the ``cnt`` value is taken from
+    ``events_added``. This means that ties are broken first_in_first_out.
 
     """
 
@@ -100,7 +100,7 @@ class SimulatorState:
 
     def remove_events(self, trial_id: int):
         """
-        Remove all events with trial_id equal to `trial_id`.
+        Remove all events with trial_id equal to ``trial_id``.
 
         :param trial_id:
         """
@@ -112,7 +112,7 @@ class SimulatorState:
     def next_until(self, time_until: float) -> Optional[Tuple[float, Event]]:
         """
         Returns (and pops) event on top of heap, if event time is <=
-        `time_until`. Otherwise, returns None.
+        ``time_until``. Otherwise, returns None.
 
         :param time_until:
         :return:

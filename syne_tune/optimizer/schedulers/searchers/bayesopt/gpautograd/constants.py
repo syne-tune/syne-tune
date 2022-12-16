@@ -56,10 +56,10 @@ class OptimizationConfig:
 @dataclass
 class MCMCConfig:
     """
-    `n_samples` is the total number of samples drawn. The first `n_burnin` of
-    these are dropped (burn-in), and every `n_thinning` of the rest is
+    ``n_samples`` is the total number of samples drawn. The first ``n_burnin`` of
+    these are dropped (burn-in), and every ``n_thinning`` of the rest is
     returned. This means we return
-    `(n_samples - n_burnin) // n_thinning` samples.
+    ``(n_samples - n_burnin) // n_thinning`` samples.
     """
 
     n_samples: int

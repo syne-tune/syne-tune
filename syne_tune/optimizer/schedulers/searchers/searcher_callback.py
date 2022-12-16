@@ -49,7 +49,7 @@ def _get_model_based_searcher(tuner):
 def _extended_result(searcher, result):
     if searcher is not None:
         kwargs = dict()
-        # Append surrogate model parameters to `result`
+        # Append surrogate model parameters to ``result``
         params = searcher.state_transformer.get_params()
         if params:
             prefix = "model_"

@@ -29,10 +29,10 @@ class ProfilingBlock:
 class SimpleProfiler:
     """
     Useful to profile time of recurring computations, for example
-    `get_config` calls in searchers.
+    ``get_config`` calls in searchers.
 
-    Measurements are divided into blocks. A block is started by `begin_block`.
-    Each block stores meta data, a time stamp when `begin_block` was called
+    Measurements are divided into blocks. A block is started by ``begin_block``.
+    Each block stores meta data, a time stamp when ``begin_block`` was called
     (relative to the time stamp for the first block, which is 0), and a dict of
     lists of durations, whose keys are tags. A tag corresponds to a range of
     code to be profiled. It may be executed many times within a block,

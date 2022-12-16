@@ -67,8 +67,8 @@ def _convert_keys(dict_old, dict_new, pref_old, pref_new):
 
 def _convert_model_params(model_params: Dict) -> Dict:
     """
-    Convert from `GaussianProcessRegression` to
-    `GaussianProcessLearningCurveModel` parameters.
+    Convert from ``GaussianProcessRegression`` to
+    ``GaussianProcessLearningCurveModel`` parameters.
 
     :param model_params:
     :return:
@@ -92,7 +92,7 @@ def build_gped_model_factory(config_space: Dict, model_params: Dict, **kwargs):
         kwargs, *gp_multifidelity_searcher_defaults(), dict_name="search_options"
     )
     kwargs_int = gp_multifidelity_searcher_factory(**_kwargs)
-    # Need to convert `model_params`
+    # Need to convert ``model_params``
     kwargs_int["model_factory"].set_params(_convert_model_params(model_params))
     return kwargs_int
 

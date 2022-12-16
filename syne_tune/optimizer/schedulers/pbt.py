@@ -99,24 +99,24 @@ class PopulationBasedTraining(FIFOScheduler):
     hyperparameters, the value is always resampled uniformly.
 
     Note: While this is implemented as child of :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, we
-    require `searcher="random"` (default), since the current code only supports
+    require ``searcher="random"`` (default), since the current code only supports
     a random searcher.
 
     Additional arguments on top of parent class :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
 
     :param resource_attr: Name of resource attribute in results obtained
-        via `on_trial_result`, defaults to "time_total_s"
+        via ``on_trial_result``, defaults to "time_total_s"
     :type resource_attr: str
     :param population_size: Size of the population, defaults to 4
     :type population_size: int, optional
     :param perturbation_interval: Models will be considered for perturbation
-        at this interval of `resource_attr`. Note that perturbation incurs
+        at this interval of ``resource_attr``. Note that perturbation incurs
         checkpoint overhead, so you shouldn't set this to be too frequent.
         Defaults to 60
     :type perturbation_interval: float, optional
     :param quantile_fraction: Parameters are transferred from the top
-        `quantile_fraction` fraction of trials to the bottom
-        `quantile_fraction` fraction. Needs to be between 0 and 0.5. Setting
+        ``quantile_fraction`` fraction of trials to the bottom
+        ``quantile_fraction`` fraction. Needs to be between 0 and 0.5. Setting
         it to 0 essentially implies doing no exploitation at all.
         Defaults to 0.25
     :type quantile_fraction: float, optional
@@ -127,9 +127,9 @@ class PopulationBasedTraining(FIFOScheduler):
         Defaults to 0.25
     :type resample_probability: float, optional
     :param custom_explore_fn: Custom exploration function. This
-        function is invoked as `f(config)` instead of the built-in perturbations,
-        and should return `config` updated as needed. If this is given,
-        `resample_probability` is not used
+        function is invoked as ``f(config)`` instead of the built-in perturbations,
+        and should return ``config`` updated as needed. If this is given,
+        ``resample_probability`` is not used
     :type custom_explore_fn: function, optional
     """
 
@@ -181,7 +181,7 @@ class PopulationBasedTraining(FIFOScheduler):
         percent, we sample a trial uniformly at random from the upper quantile.
 
         :param trial: Trial at question right now
-        :return: ID (int) of trial which should be continued inplace of `trial`
+        :return: ID (int) of trial which should be continued inplace of ``trial``
         """
         lower_quantile, upper_quantile = self._quantiles()
         # If we are not in the upper quantile, we pause:
@@ -269,11 +269,11 @@ class PopulationBasedTraining(FIFOScheduler):
         return score
 
     def _quantiles(self) -> Tuple[List[Trial], List[Trial]]:
-        """Returns trials in the lower and upper `quantile` of the population.
+        """Returns trials in the lower and upper ``quantile`` of the population.
 
         If there is not enough data to compute this, returns empty lists.
 
-        :return `(lower_quantile, upper_quantile)`
+        :return ``(lower_quantile, upper_quantile)``
         """
         trials = []
         for trial, state in self._trial_state.items():
@@ -330,7 +330,7 @@ class PopulationBasedTraining(FIFOScheduler):
 
         for key, hp_range in self.config_space.items():
             if isinstance(hp_range, Domain):
-                # For `Categorical`, all values have the same distance from each
+                # For ``Categorical``, all values have the same distance from each
                 # other, so we can always resample uniformly
                 is_numerical = (
                     isinstance(hp_range, Float)

@@ -37,7 +37,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`:
 
     :param resource_attr: Name of resource attribute. Defaults to
-        `scheduler.resource_attr` in :meth:`configure_scheduler`
+        ``scheduler.resource_attr`` in :meth:`configure_scheduler`
     """
 
     def __init__(

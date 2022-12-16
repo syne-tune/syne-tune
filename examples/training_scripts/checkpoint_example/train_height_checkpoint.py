@@ -62,8 +62,8 @@ def train_height_delta(step: int, width: float, height: float, value: float) -> 
     :param step: Step t, nonnegative int
     :param width: Width w, nonnegative
     :param height: Height h
-    :param value: Value :math:`f(t - 1)` if :math:`t > 0`
-    :return: New value :math:`f(t)`
+    :param value: Value :math:``f(t - 1)`` if :math:``t > 0``
+    :return: New value :math:``f(t)``
     """
     u = 1.0 - 0.1 * np.random.rand()  # uniform(0.9, 1) multiplier
     if step == 0:

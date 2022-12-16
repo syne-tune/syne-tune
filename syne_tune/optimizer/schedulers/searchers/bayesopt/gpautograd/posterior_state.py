@@ -75,7 +75,7 @@ class PosteriorState:
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        See comments of `predict`.
+        See comments of ``predict``.
 
         :param test_features: Input points for test configs
         :param num_samples: Number of samples
@@ -113,7 +113,7 @@ class PosteriorStateWithSampleJoint(PosteriorState):
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        See comments of `predict`.
+        See comments of ``predict``.
 
         :param test_features: Input points for test configs
         :param num_samples: Number of samples
@@ -146,8 +146,8 @@ class GaussProcPosteriorState(PosteriorStateWithSampleJoint):
         If targets is None, this is an internal (copy) constructor, where
         kwargs contains chol_fact, pred_mat.
 
-        `kernel` can be a tuple `(_kernel, covariance_scale)`, where
-        `_kernel` is a `KernelFunction`, `covariance_scale` a scalar
+        ``kernel`` can be a tuple ``(_kernel, covariance_scale)``, where
+        ``_kernel`` is a ``KernelFunction``, ``covariance_scale`` a scalar
         parameter. In this case, the kernel function is their product.
 
         :param features: Input points X, shape (n, d)

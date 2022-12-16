@@ -45,14 +45,14 @@ class Domain:
     @property
     def value_type(self):
         """
-        :return: Type of values (one of `str`, `float`, `int`)
+        :return: Type of values (one of ``str``, ``float``, ``int``)
         """
         raise NotImplementedError
 
     def cast(self, value):
         """
         :param value: Value top cast
-        :return: `value` cast to domain. For a finite domain, this can
+        :return: ``value`` cast to domain. For a finite domain, this can
             involve rounding
         """
         return self.value_type(value)
@@ -84,7 +84,7 @@ class Domain:
         :param spec: Passed to sampler
         :param size: Number of values to sample, defaults to 1
         :param random_state: PRN generator
-        :return: Single value (`size == 1`) or list (`size > 1`)
+        :return: Single value (``size == 1``) or list (``size > 1``)
         """
         sampler = self.get_sampler()
         return sampler.sample(self, spec=spec, size=size, random_state=random_state)
@@ -98,7 +98,7 @@ class Domain:
     def is_valid(self, value: Any):
         """
         :param value: Value to test
-        :return: Is `value` a valid value in domain?
+        :return: Is ``value`` a valid value in domain?
         """
         raise NotImplementedError
 
@@ -115,7 +115,7 @@ class Domain:
 
     def match_string(self, value: Any) -> str:
         """
-        Returns string representation of `value` (which must be of domain type)
+        Returns string representation of ``value`` (which must be of domain type)
         which is to match configurations for (approximate) equality.
         For discrete types (e.g., :class:`Integer`, :class:`Categorical`), this matches for
         exact equality.
@@ -164,8 +164,8 @@ EXP_ONE = np.exp(1.0)
 
 class LogUniform(Sampler):
     """
-    Note: We keep the argument `base` for compatibility with Ray Tune.
-    Since `base` has no effect on the distribution, we don't use it
+    Note: We keep the argument ``base`` for compatibility with Ray Tune.
+    Since ``base`` has no effect on the distribution, we don't use it
     internally.
     """
 
@@ -208,7 +208,7 @@ class Grid(Sampler):
         size: int = 1,
         random_state: Optional[np.random.RandomState] = None,
     ):
-        return RuntimeError("Do not call `sample()` on grid.")
+        return RuntimeError("Do not call ``sample()`` on grid.")
 
     def __eq__(self, other) -> bool:
         return isinstance(other, Grid)
@@ -223,7 +223,7 @@ def _sanitize_sample_result(items, domain: Domain):
 
 class Float(Domain):
     """
-    Continuous value in closed interval `[lower, upper]`.
+    Continuous value in closed interval ``[lower, upper]``.
 
     :param lower: Lower bound (included)
     :param upper: Upper bound (included)
@@ -256,7 +256,7 @@ class Float(Domain):
             assert (
                 0 < domain.upper < float("inf")
             ), "LogUniform needs a upper bound greater than 0"
-            # Note: We don't use `self.base` here, because it does not make a
+            # Note: We don't use ``self.base`` here, because it does not make a
             # difference
             logmin = np.log(domain.lower)
             logmax = np.log(domain.upper)
@@ -399,8 +399,8 @@ class Float(Domain):
 
 class Integer(Domain):
     """
-    Integer value in closed interval `[lower, upper]`. Note that
-    `upper` is included.
+    Integer value in closed interval ``[lower, upper]``. Note that
+    ``upper`` is included.
 
     :param lower: Lower bound (included)
     :param upper: Upper bound (included)
@@ -417,7 +417,7 @@ class Integer(Domain):
             if random_state is None:
                 random_state = np.random
             # Note: domain.upper is inclusive here, but exclusive in
-            # `np.random.randint`.
+            # ``np.random.randint``.
             items = random_state.randint(domain.lower, domain.upper + 1, size=size)
             return _sanitize_sample_result(items, domain)
 
@@ -433,7 +433,7 @@ class Integer(Domain):
             assert (
                 0 < domain.upper < float("inf")
             ), "LogUniform needs a upper bound greater than 0"
-            # Note: We don't use `self.base` here, because it does not make a
+            # Note: We don't use ``self.base`` here, because it does not make a
             # difference
             logmin = np.log(domain.lower)
             logmax = np.log(domain.upper)
@@ -592,7 +592,7 @@ class Categorical(Domain):
         return value
 
     def match_string(self, value) -> str:
-        return str(self.categories.index(value))  # Index into `categories`
+        return str(self.categories.index(value))  # Index into ``categories``
 
     def __repr__(self):
         return f"choice({self.categories})"
@@ -634,12 +634,12 @@ class OrdinalNearestNeighbor(Ordinal):
     Different type for ordered set of numerical values (int or float).
     Essentially, the finite set is represented by a real-valued interval
     containing all values, and random sampling draws a value from this
-    interval and rounds it to the nearest value in `categories`. If
-    `log_scale` is True, all of this happens in log scale. Unless values
+    interval and rounds it to the nearest value in ``categories``. If
+    ``log_scale`` is True, all of this happens in log scale. Unless values
     are equidistant, this is different from :class:`Ordinal`.
 
     :param categories: Finite sequence, must be strictly increasing,
-        value type must be `float` or `int`. If `log_scale=True`, values
+        value type must be ``float`` or ``int``. If ``log_scale=True``, values
         must be positive
     :param log_scale: Encoding and NN matching in log domain?
     """
@@ -736,15 +736,15 @@ class OrdinalNearestNeighbor(Ordinal):
 
 class FiniteRange(Domain):
     """
-    Represents a finite range `[lower, ..., upper]` with `size` values
+    Represents a finite range ``[lower, ..., upper]`` with ``size`` values
     equally spaced in linear or log domain.
-    If `cast_int`, the value type is int (rounding after the transform).
+    If ``cast_int``, the value type is int (rounding after the transform).
 
     :param lower: Lower bound (included)
     :param upper: Upper bound (included)
     :param size: Number of values
     :param log_scale: Equal spacing in log domain?
-    :param cast_int: Value type is `int` (`float` otherwise)
+    :param cast_int: Value type is ``int`` (``float`` otherwise)
     """
 
     def __init__(
@@ -856,7 +856,7 @@ class FiniteRange(Domain):
 
 
 def uniform(lower: float, upper: float):
-    """Uniform float value between `lower` and `upper`
+    """Uniform float value between ``lower`` and ``upper``
 
     :param lower: Lower bound (included)
     :param upper: Upper bound (included)
@@ -866,10 +866,10 @@ def uniform(lower: float, upper: float):
 
 
 def loguniform(lower: float, upper: float):
-    """Log-uniform float value between `lower` and `upper`
+    """Log-uniform float value between ``lower`` and ``upper``
 
-    Sampling is done as `exp(x)`, where x is uniform between `log(lower)` and
-    `log(upper)`.
+    Sampling is done as ``exp(x)``, where x is uniform between ``log(lower)`` and
+    ``log(upper)``.
 
     :param lower: Lower bound (included; positive)
     :param upper: Upper bound (included; positive)
@@ -879,28 +879,28 @@ def loguniform(lower: float, upper: float):
 
 
 def randint(lower: int, upper: int):
-    """Uniform integer between `lower` and `upper`
+    """Uniform integer between ``lower`` and ``upper``
 
-    `lower` and `upper` are inclusive. This is a difference to Ray Tune,
-    where `upper` is exclusive.
+    ``lower`` and ``upper`` are inclusive. This is a difference to Ray Tune,
+    where ``upper`` is exclusive.
 
     :param lower: Lower bound (included)
     :param upper: Upper bound (included)
-    :return `Integer` object
+    :return :class:`Integer` object
     """
     return Integer(lower, upper).uniform()
 
 
 def lograndint(lower: int, upper: int):
-    """Log-uniform integer between `lower` and `upper`
+    """Log-uniform integer between ``lower`` and ``upper``
 
-    `lower` and `upper` are inclusive.
-    Note: Ray Tune has an argument `base` here, but since this does not affect
+    ``lower`` and ``upper`` are inclusive.
+    Note: Ray Tune has an argument ``base`` here, but since this does not affect
     the distribution, we drop it.
 
     :param lower: Lower bound (included)
     :param upper: Upper bound (included)
-    :return `Integer` object
+    :return :class:`Integer` object
     """
     return Integer(lower, upper).loguniform()
 
@@ -917,21 +917,21 @@ def choice(categories: list):
 
 def ordinal(categories: list, kind: Optional[str] = None):
     """
-    Ordinal value from list `categories`. Different variants are selected by
-    `kind`.
+    Ordinal value from list ``categories``. Different variants are selected by
+    ``kind``.
 
-    For `kind == "equal"`, sampling is the same as for `choice`, and the
+    For ``kind == "equal"``, sampling is the same as for ``choice``, and the
     internal encoding is by int (first value maps to 0, second to 1, ...).
 
-    For `kind == "nn"`, the finite set is represented by a real-valued interval
+    For ``kind == "nn"``, the finite set is represented by a real-valued interval
     containing all values, and random sampling draws a value from this
-    interval and rounds it to the nearest value in `categories`. This behaves
-    like a finite version of `uniform` or `randint`. For `kind == "nn-log"`,
+    interval and rounds it to the nearest value in ``categories``. This behaves
+    like a finite version of ``uniform`` or ``randint``. For ``kind == "nn-log"``,
     nearest neighbour rounding happens in log space, which behaves like a
-    finite version of `loguniform` or `lograndint`. You can also use the
-    synonym `logordinal`.
-    For this type, values in `categories` must be int or float and strictly
-    increasing, and also positive if `kind == "nn-log"`.
+    finite version of :func:`loguniform`` or :func:`lograndint``. You can also use the
+    synonym :func:`logordinal`.
+    For this type, values in ``categories`` must be int or float and strictly
+    increasing, and also positive if ``kind == "nn-log"``.
 
     :param categories: Sequence of values, all entries must have the same type
     :param kind: Can be "equal", "nn", "nn-log"
@@ -958,12 +958,12 @@ def ordinal(categories: list, kind: Optional[str] = None):
 
 def logordinal(categories: list):
     """
-    Corresponds to `ordinal` with `kind="nn-log"`, so that nearest neighbour
-    mapping happens in log scale. Values in `categories` must be int or
+    Corresponds to :func:`ordinal` with ``kind="nn-log"``, so that nearest neighbour
+    mapping happens in log scale. Values in ``categories`` must be int or
     float, strictly increasing, and positive.
 
     :param categories: Sequence of values, strictly increasing, of type
-        `float` or `int`, all positive
+        ``float`` or ``int``, all positive
     :return: :class:`OrdinalNearestNeighbor` object
     """
     return OrdinalNearestNeighbor(categories, log_scale=True)
@@ -971,8 +971,8 @@ def logordinal(categories: list):
 
 def finrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
-    Finite range `[lower, ..., upper]` with `size` entries, which are
-    equally spaced. Finite alternative to `uniform`.
+    Finite range ``[lower, ..., upper]`` with ``size`` entries, which are
+    equally spaced. Finite alternative to :func:`uniform`.
 
     :param lower: Smallest feasible value
     :param upper: Largest feasible value
@@ -985,8 +985,8 @@ def finrange(lower: float, upper: float, size: int, cast_int: bool = False):
 
 def logfinrange(lower: float, upper: float, size: int, cast_int: bool = False):
     """
-    Finite range `[lower, ..., upper]` with `size` entries, which are
-    equally spaced in the log domain. Finite alternative to `loguniform`.
+    Finite range ``[lower, ..., upper]`` with ``size`` entries, which are
+    equally spaced in the log domain. Finite alternative to :func:`loguniform`.
 
     :param lower: Smallest feasible value (positive)
     :param upper: Largest feasible value (positive)
@@ -1038,7 +1038,7 @@ def is_uniform_space(domain: Domain) -> bool:
 def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict):
     """
     Use this to prepare argument parser in endpoint script, for the
-    non-fixed parameters in `config_space`.
+    non-fixed parameters in ``config_space``.
 
     :param parser: :class:`argparse.ArgumentParser` object
     :param config_space: Configuration space (modified)
@@ -1050,7 +1050,7 @@ def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict):
 
 def cast_config_values(config: dict, config_space: dict) -> dict:
     """
-    Returns config with keys, values of `config`, but values are cast to
+    Returns config with keys, values of ``config``, but values are cast to
     their specific types.
 
     :param config: Config whose values are to be cast
@@ -1075,13 +1075,13 @@ def non_constant_hyperparameter_keys(config_space: dict) -> List[str]:
 def config_space_size(config_space: dict, upper_limit: int = 2**20) -> Optional[int]:
     """
     Counts the number of distinct configurations in the configuration space
-    `config_space`. If this is infinite (due to real-valued parameters) or
-    larger than `upper_limit`, None is returned.
+    ``config_space``. If this is infinite (due to real-valued parameters) or
+    larger than ``upper_limit``, None is returned.
 
     :param config_space: Configuration space
     :param upper_limit: See above. Defaults to :code:`2**20`
     :return: Number of distinct configurations; or None if infinite or more than
-        `upper_limit`
+        ``upper_limit``
     """
     assert upper_limit > 1
     size = 1
@@ -1099,7 +1099,7 @@ def config_space_size(config_space: dict, upper_limit: int = 2**20) -> Optional[
 def config_to_match_string(config: dict, config_space: dict, keys: List[str]) -> str:
     """
     Maps configuration to a match string, which can be used to compare configs
-    for (approximate) equality. Only keys in `keys` are used, in that ordering.
+    for (approximate) equality. Only keys in ``keys`` are used, in that ordering.
 
     :param config: Configuration to be encoded in match string
     :param config_space: Configuration space
@@ -1116,11 +1116,11 @@ def config_to_match_string(config: dict, config_space: dict, keys: List[str]) ->
 
 def to_dict(x: Domain) -> dict:
     """
-    We assume that for each `Domain` subclass, the `__init__` kwargs are
-    also members, and all other members start with `_`.
+    We assume that for each :class:`Domain` subclass, the :meth:`__init__`
+    kwargs are also members, and all other members start with ``_``.
 
     :param x: :class:`Domain` object
-    :return: Representation as `dict`
+    :return: Representation as ``dict``
     """
     domain_kwargs = {
         k: v for k, v in x.__dict__.items() if k != "sampler" and not k.startswith("_")
@@ -1137,7 +1137,7 @@ def to_dict(x: Domain) -> dict:
 
 def from_dict(d: dict) -> Domain:
     """
-    :param d: Representation of :class:`Domain` object as `dict`
+    :param d: Representation of :class:`Domain` object as ``dict``
     :return: Decoded :class:`Domain` object
     """
     domain_cls = getattr(sys.modules[__name__], d["domain_cls"])
@@ -1154,10 +1154,10 @@ def from_dict(d: dict) -> Domain:
 def config_space_to_json_dict(
     config_space: Dict[str, Union[Domain, int, float, str]]
 ) -> Dict[str, Union[int, float, str]]:
-    """Converts `config_space` into a dictionary that can be saved as a json file.
+    """Converts ``config_space`` into a dictionary that can be saved as a json file.
 
     :param config_space: Configuration space
-    :return: JSON-serializable dictionary representing `config_space`
+    :return: JSON-serializable dictionary representing ``config_space``
     """
     return {
         k: to_dict(v) if isinstance(v, Domain) else v for k, v in config_space.items()
@@ -1173,7 +1173,7 @@ def config_space_from_json_dict(
 
     :param config_space_dict: JSON-serializable dict, as output by
         :func:`config_space_to_json_dict`
-    :return: Configuration space corresponding to `config_space_dict`
+    :return: Configuration space corresponding to ``config_space_dict``
     """
     return {
         k: from_dict(v) if isinstance(v, dict) else v
@@ -1182,7 +1182,7 @@ def config_space_from_json_dict(
 
 
 def restrict_domain(numerical_domain: Domain, lower: float, upper: float) -> Domain:
-    """Restricts a numerical domain to be in the range `[lower, upper]`
+    """Restricts a numerical domain to be in the range ``[lower, upper]``
 
     :param numerical_domain: Numerical domain
     :param lower: Lower bound
@@ -1253,7 +1253,7 @@ class Quantized(Sampler):
 
 
 def quniform(lower: float, upper: float, q: float):
-    """Sample a quantized float value uniformly between `lower` and `upper`.
+    """Sample a quantized float value uniformly between ``lower`` and ``upper``.
 
     Sampling from ``tune.uniform(1, 10)`` is equivalent to sampling from
     ``np.random.uniform(1, 10))``
@@ -1269,7 +1269,7 @@ def reverseloguniform(lower: float, upper: float):
 
     :paam lower: Lower boundary of the output interval (e.g. 0.99)
     :param upper: Upper boundary of the output interval (e.g. 0.9999)
-    :return: :class:`Float` object
+    :return: :class:``Float`` object
     """
     return Float(lower, upper).reverseloguniform()
 

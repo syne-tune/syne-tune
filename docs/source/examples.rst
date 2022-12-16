@@ -6,7 +6,7 @@ Launch HPO Experiment Locally
    :lines: 13-
 
 Along with several of the examples below, this launcher script is using the
-following `train_height.py` training script:
+following :ref:`train_height.py <train_height_script>` training script:
 
 .. literalinclude:: ../../examples/training_scripts/height_example/train_height.py
    :name: train_height_script
@@ -49,7 +49,7 @@ Population-Based Training (PBT)
    :caption: examples/launch_pbt.py
    :lines: 13-
 
-This launcher script is using the following `pbt_example.py` training
+This launcher script is using the following :ref:`pbt_example.py <pbt_example_script>` training
 script:
 
 .. literalinclude:: ../../examples/training_scripts/pbt_example/pbt_example.py
@@ -88,7 +88,7 @@ Launch HPO Experiment with Simulator Backend
 
 In this example, we use the simulator backend with the NASBench-201
 blackbox. Since time is simulated, we can use
-`max_wallclock_time=600` (so 10 minutes), but the experiment finishes
+``max_wallclock_time=600`` (so 10 minutes), but the experiment finishes
 in mere seconds. More details about the simulator backend is found in
 `this tutorial <tutorials/benchmarking/bm_simulator.html>`__.
 
@@ -119,7 +119,7 @@ Multi-objective Asynchronous Successive Halving (MOASHA)
    :caption: examples/launch_height_moasha.py
    :lines: 16-
 
-This launcher script is using the following `mo_artificial.py` training
+This launcher script is using the following :ref:`mo_artificial.py <mo_artificial_script>` training
 script:
 
 .. literalinclude:: ../../examples/training_scripts/mo_artificial/mo_artificial.py
@@ -135,7 +135,7 @@ Constrained Bayesian Optimization
    :caption: examples/launch_bayesopt_constrained.py
    :lines: 16-
 
-This launcher script is using the following `train_constrained_example.py` training
+This launcher script is using the following :ref:`train_constrained_example.py <train_constrained_script>` training
 script:
 
 .. literalinclude:: ../../examples/training_scripts/constrained_hpo/train_constrained_example.py
@@ -151,7 +151,7 @@ Tuning Reinforcement Learning
    :caption: examples/launch_rl_tuning.py
    :lines: 17-
 
-This launcher script is using the following `train_cartpole.py` training
+This launcher script is using the following :ref:`train_cartpole.py <rl_cartpole_script>` training
 script:
 
 .. literalinclude:: ../../examples/training_scripts/rl_cartpole/train_cartpole.py
@@ -187,8 +187,8 @@ SageMaker Backend and Checkpointing
    :caption: examples/launch_height_sagemaker_checkpoints.py
    :lines: 13-
 
-This launcher script is using the following `train_height_checkpoint.py`
-training script:
+This launcher script is using the following
+:ref:`train_height_checkpoint.py <train_height_checkpoint_script>` training script:
 
 .. literalinclude:: ../../examples/training_scripts/checkpoint_example/train_height_checkpoint.py
    :name: train_height_checkpoint_script
@@ -198,9 +198,9 @@ training script:
 Note that :class:`~syne_tune.backend.SageMakerBackend` is configured to use
 SageMaker managed warm pools:
 
-* `keep_alive_period_in_seconds=300` in the definition of the SageMaker
+* ``keep_alive_period_in_seconds=300`` in the definition of the SageMaker
   estimator
-* `start_jobs_without_delay=False` when creating :class:`~syne_tune.Tuner`
+* ``start_jobs_without_delay=False`` when creating :class:`~syne_tune.Tuner`
 
 Managed warm pools reduce both start-up and stop delays substantially, they
 are strongly recommended for multi-fidelity HPO with the SageMaker backend.
@@ -227,7 +227,7 @@ Makes use of :ref:`train_height.py <train_height_script>`.
 
 This example is incomplete. If your training script has dependencies which
 you would to provide as a Docker image, you need to upload it to ECR,
-after which you can refer to it with `image_uri`.
+after which you can refer to it with ``image_uri``.
 
 
 Launch Experiments Remotely on SageMaker
@@ -320,10 +320,11 @@ call the scheduler on its own. This example demonstrates how to do this
 for Gaussian process based Bayesian optimization.
 
 
-Ask Tell interface
-=================================
+Ask Tell Interface
+==================
 
 .. literalinclude:: ../../examples/launch_ask_tell_scheduler.py
+   :name: launch_ask_tell_scheduler_script
    :caption: examples/launch_ask_tell_scheduler.py
    :lines: 13-
 
@@ -332,16 +333,18 @@ In this setup the tuning loop and experiments are disentangled. The AskTell Sche
 and the users themselves perform experiments to test the performance of each configuration.
 Once done, user feeds the result into the Scheduler which uses the data to suggest better configurations.
 
-
 In some cases, experiments needed for function evaluations can be very complex and require extra orchestration
-(example vary from setting up jobs on non-aws clusters to runnig physical lab experiments) in which case this
-interface provides all the necessary flexibility
+(example vary from setting up jobs on non-aws clusters to running physical lab experiments) in which case this
+interface provides all the necessary flexibility.
+
 
 Ask Tell interface for Hyperband
-=================================
+================================
 
 .. literalinclude:: ../../examples/launch_ask_tell_scheduler_hyperband.py
    :caption: examples/launch_ask_tell_scheduler_hyperband.py
    :lines: 13-
 
-This is an extension of launch_ask_tell_scheduler.py to run multi-fidelity methods such as Hyperband
+This is an extension of
+:ref:`launch_ask_tell_scheduler.py <launch_ask_tell_scheduler_script>` to run
+multi-fidelity methods such as Hyperband.

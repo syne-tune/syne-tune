@@ -89,38 +89,38 @@ def register_parameter(params, name, encoding, shape=(1,), dtype=DATA_TYPE):
 class ScalarEncodingBase:
     """
     Base class for encoding and box constraints for Gluon parameter,
-    represented as gluon.Parameter. The parameter is with shape `(dimension,)`
-    where `dimension` is 1 by default.
+    represented as gluon.Parameter. The parameter is with shape ``(dimension,)``
+    where ``dimension`` is 1 by default.
 
     An encoding is given as
 
-        `param = enc(param_internal), param_internal = dec(param)`
+        ``param = enc(param_internal), param_internal = dec(param)``
 
-    The Gluon parameter represents `param_internal`, while `param` is what is
+    The Gluon parameter represents ``param_internal``, while ``param`` is what is
     visible to the outside.
 
-    Here,`enc` and `dec` are inverses of each other. `enc` is used in :meth:`get`,
-    `dec` is used in :meth:`set`. Use class:'IdentityScalarEncoding' for no
-    encoding (identity). Note: `enc` (and `dec`) must be strictly increasing.
+    Here,``enc`` and ``dec`` are inverses of each other. ``enc`` is used in :meth:`get`,
+    ``dec`` is used in :meth:`set`. Use class:'IdentityScalarEncoding' for no
+    encoding (identity). Note: ``enc`` (and ``dec``) must be strictly increasing.
 
-    Box constraints are given by `constr_lower_int < constr_upper_int`.
+    Box constraints are given by ``constr_lower_int < constr_upper_int``.
 
-    Here, None means no constraint. The constraints apply to `param_internal`.
-    If both are None, `param_internal` is unconstrained (default).
+    Here, None means no constraint. The constraints apply to ``param_internal``.
+    If both are None, ``param_internal`` is unconstrained (default).
 
     Note: Box constraints are just maintained here, they have to be enforced
     by an optimizer!
 
-    If `regularizer` is given, it specifies a regularization term for the
+    If ``regularizer`` is given, it specifies a regularization term for the
     (encoded) parameter which can be added to a criterion function. It is
-    evaluated as `regularizer(param)`.
+    evaluated as ``regularizer(param)``.
 
     Typical use cases:
 
-    * Unconstrained optimizer, positive `scalar > lower`:
-      Use `PositiveScalarEncoding(lower)`, box constraints = [None, None]
-    * Optimizer supports box constaints [`constr_lower`, `constr_upper`]:
-      Use `IdentityScalarEncoding(constr_lower, constr_upper)`
+    * Unconstrained optimizer, positive ``scalar > lower``:
+      Use ``PositiveScalarEncoding(lower)``, box constraints = [None, None]
+    * Optimizer supports box constaints [``constr_lower``, ``constr_upper``]:
+      Use ``IdentityScalarEncoding(constr_lower, constr_upper)``
     """
 
     def __init__(
@@ -210,7 +210,7 @@ class IdentityScalarEncoding(ScalarEncodingBase):
     """
     Identity encoding for scalar and vector:
 
-        `param = param_internal`
+        ``param = param_internal``
 
     This does not ensure that param is positive! Use this only if positivity
     is otherwise guaranteed.
@@ -243,8 +243,8 @@ class LogarithmScalarEncoding(ScalarEncodingBase):
     """
     Logarithmic encoding for scalar and vector:
 
-        `param = exp(param_internal)`,
-        `param_internal = param`
+        ``param = exp(param_internal)``,
+        ``param_internal = param``
     """
 
     def __init__(
@@ -273,22 +273,22 @@ class LogarithmScalarEncoding(ScalarEncodingBase):
 
 class PositiveScalarEncoding(ScalarEncodingBase):
     """
-    Provides encoding for positive scalar and vector: `param > lower`.
-    Here, `param` is represented as :class:`gluon.Parameter`. The `param`
-    is with shape `(dimension,)` where `dimension` is 1 by default.
+    Provides encoding for positive scalar and vector: ``param > lower``.
+    Here, ``param`` is represented as :class:`gluon.Parameter`. The ``param``
+    is with shape ``(dimension,)`` where ``dimension`` is 1 by default.
 
     The encoding is given as:
 
-        `param = softrelu(param_internal) + lower`,
-        `softrelu(x) = log(1 + exp(x))`
+        ``param = softrelu(param_internal) + lower``,
+        ``softrelu(x) = log(1 + exp(x))``
 
-    If `constr_upper` is used, the constraint
+    If ``constr_upper`` is used, the constraint
 
-        `param_internal < dec(constr_upper)`
+        ``param_internal < dec(constr_upper)``
 
-    can be enforced by an optimizer. Since `dec` is increasing, this translates
-    to `param < constr_upper`.
-    Note: While `lower` is enforced by the encoding, the upper bound is not, has
+    can be enforced by an optimizer. Since ``dec`` is increasing, this translates
+    to ``param < constr_upper``.
+    Note: While ``lower`` is enforced by the encoding, the upper bound is not, has
     to be enforced by an optimizer.
     """
 
@@ -358,18 +358,18 @@ class ConstantPositiveVector(Block):
     """
     Represents constant vector, with positive entry value represented as Gluon
     parameter, to be used in the context of wrapper classes in
-    `gluon_blocks.py`. Shape, `dtype`, and context are determined from the
+    ``gluon_blocks.py``. Shape, ``dtype``, and context are determined from the
     features argument:
 
-    * If `features.shape = (n, d)`:
-      `shape = (d, 1)` if `size_cols = True` (number cols of features)
-      `shape = (n, 1)` if `size_cols = False` (number rows of features)
-    * `dtype = features.dtype`, `ctx = features.ctx`
+    * If ``features.shape = (n, d)``:
+      ``shape = (d, 1)`` if ``size_cols = True`` (number cols of features)
+      ``shape = (n, 1)`` if ``size_cols = False`` (number rows of features)
+    * ``dtype = features.dtype``, ``ctx = features.ctx``
 
     Encoding and internal Gluon parameter:
     The positive scalar parameter is encoded via encoding (see
     :class:`ScalarEncodingBase`). The internal Gluon parameter (before encoding)
-    has the `name param_name + "_internal"`.
+    has the ``name param_name + "_internal"``.
     """
 
     def __init__(self, param_name, encoding, size_cols, **kwargs):
@@ -384,8 +384,8 @@ class ConstantPositiveVector(Block):
     def forward(self, features, param_internal):
         """Returns constant positive vector
 
-        If `features.shape = (n, d)`, the shape of the vector returned is
-        `(d, 1)` if `size_cols = True`, `(n, 1)` otherwise.
+        If ``features.shape = (n, d)``, the shape of the vector returned is
+        ``(d, 1)`` if ``size_cols = True``, ``(n, 1)`` otherwise.
 
         :param features: Matrix for shape, dtype, ctx
         :param param_internal: Unwrapped parameter
@@ -418,8 +418,8 @@ class ConstantPositiveVector(Block):
     def switch_updating(self, flag):
         """Is the underlying parameter updated during learning?
 
-        By default, the parameter takes part in learning (its `grad_req`
-        attribute is 'write'). For `flag == False`, the attribute is
+        By default, the parameter takes part in learning (its ``grad_req``
+        attribute is 'write'). For ``flag == False``, the attribute is
         flipped to 'null', and the parameter remains constant during
         learning.
 

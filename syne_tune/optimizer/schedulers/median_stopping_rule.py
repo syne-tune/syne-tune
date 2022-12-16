@@ -47,13 +47,13 @@ class MedianStoppingRule(TrialScheduler):
         median-stopping-rule decision is to continue.
     :param resource_attr: Key in the reported dictionary that accounts for the
         resource (e.g. epoch).
-    :param running_average: If `True`, then uses the running average of
-        observation instead of raw observations. Defaults to `True`
-    :param metric: Metric to be considered, defaults to `scheduler.metric`
+    :param running_average: If ``True``, then uses the running average of
+        observation instead of raw observations. Defaults to ``True``
+    :param metric: Metric to be considered, defaults to ``scheduler.metric``
     :param grace_time: Median stopping rule is only applied for results whose
-        `resource_attr` exceeds this amount. Defaults to 1
+        ``resource_attr`` exceeds this amount. Defaults to 1
     :param grace_population: Median stopping rule when at least
-        `grace_population` have been observed at a resource level. Defaults to 5
+        ``grace_population`` have been observed at a resource level. Defaults to 5
     :param rank_cutoff: Results whose quantiles are below this level are
         discarded. Defaults to 0.5 (median)
     """

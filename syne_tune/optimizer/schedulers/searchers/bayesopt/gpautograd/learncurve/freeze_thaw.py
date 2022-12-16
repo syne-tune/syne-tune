@@ -153,9 +153,9 @@ def logdet_cholfact_cov_resource(likelihood: Dict) -> float:
     """
     Computes the additional log(det(Lbar)) term. This is
     sum_i log(det(Lbar_i)), where Lbar_i is upper left submatrix of
-    `likelihood['lfact_all']`, with size `likelihood['ydims'][i]`.
+    ``likelihood['lfact_all']``, with size ``likelihood['ydims'][i]``.
 
-    :param likelihood: Result of `resource_kernel_likelihood_computations`
+    :param likelihood: Result of ``resource_kernel_likelihood_computations``
     :return: log(det(Lbar))
     """
     lfact_all = likelihood["lfact_all"]
@@ -170,19 +170,19 @@ def logdet_cholfact_cov_resource(likelihood: Dict) -> float:
 
 def resource_kernel_likelihood_precomputations(targets: List[np.ndarray]) -> Dict:
     """
-    Precomputations required by `resource_kernel_likelihood_computations`.
+    Precomputations required by ``resource_kernel_likelihood_computations``.
 
-    Importantly, `prepare_data` orders datapoints by nonincreasing number of
-    targets `ydims[i]`. For `0 <= j < ydim_max`, `ydim_max = ydims[0] =
-    max(ydims)`, `num_configs[j]` is the number of datapoints i for which
-    `ydims[i] > j`.
-    `yflat` is a flat matrix (rows corresponding to fantasy samples; column
-    vector if no fantasizing) consisting of `ydim_max` parts, where part j is of
-    size `num_configs[j]` and contains `y[j]` for targets of those i counted in
-    `num_configs[j]`.
+    Importantly, ``prepare_data`` orders datapoints by nonincreasing number of
+    targets ``ydims[i]``. For ``0 <= j < ydim_max``, ``ydim_max = ydims[0] =
+    max(ydims)``, ``num_configs[j]`` is the number of datapoints i for which
+    ``ydims[i] > j``.
+    ``yflat`` is a flat matrix (rows corresponding to fantasy samples; column
+    vector if no fantasizing) consisting of ``ydim_max`` parts, where part j is of
+    size ``num_configs[j]`` and contains ``y[j]`` for targets of those i counted in
+    ``num_configs[j]``.
 
     :param targets: Targets from data representation returned by
-        `prepare_data`
+        ``prepare_data``
     :return: See above
     """
     ydims = [y.shape[0] for y in targets]
@@ -197,10 +197,10 @@ def resource_kernel_likelihood_precomputations(targets: List[np.ndarray]) -> Dic
     assert num_configs[-1] > 0, num_configs
     total_size = sum(num_configs)
     assert total_size == sum(ydims)
-    # Attention: When comparing this to `issm.issm_likelihood_precomputations`,
-    # `targets` maps to `yflat` in the same ordering (the index is still r),
-    # whereas there the index j of `deltay` runs in the opposite direction of
-    # the index r of `targets`
+    # Attention: When comparing this to ``issm.issm_likelihood_precomputations``,
+    # ``targets`` maps to ``yflat`` in the same ordering (the index is still r),
+    # whereas there the index j of ``deltay`` runs in the opposite direction of
+    # the index r of ``targets``
     yflat_rows = []
     for pos, num in enumerate(num_configs):
         yflat_rows.extend([y[pos].reshape((1, -1)) for y in targets[:num]])
@@ -210,7 +210,7 @@ def resource_kernel_likelihood_precomputations(targets: List[np.ndarray]) -> Dic
 
 
 # TODO: This code is complex. If it does not run faster than
-# `resource_kernel_likelihood_slow_computations`, remove it.
+# ``resource_kernel_likelihood_slow_computations``, remove it.
 def resource_kernel_likelihood_computations(
     precomputed: Dict,
     res_kernel: ExponentialDecayBaseKernelFunction,
@@ -218,12 +218,12 @@ def resource_kernel_likelihood_computations(
     skip_c_d: bool = False,
 ) -> Dict:
     """
-    Given `precomputed` from `resource_kernel_likelihood_precomputations` and
-    resource kernel function `res_kernel`, compute quantities required for
+    Given ``precomputed`` from ``resource_kernel_likelihood_precomputations`` and
+    resource kernel function ``res_kernel``, compute quantities required for
     inference and marginal likelihood computation, pertaining to the likelihood
     of a additive model, as in the Freeze-Thaw paper.
 
-    Note that `res_kernel` takes raw (unnormalized) r as inputs. The code here
+    Note that ``res_kernel`` takes raw (unnormalized) r as inputs. The code here
     works for any resource kernel and mean function, not just for
     :class:`ExponentialDecayBaseKernelFunction`.
 
@@ -234,9 +234,9 @@ def resource_kernel_likelihood_computations(
     - wtv: (n, F) matrix[(W_i)^T v_i], F number of fantasy samples
     - wtw: n vector [|w_i|^2] (only if no fantasizing)
     - lfact_all: Cholesky factor for kernel matrix
-    - ydims: Target vector sizes (copy from `precomputed`)
+    - ydims: Target vector sizes (copy from ``precomputed``)
 
-    :param precomputed: Output of `resource_kernel_likelihood_precomputations`
+    :param precomputed: Output of ``resource_kernel_likelihood_precomputations``
     :param res_kernel: Kernel k(r, r') over resources
     :param noise_variance: Noise variance sigma^2
     :param skip_c_d: If True, c and d are not computed
@@ -265,12 +265,12 @@ def resource_kernel_likelihood_computations(
     off = num_all_configs
     ilscal = 1.0 / lfact_all[0, 0]
     vvec = anp.array([ilscal]).reshape((1, 1))
-    # `yflat` is a (*, F) matrix, where F == `num_fantasy_samples`. These
-    # matrices are flattened out as rows of `wmat`, and reshaped back before
-    # writing into `wtv_lst`
+    # ``yflat`` is a (*, F) matrix, where F == ``num_fantasy_samples``. These
+    # matrices are flattened out as rows of ``wmat``, and reshaped back before
+    # writing into ``wtv_lst``
     wmat = _rowvec(yflat[:off, :] - means_all[0]) * ilscal
-    # Note: We need the detour via `wtv_lst`, etc, because `autograd` does not
-    # support overwriting the content of an `ndarray`. Their role is to collect
+    # Note: We need the detour via ``wtv_lst``, etc, because ``autograd`` does not
+    # support overwriting the content of an ``ndarray``. Their role is to collect
     # parts of the final vectors, in reverse ordering
     wtv_lst = []
     wtw_lst = []
@@ -330,7 +330,7 @@ def resource_kernel_likelihood_slow_computations(
     skip_c_d: bool = False,
 ) -> Dict:
     """
-    Naive implementation of `resource_kernel_likelihood_computations`, which
+    Naive implementation of ``resource_kernel_likelihood_computations``, which
     does not require precomputations, but is somewhat slower. Here, results are
     computed one datapoint at a time, instead of en bulk.
 
@@ -393,8 +393,8 @@ def predict_posterior_marginals_extended(
 ):
     """
     These are posterior marginals on f_r = h + g_r variables, where
-    (x, r) are zipped from `test_features`, `resources`.
-    `posterior_means` is a (n, F) matrix, where F is the number of fantasy
+    (x, r) are zipped from ``test_features``, ``resources``.
+    ``posterior_means`` is a (n, F) matrix, where F is the number of fantasy
     samples, or F == 1 without fantasizing.
 
     :param poster_state: Posterior state
@@ -402,7 +402,7 @@ def predict_posterior_marginals_extended(
     :param kernel: Kernel function
     :param test_features: Feature matrix for test points (not extended)
     :param resources: Resource values corresponding to rows of
-        `test_features`
+        ``test_features``
     :param res_kernel: Kernel k(r, r') over resources
     :return: posterior_means, posterior_variances
 
@@ -438,15 +438,15 @@ def sample_posterior_joint(
     num_samples: int = 1,
 ) -> Dict:
     """
-    Given `poster_state` for some data plus one additional configuration
-    with data (`feature`, `targets`), draw joint samples of unobserved
-    targets for this configuration. `targets` may be empty, but must not
+    Given ``poster_state`` for some data plus one additional configuration
+    with data (``feature``, ``targets``), draw joint samples of unobserved
+    targets for this configuration. ``targets`` may be empty, but must not
     be complete (there must be some unobserved targets). The additional
-    configuration must not be in the dataset used to compute `poster_state`.
+    configuration must not be in the dataset used to compute ``poster_state``.
 
-    If `targets` correspond to resource values range(r_min, r_obs), we
+    If ``targets`` correspond to resource values range(r_min, r_obs), we
     sample latent target values y_r corresponding to range(r_obs, r_max+1),
-    returning a dict with [y_r] under `y` (matrix with `num_samples`
+    returning a dict with [y_r] under ``y`` (matrix with ``num_samples``
     columns).
 
     :param poster_state: Posterior state for data
@@ -457,7 +457,7 @@ def sample_posterior_joint(
     :param res_kernel: Kernel k(r, r') over resources
     :param noise_variance: Noise variance sigma^2
     :param lfact_all: Cholesky factor of complete resource kernel matrix
-    :param means_all: See `lfact_all`
+    :param means_all: See ``lfact_all``
     :param random_state: numpy.random.RandomState
     :param num_samples: Number of joint samples to draw (default: 1)
     :return: See above

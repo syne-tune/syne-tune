@@ -40,9 +40,9 @@ def _param_dict_to_str(params: dict) -> str:
 class DebugLogPrinter:
     """
     Supports a concise debug log.
-    In particular, information about `get_config` is displayed in a single
+    In particular, information about ``get_config`` is displayed in a single
     block. For that, different parts are first collected until the end of
-    `get_config`.
+    ``get_config``.
 
     """
 

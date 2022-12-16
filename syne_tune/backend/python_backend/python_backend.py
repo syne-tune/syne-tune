@@ -35,9 +35,9 @@ class PythonBackend(LocalBackend):
     """
     A backend that supports the tuning of Python functions (if you rather want to
     tune an endpoint script such as "train.py", then you should use
-    :class:`LocalBackend`). The function `tune_function` should be serializable,
+    :class:`LocalBackend`). The function ``tune_function`` should be serializable,
     should not reference any global variable or module and should have as arguments
-    a subset of the keys of `config_space`. When deserializing, a md5 is checked to
+    a subset of the keys of ``config_space``. When deserializing, a md5 is checked to
     ensure consistency.
 
     For instance, the following function is a valid way of defining a backend on
@@ -64,15 +64,16 @@ class PythonBackend(LocalBackend):
        }
        backend = PythonBackend(tune_function=f, config_space=config_space)
 
-    See `examples/launch_height_python_backend.py` for a complete example.
+    See ``examples/launch_height_python_backend.py`` for a complete example.
 
-    Additional arguments on top of parent class :class:`LocalBackend`:
+    Additional arguments on top of parent class
+    :class:`~syne_tune.backend.LocalBackend`:
 
     :param tune_function: Python function to be tuned. The function must call
         Syne Tune reporter to report metrics and be serializable, imports should
         be performed inside the function body.
     :param config_space: Configuration space corresponding to arguments of
-        `tune_function`
+        ``tune_function``
     """
 
     def __init__(

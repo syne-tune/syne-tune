@@ -147,7 +147,7 @@ def run_experiment(
     # storing results
     print_update_interval = 700
     results_update_interval = 300
-    # it is important to set `sleep_time` to 0 here (mandatory for simulator
+    # it is important to set ``sleep_time`` to 0 here (mandatory for simulator
     # backend)
 
     tuner = Tuner(
@@ -417,13 +417,13 @@ if __name__ == "__main__":
 
     # Changes to the reduction factor:
     # To run experiments with a different reduction factor,
-    # it is enough to specify the value for `reduction_factor`
-    # argument provided to `run_experiment` function.
+    # it is enough to specify the value for ``reduction_factor``
+    # argument provided to ``run_experiment`` function.
 
     # Combination with Bayesian Optimization:
     # To run experiments with a Bayesian Optimization search strategy,
-    # you need to select `'pasha-bo'` or `'asha-bo'` for `hpo_approach`
-    # argument provided to `run_experiment` function. Note these experiments
+    # you need to select ``'pasha-bo'`` or ``'asha-bo'`` for ``hpo_approach``
+    # argument provided to ``run_experiment`` function. Note these experiments
     # take longer to run because Gaussian processes are used.
 
     # Analysis of the results:

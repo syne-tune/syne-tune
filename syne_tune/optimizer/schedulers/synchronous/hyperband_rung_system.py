@@ -22,7 +22,7 @@ RungSystemsPerBracket = List[List[Tuple[int, int]]]
 
 class SynchronousHyperbandRungSystem:
     """
-    Collects factory methods for `RungSystemsPerBracket` rung systems to be
+    Collects factory methods for ``RungSystemsPerBracket`` rung systems to be
     used in :class:`SynchronousHyperbandBracketManager`.
 
     """
@@ -38,12 +38,12 @@ class SynchronousHyperbandRungSystem:
         This is the geometric progression setup from the original papers on
         successive halving and Hyperband.
 
-        If `smax = ceil(log(max_resource / min_resource) /
-        log(reduction_factor))`, there can be at most `s_max + 1` brackets.
-        Here, bracket s has `r_num = s_max - s + 1` rungs, and the size of
+        If ``smax = ceil(log(max_resource / min_resource) /
+        log(reduction_factor))``, there can be at most ``s_max + 1`` brackets.
+        Here, bracket s has ``r_num = s_max - s + 1`` rungs, and the size of
         rung r in bracket s is
-            `n(r,s) = ceil( (s_max + 1) / r_num) *
-            power(reduction_factor, r_num - r - 1)`
+            ``n(r,s) = ceil( (s_max + 1) / r_num) *
+            power(reduction_factor, r_num - r - 1)``
 
         :param min_resource: Smallest resource level (positive int)
         :param max_resource: Largest resource level (positive int)

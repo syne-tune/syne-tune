@@ -76,7 +76,7 @@ def test_comparison_yahpo_ours(benchmark_yahpo, benchmark_ours):
         ]
         for name, bm in benchmark.items()
     }
-    # Sample `num_configs` configurations which are exactly supported by data
+    # Sample ``num_configs`` configurations which are exactly supported by data
     hyperparameters = blackbox["ours"].hyperparameters
     random_inds = np.random.permutation(len(hyperparameters))[:num_configs]
     num_seeds = blackbox["ours"].num_seeds

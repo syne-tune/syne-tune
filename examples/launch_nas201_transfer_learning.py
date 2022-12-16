@@ -81,7 +81,7 @@ if __name__ == "__main__":
         dataset=test_task,
     )
 
-    # It is important to set `sleep_time` to 0 here (mandatory for simulator backend)
+    # It is important to set ``sleep_time`` to 0 here (mandatory for simulator backend)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

@@ -32,9 +32,9 @@ except ImportError:
 
 class RegularCallback:
     """
-    Allows to call the callback function at most once every `call_seconds_frequency` seconds.
+    Allows to call the callback function at most once every ``call_seconds_frequency`` seconds.
 
-    :param callback: `TunerCallback` object
+    :param callback: Callback object
     :param call_seconds_frequency: Wait time between subsequent calls
     """
 
@@ -53,18 +53,18 @@ class RegularCallback:
 def experiment_path(
     tuner_name: Optional[str] = None, local_path: Optional[str] = None
 ) -> Path:
-    f"""
-    Return the path of an experiment which is used both by the Tuner and to
-    collect results of experiments.
+    """
+    Return the path of an experiment which is used both by :class:`~syne_tune.Tuner`
+    and to collect results of experiments.
 
     :param tuner_name: Name of a tuning experiment
     :param local_path: Local path where results should be saved when running
         locally outside of SageMaker. If not specified, then the environment
-        variable `"SYNETUNE_FOLDER"` is used if defined otherwise `~/syne-tune/`
-        is used. Defining the enviroment variable `"SYNETUNE_FOLDER"` allows to
+        variable ``"SYNETUNE_FOLDER"`` is used if defined otherwise ``~/syne-tune/``
+        is used. Defining the environment variable ``"SYNETUNE_FOLDER"`` allows to
         override the default path.
     :return: Path where to write logs and results for Syne Tune tuner. On
-        SageMaker, results are written to "/opt/ml/checkpoints/" so that files
+        SageMaker, results are written to ``"/opt/ml/checkpoints/"`` so that files
         are persisted continuously to S3 by SageMaker.
     """
     is_sagemaker = "SM_MODEL_DIR" in os.environ
@@ -122,7 +122,7 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
     necessary.
 
     :param base: String used as prefix to generate the unique name
-    :param default: String used if `base is None`
+    :param default: String used if :code:`base is None`
     :param max_length: Maximum length for the resulting string (default: 63)
     :return: Input parameter with appended timestamp
     """
@@ -148,7 +148,7 @@ def random_string(length: int) -> str:
 
 def repository_root_path() -> Path:
     """
-    :return: Returns path including `syne_tune`, `examples`, `benchmarking`
+    :return: Returns path including ``syne_tune``, ``examples``, ``benchmarking``
     """
     return Path(__file__).parent.parent
 
@@ -170,7 +170,7 @@ def script_checkpoint_example_path() -> Path:
 
 def script_height_example_path() -> Path:
     """
-    :return: Path of train_heigth example
+    :return: Path of ``train_heigth`` example
     """
     path = (
         repository_root_path()
@@ -196,7 +196,7 @@ def catchtime(name: str) -> float:
 def is_increasing(lst: List[Union[float, int]]) -> bool:
     """
     :param lst: List of float or int entries
-    :return: Is `lst` strictly increasing?
+    :return: Is ``lst`` strictly increasing?
     """
     return all(x < y for x, y in zip(lst, lst[1:]))
 
@@ -204,6 +204,6 @@ def is_increasing(lst: List[Union[float, int]]) -> bool:
 def is_positive_integer(lst: List[int]) -> bool:
     """
     :param lst: List of int entries
-    :return: Are all entries of `lst` of type `int` and positive?
+    :return: Are all entries of ``lst`` of type ``int`` and positive?
     """
     return all(x == int(x) and x >= 1 for x in lst)

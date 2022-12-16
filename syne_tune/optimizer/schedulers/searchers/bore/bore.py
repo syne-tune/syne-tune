@@ -43,14 +43,14 @@ class Bore(SearcherWithRandomSeed):
 
     Note: Bore only works in the non-parallel non-multi-fidelity setting. Make
     sure that you use it with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
-    and set `n_workers=1` in :class:`~syne_tune.Tuner`.
+    and set ``n_workers=1`` in :class:`~syne_tune.Tuner`.
 
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param mode: Can be "min" (default) or "max".
     :param gamma: Defines the percentile, i.e how many percent of configurations
-        are used to model :math:`l(x)`. Defaults to 0.25
+        are used to model :math:``l(x)``. Defaults to 0.25
     :param calibrate: If set to true, we calibrate the predictions of the
         classifier via CV. Defaults to False
     :param classifier: The binary classifier to model the acquisition

@@ -51,7 +51,7 @@ class Tuner:
     :param trial_backend: Back-end for trial evaluations
     :param scheduler: Tuning algorithm for making decisions about which
         trials to start, stop, pause, or resume
-    :param stop_criterion: Tuning stops when this predicates returns `True`.
+    :param stop_criterion: Tuning stops when this predicates returns ``True``.
         Called in each iteration with the current tuning status. It is
         recommended to use :class:`StoppingCriterion`.
     :param n_workers: Number of workers used here. Note that the back-end
@@ -70,46 +70,46 @@ class Tuner:
         possibly separated by '-'. A postfix with a date time-stamp is added
         to ensure uniqueness.
     :param asynchronous_scheduling: Whether to use asynchronous scheduling
-        when scheduling new trials. If `True`, trials are scheduled as soon as
-        a worker is available. If `False`, the tuner waits that all trials
-        are finished before scheduling a new batch of size `n_workers`.
-        Default to `True`.
+        when scheduling new trials. If ``True``, trials are scheduled as soon as
+        a worker is available. If ``False``, the tuner waits that all trials
+        are finished before scheduling a new batch of size ``n_workers``.
+        Default to ``True``.
     :param wait_trial_completion_when_stopping: How to deal with running
-        trials when stopping criterion is met. If `True`, the tuner waits
-        until all trials are finished. If `False`, all trials are terminated.
-        Defaults to `False`.
+        trials when stopping criterion is met. If ``True``, the tuner waits
+        until all trials are finished. If ``False``, all trials are terminated.
+        Defaults to ``False``.
     :param callbacks: Called at certain times in the tuning loop, for example
         when a result is seen. The default callback stores results every
-        `results_update_interval`.
+        ``results_update_interval``.
     :param metadata: Dictionary of user-metadata that will be persisted in
-        `{tuner_path}/metadata.json`, in addition to metadata provided by
-        the user. `SMT_TUNER_CREATION_TIMESTAMP` is always included which
+        ``{tuner_path}/metadata.json``, in addition to metadata provided by
+        the user. ``SMT_TUNER_CREATION_TIMESTAMP`` is always included which
         measures the time-stamp when the tuner started to run.
-    :param suffix_tuner_name: If `True`, a timestamp is appended to the
-        provided `tuner_name` that ensures uniqueness, otherwise the name is
-        left unchanged and is expected to be unique. Defaults to `True`.
-    :param save_tuner: If `True`, the :class:`Tuner` object is serialized at
+    :param suffix_tuner_name: If ``True``, a timestamp is appended to the
+        provided ``tuner_name`` that ensures uniqueness, otherwise the name is
+        left unchanged and is expected to be unique. Defaults to ``True``.
+    :param save_tuner: If ``True``, the :class:`Tuner` object is serialized at
         the end of tuning, including its dependencies (e.g., scheduler). This
         allows all details of the experiment to be recovered. Defaults to
-        `True`.
-    :param start_jobs_without_delay: Defaults to `True`. If this is `True`, the tuner
+        ``True``.
+    :param start_jobs_without_delay: Defaults to ``True``. If this is ``True``, the tuner
         starts new jobs depending on scheduler decisions communicated to the
         backend. For example, if a trial has just been stopped (by calling
-        `backend.stop_trial`), the tuner may start a new one immediately, even
+        ``backend.stop_trial``), the tuner may start a new one immediately, even
         if the SageMaker training job is still busy due to stopping delays.
         This can lead to faster experiment runtime, because the backend is
         temporarily going over its budget.
 
-        If set to `False`, the tuner always asks the backend for the number of
-        busy workers, which guarantees that we never go over the `n_workers`
+        If set to ``False``, the tuner always asks the backend for the number of
+        busy workers, which guarantees that we never go over the ``n_workers``
         budget. This makes a difference for backends where stopping or pausing
         trials is not immediate (e.g., :class:`SageMakerBackend`). Not going
-        over budget means that `n_workers` can be set up to the available quota,
+        over budget means that ``n_workers`` can be set up to the available quota,
         without running the risk of an exception due to the quota being
         exceeded. If you get such exceptions, we recommend to use
-        `start_jobs_without_delay=False`. Also, if the SageMaker warm pool
+        ``start_jobs_without_delay=False``. Also, if the SageMaker warm pool
         feature is used, it is recommended to set
-        `start_jobs_without_delay=False`, since otherwise more than `n_workers`
+        ``start_jobs_without_delay=False``, since otherwise more than ``n_workers``
         warm pools will be started, because existing ones are busy with
         stopping when they should be reassigned.
     """
@@ -187,14 +187,14 @@ class Tuner:
                 self.tuning_status = TuningStatus(
                     metric_names=self.scheduler.metric_names()
                 )
-            # prints the status every `print_update_interval` seconds
+            # prints the status every ``print_update_interval`` seconds
             self.status_printer = RegularCallback(
                 callback=lambda tuning_status: logger.info(
                     "tuning status (last metric is reported)\n" + str(tuning_status)
                 ),
                 call_seconds_frequency=self.print_update_interval,
             )
-            # saves the tuner every `results_update_interval` seconds
+            # saves the tuner every ``results_update_interval`` seconds
             if self.save_tuner:
                 self.tuner_saver = RegularCallback(
                     callback=lambda tuner: tuner.save(),
@@ -210,7 +210,7 @@ class Tuner:
 
             self._save_metadata()
 
-            # `running_trial_ids` contains the ids of all trials currently running,
+            # ``running_trial_ids`` contains the ids of all trials currently running,
             # whether they were started from scratch or were resumed from a pausing
             # state
             running_trials_ids = set()
@@ -236,16 +236,16 @@ class Tuner:
                     # Save tuner state only if there have been new results
                     self.tuner_saver(tuner=self)
 
-                # update the list of done trials and remove those from `running_trials_ids`
-                # Note: It is important to update `running_trials_ids` before
-                # calling `_schedule_new_tasks`.
+                # update the list of done trials and remove those from ``running_trials_ids``
+                # Note: It is important to update ``running_trials_ids`` before
+                # calling ``_schedule_new_tasks``.
                 # Otherwise, a trial can be registered as paused in
-                # `_process_new_results`, and immediately be resumed in
-                # `_schedule_new_tasks`. If `new_done_trial_statuses` is subtracted from
-                # `running_trials_ids` afterwards only, this trial is removed from
-                # `running_trials_ids` even though it is running. Also, its status remains
-                # paused, because the next call of `_process_new_results` only considers
-                # trials in `running_trials_ids`.
+                # ``_process_new_results``, and immediately be resumed in
+                # ``_schedule_new_tasks``. If ``new_done_trial_statuses`` is subtracted from
+                # ``running_trials_ids`` afterwards only, this trial is removed from
+                # ``running_trials_ids`` even though it is running. Also, its status remains
+                # paused, because the next call of ``_process_new_results`` only considers
+                # trials in ``running_trials_ids``.
                 done_trials_statuses.update(new_done_trial_statuses)
                 running_trials_ids.difference_update(new_done_trial_statuses.keys())
 
@@ -345,7 +345,7 @@ class Tuner:
     def _enrich_metadata(self, metadata: dict) -> dict:
         """
         :param metadata: Original metadata
-        :return: `metadata` enriched by default entries
+        :return: ``metadata`` enriched by default entries
         """
         res = metadata if metadata is not None else dict()
         self._set_metadata(res, ST_TUNER_CREATION_TIMESTAMP, time.time())
@@ -379,12 +379,12 @@ class Tuner:
         """Communicates new results from the back-end to the scheduler
 
         Returns dictionary of trials which are not running, along with their
-        status, in `done_trials_statuses`, and list of new results (tuples
-        `(trial_id, result)`), observed since the previous call, in
-        `new_results`.
+        status, in ``done_trials_statuses``, and list of new results (tuples
+        ``(trial_id, result)``), observed since the previous call, in
+        ``new_results``.
 
         :param running_trials_ids: Trials currently running
-        :return: `(done_trials_statuses, new_results)`
+        :return: ``(done_trials_statuses, new_results)``
         """
 
         # fetch new results
@@ -405,7 +405,7 @@ class Tuner:
         # - they were stopped independently of the scheduler, e.g. due to a
         #   timeout argument or a manual interruption
         # - scheduler decided to interrupt them.
-        # Note: `done_trials` includes trials which are paused.
+        # Note: ``done_trials`` includes trials which are paused.
         done_trials_statuses = self._update_running_trials(
             trial_status_dict, new_results, callbacks=self.callbacks
         )
@@ -421,8 +421,8 @@ class Tuner:
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
         """Schedules new tasks if resources are available or sleep.
 
-        Note: If `start_jobs_without_delay` is False, we ask the back-end for
-        the number of busy workers, instead of trusting `running_trials_ids`.
+        Note: If ``start_jobs_without_delay`` is False, we ask the back-end for
+        the number of busy workers, instead of trusting ``running_trials_ids``.
         The latter does not contain trials which have been stopped or completed,
         but the underlying job is still not completely done.
 
@@ -431,7 +431,7 @@ class Tuner:
         """
         running_trials_threshold = self.n_workers if self.asynchronous_scheduling else 1
         if self.start_jobs_without_delay:
-            # Assume that only the trials in `running_trial_ids` are busy (which
+            # Assume that only the trials in ``running_trial_ids`` are busy (which
             # is an underestimate for certain backends)
             busy_trial_ids = None
             num_busy_workers = len(running_trials_ids)
@@ -467,7 +467,7 @@ class Tuner:
     def _schedule_new_task(self) -> Optional[TrialResult]:
         """Schedules a new task according to scheduler suggestion.
 
-        :return: Information for the trial suggested, `None` if the scheduler does
+        :return: Information for the trial suggested, ``None`` if the scheduler does
             not suggest a new configuration (this can happen if its configuration
             space is exhausted)
         """
@@ -476,7 +476,7 @@ class Tuner:
             logger.info("Searcher ran out of candidates, tuning job is stopping.")
             raise StopIteration
         elif suggestion.spawn_new_trial_id:
-            # we schedule a new trial, possibly using the checkpoint of `checkpoint_trial_id`
+            # we schedule a new trial, possibly using the checkpoint of ``checkpoint_trial_id``
             # if given.
             trial = self.trial_backend.start_trial(
                 config=suggestion.config.copy(),
@@ -541,9 +541,9 @@ class Tuner:
         * the trial completed.
 
         :param trial_status_dict: Information on trials from
-            `trial_backend.fetch_status_results`
-        :param new_results: New results from `trial_backend.fetch_status_results`
-        :param callbacks: `on_trial_result` for these callbacks is called here
+            ``trial_backend.fetch_status_results``
+        :param new_results: New results from ``trial_backend.fetch_status_results``
+        :param callbacks: ``on_trial_result`` for these callbacks is called here
         :return: Dictionary mapping trial-ids that are finished to status
         """
         # gets the list of jobs from running_jobs that are done
@@ -587,15 +587,15 @@ class Tuner:
             # to notify the scheduler of pending runtimes (even in the absence of new results).
 
             if status == Status.completed:
-                # since the code above updates `trial_status_dict[trial_id]` after a pause/stop scheduling decision
+                # since the code above updates ``trial_status_dict[trial_id]`` after a pause/stop scheduling decision
                 # this callback is never called after a pause/stop scheduler decision.
                 if (
                     trial_id not in done_trials
                     or done_trials[trial_id][1] != Status.paused
                 ):
                     logger.info(f"Trial trial_id {trial_id} completed.")
-                # If scheduler marks trial as `Status.paused`, this overrides
-                # `Status.completed` (which was assigned because the job
+                # If scheduler marks trial as ``Status.paused``, this overrides
+                # ``Status.completed`` (which was assigned because the job
                 # completed)
                 done_trial = done_trials.get(trial_id)
                 if done_trial is not None and done_trial[1] == Status.paused:

@@ -60,8 +60,8 @@ class DifferentialEvolutionHyperbandBracketManager(SynchronousHyperbandBracketMa
         super().__init__(bracket_rungs, mode)
         # Maps (bracket_id, rung_index) to top list of previous rung, as
         # returned by
-        # `DifferentialEvolutionHyperbandBracket.top_list_for_previous_rung`
-        # when the current rung is `rung_index` in that bracket. We cache
+        # ``DifferentialEvolutionHyperbandBracket.top_list_for_previous_rung``
+        # when the current rung is ``rung_index`` in that bracket. We cache
         # these, so we don't have to repeat sorting many times
         self._top_list_of_previous_rung_cache = dict()
         # Maps (offset, level) to (bracket_delta, rung_index) in order to
@@ -111,7 +111,7 @@ class DifferentialEvolutionHyperbandBracketManager(SynchronousHyperbandBracketMa
     ) -> Optional[int]:
         """
         The parent slot has the same slot index and rung level in the
-        largest bracket `< bracket_id` with a trial_id not None. If no
+        largest bracket ``< bracket_id`` with a trial_id not None. If no
         such slot exists, None is returned.
         For a cross-over or selection operation, the target is chosen
         from the parent slot.
@@ -129,9 +129,9 @@ class DifferentialEvolutionHyperbandBracketManager(SynchronousHyperbandBracketMa
 
     def top_of_previous_rung(self, bracket_id: int, pos: int) -> int:
         """
-        For the current rung in bracket `bracket_id`, consider the slots of
+        For the current rung in bracket ``bracket_id``, consider the slots of
         the previous rung (below) in sorted order. We return the trial_id of
-        position `pos` (so for `pos=0`, the best entry).
+        position ``pos`` (so for ``pos=0``, the best entry).
         """
         bracket = self._brackets[bracket_id]
         rung_index = bracket.current_rung

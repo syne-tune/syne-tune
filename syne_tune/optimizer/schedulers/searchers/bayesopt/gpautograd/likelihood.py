@@ -89,18 +89,18 @@ class MarginalLikelihood(Block):
         """
         Reset hyperparameters to their initial values (or resample them).
         """
-        # Note: The `init` parameter is a default sampler which is used only
+        # Note: The ``init`` parameter is a default sampler which is used only
         # for parameters which do not have initializers specified. Right now,
         # all our parameters have such initializers (constant in general),
-        # so this is just to be safe (if `init` is not specified here, it
-        # defaults to `np.random.uniform`, whose seed we do not control).
+        # so this is just to be safe (if ``init`` is not specified here, it
+        # defaults to ``np.random.uniform``, whose seed we do not control).
         self.initialize(init=random_state.uniform, force_reinit=True)
 
     def data_precomputations(self, data: dict, overwrite: bool = False):
         """
-        Some models require precomputations based on `data`. Precomputed
-        variables are appended to `data`. This is done only if not already
-        included in `data`, unless `overwrite` is True.
+        Some models require precomputations based on ``data``. Precomputed
+        variables are appended to ``data``. This is done only if not already
+        included in ``data``, unless ``overwrite`` is True.
 
         :param data:
         :param overwrite:
@@ -109,10 +109,10 @@ class MarginalLikelihood(Block):
 
     def on_fit_start(self, data: dict, profiler: Optional[SimpleProfiler] = None):
         """
-        Called at the beginning of `fit`.
+        Called at the beginning of ``fit``.
 
-        :param data: Argument passed to `fit`
-        :param profiler: Argument passed to `fit`
+        :param data: Argument passed to ``fit``
+        :param profiler: Argument passed to ``fit``
 
         """
         raise NotImplementedError

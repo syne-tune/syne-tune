@@ -205,11 +205,11 @@ def _create_likelihood(
     likelihood = GaussianProcessMarginalLikelihood(
         kernel=build_kernel(), mean=ScalarMeanFunction(), initial_noise_variance=None
     )
-    # Note: The `init` parameter is a default sampler which is used only
+    # Note: The ``init`` parameter is a default sampler which is used only
     # for parameters which do not have initializers specified. Right now,
     # all our parameters have such initializers (constant in general),
-    # so this is just to be safe (if `init` is not specified here, it
-    # defaults to `np.random.uniform`, whose seed we do not control).
+    # so this is just to be safe (if ``init`` is not specified here, it
+    # defaults to ``np.random.uniform``, whose seed we do not control).
     likelihood.initialize(init=random_state.uniform, force_reinit=True)
 
     return likelihood

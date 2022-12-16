@@ -70,7 +70,7 @@ def test_register_pending():
     reduction_factor = 3
 
     for searcher_data in ("rungs", "all"):
-        # We need to plug in a searcher which logs calls to `register_pending`
+        # We need to plug in a searcher which logs calls to ``register_pending``
         scheduler = HyperbandScheduler(
             config_space,
             searcher="random",

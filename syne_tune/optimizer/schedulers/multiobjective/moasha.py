@@ -45,11 +45,11 @@ class MOASHA(TrialScheduler):
     :param config_space: Configuration space
     :param metrics: List of metric names MOASHA optimizes over
     :param mode: One of :code:`{"min", "max"}` or a list of these values (same
-        size as `metrics`). Determines whether objectives are minimized or
+        size as ``metrics``). Determines whether objectives are minimized or
         maximized. Defaults to "min"
     :param time_attr: A training result attr to use for comparing time.
         Note that you can pass in something non-temporal such as
-        `training_iteration` as a measure of progress, the only requirement
+        ``training_iteration`` as a measure of progress, the only requirement
         is that the attribute should increase monotonically.
         Defaults to "training_iteration"
     :param multiobjective_priority: The multiobjective priority that is used
@@ -57,15 +57,15 @@ class MOASHA(TrialScheduler):
         as non-dominated sort or linear scalarization, default is
         non-dominated sort.
     :param max_t: max time units per trial. Trials will be stopped after
-        `max_t` time units (determined by `time_attr`) have passed.
+        ``max_t`` time units (determined by ``time_attr``) have passed.
         Defaults to 100
     :param grace_period: Only stop trials at least this old in time.
-        The units are the same as the attribute named by `time_attr`.
+        The units are the same as the attribute named by ``time_attr``.
         Defaults to 1
     :param reduction_factor: Used to set halving rate and amount. This
         is simply a unit-less scalar. Defaults to 3
     :param brackets: Number of brackets. Each bracket has a different
-        `grace_period` and number of rung levels. Defaults to 1
+        ``grace_period`` and number of rung levels. Defaults to 1
     """
 
     def __init__(
@@ -93,7 +93,7 @@ class MOASHA(TrialScheduler):
                     m in ["min", "max"] for m in mode
                 ), "all modes should be 'min' or 'max'."
             else:
-                assert mode in ["min", "max"], "`mode` must be 'min' or 'max'."
+                assert mode in ["min", "max"], "``mode`` must be 'min' or 'max'."
         else:
             mode = "min"
 
@@ -223,7 +223,7 @@ class _Bracket:
                     action = SchedulerDecision.CONTINUE
                 else:
                     # get the list of metrics seen for the rung, compute multiobjective priority and decide to continue
-                    # if priority is in the top ones according to a rank induced by the `reduction_factor`.
+                    # if priority is in the top ones according to a rank induced by the ``reduction_factor``.
                     metric_recorded = np.array(
                         [list(x.values()) for x in recorded.values()]
                         + [list(metrics.values())]

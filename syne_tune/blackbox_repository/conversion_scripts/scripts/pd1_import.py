@@ -295,10 +295,10 @@ def serialize(
 
 def deserialize(path: str) -> Dict[str, BlackboxTabular]:
     """
-    Deserialize blackboxes contained in a path that were saved with `serialize` above.
-    TODO: the API is currently dissonant with `serialize`, `deserialize` for BlackboxOffline as `serialize` is there a member.
+    Deserialize blackboxes contained in a path that were saved with ``serialize`` above.
+    TODO: the API is currently dissonant with ``serialize``, ``deserialize`` for BlackboxOffline as ``serialize`` is there a member.
     A possible way to unify is to have serialize also be a free function for BlackboxOffline.
-    :param path: a path that contains blackboxes that were saved with `serialize`
+    :param path: a path that contains blackboxes that were saved with ``serialize``
     :return: a dictionary from task name to blackbox
     """
     path = Path(path)

@@ -32,7 +32,7 @@ def distilbert_imdb_default_params() -> dict:
     }
 
 
-# TODO: Update `HuggingFace` version
+# TODO: Update ``HuggingFace`` version
 def distilbert_imdb_benchmark(sagemaker_backend: bool = False, **kwargs):
     params = distilbert_imdb_default_params()
     config_space = dict(

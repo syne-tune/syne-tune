@@ -34,13 +34,13 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
     """
     See :class:`GPFIFOSearcher` for details on transfer_learning_task_attr',
     'transfer_learning_active_task', 'transfer_learning_active_config_space'
-    as optional fields in `kwargs`. If given, they determine
-    `active_config_space` and `prefix_keys` of `hp_ranges` created here,
+    as optional fields in ``kwargs``. If given, they determine
+    ``active_config_space`` and ``prefix_keys`` of ``hp_ranges`` created here,
     and they also places constraints on 'config_space'.
 
-    This function is not only called in `gp_searcher_factory` to create
-    `hp_ranges` for a new :class:`GPFIFOSearcher` object. It is also needed to
-    create the `TuningJobState` containing the data to be used in warmstarting.
+    This function is not only called in ``gp_searcher_factory`` to create
+    ``hp_ranges`` for a new :class:`GPFIFOSearcher` object. It is also needed to
+    create the ``TuningJobState`` containing the data to be used in warmstarting.
 
     """
     task_attr = kwargs.get("transfer_learning_task_attr")
@@ -66,8 +66,8 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
         active_config_space = kwargs.get("transfer_learning_active_config_space")
         if active_config_space is None:
             active_config_space = config_space
-        # The parameter `task_attr` in `active_config_space` must be restricted
-        # to `active_task` as a single value
+        # The parameter ``task_attr`` in ``active_config_space`` must be restricted
+        # to ``active_task`` as a single value
         task_param = Categorical(categories=[active_task])
         active_config_space = dict(active_config_space, **{task_attr: task_param})
     return make_hyperparameter_ranges(
@@ -80,7 +80,7 @@ def create_filter_observed_data_for_warmstarting(
 ) -> Optional[ConfigurationFilter]:
     """
     See :class:`GPFIFOSearcher` for details on transfer_learning_task_attr',
-    'transfer_learning_active_task' as optional fields in `kwargs`.
+    'transfer_learning_active_task' as optional fields in ``kwargs``.
 
     """
     task_attr = kwargs.get("transfer_learning_task_attr")
@@ -103,15 +103,15 @@ def create_base_gp_kernel_for_warmstarting(
 ) -> KernelFunction:
     """
     In the transfer learning case, the base kernel is a product of
-    two `Matern52` kernels, the first non-ARD over the categorical
+    two ``Matern52`` kernels, the first non-ARD over the categorical
     parameter determining the task, the second ARD over the remaining
     parameters.
 
     """
     task_attr = kwargs.get("transfer_learning_task_attr")
     assert task_attr is not None
-    # Note: This attribute is the first in `hp_ranges`, see
-    # `create_hp_ranges_for_warmstarting`
+    # Note: This attribute is the first in ``hp_ranges``, see
+    # ``create_hp_ranges_for_warmstarting``
     assert hp_ranges.internal_keys[0] == task_attr  # Sanity check
     _, categ_dim = hp_ranges.encoded_ranges[task_attr]
     full_dim = hp_ranges.ndarray_size

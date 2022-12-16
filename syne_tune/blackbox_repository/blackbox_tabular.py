@@ -39,12 +39,12 @@ class BlackboxTabular(Blackbox):
     :class:`~syne_tune.blackbox_repository.Blackbox`:
 
     :param hyperparameters: dataframe of hyperparameters, shape
-        `(num_evals, num_hps)`, columns must match hyperparameter names of
-        `configuration_space`
+        ``(num_evals, num_hps)``, columns must match hyperparameter names of
+        ``configuration_space``
     :param objectives_evaluations: values of recorded objectives, must have
-        shape `(num_evals, num_seeds, num_fidelities, num_objectives)`
-    :param fidelity_values: values of the `num_fidelities` fidelities, default
-        to `[1, ..., num_fidelities]`
+        shape ``(num_evals, num_seeds, num_fidelities, num_objectives)``
+    :param fidelity_values: values of the ``num_fidelities`` fidelities, default
+        to ``[1, ..., num_fidelities]``
     """
 
     def __init__(
@@ -62,7 +62,7 @@ class BlackboxTabular(Blackbox):
             objectives_names=objectives_names,
         )
         assert len(fidelity_space) == 1, "Only a single fidelity supported for now"
-        # todo missing-value support, should boils down to droping nans in `hyperparameter_objectives_values`
+        # todo missing-value support, should boils down to droping nans in ``hyperparameter_objectives_values``
         num_hps = len(hyperparameters.columns)
 
         assert objectives_evaluations.ndim == 4
@@ -132,7 +132,7 @@ class BlackboxTabular(Blackbox):
             matching_index = self.hyperparameters_index.loc[key].values
         except KeyError:
             raise ValueError(
-                f"the hyperparameter {configuration} is not present in available evaluations. Use `add_surrogate(blackbox)` if"
+                f"the hyperparameter {configuration} is not present in available evaluations. Use ``add_surrogate(blackbox)`` if"
                 f" you want to add interpolation or a surrogate model that support querying any configuration."
             )
 
@@ -191,28 +191,28 @@ class BlackboxTabular(Blackbox):
         objectives_evaluations = objectives_evaluations[~nan_mask]
         return hyperparameters, objectives_evaluations
 
-    # TODO: It is odd that `y` is transposed when compared to
-    # `objectives_evaluations`. Keep it this way, but it would be simpler
+    # TODO: It is odd that ``y`` is transposed when compared to
+    # ``objectives_evaluations``. Keep it this way, but it would be simpler
     # to understand if this was not done
     def hyperparameter_objectives_values(
         self, predict_curves: bool = False
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        If `predict_curves` is False, the shape of `X` is
-        `(num_evals * num_seeds * num_fidelities, num_hps + 1)`, the shape of `y`
-        is `(num_evals * num_seeds * num_fidelities, num_objectives)`.
-        This can be reshaped to `(num_fidelities, num_seeds, num_evals, *)`.
-        The final column of `X` is the fidelity value (only a single fidelity
+        If ``predict_curves`` is False, the shape of ``X`` is
+        ``(num_evals * num_seeds * num_fidelities, num_hps + 1)``, the shape of ``y``
+        is ``(num_evals * num_seeds * num_fidelities, num_objectives)``.
+        This can be reshaped to ``(num_fidelities, num_seeds, num_evals, *)``.
+        The final column of ``X`` is the fidelity value (only a single fidelity
         attribute is supported).
 
-        If `predict_curves` is True, the shape of `X` is
-        `(num_evals * num_seeds, num_hps)`, the shape of `y` is
-        `(num_evals * num_seeds, num_fidelities * num_objectives)`. The latter
+        If ``predict_curves`` is True, the shape of ``X`` is
+        ``(num_evals * num_seeds, num_hps)``, the shape of ``y`` is
+        ``(num_evals * num_seeds, num_fidelities * num_objectives)``. The latter
         can be reshaped to
-        `(num_seeds, num_evals, num_fidelities, num_objectives)`.
+        ``(num_seeds, num_evals, num_fidelities, num_objectives)``.
 
-        :param predict_curves: See above. Default is `False`
-        :return: Dataframes corresponding to `X` and `y`
+        :param predict_curves: See above. Default is ``False``
+        :return: Dataframes corresponding to ``X`` and ``y``
         """
         objectives_evaluations = self.objectives_evaluations
         hyperparameters = self.hyperparameters
@@ -258,7 +258,7 @@ class BlackboxTabular(Blackbox):
         """
         :param objective_name_mapping: dictionary from old objective name to
             new one, old objective name must be present in the blackbox
-        :return: a blackbox with as many objectives as `objective_name_mapping`
+        :return: a blackbox with as many objectives as ``objective_name_mapping``
         """
         # todo add test
         for old_name in objective_name_mapping.keys():
@@ -364,8 +364,8 @@ def deserialize(path: str) -> Dict[str, BlackboxTabular]:
 
     TODO: the API is currently dissonant with :func:`serialize`,
     :func:`deserialize` for :class:`~syne_tune.blackbox_repository.BlackboxOffline`
-    as `serialize` is a member function there. A possible way to unify is to
-    have serialize also be a free function for `BlackboxOffline`.
+    as ``serialize`` is a member function there. A possible way to unify is to
+    have serialize also be a free function for ``BlackboxOffline``.
 
     :param path: a path that contains blackboxes that were saved with
         :func:`serialize`

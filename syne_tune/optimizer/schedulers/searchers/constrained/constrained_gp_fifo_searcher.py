@@ -40,7 +40,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher.MultiModelGPFIFOSearcher`:
 
-    :param constraint_attr: Name of constraint metric in `report` passed to
+    :param constraint_attr: Name of constraint metric in ``report`` passed to
         :meth:`_update`.
     """
 
@@ -78,7 +78,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def _update(self, trial_id: str, config: dict, result: dict):
         # We can call the superclass method, because
-        # `state_transformer.label_trial` can be called two times
+        # ``state_transformer.label_trial`` can be called two times
         # with parts of the metrics
         super()._update(trial_id, config, result)
         # Get constraint metric

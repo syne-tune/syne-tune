@@ -78,7 +78,7 @@ class TuningStatus:
     :param metric_names: Names of metrics reported
     """
 
-    # TODO: `metric_names` not used for anything. Remove?
+    # TODO: ``metric_names`` not used for anything. Remove?
     def __init__(self, metric_names: List[str]):
         """ """
         self.metric_names = metric_names

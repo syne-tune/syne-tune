@@ -79,10 +79,10 @@ class NeuralbandSchedulerBase(HyperbandScheduler):
         )
         if self.max_t is not None:
             search_options["max_epochs"] = self.max_t
-        # Subclasses may extend `search_options`
+        # Subclasses may extend ``search_options``
         search_options = self._extend_search_options(search_options)
         # Adjoin scheduler info to search_options, if not already done by
-        # subclass (via `_extend_search_options`)
+        # subclass (via ``_extend_search_options``)
         if "scheduler" not in search_options:
             search_options["scheduler"] = "fifo"
         self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)

@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 """
 This launches a local HPO tuning the discount factor of PPO on cartpole.
-To run this example, you should have installed dependencies in `requirements.txt`.
+To run this example, you should have installed dependencies in ``requirements.txt``.
 """
 import logging
 from pathlib import Path

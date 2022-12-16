@@ -31,7 +31,7 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
     """
     A zero-shot transfer hyperparameter optimization method which jointly selects
     configurations that minimize the average rank obtained on historic metadata
-    (`transfer_learning_evaluations`). This is a searcher which can be used
+    (``transfer_learning_evaluations``). This is a searcher which can be used
     with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Reference:
 
         | Sequential Model-Free Hyperparameter Tuning.
@@ -44,14 +44,14 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
     :param transfer_learning_evaluations: Dictionary from task name to
         offline evaluations.
     :param mode: Whether to minimize ("min", default) or maximize ("max")
-    :param sort_transfer_learning_evaluations: Use `False` if the
-        hyperparameters for each task in `transfer_learning_evaluations` are
-        already in the same order. If set to `True`, hyperparameters are sorted.
-        Defaults to `True`
+    :param sort_transfer_learning_evaluations: Use ``False`` if the
+        hyperparameters for each task in ``transfer_learning_evaluations`` are
+        already in the same order. If set to ``True``, hyperparameters are sorted.
+        Defaults to ``True``
     :param use_surrogates: If the same configuration is not evaluated on all
-        tasks, set this to `True`. This will generate a set of configurations
+        tasks, set this to ``True``. This will generate a set of configurations
         and will impute their performance using surrogate models.
-        Defaults to `False`
+        Defaults to ``False``
     """
 
     def __init__(

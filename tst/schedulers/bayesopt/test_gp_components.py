@@ -67,7 +67,7 @@ def test_get_internal_candidate_evaluations():
 
 
 def test_dimensionality_and_warping_ranges():
-    # Note: `choice` with binary value range is encoded as 1, not 2 dims
+    # Note: ``choice`` with binary value range is encoded as 1, not 2 dims
     hp_ranges = make_hyperparameter_ranges(
         {
             "a": choice(["X", "Y"]),  # pos 0

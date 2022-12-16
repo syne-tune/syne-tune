@@ -62,7 +62,7 @@ class GaussianProcessModel:
 
     def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
         """
-        Adjust model parameters based on training data `data`. Can be done via
+        Adjust model parameters based on training data ``data``. Can be done via
         optimization or MCMC sampling. The posterior states are computed at the
         end as well.
 

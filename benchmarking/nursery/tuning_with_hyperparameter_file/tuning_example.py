@@ -13,7 +13,7 @@
 """
 Example showing how to tune given a script ("training_script.py") that takes input hyperparameters
 as a file rather than command line arguments.
-Note that this approach only works with `LocalBackend` at the moment.
+Note that this approach only works with ``LocalBackend`` at the moment.
 """
 from pathlib import Path
 

@@ -106,13 +106,13 @@ def check_and_merge_defaults(
 ) -> dict:
     """
     First, check that all keys in mandatory appear in options. Second, create
-    result_options by merging `options` and `default_options`, where entries in
-    `options` have precedence. Finally, if `constraints` is given, this is used to
+    result_options by merging ``options`` and ``default_options``, where entries in
+    ``options`` have precedence. Finally, if ``constraints`` is given, this is used to
     check validity of values.
 
     :param options: Input arguments
     :param mandatory: Set of mandatory argument names
-    :param default_options: Default values for `options`
+    :param default_options: Default values for ``options``
     :param constraints: See above, optional
     :param dict_name: Prefix used in assert messages, optional
     :return: Output arguments
@@ -159,7 +159,7 @@ def check_and_merge_defaults(
 
 def filter_by_key(options: dict, remove_keys: Set[str]) -> dict:
     """
-    Filter options by removing entries whose keys are in `remove_keys`.
+    Filter options by removing entries whose keys are in ``remove_keys``.
     Used to filter kwargs passed to a constructor, before passing it to
     the superclass constructor.
 
