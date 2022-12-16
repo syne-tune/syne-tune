@@ -1,18 +1,14 @@
-Basics of Syne Tune: Concepts and Terminology
-=============================================
+Concepts and Terminology
+========================
 
 Syne Tune is a library for large-scale distributed hyperparameter optimization
 (HPO). Here is some basic terminology. A specific set of values for
 hyperparameters is called a *configuration*. The *configuration space* is the
 domain of a configuration, prescribing type and valid range of each hyperparameter.
 Finally, a *trial* refers to an evaluation of the underlying machine learning
-model on a given configuration. A trial may result in one or more observation, for
+model on a given configuration. A trial may result in one or more observations, for
 example the validation error after each epoch of training the model. Some HPO
 algorithms may pause a trial and restart it later in time.
-
-
-Syne Tune Components
---------------------
 
 HPO experiments in Syne Tune involve the interplay between three components:
 *Tuner*, *Backend*, and *Scheduler*. There is also dedicated tooling for
@@ -32,12 +28,12 @@ Scheduler
 ---------
 
 In Syne Tune, HPO algorithms are called *schedulers* (base class
-:class:`~syne_tune.optimizer.schedulers.TrialScheduler`). They search for a new,
+:class:`~syne_tune.optimizer.scheduler.TrialScheduler`). They search for a new,
 most promising configuration and suggest it as a new trial to the tuner. Some
 schedulers may decide to resume a paused trial instead of suggesting a new one.
 Schedulers may also be in charge of stopping running trials. Syne Tune supports
 `many schedulers <../../getting_started.html#supported-hpo-methods>`__, including
-`multi-fidelity <../multifidelity/README.rst>`__ methods.
+`multi-fidelity <../multifidelity/README.html>`__ methods.
 
 
 Backend
@@ -45,7 +41,7 @@ Backend
 
 The *backend* module is responsible for starting, stopping, pausing and resuming
 trials, as well as accessing results reported by trials and their statuses (base
-class :`~syne_tune.backend.TrialBackend`). Syne Tune currently supports four
+class :class:`~syne_tune.backend.trial_backend.TrialBackend`). Syne Tune currently supports four
 execution backends to facilitate experimentations: **local backend**,
 **Python backend**, **SageMaker backend**, and **simulator backend**.
 Recall that an HPO experiment is defined by two scripts. First, a launcher script
@@ -58,7 +54,10 @@ of the backend to execute the training script for different configurations, ofte
 parallel, and to relay their reports back to the tuner.
 
 
-**Local backend** (:class:`~syne_tune.backend.LocalBackend`): This backend runs
+Local Backend
+~~~~~~~~~~~~~
+
+Class :class:`~syne_tune.backend.LocalBackend`. This backend runs
 each training job locally, on the same machine as the tuner. Each training job is
 run as a subprocess. Importantly, this means that the *number of workers*, as
 specified by ``n_workers`` passed to :class:`~syne_tune.Tuner`, must be smaller or
@@ -66,7 +65,7 @@ equal to the number of independent resources on this machine, e.g. the number of
 GPUs or CPU cores. Experiments with the local backend can either be launched on
 your current machine (in which case this needs to own the resources you are
 requesting, such as GPUs), or you can
-`launch the experiment remotely<../../faq.html#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__
+`launch the experiment remotely <../../faq.html#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__
 as a SageMaker training job, using an instance type of your choice. The figure
 below demonstrates the local backend. On the left, both scripts are executed on
 the local machine, while on the right, scripts are run remotely.
@@ -96,7 +95,10 @@ wrapper around the local backend, which allows you to define an experiment in a
 single script (instead of two).
 
 
-**SageMaker backend** (:class:`~syne_tune.backend.SageMakerBackend`): This backend
+SageMaker Backend
+~~~~~~~~~~~~~~~~~
+
+Class :class:`~syne_tune.backend.SageMakerBackend`. This backend
 runs each trial evaluation as a separate SageMaker training job. Given sufficient
 instance limits, you can run your experiments with any number of workers you like,
 and each worker may use all resources on the executing instance. It is even
@@ -128,7 +130,10 @@ not present in the local backend. The SageMaker backend can be sped up by using
 `SageMaker managed warm pools <../benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`__.
 
 
-**Simulator backend** (:class:`~syne_tune.blackbox_repository.BlackboxRepositoryBackend`):
+Simulator Backend
+~~~~~~~~~~~~~~~~~
+
+Class :class:`~syne_tune.blackbox_repository.BlackboxRepositoryBackend`.
 This backend is useful for comparing HPO methods, or variations of such methods.
 It runs on a *tabulated or surrogate benchmark*, where validation metric data
 typically obtained online by running a training script has been precomputed

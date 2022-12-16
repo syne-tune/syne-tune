@@ -49,9 +49,9 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
    :caption: Tutorials
    :maxdepth: 1
 
+   tutorials/basics/README
    search_space
    schedulers
-   tutorials/basics/README
    tutorials/multifidelity/README
    tutorials/benchmarking/README
    tutorials/developer/README
