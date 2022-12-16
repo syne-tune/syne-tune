@@ -34,12 +34,10 @@ extra_args = [
 
 
 def map_extra_args(args) -> dict:
-    return dict(
-        scheduler_kwargs={
-            "grace_period": args.grace_period,
-            "reduction_factor": args.reduction_factor,
-        }
-    )
+    return {
+        "grace_period": args.grace_period,
+        "reduction_factor": args.reduction_factor,
+    }
 
 
 if __name__ == "__main__":
