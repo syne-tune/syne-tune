@@ -42,13 +42,13 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
 
     This function creates searcher objects from string argument name and
     additional kwargs. It is typically called in the constructor of a
-    scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`),
+    scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`),
     which provides most of the required `kwargs`.
 
     :param searcher_name: Value of `searcher` argument to scheduler (see
-        :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`)
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`)
     :param kwargs: Argument to
-        :class:`~`syne_tune.optimizer.schedulers.searchers.BaseSearcher` constructor
+        :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher` constructor
     :return: New searcher object
     """
     supported_schedulers = None

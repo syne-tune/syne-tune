@@ -41,8 +41,8 @@ class RemoteLauncher:
     will spawn one Sagemaker job per trial.
 
     :param tuner: Tuner that should be run remotely on a `instance_type`
-        instance. Note that :class:`~`syne_tune.StoppingCriterion` should be used
-        for the :class:`~`syne_tune.Tuner` rather than a lambda function to ensure
+        instance. Note that :class:`~syne_tune.StoppingCriterion` should be used
+        for the :class:`~syne_tune.Tuner` rather than a lambda function to ensure
         serialization.
     :param role: SageMaker role to be used to launch the remote tuning instance.
     :param instance_type: Instance where the tuning is going to happen.

@@ -248,7 +248,7 @@ class ScikitLearnCostModel(NonLinearCostModel):
 class UnivariateSplineCostModel(NonLinearCostModel):
     """
     Here, `c1(x)` is given by a univariate spline
-    (:class:`~`scipy.optimize.UnivariateSpline`), where a single scalar is
+    (:class:`~scipy.optimize.UnivariateSpline`), where a single scalar is
     extracted from x.
 
     In the second part of the dataset (`pos >= num_data0`), duplicate entries with
