@@ -167,6 +167,9 @@ are given in ``search_options``. These are:
 
 * ``debug_log``: If ``True``, a useful log output about the search progress is
   printed.
+* ``allow_duplicates``: If ``True``, the same configuration may be suggested
+  more than once. The default is ``False``, in that sampling is without
+  replacement.
 
 Bayesian Optimization
 ~~~~~~~~~~~~~~~~~~~~~

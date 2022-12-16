@@ -52,6 +52,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         num_candidates: Optional[int] = None,
         bandwidth_factor: Optional[int] = None,
         random_fraction: Optional[float] = None,
+        allow_duplicates: Optional[bool] = None,
         resource_attr: Optional[str] = None,
         **kwargs
     ):
@@ -68,6 +69,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             num_candidates=num_candidates,
             bandwidth_factor=bandwidth_factor,
             random_fraction=random_fraction,
+            allow_duplicates=allow_duplicates,
             **kwargs
         )
         self.resource_attr = resource_attr

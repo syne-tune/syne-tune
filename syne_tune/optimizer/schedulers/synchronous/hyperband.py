@@ -290,6 +290,9 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
             config = self.searcher.get_config(trial_id=str(trial_id))
             if config is not None:
                 config = cast_config_values(config, self.config_space)
+                self.searcher.register_pending(
+                    trial_id=str(trial_id), config=config, milestone=slot_in_rung.level
+                )
                 if self.max_resource_attr is not None:
                     config[self.max_resource_attr] = slot_in_rung.level
                 self._trial_to_config[trial_id] = config
@@ -393,6 +396,8 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
         if trial_id in self._trial_to_pending_slot:
             bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]
             self._report_as_failed(bracket_id, slot_in_rung)
+            # A failed trial is not pending anymore
+            del self._trial_to_pending_slot[trial_id]
         else:
             logger.warning(
                 f"Trial trial_id {trial_id} not registered at pending: "

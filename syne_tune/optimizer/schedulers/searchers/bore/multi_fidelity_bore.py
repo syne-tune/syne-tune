@@ -58,6 +58,7 @@ class MultiFidelityBore(Bore):
         random_prob: Optional[float] = None,
         init_random: Optional[int] = None,
         classifier_kwargs: Optional[dict] = None,
+        allow_duplicates: Optional[bool] = None,
         resource_attr: str = "epoch",
         **kwargs,
     ):
@@ -76,6 +77,7 @@ class MultiFidelityBore(Bore):
             random_prob=random_prob,
             init_random=init_random,
             classifier_kwargs=classifier_kwargs,
+            allow_duplicates=allow_duplicates,
             **kwargs,
         )
         self.resource_attr = resource_attr
