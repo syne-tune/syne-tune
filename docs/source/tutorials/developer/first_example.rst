@@ -114,7 +114,7 @@ include:
   have ``metric`` (name of metric to be optimized) and ``mode`` (whether metric
   is to be minimized or maximized; default is ``"min"``).
 * ``_suggest`` (internal version of ``suggest``): Called by the
-  :class:`~`syne_tune.Tuner`` whenever a worker is available. Returns trial to
+  :class:`~syne_tune.Tuner` whenever a worker is available. Returns trial to
   execute next, which in most cases will start a new configuration using
   trial ID ``trial_id`` (as
   :const:`~syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`).

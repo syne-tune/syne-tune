@@ -279,9 +279,9 @@ class HyperbandScheduler(FIFOScheduler):
           `rung_system_kwargs["num_threshold_candidates"]` of
           `points_to_evaluate` will enforce stricter rules on which task is
           continued. See
-          :class:`~`syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`
+          :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHStoppingRungSystem`
           and
-          :class:`~`syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+          :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
         * rush_promotion: Same as `rush_stopping` but for promotion, see
           :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHPromotionRungSystem`
 

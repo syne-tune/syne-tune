@@ -465,7 +465,7 @@ def gp_fifo_searcher_factory(**kwargs) -> dict:
     Returns `kwargs` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
-    scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`).
+    scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     Extensions of `kwargs` by the scheduler:
 
@@ -496,7 +496,7 @@ def gp_multifidelity_searcher_factory(**kwargs) -> dict:
     Returns `kwargs` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
-    scheduler (see :class:`~`syne_tune.optimizer.schedulers.HyperbandScheduler`).
+    scheduler (see :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`).
 
     :param kwargs: `search_options` coming from scheduler
     :return: `kwargs` for :meth:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher._create_internal`
@@ -533,7 +533,7 @@ def hypertune_searcher_factory(**kwargs) -> dict:
     Returns `kwargs` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
-    scheduler (see :class:`~`syne_tune.optimizer.schedulers.HyperbandScheduler`).
+    scheduler (see :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`).
 
     :param kwargs: `search_options` coming from scheduler
     :return: `kwargs` for :meth:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher._create_internal`
@@ -554,7 +554,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
     Returns `kwargs` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
-    scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`).
+    scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     :param kwargs: `search_options` coming from scheduler
     :return: `kwargs` for :meth:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`
@@ -605,7 +605,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     Returns `kwargs` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
-    scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`).
+    scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     This is for the coarse-grained variant, where costs :math:`c(x)` are obtained
     together with metric values and are given a GP surrogate model.
@@ -661,11 +661,11 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
     Returns `kwargs` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
     based on `kwargs` equal to `search_options` passed to and extended by
-    scheduler (see :class:`~`syne_tune.optimizer.schedulers.FIFOScheduler`).
+    scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
     This is for the fine-grained variant, where costs :math:`c(x, r)` are
     obtained with each report and are represented by a
-    :class:`~`syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`
     surrogate model.
 
     :param kwargs: `search_options` coming from scheduler
