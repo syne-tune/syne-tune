@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.3.3] - 2022-12-19
+
+We release version 0.3.3 which you can install with `pip install syne-tune[extra]`.
+
+Thanks to all contributors (sorted by chronological commit order):
+@mseeger, @mina-ghashami, @aaronkl, @jgolebiowski, @Valavanca, @TrellixVulnTeam,
+@geoalgo, @wistuba, @mlblack
+
+### Added
+* Revamped documentation hosted at https://syne-tune.readthedocs.io
+* New tutorial: Benchmarking in Syne Tune
+* Added section on backends in Basics of Syne Tune tutorial
+* Control of re-creating of blackboxes by checking and storing hash codes
+* New benchmark: Transformer on WikiText-2
+* Support SageMaker managed warm pools in SageMaker backend
+* Improvements for benchmarking with YAHPO blackboxes
+* Support points_to_evaluate in BORE
+* SageMaker backend supports delete_checkpoints=True
+
+### Changed
+* GridSearch supports all domain types now
+* BlackboxSurrogate of blackbox repository supports different modes
+* Add timeout to unit tests
+* New unit tests which run schedulers for longer, using simulator backend
+
+### Fixed
+* HyperbandScheduler: does_pause_resume for all types
+* ASHA with type="promotion" did not work when checkpointing not implemented
+* Fixed preprocessing of PD1 blackbox
+* SageMaker backend reports on true number of busy workers (fixes issue #250)
+* Fix issue with uploading/syncing to S3 of YAHPO blackbox
+* Fix YAHPO surrogate evaluations in the presence of inactive hyperparameters
+* Fix treatment of Status.paused in TuningStatus and Tuner
+
 
 ## [0.3.2] - 2022-10-14
 
