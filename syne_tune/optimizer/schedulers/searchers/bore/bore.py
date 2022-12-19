@@ -258,9 +258,9 @@ class Bore(SearcherWithRandomSeed):
             self.model = CalibratedClassifierCV(
                 self.model, cv=2, method=self.calibration
             )
-            self.model.fit(X, np.array(z, dtype=np.int))
+            self.model.fit(X, np.array(z, dtype=np.int64))
         else:
-            self.model.fit(X, np.array(z, dtype=np.int))
+            self.model.fit(X, np.array(z, dtype=np.int64))
 
         z_hat = self.model.predict(X)
         accuracy = np.mean(z_hat == z)
