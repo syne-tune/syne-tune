@@ -43,7 +43,7 @@ if __name__ == "__main__":
     trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
     # GP-based Bayesian optimization searcher. Many options can be specified
-    # via `search_options`, but let's use the defaults
+    # via ``search_options``, but let's use the defaults
     searcher = "bayesopt"
     search_options = {"num_init_random": n_workers + 2}
     # Hyperband (or successive halving) scheduler of the stopping type.

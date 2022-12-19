@@ -79,8 +79,8 @@ to be done:
     ``resource_attr`` are required parameters for your benchmark, which are
     arguments to schedulers.
 
-Role of `benchmarking/nursery/`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Role of benchmarking/nursery/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The best place to contribute a new benchmark, along with launcher scripts, is
 to create a new package in :mod:`benchmarking.nursery`. This package contains:

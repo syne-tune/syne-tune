@@ -41,7 +41,7 @@ class RandomSearch(FIFOScheduler):
     """Random search.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -62,7 +62,7 @@ class GridSearch(FIFOScheduler):
     """Grid search.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.GridSearcher`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -83,7 +83,7 @@ class BayesianOptimization(FIFOScheduler):
     """Gaussian process based Bayesian optimization.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -109,8 +109,8 @@ def _assert_need_one(kwargs: dict, need_one: Optional[set] = None):
 class ASHA(HyperbandScheduler):
     """Asynchronous Sucessive Halving (ASHA).
 
-    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
-    `type="promotion"`, the latter is more useful, see also
+    One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
+    ``type="promotion"``, the latter is more useful, see also
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
@@ -133,18 +133,18 @@ class ASHA(HyperbandScheduler):
 class MOBSTER(HyperbandScheduler):
     """Model-based Asynchronous Multi-fidelity Optimizer (MOBSTER).
 
-    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
-    `type="promotion"`, the latter is more useful, see also
+    One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
+    ``type="promotion"``, the latter is more useful, see also
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     MOBSTER can be run with different surrogate models. The model is selected
-    by `search_options["model"]` in `kwargs`. The default is `"gp_multitask"`
+    by ``search_options["model"]`` in ``kwargs``. The default is ``"gp_multitask"``
     (jointly dependent multi-task GP model), another useful choice is
-    `"gp_independent"` (independent GP models at each rung level, with shared
+    ``"gp_independent"`` (independent GP models at each rung level, with shared
     ARD kernel).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.GPMultifidelitySearcher`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -165,14 +165,14 @@ class MOBSTER(HyperbandScheduler):
 
 class HyperTune(HyperbandScheduler):
     """
-    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. For
-    `type="promotion"`, the latter is more useful, see also
+    One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
+    ``type="promotion"``, the latter is more useful, see also
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     Hyper-Tune is a model-based variant of ASHA with more than one bracket.
     It can be seen as extension of MOBSTER and can be used with
-    `search_options["model"]` in `kwargs` being `"gp_independent"` or
-    `"gp_multitask"`. It has a model-based way to sample the bracket for every
+    ``search_options["model"]`` in ``kwargs`` being ``"gp_independent"`` or
+    ``"gp_multitask"``. It has a model-based way to sample the bracket for every
     new trial, as well as an ensemble predictive distribution feeding into the
     acquisition function. Our implementation is based on:
 
@@ -185,7 +185,7 @@ class HyperTune(HyperbandScheduler):
     :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`,
     and see
     :class:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -222,7 +222,7 @@ class HyperTune(HyperbandScheduler):
 class PASHA(HyperbandScheduler):
     """Progressive ASHA.
 
-    One of `max_t`, `max_resource_attr` needs to be in `kwargs`. The latter is
+    One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. The latter is
     more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
@@ -246,7 +246,7 @@ class PASHA(HyperbandScheduler):
 class SyncHyperband(SynchronousGeometricHyperbandScheduler):
     """Synchronous Hyperband.
 
-    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
     The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
@@ -279,7 +279,7 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
     Combines :class:`SyncHyperband` with TPE-like Bayesian optimization, using
     kernel density estimators.
 
-    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
     The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
@@ -311,7 +311,7 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
 
     Combines :class:`SyncHyperband` with ideas from evolutionary algorithms.
 
-    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
     The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
@@ -345,11 +345,11 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
     optimization, just like :class:`MOBSTER` builds on top of :class:`ASHA` in
     the asynchronous case.
 
-    One of `max_resource_level`, `max_resource_attr` needs to be in `kwargs`.
+    One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
     The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
-    The default surrogate model (`search_options["model"]` in `kwargs`) is
-    `"gp_independent"`, different to :class:`MOBSTER`.
+    The default surrogate model (``search_options["model"]`` in ``kwargs``) is
+    ``"gp_independent"``, different to :class:`MOBSTER`.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -383,7 +383,7 @@ class BORE(FIFOScheduler):
     """Bayesian Optimization by Density-Ratio Estimation (BORE).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.bore.Bore`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -413,7 +413,7 @@ class REA(FIFOScheduler):
     """Regularized Evolution (REA).
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.regularized_evolution.RegularizedEvolution`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -458,7 +458,7 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
     """Constrained Bayesian Optimization.
 
     See :class:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher`
-    for `kwargs["search_options"]` parameters.
+    for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -493,14 +493,14 @@ class ZeroShotTransfer(FIFOScheduler):
         evaluations.
     :param metric: Name of metric to optimize
     :param mode: Whether to minimize (min) or maximize (max)
-    :param sort_transfer_learning_evaluations: Use `False` if the
-        hyperparameters for each task in `transfer_learning_evaluations` are
-        already in the same order. If set to `True`, hyperparameters are sorted.
+    :param sort_transfer_learning_evaluations: Use ``False`` if the
+        hyperparameters for each task in ``transfer_learning_evaluations`` are
+        already in the same order. If set to ``True``, hyperparameters are sorted.
     :param use_surrogates: If the same configuration is not evaluated on all
-        tasks, set this to `True`. This will generate a set of configurations
+        tasks, set this to ``True``. This will generate a set of configurations
         and will impute their performance using surrogate models.
     :param random_seed: Used for randomly sampling candidates. Only used if
-        `use_surrogates=True`.
+        ``use_surrogates=True``.
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """

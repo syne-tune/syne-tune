@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RungEntry:
     """
-    :param level: Rung level :math:`r_j`
-    :param prom_quant: romotion quantile :math:`q_j`
+    :param level: Rung level :math:``r_j``
+    :param prom_quant: romotion quantile :math:``q_j``
     :param data: Data of all previous jobs reaching the level
     """
 
@@ -69,7 +69,7 @@ class RungSystem:
         self._metric = metric
         self._mode = mode
         self._resource_attr = resource_attr
-        # The data entry in `_rungs` is a dict with key trial_id. The
+        # The data entry in ``_rungs`` is a dict with key trial_id. The
         # value type depends on the subclass, but it contains the
         # metric value
         self._rungs = [
@@ -81,8 +81,8 @@ class RungSystem:
         """Called when new task is to be scheduled.
 
         For a promotion-based rung system, check whether any trial can be
-        promoted. If so, return dict with keys `trial_id`, `resume_from`
-        (rung level where trial is paused), `milestone` (next rung level
+        promoted. If so, return dict with keys ``trial_id``, ``resume_from``
+        (rung level where trial is paused), ``milestone`` (next rung level
         the trial will reach, or None).
         If no trial can be promoted, or if the rung system is not
         promotion-based, an empty dict is returned.
@@ -149,7 +149,7 @@ class RungSystem:
 
     def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, dict]]:
         """
-        A snapshot is a list of rung levels with entries `(level, data)`,
+        A snapshot is a list of rung levels with entries ``(level, data)``,
         ordered from top to bottom (largest rung first).
 
         :param skip_rungs: This number of the smallest rung levels are not
@@ -170,9 +170,9 @@ class RungSystem:
 
 class StoppingRungSystem(RungSystem):
     """
-    The decision on whether a trial :math:`\mathbf{x}` continues or is stopped
-    at a rung level :math:`r`, is taken in :meth:`on_task_report`. To this end,
-    the metric value :math:`f(\mathbf{x}, r)` is inserted into :math:`r.data`.
+    The decision on whether a trial :math:``\mathbf{x}`` continues or is stopped
+    at a rung level :math:``r``, is taken in :meth:`on_task_report`. To this end,
+    the metric value :math:``f(\mathbf{x}, r)`` is inserted into :math:``r.data``.
     Then:
 
     .. math::
@@ -180,7 +180,7 @@ class StoppingRungSystem(RungSystem):
        \mathrm{continues}(\mathbf{x}, r)\; \Leftrightarrow\;
        f(\mathbf{x}, r) \le \mathrm{np.quantile}(r.data, r.prom\_quant)
 
-    in case `mode == "min"`. See also :meth:`_task_continues`.
+    in case ``mode == "min"``. See also :meth:`_task_continues`.
     """
 
     def _cutoff(self, recorded, prom_quant):
@@ -196,10 +196,10 @@ class StoppingRungSystem(RungSystem):
         resource: int,
     ) -> bool:
         """
-        :param metric_value: :math:`f(\mathbf{x}, r)` for trial
-            :math:`\mathbf{x}` at rung :math:`r`
-        :param recorded: Data for rung :math:`r` (including
-            :math:`r(\mathbf{x}, r)`)
+        :param metric_value: :math:``f(\mathbf{x}, r)`` for trial
+            :math:``\mathbf{x}`` at rung :math:``r``
+        :param recorded: Data for rung :math:``r`` (including
+            :math:``r(\mathbf{x}, r)``)
         :param prom_quant: Quantile threshold (for mode 'min')
         :param trial_id: ID of trial
         :param resource: Rung level

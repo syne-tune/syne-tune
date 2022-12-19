@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 """
-An entry point that loads a serialized function from `PythonBackend` and executes it with the provided hyperparameter.
+An entry point that loads a serialized function from ``PythonBackend`` and executes it with the provided hyperparameter.
 The md5 hash of the file is first checked before executing the deserialized function.
 """
 import json

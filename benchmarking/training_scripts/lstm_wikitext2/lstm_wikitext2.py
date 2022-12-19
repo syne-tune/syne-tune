@@ -249,7 +249,7 @@ def objective(config):
             loss = criterion(output.view(-1, ntokens), targets)
             loss.backward()
 
-            # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
+            # ``clip_grad_norm`` helps prevent the exploding gradient problem in RNNs / LSTMs.
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
             for p in model.parameters():
                 p.data.add_(p.grad.data, alpha=-lr)
@@ -266,10 +266,10 @@ def objective(config):
             #    start_time = time.time()
 
     # Checkpointing
-    # Note that `lr` and `best_val_loss` are also part of the state to be
+    # Note that ``lr`` and ``best_val_loss`` are also part of the state to be
     # checkpointed. In order for things to work out, we keep them in a
-    # dict (otherwise, they'd not be mutable in `load_model_fn`,
-    # `save_model_fn`.
+    # dict (otherwise, they'd not be mutable in ``load_model_fn``,
+    # ``save_model_fn``.
     mutable_state = {"lr": config["lr"], "best_val_loss": None}
 
     load_model_fn, save_model_fn = pytorch_load_save_functions(
@@ -450,7 +450,7 @@ if __name__ == "__main__":
                     nonlinearity = {"RNN_TANH": "tanh", "RNN_RELU": "relu"}[rnn_type]
                 except KeyError:
                     raise ValueError(
-                        """An invalid option for `--model` was supplied,
+                        """An invalid option for ``--model`` was supplied,
                                      options are ['LSTM', 'GRU', 'RNN_TANH' or 'RNN_RELU']"""
                     )
                 self.rnn = nn.RNN(

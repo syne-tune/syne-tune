@@ -151,25 +151,25 @@ def prepare_data(
     do_fantasizing: bool = False,
 ) -> Dict:
     """
-    Prepares data in `state` for further processing. The entries
-    `configs`, `targets` of the result dict are lists of one entry per trial,
-    they are sorted in decreasing order of number of target values. `features`
-    is the feature matrix corresponding to `configs`. If `normalize_targets`
+    Prepares data in ``state`` for further processing. The entries
+    ``configs``, ``targets`` of the result dict are lists of one entry per trial,
+    they are sorted in decreasing order of number of target values. ``features``
+    is the feature matrix corresponding to ``configs``. If ``normalize_targets``
     is True, the target values are normalized to mean 0, variance 1 (over all
-    values), and `mean_targets`, `std_targets` is returned.
+    values), and ``mean_targets``, ``std_targets`` is returned.
 
-    If `do_fantasizing` is True, `state.pending_evaluations` is also taken into
-    account. Entries there have to be of type `FantasizedPendingEvaluation`.
+    If ``do_fantasizing`` is True, ``state.pending_evaluations`` is also taken into
+    account. Entries there have to be of type ``FantasizedPendingEvaluation``.
     Also, in terms of their resource levels, they need to be adjacent to
     observed entries, so there are no gaps. In this case, the entries of the
-    `targets` list are matrices, each column corr´esponding to a fantasy sample.
+    ``targets`` list are matrices, each column corr´esponding to a fantasy sample.
 
-    Note: If `normalize_targets`, mean and stddev are computed over observed
-    values only. Also, fantasy values in `state.pending_evaluations` are not
+    Note: If ``normalize_targets``, mean and stddev are computed over observed
+    values only. Also, fantasy values in ``state.pending_evaluations`` are not
     normalized, because they are assumed to be sampled from the posterior with
     normalized targets as well.
 
-    :param state: `TuningJobState` with data
+    :param state: ``TuningJobState`` with data
     :param config_space_ext: Extended config space
     :param active_metric:
     :param normalize_targets: See above
@@ -227,19 +227,19 @@ def prepare_data_with_pending(
     normalize_targets: bool = False,
 ) -> (Dict, Dict):
     """
-    Similar to `prepare_data` with `do_fantasizing=False`, but two dicts are
+    Similar to ``prepare_data`` with ``do_fantasizing=False``, but two dicts are
     returned, the first for trials without pending evaluations, the second
     for trials with pending evaluations. The latter dict also contains trials
     which have pending, but no observed evaluations.
-    The second dict has the additional entry `num_pending`, which lists the
+    The second dict has the additional entry ``num_pending``, which lists the
     number of pending evals for each trial. These evals must be contiguous and
     adjacent with observed evals, so that the union of observed and pending
     evals are contiguous (when it comes to resource levels).
 
-    :param state: See `prepare_data`
-    :param config_space_ext: See `prepare_data`
-    :param active_metric: See `prepare_data`
-    :param normalize_targets: See `prepare_data`
+    :param state: See ``prepare_data``
+    :param config_space_ext: See ``prepare_data``
+    :param active_metric: See ``prepare_data``
+    :param normalize_targets: See ``prepare_data``
     :return: See above
 
     """
@@ -303,7 +303,7 @@ def prepare_data_with_pending(
                 )
             features = hp_ranges.to_ndarray_matrix(configs)
         else:
-            # It is possible that `data1_lst` is empty
+            # It is possible that ``data1_lst`` is empty
             features = None
         result = {
             "configs": list(configs),
@@ -326,24 +326,24 @@ def prepare_data_with_pending(
 
 def issm_likelihood_precomputations(targets: List[np.ndarray], r_min: int) -> Dict:
     """
-    Precomputations required by `issm_likelihood_computations`.
+    Precomputations required by ``issm_likelihood_computations``.
 
-    Importantly, `prepare_data` orders datapoints by nonincreasing number of
-    targets `ydims[i]`. For `0 <= j < ydim_max`, `ydim_max = ydims[0] =
-    max(ydims)`, `num_configs[j]` is the number of datapoints i for which
-    `ydims[i] > j`.
-    `deltay` is a flat matrix (rows corresponding to fantasy samples; column
-    vector if no fantasizing) consisting of `ydim_max` parts, where part j is
-    of size `num_configs[j]` and contains `y[j] - y[j-1]` for targets of
-    those i counted in `num_configs[j]`, the term needed in the recurrence to
-    compute `w[j]`.
-    'logr` is a flat vector consisting of `ydim_max - 1` parts, where part j
-    (starting from 1) is of size `num_configs[j]` and contains the logarithmic
-    term for computing `a[j-1]` and `e[j]`.
+    Importantly, ``prepare_data`` orders datapoints by nonincreasing number of
+    targets ``ydims[i]``. For ``0 <= j < ydim_max``, ``ydim_max = ydims[0] =
+    max(ydims)``, ``num_configs[j]`` is the number of datapoints i for which
+    ``ydims[i] > j``.
+    ``deltay`` is a flat matrix (rows corresponding to fantasy samples; column
+    vector if no fantasizing) consisting of ``ydim_max`` parts, where part j is
+    of size ``num_configs[j]`` and contains ``y[j] - y[j-1]`` for targets of
+    those i counted in ``num_configs[j]``, the term needed in the recurrence to
+    compute ``w[j]``.
+    'logr`` is a flat vector consisting of ``ydim_max - 1`` parts, where part j
+    (starting from 1) is of size ``num_configs[j]`` and contains the logarithmic
+    term for computing ``a[j-1]`` and ``e[j]``.
 
     :param targets: Targets from data representation returned by
-        `prepare_data`
-    :param r_min: Value of r_min, as returned by `prepare_data`
+        ``prepare_data``
+    :param r_min: Value of r_min, as returned by ``prepare_data``
     :return: See above
     """
     ydims = [y.shape[0] for y in targets]
@@ -407,8 +407,8 @@ def issm_likelihood_computations(
     profiler: Optional[SimpleProfiler] = None,
 ) -> Dict:
     """
-    Given `precomputed` from `issm_likelihood_precomputations` and ISSM
-    parameters `issm_params`, compute quantities required for inference and
+    Given ``precomputed`` from ``issm_likelihood_precomputations`` and ISSM
+    parameters ``issm_params``, compute quantities required for inference and
     marginal likelihood computation, pertaining to the ISSM likelihood.
 
     The index for r is range(r_min, r_max + 1). Observations must be contiguous
@@ -424,7 +424,7 @@ def issm_likelihood_computations(
     - wtv: (n, F) matrix [(W_i)^T v_i], F number of fantasy samples
     - wtw: n-vector [|w_i|^2] (only if no fantasizing)
 
-    :param precomputed: Output of `issm_likelihood_precomputations`
+    :param precomputed: Output of ``issm_likelihood_precomputations``
     :param issm_params: Parameters of ISSM likelihood
     :param r_min: Smallest resource value
     :param r_max: Largest resource value
@@ -487,8 +487,8 @@ def issm_likelihood_computations(
     wtv = wmat.copy()
     if compute_wtw:
         wtw = _flatvec(anp.square(wmat))
-    # Note: We need the detour via `vtv_lst`, etc, because `autograd` does not
-    # support overwriting the content of an `ndarray`. Their role is to collect
+    # Note: We need the detour via ``vtv_lst``, etc, because ``autograd`` does not
+    # support overwriting the content of an ``ndarray``. Their role is to collect
     # parts of the final vectors, in reverse ordering
     vtv_lst = []
     wtv_lst = []
@@ -500,7 +500,7 @@ def issm_likelihood_computations(
             # Size of working vectors is shrinking
             assert vtv.size == num_prev
             # These parts are done: Collect them in the lists
-            # All vectors are resized to `num`, dropping the tails
+            # All vectors are resized to ``num``, dropping the tails
             vtv_lst.append(vtv[num:])
             wtv_lst.append(wtv[num:, :])
             vtv = vtv[:num]
@@ -552,13 +552,13 @@ def posterior_computations(
 ) -> Dict:
     """
     Computes posterior state (required for predictions) and negative log
-    marginal likelihood (returned in `criterion`), The latter is computed only
-    when there is no fantasizing (i.e., if `issm_likelihood` contains `wtw`).
+    marginal likelihood (returned in ``criterion``), The latter is computed only
+    when there is no fantasizing (i.e., if ``issm_likelihood`` contains ``wtw``).
 
     :param features: Input matrix X
     :param mean: Mean function
     :param kernel: Kernel function
-    :param issm_likelihood: Outcome of `issm_likelihood_computations`
+    :param issm_likelihood: Outcome of ``issm_likelihood_computations``
     :param noise_variance: Variance of ISSM innovations
     :return: Internal posterior state
 
@@ -619,7 +619,7 @@ def predict_posterior_marginals(poster_state: Dict, mean, kernel, test_features)
     """
     These are posterior marginals on the h variable, whereas the full model is
     for f_r = h + g_r (additive).
-    `posterior_means` is a (n, F) matrix, where F is the number of fantasy
+    ``posterior_means`` is a (n, F) matrix, where F is the number of fantasy
     samples, or F == 1 without fantasizing.
 
     :param poster_state: Posterior state
@@ -655,7 +655,7 @@ def sample_posterior_marginals(
 ):
     """
     We sample from posterior marginals on the h variance, see also
-    `predict_posterior_marginals`.
+    ``predict_posterior_marginals``.
     """
     post_means, post_vars = predict_posterior_marginals(
         poster_state, mean, kernel, test_features
@@ -681,9 +681,9 @@ def predict_posterior_marginals_extended(
 ):
     """
     These are posterior marginals on f_r = h + g_r variables, where
-    (x, r) are zipped from `test_features`, `resources`. `issm_params`
+    (x, r) are zipped from ``test_features``, ``resources``. ``issm_params``
     are likelihood parameters for the test configs.
-    `posterior_means` is a (n, F) matrix, where F is the number of fantasy
+    ``posterior_means`` is a (n, F) matrix, where F is the number of fantasy
     samples, or F == 1 without fantasizing.
 
     :param poster_state: Posterior state
@@ -691,7 +691,7 @@ def predict_posterior_marginals_extended(
     :param kernel: Kernel function
     :param test_features: Feature matrix for test points (not extended)
     :param resources: Resource values corresponding to rows of
-        `test_features`
+        ``test_features``
     :param issm_params: See above
     :param r_min:
     :param r_max:
@@ -758,19 +758,19 @@ def sample_posterior_joint(
     num_samples: int = 1,
 ) -> Dict:
     """
-    Given `poster_state` for some data plus one additional configuration
-    with data (`feature`, `targets`, `issm_params`), draw joint samples
+    Given ``poster_state`` for some data plus one additional configuration
+    with data (``feature``, ``targets``, ``issm_params``), draw joint samples
     of the latent variables not fixed by the data, and of the latent
-    target values. `targets` may be empty, but must not reach all the
-    way to `r_max`. The additional configuration must not be in the
-    dataset used to compute `poster_state`.
+    target values. ``targets`` may be empty, but must not reach all the
+    way to ``r_max``. The additional configuration must not be in the
+    dataset used to compute ``poster_state``.
 
-    If `targets` correspond to resource values range(r_min, r_obs), we
+    If ``targets`` correspond to resource values range(r_min, r_obs), we
     sample latent target values y_r corresponding to range(r_obs, r_max+1)
     and latent function values f_r corresponding to range(r_obs-1, r_max+1),
-    unless r_obs = r_min (i.e. `targets` empty), in which case both [y_r]
+    unless r_obs = r_min (i.e. ``targets`` empty), in which case both [y_r]
     and [f_r] ranges in range(r_min, r_max+1). We return a dict with
-    [f_r] under `f`, [y_r] under `y`. These are matrices with `num_samples`
+    [f_r] under ``f``, [y_r] under ``y``. These are matrices with ``num_samples``
     columns.
 
     :param poster_state: Posterior state for data
@@ -896,11 +896,11 @@ def issm_likelihood_slow_computations(
     profiler: Optional[SimpleProfiler] = None,
 ) -> Dict:
     """
-    Naive implementation of `issm_likelihood_computations`, which does not
+    Naive implementation of ``issm_likelihood_computations``, which does not
     require precomputations, but is much slower. Here, results are computed
     one datapoint at a time, instead of en bulk.
 
-    This code is used in unit testing, and called from `sample_posterior_joint`.
+    This code is used in unit testing, and called from ``sample_posterior_joint``.
     """
     num_configs = len(targets)
     num_res = r_max + 1 - r_min
@@ -1038,11 +1038,11 @@ def update_posterior_state(
     """
     Incremental update of posterior state, given data for one additional
     configuration. The new datapoint gives rise to a new row/column of the
-    Cholesky factor. r2vec and svec are extended by `r2_new`, `s_new`
+    Cholesky factor. r2vec and svec are extended by ``r2_new``, ``s_new``
     respectively. r4vec and pvec are extended and all entries change. The new
-    datapoint is represented by `feature`, `d_new`, `s_new`, `r2_new`.
+    datapoint is represented by ``feature``, ``d_new``, ``s_new``, ``r2_new``.
 
-    Note: The field `criterion` is not updated, but set to np.nan.
+    Note: The field ``criterion`` is not updated, but set to np.nan.
 
     :param poster_state: Posterior state for data
     :param kernel: Kernel function
@@ -1102,14 +1102,14 @@ def update_posterior_pvec(
     poster_state: Dict, kernel, feature, d_new, s_new, r2_new
 ) -> np.ndarray:
     """
-    Part of `update_posterior_state`, just returns the new p vector.
+    Part of ``update_posterior_state``, just returns the new p vector.
 
-    :param poster_state: See `update_posterior_state`
-    :param kernel:  See `update_posterior_state`
-    :param feature:  See `update_posterior_state`
-    :param d_new:  See `update_posterior_state`
-    :param s_new:  See `update_posterior_state`
-    :param r2_new:  See `update_posterior_state`
+    :param poster_state: See ``update_posterior_state``
+    :param kernel:  See ``update_posterior_state``
+    :param feature:  See ``update_posterior_state``
+    :param d_new:  See ``update_posterior_state``
+    :param s_new:  See ``update_posterior_state``
+    :param r2_new:  See ``update_posterior_state``
     :return: New p vector, as flat vector
 
     """

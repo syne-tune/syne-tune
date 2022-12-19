@@ -36,11 +36,11 @@ class TrialBackend:
     """
     Interface for back-end to execute evaluations of trials.
 
-    :param delete_checkpoints: If `True`, the checkpoints written by a trial
+    :param delete_checkpoints: If ``True``, the checkpoints written by a trial
         are deleted once the trial is stopped or is registered as
         completed. Also, as part of :meth:`stop_all` called at the end of the
         tuning loop, all remaining checkpoints are deleted. Defaults to
-        `False`.
+        ``False``.
     """
 
     def __init__(self, delete_checkpoints: bool = False):
@@ -104,8 +104,8 @@ class TrialBackend:
         """Resume paused trial
 
         :param trial_id: ID of (paused) trial to be resumed
-        :param new_config: If given, the config maintained in `trial.config` is
-            replaced by `new_config`
+        :param new_config: If given, the config maintained in ``trial.config`` is
+            replaced by ``new_config``
         :return: Information for resumed trial
         """
         assert trial_id < len(
@@ -128,7 +128,7 @@ class TrialBackend:
     def _resume_trial(self, trial_id: int):
         """Called in :meth:`resume_trial`, before job is scheduled.
 
-        :param trial_id: See `resume_trial`
+        :param trial_id: See ``resume_trial``
         """
         raise NotImplementedError
 
@@ -137,7 +137,7 @@ class TrialBackend:
 
         Checks that the operation is valid and calls backend internal
         implementation to actually pause the trial.
-        If the status is queried after this function, it should be `"paused"`.
+        If the status is queried after this function, it should be ``"paused"``.
 
         :param trial_id: ID of trial to pause
         :param result: Result dict based on which scheduler decided to pause the
@@ -161,7 +161,7 @@ class TrialBackend:
 
         Checks that the operation is valid and calls backend internal
         implementation to actually stop the trial. f the status is queried after
-        this function, it should be `"stopped"`.
+        this function, it should be ``"stopped"``.
 
         :param trial_id: ID of trial to stop
         :param result: Result dict based on which scheduler decided to stop the
@@ -200,7 +200,7 @@ class TrialBackend:
         """Returns results for selected trials
 
         :param trial_ids: IDs of trials for which results are to be queried
-        :return: list of results corresponding to `trial_ids`, contains all the
+        :return: list of results corresponding to ``trial_ids``, contains all the
             results obtained since the start of each trial.
         """
         raise NotImplementedError
@@ -256,16 +256,16 @@ class TrialBackend:
         A trial is busy if its status is
         :const:`~syne_tune.backend.trial_status.Status.in_progress` or
         :const:`~syne_tune.backend.trial_status.Status.stopping`.
-        If the execution setup is able to run `n_workers` jobs in parallel,
-        then if this method returns a list of size `n`, the tuner may start
-        `n_workers - n` new jobs.
+        If the execution setup is able to run ``n_workers`` jobs in parallel,
+        then if this method returns a list of size ``n``, the tuner may start
+        ``n_workers - n`` new jobs.
 
-        :return: List of `(trial_id, status)`
+        :return: List of ``(trial_id, status)``
         """
         raise NotImplementedError
 
     def stdout(self, trial_id: int) -> List[str]:
-        """Fetch `stdout` log for trial
+        """Fetch ``stdout`` log for trial
 
         :param trial_id: ID of trial
         :return: Lines of the log of the trial (stdout)
@@ -273,7 +273,7 @@ class TrialBackend:
         raise NotImplementedError
 
     def stderr(self, trial_id: int) -> List[str]:
-        """Fetch `stderr` log for trial
+        """Fetch ``stderr`` log for trial
 
         :param trial_id: ID of trial
         :return: Lines of the log of the trial (stderr)
@@ -288,7 +288,7 @@ class TrialBackend:
                 self.stop_trial(trial_id=trial.trial_id)
         if self.delete_checkpoints:
             # Delete all remaining checkpoints (e.g., of paused trials)
-            # We loop over all trials here, but `delete_checkpoints` does nothing
+            # We loop over all trials here, but ``delete_checkpoints`` does nothing
             # if the checkpoint has already been deleted before
             logger.info("Removing all remaining checkpoints of trials")
             for trial_id in self.trial_ids:
@@ -301,10 +301,10 @@ class TrialBackend:
         :param results_root: The local folder that should contain the results of
             the tuning experiment. Used by :class:`~syne_tune.Tuner` to indicate
             a desired path where the results should be written to. This is used
-            to unify the location of backend files and `Tuner` results when
-            possible (in the local backend). By default, the backend does not do
-            anything since not all backends may be able to unify their files
-            locations.
+            to unify the location of backend files and :class:`~syne_tune.Tuner`
+            results when possible (in the local backend). By default, the backend
+            does not do anything since not all backends may be able to unify their
+            file locations.
         :param tuner_name: Name of the tuner, can be used for instance to save
             checkpoints on remote storage.
         """

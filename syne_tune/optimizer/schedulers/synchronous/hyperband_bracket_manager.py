@@ -27,10 +27,10 @@ class SynchronousHyperbandBracketManager:
     Maintains all brackets, relays requests for another job and report of
     result to one of the brackets.
 
-    Each bracket contains a number of rungs, the largest one `max_num_rungs`.
-    A bracket with k rungs has offset `max_num_rungs - k`. Hyperband cycles
-    through brackets with offset 0, ..., `num_brackets - 1`, where
-    `num_brackets <= max_num_rungs`.
+    Each bracket contains a number of rungs, the largest one ``max_num_rungs``.
+    A bracket with k rungs has offset ``max_num_rungs - k``. Hyperband cycles
+    through brackets with offset 0, ..., ``num_brackets - 1``, where
+    ``num_brackets <= max_num_rungs``.
 
     At any given time, one bracket is primary, all other active brackets are
     secondary. Jobs are preferentially assigned to the primary bracket, but
@@ -38,7 +38,7 @@ class SynchronousHyperbandBracketManager:
     brackets are considered.
 
     Each bracket has a bracket_id (nonnegative int), which is used as key for
-    the dicts in `next_jobs`, `on_results`. The primary bracket always has
+    the dicts in ``next_jobs``, ``on_results``. The primary bracket always has
     the lowest id of all active ones. For job assignment, we iterate over
     active brackets starting from the primary, and assign the job to the
     first bracket which has a free slot. If none of the active brackets have
@@ -117,12 +117,12 @@ class SynchronousHyperbandBracketManager:
         created.
 
         The job description returned is (bracket_id, slot_in_rung), where
-        `slot_in_rung` is :class:`SlotInRung`, containing the info of what
-        is to be done (`trial_id`, `level` fields). It is this entry which
-        has to be returned in 'on_result`, which the `metric_val` field set.
-        If the job returned here has `trial_id == None`, it comes from the
-        lowest rung of its bracket, and the `trial_id` has to be set as well
-        when returning the record in `on_result`.
+        ``slot_in_rung`` is :class:`SlotInRung`, containing the info of what
+        is to be done (``trial_id``, ``level`` fields). It is this entry which
+        has to be returned in 'on_result``, which the ``metric_val`` field set.
+        If the job returned here has ``trial_id == None``, it comes from the
+        lowest rung of its bracket, and the ``trial_id`` has to be set as well
+        when returning the record in ``on_result``.
 
         :return: Tuple (bracket_id, slot_in_rung)
         """
@@ -142,7 +142,7 @@ class SynchronousHyperbandBracketManager:
     def on_result(self, result: Tuple[int, SlotInRung]):
         """
         Called by scheduler to provide result for previously requested job.
-        See `next_job`.
+        See ``next_job``.
 
         :param result: Tuple (bracket_id, slot_in_rung)
         """

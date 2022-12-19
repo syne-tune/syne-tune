@@ -24,14 +24,14 @@ __all__ = ["CostValue", "CostModel"]
 @dataclass
 class CostValue:
     """
-    Represents cost value :math:`(c_0(x), c_1(x))`:
+    Represents cost value :math:``(c_0(x), c_1(x))``:
 
-    * :math:`c_0(x)`: Startup cost for evaluation at config :math:`x`
-    * :math:`c_1(x)`: Cost per unit of resource :math:`r` at config :math:`x`
+    * :math:``c_0(x)``: Startup cost for evaluation at config :math:``x``
+    * :math:``c_1(x)``: Cost per unit of resource :math:``r`` at config :math:``x``
 
-    Our assumption is that, under the model, an evaluation at :math:`x` until
-    resource level :math:`r = 1, 2, 3, \dots` costs
-    :math:`c(x, r) = c_0(x) + r c_1(x)`
+    Our assumption is that, under the model, an evaluation at :math:``x`` until
+    resource level :math:``r = 1, 2, 3, \dots`` costs
+    :math:``c(x, r) = c_0(x) + r c_1(x)``
     """
 
     c0: float
@@ -41,11 +41,11 @@ class CostValue:
 class CostModel:
     """
     Interface for (temporal) cost model in the context of multi-fidelity HPO.
-    We assume there are configurations :math:`x` and resource levels :math:`r`
-    (for example, number of epochs). Here, :math:`r` is a positive int.
+    We assume there are configurations :math:``x`` and resource levels :math:``r``
+    (for example, number of epochs). Here, :math:``r`` is a positive int.
     Can be seen as simplified version of surrogate model, which is mainly used
     in order to draw (jointly dependent) values from the posterior over
-    cost values :math:`(c_0(x), c_1(x))`.
+    cost values :math:``(c_0(x), c_1(x))``.
 
     Note: The model may be random (in which case joint samples are drawn from
     the posterior) or deterministic (in which case the model is fitted to data,
@@ -69,14 +69,14 @@ class CostModel:
         Update inner representation in order to be ready to return cost value
         samples.
 
-        Note: The metric :attr`cost_metric_name` must be dict-valued in `state`,
-        with keys being resource values :math:`r`. In order to support a proper
-        estimation of :math:`c_0` and :math:`c_1`, there should (ideally) be
-        entries with the same :math:`x` and different resource levels :math:`r`.
+        Note: The metric :attr``cost_metric_name`` must be dict-valued in ``state``,
+        with keys being resource values :math:``r``. In order to support a proper
+        estimation of :math:``c_0`` and :math:``c_1``, there should (ideally) be
+        entries with the same :math:``x`` and different resource levels :math:``r``.
         The likelihood function takes into account that
-        :math:`c(x, r) = c_0(x) + r c_1(x)`.
+        :math:``c(x, r) = c_0(x) + r c_1(x)``.
 
-        :param state: Current dataset (only `trials_evaluations` is used)
+        :param state: Current dataset (only ``trials_evaluations`` is used)
         """
         raise NotImplementedError
 
@@ -94,19 +94,19 @@ class CostModel:
 
     def sample_joint(self, candidates: List[Configuration]) -> List[CostValue]:
         """
-        Draws cost values :math:`(c_0(x), c_1(x))` for candidates (non-extended).
+        Draws cost values :math:``(c_0(x), c_1(x))`` for candidates (non-extended).
 
         If the model is random, the sampling is done jointly. Also, if
         :meth:`sample_joint` is called multiple times, the posterior is to be
         updated after each call, such that the sample over the union of
         candidates over all calls is drawn jointly (but see :meth:`resample`).
         Also, if measurement noise is allowed in update, this noise is *not*
-        added here. A sample from :math:`c(x, r)` is obtained as
-        :math:`c_0(x) + r c_1(x)`. If the model is deterministic, the model
+        added here. A sample from :math:``c(x, r)`` is obtained as
+        :math:``c_0(x) + r c_1(x)``. If the model is deterministic, the model
         determined in :meth:`update` is just evaluated.
 
         :param candidates: Non-extended configs
-        :return: List of :math:`(c_0(x), c_1(x))`
+        :return: List of :math:``(c_0(x), c_1(x))``
         """
         raise NotImplementedError
 
@@ -115,14 +115,14 @@ class CostModel:
         start_time: float, level: int, next_milestone: int, cost: CostValue
     ) -> float:
         """
-        If a task reported its last recent value at `start_time` at level `level`,
-        return time of reaching level `next_milestone`, given cost `cost`.
+        If a task reported its last recent value at ``start_time`` at level ``level``,
+        return time of reaching level ``next_milestone``, given cost ``cost``.
 
         :param start_time: See above
         :param level: See above
         :param next_milestone: See above
         :param cost: See above
-        :return: Time of reaching `next_milestone` under cost model
+        :return: Time of reaching ``next_milestone`` under cost model
         """
         result = start_time + cost.c1 * (next_milestone - level)
         if level == 0:
@@ -138,9 +138,9 @@ class CostModel:
         start_time: float = 0,
     ) -> List[float]:
         """
-        Given configs :math:`x`, resource values :math:`r` and cost values returned
+        Given configs :math:``x``, resource values :math:``r`` and cost values returned
         by :meth:`sample_joint`, compute time predictions for when each config
-        :math:`x` reaches its resource level :math:`r` if started at `start_time`.
+        :math:``x`` reaches its resource level :math:``r`` if started at ``start_time``.
 
         :param candidates: Configs
         :param resources: Resource levels

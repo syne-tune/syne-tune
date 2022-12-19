@@ -140,7 +140,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
 
     * In DEHB, trials are not paused and potentially promoted (except in the
       very first bracket). Therefore, checkpointing is not used (except in
-      the very first bracket, if `support_pause_resume` is `True`)
+      the very first bracket, if ``support_pause_resume`` is ``True``)
     * Only the initial configurations are drawn at random (or drawn from the
       searcher). Whenever possible, new configurations (in their internal
       encoding) are derived from earlier ones by way of differential evolution
@@ -151,17 +151,17 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         :class:`~syne_tune.optimizer.schedulers.synchronous.dehb_bracket_manager.DifferentialEvolutionHyperbandBracketManager`
     :param num_brackets_per_iteration: Number of brackets per iteration. The
         algorithm cycles through these brackets in one iteration. If not
-        given, the maximum number is used (i.e., `len(rungs_first_bracket)`)
+        given, the maximum number is used (i.e., ``len(rungs_first_bracket)``)
     :param metric: Name of metric to optimize, key in result's obtained via
         :meth:`on_trial_result`
     :type metric: str
     :param searcher: Selects searcher. Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`..
-        If `searcher == "random_encoded"` (default), the encoded configs are
+        If ``searcher == "random_encoded"`` (default), the encoded configs are
         sampled directly, each entry independently from U([0, 1]).
         This distribution has higher entropy than for "random" if
-        there are discrete hyperparameters in `config_space`. Note that
-        `points_to_evaluate` is still used in this case.
+        there are discrete hyperparameters in ``config_space``. Note that
+        ``points_to_evaluate`` is still used in this case.
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
@@ -173,10 +173,10 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to `[dict()]`, a single default config
-        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        If None (default), this is mapped to ``[dict()]``, a single default config
+        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
-    :type points_to_evaluate: `List[dict]`, optional
+    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
         :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
@@ -190,17 +190,17 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         :meth:`on_trial_result`. The type of resource must be int. Default to
         "epoch"
     :type resource_attr: str, optional
-    :param mutation_factor: In :math:`(0, 1]`. Factor :math:`F` used in the rand/1
+    :param mutation_factor: In :math:``(0, 1]``. Factor :math:``F`` used in the rand/1
         mutation operation of DE. Default to 0.5
     :type mutation_factor: float, optional
-    :param crossover_probability: In :math:`(0, 1)`. Probability :math:`p` used
+    :param crossover_probability: In :math:``(0, 1)``. Probability :math:``p`` used
         in crossover operation (child entries are chosen with probability
-        :math:`p`). Defaults to 0.5
+        :math:``p``). Defaults to 0.5
     :type crossover_probability: float, optional
-    :param support_pause_resume: If `True`, :meth:`_suggest` supports pause and
+    :param support_pause_resume: If ``True``, :meth:`_suggest` supports pause and
         resume in the first bracket (this is the default). If the objective
-        supports checkpointing, this is made use of. Defaults to `True`.
-        Note: The resumed trial still gets assigned a new `trial_id`, but it
+        supports checkpointing, this is made use of. Defaults to ``True``.
+        Note: The resumed trial still gets assigned a new ``trial_id``, but it
         starts from the earlier checkpoint.
     :type support_pause_resume: bool, optional
     """
@@ -285,7 +285,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
                 }
             )
             if searcher == "bayesopt":
-                # We need `max_epochs` in this case
+                # We need ``max_epochs`` in this case
                 max_epochs = self._infer_max_resource_level(
                     max_resource_level=None, max_resource_attr=self.max_resource_attr
                 )
@@ -310,9 +310,9 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         self.random_state = np.random.RandomState(self.random_seed_generator())
         # How often is selection skipped because target still pending?
         self.num_selection_skipped = 0
-        # Maps trial_id to ext_slot, as returned by `bracket_manager.next_job`,
-        # and required by `bracket_manager.on_result`. Entries are removed once
-        # passed to `on_result`. Here, ext_slot is of type `ExtendedSlotInRung`.
+        # Maps trial_id to ext_slot, as returned by ``bracket_manager.next_job``,
+        # and required by ``bracket_manager.on_result``. Entries are removed once
+        # passed to ``on_result``. Here, ext_slot is of type ``ExtendedSlotInRung``.
         self._trial_to_pending_slot = dict()
         # Maps trial_id to trial information (in particular, the encoded
         # config)
@@ -329,7 +329,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
         if self._debug_log is not None:
             if trial_id == 0:
                 # This is printed at the start of the experiment. Cannot do this
-                # at construction, because with `RemoteLauncher` this does not end
+                # at construction, because with ``RemoteLauncher`` this does not end
                 # up in the right log
                 parts = ["Rung systems for each bracket:"] + [
                     f"Bracket {bracket}: {rungs}"
@@ -434,7 +434,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
                 logger.info("Draw new config from searcher")
             config = self.searcher.get_config(trial_id=str(trial_id))
         else:
-            # `random_encoded` internal searcher. Still, `points_to_evaluate`
+            # ``random_encoded`` internal searcher. Still, ``points_to_evaluate``
             # is used
             if self._points_to_evaluate:
                 config = self._points_to_evaluate.pop(0)
@@ -731,7 +731,7 @@ class DifferentialEvolutionHyperbandScheduler(ResourceLevelsScheduler):
 
     def on_trial_error(self, trial: Trial):
         """
-        Given the `trial` is currently pending, we send a result at its
+        Given the ``trial`` is currently pending, we send a result at its
         milestone for metric value NaN. Such trials are ranked after all others
         and will most likely not be promoted.
 

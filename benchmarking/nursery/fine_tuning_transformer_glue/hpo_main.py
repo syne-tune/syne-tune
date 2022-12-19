@@ -118,7 +118,7 @@ if __name__ == "__main__":
     }
 
     # Additionally, it contains fixed parameters passed to the training script.
-    # We use `save_strategy="no"` in order to save disk space. This must be
+    # We use ``save_strategy="no"`` in order to save disk space. This must be
     # changed to "epoch" for HPO methods which require checkpointing.
     fixed_parameters = {
         "num_train_epochs": num_train_epochs,
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     if optimizer in {"asha", "mobster"}:
         # The multi-fidelity methods need extra information
         scheduler_kwargs["resource_attr"] = resource_attribute
-        # Maximum resource level information in `config_space`:
+        # Maximum resource level information in ``config_space``:
         scheduler_kwargs["max_resource_attr"] = "num_train_epochs"
     scheduler = schedulers[optimizer](config_space, **scheduler_kwargs)
 

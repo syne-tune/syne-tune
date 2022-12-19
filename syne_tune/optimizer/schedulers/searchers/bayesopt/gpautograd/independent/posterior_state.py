@@ -58,7 +58,7 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
         debug_log: bool = False,
     ):
         """
-        `mean` and `covariance_scale` map supported resource levels r to
+        ``mean`` and ``covariance_scale`` map supported resource levels r to
         mean function mu_r and covariance scale c_r.
 
         :param features: Input points X, extended features, shape (n, d)
@@ -93,7 +93,7 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
             resource_attr_range,
             debug_log,
         )
-        self._mean = mean  # See `sample_joint`
+        self._mean = mean  # See ``sample_joint``
         self._num_data = features.shape[0]
         self._num_features = features.shape[1]
         self._num_fantasies = targets.shape[1]
@@ -145,8 +145,8 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
     def neg_log_likelihood(self) -> anp.ndarray:
         return anp.sum([state.neg_log_likelihood() for state in self._states.values()])
 
-    # Different to `sample_marginals`, `sample_joint`, this method supports
-    # `autograd` differentiation
+    # Different to ``sample_marginals``, ``sample_joint``, this method supports
+    # ``autograd`` differentiation
     def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         test_features, resources = decode_extended_features(
             test_features, self._resource_attr_range
@@ -220,10 +220,10 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        Different to `predict`, entries in `test_features`
+        Different to ``predict``, entries in ``test_features``
         may have resources not covered by data in posterior state. For such
         entries, we return the prior mean. We do not sample from the prior.
-        If `sample_marginals` is used to draw fantasy values, this corresponds to
+        If ``sample_marginals`` is used to draw fantasy values, this corresponds to
         the Kriging believer heuristic.
         """
 
@@ -245,10 +245,10 @@ class IndependentGPPerResourcePosteriorState(PosteriorStateWithSampleJoint):
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        Different to `predict`, entries in `test_features`
+        Different to ``predict``, entries in ``test_features``
         may have resources not covered by data in posterior state. For such
         entries, we return the prior mean. We do not sample from the prior.
-        If `sample_joint` is used to draw fantasy values, this corresponds to
+        If ``sample_joint`` is used to draw fantasy values, this corresponds to
         the Kriging believer heuristic.
         """
 

@@ -31,7 +31,7 @@ class SurrogateBenchmarkDefinition:
         :func:`make_surrogate`. Otherwise: use no surrogate
     :param surrogate_kwargs: Default value for arguments of surrogate,
         see :func:`make_surrogate`
-    :param add_surrogate_kwargs: Arguments passed to `add_surrogate`. Optional.
+    :param add_surrogate_kwargs: Arguments passed to :func:`add_surrogate`. Optional.
     :param max_resource_attr: Internal name between back-end and scheduler
     :param datasets: Used in transfer tuning
     :param fidelities: If given, this is a strictly increasing subset of
@@ -65,19 +65,19 @@ class RealBenchmarkDefinition:
 
     :param script: Absolute filename of training script
     :param config_space: Default value for configuration space, must include
-        `max_resource_attr`
+        ``max_resource_attr``
     :param max_wallclock_time: Default value for stopping criterion
     :param n_workers: Default value for tuner
     :param instance_type: Default value for instance type
     :param metric: Name of metric reported
     :param mode: "max" or "min"
-    :param max_resource_attr: Name of `config_space` entry
-    :param framework: SageMaker framework to be used for `script`. Additional
-        dependencies in `requirements.txt` in `script.parent`
+    :param max_resource_attr: Name of ``config_space`` entry
+    :param framework: SageMaker framework to be used for ``script``. Additional
+        dependencies in ``requirements.txt`` in ``script.parent``
     :param resource_attr (optional): Name of attribute reported (required for
         multi-fidelity)
     :param estimator_kwargs (optional): Additional arguments to SageMaker
-        estimator, e.g. `framework_version`
+        estimator, e.g. ``framework_version``
     :param max_num_evaluations (optional): Default value for stopping criterion
     """
 

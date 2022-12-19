@@ -123,7 +123,7 @@ def fit_predict_ours(
 
 # Note: this function is not ran by the tests so that we do not have to require
 # GPy as a dependency of the tests. With GPy 1.9.9, it can be executed to generate
-# the numerical values that are tested in the main testing function `test_comparison_gpy`
+# the numerical values that are tested in the main testing function ``test_comparison_gpy``
 def fit_predict_gpy(
     data: dict, random_seed: int, optimization_config: OptimizationConfig
 ) -> dict:
@@ -201,7 +201,7 @@ def _plot_comparison(y_list: List[np.ndarray]):
 
 
 # Note: this function is not ran by the tests but can be executed separately
-# to get a visual interpretation, see `test_comparison_gpy`
+# to get a visual interpretation, see ``test_comparison_gpy``
 def plot_predictions(data: dict, pred_ours: dict, pred_gpy: dict, title: str):
     import matplotlib.pyplot as plt
 
@@ -245,7 +245,7 @@ def test_comparison_gpy():
     do_ackley = True
     # Uncomment the lines between --- to re-generate data and GPy predictions
     # (assumes you have GPy available and verifying the version assertion in
-    # `fit_predict_gpy`).
+    # ``fit_predict_gpy``).
     trg_path = os.path.join(tempfile.mkdtemp(), "numcomp")
 
     if do_branin:

@@ -42,7 +42,7 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
     kernel, but have their own mean functions mu_r and covariance scales c_r.
 
     The likelihood object is not created at construction, but only with
-    `create_likelihood`. This is because we need to know the rung levels of
+    ``create_likelihood``. This is because we need to know the rung levels of
     the Hyperband scheduler.
 
     :param kernel: Kernel function without covariance scale, shared by models
@@ -93,7 +93,7 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
         Delayed creation of likelihood, needs to know rung levels of Hyperband
         scheduler.
 
-        Note: last entry of `rung_levels` must be `max_t`, even if this is not
+        Note: last entry of ``rung_levels`` must be ``max_t``, even if this is not
         a rung level in Hyperband.
 
         :param rung_levels: Rung levels

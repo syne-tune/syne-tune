@@ -93,8 +93,8 @@ class GaussProcAdditivePosteriorState(PosteriorState):
         **kwargs
     ):
         """
-        `data` contains input points and targets, as obtained from
-        `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
+        ``data`` contains input points and targets, as obtained from
+        ``issm.prepare_data``. ``iss_model`` maintains the ISSM parameters.
 
         :param data: Input points and targets
         :param mean: Mean function m(X)
@@ -111,7 +111,7 @@ class GaussProcAdditivePosteriorState(PosteriorState):
             # Compute posterior state
             self._compute_posterior_state(data, noise_variance, **kwargs)
         else:
-            # Copy constructor, used by `IncrementalUpdateGPISSMPosteriorState`
+            # Copy constructor, used by ``IncrementalUpdateGPISSMPosteriorState``
             # subclass
             self.poster_state = kwargs["poster_state"]
             self.r_min = kwargs["r_min"]
@@ -140,10 +140,10 @@ class GaussProcAdditivePosteriorState(PosteriorState):
 
     def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        We compute marginals over f(x, r), where `test_features` are extended
+        We compute marginals over f(x, r), where ``test_features`` are extended
         features.
         Note: The test configs must not overlap with any in the training set.
-        Otherwise, at least if `r != r_max`, the predictive distributions
+        Otherwise, at least if ``r != r_max``, the predictive distributions
         computed here may be wrong.
 
         :param test_features: Extended features for test configs
@@ -158,7 +158,7 @@ class GaussProcAdditivePosteriorState(PosteriorState):
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        See comments of `predict`.
+        See comments of ``predict``.
 
         :param test_features: Input points for test configs
         :param num_samples: Number of samples
@@ -228,19 +228,19 @@ class GaussProcAdditivePosteriorState(PosteriorState):
     ) -> List[dict]:
         """
         Given data from one or more configurations (as returned by
-        `issm.prepare_data`), for each config, sample a curve from the
+        ``issm.prepare_data``), for each config, sample a curve from the
         joint posterior (predictive) distribution over latent targets.
-        The curve for each config in `data` may be partly observed, but
+        The curve for each config in ``data`` may be partly observed, but
         must not be fully observed. Samples for the different configs are
-        independent. None of the configs in `data` must appear in the dataset
+        independent. None of the configs in ``data`` must appear in the dataset
         used to compute the posterior state.
 
         The result is a list of dict, one for each config. If for a config,
-        targets in `data` are given for resource values range(r_min, r_obs),
-        the dict entry `y` is a joint sample [y_r], r in range(r_obs, r_max+1).
-        For some subclasses (e.g., ISSM), there is also an entry `f` with a
+        targets in ``data`` are given for resource values range(r_min, r_obs),
+        the dict entry ``y`` is a joint sample [y_r], r in range(r_obs, r_max+1).
+        For some subclasses (e.g., ISSM), there is also an entry ``f`` with a
         joint sample [f_r], r in range(r_obs-1, r_max+1), the latent function
-        values before noise. These entries are matrices with `num_samples`
+        values before noise. These entries are matrices with ``num_samples``
         columns, which are independent (the joint dependence is along the rows).
 
         :param data: Data for configs to predict at
@@ -283,18 +283,18 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
         self, feature: np.ndarray, targets: np.ndarray
     ) -> Tuple[float, float, float]:
         """
-        Helper method for `update`. Returns new entries for d, s, r2 vectors.
+        Helper method for ``update``. Returns new entries for d, s, r2 vectors.
 
-        :param feature: See `update`
-        :param targets: See `update`
+        :param feature: See ``update``
+        :param targets: See ``update``
         :return: (d_new, s_new, r2_new)
         """
         raise NotImplementedError()
 
     def _update_internal(self, feature: np.ndarray, targets: np.ndarray) -> dict:
         """
-        Update posterior state, given a single new datapoint. `feature`,
-        `targets` are like one entry of `data`. The method returns a new
+        Update posterior state, given a single new datapoint. ``feature``,
+        ``targets`` are like one entry of ``data``. The method returns a new
         object with the updated state.
 
         :param feature: See above
@@ -325,7 +325,7 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
 
     def update_pvec(self, feature: np.ndarray, targets: np.ndarray) -> np.ndarray:
         """
-        Part of `update`: Only update prediction vector p. This cannot be used
+        Part of ``update``: Only update prediction vector p. This cannot be used
         to update p for several new datapoints.
 
         :param feature:
@@ -362,22 +362,22 @@ class IncrementalUpdateGPAdditivePosteriorState(GaussProcAdditivePosteriorState)
         This function is needed for sampling fantasy targets, and also to
         support simulation-based scoring.
 
-        `issm.prepare_data_with_pending` creates two data dicts `data_nopending`,
-        `data_pending`, the first for configs with observed data, but no
+        ``issm.prepare_data_with_pending`` creates two data dicts ``data_nopending``,
+        ``data_pending``, the first for configs with observed data, but no
         pending evals, the second for configs with pending evals.
-        You create the state with `data_nopending`, then call this method with
-        `data_pending`.
+        You create the state with ``data_nopending``, then call this method with
+        ``data_pending``.
 
-        This method is iterating over configs (or trials) in `data_pending`.
+        This method is iterating over configs (or trials) in ``data_pending``.
         For each config, it draws a joint sample from some non-observed
         targets, then updates the state conditioned on observed and sampled
-        targets (by calling `update`). If `sample_all_nonobserved` is False,
+        targets (by calling ``update``). If ``sample_all_nonobserved`` is False,
         the number of targets sampled is the entry in
-        `data_pending['num_pending']`. Otherwise, targets are sampled for all
+        ``data_pending['num_pending']``. Otherwise, targets are sampled for all
         non-observed positions.
 
         The method returns the list of sampled target vectors, and the state
-        at the end (like `update` does as well).
+        at the end (like ``update`` does as well).
 
         :param data_pending: See above
         :param sample_all_nonobserved: See above
@@ -433,8 +433,8 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
         **kwargs
     ):
         """
-        `data` contains input points and targets, as obtained from
-        `issm.prepare_data`. `iss_model` maintains the ISSM parameters.
+        ``data`` contains input points and targets, as obtained from
+        ``issm.prepare_data``. ``iss_model`` maintains the ISSM parameters.
 
         :param data: Input points and targets
         :param mean: Mean function m(X)
@@ -586,8 +586,8 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         **kwargs
     ):
         """
-        `data` contains input points and targets, as obtained from
-        `issm.prepare_data`.
+        ``data`` contains input points and targets, as obtained from
+        ``issm.prepare_data``.
 
         :param data: Input points and targets
         :param mean: Mean function m(X)
@@ -640,7 +640,7 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         if "criterion" in self.poster_state:
             part3 = logdet_cholfact_cov_resource(issm_likelihood)
             self.poster_state["criterion"] += part3
-        # Extra terms required in `sample_curves`
+        # Extra terms required in ``sample_curves``
         self.poster_state["lfact_all"] = issm_likelihood["lfact_all"]
         self.poster_state["means_all"] = issm_likelihood["means_all"]
         self.poster_state["noise_variance"] = noise_variance
@@ -715,7 +715,7 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         self, feature: np.ndarray, targets: np.ndarray
     ) -> "IncrementalUpdateGPAdditivePosteriorState":
         create_kwargs = self._update_internal(feature, targets)
-        # Extra terms required in `sample_curves`
+        # Extra terms required in ``sample_curves``
         new_poster_state = create_kwargs["poster_state"]
         for k in ("lfact_all", "means_all", "noise_variance"):
             new_poster_state[k] = self.poster_state[k]

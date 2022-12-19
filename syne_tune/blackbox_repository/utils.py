@@ -23,8 +23,8 @@ def metrics_for_configuration(
     seed: Optional[int] = None,
 ) -> List[dict]:
     """
-    Returns all results for configuration `config` at fidelities in range
-    `fidelity_range`.
+    Returns all results for configuration ``config`` at fidelities in range
+    ``fidelity_range``.
 
     :param blackbox: Blackbox
     :param config: Configuration

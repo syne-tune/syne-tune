@@ -19,7 +19,7 @@ For development, you may want to get the latest version from
    pip install --upgrade pip
    pip install -e '.[extra]'
 
-This installs everything in a virtual environment `st_venv`. Remember to activate
+This installs everything in a virtual environment ``st_venv``. Remember to activate
 this environment before working with Syne Tune. We also recommend building the
 virtual environment from scratch now and then, in particular when you pull a new
 release, as dependencies may have changed.
@@ -97,7 +97,7 @@ tuning experiment as follows:
    tuner.run()
 
 This example runs `ASHA <tutorials/multifidelity/mf_asha.html>`__ with
-`n_workers=4` asynchronously parallel workers for `max_wallclock_time=15`
+``n_workers=4`` asynchronously parallel workers for ``max_wallclock_time=15``
 seconds on the local machine it is called on
 (:code:`trial_backend=LocalBackend(entry_point="train_height.py")`).
 

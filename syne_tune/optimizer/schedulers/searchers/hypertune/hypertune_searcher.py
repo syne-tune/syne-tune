@@ -34,21 +34,21 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
     :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`
     for references. Two modifications:
 
-    * New brackets are sampled from a model-based distribution :math:`[w_k]`
+    * New brackets are sampled from a model-based distribution :math:``[w_k]``
     * The acquisition function is fed with predictive means and variances from
-      a mixture over rung level distributions, weighted by :math:`[\theta_k]`
+      a mixture over rung level distributions, weighted by :math:``[\theta_k]``
 
     It is *not* recommended to create :class:`HyperTuneSearcher` searcher
     objects directly, but rather to create
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
-    `searcher="hypertune"`, and passing arguments here in `search_options`.
+    ``searcher="hypertune"``, and passing arguments here in ``search_options``.
     This will use the appropriate functions from
-    :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory` to
+    :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`` to
     create components in a consistent way.
 
     The following arguments of the parent class are not relevant here, and are
-    ignored: `gp_resource_kernel`, `resource_acq`, `issm_gamma_one`,
-    `expdecay_normalize_inputs`.
+    ignored: ``gp_resource_kernel``, ``resource_acq``, ``issm_gamma_one``,
+    ``expdecay_normalize_inputs``.
 
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`:
@@ -66,7 +66,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
 
     :type model: str, optional
     :param hypertune_distribution_num_samples: Parameter for estimating the
-        distribution, given by :math:`[\theta_k]`. Defaults to 50
+        distribution, given by :math:``[\theta_k]``. Defaults to 50
     :type hypertune_distribution_num_samples: int, optional
     """
 

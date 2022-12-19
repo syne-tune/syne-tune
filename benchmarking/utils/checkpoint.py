@@ -33,19 +33,19 @@ def resume_from_checkpointed_model(
 ) -> int:
     """
     Checks whether there is a checkpoint to be resumed from. If so, the
-    checkpoint is loaded by calling `load_model_fn`. This function takes
+    checkpoint is loaded by calling ``load_model_fn``. This function takes
     a local pathname (to which it appends a filename). It returns
     resume_from, the resource value (e.g., epoch) the checkpoint was written
     at. If it fails to load the checkpoint, it may return 0. This skips
     resuming from a checkpoint. This resume_from value is returned.
 
-    If checkpointing is not supported in `config`, or no checkpoint is
+    If checkpointing is not supported in ``config``, or no checkpoint is
     found, resume_from = 0 is returned.
 
     :param config: Configuration the training script is called with
-    :param load_model_fn: See above, must return `resume_from`. See
-        `pytorch_load_save_functions` for an example
-    :return: `resume_from` (0 if no checkpoint has been loaded)
+    :param load_model_fn: See above, must return ``resume_from``. See
+        :func:`pytorch_load_save_functions` for an example
+    :return: ``resume_from`` (0 if no checkpoint has been loaded)
     """
     resume_from = 0
     local_path = config.get(ST_CHECKPOINT_DIR)
@@ -65,18 +65,18 @@ def checkpoint_model_at_rung_level(
 ):
     """
     If checkpointing is supported, checks whether a checkpoint is to be
-    written. This is the case if the checkpoint dir is set in `config`.
-    A checkpoint is written by calling `save_model_fn`, passing the
+    written. This is the case if the checkpoint dir is set in ``config``.
+    A checkpoint is written by calling ``save_model_fn``, passing the
     local pathname and resource.
 
-    Note: Why is `resource` passed here? In the future, we want to support
+    Note: Why is ``resource`` passed here? In the future, we want to support
     writing checkpoints only for certain resource levels. This is useful if
     writing the checkpoint is expensive compared to the time needed to
     run one resource unit.
 
     :param config: Configuration the training script is called with
-    :param save_model_fn: See above. See `pytorch_load_save_functions` for an
-        example
+    :param save_model_fn: See above. See :func:`pytorch_load_save_functions` for
+        an example
     :param resource: Current resource level (e.g., number of epochs done)
     """
     local_path = config.get(ST_CHECKPOINT_DIR)
@@ -103,16 +103,16 @@ def pytorch_load_save_functions(
     fname: str = "checkpoint.json",
 ):
     """
-    Provides default `load_model_fn`, `save_model_fn` functions for standard
-    PyTorch models (arguments to `resume_from_checkpointed_model`,
-    `checkpoint_model_at_rung_level`.
+    Provides default ``load_model_fn``, ``save_model_fn`` functions for standard
+    PyTorch models (arguments to :func:`resume_from_checkpointed_model`,
+    :func:`checkpoint_model_at_rung_level`).
 
-    :param state_dict_objects: Dict of PyTorch objects implementing `state_dict`
-        and `load_state_dict`
+    :param state_dict_objects: Dict of PyTorch objects implementing ``state_dict``
+        and ``load_state_dict``
     :param mutable_state: Optional. Additional dict with elementary value
         types
     :param fname: Name of local file (path is taken from config)
-    :return: `load_model_fn, save_model_fn`
+    :return: ``load_model_fn, save_model_fn``
     """
     import torch
 

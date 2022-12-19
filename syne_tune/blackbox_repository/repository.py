@@ -96,8 +96,8 @@ def load_blackbox(
         S3 bucket name of SageMaker session
     :param generate_if_not_found: If the blackbox file is not present locally
         or on S3, should it be generated using its conversion script?
-    :param yahpo_kwargs: For a YAHPO blackbox (`name == "yahpo-*"`), these are
-        additional arguments to `instantiate_yahpo`
+    :param yahpo_kwargs: For a YAHPO blackbox (``name == "yahpo-*"``), these are
+        additional arguments to ``instantiate_yahpo``
     :param ignore_hash: do not check if hash of currently stored files matches the
         pre-computed hash. Be careful with this option. If hashes do not match, results
         might not be reproducible.
@@ -120,7 +120,7 @@ def load_blackbox(
             if not validate_hash(tgt_folder, expected_hash):
                 Exception(
                     f"The hash of the files do not match the stored hash after regenerations. "
-                    f"Consider updating the hash and sending a pull-request to change it or set the option `ignore_hash` to True."
+                    f"Consider updating the hash and sending a pull-request to change it or set the option ``ignore_hash`` to True."
                 )
         logging.info(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
@@ -174,7 +174,7 @@ def load_blackbox(
 
 
 def check_blackbox_local_files(tgt_folder) -> bool:
-    """checks whether the file of the blackbox `name` are present in `repository_path`"""
+    """checks whether the file of the blackbox ``name`` are present in ``repository_path``"""
     return tgt_folder.exists() and (tgt_folder / "metadata.json").exists()
 
 

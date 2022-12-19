@@ -27,8 +27,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 
 
 # Type for predictions from (potentially) multiple models
-# `output_to_predictions[name]` is a list of dicts, one entry for each
-# MCMC sample (list is size 1 if no MCMC), see also `predict` of
+# ``output_to_predictions[name]`` is a list of dicts, one entry for each
+# MCMC sample (list is size 1 if no MCMC), see also ``predict`` of
 # :class:`SurrogateModel`.
 # Note: List sizes of different entries can be different. MCMC averaging
 # is done over the Cartesian product of these lists.
@@ -40,8 +40,8 @@ SamplePredictionsPerOutput = Dict[str, Dict[str, np.ndarray]]
 @dataclass
 class HeadWithGradient:
     """
-    `gradient` maps each output model to a dict of head gradients, whose keys
-    are those used by `predict` (e.g., `mean`, `std`)
+    ``gradient`` maps each output model to a dict of head gradients, whose keys
+    are those used by ``predict`` (e.g., ``mean``, ``std``)
     """
 
     hval: np.ndarray
@@ -51,10 +51,10 @@ class HeadWithGradient:
 class CurrentBestProvider:
     """
     Helper class for :class:`MeanStdAcquisitionFunction`.
-    The `current_best` values required in :meth:`compute_acq` and
+    The ``current_best`` values required in :meth:`compute_acq` and
     :meth:`compute_acq_with_gradient` may depend on the MCMC sample index for each
     model (if none of the models use MCMC, this index is always
-    `(0, 0, ..., 0)`).
+    ``(0, 0, ..., 0)``).
     """
 
     def __call__(self, positions: Tuple[int, ...]) -> Optional[np.ndarray]:
@@ -68,7 +68,7 @@ class NoneCurrentBestProvider(CurrentBestProvider):
 
 class ActiveMetricCurrentBestProvider(CurrentBestProvider):
     """
-    Default implementation in which `current_best` depends on the
+    Default implementation in which ``current_best`` depends on the
     active metric only.
     """
 
@@ -95,7 +95,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
     If model is a
     :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`,
-    then active_metric is ignored. If model is a `dict` mapping output names to models,
+    then active_metric is ignored. If model is a ``dict`` mapping output names to models,
     then active_metric must be given.
 
     Note that acquisition functions will always be *minimized*!
@@ -125,7 +125,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
     def _output_to_keys_predict(self) -> Dict[str, Set[str]]:
         """
-        Required `keys_predict` for each output model. The default requires
+        Required ``keys_predict`` for each output model. The default requires
         each output model to return "mean" and "std".
         """
         mean_and_std = {"mean", "std"}
@@ -181,12 +181,12 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         self, model: SurrogateOutputModel
     ) -> CurrentBestProvider:
         """
-        Implements default where `current_best` only depends on the model for
-        `active_metric`. To be overwritten by child classes where this does not
+        Implements default where ``current_best`` only depends on the model for
+        ``active_metric``. To be overwritten by child classes where this does not
         hold.
 
         Note: The resulting current_bests is redetermined every time, since
-        `model` may change.
+        ``model`` may change.
         """
         active_metric_current_best = model[self.active_metric].current_best()
         return ActiveMetricCurrentBestProvider(active_metric_current_best)
@@ -291,7 +291,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         gradient = 0.0
         for output_name, output_model in model.items():
             # Reshape head gradients so they have the same shape as corresponding
-            # predictions. This is required for `backward_gradient` to work.
+            # predictions. This is required for ``backward_gradient`` to work.
             shp = shapes[output_name]
             head_grad = [
                 {k: v.reshape(shp[k]) for k, v in orig_grad.items()}
@@ -332,15 +332,15 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         current_best: Optional[np.ndarray],
     ) -> np.ndarray:
         """
-        If mean has `nf > 1` columns, both `std` and `current_best` are supposed to
+        If mean has ``nf > 1`` columns, both ``std`` and ``current_best`` are supposed to
         be broadcast, and the return value is averaged over this dimension.
 
         :param output_to_predictions: Dictionary mapping each output to a
             dict containing predictive moments, keys as in
-            `_output_to_keys_predict`. "mean" entry has shape `(n, nf)`,
-            "std" entry has shape `(n, 1)`
-        :param current_best: Incumbent, shape `(1, nf)`
-        :return: `h(predictions, current_best)`, shape `(n,)`
+            ``_output_to_keys_predict``. "mean" entry has shape ``(n, nf)``,
+            "std" entry has shape ``(n, 1)``
+        :param current_best: Incumbent, shape ``(1, nf)``
+        :return: ``h(predictions, current_best)``, shape ``(n,)``
         """
         raise NotImplementedError
 
@@ -354,10 +354,10 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
 
         :param: output_to_predictions: Dictionary mapping each output to a
             dict containing predictive moments, keys as in
-            `_output_to_keys_predict`.  "mean" entry has shape `(nf,)`,
-            "std" entry has shape `(1,)`.
-        :param current_best: Incumbent, shape `(nf,)`
-        :return: `hval` and head gradients (in `gradient`) for each output model.
+            ``_output_to_keys_predict``.  "mean" entry has shape ``(nf,)``,
+            "std" entry has shape ``(1,)``.
+        :param current_best: Incumbent, shape ``(nf,)``
+        :return: ``hval`` and head gradients (in ``gradient``) for each output model.
             All values have the same shape as the corresponding predictions
         """
         raise NotImplementedError

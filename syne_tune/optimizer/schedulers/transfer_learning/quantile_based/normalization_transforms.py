@@ -45,7 +45,7 @@ class GaussianTransform:
         :param random_state: if not None, ranks are drawn uniformly for values with consecutive ranges
         :return: data with same shape as input series where distribution is normalized on all dimensions
         """
-        # Cutoff ranks since `Phi^{-1}` is infinite at `0` and `1` with winsorized constants.
+        # Cutoff ranks since ``Phi^{-1}`` is infinite at ``0`` and ``1`` with winsorized constants.
         def winsorized_delta(n):
             return 1.0 / (4.0 * n**0.25 * np.sqrt(np.pi * np.log(n)))
 

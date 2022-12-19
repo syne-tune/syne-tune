@@ -55,8 +55,8 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
     :param mode: Mode to use for the metric given, can be "min" or "max". Is
         obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"
     :param num_min_data_points: Minimum number of data points that we use to fit
-        the KDEs. If set to `None`, we set this to the number of hyperparameters.
-        Defaults to `None`.
+        the KDEs. If set to ``None``, we set this to the number of hyperparameters.
+        Defaults to ``None``.
     :param top_n_percent: Determines how many datapoints we use to fit the first
         KDE model for modeling the well performing configurations.
         Defaults to 15

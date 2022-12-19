@@ -62,7 +62,7 @@ def compute_epsilon_net(X: np.ndarray, dim: Optional[int] = None) -> np.ndarray:
     X: np.ndarray [N, D]
         The items to sparsify where N is the number of items and D their dimensionality.
     dim: Optional[int], default: None
-        The index of the dimension which to use to choose the seed item. If `None`, an item is
+        The index of the dimension which to use to choose the seed item. If ``None``, an item is
         chosen at random, otherwise the item with the lowest value in the specified dimension is
         used.
 
@@ -117,10 +117,10 @@ def nondominated_sort(
     X: np.ndarray [N, D]
         The multi-dimensional items to sort.
     dim: Optional[int], default: None
-        The feature (metric) to prefer when ranking items within the Pareto front. If `None`, items
+        The feature (metric) to prefer when ranking items within the Pareto front. If ``None``, items
         are chosen randomly.
     max_items: Optional[int], default: None
-        The maximum number of items that should be returned. When this is `None`, all items are
+        The maximum number of items that should be returned. When this is ``None``, all items are
         sorted.
     flatten: bool, default: True
         Whether to flatten the resulting array.
@@ -129,7 +129,7 @@ def nondominated_sort(
     -------
     Union[List[int], List[List[int]]]
         The indices of the sorted items, either globally or within each of the Pareto front
-        depending on the value of `flatten`.
+        depending on the value of ``flatten``.
     """
     remaining = np.arange(X.shape[0])
     indices = []

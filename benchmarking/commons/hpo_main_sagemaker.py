@@ -45,14 +45,14 @@ def parse_args(
 ) -> (Any, List[str], List[int]):
     """Parse command line arguments for SageMaker back-end experiments.
 
-    :param methods: If `--method` is not given, then `method_names` are the
+    :param methods: If ``--method`` is not given, then ``method_names`` are the
         keys of this dictionary
     :param extra_args: List of dictionaries, containing additional arguments
-        to be passed. Must contain `name` for argument name (without leading
-        `"--"`), and other kwargs to `parser.add_argument`. Optional
-    :return: `(args, method_names, seeds)`, where `args` is result of
-        `parser.parse_known_args()`, `method_names` see `methods`, and
-        `seeds` are list of seeds specified by `--num_seeds` and `--start_seed`
+        to be passed. Must contain ``name`` for argument name (without leading
+        ``"--"``), and other kwargs to ``parser.add_argument``. Optional
+    :return: ``(args, method_names, seeds)``, where ``args`` is result of
+        ``parser.parse_known_args()``, ``method_names`` see ``methods``, and
+        ``seeds`` are list of seeds specified by ``--num_seeds`` and ``--start_seed``
     """
     if extra_args is None:
         extra_args = []
@@ -130,16 +130,16 @@ def main(
     Runs experiment with SageMaker back-end.
 
     Command line arguments must specify a single benchmark, method, and seed,
-    for example `--method ASHA --num_seeds 5 --start_seed 4` starts experiment
-    with `seed=4`, or `--method ASHA --num_seeds 1` starts experiment with
-    `seed=0`. Here, `ASHA` must be key in `methods`.
+    for example ``--method ASHA --num_seeds 5 --start_seed 4`` starts experiment
+    with ``seed=4``, or ``--method ASHA --num_seeds 1`` starts experiment with
+    ``seed=0``. Here, ``ASHA`` must be key in ``methods``.
 
     :param methods: Dictionary with method constructors
     :param benchmark_definitions: Definitions of benchmark; one is selected from
         command line arguments
     :param extra_args: Extra arguments for command line parser. Optional
-    :param map_extra_args: Maps `args` returned by `parse_args` to dictionary
-        for extra argument values. Needed if `extra_args` is given
+    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
+        for extra argument values. Needed if ``extra_args`` is given
     """
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag

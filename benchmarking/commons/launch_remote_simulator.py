@@ -42,10 +42,10 @@ def get_hyperparameters(
 
     :param seed: Seed of repetition
     :param method: Method name
-    :param experiment_tag: Tag of experimment
-    :param args: Result from `parse_args`
+    :param experiment_tag: Tag of experiment
+    :param args: Result from `:func:parse_args`
     :param map_extra_args: Hyperparameters are updated with
-        `map_extra_args(args)`. Optional
+        ``map_extra_args(args)``. Optional
     :return: Dictionary of hyperparameters
     """
     hyperparameters = {
@@ -82,16 +82,16 @@ def launch_remote(
     Launches sequence of SageMaker training jobs, each running an experiment
     with the simulator back-end.
 
-    The loop runs over methods selected from `methods`. Different repetitions
+    The loop runs over methods selected from ``methods``. Different repetitions
     (seeds) are run sequentially in the remote job. However, if
-    `is_expensive_method(method_name)` is true, we launch different remote
+    ``is_expensive_method(method_name)`` is true, we launch different remote
     jobs for every seed for this particular method. This is to cater for
     methods which are themselves expensive to run (e.g., involving Gaussian
     process based Bayesian optimization).
 
-    If `benchmark_definitions` is a single-level dictionary and no benchmark
+    If ``benchmark_definitions`` is a single-level dictionary and no benchmark
     is selected on the command line, then all benchmarks are run sequentially
-    in the remote job. However, if `benchmark_definitions` is two-level nested,
+    in the remote job. However, if ``benchmark_definitions`` is two-level nested,
     we loop over the outer level and start separate remote jobs, each of which
     iterates over its inner level of benchmarks. This is useful if the number
     of benchmarks to iterate over is large.
@@ -102,8 +102,8 @@ def launch_remote(
     :param benchmark_definitions: Definitions of benchmarks, can be nested
         (see above)
     :param extra_args: Extra arguments for command line parser, optional
-    :param map_extra_args: Maps `args` returned by `parse_args` to dictionary
-        for extra argument values. Needed only if `extra_args` given
+    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
+        for extra argument values. Needed only if ``extra_args`` given
     :param is_expensive_method: See above. The default is a predicative always
         returning False (no method is expensive)
     """

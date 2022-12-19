@@ -20,7 +20,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 
 class SkipOptimizationPredicate:
     """
-    Interface for `skip_optimization` predicate in
+    Interface for ``skip_optimization`` predicate in
     :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer.ModelStateTransformer`.
     """
 
@@ -58,11 +58,11 @@ class AlwaysSkipPredicate(SkipOptimizationPredicate):
 
 class SkipPeriodicallyPredicate(SkipOptimizationPredicate):
     """
-    Let `N` be the number of labeled points for metric `metric_name`.
-    Optimizations are not skipped if `N < init_length`. Afterwards,
-    we increase a counter whenever `N` is larger than in the previous
+    Let ``N`` be the number of labeled points for metric ``metric_name``.
+    Optimizations are not skipped if ``N < init_length``. Afterwards,
+    we increase a counter whenever ``N`` is larger than in the previous
     call. With respect to this counter, optimizations are done every
-    `period` times, in between they are skipped.
+    ``period`` times, in between they are skipped.
 
     :param init_length: See above
     :param period: See above
@@ -110,13 +110,13 @@ class SkipNoMaxResourcePredicate(SkipOptimizationPredicate):
     This predicate works for multi-fidelity HPO, see for example
     :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`.
 
-    We track the number of labeled datapoints at resource level `max_resource`.
-    HP optimization is skipped if the total number `N` of labeled cases is
-    `N >= init_length`, and if the number of `max_resource` cases has not
+    We track the number of labeled datapoints at resource level ``max_resource``.
+    HP optimization is skipped if the total number ``N`` of labeled cases is
+    ``N >= init_length``, and if the number of ``max_resource`` cases has not
     increased since the last recent optimization.
 
     This means that as long as the dataset only grows w.r.t. cases at lower
-    resources than `max_resource`, this does not trigger HP optimization.
+    resources than ``max_resource``, this does not trigger HP optimization.
 
     :param init_length: See above
     :param max_resource: See above

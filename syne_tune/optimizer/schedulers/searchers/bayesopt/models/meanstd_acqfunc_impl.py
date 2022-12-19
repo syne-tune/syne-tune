@@ -182,11 +182,11 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
 
        \mathrm{EIpu}(x) = \frac{\mathrm{EI(x)}}{\mathrm{power}(\mathrm{cost}(x), \mathrm{exponent_cost})},
 
-    where :math:`\mathrm{EI}(x)` is expected improvement, :math:`\mathrm{cost}(x)`
-    is the predictive mean of a cost model, and `exponent_cost` is an exponent in
-    :math:`(0, 1]`.
+    where :math:``\mathrm{EI}(x)`` is expected improvement, :math:``\mathrm{cost}(x)``
+    is the predictive mean of a cost model, and ``exponent_cost`` is an exponent in
+    :math:``(0, 1]``.
 
-    `exponent_cost` scales the influence of the cost term on the acquisition
+    ``exponent_cost`` scales the influence of the cost term on the acquisition
     function. See also:
 
         | Lee etal.
@@ -194,7 +194,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
         | https://arxiv.org/abs/2003.10870
 
     Note: two metrics are expected in the model output: the main objective and the cost.
-    The main objective needs to be indicated as `active_metric` when initializing
+    The main objective needs to be indicated as ``active_metric`` when initializing
     :class:`EIpuAcquisitionFunction`.
     The cost is automatically assumed to be the other metric.
 
@@ -301,7 +301,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
 
 class ConstraintCurrentBestProvider(CurrentBestProvider):
     """
-    Here, `current_best` depends on two models, for active and constraint metric.
+    Here, ``current_best`` depends on two models, for active and constraint metric.
     """
 
     def __init__(self, current_best_list: List[np.ndarray], num_samples_active: int):
@@ -322,21 +322,21 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
     Minus constrained expected improvement acquisition function.
     (minus because the convention is to always minimize the acquisition function)
 
-    This is defined as `CEI(x) = EI(x) * P(c(x) <= 0)`, where `EI` is the
+    This is defined as ``CEI(x) = EI(x) * P(c(x) <= 0)``, where ``EI`` is the
     standard expected improvement with respect to the current *feasible best*,
-    and `P(c(x) <= 0)` is the probability that the hyperparameter configuration
-    `x` satisfies the constraint modeled by `c(x)`.
+    and ``P(c(x) <= 0)`` is the probability that the hyperparameter configuration
+    ``x`` satisfies the constraint modeled by ``c(x)``.
 
     If there are no feasible hyperparameters yet, the current feasible best is
-    undefined. Thus, `CEI` is reduced to the `P(c(x) <= 0)` term until a feasible
+    undefined. Thus, ``CEI`` is reduced to the ``P(c(x) <= 0)`` term until a feasible
     configuration is found.
 
     Two metrics are expected in the model output: the main objective and the
-    constraint metric. The main objective needs to be indicated as `active_metric`
+    constraint metric. The main objective needs to be indicated as ``active_metric``
     when initializing :class:`CEIAcquisitionFunction`.
     The constraint is automatically assumed to be the other metric.
 
-    References on `CEI`:
+    References on ``CEI``:
 
         | Gardner et al.
         | Bayesian Optimization with Inequality Constraints

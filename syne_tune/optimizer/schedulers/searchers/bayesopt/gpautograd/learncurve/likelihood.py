@@ -62,7 +62,7 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
     modelled as sum of a Gaussian process over x (for the value at r_max)
     and a Gaussian model over r.
 
-    The latter `res_model` is either an ISSM or another Gaussian process with
+    The latter ``res_model`` is either an ISSM or another Gaussian process with
     exponential decay covariance function.
 
     :param kernel: Kernel function k(x, x')

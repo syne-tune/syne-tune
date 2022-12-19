@@ -33,8 +33,8 @@ class BracketDistribution:
     def configure(self, scheduler: TrialScheduler):
         """
         This method is called in by the scheduler just after
-        `self.searcher.configure_scheduler`. The searcher must be accessible
-        via `self.searcher`.
+        ``self.searcher.configure_scheduler``. The searcher must be accessible
+        via ``self.searcher``.
         The :meth:`__call__` method cannot be used before this method has been
         called.
         """

@@ -21,11 +21,11 @@ from benchmarking.commons.benchmark_definitions.lcbench import (
 )
 
 
-# Note: We do not include scenarios `iaml_super`, `rbv2_super` for now,
+# Note: We do not include scenarios ``iaml_super``, ``rbv2_super`` for now,
 # because they need proper usage of conditional configuration spaces,
 # which is not supported yet.
 
-# Note: We do not include the `fcnet` scenario. FCNet is a tabulated benchmark
+# Note: We do not include the ``fcnet`` scenario. FCNet is a tabulated benchmark
 # evaluated completely on a fine grid, so does not profit from surrogate
 # modelling. Our own implementation works fine and provides for much faster
 # simulations.
@@ -62,7 +62,7 @@ yahpo_nb301_benchmark_definitions = {
 # -------
 
 
-# `openml_task_name_to_id` maps OpenML task name to task ID
+# ``openml_task_name_to_id`` maps OpenML task name to task ID
 with open(Path(__file__).parent / "openml_task_name_to_id.json", "r") as fp:
     openml_task_name_to_id = json.load(fp)
 
@@ -467,7 +467,7 @@ yahpo_rbv2_benchmark = {
 }
 
 
-# `yahpo_rbv2_instances[method][metric]` contains list of instances for
+# ``yahpo_rbv2_instances[method][metric]`` contains list of instances for
 # this method and metric.
 #
 # These are not all instances available in YAHPO rbv2, some filtering has
@@ -495,18 +495,18 @@ with open(Path(__file__).parent / "yahpo_rbv2_instances.json", "r") as fp:
     yahpo_rbv2_instances = json.load(fp)
 
 
-# `yahpo_rbv2_selected_instances[method][metric]` contains list of instances
+# ``yahpo_rbv2_selected_instances[method][metric]`` contains list of instances
 # selected by visual inspection among those with the largest estimated
-# `max_wallclock_time`.
+# ``max_wallclock_time``.
 
 with open(Path(__file__).parent / "yahpo_rbv2_selected_instances.json", "r") as fp:
     yahpo_rbv2_selected_instances = json.load(fp)
 
 
-# `yahpo_rbv2_max_wallclock_time` maps key of the form
-# `f"{method}-{metric}-{instance}"` to suggested value for
-# `max_wallclock_time`. Here, `instance` loops over
-# `yahpo_rbv2_instances[method][metric]`.
+# ``yahpo_rbv2_max_wallclock_time`` maps key of the form
+# ``f"{method}-{metric}-{instance}"`` to suggested value for
+# ``max_wallclock_time``. Here, ``instance`` loops over
+# ``yahpo_rbv2_instances[method][metric]``.
 #
 # Determined as follows:
 # - Ran RS, BO, ASHA with max_wallclock_time = 900
@@ -520,10 +520,10 @@ with open(Path(__file__).parent / "yahpo_rbv2_selected_instances.json", "r") as 
 #   - remove if time < 50
 #   - remove if flat very soon and all the same
 #   - adjust time after visual inspection
-# - `yahpo_rbv2_selected_instances` from largest upon visual
+# - ``yahpo_rbv2_selected_instances`` from largest upon visual
 #    inspection
 # For all others, the estimated value is used, and they are not
-# considered for `yahpo_rbv2_selected_instances`
+# considered for ``yahpo_rbv2_selected_instances``
 #
 # This failed with all 0 for xgboost-auc-*, svm-auc-* (all), so these
 # have been removed entirely.

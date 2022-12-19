@@ -48,13 +48,13 @@ class LocalBackend(TrialBackend):
     be adjusted to the machine capacity.
 
     :param entry_point: Path to Python main file to be tuned
-    :param delete_checkpoints: If `True`, checkpoints of stopped or completed
-        trials are deleted. Defaults to `False`
+    :param delete_checkpoints: If ``True``, checkpoints of stopped or completed
+        trials are deleted. Defaults to ``False``
     :param rotate_gpus: In case several GPUs are present, each trial is
         scheduled on a different GPU. A new trial is preferentially
         scheduled on a free GPU, and otherwise the GPU with least prior
-        assignments is chosen. If `False`, then all GPUs are used at the same
-        time for all trials. Defaults to `True`.
+        assignments is chosen. If ``False``, then all GPUs are used at the same
+        time for all trials. Defaults to ``True``.
     """
 
     def __init__(
@@ -81,8 +81,8 @@ class LocalBackend(TrialBackend):
         self.gpu_times_assigned = None
         # sets the path where to write files, can be overidden later by Tuner.
         self.set_path(str(Path(experiment_path(tuner_name=random_string(length=10)))))
-        # Trials which may currently be busy (status in `BUSY_STATUS`). The
-        # corresponding jobs are polled for status in `busy_trial_ids`.
+        # Trials which may currently be busy (status in ``BUSY_STATUS``). The
+        # corresponding jobs are polled for status in ``busy_trial_ids``.
         self._busy_trial_id_candidates = set()
 
     def trial_path(self, trial_id: int) -> Path:
@@ -102,10 +102,10 @@ class LocalBackend(TrialBackend):
 
     def _prepare_for_schedule(self, num_gpus=None):
         """
-        Called at the start of each `_schedule`.
+        Called at the start of each :meth:`_schedule`.
         In particular, we initialize variables related to GPU scheduling, if
-        `rotate_gpus' is set. This is done before the first call of `_schedule`,
-        so we can be sure it runs on the target instance.
+        ``rotate_gpus`` is set. This is done before the first call of
+        :meth:`_schedule`, so we can be sure it runs on the target instance.
         """
         if self.rotate_gpus and self.num_gpus is None:
             if num_gpus is None:
@@ -298,10 +298,10 @@ class LocalBackend(TrialBackend):
         return busy_list
 
     def busy_trial_ids(self) -> List[Tuple[int, str]]:
-        # Note that at this point, `self._busy_trial_id_candidates` contains
+        # Note that at this point, ``self._busy_trial_id_candidates`` contains
         # trials whose jobs have been busy in the past, but they may have
         # stopped or terminated since. We query the current status for all
-        # these jobs and update `self._busy_trial_id_candidates` accordingly.
+        # these jobs and update ``self._busy_trial_id_candidates`` accordingly.
         if self._busy_trial_id_candidates:
             busy_list = self._get_busy_trial_ids()
             # Update internal candidate list

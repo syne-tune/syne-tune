@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 """
 This launches an HPO tuning several hyperparameters of a gluonts model.
-To run this example locally, you need to have installed dependencies in `requirements.txt` in your current interpreter.
+To run this example locally, you need to have installed dependencies in ``requirements.txt`` in your current interpreter.
 """
 import logging
 from pathlib import Path

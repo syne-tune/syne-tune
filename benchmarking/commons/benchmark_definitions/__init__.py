@@ -55,3 +55,35 @@ from benchmarking.commons.benchmark_definitions.distilbert_on_imdb import (  # n
 from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (  # noqa: F401
     mlp_fashionmnist_benchmark,
 )
+from benchmarking.commons.benchmark_definitions.transformer_wikitext2 import (  # noqa: F401
+    transformer_wikitext2_benchmark,
+)
+
+__all__ = [
+    "SurrogateBenchmarkDefinition",
+    "RealBenchmarkDefinition",
+    "fcnet_benchmark_definitions",
+    "fcnet_benchmark",
+    "nas201_benchmark_definitions",
+    "nas201_benchmark",
+    "lcbench_benchmark_definitions",
+    "lcbench_selected_benchmark_definitions",
+    "lcbench_benchmark",
+    "yahpo_nb301_benchmark_definitions",
+    "yahpo_lcbench_benchmark_definitions",
+    "yahpo_lcbench_selected_benchmark_definitions",
+    "yahpo_iaml_benchmark_definitions",
+    "yahpo_iaml_selected_benchmark_definitions",
+    "yahpo_rbv2_benchmark_definitions",
+    "yahpo_rbv2_selected_benchmark_definitions",
+    "yahpo_nb301_benchmark",
+    "yahpo_lcbench_benchmark",
+    "yahpo_iaml_benchmark",
+    "yahpo_rbv2_benchmark",
+    "resnet_cifar10_benchmark",
+    "lstm_wikitext2_benchmark",
+    "real_benchmark_definitions",
+    "distilbert_imdb_benchmark",
+    "mlp_fashionmnist_benchmark",
+    "transformer_wikitext2_benchmark",
+]

@@ -223,7 +223,7 @@ def create_tuning_job_state(
     failed_tuples: Optional[List[TupleOrDict]] = None,
 ) -> TuningJobState:
     """
-    Builds `TuningJobState` from basics, where configs are given as tuples or
+    Builds ``TuningJobState`` from basics, where configs are given as tuples or
     as dicts.
 
     NOTE: We assume that all configs in the different lists are different!

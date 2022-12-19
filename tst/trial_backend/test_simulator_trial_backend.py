@@ -130,7 +130,7 @@ def test_compare_local_simulator_backends(scheduler_name):
         _tuner_sleep_time = 0 if backend_name == "simulated" else tuner_sleep_time
         # Run experiment
         if backend_name == "local":
-            # Duplicates callback used in `tuner.run`, but we have access
+            # Duplicates callback used in ``tuner.run``, but we have access
             result_callback = StoreResultsCallback()
         else:
             result_callback = SimulatorCallback()
@@ -151,7 +151,7 @@ def test_compare_local_simulator_backends(scheduler_name):
     # exactly the same number of results, but the prefix of results should
     # be the same.
     # Note: Differences between the two are mainly due to very short training
-    # times, which amplify the importance of processing in `LocalBackend` we
+    # times, which amplify the importance of processing in ``LocalBackend`` we
     # do not simulate (e.g., starting subprocesses).
     # Filter results for stopped trials which are received after the stop
     # rung. These are filtered out by the simulator back-end, but not by

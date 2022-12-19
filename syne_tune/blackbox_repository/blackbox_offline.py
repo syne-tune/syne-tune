@@ -32,7 +32,7 @@ class BlackboxOffline(Blackbox):
     A blackbox obtained given offline evaluations. Each row of the dataframe
     should contain one evaluation given a fixed configuration, fidelity and
     seed. The columns must correspond to the provided configuration and fidelity
-    space, by default all columns that are prefixed by `"metric_"` are assumed
+    space, by default all columns that are prefixed by ``"metric_"`` are assumed
     to be metrics but this can be overridden by providing metric columns.
 
     Additional arguments on top of parent class
@@ -124,7 +124,7 @@ class BlackboxOffline(Blackbox):
         ]
         if len(output) == 0:
             raise ValueError(
-                f"the hyperparameter {configuration} is not present in available evaluations. Use `add_surrogate(blackbox)` if"
+                f"the hyperparameter {configuration} is not present in available evaluations. Use ``add_surrogate(blackbox)`` if"
                 f" you want to add interpolation or a surrogate model that support querying any configuration."
             )
         if fidelity is not None or self.fidelity_space is None:
@@ -155,7 +155,7 @@ def serialize(
     :return:
     """
     if isinstance(bb_dict, BlackboxOffline):
-        # todo hack that allows to call `serialize(bb)` instead of `serialize({"dummy-task-name": bb})`
+        # todo hack that allows to call ``serialize(bb)`` instead of ``serialize({"dummy-task-name": bb})``
         # not sure if we should keep it
         bb_dict = {path.stem, bb_dict}
 

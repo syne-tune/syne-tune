@@ -43,24 +43,24 @@ def AddJitterOp(
     Finds smaller jitter to add to diagonal of square matrix to render the
     matrix positive definite (in that linalg.potrf works).
 
-    Given input x (positive semi-definite matrix) and `sigsq_init` (nonneg
-    scalar), find `sigsq_final` (nonneg scalar), so that:
+    Given input x (positive semi-definite matrix) and ``sigsq_init`` (nonneg
+    scalar), find ``sigsq_final`` (nonneg scalar), so that:
 
-        | `sigsq_final = sigsq_init + jitter`, `jitter >= 0`,
-        | `x + sigsq_final * Id` positive definite (so that `potrf` call works)
+        | ``sigsq_final = sigsq_init + jitter``, ``jitter >= 0``,
+        | ``x + sigsq_final * Id`` positive definite (so that ``potrf`` call works)
 
-    We return the matrix `x + sigsq_final * Id`, for which `potrf` has not failed.
+    We return the matrix ``x + sigsq_final * Id``, for which ``potrf`` has not failed.
 
     For the gradient, the dependence of jitter on the inputs is ignored.
 
     The values tried for sigsq_final are:
 
-        | `sigsq_init, sigsq_init + initial_jitter * (jitter_growth ** k)`,
-          `k = 0, 1, 2, ...`,
-        | `initial_jitter = initial_jitter_factor * max(mean(diag(x)), 1)`
+        | ``sigsq_init, sigsq_init + initial_jitter * (jitter_growth ** k)``,
+          ``k = 0, 1, 2, ...``,
+        | ``initial_jitter = initial_jitter_factor * max(mean(diag(x)), 1)``
 
-    Note: The scaling of initial_jitter with `mean(diag(x))` is taken from `GPy`.
-    The rationale is that the largest eigenvalue of x is `>= mean(diag(x))`, and
+    Note: The scaling of initial_jitter with ``mean(diag(x))`` is taken from ``GPy``.
+    The rationale is that the largest eigenvalue of x is ``>= mean(diag(x))``, and
     likely of this magnitude.
 
     There is no guarantee that the Cholesky factor returned is well-conditioned
@@ -144,7 +144,7 @@ def cholesky_factorization(a):
     """
     Replacement for :func:`autograd.numpy.linalg.cholesky`. Our backward (vjp)
     is faster and simpler, while somewhat less general (only works if
-    `a.ndim == 2`).
+    ``a.ndim == 2``).
 
     See https://arxiv.org/abs/1710.08717 for derivation of backward (vjp)
     expression.

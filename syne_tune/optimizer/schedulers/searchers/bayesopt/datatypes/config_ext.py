@@ -78,10 +78,10 @@ class ExtendedConfiguration:
     def remove_resource(self, config_ext: Configuration) -> Configuration:
         """
         Strips away resource attribute and returns normal config. If
-        `config_ext` is already normal, it is returned as is.
+        ``config_ext`` is already normal, it is returned as is.
 
         :param config_ext: Extended config
-        :return: `config_ext` without resource attribute
+        :return: ``config_ext`` without resource attribute
         """
         if self.resource_attr_name in config_ext:
             config = {
@@ -96,7 +96,7 @@ class ExtendedConfiguration:
         Split extended config into normal config and resource value.
 
         :param config_ext: Extended config
-        :return: `(config, resource_value)`
+        :return: ``(config, resource_value)``
         """
         x_res = copy.copy(config_ext)
         resource_value = int(x_res[self.resource_attr_name])

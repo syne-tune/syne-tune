@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 class RayTuneScheduler(TrialScheduler):
     """
     Allow using Ray scheduler and searcher. Any searcher/scheduler should
-    work, except such which need access to `TrialRunner` (e.g., PBT), this
+    work, except such which need access to ``TrialRunner`` (e.g., PBT), this
     feature is not implemented in Syne Tune.
 
-    If `ray_searcher` is not given (defaults to random searcher), initial
-    configurations to evaluate can be passed in `points_to_evaluate`. If
-    `ray_searcher` is given, this argument is ignored (needs to be passed
-    to `ray_searcher` at construction). Note: Use
+    If ``ray_searcher`` is not given (defaults to random searcher), initial
+    configurations to evaluate can be passed in ``points_to_evaluate``. If
+    ``ray_searcher`` is given, this argument is ignored (needs to be passed
+    to ``ray_searcher`` at construction). Note: Use
     :func:`~syne_tune.optimizer.schedulers.searchers.impute_points_to_evaluate`
-    in order to preprocess `points_to_evaluate` specified by the user or
+    in order to preprocess ``points_to_evaluate`` specified by the user or
     the benchmark.
 
     :param config_space: Configuration space
@@ -144,7 +144,7 @@ class RayTuneScheduler(TrialScheduler):
         for m in self.metric_names():
             assert m in result, (
                 f"metric {m} is not present in reported results {result},"
-                f" the metrics present when calling `report(...)` in your training functions should"
+                f" the metrics present when calling ``report(...)`` in your training functions should"
                 f" be identical to the ones passed as metrics/time_attr to the scheduler and searcher"
             )
 
@@ -168,12 +168,12 @@ class RayTuneScheduler(TrialScheduler):
         """
         Converts config_space from our type to the one of Ray Tune.
 
-        Note: `randint(lower, upper)` in Ray Tune has exclusive `upper`, while
-        this is inclusive for us. On the other hand, `lograndint(lower, upper)`
-        has inclusive `upper` in Ray Tune as well.
+        Note: ``randint(lower, upper)`` in Ray Tune has exclusive ``upper``, while
+        this is inclusive for us. On the other hand, ``lograndint(lower, upper)``
+        has inclusive ``upper`` in Ray Tune as well.
 
         :param config_space: Configuration space
-        :return: `config_space` converted into Ray Tune type
+        :return: ``config_space`` converted into Ray Tune type
         """
         import ray.tune.search.sample as ray_sp
 
@@ -204,7 +204,7 @@ class RayTuneScheduler(TrialScheduler):
                     k: v for k, v in hp_range.__dict__.items() if k != "sampler"
                 }
 
-                # Note: `tune.randint` has exclusive upper while we have inclusive
+                # Note: ``tune.randint`` has exclusive upper while we have inclusive
                 if isinstance(hp_range, sp.Integer):
                     domain_kwargs["upper"] = domain_kwargs["upper"] + 1
 

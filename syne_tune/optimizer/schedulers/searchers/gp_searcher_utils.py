@@ -107,12 +107,12 @@ def decode_state_from_old_encoding(
     enc_state: dict, hp_ranges: HyperparameterRanges
 ) -> TuningJobState:
     """
-    Decodes `TuningJobState` from encoding done for the old definition of
-    `TuningJobState`. Code maintained for backwards compatibility.
+    Decodes ``TuningJobState`` from encoding done for the old definition of
+    ``TuningJobState``. Code maintained for backwards compatibility.
 
-    Note: Since the old `TuningJobState` did not contain `trial_id`, we need
+    Note: Since the old ``TuningJobState`` did not contain ``trial_id``, we need
     to make them up here. We assign these IDs in the order
-    `candidate_evaluations`, `failed_candidates`, `pending_candidates`,
+    ``candidate_evaluations``, ``failed_candidates``, ``pending_candidates``,
     matching for duplicates.
 
     :param enc_state:
@@ -156,8 +156,8 @@ def decode_state_from_old_encoding(
 class ResourceForAcquisitionMap:
     """
     In order to use a standard acquisition function (like expected improvement)
-    for multi-fidelity HPO, we need to decide at which `r_acq` we would like
-    to evaluate the AF, w.r.t. the posterior distribution over `f(x, r=r_acq)`.
+    for multi-fidelity HPO, we need to decide at which ``r_acq`` we would like
+    to evaluate the AF, w.r.t. the posterior distribution over ``f(x, r=r_acq)``.
     This decision can depend on the current state.
     """
 
@@ -167,9 +167,9 @@ class ResourceForAcquisitionMap:
 
 class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
     """
-    Implements a heuristic proposed in the BOHB paper: `r_acq` is the
-    largest `r` such that we have at least `threshold` observations at
-    `r`. If there are less than `threshold` observations at all levels,
+    Implements a heuristic proposed in the BOHB paper: ``r_acq`` is the
+    largest ``r`` such that we have at least ``threshold`` observations at
+    ``r``. If there are less than ``threshold`` observations at all levels,
     the smallest level is returned.
     """
 
@@ -191,10 +191,10 @@ class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
 
     def _max_at_least_threshold(self, counter: Counter) -> int:
         """
-        Get largest key of `counter` whose value is at least `threshold`.
+        Get largest key of ``counter`` whose value is at least ``threshold``.
 
         :param counter: dict with keys that support comparison operators
-        :return: largest key of `counter`
+        :return: largest key of ``counter``
         """
         return max(
             filter(lambda r: counter[r] >= self.threshold, counter.keys()),
@@ -204,7 +204,7 @@ class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
 
 class ResourceForAcquisitionFirstMilestone(ResourceForAcquisitionMap):
     """
-    Here, `r_acq` is the smallest rung level to be attained by a config
+    Here, ``r_acq`` is the smallest rung level to be attained by a config
     started from scratch.
     """
 
@@ -219,7 +219,7 @@ class ResourceForAcquisitionFirstMilestone(ResourceForAcquisitionMap):
 
 class ResourceForAcquisitionFinal(ResourceForAcquisitionMap):
     """
-    Here, `r_acq = r_max` is the largest resource level.
+    Here, ``r_acq = r_max`` is the largest resource level.
     """
 
     def __init__(self, r_max: int):

@@ -30,7 +30,7 @@ def make_hyperparameter_ranges(
     active_config_space: Optional[Dict] = None,
     prefix_keys: Optional[List[str]] = None,
 ) -> HyperparameterRanges:
-    """Default method to create :class:`HyperparameterRanges` from `config_space`
+    """Default method to create :class:`HyperparameterRanges` from ``config_space``
 
     :param config_space: Configuration space
     :param name_last_pos: See :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`, optional

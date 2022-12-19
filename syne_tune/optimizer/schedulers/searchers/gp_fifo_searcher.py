@@ -175,7 +175,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self._resource_attr = resource_attr
         self._filter_observed_data = filter_observed_data
         self._random_searcher = None
-        # Tracks the cumulative time spent in `get_config` calls
+        # Tracks the cumulative time spent in ``get_config`` calls
         self.cumulative_get_config_time = 0
         if model_factory.debug_log is not None:
             deb_msg = "[ModelBasedSearcher.__init__]\n"
@@ -189,9 +189,9 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             logger.info(deb_msg)
 
     def _copy_kwargs_to_kwargs_int(self, kwargs_int: dict, kwargs: dict):
-        """Copies extra arguments not dealt with by `gp_fifo_searcher_factory`
+        """Copies extra arguments not dealt with by ``gp_fifo_searcher_factory``
 
-        :param kwargs_int: Output of factory, to be passed to `searcher_factory`
+        :param kwargs_int: Output of factory, to be passed to ``searcher_factory``
         :param kwargs: Input arguments
         """
         # Extra arguments not parsed in factory
@@ -200,13 +200,13 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
 
     def _hp_ranges_in_state(self):
         """
-        :return: `HyperparameterRanges` to be used in `self.state_transformer.state`
+        :return: ``HyperparameterRanges`` to be used in ``self.state_transformer.state``
         """
         return self.hp_ranges
 
     def _hp_ranges_for_prediction(self):
         """
-        :return: `HyperparameterRanges` to be used in predictions and acquisition
+        :return: ``HyperparameterRanges`` to be used in predictions and acquisition
             functions
         """
         return self._hp_ranges_in_state()
@@ -215,8 +215,8 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         return crit_val
 
     def on_trial_result(self, trial_id: str, config: dict, result: dict, update: bool):
-        # If both `cost_attr` and `resource_attr` are given, cost data (if
-        # given) is written out from every `result`, independent of `update`
+        # If both ``cost_attr`` and ``resource_attr`` are given, cost data (if
+        # given) is written out from every ``result``, independent of ``update``
         cattr = self._cost_attr
         rattr = self._resource_attr
         if (
@@ -248,7 +248,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         else:
             crit_val = metric_val
         metrics = dictionarize_objective(self._metric_val_update(crit_val, result))
-        # Cost value only dealt with here if `resource_attr` not given
+        # Cost value only dealt with here if ``resource_attr`` not given
         attr = self._cost_attr
         cost_val = None
         if attr is not None and attr in result:
@@ -271,8 +271,8 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self, exclusion_candidates: ExclusionList, **kwargs
     ) -> Optional[Configuration]:
         """
-        Implements `get_config` part if the surrogate model is used, instead
-        of initial choices from `points_to_evaluate` or initial random
+        Implements ``get_config`` part if the surrogate model is used, instead
+        of initial choices from ``points_to_evaluate`` or initial random
         choices.
 
         :param exclusion_candidates: Configs to be avoided
@@ -291,7 +291,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def _should_pick_random_config(self, exclusion_candidates: ExclusionList) -> bool:
         """
         :param exclusion_candidates: Configs to be avoided
-        :return: Should config be drawn at random in `get_config`
+        :return: Should config be drawn at random in ``get_config``
         """
         if len(exclusion_candidates) < self.num_initial_random_choices:
             return True
@@ -311,12 +311,12 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self, exclusion_candidates: ExclusionList
     ) -> (Optional[Configuration], bool):
         """
-        Does job of `get_config`, as long as the decision does not involve
+        Does job of ``get_config``, as long as the decision does not involve
         model-based search. If False is returned, model-based search must be
         called.
 
         :param exclusion_candidates: Configs to be avoided
-        :return: `(config, use_get_config_modelbased)`
+        :return: ``(config, use_get_config_modelbased)``
         """
         self._assign_random_searcher()
         config = self._next_initial_config()  # Ask for initial config
@@ -330,7 +330,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             for _ in range(GET_CONFIG_RANDOM_RETRIES):
                 _config = self._random_searcher.get_config()
                 if _config is None:
-                    # If `RandomSearcher` returns no config at all, the
+                    # If ``RandomSearcher`` returns no config at all, the
                     # search space is exhausted
                     break
                 if not exclusion_candidates.contains(_config):
@@ -360,7 +360,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             }
             self.profiler.begin_block(meta)
             self.profiler.start("all")
-            # Initial configs come from `points_to_evaluate` or are drawn at random
+            # Initial configs come from ``points_to_evaluate`` or are drawn at random
         exclusion_candidates = self._get_exclusion_candidates(**kwargs)
         config, pick_random = self._get_config_not_modelbased(exclusion_candidates)
         if self.debug_log is not None:
@@ -427,10 +427,10 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self.random_generator.random_state = self.random_state
         if "random_searcher_state" in state:
             # Restore self._random_searcher as well
-            # Note: It is important to call `_assign_random_searcher` with a
-            # random seed. Otherwise, one is drawn from `random_state`, which
+            # Note: It is important to call ``_assign_random_searcher`` with a
+            # random seed. Otherwise, one is drawn from ``random_state``, which
             # modifies that state. The seed passed does not matter, since
-            # `_random_searcher.random_state` will be restored anyway
+            # ``_random_searcher.random_state`` will be restored anyway
             self._assign_random_searcher(random_seed=0)
             self._random_searcher._restore_from_state(state["random_searcher_state"])
 
@@ -445,7 +445,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def _assign_random_searcher(self, random_seed=None):
         if self._random_searcher is None:
             # Used for initial random configs (if any)
-            # We do not have to deal with `points_to_evaluate`
+            # We do not have to deal with ``points_to_evaluate``
             if random_seed is None:
                 random_seed = self.random_state.randint(0, 2**32)
             self._random_searcher = RandomSearcher(
@@ -467,20 +467,20 @@ class GPFIFOSearcher(ModelBasedSearcher):
     It is *not* recommended creating :class:`GPFIFOSearcher` searcher objects
     directly, but rather to create
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` objects with
-    `searcher="bayesopt"`, and passing arguments here in `search_options`.
+    ``searcher="bayesopt"``, and passing arguments here in ``search_options``.
     This will use the appropriate functions from
-    :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory` to
+    :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`` to
     create components in a consistent way.
 
-    Note: If metric values are to be maximized (`mode-"max"` in scheduler),
-    the searcher uses `map_reward` to map metric values to internal
+    Note: If metric values are to be maximized (``mode-"max"`` in scheduler),
+    the searcher uses ``map_reward`` to map metric values to internal
     criterion values, and *minimizes* the latter. The default choice is
     to multiply values by -1.
 
     Pending configurations (for which evaluation tasks are currently running)
     are dealt with by fantasizing (i.e., target values are drawn from the
     current posterior, and acquisition functions are averaged over this
-    sample, see `num_fantasy_samples`).
+    sample, see ``num_fantasy_samples``).
 
     The GP surrogate model uses a Matern 5/2 covariance function with automatic
     relevance determination (ARD) of input attributes, and a constant mean
@@ -491,21 +491,21 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     The following happens in :meth:`get_config`:
 
-    * For the first `num_init_random` calls, a config is drawn at random
-      (after `points_to_evaluate`, which are included in the `num_init_random`
+    * For the first ``num_init_random`` calls, a config is drawn at random
+      (after ``points_to_evaluate``, which are included in the ``num_init_random``
       initial ones). Afterwards, Bayesian optimization is used, unless there
       are no finished evaluations yet (a surrogate model cannot be fix on no
       data).
     * For BO, model hyperparameter are refit first. This step can be skipped
-      (see `opt_skip_*` parameters).
-    * Next, `num_init_candidates` configs are sampled at random (as in random
-      search), and ranked by a scoring function (`initial_scoring`).
+      (see ``opt_skip_*`` parameters).
+    * Next, ``num_init_candidates`` configs are sampled at random (as in random
+      search), and ranked by a scoring function (``initial_scoring``).
     * BFGS local optimization is then run starting from the top scoring config,
       where EI is minimized (this is skipped if
-      `skip_local_optimization=True`).
+      ``skip_local_optimization=True``).
 
     Note that the full logic of construction based on arguments is given in
-    :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`. In
+    :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory``. In
     particular, see
     :func:`~syne_tune.optimizer.schedulers.searchers.gp_searcher_factory.gp_fifo_searcher_defaults`
     for default values.
@@ -517,13 +517,13 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :type clone_from_state: bool
     :param resource_attr: Name of resource attribute in reports. This is
         optional here, but required for multi-fidelity searchers.
-        If `resource_attr` and `cost_attr` are given, cost values are read from
+        If ``resource_attr`` and ``cost_attr`` are given, cost values are read from
         each report and stored in the state. This allows cost models to be fit
         on more data.
     :type resource_attr: str, optional
     :param cost_attr: Name of cost attribute in data obtained from reporter
         (e.g., elapsed training time). Needed only by cost-aware searchers.
-        Depending on whether `resource_attr` is given, cost values are read
+        Depending on whether ``resource_attr`` is given, cost values are read
         from each report or only at the end.
     :type cost_attr: str, optional
     :param num_init_random: Number of initial :meth:`get_config` calls for which
@@ -532,8 +532,8 @@ class GPFIFOSearcher(ModelBasedSearcher):
         :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS`
     :type num_init_random: int, optional
     :param num_init_candidates: Number of initial candidates sampled at
-        random in order to seed the model-based search in `get_config`.
-        Defaults to `syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_NUM_INITIAL_CANDIDATES`
+        random in order to seed the model-based search in ``get_config``.
+        Defaults to ``syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_NUM_INITIAL_CANDIDATES``
     :type num_init_candidates: int, optional
     :param num_fantasy_samples: Number of samples drawn for fantasizing
         (latent target values for pending evaluations), defaults to 20
@@ -553,10 +553,10 @@ class GPFIFOSearcher(ModelBasedSearcher):
         Defaults to
         :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_INITIAL_SCORING`
     :type initial_scoring: str, optional
-    :param skip_local_optimization: If `True`, the local gradient-based
+    :param skip_local_optimization: If ``True``, the local gradient-based
         optimization of the acquisition function is skipped, and the
         top-ranked initial candidate (after initial scoring) is returned
-        instead. In this case, `initial_scoring="acq_func"` makes most
+        instead. In this case, ``initial_scoring="acq_func"`` makes most
         sense, otherwise the acquisition function will not be used.
         Defaults to False
     :type skip_local_optimization: bool, optional
@@ -566,29 +566,29 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :param opt_maxiter: Parameter for surrogate model fitting. Maximum
         number of iterations per restart. Defaults to 50
     :type opt_maxiter: int, optional
-    :param opt_warmstart: Parameter for surrogate model fitting. If `True`,
+    :param opt_warmstart: Parameter for surrogate model fitting. If ``True``,
         each fitting is started from the previous optimum. Not recommended
-        in general. Defaults to `False`
+        in general. Defaults to ``False``
     :type opt_warmstart: bool, optional
-    :param opt_verbose: Parameter for surrogate model fitting. If `True`,
-        lots of output. Defaults to `False`
+    :param opt_verbose: Parameter for surrogate model fitting. If ``True``,
+        lots of output. Defaults to ``False``
     :type opt_verbose: bool, optional
     :param opt_skip_init_length: Parameter for surrogate model fitting,
         skip predicate. Fitting is never skipped as long as number of
         observations below this threshold. Defaults to 150
     :type opt_skip_init_length: int, optional
     :param opt_skip_period: Parameter for surrogate model fitting, skip
-        predicate. If `>1`, and number of observations above
-        `opt_skip_init_length`, fitting is done only K-th call, and skipped
+        predicate. If ``>1``, and number of observations above
+        ``opt_skip_init_length``, fitting is done only K-th call, and skipped
         otherwise. Defaults to 1 (no skipping)
     :type opt_skip_period: int, optional
     :param map_reward: In the scheduler, the metric may be minimized or
         maximized, but internally, Bayesian optimization is minimizing
-        the criterion. `map_reward` converts from metric to internal
+        the criterion. ``map_reward`` converts from metric to internal
         criterion:
 
-        * "minus_x": `criterion = -metric`
-        * "<a>_minus_x": `criterion = <a> - metric`. For example "1_minus_x"
+        * "minus_x": ``criterion = -metric``
+        * "<a>_minus_x": ``criterion = <a> - metric``. For example "1_minus_x"
           maps accuracy to zero-one error
 
         From a technical standpoint, it does not matter what is chosen here,
@@ -598,39 +598,39 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :type map_reward: str or :class:`MapReward`, optional
     :param transfer_learning_task_attr: Used to support transfer HPO, where
         the state contains observed data from several tasks, one of which
-        is the active one. To this end, `config_space` must contain a
-        categorical parameter of name `transfer_learning_task_attr`, whose
-        range are all task IDs. Also, `transfer_learning_active_task` must
-        denote the active task, and `transfer_learning_active_config_space`
-        is used as `active_config_space` argument in
+        is the active one. To this end, ``config_space`` must contain a
+        categorical parameter of name ``transfer_learning_task_attr``, whose
+        range are all task IDs. Also, ``transfer_learning_active_task`` must
+        denote the active task, and ``transfer_learning_active_config_space``
+        is used as ``active_config_space`` argument in
         :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`.
         This allows us to use a narrower search space for the active task than
-        for the union of all tasks (`config_space` must be that), which is
+        for the union of all tasks (``config_space`` must be that), which is
         needed if some configurations of non-active tasks lie outside of the
-        ranges in `active_config_space`. One of the implications is that
+        ranges in ``active_config_space``. One of the implications is that
         :meth:`filter_observed_data` is selecting configs of the active task,
         so that incumbents or exclusion lists are restricted to data from the
         active task.
     :type transfer_learning_task_attr: str, optional
-    :param transfer_learning_active_task: See `transfer_learning_task_attr`.
+    :param transfer_learning_active_task: See ``transfer_learning_task_attr``.
     :type transfer_learning_active_task: str, optional
     :param transfer_learning_active_config_space:
-        See `transfer_learning_task_attr`. If not given, `config_space` is the
+        See ``transfer_learning_task_attr``. If not given, ``config_space`` is the
         search space for the active task as well. This active config space need
-        not contain the `transfer_learning_task_attr` parameter. In fact, this
-        parameter is set to a categorical with `transfer_learning_active_task`
+        not contain the ``transfer_learning_task_attr`` parameter. In fact, this
+        parameter is set to a categorical with ``transfer_learning_active_task``
         as single value, so that new configs are chosen for the active task
         only.
     :type transfer_learning_active_config_space: dict, optional
-    :param transfer_learning_model: See `transfer_learning_task_attr`.
+    :param transfer_learning_model: See ``transfer_learning_task_attr``.
         Specifies the surrogate model to be used for transfer learning:
 
         * "matern52_product": Kernel is product of Matern 5/2 (not ARD) on
-          `transfer_learning_task_attr` and Matern 5/2 (ARD) on the rest.
+          ``transfer_learning_task_attr`` and Matern 5/2 (ARD) on the rest.
           Assumes that data from same task are more closely related than
           data from different tasks
         * "matern52_same": Kernel is Matern 5/2 (ARD) on the rest of the
-          variables, `transfer_learning_task_attr` is ignored. Assumes
+          variables, ``transfer_learning_task_attr`` is ignored. Assumes
           that data from all tasks can be merged together
 
         Defaults to "matern52_product"
@@ -659,7 +659,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         else:
             # Internal constructor, bypassing the factory
             # Note: Members which are part of the mutable state, will be
-            # overwritten in `_restore_from_state`
+            # overwritten in ``_restore_from_state``
             kwargs_int = kwargs.copy()
         self._call_create_internal(kwargs_int)
 
@@ -685,7 +685,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
             scheduler, FIFOScheduler
         ), "This searcher requires FIFOScheduler scheduler"
         super().configure_scheduler(scheduler)
-        # Allow model factory to depend on `scheduler` as well
+        # Allow model factory to depend on ``scheduler`` as well
         model_factory = self.state_transformer.model_factory
         model_factory.configure_scheduler(scheduler)
 
@@ -773,22 +773,22 @@ class GPFIFOSearcher(ModelBasedSearcher):
         **kwargs,
     ) -> List[Configuration]:
         """
-        Asks for a batch of `batch_size` configurations to be suggested. This
-        is roughly equivalent to calling `get_config` `batch_size` times,
+        Asks for a batch of ``batch_size`` configurations to be suggested. This
+        is roughly equivalent to calling ``get_config`` ``batch_size`` times,
         marking the suggested configs as pending in the state (but the state
         is not modified here). This means the batch is chosen sequentially,
-        at about the cost of calling `get_config` `batch_size` times.
+        at about the cost of calling ``get_config`` ``batch_size`` times.
 
-        If `num_init_candidates_for_batch` is given, it is used instead
-        of `num_init_candidates` for the selection of all but the first
+        If ``num_init_candidates_for_batch`` is given, it is used instead
+        of ``num_init_candidates`` for the selection of all but the first
         config in the batch. In order to speed up batch selection, choose
-        `num_init_candidates_for_batch` smaller than
-        `num_init_candidates`.
+        ``num_init_candidates_for_batch`` smaller than
+        ``num_init_candidates``.
 
-        If less than `batch_size` configs are returned, the search space
+        If less than ``batch_size`` configs are returned, the search space
         has been exhausted.
 
-        Note: Batch selection does not support `debug_log` right now: make sure
+        Note: Batch selection does not support ``debug_log`` right now: make sure
         to switch this off when creating scheduler and searcher.
         """
         assert round(batch_size) == batch_size and batch_size >= 1
@@ -798,12 +798,12 @@ class GPFIFOSearcher(ModelBasedSearcher):
             if config is not None:
                 configs.append(config)
         else:
-            # `DebugLogWriter` does not support batch selection right now,
+            # ``DebugLogWriter`` does not support batch selection right now,
             # must be switched off
             assert self.debug_log is None, (
-                "`get_batch_configs` does not support debug_log right now. "
-                + "Please set `debug_log=False` in search_options argument "
-                + "of scheduler, or create your searcher with `debug_log=False`"
+                "``get_batch_configs`` does not support debug_log right now. "
+                + "Please set ``debug_log=False`` in search_options argument "
+                + "of scheduler, or create your searcher with ``debug_log=False``"
             )
             exclusion_candidates = self._get_exclusion_candidates(**kwargs)
             pick_random = True
@@ -845,7 +845,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
                     if isinstance(model_factory, dict):
                         model_factory = model_factory[INTERNAL_METRIC_NAME]
                     # We need a copy of the state here, since
-                    # `pending_candidate_state_transformer` modifies the state (it
+                    # ``pending_candidate_state_transformer`` modifies the state (it
                     # appends pending trials)
                     temporary_state = copy.deepcopy(self.state_transformer.state)
                     pending_candidate_state_transformer = ModelStateTransformer(
@@ -881,11 +881,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     def _new_searcher_kwargs_for_clone(self) -> dict:
         """
-        Helper method for `clone_from_state`. Args need to be extended
-        by `model_factory`, `init_state`, `skip_optimization`, and others
+        Helper method for ``clone_from_state``. Args need to be extended
+        by ``model_factory``, ``init_state``, ``skip_optimization``, and others
         args becoming relevant in subclasses only.
 
-        :return: kwargs for creating new searcher object in `clone_from_state`
+        :return: kwargs for creating new searcher object in ``clone_from_state``
         """
         return dict(
             config_space=self.config_space,

@@ -68,17 +68,17 @@ class TunerCallback:
         trial_status_dict: TrialAndStatusInformation,
         new_results: TrialIdAndResultList,
     ):
-        """Called just after `trial_backend.fetch_status_results`
+        """Called just after ``trial_backend.fetch_status_results``
 
-        :param trial_status_dict: Result of `fetch_status_results`
-        :param new_results: Result of `fetch_status_results`
+        :param trial_status_dict: Result of ``fetch_status_results``
+        :param new_results: Result of ``fetch_status_results``
         """
         pass
 
     def on_trial_complete(self, trial: Trial, result: dict):
-        """Called when a trial completes (`Status.completed`)
+        """Called when a trial completes (``Status.completed``)
 
-        The arguments here also have been passed to `scheduler.on_trial_complete`,
+        The arguments here also have been passed to ``scheduler.on_trial_complete``,
         before this call here.
 
         :param trial: Trial that just completed.
@@ -89,14 +89,14 @@ class TunerCallback:
     def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
         """Called when a new result (reported by a trial) is observed
 
-        The arguments here are inputs or outputs of `scheduler.on_trial_result`
+        The arguments here are inputs or outputs of ``scheduler.on_trial_result``
         (called just before).
 
         :param trial: Trial whose report has been received
-        :param status: Status of trial before `scheduler.on_trial_result` has
+        :param status: Status of trial before ``scheduler.on_trial_result`` has
             been called
         :param result: Result dict received
-        :param decision: Decision returned by `scheduler.on_trial_result`
+        :param decision: Decision returned by ``scheduler.on_trial_result``
         """
         pass
 
@@ -114,7 +114,7 @@ class StoreResultsCallback(TunerCallback):
     reported results, and allows to store them as CSV file.
 
     :param add_wallclock_time: If True, wallclock time since call of
-        `on_tuning_start` is stored as
+        ``on_tuning_start`` is stored as
         :const:`~syne_tune.constants.ST_TUNER_TIME`.
     """
 
@@ -158,7 +158,7 @@ class StoreResultsCallback(TunerCallback):
     def store_results(self):
         """
         Store current results into CSV file, of name
-        `{tuner.tuner_path}/results.csv.zip`.
+        ``{tuner.tuner_path}/results.csv.zip``.
         """
         if self.csv_file is not None:
             self.dataframe().to_csv(self.csv_file, index=False)
@@ -171,7 +171,7 @@ class StoreResultsCallback(TunerCallback):
         # and resumed again on a different machine.
         self.csv_file = str(tuner.tuner_path / "results.csv.zip")
 
-        # we only save results every `results_update_frequency` seconds as this operation
+        # we only save results every ``results_update_frequency`` seconds as this operation
         # may be expensive on remote storage.
         self.save_results_at_frequency = RegularCallback(
             lambda: self.store_results(),
@@ -182,5 +182,5 @@ class StoreResultsCallback(TunerCallback):
 
     def on_tuning_end(self):
         # store the results in case some results were not committed yet (since they are saved every
-        # `results_update_interval` seconds)
+        # ``results_update_interval`` seconds)
         self.store_results()

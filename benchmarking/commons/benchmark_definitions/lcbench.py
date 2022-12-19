@@ -15,11 +15,11 @@ from benchmarking.commons.benchmark_definitions.common import (
 )
 
 
-def lcbench_benchmark(dataset_name, datasets=None):
+def lcbench_benchmark(dataset_name: str, datasets=None) -> SurrogateBenchmarkDefinition:
     """
-    The default is to use nearest neighbour regression with `K=1`. If
+    The default is to use nearest neighbour regression with ``K=1``. If
     you use a more sophisticated surrogate, it is recommended to also
-    define `add_surrogate_kwargs`, for example:
+    define ``add_surrogate_kwargs``, for example:
 
     .. code-block:: python
 
@@ -29,9 +29,9 @@ def lcbench_benchmark(dataset_name, datasets=None):
            "fit_differences": ["time"],
        },
 
-    :param dataset_name: Value for `dataset_name`
+    :param dataset_name: Value for ``dataset_name``
     :param datasets: Used for transfer learning
-    :return: :class:`SurrogateBenchmarkDefinition` object
+    :return: Definition of benchmark
     """
     return SurrogateBenchmarkDefinition(
         max_wallclock_time=7200,

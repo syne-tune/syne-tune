@@ -287,7 +287,7 @@ Recommendations
 ---------------
 
 One important parameter of
-:class:`~syne_tune.optimizers.schedulers.searchers.RandomSearcher` (and the
+:class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher` (and the
 other schedulers we use in this tutorial) we did not use is
 ``points_to_evaluate``, which allows specifying initial configurations to
 suggest first. For example:

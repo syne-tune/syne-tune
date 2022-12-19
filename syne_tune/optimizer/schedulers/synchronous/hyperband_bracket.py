@@ -40,7 +40,7 @@ class SynchronousBracket:
     the smaller the number of slots.
 
     A slot is occupied (by a metric value), free, or pending. A pending slot
-    has already been returned by `next_free_slot`. Slots
+    has already been returned by ``next_free_slot``. Slots
     in the lowest rung (smallest rung level, largest size) are filled first.
     At any point in time, only slots in the lowest not fully occupied rung
     can be filled. If there are no free slots in the current rung, but there
@@ -84,7 +84,7 @@ class SynchronousBracket:
     def num_pending_slots(self) -> int:
         """
         :return: Number of pending slots (have been returned by
-            `next_free_slot`, but not yet occupied
+            ``next_free_slot``, but not yet occupied
         """
         if self.is_bracket_complete():
             return 0
@@ -110,9 +110,9 @@ class SynchronousBracket:
 
     def on_result(self, result: SlotInRung) -> bool:
         """
-        Provides result for slot previously requested by `next_free_slot`.
-        Here, `result.metric` is written to the slot in order to make it
-        occupied. Also, `result.trial_id` is written there.
+        Provides result for slot previously requested by ``next_free_slot``.
+        Here, ``result.metric`` is written to the slot in order to make it
+        occupied. Also, ``result.trial_id`` is written there.
 
         :param result: See above
         :return: Has the rung been completely occupied with this result?
@@ -165,8 +165,8 @@ class SynchronousHyperbandBracket(SynchronousBracket):
 
     def __init__(self, rungs: List[Tuple[int, int]], mode: str):
         """
-        :param rungs: List of `(rung_size, level)`, where `level` is rung
-            (resource) level, `rung_size` is rung size (number of slots).
+        :param rungs: List of ``(rung_size, level)``, where ``level`` is rung
+            (resource) level, ``rung_size`` is rung size (number of slots).
             All entries must be positive int's. The list must be increasing
             in the first and decreasing in the second component
         :param mode: Criterion is minimized ('min') or maximized ('max')

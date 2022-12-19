@@ -41,8 +41,8 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
     :param transfer_learning_evaluations: Dictionary from task name to offline
         evaluations.
     :param points_to_evaluate: If given, these configurations are evaluated
-        after `custom_rush_points` and configurations inferred from
-        `transfer_learning_evaluations`. These points are not used to prune
+        after ``custom_rush_points`` and configurations inferred from
+        ``transfer_learning_evaluations``. These points are not used to prune
         any configurations.
     :param custom_rush_points: If given, these configurations are evaluated
         first, in addition to top performing configurations from other tasks

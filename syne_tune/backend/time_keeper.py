@@ -45,8 +45,8 @@ class TimeKeeper:
 
     def advance(self, step: float):
         """
-        Advance time by `step`. For real time, this means we sleep for
-        `step` seconds.
+        Advance time by ``step``. For real time, this means we sleep for
+        ``step`` seconds.
         """
         raise NotImplementedError
 

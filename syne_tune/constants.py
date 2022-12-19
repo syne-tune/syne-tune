@@ -25,7 +25,7 @@ ST_TUNER_CREATION_TIMESTAMP = "st_tuner_creation_timestamp"
 
 ST_TUNER_START_TIMESTAMP = "st_tuner_start_timestamp"
 
-# constants of keys that are written by `report`
+# constants of keys that are written by ``report``
 
 ST_WORKER_ITER = "st_worker_iter"
 """Number of times reporter was called"""  # pylint: disable=W0105
@@ -60,6 +60,6 @@ ST_STATUS = "st_status"
 ST_CHECKPOINT_DIR = "st_checkpoint_dir"
 """Name of config key for checkpoint directory"""  # pylint: disable=W0105
 
-# Name for `upload_dir` in `RemoteTuner`
+# Name for ``upload_dir`` in ``RemoteTuner``
 ST_REMOTE_UPLOAD_DIR_NAME = "tuner"
-"""Name for `upload_dir` in `RemoteTuner`"""  # pylint: disable=W0105
+"""Name for ``upload_dir`` in ``RemoteTuner``"""  # pylint: disable=W0105

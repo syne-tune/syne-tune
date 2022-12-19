@@ -52,7 +52,7 @@ class Trial:
 
 @dataclass
 class TrialResult(Trial):
-    # Metrics recorded for each call of `report`. Each metric is a dictionary from metric name to value (
+    # Metrics recorded for each call of ``report``. Each metric is a dictionary from metric name to value (
     # could be numeric or string, the only constrain is that it must be compatible with json).
     metrics: List[Dict[str, object]]
     status: Literal[

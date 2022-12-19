@@ -67,7 +67,7 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
 * ``kde``: For BOHB (such as :class:`~syne_tune.optimizer.baselines.SyncBOHB`,
   or :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` or
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
-  `searcher="kde"`)
+  ``searcher="kde"``)
 * ``botorch``: Bayesian optimization from BOTorch (see
   :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BotorchSearcher`)
 * ``dev``: For developers who would like to extend Syne Tune
@@ -300,7 +300,7 @@ from scratch. The following schedulers make use of checkpointing:
 
 * Promotion-based asynchronous Hyperband:
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
-  `type="promotion"`, as well as other asynchronous multi-fidelity schedulers.
+  ``type="promotion"``, as well as other asynchronous multi-fidelity schedulers.
   The code runs without checkpointing, but in this case, any trial which is
   resumed is started from scratch. For example, if a trial was paused after 9
   epochs of training and is resumed later, training starts from scratch
@@ -407,7 +407,7 @@ How do I append additional information to the results which are stored?
 =======================================================================
 
 Results are processed and stored by callbacks passed to
-:class:`~syne_tune.Tuner``, in particular see
+:class:`~syne_tune.Tuner`, in particular see
 :class:`~syne_tune.tuner_callback.StoreResultsCallback`. In order to add more
 information, you can inherit from this class. An example is given in
 :class:`~syne_tune.optimizer.schedulers.searchers.searcher_callback.StoreResultsAndModelParamsCallback`.
@@ -632,7 +632,7 @@ To add a new dataset of tabular evaluations, you need to:
   :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench`
   for an example.
 * add your new recipe class in
-  :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.recipes` to make
+  :mod:`syne_tune.blackbox_repository.conversion_scripts.recipes` to make
   it available in Syne Tune.
 
 Further details are given
