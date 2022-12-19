@@ -7,12 +7,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [0.3.3] - 2022-12-19
 
-We release 0.3.3 version which you can install with `pip install syne-tune[extra]`.
+We release version 0.3.3 which you can install with `pip install syne-tune[extra]`.
 
 Thanks to all contributors (sorted by chronological commit order):
-@mseeger, @geoalgo, @aaronkl, @wistuba, @talesa, @hfurkanbozkurt, @rsnirwan,
-@mina-ghashami, @duck105, @ondrejbohdal, @iaroslav-ai, @master, @jgolebioswki,
-@austinmw, @banyikun, @jjaeyeon, @ltiao
+@mseeger, @mina-ghashami, @aaronkl, @jgolebiowski, @Valavanca, @TrellixVulnTeam,
+@geoalgo, @wistuba, @mlblack
 
 ### Added
 * Revamped documentation hosted at https://syne-tune.readthedocs.io
