@@ -162,7 +162,7 @@ def test_blackbox_offline_serialization():
 def test_blackbox_offline_fidelities():
     data = np.concatenate(
         [
-            np.stack([x1, x2, x1 * x2, np.ones_like(x1, dtype=np.int)], axis=1),
+            np.stack([x1, x2, x1 * x2, np.ones_like(x1, dtype=np.int_)], axis=1),
             np.stack(
                 [x1, x2, 0.5 * x1 * x2, 2 * np.ones_like(x1, dtype=np.int)], axis=1
             ),
