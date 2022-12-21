@@ -17,6 +17,7 @@ from autograd import grad
 
 # from autograd.test_util import check_grads
 import time
+import pytest
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.custom_op import (
     cholesky_factorization,
@@ -56,26 +57,18 @@ def _testfunc_mahal_from_xb(xb, use_my):
     return _testfunc_mahal(a, b, use_my)
 
 
-def test_cholesky_factorization():
-    # num_rep = 10
-    # min_n = 100
-    # max_n = 2500
-    # Not so useful for time comparison, but runs faster:
-    num_rep = 8
-    min_n = 10
-    max_n = 250
+@pytest.mark.xdist_group("parallel")
+@pytest.mark.parametrize(
+    "xmat_size",
+    [pytest.param(2**i, marks=pytest.mark.timeout(i - 3)) for i in range(4, 9)],
+)
+def test_cholesky_factorization_logdet(xmat_size: int) -> None:
+    num_rep: int = 8
     grad_logdet_my = grad(lambda x: _testfunc_logdet_from_x(x, use_my=True))
     grad_logdet_cmp = grad(lambda x: _testfunc_logdet_from_x(x, use_my=False))
-    grad_mahal_my = grad(lambda xb: _testfunc_mahal_from_xb(xb, use_my=True))
-    grad_mahal_cmp = grad(lambda xb: _testfunc_mahal_from_xb(xb, use_my=False))
     for rep in range(num_rep):
-        n = np.random.randint(min_n, max_n)
-        xmat = np.random.randn(n, n)
-        # check_grads(
-        #    lambda x: testfunc_logdet_from_x(x, use_my=True),
-        #    modes=['rev'], order=1)(xmat)
-        # logdet
-        print("\nn = {}\nlogdet:".format(n))
+        xmat = np.random.randn(xmat_size, xmat_size)
+        print("\nn = {}\nlogdet:".format(xmat_size))
         ts_start = time.time()
         gval_my = grad_logdet_my(xmat)
         time_my = time.time() - ts_start
@@ -89,8 +82,20 @@ def test_cholesky_factorization():
             )
         )
         assert max_diff_grad_logdet < 1e-12
-        # mahal
-        print("mahal:")
+
+
+@pytest.mark.xdist_group("parallel")
+@pytest.mark.parametrize(
+    "xmat_size",
+    [pytest.param(2**i, marks=pytest.mark.timeout(i - 3)) for i in range(4, 9)],
+)
+def test_cholesky_factorization_mahal(xmat_size: int) -> None:
+    num_rep: int = 8
+    grad_mahal_my = grad(lambda xb: _testfunc_mahal_from_xb(xb, use_my=True))
+    grad_mahal_cmp = grad(lambda xb: _testfunc_mahal_from_xb(xb, use_my=False))
+    for rep in range(num_rep):
+        xmat = np.random.randn(xmat_size, xmat_size)
+        print("\nn = {}\nmahal:".format(xmat_size))
         ts_start = time.time()
         gval_my = grad_mahal_my(xmat)
         time_my = time.time() - ts_start
@@ -107,4 +112,4 @@ def test_cholesky_factorization():
 
 
 if __name__ == "__main__":
-    test_cholesky_factorization()
+    pytest.main([__file__])

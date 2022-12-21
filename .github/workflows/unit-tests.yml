@@ -33,4 +33,4 @@ jobs:
         python -m pip install .[extra] --upgrade pip
     - name: Test with pytest
       run: |
-        pytest
+        pytest -n 2 --dist loadgroup

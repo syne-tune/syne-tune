@@ -45,6 +45,7 @@ def test_likelihood_encoding():
     assert isinstance(likelihood.encoding_noise, PositiveScalarEncoding)
 
 
+@pytest.mark.xdist_group("parallel")
 def test_gp_regression_no_noise():
     def f(x):
         return anp.sin(x) / x
@@ -91,6 +92,7 @@ def test_gp_regression_no_noise():
     # plt.show()
 
 
+@pytest.mark.xdist_group("parallel")
 def test_gp_regression_with_noise():
     def f(x):
         return anp.sin(x) / x

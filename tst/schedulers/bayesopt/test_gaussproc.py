@@ -98,6 +98,7 @@ def _make_model_mcmc(
     return model, gpmodel
 
 
+@pytest.mark.xdist_group("parallel")
 def test_gp_fit(tuning_job_state):
     _set_seeds(0)
     hp_ranges = tuning_job_state.hp_ranges
@@ -128,6 +129,7 @@ def test_gp_fit(tuning_job_state):
 
 
 @pytest.mark.timeout(10)
+@pytest.mark.xdist_group("parallel")
 def test_gp_mcmc_fit(tuning_job_state):
     hp_ranges = make_hyperparameter_ranges({"x": uniform(-4.0, 4.0)})
 
@@ -184,6 +186,7 @@ def _compute_acq_with_gradient_many(acq_func, X_test):
 
 
 @pytest.mark.timeout(10)
+@pytest.mark.xdist_group("parallel")
 def test_gp_fantasizing():
     """
     Compare whether acquisition function evaluations (values, gradients) with
@@ -298,6 +301,7 @@ def default_models() -> List[GaussProcSurrogateModel]:
 
 
 @pytest.mark.timeout(10)
+@pytest.mark.xdist_group("parallel")
 def test_current_best():
     for model in default_models():
         current_best = model.current_best()[0].item()
