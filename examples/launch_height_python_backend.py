@@ -44,7 +44,7 @@ if __name__ == "__main__":
     import logging
 
     root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
+    root.setLevel(logging.INFO)
 
     max_steps = 100
     n_workers = 4
