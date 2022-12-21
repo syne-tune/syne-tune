@@ -65,7 +65,7 @@ if __name__ == "__main__":
         ray_searcher=ray_searcher,
     )
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=30)
+    stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

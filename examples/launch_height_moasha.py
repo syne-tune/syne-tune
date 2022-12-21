@@ -54,7 +54,7 @@ if __name__ == "__main__":
     )
     trial_backend = LocalBackend(entry_point=str(entry_point))
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=30)
+    stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

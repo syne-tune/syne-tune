@@ -100,7 +100,7 @@ if __name__ == "__main__":
     np.random.seed(random_seed)
     scheduler = SimpleScheduler(config_space=config_space, metric=metric)
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=30)
+    stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
