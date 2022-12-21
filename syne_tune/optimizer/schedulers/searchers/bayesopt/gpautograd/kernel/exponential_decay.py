@@ -78,8 +78,8 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         **kwargs
     ):
         """
-        :param kernel_x: Kernel :math:``k_x(x, x')`` over configs
-        :param mean_x: Mean function :math:``\mu_x(x)`` over configs
+        :param kernel_x: Kernel :math:`k_x(x, x')` over configs
+        :param mean_x: Mean function :math:`\mu_x(x)` over configs
         :param encoding_type: Encoding used for ``alpha``, ``mean_lam``, ``gamma``
             (positive values). Defaults to
             :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING``

@@ -50,7 +50,7 @@ class Bore(SearcherWithRandomSeed):
 
     :param mode: Can be "min" (default) or "max".
     :param gamma: Defines the percentile, i.e how many percent of configurations
-        are used to model :math:``l(x)``. Defaults to 0.25
+        are used to model :math:`l(x)`. Defaults to 0.25
     :param calibrate: If set to true, we calibrate the predictions of the
         classifier via CV. Defaults to False
     :param classifier: The binary classifier to model the acquisition

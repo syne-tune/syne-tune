@@ -75,7 +75,7 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
     but expected improvement (EI) is replaced by EIpu (see
     :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl.EIpuAcquisitionFunction`).
 
-    Cost values are read from each report and cost is modeled as :math:``c(x, r)``,
+    Cost values are read from each report and cost is modeled as :math:`c(x, r)`,
     the cost model being given by ``kwargs["cost_model"]``.
 
     Additional arguments on top of parent class
@@ -88,9 +88,9 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
     :type cost_attr: str
     :param resource_attr: Name of resource attribute in reports.
         Cost values are read from each report and cost is modeled as
-        :math:``c(x, r)``, the cost model being given by ``cost_model``.
+        :math:`c(x, r)`, the cost model being given by ``cost_model``.
     :type resource_attr: str
-    :param cost_model: Model for :math:``c(x, r)``
+    :param cost_model: Model for :math:`c(x, r)`
     :type cost_model:
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`, optional
     """

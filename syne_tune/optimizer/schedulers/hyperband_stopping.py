@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RungEntry:
     """
-    :param level: Rung level :math:``r_j``
-    :param prom_quant: romotion quantile :math:``q_j``
+    :param level: Rung level :math:`r_j`
+    :param prom_quant: romotion quantile :math:`q_j`
     :param data: Data of all previous jobs reaching the level
     """
 
@@ -170,9 +170,9 @@ class RungSystem:
 
 class StoppingRungSystem(RungSystem):
     """
-    The decision on whether a trial :math:``\mathbf{x}`` continues or is stopped
-    at a rung level :math:``r``, is taken in :meth:`on_task_report`. To this end,
-    the metric value :math:``f(\mathbf{x}, r)`` is inserted into :math:``r.data``.
+    The decision on whether a trial :math:`\mathbf{x}` continues or is stopped
+    at a rung level :math:`r`, is taken in :meth:`on_task_report`. To this end,
+    the metric value :math:`f(\mathbf{x}, r)` is inserted into :math:`r.data`.
     Then:
 
     .. math::
@@ -196,10 +196,10 @@ class StoppingRungSystem(RungSystem):
         resource: int,
     ) -> bool:
         """
-        :param metric_value: :math:``f(\mathbf{x}, r)`` for trial
-            :math:``\mathbf{x}`` at rung :math:``r``
-        :param recorded: Data for rung :math:``r`` (including
-            :math:``r(\mathbf{x}, r)``)
+        :param metric_value: :math:`f(\mathbf{x}, r)` for trial
+            :math:`\mathbf{x}` at rung :math:`r`
+        :param recorded: Data for rung :math:`r` (including
+            :math:`r(\mathbf{x}, r)`)
         :param prom_quant: Quantile threshold (for mode 'min')
         :param trial_id: ID of trial
         :param resource: Rung level

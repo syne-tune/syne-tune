@@ -173,20 +173,20 @@ class HyperbandScheduler(FIFOScheduler):
     These rung levels (positive, strictly increasing) can be specified via
     ``rung_levels``, the largest must be ``<= max_resource_level``.
     If ``rung_levels`` is not given, they are specified by ``grace_period``
-    and ``reduction_factor``. If :math:``r_{min}`` is ``grace_period``,
-    :math:``\eta`` is ``reduction_factor``, then rung levels are
-    :math:``\mathrm{round}(r_{min} \eta^j), j=0, 1, \dots``.
+    and ``reduction_factor``. If :math:`r_{min}` is ``grace_period``,
+    :math:`\eta` is ``reduction_factor``, then rung levels are
+    :math:`\mathrm{round}(r_{min} \eta^j), j=0, 1, \dots`.
     This is the default choice for successive halving (Hyperband).
     Note: If ``rung_levels`` is given, then ``grace_period``, ``reduction_factor``
     are ignored. If they are given, a warning is logged.
 
     The rung levels determine the quantiles to be used in the stop/go
-    decisions. If rung levels are :math:``r_j``, define
-    :math:``q_j = r_j / r_{j+1}``.
-    :math:``q_j`` is the promotion quantile at rung level :math:``r_j``. On
-    average, a fraction of :math:``q_j`` jobs can continue, the remaining ones
+    decisions. If rung levels are :math:`r_j`, define
+    :math:`q_j = r_j / r_{j+1}`.
+    :math:`q_j` is the promotion quantile at rung level :math:`r_j`. On
+    average, a fraction of :math:`q_j` jobs can continue, the remaining ones
     are stopped (or paused). In the default successive halving case, we have
-    :math:``q_j = 1/\eta`` for all :math:``j``.
+    :math:`q_j = 1/\eta` for all :math:`j`.
 
     **Cost-aware schedulers or searchers**
 
@@ -215,13 +215,13 @@ class HyperbandScheduler(FIFOScheduler):
     to "rungs", pending evaluations sit only at rung levels, because
     observations are only used there. In the other cases, pending evaluations
     sit at all resource levels for which observations are obtained. For
-    example, if a trial is at rung level :math:``r`` and continues towards the
-    next rung level :math:``r_{next}``, if ``searcher_data == "rungs"``,
-    ``searcher.register_pending`` is called for :math:``r_{next}`` only, while for
+    example, if a trial is at rung level :math:`r` and continues towards the
+    next rung level :math:`r_{next}`, if ``searcher_data == "rungs"``,
+    ``searcher.register_pending`` is called for :math:`r_{next}` only, while for
     other ``searcher_data`` values, pending evaluations are registered for
-    :math:``r + 1, r + 2, \dots, r_{next}``.
+    :math:`r + 1, r + 2, \dots, r_{next}`.
     However, if in this case, ``register_pending_myopic`` is True, we instead
-    call ``searcher.register_pending`` for :math:``r + 1`` when each observation is
+    call ``searcher.register_pending`` for :math:`r + 1` when each observation is
     obtained (not just at a rung level). This leads to less pending
     evaluations at any one time. On the other hand, when a trial is continued
     at a rung level, we already know it will emit observations up to the next
@@ -238,7 +238,7 @@ class HyperbandScheduler(FIFOScheduler):
         if ``rung_levels`` is given. Defaults to 1
     :type grace_period: int, optional
     :param reduction_factor: Parameter to determine rung levels. Ignored
-        if ``rung_levels`` is given. Must be :math:``\ge 2``, defaults to 3
+        if ``rung_levels`` is given. Must be :math:`\ge 2`, defaults to 3
     :type reduction_factor: float, optional
     :param rung_levels: If given, prescribes the set of rung levels to
         be used. Must contain positive integers, strictly increasing.

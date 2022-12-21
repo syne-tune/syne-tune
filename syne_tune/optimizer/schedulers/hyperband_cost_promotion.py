@@ -27,30 +27,30 @@ class CostPromotionRungSystem(PromotionRungSystem):
     except the "promotable" condition in :meth:`_find_promotable_trial` is
     replaced.
 
-    When a config :math:``\mathbf{x}`` reaches rung level :math:``r``, the result
-    includes a metric :math:``f(\mathbf{x}, r)``, but also a cost
-    :math:``c(\mathbf{x}, r)``. The latter is the cost (e.g., training time) spent
-    to reach level :math:``r``.
+    When a config :math:`\mathbf{x}` reaches rung level :math:`r`, the result
+    includes a metric :math:`f(\mathbf{x}, r)`, but also a cost
+    :math:`c(\mathbf{x}, r)`. The latter is the cost (e.g., training time) spent
+    to reach level :math:`r`.
 
-    Consider all trials who reached rung level :math:``r`` (whether promoted from
-    there or still paused there), ordered w.r.t. :math:``f(\mathbf{x}, r)``, best
-    first, and let their number be :math:``N``. Define
+    Consider all trials who reached rung level :math:`r` (whether promoted from
+    there or still paused there), ordered w.r.t. :math:`f(\mathbf{x}, r)`, best
+    first, and let their number be :math:`N`. Define
 
     .. math::
 
        C(r, k) = \sum_{i\le k} c(\mathbf{x}_i, r)
 
-    For a promotion quantile :math:``q``, define
+    For a promotion quantile :math:`q`, define
 
     .. math::
 
         K = \max_k \mathrm{I}[ C(r, k) \le q  C(r, N) ]
 
-    Any trial not yet promoted and ranked :math:``\le K`` can be promoted.
+    Any trial not yet promoted and ranked :math:`\le K` can be promoted.
     As usual, we scan rungs from the top. If several trials are promotable,
     the one with the best metric value is promoted.
 
-    Note that costs :math:``c(\mathbf{x}, r)`` reported via ``cost_attr`` need to
+    Note that costs :math:`c(\mathbf{x}, r)` reported via ``cost_attr`` need to
     be total costs of a trial. If the trial is paused and resumed, partial costs
     have to be added up. See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     for how this works.

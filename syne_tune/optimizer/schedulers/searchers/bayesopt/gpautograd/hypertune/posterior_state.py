@@ -86,15 +86,15 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
     """
     Special case of :class:`IndependentGPPerResourcePosteriorState`, where
     methods ``predict``, ``backward_gradient``, ``sample_marginals``, ``sample_joint``
-    are over a random function :math:``f_{MF}(x)``, obtained by first sampling the
-    resource level :math:``r \\sim [\\theta_r]``, then use
-    :math:``f_{MF}(x) = f(x, r)``. Predictive means and variances are:
+    are over a random function :math:`f_{MF}(x)`, obtained by first sampling the
+    resource level :math:`r \\sim [\\theta_r]`, then use
+    :math:`f_{MF}(x) = f(x, r)`. Predictive means and variances are:
 
     ..math::
         \\mu_{MF}(x) = \\sum_r \\theta_r \\mu(x, r)
         \\sigma_{MF}^2(x) = \\sum_r \\theta_r^2 \\sigma_{MF}^2(x, r)
 
-    Here, :math:``[\\theta_k]`` is a distribution over a subset of rung levels.
+    Here, :math:`[\\theta_k]` is a distribution over a subset of rung levels.
 
     Note: This posterior state is unusual, in that ``sample_marginals``,
     ``sample_joint`` have to work both with (a) extended inputs (x, r) and (b)
@@ -119,7 +119,7 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
     ):
         """
         ``ensemble_distribution`` contains non-zero entries of the distribution
-        :math:``[\\theta_k]``. All resource levels supported there must have
+        :math:`[\\theta_k]`. All resource levels supported there must have
         sufficient data in order to allow for predictions.
         """
         super().__init__(
@@ -245,15 +245,15 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
     """
     Special case of :class:`GaussProcPosteriorState`, where methods ``predict``,
     ``backward_gradient``, ``sample_marginals``, ``sample_joint`` are over a random
-    function :math:``f_{MF}(x)``, obtained by first sampling the resource level
-    :math:``r \\sim [\\theta_r]``, then use :math:``f_{MF}(x) = f(x, r)``.
+    function :math:`f_{MF}(x)`, obtained by first sampling the resource level
+    :math:`r \\sim [\\theta_r]`, then use :math:`f_{MF}(x) = f(x, r)`.
     Predictive means and variances are:
 
     ..math::
         \\mu_{MF}(x) = \\sum_r \\theta_r \\mu(x, r)
         \\sigma_{MF}^2(x) = \\sum_r \\theta_r^2 \\sigma_{MF}^2(x, r)
 
-    Here, :math:``[\\theta_k]`` is a distribution over a subset of rung levels.
+    Here, :math:`[\\theta_k]` is a distribution over a subset of rung levels.
 
     Note: This posterior state is unusual, in that ``sample_marginals``,
     ``sample_joint`` have to work both with (a) extended inputs (x, r) and (b)
@@ -277,7 +277,7 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
     ):
         """
         ``ensemble_distribution`` contains non-zero entries of the distribution
-        :math:``[\\theta_k]``. All resource levels supported there must have
+        :math:`[\\theta_k]`. All resource levels supported there must have
         sufficient data in order to allow for predictions.
         """
         super().__init__(
