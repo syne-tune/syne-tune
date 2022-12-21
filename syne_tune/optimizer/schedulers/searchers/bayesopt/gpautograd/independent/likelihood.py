@@ -55,7 +55,7 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import (
 
 class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
     """
-    Marginal likelihood for GP multi-fidelity model over :msth:``f(x, r)``,
+    Marginal likelihood for GP multi-fidelity model over :math:`f(x, r)`,
     where for each :math:`r`, :math:`f(x, r)` is represented by an independent
     GP. The different processes share the same kernel, but have their own mean
     functions :math:`\mu_r` and covariance scales :math:`c_r`.
