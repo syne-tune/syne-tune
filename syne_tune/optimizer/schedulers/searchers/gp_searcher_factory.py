@@ -607,7 +607,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     based on ``kwargs`` equal to ``search_options`` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
-    This is for the coarse-grained variant, where costs :math:``c(x)`` are obtained
+    This is for the coarse-grained variant, where costs :math:`c(x)` are obtained
     together with metric values and are given a GP surrogate model.
 
     :param kwargs: ``search_options`` coming from scheduler
@@ -663,7 +663,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
     based on ``kwargs`` equal to ``search_options`` passed to and extended by
     scheduler (see :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`).
 
-    This is for the fine-grained variant, where costs :math:``c(x, r)`` are
+    This is for the fine-grained variant, where costs :math:`c(x, r)` are
     obtained with each report and are represented by a
     :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`
     surrogate model.

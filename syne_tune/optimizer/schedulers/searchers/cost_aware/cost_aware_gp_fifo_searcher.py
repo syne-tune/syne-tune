@@ -65,11 +65,11 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
     requires a cost metric, which is given by ``cost_attr``.
 
     Implements two different variants. If ``resource_attr`` is given, cost values
-    are read from each report and cost is modeled as :math:``c(x, r)``, the cost
+    are read from each report and cost is modeled as :math:`c(x, r)`, the cost
     model being given by ``kwargs["cost_model"]``.
 
     If ``resource_attr`` is not given, cost values are read only at the end (just
-    like the primary metric) and cost is modeled as :math:``c(x)``, using a
+    like the primary metric) and cost is modeled as :math:`c(x)`, using a
     default GP surrogate model.
 
     Note: The presence or absence of ``resource_attr`` decides on which variant
@@ -86,14 +86,14 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
     :type cost_attr: str
     :param resource_attr: Name of resource attribute in reports, optional.
         If this is given, cost values are read from each report and cost is
-        modeled as :math:``c(x, r)``, the cost model being given by ``cost_model``.
+        modeled as :math:`c(x, r)`, the cost model being given by ``cost_model``.
         If not given, cost values are read only at the end (just like the
-        primary metric) and cost is modeled as :math:``c(x)``, using a default
+        primary metric) and cost is modeled as :math:`c(x)`, using a default
         GP surrogate model.
     :type resource_attr: str, optional
     :param cost_model: Needed if ``resource_attr`` is given, model for
-        :math:``c(x, r)``. Ignored if ``resource_attr`` is not given, since
-        :math:``c(x)`` is represented by a default GP surrogate model.
+        :math:`c(x, r)`. Ignored if ``resource_attr`` is not given, since
+        :math:`c(x)` is represented by a default GP surrogate model.
     :type cost_model:
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`, optional
     """

@@ -37,17 +37,17 @@ def decode_resource_values(res_encoded, num_folds):
 
 class CrossValidationKernelFunction(KernelFunction):
     """
-    Kernel function suitable for :math:``f(x, r)`` being the average of ``r``
+    Kernel function suitable for :math:`f(x, r)` being the average of ``r``
     validation metrics evaluated on different (train, validation) splits.
 
-    More specifically, there are 'num_folds`` such splits, and :math:``f(x, r)``
+    More specifically, there are 'num_folds`` such splits, and :math:`f(x, r)`
     is the average over the first ``r`` of them.
 
-    We model the score on fold ``k`` as :math:``e_k(x) = f(x) + g_k(x)``,
-    where :math:``f(x)`` and the :math:``g_k(x)`` are a priori independent Gaussian
-    processes with kernels ``kernel_main`` and ``kernel_residual`` (all :math:``g_k``
-    share the same kernel). Moreover, the :math:``g_k`` are zero-mean, while
-    :math:``f(x)`` may have a mean function. Then:
+    We model the score on fold ``k`` as :math:`e_k(x) = f(x) + g_k(x)`,
+    where :math:`f(x)` and the :math:`g_k(x)` are a priori independent Gaussian
+    processes with kernels ``kernel_main`` and ``kernel_residual`` (all :math:`g_k`
+    share the same kernel). Moreover, the :math:`g_k` are zero-mean, while
+    :math:`f(x)` may have a mean function. Then:
 
     .. math::
 
@@ -56,9 +56,9 @@ class CrossValidationKernelFunction(KernelFunction):
        k((x, r), (x', r')) = k_{main}(x, x') +
           \frac{k_{residual}(x, x')}{\mathrm{max}(r, r')}
 
-    Note that ``kernel_main``, ``kernel_residual`` are over inputs :math:``x``
+    Note that ``kernel_main``, ``kernel_residual`` are over inputs :math:`x`
     (dimension ``d``), while the kernel represented here is over inputs
-    :math:``(x, r)`` of dimension ``d + 1``, where the resource attribute :math:``r``
+    :math:`(x, r)` of dimension ``d + 1``, where the resource attribute :math:`r`
     (number of folds) is last.
 
     Inputs are encoded. We assume a linear encoding for r with bounds 1 and
@@ -77,9 +77,9 @@ class CrossValidationKernelFunction(KernelFunction):
         **kwargs,
     ):
         """
-        :param kernel_main: Kernel for main effect :math:``f(x)``
-        :param kernel_residual: Kernel for residuals :math:``g_k(x)``
-        :param mean_main: Mean function for main effect :math:``f(x)``
+        :param kernel_main: Kernel for main effect :math:`f(x)`
+        :param kernel_residual: Kernel for residuals :math:`g_k(x)`
+        :param mean_main: Mean function for main effect :math:`f(x)`
         :param num_folds: Maximum number of folds: ``1 <= r <= num_folds``
         """
         super().__init__(dimension=kernel_main.dimension + 1, **kwargs)

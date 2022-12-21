@@ -182,9 +182,9 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
 
        \mathrm{EIpu}(x) = \frac{\mathrm{EI(x)}}{\mathrm{power}(\mathrm{cost}(x), \mathrm{exponent_cost})},
 
-    where :math:``\mathrm{EI}(x)`` is expected improvement, :math:``\mathrm{cost}(x)``
+    where :math:`\mathrm{EI}(x)` is expected improvement, :math:`\mathrm{cost}(x)`
     is the predictive mean of a cost model, and ``exponent_cost`` is an exponent in
-    :math:``(0, 1]``.
+    :math:`(0, 1]`.
 
     ``exponent_cost`` scales the influence of the cost term on the acquisition
     function. See also:

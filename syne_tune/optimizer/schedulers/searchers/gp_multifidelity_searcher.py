@@ -58,16 +58,16 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     Most of :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
     comments apply here as well. In multi-fidelity HPO, we optimize a function
-    :math:``f(\mathbf{x}, r)``, :math:``\mathbf{x}`` the configuration, :math:``r``
+    :math:`f(\mathbf{x}, r)`, :math:`\mathbf{x}` the configuration, :math:`r`
     the resource (or time) attribute. The latter must be a positive integer.
     In most applications, ``resource_attr == "epoch"``, and the resource is the
     number of epochs already trained.
 
     If ``model == "gp_multitask"`` (default), we model the function
-    :math:``f(\mathbf{x}, r)`` jointly over all resource levels :math:``r`` at
+    :math:`f(\mathbf{x}, r)` jointly over all resource levels :math:`r` at
     which it is observed (but see ``searcher_data`` in
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`). The kernel
-    and mean function of our surrogate model are over :math:``(\mathbf{x}, r)``.
+    and mean function of our surrogate model are over :math:`(\mathbf{x}, r)`.
     The surrogate model is selected by ``gp_resource_kernel``. More details about
     the supported kernels is in:
 
@@ -76,12 +76,12 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         | https://openreview.net/forum?id=a2rFihIU7i
 
     The acquisition function (EI) which is optimized in :meth:`get_config`, is
-    obtained by fixing the resource level :math:``r`` to a value which is
+    obtained by fixing the resource level :math:`r` to a value which is
     determined depending on the current state. If ``resource_acq`` == 'bohb',
-    :math:``r`` is the largest value ``<= max_t``, where we have seen
-    :math:``\ge \mathrm{dimension}(\mathbf{x})`` metric values. If
-    ``resource_acq == "first"``, :math:``r`` is the first milestone which config
-    :math:``\mathbf{x}`` would reach when started.
+    :math:`r` is the largest value ``<= max_t``, where we have seen
+    :math:`\ge \mathrm{dimension}(\mathbf{x})` metric values. If
+    ``resource_acq == "first"``, :math:`r` is the first milestone which config
+    :math:`\mathbf{x}` would reach when started.
 
     Additional arguments on top of parent class
     :class:`~syne_tune,optimizer.schedulers.searchers.GPFIFOSearcher`.
@@ -98,13 +98,13 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     :type model: str, optional
     :param gp_resource_kernel: Only relevant for ``model == "gp_multitask"``.
-        Surrogate model over criterion function :math:``f(\mathbf{x}, r)``,
-        :math:``\mathbf{x}`` the config, :math:``r`` the resource. Note that
-        :math:``\mathbf{x}`` is encoded to be a vector with entries in ``[0, 1]``,
-        and :math:``r`` is linearly mapped to ``[0, 1]``, while the criterion data
+        Surrogate model over criterion function :math:`f(\mathbf{x}, r)`,
+        :math:`\mathbf{x}` the config, :math:`r` the resource. Note that
+        :math:`\mathbf{x}` is encoded to be a vector with entries in ``[0, 1]``,
+        and :math:`r` is linearly mapped to ``[0, 1]``, while the criterion data
         is normalized to mean 0, variance 1. The reference above provides details
         on the models supported here. For the exponential decay kernel, the
-        base kernel over :math:``\mathbf{x}`` is Matern 5/2 ARD. See
+        base kernel over :math:`\mathbf{x}` is Matern 5/2 ARD. See
         :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory.SUPPORTED_RESOURCE_MODELS`
         for supported choices. Defaults to "exp-decay-sum"
     :type gp_resource_kernel: str, optional

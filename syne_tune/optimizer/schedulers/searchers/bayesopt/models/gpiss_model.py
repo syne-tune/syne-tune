@@ -59,7 +59,7 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
     Note: :meth:`predict_mean_current_candidates` calls :meth:`predict` for all
     observed and pending extended configs. This may not be exactly
     correct, because :meth:`predict` is not meant to be used for configs
-    which have observations (it IS correct at :math:``r = r_{max}``).
+    which have observations (it IS correct at :math:`r = r_{max}`).
 
     ``fantasy_samples`` contains the sampled (normalized) target values for
     pending configs. Only ``active_metric`` target values are considered.

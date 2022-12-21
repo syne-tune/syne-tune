@@ -65,7 +65,7 @@ class PosteriorStateClampedResource(
 
     :param poster_state_extended: Posterior state over extended inputs
     :param resource: Value to which resource attribute is clamped
-    :param resource_attr_range: :math:``(r_{min}, r_{max})``
+    :param resource_attr_range: :math:`(r_{min}, r_{max})`
     """
 
     def __init__(

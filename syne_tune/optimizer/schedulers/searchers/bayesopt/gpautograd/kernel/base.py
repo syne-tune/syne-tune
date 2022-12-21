@@ -60,7 +60,7 @@ class KernelFunction(MeanFunction):
     def diagonal(self, X):
         """
         :param X: Input data, shape ``(n, d)``
-        :return: Diagonal of :math:``k(X, X)``, shape ``(n,)``
+        :return: Diagonal of :math:`k(X, X)`, shape ``(n,)``
         """
         raise NotImplementedError
 
@@ -88,11 +88,11 @@ class SquaredDistance(Block):
 
        \mathbf{X}_1 = [x_{1: i j}],\quad \mathbf{X}_2 = [x_{2: i j}]
 
-    Here, :math:``[ib_k]`` is the vector :attr:`inverse_bandwidth`.
+    Here, :math:`[ib_k]` is the vector :attr:`inverse_bandwidth`.
     if ``ARD == False``, ``inverse_bandwidths`` is equal to a scalar broadcast to the
     d components (with ``d = dimension``, i.e., the number of features in ``X``).
 
-    :param dimension: Dimensionality :math:``d`` of input vectors
+    :param dimension: Dimensionality :math:`d` of input vectors
     :param ARD: Automatic relevance determination (``inverse_bandwidth`` vector
         of size ``d``)? Defaults to ``False``
     :param encoding_type: Encoding for ``inverse_bandwidth``. Defaults to

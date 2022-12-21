@@ -1269,7 +1269,7 @@ def reverseloguniform(lower: float, upper: float):
 
     :paam lower: Lower boundary of the output interval (e.g. 0.99)
     :param upper: Upper boundary of the output interval (e.g. 0.9999)
-    :return: :class:``Float`` object
+    :return: ``Float`` object
     """
     return Float(lower, upper).reverseloguniform()
 

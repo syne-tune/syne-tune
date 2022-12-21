@@ -202,12 +202,12 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
         :meth:`on_trial_result`. The type of resource must be int. Default to
         "epoch"
     :type resource_attr: str, optional
-    :param mutation_factor: In :math:``(0, 1]``. Factor :math:``F`` used in the rand/1
+    :param mutation_factor: In :math:`(0, 1]`. Factor :math:`F` used in the rand/1
         mutation operation of DE. Default to 0.5
     :type mutation_factor: float, optional
-    :param crossover_probability: In :math:``(0, 1)``. Probability :math:``p`` used
+    :param crossover_probability: In :math:`(0, 1)`. Probability :math:`p` used
         in crossover operation (child entries are chosen with probability
-        :math:``p``). Defaults to 0.5
+        :math:`p`). Defaults to 0.5
     :type crossover_probability: float, optional
     :param support_pause_resume: If ``True``, :meth:`_suggest` supports pause and
         resume in the first bracket (this is the default). If the objective

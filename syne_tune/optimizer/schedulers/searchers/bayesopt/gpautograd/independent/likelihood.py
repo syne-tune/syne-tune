@@ -56,15 +56,15 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import (
 class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
     """
     Marginal likelihood for GP multi-fidelity model over :msth:``f(x, r)``,
-    where for each :math:``r``, :math:``f(x, r)`` is represented by an independent
+    where for each :math:`r`, :math:`f(x, r)` is represented by an independent
     GP. The different processes share the same kernel, but have their own mean
-    functions :math:``\mu_r`` and covariance scales :math:``c_r``.
+    functions :math:`\mu_r` and covariance scales :math:`c_r`.
     If ``separate_noise_variances == True``, each process has its own noise
     variance, otherwise all processes share the same noise variance.
 
-    :param kernel: Shared kernel function :math:``k(x, x')``
-    :param mean: Maps rung level :math:``r`` to mean function :math:``\mu_r``
-    :param resource_attr_range: :math:``(r_{min}, r_{max})``
+    :param kernel: Shared kernel function :math:`k(x, x')`
+    :param mean: Maps rung level :math:`r` to mean function :math:`\mu_r`
+    :param resource_attr_range: :math:`(r_{min}, r_{max})`
     :param separate_noise_variances: See above. Defaults to ``False``
     :param initial_noise_variance: Initial value for noise variance(s).
         Defaults to

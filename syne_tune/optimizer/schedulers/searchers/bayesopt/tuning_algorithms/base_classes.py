@@ -154,20 +154,20 @@ class SurrogateModel:
         self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> List[np.ndarray]:
         """
-        Computes the gradient :math:``\nabla f(x)`` for an acquisition
-        function :math:``f(x)``, where :math:``x`` is a single input point. This
+        Computes the gradient :math:`\nabla f(x)` for an acquisition
+        function :math:`f(x)`, where :math:`x` is a single input point. This
         is using reverse mode differentiation, the head gradients are passed
         by the acquisition function. The head gradients are
-        :math:``\partial_k f``, where :math:``k`` runs over the statistics
-        returned by :meth:`predict` for the single input point :math:``x``.
+        :math:`\partial_k f`, where :math:`k` runs over the statistics
+        returned by :meth:`predict` for the single input point :math:`x`.
         The shape of head gradients is the same as the shape of the
         statistics.
 
         Lists have ``> 1`` entry if MCMC is used, otherwise they are all size 1.
 
-        :param input: Single input point :math:``x``, shape ``(d,)``
+        :param input: Single input point :math:`x`, shape ``(d,)``
         :param head_gradients: See above
-        :return: Gradient :math:``\nabla f(x)`` (several if MCMC is used)
+        :return: Gradient :math:`\nabla f(x)` (several if MCMC is used)
         """
         raise NotImplementedError
 
@@ -200,7 +200,7 @@ class ScoringFunction:
 
 class AcquisitionFunction(ScoringFunction):
     """
-    Base class for acquisition functions :math:``f(x)``.
+    Base class for acquisition functions :math:`f(x)`.
 
     :param model: Surrogate model providing predictive statistics (e.g.,
         mean, variance)
@@ -231,12 +231,12 @@ class AcquisitionFunction(ScoringFunction):
         self, input: np.ndarray, model: Optional[SurrogateOutputModel] = None
     ) -> Tuple[float, np.ndarray]:
         """
-        For a single input point :math:``x``, compute acquisition function value
-        :math:``f(x)`` and gradient :math:``\nabla f(x)``.
+        For a single input point :math:`x`, compute acquisition function value
+        :math:`f(x)` and gradient :math:`\nabla f(x)`.
 
-        :param input: Single input point :math:``x``, shape ``(d,)``
+        :param input: Single input point :math:`x`, shape ``(d,)``
         :param model: If given, overrides ``self.model``
-        :return: :math:``(f(x), \nabla f(x))``
+        :return: :math:`(f(x), \nabla f(x))`
         """
         raise NotImplementedError
 
