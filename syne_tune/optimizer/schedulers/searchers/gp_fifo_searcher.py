@@ -52,7 +52,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
     TuningJobState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
-    TransformerModelFactory,
     TransformerOutputModelFactory,
     ModelStateTransformer,
 )
