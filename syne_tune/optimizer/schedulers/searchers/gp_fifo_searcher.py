@@ -53,6 +53,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
     TransformerModelFactory,
+    TransformerOutputModelFactory,
     ModelStateTransformer,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
@@ -130,7 +131,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def _create_internal(
         self,
         hp_ranges: HyperparameterRanges,
-        model_factory: TransformerModelFactory,
+        model_factory: TransformerOutputModelFactory,
         acquisition_class: AcquisitionClassAndArgs,
         map_reward: Optional[MapReward] = None,
         init_state: TuningJobState = None,
@@ -155,7 +156,11 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         else:
             self.local_minimizer_class = local_minimizer_class
         self.acquisition_class = acquisition_class
-        self._debug_log = model_factory.debug_log
+        if isinstance(model_factory, dict):
+            model_factory_main = model_factory[INTERNAL_METRIC_NAME]
+        else:
+            model_factory_main = model_factory
+        self._debug_log = model_factory_main.debug_log
         self.initial_scoring = check_initial_candidates_scorer(initial_scoring)
         self.skip_local_optimization = skip_local_optimization
         # Create state transformer
@@ -170,14 +175,14 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self.random_generator = RandomStatefulCandidateGenerator(
             self._hp_ranges_for_prediction(), random_state=self.random_state
         )
-        self.set_profiler(model_factory.profiler)
+        self.set_profiler(model_factory_main.profiler)
         self._cost_attr = cost_attr
         self._resource_attr = resource_attr
         self._filter_observed_data = filter_observed_data
         self._random_searcher = None
         # Tracks the cumulative time spent in ``get_config`` calls
         self.cumulative_get_config_time = 0
-        if model_factory.debug_log is not None:
+        if self._debug_log is not None:
             deb_msg = "[ModelBasedSearcher.__init__]\n"
             deb_msg += "- acquisition_class = {}\n".format(acquisition_class)
             deb_msg += "- local_minimizer_class = {}\n".format(local_minimizer_class)
@@ -687,7 +692,12 @@ class GPFIFOSearcher(ModelBasedSearcher):
         super().configure_scheduler(scheduler)
         # Allow model factory to depend on ``scheduler`` as well
         model_factory = self.state_transformer.model_factory
-        model_factory.configure_scheduler(scheduler)
+        if isinstance(model_factory, dict):
+            model_factories = list(model_factory.values())
+        else:
+            model_factories = [model_factory]
+        for model_factory in model_factories:
+            model_factory.configure_scheduler(scheduler)
 
     def register_pending(
         self, trial_id: str, config: Optional[dict] = None, milestone=None
@@ -841,15 +851,12 @@ class GPFIFOSearcher(ModelBasedSearcher):
                     # Internally, if num_requested_candidates > 1, the candidates are
                     # selected greedily. This needs model updates after each greedy
                     # selection, because of one more pending evaluation.
-                    model_factory = self.state_transformer._model_factory
-                    if isinstance(model_factory, dict):
-                        model_factory = model_factory[INTERNAL_METRIC_NAME]
                     # We need a copy of the state here, since
                     # ``pending_candidate_state_transformer`` modifies the state (it
                     # appends pending trials)
                     temporary_state = copy.deepcopy(self.state_transformer.state)
                     pending_candidate_state_transformer = ModelStateTransformer(
-                        model_factory=model_factory,
+                        model_factory=self.state_transformer.model_factory,
                         init_state=temporary_state,
                         skip_optimization=AlwaysSkipPredicate(),
                     )
