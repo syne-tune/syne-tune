@@ -205,7 +205,7 @@ SageMaker managed warm pools:
 Managed warm pools reduce both start-up and stop delays substantially, they
 are strongly recommended for multi-fidelity HPO with the SageMaker backend.
 More details are found in
-`this tutorial <tutorials/benchmarking/bm_sagemaker.rst#using-sageMaker-managed-warm-pools>`__.
+`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sageMaker-managed-warm-pools>`__.
 
 Retrieving the best checkpoint
 ==============================

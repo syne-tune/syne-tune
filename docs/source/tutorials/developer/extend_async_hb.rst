@@ -6,13 +6,13 @@ methods like successive halving and Hyperband. These can be run with
 synchronous or asynchronous decision-making. The most important generic
 templates at the moment are:
 
-* `FIFOScheduler <random_search.md#fifoscheduler-and-randomsearcher>`__:
+* `FIFOScheduler <random_search.html#fifoscheduler-and-randomsearcher>`__:
   *Full evaluation* scheduler, baseclass for many others. See also
   :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
-* `HyperbandScheduler <extend_async_hb.md#hyperbandscheduler>`__:
+* `HyperbandScheduler <extend_async_hb.html#hyperbandscheduler>`__:
   Asynchronous successive halving and Hyperband. See also
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
-* `SynchronousHyperbandScheduler <extend_sync_hb.md#synchronous-hyperband>`__:
+* `SynchronousHyperbandScheduler <extend_sync_hb.html#synchronous-hyperband>`__:
   Synchronous successive halving and Hyperband. See also
   :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
 
