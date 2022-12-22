@@ -179,6 +179,9 @@ You need to `setup SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
 before being able to use the SageMaker backend. More details are provided
 in `this tutorial <tutorials/basics/basics_backend.html>`__.
 
+This example can be sped up by using SageMaker managed warm pools, as in
+`this example <#sagemaker-backend-and-checkpointing>`__.
+
 
 SageMaker Backend and Checkpointing
 ===================================
@@ -205,7 +208,8 @@ SageMaker managed warm pools:
 Managed warm pools reduce both start-up and stop delays substantially, they
 are strongly recommended for multi-fidelity HPO with the SageMaker backend.
 More details are found in
-`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sageMaker-managed-warm-pools>`__.
+`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`__.
+
 
 Retrieving the best checkpoint
 ==============================
@@ -215,6 +219,7 @@ Retrieving the best checkpoint
    :lines: 13-
 
 Example showing how to retrieve the best checkpoint obtained after tuning.
+
 
 Launch with SageMaker Backend and Custom Docker Image
 =====================================================

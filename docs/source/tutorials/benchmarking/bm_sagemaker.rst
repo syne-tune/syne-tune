@@ -108,6 +108,9 @@ used with ``hpo_main.py``. For the example above:
 The warm pool feature is most useful with multi-fidelity HPO methods (such as
 ``ASHA`` and ``MOBSTER`` in our example). Some points you should be aware of:
 
+* When using SageMaker managed warm pools with the SageMaker back-end, it is
+  important to use ``start_jobs_without_delay=False`` when creating the
+  :class:`~syne_tune.Tuner`.
 * Warm pools are a billable resource, and you may incur extra costs. You have
   to request warm pool quota increases for instance types you would like to
   use. For our example, you need to have quotas for (at least) four

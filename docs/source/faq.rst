@@ -637,3 +637,15 @@ To add a new dataset of tabular evaluations, you need to:
 
 Further details are given
 `here <tutorials/benchmarking/bm_contributing.html#contributing-a-tabulated-benchmark>`__.
+
+How can I reduce delays in starting trials with the SageMaker backend?
+======================================================================
+
+The SageMaker backend executes each trial as a SageMaker training job, which
+encurs start-up delays up to several minutes. These delays can be reduced to
+about 20 seconds with
+`SageMaker managed warm pools <https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html>`__,
+as is detailed in
+`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`__
+or `this example <examples.html#sagemaker-backend-and-checkpointing>`__. We
+strongly recommend to use managed warm pools with the SageMaker backend.
