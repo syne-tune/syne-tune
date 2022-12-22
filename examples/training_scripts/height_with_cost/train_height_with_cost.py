@@ -20,6 +20,7 @@ import time
 import math
 
 from syne_tune import Reporter
+from syne_tune.backend.sagemaker_backend.estimators import DEFAULT_CPU_INSTANCE_SMALL
 from syne_tune.config_space import randint, add_to_argparse
 from benchmarking.utils import (
     resume_from_checkpointed_model,
@@ -41,10 +42,6 @@ def height_with_cost_default_params(params=None):
         "max_resource_level": 100,
         "grace_period": 1,
         "reduction_factor": 3,
-        "instance_type": "ml.m5.large",
-        "num_workers": 4,
-        "framework": "PyTorch",
-        "framework_version": "1.6",
         "dont_sleep": dont_sleep,
     }
 

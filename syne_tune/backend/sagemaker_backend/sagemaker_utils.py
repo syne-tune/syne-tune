@@ -23,8 +23,8 @@ from typing import List, Tuple, Dict, Optional
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
-from sagemaker.estimator import Framework
 from sagemaker import Session
+from sagemaker.estimator import Framework
 
 import syne_tune
 from syne_tune.backend.trial_status import TrialResult
@@ -101,10 +101,12 @@ def decode_sagemaker_hyperparameter(hp: str):
 def sagemaker_search(
     trial_ids_and_names: List[Tuple[int, str]],
     sm_client=None,
+    log_client=None,
 ) -> List[TrialResult]:
     """
     :param trial_ids_and_names: Trial ids and sagemaker jobnames to retrieve information from
-    :param sm_client:
+    :param sm_client: Sagemaker client used to search for jobs
+    :param sm_client: Log client used to query lob logs
     :return: list of dictionary containing job information (status, creation-time, metrics, hyperparameters etc).
     In term of speed around 100 jobs can be retrieved per second.
     """
@@ -155,7 +157,7 @@ def sagemaker_search(
             # Sagemaker encodes hyperparameters as literals, we evaluate them to retrieve the original type
             hps = {k: decode_sagemaker_hyperparameter(v) for k, v in hps.items()}
 
-            metrics = retrieve(log_lines=get_log(name))
+            metrics = retrieve(log_lines=get_log(name, log_client=log_client))
 
             trial_id = name_to_trialid_dict[name]
 

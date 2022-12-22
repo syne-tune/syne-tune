@@ -18,19 +18,19 @@ from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist imp
     METRIC_NAME,
     RESOURCE_ATTR,
 )
+from syne_tune.backend.sagemaker_backend.estimators import DEFAULT_CPU_INSTANCE
 
 
 def mlp_fashionmnist_default_params() -> dict:
     return {
         "max_resource_level": 81,
-        "instance_type": "ml.c5.4xlarge",
+        "instance_type": DEFAULT_CPU_INSTANCE,
         "num_workers": 4,
         "dataset_path": "./",
         "report_current_best": "False",
     }
 
 
-# Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def mlp_fashionmnist_benchmark(sagemaker_backend: bool = False, **kwargs):
     params = mlp_fashionmnist_default_params()
     config_space = dict(
@@ -53,10 +53,6 @@ def mlp_fashionmnist_benchmark(sagemaker_backend: bool = False, **kwargs):
         max_resource_attr="epochs",
         resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
-        estimator_kwargs=dict(
-            framework_version="1.7.1",
-            py_version="py3",
-        ),
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)
