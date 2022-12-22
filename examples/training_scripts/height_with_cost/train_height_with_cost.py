@@ -13,22 +13,20 @@
 """
 Derived from `train_height.py`, but add variable cost (elapsed time).
 """
-import os
 import argparse
 import logging
-import time
 import math
+import os
+import time
 
-from syne_tune import Reporter
-from syne_tune.backend.sagemaker_backend.estimators import DEFAULT_CPU_INSTANCE_SMALL
-from syne_tune.config_space import randint, add_to_argparse
 from benchmarking.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
     add_checkpointing_to_argparse,
     parse_bool,
 )
-
+from syne_tune import Reporter
+from syne_tune.config_space import randint, add_to_argparse
 
 _config_space = {
     "width": randint(0, 20),

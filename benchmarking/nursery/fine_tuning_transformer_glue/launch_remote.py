@@ -18,7 +18,6 @@ from tqdm import tqdm
 import syne_tune
 from benchmarking.commons.utils import message_sync_from_s3
 from syne_tune.backend.sagemaker_backend.estimators import (
-    instance_sagemaker_estimator,
     DEFAULT_GPU_INSTANCE_SMALL,
     DEFAULT_GPU_INSTANCE_LARGE,
     pytorch_estimator,
