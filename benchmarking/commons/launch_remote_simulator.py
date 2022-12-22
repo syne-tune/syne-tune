@@ -10,24 +10,26 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Callable, Dict, Any
-from pathlib import Path
-from tqdm import tqdm
 import itertools
+from pathlib import Path
+from typing import Optional, List, Callable, Dict, Any
+
+from tqdm import tqdm
 
 from benchmarking.commons.hpo_main_simulator import (
     parse_args,
     SurrogateBenchmarkDefinitions,
     is_dict_of_dict,
 )
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
     filter_none,
     message_sync_from_s3,
-    basic_cpu_instance_sagemaker_estimator,
     find_or_create_requirements_txt,
 )
-from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
-
+from syne_tune.backend.sagemaker_backend.estimators import (
+    basic_cpu_instance_sagemaker_estimator,
+)
 from syne_tune.util import random_string
 
 

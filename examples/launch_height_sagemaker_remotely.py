@@ -14,21 +14,22 @@
 This example show how to launch a tuning job that will be executed on Sagemaker rather than on your local machine.
 """
 import logging
-
 from pathlib import Path
 
-from sagemaker.pytorch import PyTorch
-
+from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend import LocalBackend
+from syne_tune.backend import SageMakerBackend
+from syne_tune.backend.sagemaker_backend.estimators import (
+    basic_cpu_instance_sagemaker_estimator,
+    DEFAULT_CPU_INSTANCE_SMALL,
+)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
+from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.remote.remote_launcher import RemoteLauncher
-from syne_tune.backend import SageMakerBackend
-from syne_tune.config_space import randint
-from syne_tune import StoppingCriterion, Tuner
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -56,15 +57,10 @@ if __name__ == "__main__":
     distribute_trials_on_sagemaker = False
     if distribute_trials_on_sagemaker:
         trial_backend = SageMakerBackend(
-            # we tune a PyTorch Framework from Sagemaker
-            sm_estimator=PyTorch(
+            sm_estimator=basic_cpu_instance_sagemaker_estimator(
                 entry_point=entry_point,
-                instance_type="ml.m5.xlarge",
-                instance_count=1,
                 role=get_execution_role(),
                 max_run=10 * 60,
-                framework_version="1.7.1",
-                py_version="py3",
                 base_job_name="hpo-height",
                 sagemaker_session=default_sagemaker_session(),
                 disable_profiler=True,
@@ -91,7 +87,7 @@ if __name__ == "__main__":
             # Extra arguments describing the resource of the remote tuning instance and whether we want to wait
             # the tuning to finish. The instance-type where the tuning job runs can be different than the
             # instance-type used for evaluating the training jobs.
-            instance_type="ml.m5.large",
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
         )
 
         tuner.run(wait=False)

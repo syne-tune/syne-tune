@@ -10,18 +10,23 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from pathlib import Path
 import itertools
+from pathlib import Path
+
 from tqdm import tqdm
 
-from sagemaker.pytorch import PyTorch
 import syne_tune
-
+from benchmarking.commons.utils import message_sync_from_s3
+from syne_tune.backend.sagemaker_backend.estimators import (
+    instance_sagemaker_estimator,
+    DEFAULT_GPU_INSTANCE_SMALL,
+    DEFAULT_GPU_INSTANCE_LARGE,
+    pytorch_estimator,
+)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )
 from syne_tune.util import s3_experiment_path, random_string
-from benchmarking.commons.utils import message_sync_from_s3
 
 if __name__ == "__main__":
     experiment_name = "glue-4"
@@ -31,8 +36,7 @@ if __name__ == "__main__":
     model_type = "bert-base-cased"  # Default model used if not selected
     num_train_epochs = 3  # Maximum number of epochs
     max_runtime = 1800  # Each experiment runs for 30 mins
-    instance_type = "ml.g4dn.xlarge"
-    # instance_type = "ml.g4dn.12xlarge"
+    instance_type = DEFAULT_GPU_INSTANCE_SMALL
     # Useful if not all experiments could be started:
     skip_initial_experiments = 0
 
@@ -45,7 +49,7 @@ if __name__ == "__main__":
     run_ids = list(range(num_runs))
     num_experiments = len(model_selection) * len(optimizers) * len(run_ids)
     # We need 1 GPU for each worker:
-    if instance_type == "ml.g4dn.12xlarge":
+    if instance_type == DEFAULT_GPU_INSTANCE_LARGE:
         n_workers = 4
     else:
         n_workers = 1
@@ -87,15 +91,13 @@ if __name__ == "__main__":
         source_dir = str(Path(__file__).parent)
         entry_point = "hpo_main.py"
         dependencies = syne_tune.__path__ + [source_dir]
-        # Latest PyTorch version (1.10):
-        est = PyTorch(
+        # We use PyTorch container here since GPU support might be needed
+        est = pytorch_estimator(
             entry_point=entry_point,
             source_dir=source_dir,
             checkpoint_s3_uri=checkpoint_s3_uri,
             instance_type=instance_type,
             instance_count=1,
-            py_version="py38",
-            framework_version="1.10.0",
             volume_size=125,
             max_run=int(1.25 * max_runtime),
             role=get_execution_role(),

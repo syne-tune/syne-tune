@@ -18,15 +18,19 @@ from benchmarking.training_scripts.resnet_cifar10.resnet_cifar10 import (
     RESOURCE_ATTR,
     _config_space,
 )
+from syne_tune.backend.sagemaker_backend.estimators import (
+    DEFAULT_GPU_INSTANCE_SMALL,
+    DEFAULT_GPU_INSTANCE_LARGE,
+)
 
 
 def resnet_cifar10_default_params(sagemaker_backend: bool):
     if sagemaker_backend:
-        instance_type = "ml.g4dn.xlarge"
+        instance_type = DEFAULT_GPU_INSTANCE_SMALL
     else:
         # For local backend, GPU cores serve different workers, so we
         # need more memory
-        instance_type = "ml.g4dn.12xlarge"
+        instance_type = DEFAULT_GPU_INSTANCE_LARGE
     return {
         "max_resource_level": 27,
         "instance_type": instance_type,
@@ -59,10 +63,6 @@ def resnet_cifar10_benchmark(sagemaker_backend: bool = False, **kwargs):
         max_resource_attr="epochs",
         resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
-        estimator_kwargs=dict(
-            framework_version="1.7.1",
-            py_version="py3",
-        ),
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)

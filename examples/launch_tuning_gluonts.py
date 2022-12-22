@@ -19,17 +19,18 @@ from pathlib import Path
 
 import numpy as np
 
-from sagemaker.mxnet import MXNet
-
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend, SageMakerBackend
+from syne_tune.backend.sagemaker_backend.estimators import (
+    mxnet_estimator,
+    DEFAULT_CPU_INSTANCE,
+)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
-from syne_tune.optimizer.baselines import ASHA
-from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import loguniform, lograndint
-
+from syne_tune.optimizer.baselines import ASHA
 
 if __name__ == "__main__":
 
@@ -57,15 +58,13 @@ if __name__ == "__main__":
     if evaluate_trials_on_sagemaker:
         # evaluate trials on Sagemaker
         trial_backend = SageMakerBackend(
-            sm_estimator=MXNet(
+            sm_estimator=mxnet_estimator(
                 entry_point=entry_point.name,
                 source_dir=str(entry_point.parent),
-                instance_type="ml.c5.2xlarge",
+                instance_type=DEFAULT_CPU_INSTANCE,
                 instance_count=1,
                 role=get_execution_role(),
                 max_run=10 * 60,
-                framework_version="1.7",
-                py_version="py3",
                 base_job_name="hpo-gluonts",
                 sagemaker_session=default_sagemaker_session(),
                 disable_profiler=True,

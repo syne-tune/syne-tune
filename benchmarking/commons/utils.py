@@ -10,59 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 from syne_tune.util import s3_experiment_path
-from syne_tune.try_import import try_import_aws_message
-
-try:
-    from sagemaker.pytorch import PyTorch
-    from sagemaker.huggingface import HuggingFace
-    from sagemaker.mxnet import MXNet
-    from sagemaker.tensorflow import TensorFlow
-    from sagemaker.sklearn import SKLearn
-    from sagemaker.chainer import Chainer
-    from sagemaker.xgboost import XGBoost
-except ImportError:
-    print(try_import_aws_message())
-
-
-sagemaker_estimator = {
-    "PyTorch": PyTorch,
-    "HuggingFace": HuggingFace,
-    "MXNet": MXNet,
-    "TensorFlow": TensorFlow,
-    "SKLearn": SKLearn,
-    "Chainer": Chainer,
-    "XGBoost": XGBoost,
-}
-
-
-# Used for simulator back-end experiments and for remote launching of
-# SageMaker back-end experiments
-def basic_cpu_instance_sagemaker_estimator(**kwargs):
-    """
-    Returns SageMaker estimator to be used for simulator back-end experiments
-    and for remote launching of SageMaker back-end experiments.
-
-    :param kwargs: Extra arguments to SageMaker estimator
-    :return: SageMaker estimator
-    """
-    # return SKLearn(
-    #     instance_type="ml.c5.4xlarge",
-    #     instance_count=1,
-    #     py_version="py3",
-    #     framework_version="1.0-1",
-    #     **kwargs,
-    # )
-    return PyTorch(
-        instance_type="ml.c5.4xlarge",
-        instance_count=1,
-        py_version="py38",
-        framework_version="1.12.1",
-        **kwargs,
-    )
 
 
 def filter_none(a: dict) -> dict:

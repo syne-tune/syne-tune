@@ -10,13 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Any
+import copy
 import logging
 from argparse import ArgumentParser
-import copy
+from typing import Optional, List, Dict, Any
 
 from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
-
 
 try:
     from coolname import generate_slug
@@ -41,7 +40,7 @@ def parse_args(
     try:
         default_experiment_tag = generate_slug(2)
     except Exception:
-        default_experiment_tag = "syne_tune_experiment"
+        default_experiment_tag = "syne-tune-experiment"
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag",

@@ -16,14 +16,18 @@ Example showing how to tune instance types and hyperparameters with a Sagemaker 
 import logging
 from pathlib import Path
 
-from sagemaker.huggingface import HuggingFace
-
-from syne_tune.backend.sagemaker_backend.instance_info import select_instance_type
+from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend import SageMakerBackend
+from syne_tune.backend.sagemaker_backend.estimators import (
+    huggingface_estimator,
+    DEFAULT_CPU_INSTANCE_SMALL,
+)
+from syne_tune.backend.sagemaker_backend.instance_info import select_instance_type
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
+from syne_tune.config_space import loguniform, choice
 from syne_tune.constants import (
     ST_WORKER_TIME,
     ST_WORKER_COST,
@@ -31,8 +35,6 @@ from syne_tune.constants import (
 )
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.remote.remote_launcher import RemoteLauncher
-from syne_tune import StoppingCriterion, Tuner
-from syne_tune.config_space import loguniform, choice
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -74,15 +76,12 @@ if __name__ == "__main__":
     # Define the training function to be tuned, use the Sagemaker backend to execute trials as separate training job
     # (since they are quite expensive).
     trial_backend = SageMakerBackend(
-        sm_estimator=HuggingFace(
+        sm_estimator=huggingface_estimator(
             entry_point=str(entry_point),
             base_job_name="hpo-transformer",
             # instance-type given here are override by Syne Tune with values sampled from ST_INSTANCE_TYPE.
-            instance_type="ml.m5.large",
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
             instance_count=1,
-            transformers_version="4.4",
-            pytorch_version="1.6",
-            py_version="py36",
             max_run=3600,
             role=get_execution_role(),
             dependencies=[str(Path(__file__).parent.parent / "benchmarking")],

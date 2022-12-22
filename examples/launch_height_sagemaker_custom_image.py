@@ -18,6 +18,7 @@ from pathlib import Path
 
 from syne_tune.backend.sagemaker_backend.custom_framework import CustomFramework
 from syne_tune.backend import SageMakerBackend
+from syne_tune.backend.sagemaker_backend.estimators import DEFAULT_CPU_INSTANCE_SMALL
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     trial_backend = SageMakerBackend(
         sm_estimator=CustomFramework(
             entry_point=entry_point,
-            instance_type="ml.m5.large",
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
             instance_count=1,
             role=get_execution_role(),
             image_uri=image_uri,
