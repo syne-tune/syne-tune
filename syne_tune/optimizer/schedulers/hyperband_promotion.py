@@ -42,7 +42,7 @@ class PromotionRungSystem(RungSystem):
     start training from scratch, in which case metrics are reported for every
     epoch, also those ``< resume_from``. At least for some modes of fitting the
     searcher model to data, this would lead to duplicate target values for the
-    same extended config ``(x, r)``, which we want to avoid. The solution is to
+    same extended config :math:`(x, r)`, which we want to avoid. The solution is to
     maintain ``resume_from`` in the data for the terminator (see :attr:`_running`).
     Given this, we can report in :meth:`on_task_report` that the current metric
     data should not be used for the searcher model (``ignore_data = True``), namely
@@ -58,10 +58,11 @@ class PromotionRungSystem(RungSystem):
         resource_attr: str,
         max_t: int,
     ):
-        super().__init__(rung_levels, promote_quantiles, metric, mode, resource_attr)
+        super().__init__(
+            rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
+        )
         # The data entry in ``_rungs`` is a dict mapping trial_id to
         # (metric_value, was_promoted)
-        self.max_t = max_t
         # ``_running`` maps ``trial_id ``to ``dict(milestone, resume_from)``.
         # The tasks runs trial ``trial_id`` until resource reaches milestone.
         # The ``resume_from`` field can be None. If not, the task is running a
@@ -135,7 +136,7 @@ class PromotionRungSystem(RungSystem):
         amount of resources allocated to a single configuration during the
         optimization. For ASHA it's just a constant value.
         """
-        return self.max_t
+        return self._max_t
 
     def on_task_schedule(self) -> dict:
         """
@@ -147,7 +148,7 @@ class PromotionRungSystem(RungSystem):
         at the rung level it sits right now.
         """
         trial_id = None
-        next_milestone = self.max_t
+        next_milestone = self._max_t
         milestone = None
         recorded = None
         for rung in self._rungs:
@@ -158,10 +159,10 @@ class PromotionRungSystem(RungSystem):
                 trial_id = self._find_promotable_trial(
                     _recorded, prom_quant, rung.level
                 )
-            if trial_id is not None:
-                recorded = _recorded
-                milestone = _milestone
-                break
+                if trial_id is not None:
+                    recorded = _recorded
+                    milestone = _milestone
+                    break
             next_milestone = _milestone
         ret_dict = dict()
         if trial_id is not None:
@@ -252,11 +253,11 @@ class PromotionRungSystem(RungSystem):
                 recorded = self._rungs[rung_pos].data
                 self._register_metrics_at_rung_level(trial_id, result, recorded)
                 next_milestone = (
-                    self._rungs[rung_pos - 1].level if rung_pos > 0 else self.max_t
+                    self._rungs[rung_pos - 1].level if rung_pos > 0 else self._max_t
                 )
             except StopIteration:
-                # milestone not a rung level. This can happen, in particular
-                # if milestone == self.max_t
+                # ``milestone`` not a rung level. This can happen, in particular
+                # if ``milestone == self._max_t``
                 pass
         return {
             "task_continues": not milestone_reached,
@@ -266,7 +267,8 @@ class PromotionRungSystem(RungSystem):
         }
 
     def on_task_remove(self, trial_id: str):
-        del self._running[trial_id]
+        if trial_id in self._running:
+            del self._running[trial_id]
 
     @staticmethod
     def does_pause_resume() -> bool:

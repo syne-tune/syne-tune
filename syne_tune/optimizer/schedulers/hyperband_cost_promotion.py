@@ -70,9 +70,9 @@ class CostPromotionRungSystem(PromotionRungSystem):
             rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
         )
         self._cost_attr = cost_attr
-        # Note: The data entry in _rungs is now a dict mapping trial_id to
-        # (metric_value, cost_value, was_promoted), where metric_value is
-        # m(x, r), cost value is c(x, r).
+        # Note: The data entry in ``_rungs`` is now a dict mapping trial_id to
+        # ``(metric_value, cost_value, was_promoted)``, where metric_value is
+        # :math:`m(x, r)`, cost value is :math:`c(x, r)`.
 
     def _find_promotable_trial(
         self, recorded: dict, prom_quant: float, resource: int
@@ -85,7 +85,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
         :param recorded: Dict to scan
         :param prom_quant: Quantile for promotion
         :param resource: Amount of resources spent on the rung.
-        :return: trial_id if found, otherwise None
+        :return: ``trial_id`` if found, otherwise ``None``
         """
         ret_id = None
         if len(recorded) > 1:

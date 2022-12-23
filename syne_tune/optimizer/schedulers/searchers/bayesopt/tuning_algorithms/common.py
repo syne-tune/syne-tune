@@ -113,6 +113,16 @@ class ExclusionList:
             self.excl_set
         ) >= self.configspace_size
 
+    def get_state(self) -> dict:
+        return {
+            "excl_set": list(self.excl_set),
+            "keys": self.keys,
+        }
+
+    def clone_from_state(self, state: dict):
+        self.keys = state["keys"]
+        self.excl_set = set(state["excl_set"])
+
 
 class CandidateGenerator:
     """
