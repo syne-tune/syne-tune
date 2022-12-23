@@ -99,9 +99,12 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
         metric: str,
         mode: str,
         resource_attr: str,
+        max_t: int,
         num_threshold_candidates: int,
     ):
-        super().__init__(rung_levels, promote_quantiles, metric, mode, resource_attr)
+        super().__init__(
+            rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
+        )
         self._decider = RUSHDecider(num_threshold_candidates, mode)
 
     def _task_continues(

@@ -75,7 +75,15 @@ first bracket which is not yet complete, is the *primary bracket*.
 
 Given these classes,
 :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
-is straightforward. It is a pause-and-resume scheduler.
+is straightforward. It is a pause-and-resume scheduler, and it implements the API
+:class:`~syne_tune.optimizer.schedulers.multi_fidelity.MultiFidelitySchedulerMixin`,
+so that any searchers supporting multi-fidelity schedulers can be used. More
+precisely, ``SynchronousHyperbandScheduler`` inherits from
+:class:`~syne_tune.optimizer.schedulers.synchronous.hyperband.SynchronousHyperbandCommon`,
+which derives from
+:class:`~syne_tune.optimizer.schedulers.scheduler_searcher.TrialSchedulerWithSearcher` and
+:class:`~syne_tune.optimizer.schedulers.multi_fidelity.MultiFidelitySchedulerMixin`
+and collects some code used during construction.
 
 * ``_suggest`` polls ``self.bracket_manager.next_job()``. If the ``SlotInRung``
   returned has ``trial_id`` assigned, it corresponds to a trial to be
@@ -197,7 +205,10 @@ is very similar to ``SynchronousHyperbandBracketManager``. Differences include:
   cross-over and selection.
 
 :class:`~syne_tune.optimizer.schedulers.synchronous.DifferentialEvolutionHyperbandScheduler`
-implements the DEHB scheduler.
+implements the DEHB scheduler. Just like ``SynchronousHyperbandScheduler``, it
+inherits from
+:class:`~syne_tune.optimizer.schedulers.synchronous.hyperband.SynchronousHyperbandCommon`,
+which contains common code used by both of them.
 
 * On top of ``SynchronousHyperbandScheduler``, it also maps ``trial_id`` to
   encoded configuration in ``self._trial_info``, and ``self._global_parent_pool``

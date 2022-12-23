@@ -53,6 +53,7 @@ def get_transfer_learning_evaluations(
     test_task: str,
     datasets: Optional[List[str]],
     n_evals: Optional[int] = None,
+    ignore_hash: bool = False,
 ) -> dict:
     """
     :param blackbox_name: name of blackbox
@@ -62,7 +63,7 @@ def get_transfer_learning_evaluations(
     :param n_evals: maximum number of evaluations to be returned
     :return:
     """
-    task_to_evaluations = load_blackbox(blackbox_name)
+    task_to_evaluations = load_blackbox(blackbox_name, ignore_hash=ignore_hash)
 
     # todo retrieve right metric
     metric_index = 0
@@ -159,6 +160,12 @@ def parse_args(
                 default="none",
                 help="Ordinal encoding for fcnet categorical HPs",
             ),
+            dict(
+                name="ignore_blackbox_hash",
+                type=int,
+                default=0,
+                help="Ignore mechanism to check whether blackbox files are up to date?",
+            ),
         ]
     )
     if nested_dict:
@@ -172,6 +179,7 @@ def parse_args(
     args, method_names, seeds = _parse_args(methods, extra_args)
     args.verbose = bool(args.verbose)
     args.support_checkpointing = bool(args.support_checkpointing)
+    args.ignore_blackbox_hash = bool(args.ignore_blackbox_hash)
     if args.benchmark is not None:
         benchmark_names = [args.benchmark]
     else:
@@ -247,6 +255,7 @@ def main(
             surrogate=benchmark.surrogate,
             surrogate_kwargs=benchmark.surrogate_kwargs,
             add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
+            ignore_hash=args.ignore_blackbox_hash,
         )
 
         resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
@@ -270,6 +279,7 @@ def main(
                     blackbox_name=benchmark.blackbox_name,
                     test_task=benchmark.dataset_name,
                     datasets=benchmark.datasets,
+                    ignore_hash=args.ignore_blackbox_hash,
                 ),
             )
         scheduler = methods[method](

@@ -80,7 +80,6 @@ class TuningStatus:
 
     # TODO: ``metric_names`` not used for anything. Remove?
     def __init__(self, metric_names: List[str]):
-        """ """
         self.metric_names = metric_names
         self.start_time = time.perf_counter()
 

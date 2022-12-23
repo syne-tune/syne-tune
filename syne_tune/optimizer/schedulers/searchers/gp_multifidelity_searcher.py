@@ -31,9 +31,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     PendingEvaluation,
     MetricValues,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model import (
-    GaussProcAdditiveModelFactory,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +134,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         super().__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
+        self._resource_attr = None
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -159,27 +157,15 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         self._create_internal(**kwargs_int)
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-        from syne_tune.optimizer.schedulers.synchronous.hyperband import (
-            SynchronousHyperbandScheduler,
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
         )
 
         super().configure_scheduler(scheduler)
         assert isinstance(
-            scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
-        ), (
-            "This searcher requires HyperbandScheduler or "
-            + "SynchronousHyperbandScheduler scheduler"
-        )
+            scheduler, MultiFidelitySchedulerMixin
+        ), "This searcher requires MultiFidelitySchedulerMixin scheduler"
         self._resource_attr = scheduler.resource_attr
-        model_factory = self.state_transformer.model_factory
-        if isinstance(model_factory, GaussProcAdditiveModelFactory):
-            assert scheduler.searcher_data == "all", (
-                "For an additive Gaussian learning curve model (model="
-                + "'gp_issm' or model='gp_expdecay' in search_options), you "
-                + "need to set searcher_data='all' when creating the "
-                + "HyperbandScheduler"
-            )
 
     def _hp_ranges_in_state(self):
         return self.config_space_ext.hp_ranges_ext

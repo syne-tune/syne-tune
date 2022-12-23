@@ -432,15 +432,6 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
                 **_kwargs,
             )
         )
-    elif model == "gp_independent":
-        result.update(
-            _create_gp_independent_model(
-                hp_ranges=hp_ranges,
-                active_metric=INTERNAL_METRIC_NAME,
-                random_seed=random_seed,
-                **_kwargs,
-            )
-        )
     else:
         result.update(
             _create_gp_additive_model(

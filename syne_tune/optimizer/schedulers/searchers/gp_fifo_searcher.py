@@ -683,11 +683,13 @@ class GPFIFOSearcher(ModelBasedSearcher):
         self._create_internal(**kwargs_int)
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+        from syne_tune.optimizer.schedulers.scheduler_searcher import (
+            TrialSchedulerWithSearcher,
+        )
 
         assert isinstance(
-            scheduler, FIFOScheduler
-        ), "This searcher requires FIFOScheduler scheduler"
+            scheduler, TrialSchedulerWithSearcher
+        ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
         # Allow model factory to depend on ``scheduler`` as well
         model_factory = self.state_transformer.model_factory

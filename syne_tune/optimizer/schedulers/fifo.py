@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from typing import Optional, List
 import logging
-import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
@@ -23,17 +22,15 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     assert_no_invalid_options,
     Integer,
 )
-from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
 from syne_tune.optimizer.scheduler import (
-    TrialScheduler,
     SchedulerDecision,
     TrialSuggestion,
 )
+from syne_tune.optimizer.schedulers.scheduler_searcher import TrialSchedulerWithSearcher
+
 from syne_tune.backend.time_keeper import TimeKeeper, RealTimeKeeper
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import cast_config_values
-
-__all__ = ["FIFOScheduler", "ResourceLevelsScheduler"]
 
 logger = logging.getLogger(__name__)
 
@@ -64,54 +61,7 @@ _CONSTRAINTS = {
 }
 
 
-class ResourceLevelsScheduler(TrialScheduler):
-    """
-    Implements helper method to infer value for ``max_resource_level``.
-    """
-
-    def _infer_max_resource_level_getval(self, name):
-        if name in self.config_space and name not in self._hyperparameter_keys:
-            return self.config_space[name]
-        else:
-            return None
-
-    def _infer_max_resource_level(
-        self, max_resource_level: Optional[int], max_resource_attr: Optional[str]
-    ):
-        """Infer ``max_resource_level`` if not explicitly given.
-
-        :param max_resource_level: Value explicitly provided, or None
-        :param max_resource_attr: Name of max resource attribute in
-            ``self.config_space`` (optional)
-        :return: Inferred value for ``max_resource_level``
-        """
-        inferred_max_t = None
-        names = ("epochs", "max_t", "max_epochs")
-        if max_resource_attr is not None:
-            names = (max_resource_attr,) + names
-        for name in names:
-            inferred_max_t = self._infer_max_resource_level_getval(name)
-            if inferred_max_t is not None:
-                break
-        if max_resource_level is not None:
-            if inferred_max_t is not None and max_resource_level != inferred_max_t:
-                logger.warning(
-                    f"max_resource_level = {max_resource_level} is different "
-                    f"from the value {inferred_max_t} inferred from "
-                    "config_space"
-                )
-        else:
-            # It is OK if max_resource_level cannot be inferred
-            if inferred_max_t is not None:
-                logger.info(
-                    f"max_resource_level = {inferred_max_t}, as inferred "
-                    "from config_space"
-                )
-            max_resource_level = inferred_max_t
-        return max_resource_level
-
-
-class FIFOScheduler(ResourceLevelsScheduler):
+class FIFOScheduler(TrialSchedulerWithSearcher):
     """Scheduler which executes trials in submission order.
 
     This is the most basic scheduler template. It can be configured to
@@ -179,20 +129,19 @@ class FIFOScheduler(ResourceLevelsScheduler):
     """
 
     def __init__(self, config_space: dict, **kwargs):
-        super().__init__(config_space)
+        super().__init__(config_space, **kwargs)
         # Check values and impute default values
         assert_no_invalid_options(kwargs, _ARGUMENT_KEYS, name="FIFOScheduler")
         kwargs = check_and_merge_defaults(
             kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
         )
-        metric = kwargs.get("metric")
-        assert metric is not None, (
+        self.metric = kwargs.get("metric")
+        assert self.metric is not None, (
             "Argument 'metric' is mandatory. Pass the name of the metric "
             + "reported by your training script, which you'd like to "
             + "optimize, and use 'mode' to specify whether it should "
             + "be minimized or maximized"
         )
-        self.metric = metric
         self.mode = kwargs["mode"]
         self.max_resource_attr = kwargs.get("max_resource_attr")
         # Setting max_t (if not provided as argument -> self.max_t)
@@ -203,12 +152,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
         self.max_t = self._infer_max_resource_level(
             kwargs.get("max_t"), self.max_resource_attr
         )
-        # Generator for random seeds
-        random_seed = kwargs.get("random_seed")
-        if random_seed is None:
-            random_seed = np.random.randint(0, 2**32)
-        logger.info(f"Master random_seed = {random_seed}")
-        self.random_seed_generator = RandomSeedGenerator(random_seed)
         # Generate searcher
         searcher = kwargs["searcher"]
         if isinstance(searcher, str):
@@ -234,19 +177,22 @@ class FIFOScheduler(ResourceLevelsScheduler):
             # subclass (via ``_extend_search_options``)
             if "scheduler" not in search_options:
                 search_options["scheduler"] = "fifo"
-            self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
+            self._searcher: BaseSearcher = searcher_factory(searcher, **search_options)
         else:
             assert isinstance(searcher, BaseSearcher)
-            self.searcher: BaseSearcher = searcher
+            self._searcher: BaseSearcher = searcher
 
         self._start_time = None  # Will be set at first ``suggest``
-        self._searcher_initialized = False
         # Time keeper
         time_keeper = kwargs.get("time_keeper")
         if time_keeper is not None:
             self.set_time_keeper(time_keeper)
         else:
             self.time_keeper = None
+
+    @property
+    def searcher(self) -> Optional[BaseSearcher]:
+        return self._searcher
 
     def set_time_keeper(self, time_keeper: TimeKeeper):
         """Assign time keeper after construction.
@@ -270,12 +216,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
         """
         return search_options
 
-    def _initialize_searcher(self):
-        """Callback to initialize searcher based on scheduler, if not done already"""
-        if not self._searcher_initialized:
-            self.searcher.configure_scheduler(self)
-            self._searcher_initialized = True
-
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         """Implements ``suggest``, except for basic postprocessing of config.
 
@@ -288,7 +228,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
         :return: Suggestion for a trial to be started or to be resumed, see
             above. If no suggestion can be made, None is returned
         """
-        self._initialize_searcher()
         # If no time keeper was provided at construction, we use a local
         # one which is started here
         if self.time_keeper is None:
@@ -359,13 +298,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
         assert self.time_keeper is not None, "Experiment has not been started yet"
         return self.time_keeper.time()
 
-    def on_trial_error(self, trial: Trial):
-        self._initialize_searcher()
-        trial_id = str(trial.trial_id)
-        self.searcher.evaluation_failed(trial_id)
-        if self.searcher.debug_log is not None:
-            logger.info(f"trial_id {trial_id}: Evaluation failed!")
-
     def _check_key_of_result(self, result: dict, key: str):
         assert key in result, (
             "Your training evaluation function needs to report values "
@@ -396,13 +328,6 @@ class FIFOScheduler(ResourceLevelsScheduler):
         log_msg += f"): decision = {trial_decision}"
         logger.debug(log_msg)
         return trial_decision
-
-    def on_trial_complete(self, trial: Trial, result: dict):
-        self._initialize_searcher()
-        config = self._preprocess_config(trial.config)
-        self.searcher.on_trial_result(
-            str(trial.trial_id), config, result=result, update=True
-        )
 
     def metric_names(self) -> List[str]:
         return [self.metric]

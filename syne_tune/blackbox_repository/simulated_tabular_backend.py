@@ -279,6 +279,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         space of the original blackbox is used. However, its numerical parameters
         have finite domains (categorical or ordinal), which is usually not what
         we want for a surrogate.
+    :param ignore_hash: If `True`, the hashing mechanism to check whether the
+        blackbox files match a pre-computed hash, is ignored. This is not
+        recommended. Defaults to `False`.
     :param simulatorbackend_kwargs: Additional arguments to parent
         :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`
     """
@@ -295,6 +298,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         surrogate_kwargs: Optional[dict] = None,
         add_surrogate_kwargs: Optional[dict] = None,
         config_space_surrogate: Optional[dict] = None,
+        ignore_hash: bool = False,
         **simulatorbackend_kwargs,
     ):
         assert (
@@ -326,6 +330,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             }
         else:
             self._config_space_surrogate = None
+        self._ignore_hash = ignore_hash
 
     @property
     def blackbox(self) -> Blackbox:
@@ -333,7 +338,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             # Pass ``self._surrogate_kwargs`` as ``yahpo_kwargs``. This is used if
             # ``self.blackbox_name`` is a YAHPO blackbox, and is ignored otherwise
             self._blackbox = load_blackbox(
-                self.blackbox_name, yahpo_kwargs=self._surrogate_kwargs
+                self.blackbox_name,
+                yahpo_kwargs=self._surrogate_kwargs,
+                ignore_hash=self._ignore_hash,
             )
             if self.dataset is None:
                 assert not isinstance(self._blackbox, dict), (
@@ -368,6 +375,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             "dataset": self.dataset,
             "surrogate": self._surrogate,
             "surrogate_kwargs": self._surrogate_kwargs,
+            "ignore_hash": self._ignore_hash,
         }
         if self._config_space_surrogate is not None:
             state["config_space_surrogate"] = config_space_to_json_dict(
@@ -387,6 +395,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
         self.dataset = state["dataset"]
         self._surrogate = state["surrogate"]
         self._surrogate_kwargs = state["surrogate_kwargs"]
+        self._ignore_hash = state["ignore_hash"]
         self._blackbox = None
         if "config_space_surrogate" in state:
             self._config_space_surrogate = config_space_from_json_dict(

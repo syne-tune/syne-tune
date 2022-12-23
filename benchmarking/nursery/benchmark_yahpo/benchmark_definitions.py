@@ -13,6 +13,7 @@
 from benchmarking.commons.benchmark_definitions import (
     yahpo_iaml_benchmark_definitions,
     yahpo_rbv2_benchmark_definitions,
+    yahpo_nb301_benchmark_definitions,
 )
 from benchmarking.commons.benchmark_definitions.yahpo import (
     yahpo_rbv2_metrics,
@@ -47,4 +48,6 @@ for method in yahpo_rbv2_methods:
         }
 
 
-benchmark_definitions = benchmark_definitions_iaml
+# benchmark_definitions = benchmark_definitions_iaml
+# benchmark_definitions = benchmark_definitions_rbv2
+benchmark_definitions = yahpo_nb301_benchmark_definitions

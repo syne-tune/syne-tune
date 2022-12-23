@@ -50,6 +50,8 @@ from syne_tune.blackbox_repository.conversion_scripts.utils import (
     blackbox_s3_path,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def blackbox_list() -> List[str]:
     """
@@ -113,7 +115,7 @@ def load_blackbox(
             and expected_hash is not None
             and not validate_hash(tgt_folder, expected_hash)
         ):
-            logging.warning(
+            logger.warning(
                 f"Files seem to be corrupted (hash mismatch), regenerating it locally and persisting it on S3."
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)
@@ -122,11 +124,11 @@ def load_blackbox(
                     f"The hash of the files do not match the stored hash after regenerations. "
                     f"Consider updating the hash and sending a pull-request to change it or set the option ``ignore_hash`` to True."
                 )
-        logging.info(
+        logger.info(
             f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
         )
     else:
-        logging.info("Local files not found, attempting to copy from S3.")
+        logger.info("Local files not found, attempting to copy from S3.")
         tgt_folder.mkdir(exist_ok=True, parents=True)
         try:
             s3_folder = blackbox_s3_path(name=name, s3_root=s3_root)
@@ -135,11 +137,11 @@ def load_blackbox(
         except NoCredentialsError:
             data_on_s3 = False
         if data_on_s3:
-            logging.info("found blackbox on S3, copying it locally")
+            logger.info("found blackbox on S3, copying it locally")
             # download files from s3 to repository_path
             for src in fs.glob(f"{s3_folder}/*"):
                 tgt = tgt_folder / Path(src).name
-                logging.info(f"copying {src} to {tgt}")
+                logger.info(f"copying {src} to {tgt}")
                 fs.get(src, str(tgt))
 
             if (
@@ -147,7 +149,7 @@ def load_blackbox(
                 and expected_hash is not None
                 and not validate_hash(tgt_folder, expected_hash)
             ):
-                logging.warning(
+                logger.warning(
                     f"Files seem to be corrupted (hash mismatch), regenerating it locally and overwrite files on S3."
                 )
                 generate_blackbox_recipes[name].generate(s3_root=s3_root)
@@ -157,7 +159,7 @@ def load_blackbox(
                 + f"write permissions to {s3_folder}, you can set "
                 + "generate_if_not_found=True in order to generate and persist them"
             )
-            logging.info(
+            logger.info(
                 "Did not find blackbox files locally nor on S3, regenerating it locally and persisting it on S3."
             )
             generate_blackbox_recipes[name].generate(s3_root=s3_root)

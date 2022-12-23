@@ -86,7 +86,7 @@ def test_register_pending():
         new_searcher = MyRandomSearcher(
             old_searcher.config_space, metric=old_searcher._metric
         )
-        scheduler.searcher = new_searcher
+        scheduler._searcher = new_searcher
 
         # Start 4 trials (0, 1, 2, 3)
         trials = dict()

@@ -40,18 +40,20 @@ class PASHARungSystem(PromotionRungSystem):
             rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
         )
         self.ranking_criterion = ranking_criterion
-        # define the index of the current top rung, starting from 1 for the lowest rung
-        #
-        self.current_rung_idx = 2
-        self.rung_levels = rung_levels
+        # define the index of the current top rung, starting from 1 for the
+        # lowest rung
+        assert self.num_rungs >= 1, "rung_levels must not be empty"
+        self.rung_levels = rung_levels.copy()
 
         # initialize current maximum resources
+        self.current_rung_idx = min(len(rung_levels) - 1, 2)
         self.current_max_t = rung_levels[self.current_rung_idx - 1]
 
         self.epsilon = epsilon
         self.epsilon_scaling = epsilon_scaling
 
-    # overriding the method in HB promotion to accommodate the increasing max resources level
+    # overriding the method in HB promotion to accommodate the increasing max
+    # resources level
     def _effective_max_t(self):
         return self.current_max_t
 

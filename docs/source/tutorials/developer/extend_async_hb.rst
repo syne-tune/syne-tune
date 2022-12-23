@@ -92,7 +92,9 @@ variant of the expected improvement acquisition function.
 
 We begin with the base class
 :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`,
-which works together with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`,
+which works with schedulers implementing
+:class:`~syne_tune.optimizer.schedulers.scheduler_searcher.TrialSchedulerWithSearcher`
+(the most important one being :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`),
 but already implements most of what is needed in the multi-fidelity context.
 
 * The code does quite some bookkeeping concerned with mapping configurations to
@@ -108,6 +110,20 @@ but already implements most of what is needed in the multi-fidelity context.
 * ``get_config`` fits KDEs to the good and bad parts of ``self.X``, ``self.y``.
   It then samples ``self.num_candidates`` configurations at random, evaluates
   the TPE acquisition function for each candidate, and returns the best one.
+* ``configure_scheduler`` is a callback which allows the searcher to check whether
+  its scheduler is compatible, and to depend on details of this scheduler.
+  In our case, we check whether the scheduler implements
+  :class:`~syne_tune.optimizer.schedulers.scheduler_searcher.TrialSchedulerWithSearcher`,
+  which is the minimum requirement for a searcher.
+
+.. note::
+   Any scheduler configured by a searcher should inherit from
+   :class:`~syne_tune.optimizer.schedulers.scheduler_searcher.TrialSchedulerWithSearcher`,
+   which mainly makes sure that
+   :meth:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher.configure_scheduler`
+   is called before the searcher is first used. It is also strongly recommended
+   to implement `configure_scheduler`` for a new searcher, restrictoing usage
+   to compatible schedulers.
 
 The class
 :class:`~syne_tune.optimizer.schedulers.searchers.kde.MultiFidelityKernelDensityEstimator`
@@ -119,12 +135,25 @@ inherits from ``KernelDensityEstimator``:
   training the good and bad density models is modified. The idea is to fit
   these to data from a single rung level, namely the largest level at which we
   have observed at least ``self.num_min_data_points`` points.
-* ``configure_scheduler`` restricts usage to
-  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` (asynchronous
-  Hyperband) and
+* ``configure_scheduler`` restricts usage to schedulers implementing
+  :class:`~syne_tune.optimizer.schedulers.multi_fidelity.MultiFidelitySchedulerMixin`,
+  which all multi-fidelity schedulers need to inherit from (examples are
+  :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for asynchronous
+  Hyperband and
   :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
-  (synchronous Hyperband). Also, ``self.resource_attr`` is obtained from the
-  scheduler, so does not have to be passed.
+  for synchronous Hyperband). It also calls
+  :meth:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator.configure_scheduler`.
+  Moreover, ``self.resource_attr`` is obtained from the scheduler, so does not
+  have to be passed.
+
+.. note::
+   Any *multi-fidelity* scheduler configured by a searcher should inherit from both
+   :class:`~syne_tune.optimizer.schedulers.scheduler_searcher.TrialSchedulerWithSearcher` and
+   :class:`~syne_tune.optimizer.schedulers.multi_fidelity.MultiFidelitySchedulerMixin`.
+   The latter is a basic API to be implemented by multi-fidelity schedulers, which
+   is used by the ``configure_scheduler`` of searchers specialized to multi-fidelity
+   HPO. Doing so makes sure any new multi-fidelity scheduler can seamlessly be
+   used with any such searcher.
 
 While being functional and simple, the
 ``MultiFidelityKernelDensityEstimator`` does not showcase the full range of

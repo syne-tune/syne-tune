@@ -138,11 +138,13 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             self.population.popleft()
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+        from syne_tune.optimizer.schedulers.scheduler_searcher import (
+            TrialSchedulerWithSearcher,
+        )
 
         assert isinstance(
-            scheduler, FIFOScheduler
-        ), "This searcher requires FIFOScheduler scheduler"
+            scheduler, TrialSchedulerWithSearcher
+        ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
     def clone_from_state(self, state: dict):

@@ -204,12 +204,7 @@ class HyperTune(HyperbandScheduler):
             f", must be in {supp}"
         )
         search_options[k] = model
-        k = "hypertune_distribution_num_samples"
-        num_samples = search_options.get(k, 50)
-        search_options[k] = num_samples
         kwargs["search_options"] = search_options
-        num_brackets = kwargs.get("brackets", 4)
-        kwargs["brackets"] = num_brackets
         super(HyperTune, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -346,7 +341,8 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
     the asynchronous case.
 
     One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
-    The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    The latter is more useful, see also
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     The default surrogate model (``search_options["model"]`` in ``kwargs``) is
     ``"gp_independent"``, different to :class:`MOBSTER`.
