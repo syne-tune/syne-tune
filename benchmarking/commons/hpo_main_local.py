@@ -26,6 +26,7 @@ from benchmarking.commons.hpo_main_common import (
     set_logging_level,
     get_metadata,
 )
+from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 
 
 RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
@@ -108,6 +109,7 @@ def main(
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag
     benchmark_name = args.benchmark
+    master_random_seed = get_master_random_seed(args.random_seed)
 
     set_logging_level(args)
     benchmark = get_benchmark(args, benchmark_definitions)
@@ -115,7 +117,8 @@ def main(
     combinations = list(itertools.product(method_names, seeds))
     print(combinations)
     for method, seed in tqdm(combinations):
-        np.random.seed(seed)
+        random_seed = effective_random_seed(master_random_seed, seed)
+        np.random.seed(random_seed)
         print(
             f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
         )
@@ -131,7 +134,7 @@ def main(
                 config_space=benchmark.config_space,
                 metric=benchmark.metric,
                 mode=benchmark.mode,
-                random_seed=seed,
+                random_seed=random_seed,
                 resource_attr=benchmark.resource_attr,
                 verbose=args.verbose,
                 **method_kwargs,
@@ -143,7 +146,13 @@ def main(
             max_num_evaluations=benchmark.max_num_evaluations,
         )
         metadata = get_metadata(
-            seed, method, experiment_tag, benchmark_name, benchmark, extra_args
+            seed=seed,
+            method=method,
+            experiment_tag=experiment_tag,
+            benchmark_name=benchmark_name,
+            random_seed=master_random_seed,
+            benchmark=benchmark,
+            extra_args=extra_args,
         )
         tuner = Tuner(
             trial_backend=trial_backend,

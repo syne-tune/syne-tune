@@ -24,6 +24,10 @@ from benchmarking.commons.hpo_main_local import (
     get_benchmark,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
+from benchmarking.commons.utils import (
+    get_master_random_seed,
+    effective_random_seed,
+)
 from syne_tune.backend import SageMakerBackend
 from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
@@ -31,6 +35,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 )
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
+
 
 # SageMaker managed warm pools:
 # https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html#train-warm-pools-resource-limits
@@ -143,12 +148,14 @@ def main(
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag
     benchmark_name = args.benchmark
+    master_random_seed = get_master_random_seed(args.random_seed)
     assert (
         len(method_names) == 1 and len(seeds) == 1
     ), "Can only launch single (method, seed). Use launch_remote to launch several combinations"
     method = method_names[0]
     seed = seeds[0]
     logging.getLogger().setLevel(logging.INFO)
+    random_seed = effective_random_seed(master_random_seed, seed)
 
     benchmark = get_benchmark(args, benchmark_definitions, sagemaker_backend=True)
     print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
@@ -191,7 +198,7 @@ def main(
             config_space=benchmark.config_space,
             metric=benchmark.metric,
             mode=benchmark.mode,
-            random_seed=seed,
+            random_seed=random_seed,
             resource_attr=benchmark.resource_attr,
             verbose=True,
             **method_kwargs,
@@ -203,7 +210,13 @@ def main(
         max_num_evaluations=benchmark.max_num_evaluations,
     )
     metadata = get_metadata(
-        seed, method, experiment_tag, benchmark_name, benchmark, extra_args
+        seed=seed,
+        method=method,
+        experiment_tag=experiment_tag,
+        benchmark_name=benchmark_name,
+        random_seed=master_random_seed,
+        benchmark=benchmark,
+        extra_args=extra_args,
     )
     tuner = Tuner(
         trial_backend=trial_backend,

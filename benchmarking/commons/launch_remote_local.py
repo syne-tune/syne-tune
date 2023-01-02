@@ -29,6 +29,7 @@ from benchmarking.commons.utils import (
     message_sync_from_s3,
     find_or_create_requirements_txt,
     combine_requirements_txt,
+    get_master_random_seed,
 )
 from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.util import random_string
@@ -40,6 +41,7 @@ def get_hyperparameters(
     seed: int,
     method: str,
     experiment_tag: str,
+    random_seed: int,
     args,
     map_extra_args: Optional[callable],
 ) -> Dict[str, Any]:
@@ -48,6 +50,7 @@ def get_hyperparameters(
     :param seed: Seed of repetition
     :param method: Method name
     :param experiment_tag: Tag of experiment
+    :param random_seed: Master random seed
     :param args: Result from :func:`parse_args`
     :param map_extra_args: Hyperparameters are updated with
         ``map_extra_args(args)``. Optional
@@ -60,6 +63,7 @@ def get_hyperparameters(
         "save_tuner": int(args.save_tuner),
         "num_seeds": seed + 1,
         "start_seed": seed,
+        "random_seed": random_seed,
     }
     for k in ("n_workers", "max_wallclock_time", "instance_type"):
         v = getattr(args, k)
@@ -107,6 +111,7 @@ def launch_remote(
     experiment_tag = args.experiment_tag
     suffix = random_string(4)
     benchmark = get_benchmark(args, benchmark_definitions)
+    master_random_seed = get_master_random_seed(args.random_seed)
 
     synetune_requirements_file = find_or_create_requirements_txt(
         entry_point, requirements_fname="requirements-synetune.txt"
@@ -123,7 +128,12 @@ def launch_remote(
             benchmark=benchmark,
         )
         hyperparameters = get_hyperparameters(
-            seed, method, experiment_tag, args, map_extra_args
+            seed=seed,
+            method=method,
+            experiment_tag=experiment_tag,
+            random_seed=master_random_seed,
+            args=args,
+            map_extra_args=map_extra_args,
         )
         hyperparameters["verbose"] = int(args.verbose)
         sm_args["hyperparameters"] = hyperparameters
