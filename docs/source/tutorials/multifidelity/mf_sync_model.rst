@@ -56,7 +56,7 @@ is represented by an independent Gaussian process (more details are given
 `It turns out <mf_comparison.html>`__ that ``SyncMOBSTER`` outperforms
 ``SyncBOHB`` substantially on the benchmark chosen here.
 
-When running these experiments with the simulator back-end, we note that
+When running these experiments with the simulator backend, we note that
 suddenly it takes quite some time for an experiment to be finished. Still many
 times faster than real time, we now need many minutes instead of seconds. This
 is a reminder that *model-based decision-making can take time*. In GP-based

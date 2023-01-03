@@ -38,7 +38,7 @@ include:
   state which is modified based on this information. The scheduler also
   decides what to do with this trial, returning a
   :class:`~syne_tune.optimizer.scheduler.SchedulerDecision` to the
-  :class:`~syne_tune.Tuner`, which in turn relays this decision to the back-end.
+  :class:`~syne_tune.Tuner`, which in turn relays this decision to the backend.
   Our ``SimpleScheduler`` maintains a sorted list of all metric values
   reported in ``self.sorted_results``. Whenever a trial reports a metric
   value which is worse than 4/5 of all previous reports (across all trials),
@@ -64,8 +64,8 @@ Basic Concepts
 --------------
 
 Recall from `Basics of Syne Tune <../basics/README.html>`__ that an HPO
-experiment is run as interplay between a *back-end* and a *scheduler*, which is
-orchestrated by the :class:`~syne_tune.Tuner`. The back-end starts, stops,
+experiment is run as interplay between a *backend* and a *scheduler*, which is
+orchestrated by the :class:`~syne_tune.Tuner`. The backend starts, stops,
 pauses, or resumes training jobs and relays their reports. A *trial* abstracts
 the evaluation of a hyperparameter *configuration*. There is a diverse range of
 schedulers which can be implemented in Syne Tune, some examples are:

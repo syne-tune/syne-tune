@@ -9,7 +9,7 @@ tools are `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`__ and
 why you may prefer Syne Tune over these alternatives:
 
 * **Lightweight and platform-agnostic**: Syne Tune is designed to work with
-  different execution back-ends, so you are not locked into a particular
+  different execution backends, so you are not locked into a particular
   distributed system architecture. Syne Tune runs with minimal dependencies.
 * **Wide range of modalities**: Syne Tune supports multi-fidelity HPO,
   constrained HPO, multi-objective HPO, transfer tuning, cost-aware HPO,
@@ -23,7 +23,7 @@ why you may prefer Syne Tune over these alternatives:
   cost-aware HPO, having been tried and tested for several years.
 * **Special support for researchers**: Syne Tune allows for rapid development
   and comparison between different tuning algorithms. Its
-  `blackbox repository and simulator back-end <tutorials/multifidelity/mf_setup.html>`__
+  `blackbox repository and simulator backend <tutorials/multifidelity/mf_setup.html>`__
   run realistic simulations of experiments many times faster than real time.
   `Benchmarking <tutorials/benchmarking/README.html>`__ is simple and efficient.
 

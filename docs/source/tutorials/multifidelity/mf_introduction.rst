@@ -149,4 +149,4 @@ remarks at this point, which will be substantiated with examples:
   used to resume any of the paused trials, in case they compare well against
   peers at the same rung. These modalities place `different requirements
   <mf_asha.html#asynchronous-successive-halving-promotion-variant>`__ on the
-  training script and the execution back-end.
+  training script and the execution backend.

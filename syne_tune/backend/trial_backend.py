@@ -34,7 +34,7 @@ BUSY_STATUS = {Status.in_progress, Status.stopping}
 
 class TrialBackend:
     """
-    Interface for back-end to execute evaluations of trials.
+    Interface for backend to execute evaluations of trials.
 
     :param delete_checkpoints: If ``True``, the checkpoints written by a trial
         are deleted once the trial is stopped or is registered as

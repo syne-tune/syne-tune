@@ -45,16 +45,16 @@ DEFAULT_SLEEP_TIME = 5.0
 class Tuner:
     """
     Controller of tuning loop, manages interplay between scheduler and
-    trial back-end. Also, stopping criterion and number of workers are
+    trial backend. Also, stopping criterion and number of workers are
     maintained here.
 
-    :param trial_backend: Back-end for trial evaluations
+    :param trial_backend: Backend for trial evaluations
     :param scheduler: Tuning algorithm for making decisions about which
         trials to start, stop, pause, or resume
     :param stop_criterion: Tuning stops when this predicates returns ``True``.
         Called in each iteration with the current tuning status. It is
         recommended to use :class:`StoppingCriterion`.
-    :param n_workers: Number of workers used here. Note that the back-end
+    :param n_workers: Number of workers used here. Note that the backend
         needs to support (at least) this number of workers to be run
         in parallel
     :param sleep_time: Time to sleep when all workers are busy. Defaults to
@@ -376,7 +376,7 @@ class Tuner:
     def _process_new_results(
         self, running_trials_ids: Set[int]
     ) -> (TrialAndStatusInformation, TrialIdAndResultList):
-        """Communicates new results from the back-end to the scheduler
+        """Communicates new results from the backend to the scheduler
 
         Returns dictionary of trials which are not running, along with their
         status, in ``done_trials_statuses``, and list of new results (tuples
@@ -421,7 +421,7 @@ class Tuner:
     def _schedule_new_tasks(self, running_trials_ids: Set[int]):
         """Schedules new tasks if resources are available or sleep.
 
-        Note: If ``start_jobs_without_delay`` is False, we ask the back-end for
+        Note: If ``start_jobs_without_delay`` is False, we ask the backend for
         the number of busy workers, instead of trusting ``running_trials_ids``.
         The latter does not contain trials which have been stopped or completed,
         but the underlying job is still not completely done.
@@ -532,7 +532,7 @@ class Tuner:
     ) -> TrialAndStatusInformation:
         """
         Updates schedulers with new results and sends decision to stop/pause
-        trials to the back-end. Trials can be finished because:
+        trials to the backend. Trials can be finished because:
 
         * the scheduler decided to stop or pause.
         * the trial failed.

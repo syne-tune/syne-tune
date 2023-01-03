@@ -80,7 +80,7 @@ def launch_remote(
 ):
     """
     Launches sequence of SageMaker training jobs, each running an experiment
-    with the simulator back-end.
+    with the simulator backend.
 
     The loop runs over methods selected from ``methods``. Different repetitions
     (seeds) are run sequentially in the remote job. However, if

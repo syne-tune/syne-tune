@@ -46,7 +46,7 @@ def get_benchmark(
 def parse_args(
     methods: Dict[str, Any], extra_args: Optional[List[dict]] = None
 ) -> (Any, List[str], List[int]):
-    """Parse command line arguments for local back-end experiments.
+    """Parse command line arguments for local backend experiments.
 
     :param methods: If ``--method`` is not given, then ``method_names`` are the
         keys of this dictionary
@@ -94,7 +94,7 @@ def main(
     map_extra_args: Optional[callable] = None,
 ):
     """
-    Runs sequence of experiments with local back-end sequentially. The loop runs
+    Runs sequence of experiments with local backend sequentially. The loop runs
     over methods selected from ``methods`` and repetitions, both controlled by
     command line arguments.
 

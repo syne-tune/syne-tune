@@ -105,7 +105,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
     ) -> (str, List[dict]):
         assert (
             trial_id in self._trial_dict
-        ), f"Trial with trial_id = {trial_id} not registered with back-end"
+        ), f"Trial with trial_id = {trial_id} not registered with backend"
         if config is None:
             config = self._trial_dict[trial_id].config
 
@@ -206,7 +206,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
     example on how to use. If you want to add a new dataset, see the *Adding a
     new dataset* section of ``syne_tune/blackbox_repository/README.md``.
 
-    In each result reported to the simulator back-end, the value for key
+    In each result reported to the simulator backend, the value for key
     ``elapsed_time_attr`` must be the time since the start of the
     evaluation. For example, if resource (or fidelity) equates to epochs
     trained, this would be the time from start of training until the end
@@ -229,11 +229,11 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
        different from what
        :class:`~syne_tune.backend.simulator_backend.SimulatorBackend` requires
        for ``elapsed_time_attr``, if a pause-and-resume scheduler is used. Namely,
-       the back-end requires the time since the start of the last recent
+       the backend requires the time since the start of the last recent
        resume. This conversion is done here internally in
        :meth:`_run_job_and_collect_results`, which is called for each resume.
        This means that the field ``elapsed_time_attr`` is not what is received
-       from the blackbox table, but instead what the back-end needs.
+       from the blackbox table, but instead what the backend needs.
 
     ``max_resource_attr`` plays the same role as in
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.

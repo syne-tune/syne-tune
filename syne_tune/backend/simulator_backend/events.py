@@ -39,7 +39,7 @@ class StartEvent(Event):
 class CompleteEvent(Event):
     """
     Job for trial ``trial_id`` completes with status ``status``. This is registered
-    at the back-end.
+    at the backend.
 
     """
 
@@ -58,7 +58,7 @@ class StopEvent(Event):
 @dataclass
 class OnTrialResultEvent(Event):
     """
-    Result reported by some worker arrives at the back-end and is registered
+    Result reported by some worker arrives at the backend and is registered
     there.
 
     """

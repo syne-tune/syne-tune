@@ -57,7 +57,7 @@ increasing.
   fields by the top performers of the rung just completed. All slots in the new
   rung are free. Note that the ``trial_id`` fields of the first rung are
   assigned to ``None`` at the beginning, they are set by the caller (using
-  new ``trial_id`` values provided by the back-end).
+  new ``trial_id`` values provided by the backend).
 
 :class:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager.SynchronousHyperbandBracketManager`
 maintains all brackets during an experiment. It is configured by a list

@@ -13,7 +13,7 @@ Schedulers and Searchers
 
 The decision-making algorithms driving an HPO experiments are referred to as
 **schedulers**. As in Ray Tune, some of our schedulers are internally configured
-by a **searcher**. A scheduler interacts with the back-end, making decisions on
+by a **searcher**. A scheduler interacts with the backend, making decisions on
 which configuration to evaluate next, and whether to stop, pause or resume
 existing trials. It relays “next configuration” decisions to the searcher. Some
 searchers maintain a **surrogate model** which is fitted to metric data coming
@@ -104,7 +104,7 @@ What happens in this launcher script?
 
 * We select the ``mlp_fashionmnist`` benchmark, adopting its default
   hyperparameter search space without modifications.
-* We select the local back-end, which runs up to ``n_workers = 4`` processes in
+* We select the local backend, which runs up to ``n_workers = 4`` processes in
   parallel on the same instance.
 * We create a ``FIFOScheduler`` with ``searcher = "bayesopt"``. This means that
   new configurations to be evaluated are selected by Bayesian optimization, and

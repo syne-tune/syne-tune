@@ -43,7 +43,7 @@ if __name__ == "__main__":
     mode = "min"
     metric = "mean_loss"
 
-    # Local back-end
+    # Local backend
     trial_backend = LocalBackend(entry_point=entry_point)
 
     # Hyperband scheduler with SkOpt searcher

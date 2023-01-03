@@ -37,13 +37,13 @@ class MethodArguments:
     :param max_t: Value for ``max_resource_value``. One of ``max_resource_attr``,
         ``max_t`` is mandatory
     :param transfer_learning_evaluations: Support for transfer learning. Only
-        for simulator back-end experiments right now
-    :param use_surrogates: For simulator back-end experiments, defaults to False
+        for simulator backend experiments right now
+    :param use_surrogates: For simulator backend experiments, defaults to False
     :param num_brackets: Parameter for Hyperband schedulers, optional
     :param verbose: If True, fine-grained log information about the tuning is
         printed. Defaults to False
     :param num_samples: Parameter for Hyper-Tune schedulers, defaults to 50
-    :param fcnet_ordinal: Only for simulator back-end and ``fcnet`` blackbox.
+    :param fcnet_ordinal: Only for simulator backend and ``fcnet`` blackbox.
         This blackbox is tabulated with finite domains, one of which has
         irregular spacing. If ``fcnet_ordinal="none"``, this is left as
         categorical, otherwise we use ordinal encoding with

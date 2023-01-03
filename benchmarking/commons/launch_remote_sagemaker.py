@@ -48,7 +48,7 @@ def launch_remote(
 ):
     """
     Launches sequence of SageMaker training jobs, each running an experiment
-    with the SageMaker back-end. The loop runs over methods selected from
+    with the SageMaker backend. The loop runs over methods selected from
     ``methods`` and repetitions, both controlled by command line arguments.
 
     :param entry_point: Script for running the experiment

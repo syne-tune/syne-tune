@@ -112,7 +112,7 @@ def parse_args(
     benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
 ) -> (Any, List[str], List[str], List[int]):
-    """Parse command line arguments for simulator back-end experiments.
+    """Parse command line arguments for simulator backend experiments.
 
     :param methods: If ``--method`` is not given, then ``method_names`` are the
         keys of this dictionary
@@ -200,7 +200,7 @@ def main(
     use_transfer_learning: bool = False,
 ):
     """
-    Runs sequence of experiments with simulator back-end sequentially. The loop
+    Runs sequence of experiments with simulator backend sequentially. The loop
     runs over methods selected from ``methods``, repetitions and benchmarks
     selected from ``benchmark_definitions``, with the range being controlled by
     command line arguments.

@@ -1,8 +1,8 @@
-Benchmarking with Simulator Back-end
+Benchmarking with Simulator Backend
 ====================================
 
 The fastest and cheapest way to compare a number of different HPO methods, or
-variants thereof, is benchmarking with the simulator back-end. In this case,
+variants thereof, is benchmarking with the simulator backend. In this case,
 all training evaluations are simulated by querying metric and time values from
 a tabulated blackbox or a surrogate model. Not only are expensive computations
 on GPUs avoided, but the experiment also runs faster than real time. In some

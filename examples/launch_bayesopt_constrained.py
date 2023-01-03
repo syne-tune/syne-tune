@@ -44,7 +44,7 @@ if __name__ == "__main__":
     metric = "objective"
     constraint_attr = "my_constraint_metric"
 
-    # Local back-end
+    # Local backend
     trial_backend = LocalBackend(entry_point=entry_point)
 
     # Bayesian constrained optimization:

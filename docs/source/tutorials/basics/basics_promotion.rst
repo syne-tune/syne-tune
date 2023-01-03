@@ -149,10 +149,10 @@ promotion-based MOBSTER with ``--method MOBSTER-PROM``:
   ``config[max_resource_attr] = 9`` (instead of 81). It is resumed from its
   ``r=3`` checkpoint and runs epochs 4, 5, 6, 7, 8, 9, then terminates by
   itself. If ``max_resource_attr`` is not used, training scripts are started
-  to be run until the end, and they need to be stopped by the back-end.
-  Depending on the back-end, there can be a delay between a stopping signal
+  to be run until the end, and they need to be stopped by the backend.
+  Depending on the backend, there can be a delay between a stopping signal
   being sent and a worker coming available again, which is avoided if
-  ``max_resource_attr`` is used. Moreover, future back-ends may be able to use
+  ``max_resource_attr`` is used. Moreover, future backends may be able to use
   the information on how long a resumed trial needs to be run until paused for
   improved scheduling.
 * Syne Tune allows promotion-based schedulers to be used with training scripts
@@ -182,12 +182,12 @@ obtained for stopping-based scheduling, except the random variations are
 somewhat larger for ASHA stopping than for ASHA promotion.
 
 It is not a priori clear when stopping or promotion-based scheduling will work
-better. When it comes to the back-end, promotion-based scheduling needs
-checkpointing, and the back-end needs to efficiently handle the transfer of
+better. When it comes to the backend, promotion-based scheduling needs
+checkpointing, and the backend needs to efficiently handle the transfer of
 checkpoints between workers. On the other hand, promotion-based scheduling does
-not require the back-end to stop jobs (see ``max_resource_attr`` discussion
-above), which can be subject to delays in some back-ends. Run with the local
-back-end, where delays play no role, stopping and promotion-based scheduling
+not require the backend to stop jobs (see ``max_resource_attr`` discussion
+above), which can be subject to delays in some backends. Run with the local
+backend, where delays play no role, stopping and promotion-based scheduling
 can behave quite differently. In our experiments, we have often observed that
 stopping can be more efficient at the beginning, while promotion has an edge
 during later stages.

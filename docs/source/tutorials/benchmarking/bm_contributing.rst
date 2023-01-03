@@ -55,7 +55,7 @@ to be done:
   function returning a
   :class:`~benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
   object. Arguments should be a flag ``sagemaker_backend`` (``True`` for
-  SageMaker back-end experiment, ``False`` otherwise), and ``**kwargs``
+  SageMaker backend experiment, ``False`` otherwise), and ``**kwargs``
   overwriting values in ``RealBenchmarkDefinition``. Hints:
 
   * ``framework`` should be one of the
@@ -69,7 +69,7 @@ to be done:
     type and number of workers for experiments running your benchmark. If in
     doubt, choose instances with the lowest costs. Currently, most of our GPU
     benchmarks use ``ml.g4dn.xlarge``, and CPU benchmarks use ``ml.c5.4xlarge``.
-    Note that for experiments with the local back-end (``sagemaker_backend=False``),
+    Note that for experiments with the local backend (``sagemaker_backend=False``),
     the instance type must offer at least ``n_workers`` GPUs or CPU cores. For
     example, ``ml.g4dn.xlarge`` only has 1 GPU, while ``ml.g4dn.12xlarge``
     provides for ``n_workers=4``.
@@ -105,7 +105,7 @@ Contributing a Tabulated Benchmark
 
 Syne Tune contains a blackbox repository :mod:`syne_tune.blackbox_repository`
 for maintaining and serving tabulated and surrogate benchmarks, as well as a
-simulator back-end (:mod:`syne_tune.backend.simulator_backend`), which
+simulator backend (:mod:`syne_tune.backend.simulator_backend`), which
 simulates training evaluations from a blackbox. The simulator backend can be
 used with any Syne Tune scheduler, and experiment runs are very close to what
 would be obtained by running training for real. Since time is simulated as well,

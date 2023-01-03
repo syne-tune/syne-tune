@@ -156,8 +156,8 @@ run HPO experiments.
            }
        )
 
-       # Local back-end: Responsible for scheduling trials  [3]
-       # The local back-end runs trials as sub-processes on a single instance
+       # Local backend: Responsible for scheduling trials  [3]
+       # The local backend runs trials as sub-processes on a single instance
        trial_backend = LocalBackend(entry_point=str(entry_point))
 
        # Scheduler: Depends on `args.method`  [4]
@@ -221,9 +221,9 @@ Let us walk through the script, keeping this special case in mind:
   “resource” is a more general concept than “epoch”, but for most of this
   tutorial, they can be considered to be the same. We need to extend
   ``config_space`` by these two additional parameters.
-* [3] Next, we need to choose a back-end, which specifies how Syne Tune should
+* [3] Next, we need to choose a backend, which specifies how Syne Tune should
   execute our training jobs (also called *trials*). The simplest choice is the
-  local back-end, which runs trials as sub-processes on a single instance.
+  local backend, which runs trials as sub-processes on a single instance.
 * [4] Most important, we need to choose a *scheduler*, which is how HPO
   algorithms are referred to in Syne Tune. A scheduler needs to suggest
   configurations for new trials, and also to make scheduling decisions about
@@ -244,7 +244,7 @@ Let us walk through the script, keeping this special case in mind:
   attributes are used, you get the *or* combination.
 * Everything comes together in the ``Tuner``. Here, we can also specify
   ``n_workers``, the number of workers. This is the maximum number of trials
-  which are run concurrently. For the local back-end, concurrent trials share
+  which are run concurrently. For the local backend, concurrent trials share
   the resources of a single instance (e.g., CPU cores or GPUs), so the
   effective number of workers is limited in this way. To ensure you really use
   ``n_workers`` workers, make sure to pick an instance type which caters for

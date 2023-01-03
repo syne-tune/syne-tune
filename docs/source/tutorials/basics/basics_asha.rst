@@ -105,10 +105,10 @@ compute a predicate ``continue`` which is true iff the new value lies in the
 top 1/3.
 
 There are two variants of *asynchronous successive halving (ASHA)*, with
-different requirements on the back-end. In the *stopping* variant, a trial
+different requirements on the backend. In the *stopping* variant, a trial
 reaching a rung level is stopped and discarded if ``continue = False``,
 otherwise it is allowed to continue. If there is not enough data at a rung, the
-trial continues by default. The back-end needs to be able to stop jobs at
+trial continues by default. The backend needs to be able to stop jobs at
 random times.
 
 In the *promotion* variant, a trial reaching a rung level is always paused,
@@ -119,7 +119,7 @@ until 9 epochs): the trial is *promoted* to the next rung. If no paused trial
 can be promoted, a new one is started from scratch. This ASHA variant requires
 pause and resume scheduling. In particular, a trial needs to checkpoint its
 state (at least at rung levels), and these checkpoints need to be accessible
-to all workers. On the other hand, the back-end never needs to stop running
+to all workers. On the other hand, the backend never needs to stop running
 trials, as the stopping condition for each training job is determined up
 front.
 
