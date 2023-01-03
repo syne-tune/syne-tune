@@ -64,7 +64,7 @@ def load_blackbox(
     s3_root: Optional[str] = None,
     generate_if_not_found: bool = True,
     yahpo_kwargs: Optional[dict] = None,
-    ignore_hash: bool = False,
+    ignore_hash: bool = True,  # TODO: Switch back to ``False`` once hash computation fixed
 ) -> Union[Dict[str, Blackbox], Blackbox]:
     """
     :param name: name of a blackbox present in the repository, see
