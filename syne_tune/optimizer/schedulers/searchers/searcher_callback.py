@@ -16,7 +16,7 @@ from syne_tune.backend.trial_status import Trial
 from syne_tune.tuner_callback import StoreResultsCallback
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import ModelBasedSearcher
+from syne_tune.optimizer.schedulers.searchers import ModelBasedSearcher
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
     ModelStateTransformer,
 )

@@ -13,6 +13,7 @@
 from typing import Dict, Optional, Callable, Union
 import logging
 import copy
+from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     SurrogateModel,
@@ -114,6 +115,27 @@ SkipOptimizationOutputPredicate = Union[
 ]
 
 
+class StateForModelConverter:
+    """
+    Interface for state converters (optionally) used in :class:`ModelStateTransformer`.
+    These are applied to a state before being passed to the model for fitting and
+    predictions. The main use case is to filter down data if fitting the model scales
+    superlinearly.
+    """
+
+    def __call__(self, state: TuningJobState) -> TuningJobState:
+        raise NotImplementedError
+
+    def set_random_state(self, random_state: RandomState):
+        """
+        Some state converters use random sampling. For these, the random state has to
+        be set before first usage.
+
+        :param random_state: Random state to be used internally
+        """
+        pass
+
+
 class ModelStateTransformer:
     """
     This class maintains the
@@ -136,6 +158,11 @@ class ModelStateTransformer:
     fitting only depends on ``state.trials_evaluations`` (observed data),
     not on other fields (e.g., pending evaluations).
 
+    If given, ``state_converter`` maps the state to another one which is then
+    passed to the model for fitting and predictions. One important use case is
+    filtering down data when model fitting is superlinear. Another is to convert
+    multi-fidelity setups to be used with single-fidelity models inside.
+
     Note that ``model_factory`` and ``skip_optimization`` can also be a dictionary mapping
     output names to models. In that case, the state is shared but the models for each
     output metric are updated independently.
@@ -144,6 +171,7 @@ class ModelStateTransformer:
     :param init_state: Initial tuning job state
     :param skip_optimization: Skip optimization predicate (see above). Defaults to
         ``None`` (fitting is never skipped)
+    :param state_converter: See above, optional
     """
 
     def __init__(
@@ -151,6 +179,7 @@ class ModelStateTransformer:
         model_factory: TransformerOutputModelFactory,
         init_state: TuningJobState,
         skip_optimization: Optional[SkipOptimizationOutputPredicate] = None,
+        state_converter: Optional[StateForModelConverter] = None,
     ):
         self._use_single_model = False
         if isinstance(model_factory, TransformerModelFactory):
@@ -193,6 +222,7 @@ class ModelStateTransformer:
             skip_optimization = dictionarize_objective(skip_optimization)
         self._model_factory = model_factory
         self._skip_optimization = skip_optimization
+        self._state_converter = state_converter
         self._state = copy.copy(init_state)
         # SurrogateOutputModel computed on demand
         self._model: Optional[SurrogateOutputModel] = None
@@ -388,6 +418,11 @@ class ModelStateTransformer:
                     )
 
         _assert_same_keys(skip_optimization, self._model_factory)
+        state_for_model = (
+            self._state
+            if self._state_converter is None
+            else self._state_converter(self._state)
+        )
         output_models = dict()
         for output_name, output_skip_optimization in skip_optimization.items():
             fit_params = not output_skip_optimization
@@ -406,6 +441,6 @@ class ModelStateTransformer:
                     # Model will be refitted: Update
                     self._num_evaluations[output_name] = num_evaluations
             output_models[output_name] = self._model_factory[output_name].model(
-                state=self._state, fit_params=fit_params
+                state=state_for_model, fit_params=fit_params
             )
         self._model = output_models

@@ -201,6 +201,7 @@ def main(
             random_seed=random_seed,
             resource_attr=benchmark.resource_attr,
             verbose=True,
+            max_size_data_for_model=args.max_size_data_for_model,
             **method_kwargs,
         )
     )
@@ -215,6 +216,7 @@ def main(
         experiment_tag=experiment_tag,
         benchmark_name=benchmark_name,
         random_seed=master_random_seed,
+        max_size_data_for_model=args.max_size_data_for_model,
         benchmark=benchmark,
         extra_args=extra_args,
     )

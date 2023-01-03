@@ -71,6 +71,8 @@ GPU with PyTorch being installed):
   runs for a single seed equal to 5.
 * ``n_workers``, ``max_wallclock_time``: You can overwrite the default values
   for the selected benchmark by these command line arguments.
+* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
 
 If you defined additional arguments via ``extra_args``, you can use them here
 as well.

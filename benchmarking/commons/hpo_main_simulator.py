@@ -285,6 +285,7 @@ def main(
                 verbose=args.verbose,
                 fcnet_ordinal=args.fcnet_ordinal,
                 use_surrogates="lcbench" in benchmark_name,
+                max_size_data_for_model=args.max_size_data_for_model,
                 **method_kwargs,
             )
         )
@@ -299,6 +300,7 @@ def main(
             experiment_tag=experiment_tag,
             benchmark_name=benchmark_name,
             random_seed=master_random_seed,
+            max_size_data_for_model=args.max_size_data_for_model,
             extra_args=extra_args,
         )
         metadata["fcnet_ordinal"] = args.fcnet_ordinal

@@ -48,6 +48,9 @@ class MethodArguments:
         irregular spacing. If ``fcnet_ordinal="none"``, this is left as
         categorical, otherwise we use ordinal encoding with
         ``kind=fcnet_ordinal``.
+    :param max_size_data_for_model: Parameter of
+        :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`,
+        sets limit to number of observations to which GP surrogate model is fit to
     :param scheduler_kwargs: If given, overwrites defaults of scheduler
         arguments
     """
@@ -65,6 +68,7 @@ class MethodArguments:
     verbose: Optional[bool] = False
     num_samples: int = 50
     fcnet_ordinal: Optional[str] = None
+    max_size_data_for_model: Optional[int] = None
     scheduler_kwargs: Optional[dict] = None
 
 
@@ -72,7 +76,11 @@ MethodDefinitions = Dict[str, Callable[[MethodArguments], TrialScheduler]]
 
 
 def search_options(args: MethodArguments) -> dict:
-    return {"debug_log": args.verbose}
+    result = {"debug_log": args.verbose}
+    max_size = args.max_size_data_for_model
+    if max_size is not None:
+        result["max_size_data_for_model"] = max_size
+    return result
 
 
 def convert_categorical_to_ordinal(config_space: dict) -> dict:

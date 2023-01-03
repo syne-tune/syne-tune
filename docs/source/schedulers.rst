@@ -420,6 +420,9 @@ schedulers.
   enough (at least a minute per unit of ``r``). In such cases, MOBSTER
   (:class:`~syne_tune.optimizer.baselines.MOBSTER`) can outperform ASHA
   substantially. However, if your problem is cheap, so you can afford a lot of
-  evaluation, the searchers based on GP surrogate models may end up expensive.
-  With ASHA your baseline, you can try to speed up MOBSTER by changing
-  ``opt_skip_period`` (or using ``opt_skip_num_max_resource``).
+  evaluations, the searchers based on GP surrogate models may end up expensive.
+  In fact, once the number of evaluations surpassed a certain threshold, the
+  data is filtered down before fitting the surrogate model (see
+  `here <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`_).
+  You can adjust this threshold or change ``opt_skip_period`` in order to speed
+  up MOBSTER.
