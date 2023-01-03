@@ -88,7 +88,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
                 hp_name, hp = hps[self.random_state.randint(len(hps))]
 
                 # mutate the value by sampling
-                config[hp_name] = hp.sample(random_state=self.random_state)
+                child_config[hp_name] = hp.sample(random_state=self.random_state)
             else:
                 break
         if sample_try == self.num_sample_try:
