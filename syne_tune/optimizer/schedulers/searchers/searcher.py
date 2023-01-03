@@ -178,6 +178,8 @@ class BaseSearcher:
         If ``None`` (default), this is mapped to ``[dict()]``, a single default config
         determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
+    :param mode: Should metric be minimized ("min", default) or maximized
+        ("max")
     """
 
     def __init__(
@@ -185,6 +187,7 @@ class BaseSearcher:
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        mode: str = "min",
     ):
         self.config_space = config_space
         assert metric is not None, "Argument 'metric' is required"
@@ -192,6 +195,7 @@ class BaseSearcher:
         self._points_to_evaluate = impute_points_to_evaluate(
             points_to_evaluate, config_space
         )
+        self._mode = mode
 
     def configure_scheduler(self, scheduler):
         """
@@ -202,10 +206,10 @@ class BaseSearcher:
         :param scheduler: Scheduler the searcher is used with.
         :type scheduler: :class:`~syne_tune.optimizer.schedulers.TrialScheduler`
         """
-        from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
-
-        if isinstance(scheduler, FIFOScheduler):
-            self._metric = scheduler.metric
+        if hasattr(scheduler, "metric"):
+            self._metric = getattr(scheduler, "metric")
+        if hasattr(scheduler, "mode"):
+            self._mode = getattr(scheduler, "mode")
 
     def _next_initial_config(self) -> Optional[dict]:
         """
@@ -408,7 +412,10 @@ class SearcherWithRandomSeed(BaseSearcher):
         **kwargs,
     ):
         super().__init__(
-            config_space, metric=metric, points_to_evaluate=points_to_evaluate
+            config_space,
+            metric=metric,
+            points_to_evaluate=points_to_evaluate,
+            mode=kwargs.get("mode", "min"),
         )
         random_seed, _ = extract_random_seed(**kwargs)
         self.random_state = np.random.RandomState(random_seed)
@@ -465,15 +472,14 @@ class RandomSearcher(SearcherWithRandomSeed):
             self._debug_log = debug_log
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers import HyperbandScheduler
-        from syne_tune.optimizer.schedulers.synchronous import (
-            SynchronousHyperbandScheduler,
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
         )
 
         super().configure_scheduler(scheduler)
-        # If the scheduler is Hyperband, we want to know the resource
+        # If the scheduler is multi-fidelity, we want to know the resource
         # attribute, this is used for ``debug_log``
-        if isinstance(scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)):
+        if isinstance(scheduler, MultiFidelitySchedulerMixin):
             self._resource_attr = scheduler.resource_attr
 
     def get_config(self, **kwargs) -> Optional[dict]:

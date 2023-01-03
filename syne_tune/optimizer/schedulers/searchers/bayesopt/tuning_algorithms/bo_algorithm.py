@@ -75,7 +75,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         Note: Model updates (by the state transformer) for batch candidates beyond
         the first do not involve fitting hyperparameters, so they are usually
         cheap.
-    :param exclusion_candidates: set of candidates that should not be returned,
+    :param exclusion_candidates: Set of candidates that should not be returned,
         because they are already labeled, currently pending, or have failed
     :param num_requested_candidates: number of candidates to return
     :param greedy_batch_selection: If True and ``num_requested_candidates > 1``, we

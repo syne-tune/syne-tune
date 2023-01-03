@@ -310,6 +310,20 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             **extra_kwargs,
         )
 
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
+        )
+
+        assert isinstance(
+            scheduler, MultiFidelitySchedulerMixin
+        ), "GaussProcAdditiveModelFactory requires MultiFidelitySchedulerMixin scheduler"
+        assert scheduler.searcher_data == "all", (
+            "For an additive Gaussian learning curve model (model='gp_issm' or "
+            "model='gp_expdecay' in search_options), you need to set "
+            "searcher_data='all' when creating the multi-fidelity scheduler"
+        )
+
     def _draw_fantasy_values(self, state: TuningJobState) -> TuningJobState:
         """
         Note: Fantasized target values are not de-normalized, because they

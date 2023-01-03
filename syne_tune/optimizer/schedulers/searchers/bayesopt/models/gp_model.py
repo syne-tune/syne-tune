@@ -433,22 +433,25 @@ class GaussProcModelFactory(TransformerModelFactory):
         )
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
+        )
 
         if isinstance(
             self._gpmodel, (IndependentGPPerResourceModel, HyperTuneJointGPModel)
         ):
-            assert isinstance(scheduler, HyperbandScheduler), (
+            assert isinstance(scheduler, MultiFidelitySchedulerMixin), (
                 "gpmodel of type IndependentGPPerResourceModel requires "
-                + "HyperbandScheduler scheduler"
+                "MultiFidelitySchedulerMixin scheduler"
             )
             # Likelihood of internal model still has to be created (depends on
-            # rung levels of scheduler). Note that ``max_t`` must be included
-            max_t = scheduler.max_t
-            if scheduler.rung_levels[-1] == max_t:
+            # rung levels of scheduler). Note that ``max_resource_level`` must be
+            # included
+            max_resource_level = scheduler.max_resource_level
+            if scheduler.rung_levels[-1] == max_resource_level:
                 rung_levels = scheduler.rung_levels
             else:
-                rung_levels = scheduler.rung_levels + [max_t]
+                rung_levels = scheduler.rung_levels + [max_resource_level]
             self._gpmodel.create_likelihood(rung_levels)
 
 

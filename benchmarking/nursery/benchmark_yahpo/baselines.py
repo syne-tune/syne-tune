@@ -17,6 +17,7 @@ from syne_tune.optimizer.baselines import (
     RandomSearch,
     BayesianOptimization,
     ASHA,
+    MOBSTER,
 )
 
 
@@ -24,6 +25,7 @@ class Methods:
     RS = "RS"
     BO = "BO"
     ASHA = "ASHA"
+    MOBSTER = "MOBSTER"
 
 
 methods = {
@@ -44,6 +46,20 @@ methods = {
         random_seed=method_arguments.random_seed,
     ),
     Methods.ASHA: lambda method_arguments: ASHA(
+        config_space=method_arguments.config_space,
+        search_options=search_options(method_arguments),
+        mode=method_arguments.mode,
+        metric=method_arguments.metric,
+        max_resource_attr=method_arguments.max_resource_attr,
+        resource_attr=method_arguments.resource_attr,
+        random_seed=method_arguments.random_seed,
+        **(
+            method_arguments.scheduler_kwargs
+            if method_arguments.scheduler_kwargs is not None
+            else dict()
+        ),
+    ),
+    Methods.MOBSTER: lambda method_arguments: MOBSTER(
         config_space=method_arguments.config_space,
         search_options=search_options(method_arguments),
         mode=method_arguments.mode,

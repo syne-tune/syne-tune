@@ -26,8 +26,7 @@ from benchmarking.nursery.benchmark_yahpo.hpo_main import (
 if __name__ == "__main__":
 
     def _is_expensive_method(method: str) -> bool:
-        # return True
-        return method == "BO"
+        return method in {"BO", "MOBSTER"}
 
     entry_point = Path(__file__).parent / "hpo_main.py"
     launch_remote(

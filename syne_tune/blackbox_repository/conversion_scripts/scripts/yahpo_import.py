@@ -50,6 +50,8 @@ from yahpo_gym.benchmark_set import BenchmarkSet
 from yahpo_gym.configuration import list_scenarios
 from yahpo_gym import local_config
 
+logger = logging.getLogger(__name__)
+
 
 def download(target_path: Path, version: str):
     import urllib
@@ -58,12 +60,12 @@ def download(target_path: Path, version: str):
 
     target_file = target_path / f"yahpo_data-{version}"
     if not target_file.exists():
-        logging.info(f"File {target_file} not found redownloading it.")
+        logger.info(f"File {target_file} not found redownloading it.")
         urllib.request.urlretrieve(root + f"v{version}.zip", str(target_path) + ".zip")
         with zipfile.ZipFile(str(target_path) + ".zip", "r") as zip_ref:
             zip_ref.extractall(target_path)
     else:
-        logging.info(f"File {target_file} found, skipping download.")
+        logger.info(f"File {target_file} found, skipping download.")
 
 
 def _check_whether_iaml(benchmark: BenchmarkSet) -> bool:

@@ -333,7 +333,8 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             # Pass ``self._surrogate_kwargs`` as ``yahpo_kwargs``. This is used if
             # ``self.blackbox_name`` is a YAHPO blackbox, and is ignored otherwise
             self._blackbox = load_blackbox(
-                self.blackbox_name, yahpo_kwargs=self._surrogate_kwargs
+                self.blackbox_name,
+                yahpo_kwargs=self._surrogate_kwargs,
             )
             if self.dataset is None:
                 assert not isinstance(self._blackbox, dict), (

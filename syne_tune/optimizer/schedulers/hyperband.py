@@ -20,6 +20,7 @@ import numpy as np
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from syne_tune.optimizer.schedulers.multi_fidelity import MultiFidelitySchedulerMixin
 from syne_tune.optimizer.schedulers.hyperband_cost_promotion import (
     CostPromotionRungSystem,
 )
@@ -141,7 +142,7 @@ class TrialInformation:
         self.trial_decision = SchedulerDecision.CONTINUE
 
 
-class HyperbandScheduler(FIFOScheduler):
+class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     """Implements different variants of asynchronous Hyperband
 
     See ``type`` for the different variants. One implementation detail is
@@ -171,7 +172,7 @@ class HyperbandScheduler(FIFOScheduler):
     Rung levels are values of the resource attribute at which stop/go decisions
     are made for jobs, comparing their metric against others at the same level.
     These rung levels (positive, strictly increasing) can be specified via
-    ``rung_levels``, the largest must be ``<= max_resource_level``.
+    ``rung_levels``, the largest must be ``<= max_t``.
     If ``rung_levels`` is not given, they are specified by ``grace_period``
     and ``reduction_factor``. If :math:`r_{min}` is ``grace_period``,
     :math:`\eta` is ``reduction_factor``, then rung levels are
@@ -247,7 +248,7 @@ class HyperbandScheduler(FIFOScheduler):
         is set based on the ratio of successive rung levels.
     :type rung_levels: ``List[int]``, optional
     :param brackets: Number of brackets to be used in Hyperband. Each
-        bracket has a different grace period, all share ``max_resource_level``
+        bracket has a different grace period, all share ``max_t``
         and ``reduction_factor``. If ``brackets == 1`` (default), we run
         asynchronous successive halving.
     :type brackets: int, optional
@@ -372,18 +373,28 @@ class HyperbandScheduler(FIFOScheduler):
         self._resource_attr = kwargs["resource_attr"]
         self._rung_system_kwargs = kwargs["rung_system_kwargs"]
         self._cost_attr = kwargs.get("cost_attr")
-        self._num_brackets = kwargs["brackets"]
         assert not (
             scheduler_type == "cost_promotion" and self._cost_attr is None
         ), "cost_attr must be given if type='cost_promotion'"
         # Default: May be modified by searcher (via ``configure_scheduler``)
         self.bracket_distribution = DefaultHyperbandBracketDistribution()
+        # See :meth:`_extend_search_options` for why this is needed:
+        if kwargs.get("searcher") == "hypertune":
+            self._num_brackets_info = {
+                "num_brackets": kwargs["brackets"],
+                "rung_levels": kwargs.get("rung_levels"),
+                "grace_period": kwargs["grace_period"],
+                "reduction_factor": kwargs["reduction_factor"],
+            }
+        else:
+            self._num_brackets_info = None
+
         # Superclass constructor
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
         assert self.max_t is not None, (
             "Either max_t must be specified, or it has to be specified as "
-            + "config_space['epochs'], config_space['max_t'], "
-            + "config_space['max_epochs']"
+            + "config_space[max_resource_attr], config_space['epochs'], "
+            + "config_space['max_t'], config_space['max_epochs']"
         )
 
         # If rung_levels is given, grace_period and reduction_factor are ignored
@@ -409,21 +420,21 @@ class HyperbandScheduler(FIFOScheduler):
         rung_system_per_bracket = kwargs["rung_system_per_bracket"]
 
         self.terminator = HyperbandBracketManager(
-            scheduler_type,
-            self._resource_attr,
-            self.metric,
-            self.mode,
-            self.max_t,
-            rung_levels,
-            self._num_brackets,
-            rung_system_per_bracket,
+            scheduler_type=scheduler_type,
+            resource_attr=self._resource_attr,
+            metric=self.metric,
+            mode=self.mode,
+            max_t=self.max_t,
+            rung_levels=rung_levels,
+            brackets=kwargs["brackets"],
+            rung_system_per_bracket=rung_system_per_bracket,
             cost_attr=self._total_cost_attr(),
             random_seed=self.random_seed_generator(),
             rung_system_kwargs=self._rung_system_kwargs,
             scheduler=self,
         )
         self.do_snapshots = do_snapshots
-        self.searcher_data = kwargs["searcher_data"]
+        self._searcher_data = kwargs["searcher_data"]
         self._register_pending_myopic = kwargs["register_pending_myopic"]
         # _active_trials:
         # Maintains information for all tasks (running, paused, or stopped).
@@ -445,11 +456,32 @@ class HyperbandScheduler(FIFOScheduler):
 
     @property
     def rung_levels(self) -> List[int]:
+        """
+        Note that all entries of ``rung_levels`` are smaller than ``max_t`` (or
+        ``config_space[max_resource_attr]``): rung levels are resource levels where
+        stop/go decisions are made. In particular, if ``rung_levels`` is passed at
+        construction with ``rung_levels[-1] == max_t``, this last entry is stripped
+        off.
+
+        :return: Rung levels (strictly increasing, positive ints)
+        """
         return self.terminator.rung_levels
+
+    @property
+    def num_brackets(self) -> int:
+        return self.terminator.num_brackets
 
     @property
     def resource_attr(self) -> str:
         return self._resource_attr
+
+    @property
+    def max_resource_level(self) -> int:
+        return self.max_t
+
+    @property
+    def searcher_data(self) -> str:
+        return self._searcher_data
 
     def _initialize_searcher(self):
         if not self._searcher_initialized:
@@ -457,7 +489,7 @@ class HyperbandScheduler(FIFOScheduler):
             self.bracket_distribution.configure(self)
 
     def _extend_search_options(self, search_options: dict) -> dict:
-        # Note: Needs self.scheduler_type to be set
+        # Note: Needs ``self.scheduler_type`` to be set
         scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
             search_options, scheduler=scheduler, resource_attr=self._resource_attr
@@ -467,8 +499,23 @@ class HyperbandScheduler(FIFOScheduler):
         cost_attr = self._total_cost_attr()
         if cost_attr is not None:
             result["cost_attr"] = cost_attr
-        if "hypertune_distribution_num_samples" in result:
-            result["hypertune_distribution_num_brackets"] = self._num_brackets
+        if self._num_brackets_info is not None:
+            # At this point, the correct number of brackets needs to be
+            # determined. This could be smaller than the ``brackets`` argument
+            # passed at construction, since the number of brackets is limited
+            # by the number of rung levels, which in turn requires ``max_t``
+            # to have been determined. This is why we need some extra effort
+            # here
+            rung_levels = hyperband_rung_levels(
+                self._num_brackets_info["rung_levels"],
+                grace_period=self._num_brackets_info["grace_period"],
+                reduction_factor=self._num_brackets_info["reduction_factor"],
+                max_t=self.max_t,
+            )
+            num_brackets = min(
+                self._num_brackets_info["num_brackets"], len(rung_levels) + 1
+            )
+            result["hypertune_distribution_num_brackets"] = num_brackets
         return result
 
     def _total_cost_attr(self) -> Optional[str]:
@@ -828,6 +875,7 @@ class HyperbandScheduler(FIFOScheduler):
                         do_update = False  # Do not update again
                     else:
                         record.largest_update_resource = resource
+                act_str = None
                 if not task_continues:
                     if (not self.does_pause_resume()) or resource >= self.max_t:
                         trial_decision = SchedulerDecision.STOP
@@ -893,7 +941,10 @@ def hyperband_rung_levels(
 ) -> List[int]:
     """Creates ``rung_levels`` from ``grace_period``, ``reduction_factor``
 
-    :param rung_levels: If given, this is returned
+    Note: If ``rung_levels`` is given and ``rung_levels[-1] == max_t``, we strip
+    off this final entry, so that all rung levels are ``< max_t``.
+
+    :param rung_levels: If given, this is returned (but see above)
     :param grace_period: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     :param reduction_factor: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     :param max_t: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
@@ -926,10 +977,8 @@ def hyperband_rung_levels(
         max_rungs = int(np.log(max_t / min_t) / np.log(rf) + 1)
         rung_levels = [int(round(min_t * np.power(rf, k))) for k in range(max_rungs)]
         assert rung_levels[-1] <= max_t  # Sanity check
-        assert len(rung_levels) >= 2, (
-            f"grace_period = {grace_period}, reduction_factor = "
-            + f"{reduction_factor}, max_t = {max_t} leads to single rung level only"
-        )
+    if rung_levels[-1] == max_t:
+        rung_levels = rung_levels[:-1]
     return rung_levels
 
 
@@ -978,6 +1027,9 @@ class HyperbandBracketManager:
         rung_system_kwargs: dict,
         scheduler: HyperbandScheduler,
     ):
+        assert (
+            rung_levels[-1] < max_t
+        ), f"rung_levels = {rung_levels} must not contain max_t = {max_t}"
         self._scheduler_type = scheduler_type
         self._resource_attr = resource_attr
         self._max_t = max_t
@@ -986,17 +1038,21 @@ class HyperbandBracketManager:
         self._scheduler = scheduler
         # Maps trial_id -> bracket_id
         self._task_info = dict()
-        max_num_brackets = len(rung_levels)
+        max_num_brackets = len(rung_levels) + 1
         self.num_brackets = min(brackets, max_num_brackets)
         num_systems = self.num_brackets if rung_system_per_bracket else 1
         rung_levels_plus_maxt = rung_levels[1:] + [max_t]
         # Promotion quantiles: q_j = r_j / r_{j+1}
         promote_quantiles = [x / y for x, y in zip(rung_levels, rung_levels_plus_maxt)]
-        kwargs = dict(metric=metric, mode=mode, resource_attr=resource_attr)
+        kwargs = dict(
+            metric=metric,
+            mode=mode,
+            resource_attr=resource_attr,
+            max_t=max_t,
+        )
         if scheduler_type == "stopping":
             rs_type = StoppingRungSystem
         elif scheduler_type == "pasha":
-            kwargs["max_t"] = max_t
             kwargs["ranking_criterion"] = rung_system_kwargs["ranking_criterion"]
             kwargs["epsilon"] = rung_system_kwargs["epsilon"]
             kwargs["epsilon_scaling"] = rung_system_kwargs["epsilon_scaling"]
@@ -1005,18 +1061,16 @@ class HyperbandBracketManager:
             kwargs["num_threshold_candidates"] = rung_system_kwargs.get(
                 "num_threshold_candidates", 0
             )
-            if scheduler_type == "rush_stopping":
-                rs_type = RUSHStoppingRungSystem
-            else:
-                kwargs["max_t"] = max_t
-                rs_type = RUSHPromotionRungSystem
+            rs_type = (
+                RUSHStoppingRungSystem
+                if scheduler_type == "rush_stopping"
+                else RUSHPromotionRungSystem
+            )
+        elif scheduler_type == "promotion":
+            rs_type = PromotionRungSystem
         else:
-            kwargs["max_t"] = max_t
-            if scheduler_type == "promotion":
-                rs_type = PromotionRungSystem
-            else:
-                kwargs["cost_attr"] = cost_attr
-                rs_type = CostPromotionRungSystem
+            kwargs["cost_attr"] = cost_attr
+            rs_type = CostPromotionRungSystem
         self._rung_systems = [
             rs_type(
                 rung_levels=rung_levels[s:],
@@ -1057,7 +1111,7 @@ class HyperbandBracketManager:
         Since the bracket has already been sampled, not much is done here.
         We return the list of milestones for this bracket in reverse
         (decreasing) order. The first entry is ``max_t``, even if it is
-        not a milestone in the bracket. This list contains the resource
+        not a rung level in the bracket. This list contains the resource
         levels the task would reach if it ran to ``max_t`` without being stopped.
 
         :param trial_id: ID of trial

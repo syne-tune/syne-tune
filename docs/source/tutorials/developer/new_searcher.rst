@@ -74,6 +74,8 @@ some best practices for linking a new searcher into the factory:
   being specified by the user. You will always have the fields contributed by
   the generic schedulers, and for all others, your code should ideally come with
   sensible defaults.
+* Make sure to implement the ``configure_scheduler`` method of your new searcher,
+  restricting usage to supported scheduler types.
 
 Contribute your Extension
 -------------------------
