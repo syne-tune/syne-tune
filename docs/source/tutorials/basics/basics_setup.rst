@@ -268,7 +268,7 @@ exploration than for model-based HPO methods. On the other hand, we should
 avoid to encode finite-sized numerical ranges as categorical for model-based
 HPO, instead using one of the more specialized types in Syne Tune. More details
 on choosing the configuration space are provided
-`here <../../search_space.html>`__, where you will also learn about more types:
+`here <../../search_space.html>`_, where you will also learn about more types:
 categorical, finite range, and ordinal.
 
 Finally, you can also tune only a subset of the hyperparameters of your

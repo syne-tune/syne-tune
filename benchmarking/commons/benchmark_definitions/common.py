@@ -32,7 +32,7 @@ class SurrogateBenchmarkDefinition:
     :param surrogate_kwargs: Default value for arguments of surrogate,
         see :func:`make_surrogate`
     :param add_surrogate_kwargs: Arguments passed to :func:`add_surrogate`. Optional.
-    :param max_resource_attr: Internal name between back-end and scheduler
+    :param max_resource_attr: Internal name between backend and scheduler
     :param datasets: Used in transfer tuning
     :param fidelities: If given, this is a strictly increasing subset of
         the fidelity values provided by the surrogate, and only those

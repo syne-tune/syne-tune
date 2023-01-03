@@ -51,16 +51,16 @@ class SimulatorConfig:
     Configures the simulator:
 
     :param delay_on_trial_result: Time from ``report`` called on worker to result
-        registered at back-end, defaults to :const:`DEFAULT_DELAY`
+        registered at backend, defaults to :const:`DEFAULT_DELAY`
     :param delay_complete_after_final_report: Time from final ``report`` called
-        on worker to job completion being registered at back-end. Defaults to
+        on worker to job completion being registered at backend. Defaults to
         :const:`DEFAULT_DELAY`
     :param delay_complete_after_stop: Time from stop signal received at worker
-        to job completion being registered at back-end. Defaults to
+        to job completion being registered at backend. Defaults to
         :const:`DEFAULT_DELAY`
-    :param delay_start: Time from start command being sent at back-end and job
+    :param delay_start: Time from start command being sent at backend and job
         starting on the worker (which is free). Defaults to :const:`DEFAULT_DELAY`
-    :param delay_stop: Time from stop signal being sent at back-end to signal
+    :param delay_stop: Time from stop signal being sent at backend to signal
         received at worker (which is running). Defaults to :const:`DEFAULT_DELAY`
     """
 
@@ -82,7 +82,7 @@ class SimulatorConfig:
 
 class SimulatorBackend(LocalBackend):
     """
-    This simulator back-end drives experiments with tabulated training
+    This simulator backend drives experiments with tabulated training
     evaluation functions, which return their computation time rather than
     spend it. To this end, time (on the tuning instance) is simulated using
     a :attr:`time_keeper` and an event priority queue in :attr:`_simulator_state`.
@@ -101,12 +101,12 @@ class SimulatorBackend(LocalBackend):
     the trial.
 
     Each method call starts by advancing time by what was spent outside,
-    since the last recent call to the back-end. Then, all events in
+    since the last recent call to the backend. Then, all events in
     ``simulator_state`` are processed whose time is before the current time
     in ``time_keeper``. The method ends by ``time_keeper.mark_exit()``.
 
     .. note::
-       In this basic version of the simulator back-end, we still call a
+       In this basic version of the simulator backend, we still call a
        Python main function as a subprocess, which returns the requested
        metrics by looking them up or running a surrogate. This is flexible,
        but has the overhead of loading a table at every call. For fast and
@@ -303,7 +303,7 @@ class SimulatorBackend(LocalBackend):
             **debug_kwargs,
         )
         # Append timestamps to ``result``. This is done here, but not in
-        # the other back-ends, for which timestamps are only added when
+        # the other backends, for which timestamps are only added when
         # results are written out.
         result[ST_TUNER_TIME] = time_event
         if trial_id in self._next_results_to_fetch:
@@ -477,7 +477,7 @@ class SimulatorBackend(LocalBackend):
         """
         assert (
             trial_id in self._trial_dict
-        ), f"Trial with trial_id = {trial_id} not registered with back-end"
+        ), f"Trial with trial_id = {trial_id} not registered with backend"
         if config is None:
             config = self._trial_dict[trial_id].config
 

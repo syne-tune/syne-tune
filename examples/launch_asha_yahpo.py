@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 """
-Example for running ASHA with 4 workers with the simulator back-end based on three Yahpo surrogate benchmarks.
+Example for running ASHA with 4 workers with the simulator backend based on three Yahpo surrogate benchmarks.
 """
 import logging
 from dataclasses import dataclass

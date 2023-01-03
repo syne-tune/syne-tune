@@ -28,8 +28,8 @@ class SimulatorCallback(StoreResultsCallback):
     :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`.
 
     This is doing two things. First, :meth:`on_tuning_sleep` is advancing the
-    ``time_keeper`` of the simulator back-end by ``tuner_sleep_time`` (also
-    defined in the back-end). The real sleep time in :class:`~syne_tune.Tuner`
+    ``time_keeper`` of the simulator backend by ``tuner_sleep_time`` (also
+    defined in the backend). The real sleep time in :class:`~syne_tune.Tuner`
     must be 0.
 
     Second, we need to make sure that results written out are annotated by
@@ -51,7 +51,7 @@ class SimulatorCallback(StoreResultsCallback):
     def __init__(self):
         # Note: ``results_update_interval`` is w.r.t. real time, not
         # simulated time. Storing results intermediately is not important for
-        # the simulator back-end, so the default is larger
+        # the simulator backend, so the default is larger
         super().__init__(add_wallclock_time=True)
         self._tuner_sleep_time = None
         self._time_keeper = None

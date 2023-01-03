@@ -43,7 +43,7 @@ WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS = 10 * 60
 def parse_args(
     methods: Dict[str, Any], extra_args: Optional[List[dict]] = None
 ) -> (Any, List[str], List[int]):
-    """Parse command line arguments for SageMaker back-end experiments.
+    """Parse command line arguments for SageMaker backend experiments.
 
     :param methods: If ``--method`` is not given, then ``method_names`` are the
         keys of this dictionary
@@ -127,7 +127,7 @@ def main(
     map_extra_args: Optional[callable] = None,
 ):
     """
-    Runs experiment with SageMaker back-end.
+    Runs experiment with SageMaker backend.
 
     Command line arguments must specify a single benchmark, method, and seed,
     for example ``--method ASHA --num_seeds 5 --start_seed 4`` starts experiment

@@ -21,7 +21,7 @@ class SimulatedTimeKeeper(TimeKeeper):
     Here, time is simulated. It needs to be advanced explicitly.
 
     In addition, :meth:`mark_exit` and :meth:`real_time_since_last_recent_exit`
-    are used to measure real time spent outside the back-end (i.e., in the tuner
+    are used to measure real time spent outside the backend (i.e., in the tuner
     loop and scheduler). Namely, every method of
     :class:`~syne_tune.backend.SimulatorBackend` calls :meth:`mark_exit` before
     leaving, and :meth:`real_time_since_last_recent_exit` at the start, advancing

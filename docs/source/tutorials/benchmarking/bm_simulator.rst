@@ -1,8 +1,8 @@
-Benchmarking with Simulator Back-end
+Benchmarking with Simulator Backend
 ====================================
 
 The fastest and cheapest way to compare a number of different HPO methods, or
-variants thereof, is benchmarking with the simulator back-end. In this case,
+variants thereof, is benchmarking with the simulator backend. In this case,
 all training evaluations are simulated by querying metric and time values from
 a tabulated blackbox or a surrogate model. Not only are expensive computations
 on GPUs avoided, but the experiment also runs faster than real time. In some
@@ -14,7 +14,7 @@ Defining the Experiment
 
 As usual in Syne Tune, the experiment is defined by a number of scripts. We
 will look at an example in
-`benchmarking/nursery/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`__.
+`benchmarking/nursery/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`_.
 Common code used in these benchmarks can be found in :mod:`benchmarking.commons`.
 
 * Local launcher: :mod:`benchmarking.commons.hpo_main_simulator`
@@ -23,7 +23,7 @@ Common code used in these benchmarks can be found in :mod:`benchmarking.commons`
 
 Let us look at the scripts in order, and how you can adapt them to your needs:
 
-* `benchmarking/nursery/benchmark_hypertune/baselines.py <../../benchmarking/benchmark_hypertune.html#id1>`__:
+* `benchmarking/nursery/benchmark_hypertune/baselines.py <../../benchmarking/benchmark_hypertune.html#id1>`_:
   Defines the HPO methods to take part in the experiment, in the form of a
   dictionary ``methods`` which maps method names to factory functions, which in
   turn map :class:`~benchmarking.commons.baselines.MethodArguments` to scheduler
@@ -32,7 +32,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   you like to compare different variants of a method, you need to create
   different entries in ``methods``, for example ``Methods.MOBSTER_JOINT`` and
   ``Methods.MOBSTER_INDEP`` are different variants of MOBSTER.
-* `benchmarking/nursery/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`__:
+* `benchmarking/nursery/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`_:
   Defines the benchmarks to be considered in this experiment, in the form of a
   dictionary ``benchmark_definitions`` with values of type
   :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
@@ -41,7 +41,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   parameters, for example ``surrogate`` and ``surrogate_kwargs`` in order to
   select a different surrogate model, or you can change the defaults for
   ``n_workers`` or ``max_wallclock_time``.
-* `benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__:
+* `benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`_:
   Script for launching experiments locally. All you typically need to do here
   is to import :mod:`benchmarking.commons.hpo_main_simulator` and (optionally)
   to add additional command line arguments you would like to parameterize your
@@ -54,7 +54,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   ``methods`` and ``benchmark_definitions`` dictionaries, and (optionally) with
   ``extra_args`` and ``map_extra_args``. We will see shortly how the launcher
   is called, and what happens inside.
-* `benchmarking/nursery/benchmark_hypertune/launch_remote.py <../../benchmarking/benchmark_hypertune.html#id4>`__:
+* `benchmarking/nursery/benchmark_hypertune/launch_remote.py <../../benchmarking/benchmark_hypertune.html#id4>`_:
   Script for launching experiments remotely, in that each experiment runs as its
   own SageMaker training job, in parallel with other experiments. You need to
   import :mod:`benchmarking.commons.launch_remote_simulator` and pass the same
@@ -65,14 +65,14 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   runs different seeds (repetitions) in parallel for expensive methods, but
   sequentially for cheap ones. We will see shortly how the launcher is called,
   and what happens inside.
-* `benchmarking/nursery/benchmark_hypertune/requirements.txt <../../benchmarking/benchmark_hypertune.html#id5>`__:
+* `benchmarking/nursery/benchmark_hypertune/requirements.txt <../../benchmarking/benchmark_hypertune.html#id5>`_:
   Dependencies for ``hpo_main.py`` to be run remotely as SageMaker training job,
   in the context of launching experiments remotely. In particular, this needs
   the dependencies of Syne Tune itself. A safe bet here is ``syne-tune[extra]``
   and ``tqdm`` (which is the default if ``requirements.txt`` is missing). However,
   you can decrease startup time by narrowing down the dependencies you really
   need (see
-  `FAQ <../../faq.html#what-are-the-different-installations-options-supported>`__).
+  `FAQ <../../faq.html#what-are-the-different-installations-options-supported>`_).
   In our example here, we need ``gpsearchers`` and ``kde`` for methods. For
   simulated experiments, you always need to have ``blackbox-repository`` here.
   In order to use YAHPO benchmarks, also add ``yahpo``.
@@ -200,7 +200,7 @@ Selecting Benchmarks from benchmark_definitions
 Each family of tabulated (or surrogate) blackboxes accessible to the
 benchmarking tooling discussed here, are represented by a Python file in
 :mod:`benchmarking.commons.benchmark_definitions` (the same directly also
-contains definitions for `real benchmarks <bm_local.html>`__). For example:
+contains definitions for `real benchmarks <bm_local.html>`_). For example:
 
 * NASBench201 (:mod:`benchmarking.commons.benchmark_definitions.nas201`):
   Tabulated, no surrogate needed.
@@ -237,8 +237,8 @@ The YAHPO Family
 ~~~~~~~~~~~~~~~~
 
 A rich source of blackbox surrogates in Syne Tune comes from
-`YAHPO <https://github.com/slds-lmu/yahpo_gym>`__, which is also detailed in
-this `paper <https://arxiv.org/abs/2109.03670>`__. YAHPO contains a number of
+`YAHPO <https://github.com/slds-lmu/yahpo_gym>`_, which is also detailed in
+this `paper <https://arxiv.org/abs/2109.03670>`_. YAHPO contains a number of
 blackboxes (called scenarios), some of which over a lot of datasets (called
 instances). All our definitions are in
 :mod:`benchmarking.commons.benchmark_definitions.yahpo`. Further details can

@@ -71,7 +71,7 @@ def run_experiment(
 
     config_space = benchmark["config_space"]
 
-    # simulator back-end specialized to tabulated blackboxes
+    # simulator backend specialized to tabulated blackboxes
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         elapsed_time_attr=benchmark["elapsed_time_attr"],

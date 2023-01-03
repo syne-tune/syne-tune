@@ -50,7 +50,7 @@ def _compare_results(res_local: dict, res_simul: dict, num: int):
 
 
 # Note: This test is very tricky to get right. When training times are very
-# short, trivial differences between local and simulated back-end get
+# short, trivial differences between local and simulated backend get
 # amplified. These do not play a role with realistic training times of
 # more than 1 sec per epoch.
 @pytest.mark.skip(
@@ -80,7 +80,7 @@ def test_compare_local_simulator_backends(scheduler_name):
         stop_criterion = StoppingCriterion(max_num_trials_completed=6)
     else:
         stop_criterion = StoppingCriterion(max_num_trials_started=15)
-    # Run experiment with two different back-ends
+    # Run experiment with two different backends
     results = dict()
     for backend_name in ("local", "simulated"):
         benchmark["config_space"]["dont_sleep"] = backend_name == "simulated"
@@ -108,7 +108,7 @@ def test_compare_local_simulator_backends(scheduler_name):
             FIFOScheduler if scheduler_name == "fifo" else HyperbandScheduler
         )
         scheduler = scheduler_cls(benchmark["config_space"], **scheduler_options)
-        # Create back-end
+        # Create backend
         if backend_name == "local":
             trial_backend = LocalBackend(entry_point=benchmark["script"])
         else:
@@ -154,8 +154,8 @@ def test_compare_local_simulator_backends(scheduler_name):
     # times, which amplify the importance of processing in ``LocalBackend`` we
     # do not simulate (e.g., starting subprocesses).
     # Filter results for stopped trials which are received after the stop
-    # rung. These are filtered out by the simulator back-end, but not by
-    # the local back-end
+    # rung. These are filtered out by the simulator backend, but not by
+    # the local backend
     rung_levels = (9, 3, 1)
     max_resource_when_stopped = dict()
     stop_decisions = {SchedulerDecision.STOP, SchedulerDecision.PAUSE}

@@ -61,7 +61,7 @@ if __name__ == "__main__":
         path.mkdir(parents=True, exist_ok=True)
         tuner.trial_backend.set_path(results_root=str(path), tuner_name=tuner.name)
 
-    # Run the tuner on the sagemaker instance. If the simulation back-end is
+    # Run the tuner on the sagemaker instance. If the simulation backend is
     # used, this needs a specific callback
     if args.no_tuner_logging == "True":
         logging.getLogger("syne_tune.tuner").setLevel(logging.ERROR)

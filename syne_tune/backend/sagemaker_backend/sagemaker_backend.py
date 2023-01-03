@@ -46,17 +46,17 @@ logger = logging.getLogger(__name__)
 
 class SageMakerBackend(TrialBackend):
     """
-    This back-end executes each trial evaluation as a separate SageMaker
+    This backend executes each trial evaluation as a separate SageMaker
     training job, using ``sm_estimator`` as estimator.
 
     Checkpoints are written to and loaded from S3, using ``checkpoint_s3_uri``
     of the estimator.
 
-    Compared to :class:`LocalBackend`, this back-end can run any number of
+    Compared to :class:`LocalBackend`, this backend can run any number of
     jobs in parallel (given sufficient resources), and any instance type can
     be used.
 
-    This back-end allows to select the instance type and count for a trial
+    This backend allows to select the instance type and count for a trial
     evaluation, by passing values in the configuration, using names
     :const:`~syne_tune.constants.ST_INSTANCE_TYPE` and
     :const:`~syne_tune.constants.ST_INSTANCE_COUNT`. If these are given in the

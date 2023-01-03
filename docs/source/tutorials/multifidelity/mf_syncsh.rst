@@ -5,7 +5,7 @@ In this section, we will introduce some simple multi-fidelity HPO methods based
 on synchronous decision-making. Methods discussed here are not model-based,
 they suggest new configurations simply by drawing them uniformly at random from
 the configuration space, much like
-`random search <../basics/basics_randomsearch.html>`__ does.
+`random search <../basics/basics_randomsearch.html>`_ does.
 
 Early Stopping Hyperparameter Configurations
 --------------------------------------------
@@ -32,7 +32,7 @@ them to more promising ones. This speeds up the optimization process, since we
 have a higher throughput of configurations that we can try.
 
 Recall the notation of *resource* from the
-`introduction <mf_introduction.html#fidelities-and-resources>`__. In this
+`introduction <mf_introduction.html#fidelities-and-resources>`_. In this
 tutorial, resource equates to epochs trained, so :math:`r=2` refers to metric
 values evaluated at the end of the second epoch. The main objective of interest,
 validation error in our tutorial, is denoted by :math:`f(\mathbf{x}, r)`, where
@@ -46,7 +46,7 @@ Synchronous Successive Halving
 ------------------------------
 
 One of the simplest competitive multi-fidelity HPO methods is
-`synchronous successive halving <https://arxiv.org/abs/1502.07943>`__ (SH). The
+`synchronous successive halving <https://arxiv.org/abs/1502.07943>`_ (SH). The
 basic idea is to start with :math:`N` configurations randomly sampled from the
 configuration space, training each of them for :math:`r_{min}` epochs only
 (e.g., :math:`r_{min} = 1`). We then discard a fraction of the worst performing
@@ -84,7 +84,7 @@ resource :math:`r_{max}`. In our example:
 Finally, once one such round of SH is finished, we start the next round with a
 new set of initial configurations, until the total budget is spent.
 
-Our `launcher script <mf_setup.html#the-launcher-script>`__ runs synchronous
+Our `launcher script <mf_setup.html#the-launcher-script>`_ runs synchronous
 successive halving if ``method="SYNCSH"``. The relevant parameters are
 ``grace_period`` ( :math:`r_{min}` ) and ``reduction_factor`` ( :math:`\eta` ).
 Moreover, for SH, we need to set ``brackets=1``, since otherwise an extension
@@ -92,7 +92,7 @@ called *Hyperband* is run (to be discussed shortly). Our implementation is
 :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
 
 Synchronous SH employs *pause-and-resume scheduling* (see
-`introduction <mf_introduction.html#multi-fidelity-scheduling>`__). Once a
+`introduction <mf_introduction.html#multi-fidelity-scheduling>`_). Once a
 trial reaches a rung level, it is paused there. This is because the decision of
 which trials to promote to the next rung level can only be taken once the
 current rung level is completely filled up: only then can we determine the top
@@ -103,7 +103,7 @@ trial is resumed, the checkpoint is loaded and training can resume from there.
 Say a trial is paused at :math:`r = 9` and is later resumed towards
 :math:`r = 27`. With checkpointing, we have to train for :math:`27 - 9 = 18`
 epochs only instead of 27 epochs for training from scratch. More details are
-given `here <../../faq.html#how-can-i-enable-trial-checkpointing>`__. For
+given `here <../../faq.html#how-can-i-enable-trial-checkpointing>`_. For
 tabulated benchmarks, checkpointing is supported by default.
 
 Finally, it is important to understand in which sense the method detailed in
@@ -136,7 +136,7 @@ network might not have learned anything useful, and even the best configurations
 may be filtered out at random. If :math:`r_{min}` is too large on the other
 hand, the benefits of early stopping may be greatly diminished.
 
-`Hyperband <https://arxiv.org/abs/1603.06560>`__ is an extension of SH that
+`Hyperband <https://arxiv.org/abs/1603.06560>`_ is an extension of SH that
 mitigates the risk of setting :math:`r_{min}` too small. It runs SH as
 subroutine, where each round, called a *bracket*, balances between
 :math:`r_{min}` and the number of initial configurations :math:`N`, such that
@@ -155,7 +155,7 @@ NASBench-201 example:
 * Bracket 4: :math:`r_{min} = 81, N = 9`
 * Bracket 5: :math:`r_{min} = 200, N = 6`
 
-Our `launcher script <mf_setup.html#the-launcher-script>`__ runs synchronous
+Our `launcher script <mf_setup.html#the-launcher-script>`_ runs synchronous
 Hyperband if ``method="SYNCHB"``. Since ``brackets`` is not used when creating
 ``SyncHyperband``, the maximum value 6 is chosen. We also use the default
 values for ``grace_period`` (1) and ``reduction_factor`` (3). Our implementation

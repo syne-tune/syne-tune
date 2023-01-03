@@ -13,7 +13,7 @@ will use the promotion mode here (i.e., pause-and-resume scheduling).
 Surrogate Models of Learning Curves
 -----------------------------------
 
-`Recall <mf_syncsh.html#early-stopping-hyperparameter-configurations>`__
+`Recall <mf_syncsh.html#early-stopping-hyperparameter-configurations>`_
 that validation error after :math:`r` epochs is denoted by
 :math:`f(\mathbf{x}, r)`, with :math:`\mathbf{x}` the configuration. Here,
 :math:`r\mapsto f(\mathbf{x}, r)` is called learning curve. A learning curve
@@ -23,7 +23,7 @@ are much more abundant at smaller resource levels :math:`r`, while predictions
 are more valuable at larger :math:`r`.
 
 In the context of Gaussian process based
-`Bayesian optimization <../basics/basics_bayesopt.html>`__, Syne Tune supports
+`Bayesian optimization <../basics/basics_bayesopt.html>`_, Syne Tune supports
 a number of different learning curve surrogate models. The type of model is
 selected upon construction of the scheduler:
 
@@ -80,8 +80,8 @@ represents :math:`f(\mathbf{x}, r)` directly, with mean function
 ``"freeze-thaw"``, ``"matern52"``, ``"matern52-res-warp"``,
 ``"cross-validation"``. The default choice is ``"exp-decay-sum"``, which is
 inspired by the exponential decay model proposed
-`here <https://arxiv.org/abs/1406.3896>`__. Details about these different
-models are given `here <https://openreview.net/forum?id=a2rFihIU7i>`__ and in
+`here <https://arxiv.org/abs/1406.3896>`_. Details about these different
+models are given `here <https://openreview.net/forum?id=a2rFihIU7i>`_ and in
 the source code.
 
 Decision-making is somewhat more expensive with ``"gp_multitask"`` than with
@@ -96,7 +96,7 @@ Additive Gaussian Models
 Two additional models are selected by
 ``search_options["model"] = "gp_expdecay"`` and
 ``search_options["model"] = "gp_issm"``. The former is the exponential
-decay model proposed `here <https://arxiv.org/abs/1406.3896>`__, the latter is
+decay model proposed `here <https://arxiv.org/abs/1406.3896>`_, the latter is
 a variant thereof. These additive Gaussian models represent dependencies across
 :math:`r` in a cheaper way than in ``"gp_multitask"``, and they can be fit to
 all observed data, not just at rung levels. Also, joint sampling is cheap.
@@ -108,7 +108,7 @@ Hyper-Tune.
 Asynchronous MOBSTER
 --------------------
 
-`MOBSTER <https://openreview.net/forum?id=a2rFihIU7i>`__ combines ASHA and
+`MOBSTER <https://openreview.net/forum?id=a2rFihIU7i>`_ combines ASHA and
 asynchronous Hyperband with GP-based Bayesian optimization. A Gaussian process
 learning curve surrogate model is fit to the data at all rung levels, and
 posterior predictive distributions are used in order to compute acquisition
@@ -116,14 +116,14 @@ function values and decide on which configuration to start next. We distinguish
 between MOBSTER-JOINT with a GP multi-task model (``"gp_multitask"``) and
 MOBSTER-INDEP with an independent GP model (``"gp_independent"``), as detailed
 above. The acquisition function is expected improvement (EI) at the rung level
-:math:`r_{acq}` also used by `BOHB <mf_sync_model.html#synchronous-bohb>`__.
+:math:`r_{acq}` also used by `BOHB <mf_sync_model.html#synchronous-bohb>`_.
 
-Our `launcher script <mf_setup.html#the-launcher-script>`__ runs (asynchronous)
+Our `launcher script <mf_setup.html#the-launcher-script>`_ runs (asynchronous)
 MOBSTER-JOINT if ``method="MOBSTER-JOINT"``. The searcher can be configured
 with ``search_options``, but MOBSTER-JOINT with the ``"exp-decay-sum"``
 covariance model is the default
 
-As shown `below <mf_comparison.html>`__, MOBSTER can outperform ASHA
+As shown `below <mf_comparison.html>`_, MOBSTER can outperform ASHA
 significantly. This is achieved by starting many less trials that stop very
 early (after 1 epoch) due to poor performance. Essentially, MOBSTER rapidly
 learns some important properties about the NASBench-201 problem and avoids
@@ -153,7 +153,7 @@ not tend to make a difference, so the default ``searcher_data="rungs"`` is
 recommended.
 
 Finally, we can also combine ASHA with
-`BOHB <mf_sync_model.html#synchronous-bohb>`__ decision-making, by choosing
+`BOHB <mf_sync_model.html#synchronous-bohb>`_ decision-making, by choosing
 ``searcher="kde"`` in
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. This is an
 asynchronous version of BOHB.
@@ -161,7 +161,7 @@ asynchronous version of BOHB.
 MOBSTER-INDEP
 ~~~~~~~~~~~~~
 
-Our `launcher script <mf_setup.html#the-launcher-script>`__ runs
+Our `launcher script <mf_setup.html#the-launcher-script>`_ runs
 (asynchronous) MOBSTER-INDEP if ``method="MOBSTER-INDEP"``. The independent
 GPs model is selected by ``search_options["model"] = "gp_independent"``.
 MOBSTER tends to perform slightly better with a joint multi-task GP model than
@@ -172,7 +172,7 @@ marginal impact.
 MOBSTER and Hyperband
 ~~~~~~~~~~~~~~~~~~~~~
 
-Just like `ASHA can be run with multiple brackets <mf_asha.html#asynchronous-hyperband>`__,
+Just like `ASHA can be run with multiple brackets <mf_asha.html#asynchronous-hyperband>`_,
 so can MOBSTER, simply by selecting ``brackets`` when creating
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. In our experience so
 far, just like with ASHA, MOBSTER tends to work best with a single bracket.
@@ -180,7 +180,7 @@ far, just like with ASHA, MOBSTER tends to work best with a single bracket.
 Hyper-Tune
 ----------
 
-`Hyper-Tune <https://arxiv.org/abs/2201.06834>`__ is a model-based extension of
+`Hyper-Tune <https://arxiv.org/abs/2201.06834>`_ is a model-based extension of
 ASHA with some additional features compared to MOBSTER. It can be seen as
 extending MOBSTER-INDEP (with the ``"gp_independent"`` surrogate model) in two
 ways. First, it uses an acquisition function based on an ensemble predictive
@@ -192,7 +192,7 @@ is used to weight rung levels according to their reliability for making
 decisions (namely, which configuration :math:`\mathbf{x}` and bracket
 :math:`r_{min}` to associate with a new trial).
 
-Our `launcher script <mf_setup.html#the-launcher-script>`__ runs Hyper-Tune
+Our `launcher script <mf_setup.html#the-launcher-script>`_ runs Hyper-Tune
 if ``method="HYPERTUNE-INDEP"``. The searcher can be configured with
 ``search_options``, but the independent GPs model ``"gp_independent"`` is the
 default. In this example, Hyper-Tune is using a single bracket, so the
@@ -202,7 +202,7 @@ the acquisition function.
 Syne Tune also implements Hyper-Tune with the GP multi-task surrogate models
 used in MOBSTER. In result plots for this tutorial, original Hyper-Tune is
 called HYPERTUNE-INDEP, while this latter variant is called HYPERTUNE-JOINT.
-Our `launcher script <mf_setup.html#the-launcher-script>`__ runs this variant
+Our `launcher script <mf_setup.html#the-launcher-script>`_ runs this variant
 if ``method="HYPERTUNE-JOINT"``.
 
 Hyper-Tune with Multiple Brackets
@@ -213,7 +213,7 @@ simply by using the ``brackets`` argument of
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. If ``brackets > 1``,
 Hyper-Tune samples the bracket for a new trial from an adaptive distribution
 closely related to the ensemble distribution used for acquisitions. Our
-`launcher script <mf_setup.html#the-launcher-script>`__ runs Hyper-Tune with 4
+`launcher script <mf_setup.html#the-launcher-script>`_ runs Hyper-Tune with 4
 brackets if ``method="HYPERTUNE4-INDEP"``.
 
 Recall that both ASHA and MOBSTER tend to work better for one than for multiple
@@ -255,7 +255,7 @@ compute loss values :math:`l_{r, s}` for :math:`(r, r_{*})` over all
 :math:`[\theta_r]` is obtained as normalized sum of these indicators over
 :math:`s=1,\dots, S`. We also need to compute loss values :math:`l_{r_{*}, s}`,
 this is done using a cross-validation approximation, see
-`here <https://arxiv.org/abs/2201.06834>`__ or the code in
+`here <https://arxiv.org/abs/2201.06834>`_ or the code in
 :mod:`syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune`
 for details. In the beginning, with too little data at the second rung level,
 we use :math:`\theta_{r_{min}} = 1` and 0 elsewhere.
@@ -272,7 +272,7 @@ experiments so far, this adaptive weighting can outperform the
 :math:`r_{acq}` heuristic used in BOHB and MOBSTER.
 
 Note that our implementation generalizes
-`Hyper-Tune <https://arxiv.org/abs/2201.06834>`__ in that ranking losses and
+`Hyper-Tune <https://arxiv.org/abs/2201.06834>`_ in that ranking losses and
 :math:`[\theta_r]` are estimated once :math:`r_{*} > r_{min}` (i.e., once
 :math:`r_{*}` is equal to the second rung level). In the original work, one has
 to wait until :math:`r_{*} = r_{max}`, i.e. the maximum rung level is
@@ -290,7 +290,7 @@ to determine a distribution :math:`P(r)` over all rung levels which feature as
 :math:`r_{min}` in a bracket. In our NASBench-201 example, if Hyper-Tune is run
 with 5 brackets, the support of :math:`P(r)` would be :math:`\mathcal{S} =
 \{1, 3, 9, 27, 81\}`. Also, denote the
-`default distribution <mf_asha.html#asynchronous-hyperband>`__ used in ASHA
+`default distribution <mf_asha.html#asynchronous-hyperband>`_ used in ASHA
 and MOBSTER by :math:`P_0(r)`. Let
 :math:`r_0 = \text{min}(r_{*}, \text{max}(\mathcal{S}))`. For
 :math:`r\in\mathcal{S}`, we define :math:`P(r) = M \theta_r / r` for
@@ -298,4 +298,4 @@ and MOBSTER by :math:`P_0(r)`. Let
 :math:`M = \sum_{r\in\mathcal{S}, r\le r_0} P_0(r)`. In other words, we use
 :math:`\theta_r / r` for rung levels supported by data, and the default
 :math:`P_0(r)` elsewhere. Once more, this slightly generalizes
-`Hyper-Tune <https://arxiv.org/abs/2201.06834>`__.
+`Hyper-Tune <https://arxiv.org/abs/2201.06834>`_.

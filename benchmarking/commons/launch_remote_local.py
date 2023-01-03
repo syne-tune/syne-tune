@@ -78,7 +78,7 @@ def launch_remote(
 ):
     """
     Launches sequence of SageMaker training jobs, each running an experiment
-    with the local back-end. The loop runs over methods selected from ``methods``
+    with the local backend. The loop runs over methods selected from ``methods``
     and repetitions, both controlled by command line arguments.
 
     Combination of ``requirements.txt``: Dependencies for ``entry_point`` are the

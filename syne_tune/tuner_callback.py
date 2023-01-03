@@ -50,7 +50,7 @@ class TunerCallback:
     def on_loop_start(self):
         """Called at start of each tuning loop iteration
 
-        Every iteration starts with fetching new results from the back-end.
+        Every iteration starts with fetching new results from the backend.
         This is called before this is done.
         """
         pass
@@ -131,7 +131,7 @@ class StoreResultsCallback(TunerCallback):
     def _set_time_fields(self, result: dict):
         """
         Note that we only add wallclock time to the result if this has not
-        already been done (by the back-end)
+        already been done (by the backend)
         """
         if self._start_time_stamp is not None and ST_TUNER_TIME not in result:
             result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp

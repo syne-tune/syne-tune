@@ -65,7 +65,7 @@ class TensorboardCallback(TunerCallback):
     def _set_time_fields(self, result: dict):
         """
         Note that we only add wallclock time to the result if this has not
-        already been done (by the back-end)
+        already been done (by the backend)
         """
         if self.start_time_stamp is not None and ST_TUNER_TIME not in result:
             result[ST_TUNER_TIME] = perf_counter() - self.start_time_stamp

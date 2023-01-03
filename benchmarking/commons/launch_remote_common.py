@@ -40,8 +40,8 @@ def sagemaker_estimator_args(
     :param experiment_tag: Tag of experiment, used to create ``checkpoint_s3_uri``
     :param tuner_name: Name of tuner, used to create ``checkpoint_s3_uri``
     :param benchmark: Benchmark definition, optional
-    :param sagemaker_backend: Is remote tuning job running the SageMaker back-end?
-        If not, it either runs local or simulator back-end. Defaults to False
+    :param sagemaker_backend: Is remote tuning job running the SageMaker backend?
+        If not, it either runs local or simulator backend. Defaults to False
     :return: Keyword arguments for SageMaker estimator
     """
     checkpoint_s3_uri = s3_experiment_path(

@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # us use the default
     config_space = benchmark.config_space
 
-    # Local back-end
+    # Local backend
     trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
     # GP-based Bayesian optimization searcher. Many options can be specified

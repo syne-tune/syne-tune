@@ -58,7 +58,7 @@ class Reporter:
     :param add_cost: If True (default), estimated dollar cost since creation of
         :class:`Reporter` object is reported automatically as
         :const:`~syne_tune.constants.ST_WORKER_COST`. This is available for
-        SageMaker back-end only. Requires ``add_time=True``.
+        SageMaker backend only. Requires ``add_time=True``.
     """
 
     add_time: bool = True

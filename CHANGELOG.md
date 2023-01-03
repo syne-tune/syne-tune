@@ -59,7 +59,7 @@ Thanks to all contributors (sorted by chronological commit order):
 * BOTorch searcher
 * MOBSTER algorithm supports independent GPs at each rung level
 * Support for launching experiments in benchmarking/commons, for local,
-  SageMaker, and simulator back-end
+  SageMaker, and simulator backend
 * New benchmark: Fine-tuning Hugging Face transformers
 * Add IPython util function to display results as parallel categories plot
 * New hyperparameter types `ordinal`, `logordinal`
@@ -74,7 +74,7 @@ Thanks to all contributors (sorted by chronological commit order):
 * New dependencies `yahpo`
  
 ### Fixed
-* In SageMaker back-end, trials with low IDs received reports several times. This
+* In SageMaker backend, trials with low IDs received reports several times. This
   is fixed
 * Fixing issue with checkpoint_s3_uri usage
 * Fix mode in BOTorch searcher when maximizing

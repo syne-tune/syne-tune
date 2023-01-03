@@ -3,7 +3,7 @@ The TrialScheduler API
 
 In this section, we have a closer look at the
 :class:`~syne_tune.optimizer.scheduler.TrialScheduler` API, and how a scheduler
-interacts with the trial back-end.
+interacts with the trial backend.
 
 Interaction between TrialScheduler and TrialBackend
 ---------------------------------------------------
@@ -18,41 +18,41 @@ number of such evaluation (or training) jobs can be executed in parallel, on
 separate *workers* (which can be different GPUs or CPU cores on the same
 instance, or different instances).
 
-In Syne Tune, this process is split between two entities: the trial back-end
-and the `trial scheduler <../../schedulers.html>`__. The back-end wraps the
+In Syne Tune, this process is split between two entities: the trial backend
+and the `trial scheduler <../../schedulers.html>`_. The backend wraps the
 training code to be executed for different configurations and is responsible to
 start jobs, as well as stop, pause or resume them. It also collects results
 reported by the training jobs and relays them to the scheduler. In Syne Tune,
 pause-and-resume scheduling is done via
-`checkpointing <../../faq.html#how-can-i-enable-trial-checkpointing>`__. While
+`checkpointing <../../faq.html#how-can-i-enable-trial-checkpointing>`_. While
 code to write and load checkpoints locally must be provided by the training
-script, the back-end makes them available when needed. There are two basic
+script, the backend makes them available when needed. There are two basic
 events which happen repeatedly during an HPO experiment, as orchestrated by the
 :class:`~syne_tune.Tuner`:
 
-* The ``Tuner`` polls the back-end, which signals that one or more workers are
+* The ``Tuner`` polls the backend, which signals that one or more workers are
   available. For each free worker, it calls
   :meth:`~syne_tune.optimizer.scheduler.TrialScheduler.suggest`, asking for
   what to do next. As already seen in our
-  `first example <first_example.html#first-example>`__, the scheduler will
+  `first example <first_example.html#first-example>`_, the scheduler will
   typically suggest a configuration for a new trial to be started. On the
   other hand, a pause-and-resume scheduler may also suggest to resume a
   trial which is currently paused (having been started, and then paused,
   in the past). Based on the scheduler response, the ``Tuner`` asks the
-  back-end to start a new trial, or to resume an existing one.
-* The ``Tuner`` polls the back-end for new results, having been reported since
+  backend to start a new trial, or to resume an existing one.
+* The ``Tuner`` polls the backend for new results, having been reported since
   the last recent poll. For each such result,
   :meth:`~syne_tune.optimizer.scheduler.TrialScheduler.on_trial_result`
   is called. The scheduler makes a decision of what to do with the reporting
-  trial. Based on this decision, the ``Tuner`` asks the back-end to stop or
+  trial. Based on this decision, the ``Tuner`` asks the backend to stop or
   pause the trial (or does nothing, in case the trial is to continue).
 
 The processing of these events is non-blocking and full asynchronous, without
-any synchronization points. Depending on the back-end, there can be substantial
+any synchronization points. Depending on the backend, there can be substantial
 delays between a trial reporting a result and a stop or pause decision being
 executed. During this time, the training code simply continues, it may even
 report further results. Moreover, a worker may be idle between finishing an
-evaluation and starting or resuming another one, due to delays in the back-end
+evaluation and starting or resuming another one, due to delays in the backend
 or even compute time for decisions in the scheduler. However, it will never be
 idle having to wait for results from other trials.
 
@@ -61,7 +61,7 @@ TrialScheduler API
 
 We now discuss additional aspects of the
 :class:`~syne_tune.optimizer.scheduler.TrialScheduler` API, beyond what has
-already been covered `here <first_example.html#first-example>`__:
+already been covered `here <first_example.html#first-example>`_:
 
 * ``suggest`` returns a
   :class:`~syne_tune.optimizer.scheduler.TrialSuggestion` object with fields
@@ -83,7 +83,7 @@ already been covered `here <first_example.html#first-example>`__:
 * The only reason for ``suggest`` to return ``None`` is if no further
   suggestion can be made. This can happen if the configuration space has been
   exhausted. As discussed
-  `here <first_example.html#asynchronous-job-execution>`__, the scheduler
+  `here <first_example.html#asynchronous-job-execution>`_, the scheduler
   cannot delay a ``suggest`` decision to a later point in time.
 * The helper methods ``_preprocess_config`` and ``_postprocess_config`` are
   used when interfacing with a searcher. Namely, the configuration space
@@ -101,7 +101,7 @@ already been covered `here <first_example.html#first-example>`__:
   :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.start_suggestion`, the
   corresponding trial is going to be started, so ``on_trial_add`` is not
   mandatory.
-* ``on_trial_error``: This method is called by ``Tuner`` if the back-end
+* ``on_trial_error``: This method is called by ``Tuner`` if the backend
   reports a trial’s evaluation to have failed. A useful reaction for the
   scheduler is to not propose this configuration again, and also to remove
   pending evaluations associated with this trial.
