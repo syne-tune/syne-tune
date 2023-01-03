@@ -16,7 +16,7 @@ for 1 epoch, then 81 for 3 epochs, 27 for 9 epochs, and 9 for 27 epochs. Our
 excellent trial will always be among the top :math:`1/3` of others at these
 rung levels, but its progress through the rungs is severely delayed.
 
-In `asynchronous successive halving (ASHA) <https://arxiv.org/abs/1810.05934>`__,
+In `asynchronous successive halving (ASHA) <https://arxiv.org/abs/1810.05934>`_,
 the aim is to promote promising configurations as early as possible. There are
 two different variants of ASHA, and we will begin with the (arguably) simpler
 one. Whenever a worker becomes available, a new configuration is sampled at
@@ -35,14 +35,14 @@ decisions. While asynchronous decision-making can be much more efficient at
 running good configurations to the end, it runs the risk of making bad
 decisions based on too little data.
 
-Our `launcher script <mf_setup.html#the-launcher-script>`__ runs the stopping
+Our `launcher script <mf_setup.html#the-launcher-script>`_ runs the stopping
 variant of ASHA if ``method="ASHA-STOP"``.
 
 Asynchronous Successive Halving: Promotion Variant
 --------------------------------------------------
 
 In fact, the algorithm originally proposed as
-`ASHA <https://arxiv.org/abs/1810.05934>`__ is slightly different to what has
+`ASHA <https://arxiv.org/abs/1810.05934>`_ is slightly different to what has
 been detailed above. Instead of starting a trial once and rely on early
 stopping, this *promotion variant* is of the *pause-and-resume* type. Namely,
 whenever a trial reaches a rung, it is paused there. Whenever a worker becomes
@@ -50,7 +50,7 @@ available, all rungs are scanned top to bottom. If a paused trial is found
 which lies in the top :math:`1 / \eta` of all rung entries, it is *promoted*:
 it may resume and train until the next rung level. If no promotable paused
 trial is found, a new trial is started from scratch. Our
-`launcher script <mf_setup.html#the-launcher-script>`__ runs the stopping
+`launcher script <mf_setup.html#the-launcher-script>`_ runs the stopping
 variant of ASHA if ``method="ASHA-PROM"``.
 
 If these two variants (stopping and promotion) are compared under ideal
@@ -67,7 +67,7 @@ promotion type can be more attractive. In this context, it is important to
 understand the relevance of passing ``max_resource_attr`` to the scheduler
 (and, in our case, also to the
 :class:`~syne_tune.blackbox_repository.simulated_tabular_backend.BlackboxRepositoryBackend`).
-Recall the discussion `here <mf_setup.html#the-launcher-script>`__. If the
+Recall the discussion `here <mf_setup.html#the-launcher-script>`_. If the
 configuration space contains an entry with the maximum resource, whose key is
 passed to the scheduler as ``max_resource_attr``, the latter can modify this
 value when calling the backend to start or resume a trial. For example, if a
@@ -83,13 +83,13 @@ Finally, ASHA can also be extended to use multiple brackets. Namely, whenever
 a new trial is started, its bracket (or, equivalently, its :math:`r_{min}`
 value) is sampled randomly from a distribution. In Syne Tune, this distribution
 is proportional to the rung sizes in synchronous Hyperband. In our example
-with 6 brackets (see details `here <mf_syncsh.html#synchronous-hyperband>`__),
+with 6 brackets (see details `here <mf_syncsh.html#synchronous-hyperband>`_),
 this distribution is :math:`P(r_{min}) = [1:243/415, 3:98/415, 9:41/415,
 27:18/415, 81:9/415, 200:6/415]`. Our `launcher script
-<mf_setup.html#the-launcher-script>`__ runs asynchronous Hyperband with 6
+<mf_setup.html#the-launcher-script>`_ runs asynchronous Hyperband with 6
 brackets if ``method="ASHA6-STOP"``.
 
-As also noted in `ASHA <https://arxiv.org/abs/1810.05934>`__, the algorithm
+As also noted in `ASHA <https://arxiv.org/abs/1810.05934>`_, the algorithm
 often works best with a single bracket, so that ``brackets=1`` is the default
 in Syne Tune. However, we will see further below that model-based variants of
 ASHA with multiple brackets can outperform the single-bracket version if the

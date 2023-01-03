@@ -120,7 +120,7 @@ How to implement such scheduling decisions? In general, we need to compare a
 number of trials with each other on the basis of observations at a certain
 resource level :math:`r` (or, more generally, on values up to :math:`r`). In
 this tutorial, and in Syne Tune more generally, we use terminology defined in
-the `ASHA <https://arxiv.org/abs/1810.05934>`__ publication. A *rung* is a list
+the `ASHA <https://arxiv.org/abs/1810.05934>`_ publication. A *rung* is a list
 of trials :math:`\mathbf{x}_j` and observations :math:`f(\mathbf{x}_j, r)` at a
 certain resource level :math:`r`. This resource is also called *rung level*. In
 general, a decision on what to do with one or several trials in the rung is
@@ -135,7 +135,7 @@ remarks at this point, which will be substantiated with examples:
 * Modern successive halving methods innovated over earlier proposals by
   suggesting a geometric spacing of rung levels, and by calibrating the
   thresholds in scheduling decisions according to this spacing. For example,
-  the `median stopping rule <https://research.google/pubs/pub46180/>`__
+  the `median stopping rule <https://research.google/pubs/pub46180/>`_
   predates successive halving, but is typically outperformed by ASHA (while MSR
   is implemented in Syne Tune, it is not discussed in this tutorial).
 * Scheduling decisions can either be made synchronously or asynchronously. In
@@ -148,5 +148,5 @@ remarks at this point, which will be substantiated with examples:
   next rung level and paused there. When a worker becomes available, it may be
   used to resume any of the paused trials, in case they compare well against
   peers at the same rung. These modalities place `different requirements
-  <mf_asha.html#asynchronous-successive-halving-promotion-variant>`__ on the
+  <mf_asha.html#asynchronous-successive-halving-promotion-variant>`_ on the
   training script and the execution backend.

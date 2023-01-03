@@ -10,7 +10,7 @@ Defining the Experiment
 
 The scripts required to define an experiment are pretty much the same as in the
 local backend case. We will look at an example in
-`benchmarking/nursery/launch_sagemaker/ <../../benchmarking/launch_sagemaker.html>`__.
+`benchmarking/nursery/launch_sagemaker/ <../../benchmarking/launch_sagemaker.html>`_.
 Common code used in these benchmarks can be found in
 :mod:`benchmarking.commons`:
 
@@ -19,15 +19,15 @@ Common code used in these benchmarks can be found in
 * Benchmark definitions: :mod:`benchmarking.commons.benchmark_definitions`
 
 The scripts
-`benchmarking/nursery/launch_sagemaker/baselines.py <../../benchmarking/launch_sagemaker.html#id1>`__,
-`benchmarking/nursery/launch_sagemaker/hpo_main.py <../../benchmarking/launch_sagemaker.html#id2>`__, and
-`benchmarking/nursery/launch_sagemaker/launch_remote.py <../../benchmarking/launch_sagemaker.html#id3>`__
+`benchmarking/nursery/launch_sagemaker/baselines.py <../../benchmarking/launch_sagemaker.html#id1>`_,
+`benchmarking/nursery/launch_sagemaker/hpo_main.py <../../benchmarking/launch_sagemaker.html#id2>`_, and
+`benchmarking/nursery/launch_sagemaker/launch_remote.py <../../benchmarking/launch_sagemaker.html#id3>`_
 are identical in structure to what happens in the
-`local backend case <bm_local.html#defining-the-experiment>`__, with the only
+`local backend case <bm_local.html#defining-the-experiment>`_, with the only
 difference that :mod:`benchmarking.commons.hpo_main_sagemaker` or
 :mod:`benchmarking.commons.launch_remote_sagemaker` are imported from. Moreover,
 Syne Tune dependencies need to be specified in
-`benchmarking/nursery/launch_sagemaker/requirements.txt <../../benchmarking/launch_sagemaker.html#id4>`__.
+`benchmarking/nursery/launch_sagemaker/requirements.txt <../../benchmarking/launch_sagemaker.html#id4>`_.
 
 In terms of benchmarks, the same definitions can be used for the SageMaker
 backend, in particular you can select from
@@ -59,7 +59,7 @@ This call launches a single experiment on the local machine (however, each
 trial launches the training script as a SageMaker training job, using the
 instance type suggested for the benchmark). The command line arguments are the
 same as in the
-`local backend case <bm_local.html#launching-experiments-locally>`__. Additional
+`local backend case <bm_local.html#launching-experiments-locally>`_. Additional
 arguments are:
 
 * ``n_workers``, ``max_wallclock_time``: Overwrite the default values for the
@@ -67,7 +67,7 @@ arguments are:
 * ``max_failures``: Number of trials which can fail without terminating the
   entire experiment.
 * ``warm_pool``: This flag is discussed
-  `below <bm_sagemaker.html#using-sagemaker-managed-warm-pools>`__.
+  `below <bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_.
 
 If you defined additional arguments via ``extra_args``, you can use them here
 as well.
@@ -79,7 +79,7 @@ Sagemaker backend experiments can also be launched remotely, in which case
 each experiment is run in a SageMaker training job, using a cheap instance
 type, within which trials are executed as SageMaker training jobs as well. The
 usage is the same as in the
-`local backend case <bm_local.html#launching-experiments-remotely>`__.
+`local backend case <bm_local.html#launching-experiments-remotely>`_.
 
 .. note::
    At present, there are still some glitches which affect remote launching of
@@ -90,7 +90,7 @@ Using SageMaker Managed Warm Pools
 ----------------------------------
 
 The SageMaker backend supports
-`SageMaker managed warm pools <https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html>`__,
+`SageMaker managed warm pools <https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html>`_,
 a recently launched feature of SageMaker. In a nutshell, this feature allows
 customers to circumvent start-up delays for SageMaker training jobs which share
 a similar configuration (e.g., framework) with earlier jobs which have already

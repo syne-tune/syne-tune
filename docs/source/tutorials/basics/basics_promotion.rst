@@ -24,7 +24,7 @@ However, *pause and resume* needs more support from the training script, which
 has to make sure that a paused trial can be resumed later on, continuing
 training as if nothing happened in between. To this end, the *state* of the
 training job has to be checkpointed (i.e., stored into a file). The
-`training script <basics_asha.html#scripts-for-asynchronous-successive-halving>`__
+`training script <basics_asha.html#scripts-for-asynchronous-successive-halving>`_
 has to be modified once more, by replacing ``objective`` with this code:
 
 .. code-block:: python
@@ -112,7 +112,7 @@ Checkpointing requires you to implement the following:
   to the script, checkpointing is deactivated.
 
 Syne Tune provides some helper functions for checkpointing, see
-`FAQ <../../faq.html#how-can-i-enable-trial-checkpointing>`__.
+`FAQ <../../faq.html#how-can-i-enable-trial-checkpointing>`_.
 
 * ``checkpoint_model_at_rung_level(config, save_model_fn, epoch)`` stores
   a checkpoint at the end of epoch ``epoch``. The main work is done by
@@ -134,7 +134,7 @@ only be paused there. Selective checkpointing could be supported by passing the
 rung levels to the training script, but this is currently not done in Syne
 Tune.
 
-Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
+Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_
 runs promotion-based ASHA with the argument ``--method ASHA-PROM``, and
 promotion-based MOBSTER with ``--method MOBSTER-PROM``:
 

@@ -281,7 +281,7 @@ fluctuations.
 .. note::
    In order to learn more about how to launch long-running HPO experiments many
    times in parallel on SageMaker, please have a look at
-   `this tutorial <../benchmarking/README.html>`__.
+   `this tutorial <../benchmarking/README.html>`_.
 
 Recommendations
 ---------------
@@ -325,4 +325,4 @@ the order given there.
    all values are selected by the mid-point rule. If you want to run pure
    random search from the start (which is not recommended), you need to set
    ``points_to_evaluate=[]``. Details are provided
-   `here <../../schedulers.html#fifoscheduler>`__.
+   `here <../../schedulers.html#fifoscheduler>`_.

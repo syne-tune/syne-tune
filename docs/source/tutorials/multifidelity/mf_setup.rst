@@ -2,7 +2,7 @@ Setting up the Problem
 ======================
 
 If you have not done this before, it is recommended you first work through the
-`Basics of Syne Tune <../basics/README.html>`__ tutorial, in order to become
+`Basics of Syne Tune <../basics/README.html>`_ tutorial, in order to become
 familiar with concepts such as *configuration*, *configuration space*,
 *backend*, *scheduler*.
 
@@ -10,7 +10,7 @@ Running Example
 ---------------
 
 For most of this tutorial, we will be concerned with one running example: the
-`NASBench-201 benchmark <https://arxiv.org/abs/2001.00326>`__. NASBench-201 is
+`NASBench-201 benchmark <https://arxiv.org/abs/2001.00326>`_. NASBench-201 is
 a frequently used neural architecture search benchmark with a configuration
 space of six categorical parameters, with five values each. The authors
 trained networks under all these configurations and provide metrics, such as
@@ -255,7 +255,7 @@ script.
 Let us have a walk through this script, assuming it is called with the default
 ``--method ASHA-STOP``:
 
-* If you worked through `Basics of Syne Tune <../basics/README.html>`__, you
+* If you worked through `Basics of Syne Tune <../basics/README.html>`_, you
   probably miss the training scripts. Since we use the simulator backend with a
   blackbox (NASBench-201), a training script is not required, since the backend
   is directly linked to the blackbox repository and obtains evaluation data from
@@ -289,7 +289,7 @@ Let us have a walk through this script, assuming it is called with the default
   finite configuration space, we can ignore this extra complexity in this
   tutorial. However, choosing a suitable configuration space and specifying a
   surrogate can be important for model-based HPO methods. Some more informations
-  are given `here <../../search_space.html>`__.
+  are given `here <../../search_space.html>`_.
 * [2] We can determine ``resource_attr`` (name of resource attribute) and
   ``max_resource_level`` (largest value of resource attribute) from the
   blackbox. Next, if ``max_resource_attr`` is specified, we attach the
@@ -300,7 +300,7 @@ Let us have a walk through this script, assuming it is called with the default
   the maximum resource information to the configuration space is that
   pause-and-resume schedulers can use it to signal the training script how long
   to really run for. This is explained in more detail
-  `when we come to these schedulers <mf_asha.html#asynchronous-successive-halving-promotion-variant>`__.
+  `when we come to these schedulers <mf_asha.html#asynchronous-successive-halving-promotion-variant>`_.
   In short, we strongly recommend to use ``max_resource_attr`` and to configure
   schedulers with it.
 * [2] If ``max_resource_attr`` is not to be used, the scheduler needs to be
@@ -310,7 +310,7 @@ Let us have a walk through this script, assuming it is called with the default
   the default case. Most supported schedulers can easily be imported from
   :mod:`syne_tune.optimizer.baselines`, using common names.
 * [4] Finally, we create a stopping criterion and a ``Tuner``. This should be
-  well known from `Basics of Syne Tune <../basics/README.html>`__. One
+  well known from `Basics of Syne Tune <../basics/README.html>`_. One
   speciality here is that we require ``sleep_time=0`` and
   ``callbacks=[SimulatorCallback()]`` for things to work out with the simulator
   backend. Namely, since time is simulated, the ``Tuner`` does not really have

@@ -32,8 +32,8 @@ In Syne Tune, HPO algorithms are called *schedulers* (base class
 most promising configuration and suggest it as a new trial to the tuner. Some
 schedulers may decide to resume a paused trial instead of suggesting a new one.
 Schedulers may also be in charge of stopping running trials. Syne Tune supports
-`many schedulers <../../getting_started.html#supported-hpo-methods>`__, including
-`multi-fidelity <../multifidelity/README.html>`__ methods.
+`many schedulers <../../getting_started.html#supported-hpo-methods>`_, including
+`multi-fidelity <../multifidelity/README.html>`_ methods.
 
 
 Backend
@@ -65,7 +65,7 @@ equal to the number of independent resources on this machine, e.g. the number of
 GPUs or CPU cores. Experiments with the local backend can either be launched on
 your current machine (in which case this needs to own the resources you are
 requesting, such as GPUs), or you can
-`launch the experiment remotely <../../faq.html#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__
+`launch the experiment remotely <../../faq.html#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`_
 as a SageMaker training job, using an instance type of your choice. The figure
 below demonstrates the local backend. On the left, both scripts are executed on
 the local machine, while on the right, scripts are run remotely.
@@ -103,7 +103,7 @@ runs each trial evaluation as a separate SageMaker training job. Given sufficien
 instance limits, you can run your experiments with any number of workers you like,
 and each worker may use all resources on the executing instance. It is even
 possible to execute trials on instances of different types, which allows for
-`joint tuning of hyperparameters and compute resources <../../examples.html#joint-tuning-of-instance-type-and-hyperparameters-using-moasha>`__.
+`joint tuning of hyperparameters and compute resources <../../examples.html#joint-tuning-of-instance-type-and-hyperparameters-using-moasha>`_.
 The figure below demonstrates the SageMaker backend. On the left, the launcher
 script runs on the local machine, while on the right, it is run remotely.
 
@@ -122,12 +122,12 @@ This allows you to use any instance type and configuration you like. Also, you
 may use any of the SageMaker frameworks, from ``scikit-learn`` over ``PyTorch``
 and ``TensorFlow``, up to dedicated frameworks for distributed training. You may
 also
-`bring your own Docker image <../../examples.html#launch-with-sagemaker-backend-and-custom-docker-image>`__.
+`bring your own Docker image <../../examples.html#launch-with-sagemaker-backend-and-custom-docker-image>`_.
 
 This backend is most suited to tune models for which training is fairly expensive.
 SageMaker training jobs incur certain delays for starting or stopping, which are
 not present in the local backend. The SageMaker backend can be sped up by using
-`SageMaker managed warm pools <../benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`__.
+`SageMaker managed warm pools <../benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_.
 
 
 Simulator Backend
@@ -139,8 +139,8 @@ It runs on a *tabulated or surrogate benchmark*, where validation metric data
 typically obtained online by running a training script has been precomputed
 offline. In a corporate setting, simulation experiments are useful for unit and
 regression testing, but also to speed up evaluations of prototypes. More details
-are given `here <../benchmarking/bm_simulator.html>`__, and in
-`this example <../../examples.html#launch-hpo-experiment-with-simulator-backend>`__.
+are given `here <../benchmarking/bm_simulator.html>`_, and in
+`this example <../../examples.html#launch-hpo-experiment-with-simulator-backend>`_.
 
 The main advantage of the simulator backend is that it allows for realistic
 experimentation at very low cost, and running order of magnitude faster than
@@ -152,13 +152,13 @@ Importantly, Syne Tune is agnostic to which execution backend is being used. You
 can easily switch between backends by changing the ``trial_backend`` argument
 in :class:`~syne_tune.Tuner`:
 
-* `launch_height_baselines.py <../../examples.html#launch-hpo-experiment-locally>`__
+* `launch_height_baselines.py <../../examples.html#launch-hpo-experiment-locally>`_
   provides an example for launching experiments with the local backend
-* `launch_height_python_backend.py <../../examples.html#launch-hpo-experiment-with-python-backend>`__
+* `launch_height_python_backend.py <../../examples.html#launch-hpo-experiment-with-python-backend>`_
   provides an example for launching experiments with the Python backend
-* `launch_height_sagemaker.py <../../examples.html#launch-hpo-experiment-with-sagemaker-backend>`__
+* `launch_height_sagemaker.py <../../examples.html#launch-hpo-experiment-with-sagemaker-backend>`_
   provides an example for launching experiments with the SageMaker backend
-* `launch_nasbench201_simulated.py <../../examples.html#launch-hpo-experiment-with-simulator-backend>`__
+* `launch_nasbench201_simulated.py <../../examples.html#launch-hpo-experiment-with-simulator-backend>`_
   provides an example for launching experiments with the simulator backend
 
 
@@ -169,5 +169,5 @@ A benchmark is a collection of meta-datasets from different configuration spaces
 where the exact dataset split, the evaluation protocol, and the performance
 measure are well-specified. Benchmarking allows for experimental reproducibility
 and assist us in comparing HPO methods on the specified configurations.
-Refer to `this tutorial <../benchmarking/README.html>`__ for a complete guide on
+Refer to `this tutorial <../benchmarking/README.html>`_ for a complete guide on
 benchmarking in Syne Tune.

@@ -39,11 +39,11 @@ MOBSTER
 -------
 
 A simple method combining ASHA with Bayesian optimization is
-`MOBSTER <https://openreview.net/forum?id=a2rFihIU7i>`__. It restricts
+`MOBSTER <https://openreview.net/forum?id=a2rFihIU7i>`_. It restricts
 Bayesian decision-making to proposing configurations for new trials, leaving
 scheduling decisions for existing trials (e.g., stopping, pausing, promoting)
 to ASHA. Recall from
-`Bayesian Optimization <basics_bayesopt.html#what-is-bayesian-optimization>`__
+`Bayesian Optimization <basics_bayesopt.html#what-is-bayesian-optimization>`_
 that we need two ingredients: a surrogate model :math:`f(\mathbf{x}, r)` and
 an acquisition function :math:`a(\mathbf{x})`:
 
@@ -54,7 +54,7 @@ an acquisition function :math:`a(\mathbf{x})`:
   done in several different ways, which are detailed below.
 
 * Acquisition function: MOBSTER adopts an idea from
-  `BOHB <https://arxiv.org/abs/1807.01774>`__, where it is argued that the
+  `BOHB <https://arxiv.org/abs/1807.01774>`_, where it is argued that the
   function of interest is really :math:`f(\mathbf{x}, r_{max})` (where
   :math:`r_{max}` is the full number of epochs), so expected improvement for
   this function would be a reasonable choice. However, this requires at least
@@ -67,13 +67,13 @@ These choices conveniently reduce MOBSTER to a Bayesian optimization searcher
 of similar form than without early stopping. One important difference is of
 course that a lot more data is available now, which has scaling implications
 for the surrogate model. More details about MOBSTER, and further options not
-discussed here, are given in `this tutorial <../multifidelity/README.html>`__.
+discussed here, are given in `this tutorial <../multifidelity/README.html>`_.
 
-Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
+Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_
 runs stopping-based MOBSTER with the argument ``--method MOBSTER-STOP``. At
 least if defaults are chosen, this is much the same as for ``ASHA-STOP``.
 However, we can configure the surrogate model with a range of options, which
-are detailed `here <../multifidelity/mf_async_model.html>`__.
+are detailed `here <../multifidelity/mf_async_model.html>`_.
 
 Results for MOBSTER
 -------------------
@@ -95,7 +95,7 @@ Results on NASBench201 (ImageNet-16)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We repeated this comparison on a harder benchmark problem:
-`NASBench-201 <https://arxiv.org/abs/2001.00326>`__, on the ImageNet-16
+`NASBench-201 <https://arxiv.org/abs/2001.00326>`_, on the ImageNet-16
 dataset. Here, ``r_max = 200``, and rung levels are ``1, 3, 9, 27, 81, 200``.
 We used 8 workers and 8 hours experiment time, and once more report median
 and 25/75 percentiles over 50 repeats. Now, after about 5 hours, MOBSTER

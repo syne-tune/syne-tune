@@ -8,7 +8,7 @@ of how to extend this template.
 
 Our example here is somewhat more advanced than the one given for asynchronous
 Hyperband. In fact, we will walk through the implementation of
-`Differential Evolution Hyperband (DEHB) <https://arxiv.org/abs/2105.09821>`__
+`Differential Evolution Hyperband (DEHB) <https://arxiv.org/abs/2105.09821>`_
 in Syne Tune. Readers who are not interested in how to extend synchronous
 Hyperband, may skip this section without loss.
 
@@ -17,19 +17,19 @@ Synchronous Hyperband
 
 The differences between synchronous and asynchronous successive halving and
 Hyperband are detailed in
-`this tutorial <../multifidelity/mf_asha.html#asynchronous-successive-halving-early-stopping-variant>`__.
+`this tutorial <../multifidelity/mf_asha.html#asynchronous-successive-halving-early-stopping-variant>`_.
 In a nutshell, synchronous Hyperband uses rung levels of a priori fixed size,
 and decisions on which trials to promote to the next level are only done when
 all slots in the current rung are filled. In other words, *promotion decisions*
 are synchronized, while the execution of parallel jobs still happens
 asynchronously. This requirement poses slight additional challenges for an
 implementation, over what is said in
-`published work <https://jmlr.org/papers/v18/16-558.html>`__. We start with an
+`published work <https://jmlr.org/papers/v18/16-558.html>`_. We start with an
 overview of
 :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
 Concepts such as resource, rung, bracket, grace period :math:`r_{min}`,
 reduction factor :math:`\eta` are detailed in
-`this tutorial <../multifidelity/README.html>`__.
+`this tutorial <../multifidelity/README.html>`_.
 
 :class:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket.SynchronousHyperbandBracket`
 represents a bracket, consisting of a list of rungs, where each rung is
@@ -95,11 +95,11 @@ Differential Evolution Hyperband
 --------------------------------
 
 We will now have a closer look at the implementation of
-`DEHB <https://arxiv.org/abs/2105.09821>`__ in Syne Tune, which is a
+`DEHB <https://arxiv.org/abs/2105.09821>`_ in Syne Tune, which is a
 recent extension of synchronous Hyperband, where configurations of
 trials are chosen by evolutionary computations (mutation, cross-over,
 selection). This example is more advanced than the
-`one above <extend_async_hb.html>`__, in that we need to do more than
+`one above <extend_async_hb.html>`_, in that we need to do more than
 furnishing
 :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
 with a new searcher. The only time when a searcher suggests configurations is
@@ -118,7 +118,7 @@ Moreover, each configuration attached to a trial is represented by an
 encoded vector with values in :math:`[0, 1]`, where the mapping from
 vectors to configurations is not invertible if the configuration space
 contains discrete parameters. Much the same is done in Gaussian process
-based `Bayesian optimization <../basics/basics_bayesopt.html>`__.
+based `Bayesian optimization <../basics/basics_bayesopt.html>`_.
 
 The very first bracket of DEHB is processed in the same way as in
 synchronous Hyperband, so assume the current bracket is not the first.
@@ -146,7 +146,7 @@ chosen:
   to the slot.
 
 While this sounds quite foreign to what we saw
-`above <extend_sync_hb.html#synchronous-hyperband>`__, we can make
+`above <extend_sync_hb.html#synchronous-hyperband>`_, we can make
 progress by associating each candidate vector arising from mutation and
 cross-over with a new ``trial_id``. After all, in order to determine the
 winner between candidate and target, we have to evaluate the former.

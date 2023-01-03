@@ -6,13 +6,13 @@ methods like successive halving and Hyperband. These can be run with
 synchronous or asynchronous decision-making. The most important generic
 templates at the moment are:
 
-* `FIFOScheduler <random_search.html#fifoscheduler-and-randomsearcher>`__:
+* `FIFOScheduler <random_search.html#fifoscheduler-and-randomsearcher>`_:
   *Full evaluation* scheduler, baseclass for many others. See also
   :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
-* `HyperbandScheduler <extend_async_hb.html#hyperbandscheduler>`__:
+* `HyperbandScheduler <extend_async_hb.html#hyperbandscheduler>`_:
   Asynchronous successive halving and Hyperband. See also
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
-* `SynchronousHyperbandScheduler <extend_sync_hb.html#synchronous-hyperband>`__:
+* `SynchronousHyperbandScheduler <extend_sync_hb.html#synchronous-hyperband>`_:
   Synchronous successive halving and Hyperband. See also
   :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
 
@@ -29,7 +29,7 @@ HyperbandScheduler
 ------------------
 
 Details about asynchronous successive halving and Hyperband are given in the
-`Multi-fidelity HPO tutorial <../multifidelity/README.html>`__. This is a
+`Multi-fidelity HPO tutorial <../multifidelity/README.html>`_. This is a
 multi-fidelity scheduler, where trials report intermediate results (e.g.,
 validation error at the end of each epoch of training). We can formalize this
 notion by the concept of *resource* :math:`r = 1, 2, 3, \dots` (e.g.,
@@ -47,7 +47,7 @@ class:`syne_tune.optimizer.schedulers.FIFOScheduler`:
   class:`syne_tune.optimizer.schedulers.FIFOScheduler`. They are used to
   determine the maximum resource :math:`r_{max}` (e.g., the total number of
   epochs a trial is to be trained, if not stopped before). As discussed in
-  detail `here <../multifidelity/mf_setup.html#the-launcher-script>`__, it is
+  detail `here <../multifidelity/mf_setup.html#the-launcher-script>`_, it is
   best practice reserving a field in the configuration space
   ``scheduler.config_space`` to contain :math:`r_{max}`. If this is done, its
   name should be passed in ``max_resource_attr``. Now, every configuration sent
@@ -60,12 +60,12 @@ class:`syne_tune.optimizer.schedulers.FIFOScheduler`:
   to be passed explicitly via ``max_t`` (which is not needed if
   ``max_resource_attr`` is used).
 * ``reduction_factor``, ``grace_period``, ``brackets`` are important parameters
-  detailed in the `tutorial <../multifidelity/README.html>`__. If
+  detailed in the `tutorial <../multifidelity/README.html>`_. If
   ``brackets > 1``, we run asynchronous Hyperband with this number of brackets,
   while for ``bracket == 1`` we run asynchronous successive halving (this is the
   default).
 * As detailed in the
-  `tutorial <../multifidelity/mf_asha.html#asynchronous-successive-halving-early-stopping-variant>`__,
+  `tutorial <../multifidelity/mf_asha.html#asynchronous-successive-halving-early-stopping-variant>`_,
   ``type`` determines whether the method uses early stopping (``type="stopping"``)
   or pause-and-resume scheduling (``type="promotion"``). Further choices of
   ``type`` activate specific algorithms such as RUSH, PASHA, or cost-sensitive
@@ -76,14 +76,14 @@ Kernel Density Estimator Searcher
 
 One of the most flexible ways of extending
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` is to provide it with
-a novel `searcher <first_example.html#searchers-and-schedulers>`__. In order to
+a novel `searcher <first_example.html#searchers-and-schedulers>`_. In order to
 understand how this is done, we will walk through
 :class:`~syne_tune.optimizer.schedulers.searchers.kde.MultiFidelityKernelDensityEstimator`
 and
 :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`.
 This searcher implements ``suggest`` as in
-`BOHB <https://arxiv.org/abs/1807.01774>`__, as also detailed in
-`this tutorial <../multifidelity/mf_sync_model.html#synchronous-bohb>`__. In a
+`BOHB <https://arxiv.org/abs/1807.01774>`_, as also detailed in
+`this tutorial <../multifidelity/mf_sync_model.html#synchronous-bohb>`_. In a
 nutshell, the searcher splits all observations into two parts (*good* and
 *bad*), depending on metric values lying above or below a certain quantile, and
 fits kernel density estimators to these two subsets. It then makes decisions
@@ -143,7 +143,7 @@ This searcher takes pending evaluations into account (by way of fantasizing).
 Moreover, it can be configured with a Gaussian process model and an acquisition
 function, which is optimized in a gradient-based manner.
 
-Moreover, as already noted `here <first_example.html#searchers-and-schedulers>`__,
+Moreover, as already noted `here <first_example.html#searchers-and-schedulers>`_,
 ``HyperbandScheduler`` also allows to configure the decision rule for
 stop/continue or pause/resume as part of ``on_trial_report``. Examples for this
 are found in
