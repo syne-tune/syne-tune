@@ -16,19 +16,22 @@ This example show how to launch a tuning job that will be executed on Sagemaker 
 import logging
 from pathlib import Path
 
+from sagemaker.pytorch import PyTorch
+
 from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend import LocalBackend
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.estimators import (
-    basic_cpu_instance_sagemaker_estimator,
-    DEFAULT_CPU_INSTANCE_SMALL,
-)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.remote.estimators import (
+    DEFAULT_CPU_INSTANCE_SMALL,
+    PYTORCH_LATEST_FRAMEWORK,
+    PYTORCH_LATEST_PY_VERSION,
+)
 from syne_tune.remote.remote_launcher import RemoteLauncher
 
 if __name__ == "__main__":
@@ -57,7 +60,10 @@ if __name__ == "__main__":
     distribute_trials_on_sagemaker = False
     if distribute_trials_on_sagemaker:
         trial_backend = SageMakerBackend(
-            sm_estimator=basic_cpu_instance_sagemaker_estimator(
+            sm_estimator=PyTorch(
+                instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+                framework_version=PYTORCH_LATEST_FRAMEWORK,
+                py_version=PYTORCH_LATEST_PY_VERSION,
                 entry_point=entry_point,
                 role=get_execution_role(),
                 max_run=10 * 60,

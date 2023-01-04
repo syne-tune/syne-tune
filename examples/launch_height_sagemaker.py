@@ -16,17 +16,21 @@ Example showing how to run on Sagemaker with a Sagemaker Framework.
 import logging
 from pathlib import Path
 
+from sagemaker.pytorch import PyTorch
+
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.estimators import (
-    basic_cpu_instance_sagemaker_estimator,
-)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.remote.estimators import (
+    PYTORCH_LATEST_FRAMEWORK,
+    PYTORCH_LATEST_PY_VERSION,
+    DEFAULT_CPU_INSTANCE_SMALL,
+)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -56,7 +60,10 @@ if __name__ == "__main__":
 
     trial_backend = SageMakerBackend(
         # we tune a PyTorch Framework from Sagemaker
-        sm_estimator=basic_cpu_instance_sagemaker_estimator(
+        sm_estimator=PyTorch(
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+            framework_version=PYTORCH_LATEST_FRAMEWORK,
+            py_version=PYTORCH_LATEST_PY_VERSION,
             entry_point=str(entry_point),
             role=get_execution_role(),
             max_run=10 * 60,

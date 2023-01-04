@@ -18,19 +18,19 @@ from benchmarking.training_scripts.resnet_cifar10.resnet_cifar10 import (
     RESOURCE_ATTR,
     _config_space,
 )
-from syne_tune.backend.sagemaker_backend.estimators import (
-    DEFAULT_GPU_INSTANCE_SMALL,
-    DEFAULT_GPU_INSTANCE_LARGE,
+from syne_tune.remote.estimators import (
+    DEFAULT_GPU_INSTANCE_1GPU,
+    DEFAULT_GPU_INSTANCE_4GPU,
 )
 
 
 def resnet_cifar10_default_params(sagemaker_backend: bool):
     if sagemaker_backend:
-        instance_type = DEFAULT_GPU_INSTANCE_SMALL
+        instance_type = DEFAULT_GPU_INSTANCE_1GPU
     else:
         # For local backend, GPU cores serve different workers, so we
         # need more memory
-        instance_type = DEFAULT_GPU_INSTANCE_LARGE
+        instance_type = DEFAULT_GPU_INSTANCE_4GPU
     return {
         "max_resource_level": 27,
         "instance_type": instance_type,

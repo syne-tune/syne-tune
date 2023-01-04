@@ -16,18 +16,25 @@ Example for how to fine-tune a DistilBERT model on the IMDB sentiment classifica
 import logging
 from pathlib import Path
 
+from sagemaker.huggingface import HuggingFace
+
 import syne_tune
 from benchmarking.commons.benchmark_definitions.distilbert_on_imdb import (
     distilbert_imdb_benchmark,
 )
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.estimators import huggingface_estimator
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
 from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.remote.estimators import (
+    HUGGINGFACE_LATEST_FRAMEWORK_VERSION,
+    HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
+    HUGGINGFACE_LATEST_PYTORCH_VERSION,
+    HUGGINGFACE_LATEST_PY_VERSION,
+)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -45,7 +52,11 @@ if __name__ == "__main__":
 
     # Define Hugging Face SageMaker estimator
     root = Path(syne_tune.__path__[0]).parent
-    estimator = huggingface_estimator(
+    estimator = HuggingFace(
+        framework_version=HUGGINGFACE_LATEST_FRAMEWORK_VERSION,
+        transformers_version=HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
+        pytorch_version=HUGGINGFACE_LATEST_PYTORCH_VERSION,
+        py_version=HUGGINGFACE_LATEST_PY_VERSION,
         entry_point=str(benchmark.script),
         base_job_name="hpo-transformer",
         instance_type=benchmark.instance_type,

@@ -18,7 +18,7 @@ from coolname import generate_slug
 import benchmarking
 import syne_tune
 from benchmarking.nursery.benchmark_automl.baselines import methods, Methods
-from syne_tune.backend.sagemaker_backend.estimators import (
+from syne_tune.remote.estimators import (
     basic_cpu_instance_sagemaker_estimator,
 )
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import get_execution_role

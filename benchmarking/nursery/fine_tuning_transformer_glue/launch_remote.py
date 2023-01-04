@@ -17,9 +17,9 @@ from tqdm import tqdm
 
 import syne_tune
 from benchmarking.commons.utils import message_sync_from_s3
-from syne_tune.backend.sagemaker_backend.estimators import (
-    DEFAULT_GPU_INSTANCE_SMALL,
-    DEFAULT_GPU_INSTANCE_LARGE,
+from syne_tune.remote.estimators import (
+    DEFAULT_GPU_INSTANCE_1GPU,
+    DEFAULT_GPU_INSTANCE_4GPU,
     pytorch_estimator,
 )
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     model_type = "bert-base-cased"  # Default model used if not selected
     num_train_epochs = 3  # Maximum number of epochs
     max_runtime = 1800  # Each experiment runs for 30 mins
-    instance_type = DEFAULT_GPU_INSTANCE_SMALL
+    instance_type = DEFAULT_GPU_INSTANCE_1GPU
     # Useful if not all experiments could be started:
     skip_initial_experiments = 0
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     run_ids = list(range(num_runs))
     num_experiments = len(model_selection) * len(optimizers) * len(run_ids)
     # We need 1 GPU for each worker:
-    if instance_type == DEFAULT_GPU_INSTANCE_LARGE:
+    if instance_type == DEFAULT_GPU_INSTANCE_4GPU:
         n_workers = 4
     else:
         n_workers = 1

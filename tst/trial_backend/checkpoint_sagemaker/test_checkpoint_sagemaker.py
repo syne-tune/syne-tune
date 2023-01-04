@@ -19,7 +19,7 @@ import pytest
 
 from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.estimators import (
+from syne_tune.remote.estimators import (
     pytorch_estimator,
     DEFAULT_CPU_INSTANCE_SMALL,
 )

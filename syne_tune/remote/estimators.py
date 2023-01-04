@@ -25,8 +25,19 @@ except ImportError:
 
 DEFAULT_CPU_INSTANCE = "ml.c5.4xlarge"
 DEFAULT_CPU_INSTANCE_SMALL = "ml.c5.large"
-DEFAULT_GPU_INSTANCE_SMALL = "ml.g4dn.xlarge"
-DEFAULT_GPU_INSTANCE_LARGE = "ml.g4dn.12xlarge"
+DEFAULT_GPU_INSTANCE_1GPU = "ml.g4dn.xlarge"
+DEFAULT_GPU_INSTANCE_4GPU = "ml.g4dn.12xlarge"
+
+PYTORCH_LATEST_FRAMEWORK = "1.12.1"
+PYTORCH_LATEST_PY_VERSION = "py38"
+
+HUGGINGFACE_LATEST_FRAMEWORK_VERSION = "4.4"
+HUGGINGFACE_LATEST_PYTORCH_VERSION = "1.7.1"
+HUGGINGFACE_LATEST_TRANSFORMERS_VERSION = "4.6.1"
+HUGGINGFACE_LATEST_PY_VERSION = "py3"
+
+MXNET_LATEST_PY_VERSION = "py38"
+MXNET_LATEST_VERSION = "1.9.0"
 
 
 def instance_sagemaker_estimator(**kwargs):
@@ -67,8 +78,8 @@ def pytorch_estimator(**estimator_kwargs) -> PyTorch:
     :return: PyTorch estimator
     """
     return PyTorch(
-        py_version="py38",
-        framework_version="1.12.1",
+        py_version=PYTORCH_LATEST_PY_VERSION,
+        framework_version=PYTORCH_LATEST_FRAMEWORK,
         **estimator_kwargs,
     )
 
@@ -83,10 +94,10 @@ def huggingface_estimator(**estimator_kwargs) -> HuggingFace:
     :return: PyTorch estimator
     """
     return HuggingFace(
-        framework_version="4.4",
-        transformers_version="4.6.1",
-        pytorch_version="1.7.1",
-        py_version="py3",
+        framework_version=HUGGINGFACE_LATEST_FRAMEWORK_VERSION,
+        transformers_version=HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
+        pytorch_version=HUGGINGFACE_LATEST_PYTORCH_VERSION,
+        py_version=HUGGINGFACE_LATEST_PY_VERSION,
         **estimator_kwargs,
     )
 
@@ -117,8 +128,8 @@ def mxnet_estimator(**estimator_kwargs) -> MXNet:
     :return: PyTorch estimator
     """
     return MXNet(
-        framework_version="1.9.0",
-        py_version="py38",
+        framework_version=MXNET_LATEST_VERSION,
+        py_version=MXNET_LATEST_PY_VERSION,
         **estimator_kwargs,
     )
 
@@ -126,7 +137,7 @@ def mxnet_estimator(**estimator_kwargs) -> MXNet:
 sagemaker_estimator = {
     "PyTorch": pytorch_estimator,
     "HuggingFace": huggingface_estimator,
-    "BasicEstimator": instance_sagemaker_estimator,
+    "BasicCPU": basic_cpu_instance_sagemaker_estimator,
     "MXNet": MXNet,
     "TensorFlow": TensorFlow,
     "SKLearn": sklearn_estimator,

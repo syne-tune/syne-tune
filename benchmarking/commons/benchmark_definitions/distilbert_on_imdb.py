@@ -18,13 +18,13 @@ from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import 
     RESOURCE_ATTR,
     _config_space,
 )
-from syne_tune.backend.sagemaker_backend.estimators import DEFAULT_GPU_INSTANCE_SMALL
+from syne_tune.remote.estimators import DEFAULT_GPU_INSTANCE_1GPU
 
 
 def distilbert_imdb_default_params() -> dict:
     return {
         "max_resource_level": 15,
-        "instance_type": DEFAULT_GPU_INSTANCE_SMALL,
+        "instance_type": DEFAULT_GPU_INSTANCE_1GPU,
         "num_workers": 4,
         "framework": "HuggingFace",
         "framework_version": "4.4",

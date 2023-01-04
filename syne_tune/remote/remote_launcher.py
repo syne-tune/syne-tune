@@ -21,7 +21,7 @@ import boto3
 
 import syne_tune
 from syne_tune import Tuner
-from syne_tune.backend.sagemaker_backend.estimators import (
+from syne_tune.remote.estimators import (
     instance_sagemaker_estimator,
     DEFAULT_CPU_INSTANCE,
 )

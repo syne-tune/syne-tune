@@ -27,7 +27,7 @@ from benchmarking.commons.utils import (
     message_sync_from_s3,
     find_or_create_requirements_txt,
 )
-from syne_tune.backend.sagemaker_backend.estimators import (
+from syne_tune.remote.estimators import (
     basic_cpu_instance_sagemaker_estimator,
 )
 from syne_tune.util import random_string

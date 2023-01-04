@@ -30,7 +30,7 @@ from benchmarking.commons.utils import (
     find_or_create_requirements_txt,
     combine_requirements_txt,
 )
-from syne_tune.backend.sagemaker_backend.estimators import sagemaker_estimator
+from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.util import random_string
 
 logger = logging.getLogger(__name__)

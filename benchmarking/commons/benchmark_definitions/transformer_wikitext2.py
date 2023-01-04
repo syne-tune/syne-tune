@@ -19,19 +19,19 @@ from benchmarking.training_scripts.transformer_wikitext2.training_script import 
     RESOURCE_ATTR,
     MAX_RESOURCE_ATTR,
 )
-from syne_tune.backend.sagemaker_backend.estimators import (
-    DEFAULT_GPU_INSTANCE_SMALL,
-    DEFAULT_GPU_INSTANCE_LARGE,
+from syne_tune.remote.estimators import (
+    DEFAULT_GPU_INSTANCE_1GPU,
+    DEFAULT_GPU_INSTANCE_4GPU,
 )
 
 
 def transformer_wikitext2_default_params(sagemaker_backend: bool) -> dict:
     if sagemaker_backend:
-        instance_type = DEFAULT_GPU_INSTANCE_SMALL
+        instance_type = DEFAULT_GPU_INSTANCE_1GPU
     else:
         # For local backend, GPU cores serve different workers, so we
         # need more memory
-        instance_type = DEFAULT_GPU_INSTANCE_LARGE
+        instance_type = DEFAULT_GPU_INSTANCE_4GPU
     return {
         "max_resource_level": 40,
         "instance_type": instance_type,
