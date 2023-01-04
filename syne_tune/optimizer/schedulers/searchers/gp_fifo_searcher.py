@@ -125,7 +125,19 @@ def check_initial_candidates_scorer(initial_scoring: Optional[str]) -> str:
 
 
 class ModelBasedSearcher(SearcherWithRandomSeed):
-    """Common code for surrogate model based searchers"""
+    """Common code for surrogate model based searchers
+
+    If ``num_initial_candidates > 0``, initial configurations are drawn using
+    an internal :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    object, which is created in :meth:`_assign_random_searcher`. This internal
+    random searcher shares :attr:`random_state` with the searcher here. This ensures
+    that if ``ModelBasedSearcher`` and ``RandomSearcher`` objects are created with
+    the same ``random_seed`` and ``points_to_evaluate`` argument, initial
+    configurations are identical until :meth:`_get_config_modelbased` kicks in.
+
+    Note that this works because :attr:`random_state` is only used in the internal
+    random searcher until meth:`_get_config_modelbased` is first called.
+    """
 
     def _create_internal(
         self,
@@ -410,10 +422,13 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def get_state(self) -> dict:
         """
         The mutable state consists of the GP model parameters, the
-        TuningJobState, and the skip_optimization predicate (which can have a
+        ``TuningJobState``, and the ``skip_optimization`` predicate (which can have a
         mutable state).
-        We assume that skip_optimization can be pickled.
+        We assume that ``skip_optimization`` can be pickled.
 
+        Note that we do not have to store the state of :attr:`_random_searcher`,
+        since this internal searcher shares its ``random_state`` with the searcher
+        here.
         """
         state = dict(
             super().get_state(),
@@ -421,22 +436,15 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             state=encode_state(self.state_transformer.state),
             skip_optimization=self.state_transformer.skip_optimization,
         )
-        if self._random_searcher is not None:
-            state["random_searcher_state"] = self._random_searcher.get_state()
         return state
 
     def _restore_from_state(self, state: dict):
         super()._restore_from_state(state)
         self.state_transformer.set_params(state["model_params"])
         self.random_generator.random_state = self.random_state
-        if "random_searcher_state" in state:
-            # Restore self._random_searcher as well
-            # Note: It is important to call ``_assign_random_searcher`` with a
-            # random seed. Otherwise, one is drawn from ``random_state``, which
-            # modifies that state. The seed passed does not matter, since
-            # ``_random_searcher.random_state`` will be restored anyway
-            self._assign_random_searcher(random_seed=0)
-            self._random_searcher._restore_from_state(state["random_searcher_state"])
+        # The internal random searcher is generated once needed, and it shares its
+        # ``random_state`` with this searcher here
+        self._random_searcher = None
 
     def set_profiler(self, profiler: Optional[SimpleProfiler]):
         self.profiler = profiler
@@ -446,19 +454,22 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def debug_log(self):
         return self._debug_log
 
-    def _assign_random_searcher(self, random_seed=None):
+    def _assign_random_searcher(self):
+        """
+        Assigns :attr:`_random_searcher` if not already done. This internal searcher
+        is sharing :attr:`random_state` with the searcher here, see header comments.
+        """
         if self._random_searcher is None:
             # Used for initial random configs (if any)
             # We do not have to deal with ``points_to_evaluate``
-            if random_seed is None:
-                random_seed = self.random_state.randint(0, 2**32)
             self._random_searcher = RandomSearcher(
                 self.hp_ranges.config_space_for_sampling,
                 metric=self._metric,
                 points_to_evaluate=[],
-                random_seed=random_seed,
+                random_seed=0,
                 debug_log=False,
             )
+            self._random_searcher.set_random_state(self.random_state)
 
 
 class GPFIFOSearcher(ModelBasedSearcher):

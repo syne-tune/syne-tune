@@ -375,13 +375,13 @@ class BaseSearcher:
 
 def extract_random_seed(**kwargs) -> (int, dict):
     key = "random_seed_generator"
-    if kwargs.get(key) is not None:
-        random_seed = kwargs[key]()
+    generator = kwargs.get(key)
+    if generator is not None:
+        random_seed = generator()
     else:
         key = "random_seed"
-        if kwargs.get(key) is not None:
-            random_seed = kwargs[key]
-        else:
+        random_seed = kwargs.get(key)
+        if random_seed is None:
             random_seed = 31415927
             key = None
     _kwargs = {k: v for k, v in kwargs.items() if k != key}
@@ -421,12 +421,17 @@ class SearcherWithRandomSeed(BaseSearcher):
         self.random_state = np.random.RandomState(random_seed)
 
     def get_state(self) -> dict:
-        state = dict(super().get_state(), random_state=self.random_state.get_state())
-        return state
+        return dict(
+            super().get_state(),
+            random_state=self.random_state.get_state(),
+        )
 
     def _restore_from_state(self, state: dict):
         super()._restore_from_state(state)
         self.random_state.set_state(state["random_state"])
+
+    def set_random_state(self, random_state: np.random.RandomState):
+        self.random_state = random_state
 
 
 class RandomSearcher(SearcherWithRandomSeed):
