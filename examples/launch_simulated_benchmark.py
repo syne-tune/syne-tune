@@ -76,7 +76,7 @@ def simulate_benchmark(blackbox, trial_backend, metric):
 
     stop_criterion = StoppingCriterion(max_wallclock_time=7200)
 
-    # It is important to set `sleep_time` to 0 here (mandatory for simulator backend)
+    # It is important to set ``sleep_time`` to 0 here (mandatory for simulator backend)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

@@ -24,7 +24,7 @@ However, *pause and resume* needs more support from the training script, which
 has to make sure that a paused trial can be resumed later on, continuing
 training as if nothing happened in between. To this end, the *state* of the
 training job has to be checkpointed (i.e., stored into a file). The
-`training script <basics_asha.html#scripts-for-asynchronous-successive-halving>`__
+`training script <basics_asha.html#scripts-for-asynchronous-successive-halving>`_
 has to be modified once more, by replacing ``objective`` with this code:
 
 .. code-block:: python
@@ -112,7 +112,7 @@ Checkpointing requires you to implement the following:
   to the script, checkpointing is deactivated.
 
 Syne Tune provides some helper functions for checkpointing, see
-`FAQ <../../faq.html#how-can-i-enable-trial-checkpointing>`__.
+`FAQ <../../faq.html#how-can-i-enable-trial-checkpointing>`_.
 
 * ``checkpoint_model_at_rung_level(config, save_model_fn, epoch)`` stores
   a checkpoint at the end of epoch ``epoch``. The main work is done by
@@ -134,7 +134,7 @@ only be paused there. Selective checkpointing could be supported by passing the
 rung levels to the training script, but this is currently not done in Syne
 Tune.
 
-Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
+Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_
 runs promotion-based ASHA with the argument ``--method ASHA-PROM``, and
 promotion-based MOBSTER with ``--method MOBSTER-PROM``:
 
@@ -149,10 +149,10 @@ promotion-based MOBSTER with ``--method MOBSTER-PROM``:
   ``config[max_resource_attr] = 9`` (instead of 81). It is resumed from its
   ``r=3`` checkpoint and runs epochs 4, 5, 6, 7, 8, 9, then terminates by
   itself. If ``max_resource_attr`` is not used, training scripts are started
-  to be run until the end, and they need to be stopped by the back-end.
-  Depending on the back-end, there can be a delay between a stopping signal
+  to be run until the end, and they need to be stopped by the backend.
+  Depending on the backend, there can be a delay between a stopping signal
   being sent and a worker coming available again, which is avoided if
-  ``max_resource_attr`` is used. Moreover, future back-ends may be able to use
+  ``max_resource_attr`` is used. Moreover, future backends may be able to use
   the information on how long a resumed trial needs to be run until paused for
   improved scheduling.
 * Syne Tune allows promotion-based schedulers to be used with training scripts
@@ -182,12 +182,12 @@ obtained for stopping-based scheduling, except the random variations are
 somewhat larger for ASHA stopping than for ASHA promotion.
 
 It is not a priori clear when stopping or promotion-based scheduling will work
-better. When it comes to the back-end, promotion-based scheduling needs
-checkpointing, and the back-end needs to efficiently handle the transfer of
+better. When it comes to the backend, promotion-based scheduling needs
+checkpointing, and the backend needs to efficiently handle the transfer of
 checkpoints between workers. On the other hand, promotion-based scheduling does
-not require the back-end to stop jobs (see ``max_resource_attr`` discussion
-above), which can be subject to delays in some back-ends. Run with the local
-back-end, where delays play no role, stopping and promotion-based scheduling
+not require the backend to stop jobs (see ``max_resource_attr`` discussion
+above), which can be subject to delays in some backends. Run with the local
+backend, where delays play no role, stopping and promotion-based scheduling
 can behave quite differently. In our experiments, we have often observed that
 stopping can be more efficient at the beginning, while promotion has an edge
 during later stages.

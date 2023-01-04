@@ -85,7 +85,7 @@ def _assert_features_shape(test_features: np.ndarray, num_features: int) -> int:
 class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorState):
     """
     Special case of :class:`IndependentGPPerResourcePosteriorState`, where
-    methods `predict`, `backward_gradient`, `sample_marginals`, `sample_joint`
+    methods ``predict``, ``backward_gradient``, ``sample_marginals``, ``sample_joint``
     are over a random function :math:`f_{MF}(x)`, obtained by first sampling the
     resource level :math:`r \\sim [\\theta_r]`, then use
     :math:`f_{MF}(x) = f(x, r)`. Predictive means and variances are:
@@ -96,8 +96,8 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
 
     Here, :math:`[\\theta_k]` is a distribution over a subset of rung levels.
 
-    Note: This posterior state is unusual, in that `sample_marginals`,
-    `sample_joint` have to work both with (a) extended inputs (x, r) and (b)
+    Note: This posterior state is unusual, in that ``sample_marginals``,
+    ``sample_joint`` have to work both with (a) extended inputs (x, r) and (b)
     non-extended inputs x. For case (a), they behave like the superclass
     methods, this is needed to support fitting model parameters, for example
     for drawing fantasy samples. For case (b), they use the ensemble
@@ -118,7 +118,7 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
         debug_log: bool = False,
     ):
         """
-        `ensemble_distribution` contains non-zero entries of the distribution
+        ``ensemble_distribution`` contains non-zero entries of the distribution
         :math:`[\\theta_k]`. All resource levels supported there must have
         sufficient data in order to allow for predictions.
         """
@@ -163,7 +163,7 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        If `test_features` are non-extended features (no resource attribute),
+        If ``test_features`` are non-extended features (no resource attribute),
         we sample from the ensemble predictive distribution. Otherwise, we
         call the superclass method.
         """
@@ -196,7 +196,7 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        If `test_features` are non-extended features (no resource attribute),
+        If ``test_features`` are non-extended features (no resource attribute),
         we sample from the ensemble predictive distribution. Otherwise, we
         call the superclass method.
         """
@@ -243,8 +243,8 @@ class HyperTuneIndependentGPPosteriorState(IndependentGPPerResourcePosteriorStat
 
 class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
     """
-    Special case of :class:`GaussProcPosteriorState`, where methods `predict`,
-    `backward_gradient`, `sample_marginals`, `sample_joint` are over a random
+    Special case of :class:`GaussProcPosteriorState`, where methods ``predict``,
+    ``backward_gradient``, ``sample_marginals``, ``sample_joint`` are over a random
     function :math:`f_{MF}(x)`, obtained by first sampling the resource level
     :math:`r \\sim [\\theta_r]`, then use :math:`f_{MF}(x) = f(x, r)`.
     Predictive means and variances are:
@@ -255,8 +255,8 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
 
     Here, :math:`[\\theta_k]` is a distribution over a subset of rung levels.
 
-    Note: This posterior state is unusual, in that `sample_marginals`,
-    `sample_joint` have to work both with (a) extended inputs (x, r) and (b)
+    Note: This posterior state is unusual, in that ``sample_marginals``,
+    ``sample_joint`` have to work both with (a) extended inputs (x, r) and (b)
     non-extended inputs x. For case (a), they behave like the superclass
     methods, this is needed to support fitting model parameters, for example
     for drawing fantasy samples. For case (b), they use the ensemble
@@ -276,7 +276,7 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
         debug_log: bool = False,
     ):
         """
-        `ensemble_distribution` contains non-zero entries of the distribution
+        ``ensemble_distribution`` contains non-zero entries of the distribution
         :math:`[\\theta_k]`. All resource levels supported there must have
         sufficient data in order to allow for predictions.
         """
@@ -328,7 +328,7 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        If `test_features` are non-extended features (no resource attribute),
+        If ``test_features`` are non-extended features (no resource attribute),
         we sample from the ensemble predictive distribution. Otherwise, we
         call the superclass method.
         """
@@ -362,7 +362,7 @@ class HyperTuneJointGPPosteriorState(GaussProcPosteriorState):
         random_state: Optional[RandomState] = None,
     ) -> np.ndarray:
         """
-        If `test_features` are non-extended features (no resource attribute),
+        If ``test_features`` are non-extended features (no resource attribute),
         we sample from the ensemble predictive distribution. Otherwise, we
         call the superclass method.
         """

@@ -161,7 +161,7 @@ def load_experiment(
     :param download_if_not_found: If True, fetch results from S3 if not found locally
     :param load_tuner: Whether to load the tuner in addition to metadata and results
     :param local_path: Path containing the experiment to load. If not specified,
-        `~/{SYNE_TUNE_FOLDER}/` is used.
+        ``~/{SYNE_TUNE_FOLDER}/`` is used.
     :param experiment_name: If given, this is used as first directory.
     :return: Result object
     """
@@ -231,7 +231,7 @@ def get_metadata(
         the filter are kept. This allows rapid filtering in the presence of many
         experiments.
     :param root: Root path for experiment results. Default is
-        `experiment_path()`
+        ``experiment_path()``
     :return: Dictionary from tuner name to metadata dict
     """
     path_filter = _impute_filter(path_filter)
@@ -315,14 +315,14 @@ def load_experiments_df(
         evaluated, metrics reported via :class:`~syne_tune.Reporter`. These metrics
         are collected automatically:
 
-        * `st_worker_time` (indicating time spent in the worker when report was
+        * ``st_worker_time`` (indicating time spent in the worker when report was
           seen)
-        * `time` (indicating wallclock time measured by the tuner)
-        * `decision` decision taken by the scheduler when observing the result
-        * `status` status of the trial that was shown to the tuner
-        * `config_{xx}` configuration value for the hyperparameter `{xx}`
-        * `tuner_name` named passed when instantiating the Tuner
-        * `entry_point_name`, `entry_point_path` name and path of the entry
+        * ``time`` (indicating wallclock time measured by the tuner)
+        * ``decision`` decision taken by the scheduler when observing the result
+        * ``status`` status of the trial that was shown to the tuner
+        * ``config_{xx}`` configuration value for the hyperparameter ``{xx}``
+        * ``tuner_name`` named passed when instantiating the Tuner
+        * ``entry_point_name``, ``entry_point_path`` name and path of the entry
           point that was tuned
     """
     dfs = []

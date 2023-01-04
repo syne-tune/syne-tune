@@ -1,10 +1,10 @@
-SageMaker Back-end
+SageMaker Backend
 ==================
 
-Limitations of the Local Back-end
+Limitations of the Local Backend
 ---------------------------------
 
-We have been using the local back-end :class:`~syne_tune.backend.LocalBackend`
+We have been using the local backend :class:`~syne_tune.backend.LocalBackend`
 in this tutorial so far. Due to its simplicity and very low overheads for
 starting, stopping, or resuming trials, this is the preferred choice for
 getting started. But with models and datasets getting larger, some
@@ -21,20 +21,20 @@ disadvantages become apparent:
   dependencies. You cannot use Docker images.
 * You may be used to work with SageMaker frameworks, or even specialized setups
   such as distributed training. In such cases, it is hard to get tuning to work
-  with the local back-end.
+  with the local backend.
 
 
-Launcher Script for SageMaker Back-end
+Launcher Script for SageMaker Backend
 --------------------------------------
 
-Syne Tune offers the SageMaker back-end
+Syne Tune offers the SageMaker backend
 :class:`~syne_tune.backend.SageMakerBackend` as alternative to the local one.
 Using it requires some preparation, as is detailed
-`here <../../faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
+`here <../../faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
 
 Recall our
-`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__.
-In order to use the SageMaker back-end, we need to create ``trial_backend``
+`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_.
+In order to use the SageMaker backend, we need to create ``trial_backend``
 differently:
 
 .. code-block:: python
@@ -62,7 +62,7 @@ In essence, the :class:`~syne_tune.backend.SageMakerBackend` is parameterized
 with a SageMaker estimator, which executes the training script. In our example,
 we use the ``PyTorch`` SageMaker framework as a pre-built container for the
 dependencies our training scripts requires. However, any other type of
-`SageMaker estimator <https://sagemaker.readthedocs.io/en/stable/api/training/estimators.html>`__
+`SageMaker estimator <https://sagemaker.readthedocs.io/en/stable/api/training/estimators.html>`_
 can be used here just as well.
 
 If your training script requires additional dependencies not contained in the
@@ -74,5 +74,5 @@ of the SageMaker estimator). In our example, this file needs to contain the
 .. note::
    This simple example avoids complications about writing results to S3 in
    a unified manner, or using special features of SageMaker which can speed
-   up tuning substantially. For more information about the SageMaker back-end,
-   please consider `this tutorial <../benchmarking/bm_sagemaker.html>`__.
+   up tuning substantially. For more information about the SageMaker backend,
+   please consider `this tutorial <../benchmarking/bm_sagemaker.html>`_.

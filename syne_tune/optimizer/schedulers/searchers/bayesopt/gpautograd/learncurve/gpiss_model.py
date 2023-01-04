@@ -49,11 +49,11 @@ class GaussianProcessLearningCurveModel(GaussianProcessOptimizeModel):
 
     - Innovation state space model (ISSM) of a particular power-law decay
         form. For this one, g(r_max | x) = 0 for all x. Used if
-        `res_model` is of type :class:`ISSModelParameters`
+        ``res_model`` is of type :class:`ISSModelParameters`
     - Gaussian process model with exponential decay covariance function. This
         is essentially the model from the Freeze Thaw paper, see also
         :class:`ExponentialDecayResourcesKernelFunction`. Used if
-        `res_model` is of type :class:`ExponentialDecayBaseKernelFunction`
+        ``res_model`` is of type :class:`ExponentialDecayBaseKernelFunction`
 
     Importantly, inference scales cubically only in the number of
     configurations, not in the number of observations.

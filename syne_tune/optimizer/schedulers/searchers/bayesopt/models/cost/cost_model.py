@@ -69,14 +69,14 @@ class CostModel:
         Update inner representation in order to be ready to return cost value
         samples.
 
-        Note: The metric :attr`cost_metric_name` must be dict-valued in `state`,
+        Note: The metric :attr``cost_metric_name`` must be dict-valued in ``state``,
         with keys being resource values :math:`r`. In order to support a proper
         estimation of :math:`c_0` and :math:`c_1`, there should (ideally) be
         entries with the same :math:`x` and different resource levels :math:`r`.
         The likelihood function takes into account that
         :math:`c(x, r) = c_0(x) + r c_1(x)`.
 
-        :param state: Current dataset (only `trials_evaluations` is used)
+        :param state: Current dataset (only ``trials_evaluations`` is used)
         """
         raise NotImplementedError
 
@@ -115,14 +115,14 @@ class CostModel:
         start_time: float, level: int, next_milestone: int, cost: CostValue
     ) -> float:
         """
-        If a task reported its last recent value at `start_time` at level `level`,
-        return time of reaching level `next_milestone`, given cost `cost`.
+        If a task reported its last recent value at ``start_time`` at level ``level``,
+        return time of reaching level ``next_milestone``, given cost ``cost``.
 
         :param start_time: See above
         :param level: See above
         :param next_milestone: See above
         :param cost: See above
-        :return: Time of reaching `next_milestone` under cost model
+        :return: Time of reaching ``next_milestone`` under cost model
         """
         result = start_time + cost.c1 * (next_milestone - level)
         if level == 0:
@@ -140,7 +140,7 @@ class CostModel:
         """
         Given configs :math:`x`, resource values :math:`r` and cost values returned
         by :meth:`sample_joint`, compute time predictions for when each config
-        :math:`x` reaches its resource level :math:`r` if started at `start_time`.
+        :math:`x` reaches its resource level :math:`r` if started at ``start_time``.
 
         :param candidates: Configs
         :param resources: Resource levels

@@ -24,34 +24,34 @@ logger = logging.getLogger(__name__)
 
 class SimulatorCallback(StoreResultsCallback):
     """
-    Callback to be used in `Tuner.run` in order to support the
+    Callback to be used in :meth:`~syne_tune.Tuner.run` in order to support the
     :class:`~syne_tune.backend.simulator_backend.SimulatorBackend`.
 
     This is doing two things. First, :meth:`on_tuning_sleep` is advancing the
-    `time_keeper` of the simulator back-end by `tuner_sleep_time` (also
-    defined in the back-end). The real sleep time in :class:`~syne_tune.Tuner`
+    ``time_keeper`` of the simulator backend by ``tuner_sleep_time`` (also
+    defined in the backend). The real sleep time in :class:`~syne_tune.Tuner`
     must be 0.
 
     Second, we need to make sure that results written out are annotated by
     simulated time, not real time. This is already catered for by
-    `SimulatorBackend` adding `ST_TUNER_TIME` entries to each result it
-    receives.
+    :class:`~syne_tune.backend.SimulatorBackend` adding ``ST_TUNER_TIME``
+    entries to each result it receives.
 
     Third (and most subtle), we need to make sure the stop criterion in
-    `Tuner.run` is using simulated time instead of real time when making
-    a decision based on `max_wallclock_time`. By default,
-    :class:`~syne_tune.StoppingCriterion` takes `TuningStatus` as an input,
+    :meth:`~syne_tune.Tuner.run` is using simulated time instead of real time when making
+    a decision based on ``max_wallclock_time``. By default,
+    :class:`~syne_tune.StoppingCriterion` takes ``TuningStatus`` as an input,
     which counts real time and knows nothing about simulated time. To this
-    end, we modify `stop_criterion` of the tuner to instead depend on the
-    `ST_TUNER_TIME` fields in the results received. This allows us to keep
-    both :class:`~syne_tune.Tuner` and `TuningStatus` independent of the time
+    end, we modify ``stop_criterion`` of the tuner to instead depend on the
+    ``ST_TUNER_TIME`` fields in the results received. This allows us to keep
+    both :class:`~syne_tune.Tuner` and ``TuningStatus`` independent of the time
     keeper.
     """
 
     def __init__(self):
-        # Note: `results_update_interval` is w.r.t. real time, not
+        # Note: ``results_update_interval`` is w.r.t. real time, not
         # simulated time. Storing results intermediately is not important for
-        # the simulator back-end, so the default is larger
+        # the simulator backend, so the default is larger
         super().__init__(add_wallclock_time=True)
         self._tuner_sleep_time = None
         self._time_keeper = None
@@ -70,10 +70,10 @@ class SimulatorCallback(StoreResultsCallback):
                 + "recommended to use StoppingCriterion!"
             )
         elif stop_criterion.max_wallclock_time is not None:
-            # Since `TuningStatus` is measuring real time, not simulated time,
-            # we need to replace the `max_wallclock_time` part of this criterion
-            # by `max_metric_value` w.r.t. ST_TUNER_TIME. Note that
-            # `SimulatorBackend` is adding ST_TUNER_TIME to any result it
+            # Since ``TuningStatus`` is measuring real time, not simulated time,
+            # we need to replace the ``max_wallclock_time`` part of this criterion
+            # by ``max_metric_value`` w.r.t. ST_TUNER_TIME. Note that
+            # ``SimulatorBackend`` is adding ST_TUNER_TIME to any result it
             # receives
             self._backup_stop_criterion = stop_criterion
             max_wallclock_time = stop_criterion.max_wallclock_time
@@ -114,7 +114,7 @@ class SimulatorCallback(StoreResultsCallback):
             scheduler.set_time_keeper(self._time_keeper)
         self._time_keeper.start_of_time()
         self._tuner_sleep_time = backend.tuner_sleep_time
-        # Modify `tuner.stop_criterion` in case it depends on wallclock time
+        # Modify ``tuner.stop_criterion`` in case it depends on wallclock time
         self._modify_stop_criterion(tuner)
         self._tuner = tuner
 
@@ -123,6 +123,6 @@ class SimulatorCallback(StoreResultsCallback):
 
     def on_tuning_end(self):
         super().on_tuning_end()
-        # Restore `stop_criterion`
+        # Restore ``stop_criterion``
         self._tuner.stop_criterion = self._backup_stop_criterion
         self._tuner = None

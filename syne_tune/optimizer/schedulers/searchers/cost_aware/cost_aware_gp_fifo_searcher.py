@@ -39,7 +39,7 @@ class MultiModelGPFIFOSearcher(GPFIFOSearcher):
     :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`. We first
     call
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher._create_internal`
-    passing factory and `skip_optimization` predicate for the `INTERNAL_METRIC_NAME`
+    passing factory and ``skip_optimization`` predicate for the ``INTERNAL_METRIC_NAME``
     model, then replace the state transformer by a multi-model one.
     """
 
@@ -49,7 +49,7 @@ class MultiModelGPFIFOSearcher(GPFIFOSearcher):
         kwargs_int["model_factory"] = output_model_factory[INTERNAL_METRIC_NAME]
         kwargs_int["skip_optimization"] = output_skip_optimization[INTERNAL_METRIC_NAME]
         self._create_internal(**kwargs_int)
-        # Replace `state_transformer`
+        # Replace ``state_transformer``
         init_state = self.state_transformer.state
         self.state_transformer = ModelStateTransformer(
             model_factory=output_model_factory,
@@ -62,18 +62,18 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
     """
     Gaussian process-based cost-aware hyperparameter optimization (to be used
     with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`). The searcher
-    requires a cost metric, which is given by `cost_attr`.
+    requires a cost metric, which is given by ``cost_attr``.
 
-    Implements two different variants. If `resource_attr` is given, cost values
+    Implements two different variants. If ``resource_attr`` is given, cost values
     are read from each report and cost is modeled as :math:`c(x, r)`, the cost
-    model being given by `kwargs["cost_model"]`.
+    model being given by ``kwargs["cost_model"]``.
 
-    If `resource_attr` is not given, cost values are read only at the end (just
+    If ``resource_attr`` is not given, cost values are read only at the end (just
     like the primary metric) and cost is modeled as :math:`c(x)`, using a
     default GP surrogate model.
 
-    Note: The presence or absence of `resource_attr` decides on which variant
-    is used here. If `resource_attr` is given, `cost_model` must be given
+    Note: The presence or absence of ``resource_attr`` decides on which variant
+    is used here. If ``resource_attr`` is given, ``cost_model`` must be given
     as well.
 
     Additional arguments on top of parent class
@@ -81,18 +81,18 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     :param cost_attr: Mandatory. Name of cost attribute in data obtained
         from reporter (e.g., elapsed training time). Depending on whether
-        `resource_attr` is given, cost values are read from each report or
+        ``resource_attr`` is given, cost values are read from each report or
         only at the end.
     :type cost_attr: str
     :param resource_attr: Name of resource attribute in reports, optional.
         If this is given, cost values are read from each report and cost is
-        modeled as :math:`c(x, r)`, the cost model being given by `cost_model`.
+        modeled as :math:`c(x, r)`, the cost model being given by ``cost_model``.
         If not given, cost values are read only at the end (just like the
         primary metric) and cost is modeled as :math:`c(x)`, using a default
         GP surrogate model.
     :type resource_attr: str, optional
-    :param cost_model: Needed if `resource_attr` is given, model for
-        :math:`c(x, r)`. Ignored if `resource_attr` is not given, since
+    :param cost_model: Needed if ``resource_attr`` is given, model for
+        :math:`c(x, r)`. Ignored if ``resource_attr`` is not given, since
         :math:`c(x)` is represented by a default GP surrogate model.
     :type cost_model:
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model.CostModel`, optional
@@ -117,7 +117,7 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
         _kwargs = check_and_merge_defaults(
             kwargs, *cost_aware_gp_fifo_searcher_defaults(), dict_name="search_options"
         )
-        # If `resource_attr` is specified, we do fine-grained, otherwise
+        # If ``resource_attr`` is specified, we do fine-grained, otherwise
         # coarse-grained
         if kwargs.get("resource_attr") is not None:
             logger.info(

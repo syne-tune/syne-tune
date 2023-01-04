@@ -55,7 +55,7 @@ def default_sagemaker_session():
 def get_log(jobname: str, log_client=None) -> List[str]:
     """
     :param jobname: name of a sagemaker training job
-    :param log_client: a log client, for instance `boto3.client('logs')` if None, the client is instantiated with the
+    :param log_client: a log client, for instance ``boto3.client('logs')`` if None, the client is instantiated with the
     default AWS configuration
     :return: lines appearing in the log of the Sagemaker training job
     """
@@ -185,7 +185,7 @@ def metric_definitions_from_names(metrics_names):
     :param metrics_names: names of the metrics present in the log.
     Metrics must be written in the log as [metric-name]: value, for instance [accuracy]: 0.23
     :return: a list of metric dictionaries that can be passed to sagemaker so that metrics are parsed from logs, the
-    list can be passed to `metric_definitions` in sagemaker.
+    list can be passed to ``metric_definitions`` in sagemaker.
     """
 
     def metric_dict(metric_name):
@@ -218,10 +218,10 @@ def sagemaker_fit(
 ):
     """
     :param sm_estimator: sagemaker estimator to be fitted
-    :param hyperparameters: dictionary of hyperparameters that are passed to `entry_point_script`
+    :param hyperparameters: dictionary of hyperparameters that are passed to ``entry_point_script``
     :param checkpoint_s3_uri: checkpoint_s3_uri of Sagemaker Estimator
     :param wait: whether to wait for job completion
-    :param metrics_names: names of metrics to track reported with `report.py`. In case those metrics are passed, their
+    :param metrics_names: names of metrics to track reported with ``report.py``. In case those metrics are passed, their
     learning curves will be shown in Sagemaker console.
     :return: name of sagemaker job
     """
@@ -238,9 +238,9 @@ def sagemaker_fit(
 
 def get_execution_role():
     """
-    :return: sagemaker execution role that is specified with the environment variable `AWS_ROLE`, if not specified then
+    :return: sagemaker execution role that is specified with the environment variable ``AWS_ROLE``, if not specified then
     we infer it by searching for the role associated to Sagemaker. Note that
-    `import sagemaker; sagemaker.get_execution_role()`
+    ``import sagemaker; sagemaker.get_execution_role()``
     does not return the right role outside of a Sagemaker notebook.
     """
     if "AWS_ROLE" in os.environ:
@@ -259,7 +259,7 @@ def get_execution_role():
             if "AmazonSageMaker-ExecutionRole" in role["RoleName"]:
                 return role["Arn"]
         raise Exception(
-            "Could not infer Sagemaker role, specify it by specifying `AWS_ROLE` environement variable "
+            "Could not infer Sagemaker role, specify it by specifying ``AWS_ROLE`` environement variable "
             "or refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html to create a new one"
         )
 
@@ -274,7 +274,7 @@ def untar(filename: Path):
 def download_sagemaker_results(s3_path: Optional[str] = None):
     """
     Download results obtained after running tuning remotely on Sagemaker,
-    e.g. when using `RemoteLauncher`.
+    e.g. when using ``RemoteLauncher``.
     """
     if s3_path is None:
         s3_path = s3_experiment_path()
@@ -288,10 +288,10 @@ def map_identifier_limited_length(
     name: str, max_length: int = 63, rnd_digits: int = 4
 ) -> str:
     """
-    If `name` is longer than 'max_length` characters, it is mapped to a new
-    identifier of length `max_length`, being the concatenation of the first
-    `max_length - rnd_digits` characters of `name`, followed by a random
-    string of length `hash_digits`.
+    If ``name`` is longer than 'max_length`` characters, it is mapped to a new
+    identifier of length ``max_length``, being the concatenation of the first
+    ``max_length - rnd_digits`` characters of ``name``, followed by a random
+    string of length ``hash_digits``.
 
     :param name: Identifier to be limited in length
     :param max_length: Maximum length for output
@@ -310,14 +310,14 @@ def map_identifier_limited_length(
 
 def _s3_traverse_recursively(s3_client, action, bucket: str, prefix: str) -> dict:
     """
-    Traverses directory from root `prefix`. The function `action` is applied
+    Traverses directory from root ``prefix``. The function ``action`` is applied
     to all objects encountered, the signature is
 
-        `action(s3_client, bucket, object_key)`
+        ``action(s3_client, bucket, object_key)``
 
     'action' returns None if successful, otherwise an error message.
     We return a dict with 'num_action_calls', 'num_successful_action_calls',
-    'first_error_message' (the error message for the first failed `action` call
+    'first_error_message' (the error message for the first failed ``action`` call
     encountered).
 
     :param s3_client: S3 client
@@ -379,10 +379,10 @@ def _split_bucket_prefix(s3_path: str) -> (str, str):
 
 def s3_copy_files_recursively(s3_source_path: str, s3_target_path: str) -> dict:
     """
-    Recursively copies files from `s3_source_path` to `s3_target_path`.
+    Recursively copies files from ``s3_source_path`` to ``s3_target_path``.
 
     We return a dict with 'num_action_calls', 'num_successful_action_calls',
-    'first_error_message' (the error message for the first failed `action` call
+    'first_error_message' (the error message for the first failed ``action`` call
     encountered).
 
     :param s3_source_path:
@@ -418,10 +418,10 @@ def s3_copy_files_recursively(s3_source_path: str, s3_target_path: str) -> dict:
 
 def s3_delete_files_recursively(s3_path: str) -> dict:
     """
-    Recursively deletes files from `s3_path`.
+    Recursively deletes files from ``s3_path``.
 
     We return a dict with 'num_action_calls', 'num_successful_action_calls',
-    'first_error_message' (the error message for the first failed `action` call
+    'first_error_message' (the error message for the first failed ``action`` call
     encountered).
 
     :param s3_path:

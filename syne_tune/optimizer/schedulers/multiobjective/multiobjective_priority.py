@@ -99,9 +99,9 @@ class NonDominatedPriority(MOPriority):
 
         :param metrics:
         :param dim: The objective to prefer when ranking items within the Pareto front and picking the first
-        element. If `None`, the first element is chosen randomly.
+        element. If ``None``, the first element is chosen randomly.
         :param max_num_samples: The maximum number of samples that should be returned.
-        When this is `None`, all items are sorted (less efficient), if you have a large number of samples but only want
+        When this is ``None``, all items are sorted (less efficient), if you have a large number of samples but only want
         the top k indices, set this to k for efficiency.
         """
         super(NonDominatedPriority, self).__init__(metrics=metrics)

@@ -42,19 +42,21 @@ def quantile_cutoff(values, prom_quant, mode):
 
 class RungSystem:
     """
-    Terminology: trials emit results at certain resource levels (e.g.,
-    epoch numbers). Some resource levels are rung levels, this is where
-    scheduling decisions (stop, continue or pause, resume) are taken.
+    Terminology: Trials emit results at certain resource levels (e.g., epoch
+    numbers). Some resource levels are rung levels, this is where scheduling
+    decisions (stop, continue or pause, resume) are taken. For a running trial,
+    the next rung level (or ``max_t``) it will reach is called its next
+    milestone.
 
-    For a running trial, the next rung level it will reach is called
-    its next milestone.
+    Note that ``rung_levels``, ``promote_quantiles`` can be empty. All
+    entries of ``rung_levels`` are smaller than ``max_t``.
 
     :param rung_levels: List of rung levels (positive int, increasing)
-    :param promote_quantiles: List of promotion quantiles at each rung
-        level
+    :param promote_quantiles: List of promotion quantiles at each rung level
     :param metric: Name of metric to optimize
     :param mode: "min" or "max"
     :param resource_attr: Name of resource attribute
+    :param max_t: Largest resource level
     """
 
     def __init__(
@@ -64,12 +66,16 @@ class RungSystem:
         metric: str,
         mode: str,
         resource_attr: str,
+        max_t: int,
     ):
-        assert len(rung_levels) == len(promote_quantiles)
+        self.num_rungs = len(rung_levels)
+        assert len(promote_quantiles) == self.num_rungs
+        assert self.num_rungs == 0 or rung_levels[-1] < max_t
         self._metric = metric
         self._mode = mode
         self._resource_attr = resource_attr
-        # The data entry in `_rungs` is a dict with key trial_id. The
+        self._max_t = max_t
+        # The data entry in ``_rungs`` is a dict with key trial_id. The
         # value type depends on the subclass, but it contains the
         # metric value
         self._rungs = [
@@ -81,8 +87,8 @@ class RungSystem:
         """Called when new task is to be scheduled.
 
         For a promotion-based rung system, check whether any trial can be
-        promoted. If so, return dict with keys `trial_id`, `resume_from`
-        (rung level where trial is paused), `milestone` (next rung level
+        promoted. If so, return dict with keys ``trial_id``, ``resume_from``
+        (rung level where trial is paused), ``milestone`` (next rung level
         the trial will reach, or None).
         If no trial can be promoted, or if the rung system is not
         promotion-based, an empty dict is returned.
@@ -130,7 +136,11 @@ class RungSystem:
             considered milestones for this task
         :return: First milestone to be considered
         """
-        return self._rungs[-(skip_rungs + 1)].level
+        return (
+            self._rungs[-(skip_rungs + 1)].level
+            if skip_rungs < self.num_rungs
+            else self._max_t
+        )
 
     def _milestone_rungs(self, skip_rungs: int) -> List[RungEntry]:
         if skip_rungs > 0:
@@ -142,14 +152,15 @@ class RungSystem:
         """
         :param skip_rungs: This number of the smallest rung levels are not
             considered milestones for this task
-        :return: All milestones to be considered
+        :return: All milestones to be considered, in decreasing order; does
+            not include ``max_t``
         """
         milestone_rungs = self._milestone_rungs(skip_rungs)
         return [x.level for x in milestone_rungs]
 
     def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, dict]]:
         """
-        A snapshot is a list of rung levels with entries `(level, data)`,
+        A snapshot is a list of rung levels with entries ``(level, data)``,
         ordered from top to bottom (largest rung first).
 
         :param skip_rungs: This number of the smallest rung levels are not
@@ -180,7 +191,7 @@ class StoppingRungSystem(RungSystem):
        \mathrm{continues}(\mathbf{x}, r)\; \Leftrightarrow\;
        f(\mathbf{x}, r) \le \mathrm{np.quantile}(r.data, r.prom\_quant)
 
-    in case `mode == "min"`. See also :meth:`_task_continues`.
+    in case ``mode == "min"``. See also :meth:`_task_continues`.
     """
 
     def _cutoff(self, recorded, prom_quant):
@@ -216,39 +227,44 @@ class StoppingRungSystem(RungSystem):
     def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
         resource = result[self._resource_attr]
         metric_value = result[self._metric]
-        task_continues = True
-        milestone_reached = False
-        next_milestone = None
-        milestone_rungs = self._milestone_rungs(skip_rungs)
-        for rung in milestone_rungs:
-            milestone = rung.level
-            prom_quant = rung.prom_quant
-            recorded = rung.data
-            if not (resource < milestone or trial_id in recorded):
-                # Note: It is important for model-based searchers that
-                # milestones are reached exactly, not jumped over. In
-                # particular, if a future milestone is reported via
-                # register_pending, its reward value has to be passed
-                # later on via update.
-                if resource > milestone:
-                    logger.warning(
-                        f"resource = {resource} > {milestone} = milestone. "
-                        "Make sure to report time attributes covering all milestones.\n"
-                        f"Continueing, but milestone {milestone} has been skipped."
-                    )
-                else:
-                    milestone_reached = True
-                    # Enter new metric value before checking condition
-                    recorded[trial_id] = metric_value
-                    task_continues = self._task_continues(
-                        metric_value=metric_value,
-                        recorded=recorded,
-                        prom_quant=prom_quant,
-                        trial_id=trial_id,
-                        resource=resource,
-                    )
-                break
-            next_milestone = milestone
+        if resource == self._max_t:
+            task_continues = False
+            milestone_reached = True
+            next_milestone = None
+        else:
+            task_continues = True
+            milestone_reached = False
+            next_milestone = self._max_t
+            milestone_rungs = self._milestone_rungs(skip_rungs)
+            for rung in milestone_rungs:
+                milestone = rung.level
+                prom_quant = rung.prom_quant
+                recorded = rung.data
+                if not (resource < milestone or trial_id in recorded):
+                    # Note: It is important for model-based searchers that
+                    # milestones are reached exactly, not jumped over. In
+                    # particular, if a future milestone is reported via
+                    # register_pending, its reward value has to be passed
+                    # later on via update.
+                    if resource > milestone:
+                        logger.warning(
+                            f"resource = {resource} > {milestone} = milestone. "
+                            "Make sure to report time attributes covering all milestones.\n"
+                            f"Continueing, but milestone {milestone} has been skipped."
+                        )
+                    else:
+                        milestone_reached = True
+                        # Enter new metric value before checking condition
+                        recorded[trial_id] = metric_value
+                        task_continues = self._task_continues(
+                            metric_value=metric_value,
+                            recorded=recorded,
+                            prom_quant=prom_quant,
+                            trial_id=trial_id,
+                            resource=resource,
+                        )
+                    break
+                next_milestone = milestone
         return {
             "task_continues": task_continues,
             "milestone_reached": milestone_reached,

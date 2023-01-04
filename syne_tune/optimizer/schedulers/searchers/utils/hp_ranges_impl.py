@@ -80,16 +80,16 @@ def scale_from_zero_one(
 class HyperparameterRangeContinuous(HyperparameterRange):
     """
     Real valued hyperparameter.
-    If `active_lower_bound` and/or `active_upper_bound` are given, the
+    If ``active_lower_bound`` and/or ``active_upper_bound`` are given, the
     feasible interval for values of new configs is reduced, but data can
-    still contain configs with values in `[lower_bound, upper_bound]`, and
+    still contain configs with values in ``[lower_bound, upper_bound]``, and
     internal encoding is done w.r.t. this original range.
 
     :param name: Name of hyperparameter
     :param lower_bound: Lower bound (included)
     :param upper_bound: Upper bound (included)
     :param scaling: Determines internal representation, whereby
-        `parameter = scaling(internal)`.
+        ``parameter = scaling(internal)``.
     :param active_lower_bound: See above
     :param active_upper_bound: See above
     """
@@ -172,14 +172,14 @@ class HyperparameterRangeInteger(HyperparameterRange):
     """
     Integer valued hyperparameter.
     Both bounds are *included* in the valid values. Under the hood generates
-    a continuous range from `lower_bound - 0.5` to `upper_bound + 0.5`.
+    a continuous range from ``lower_bound - 0.5`` to ``upper_bound + 0.5``.
     See docs for continuous hyperparameter for more information.
 
     :param name: Name of hyperparameter
     :param lower_bound: Lower bound (integer, included)
     :param upper_bound: Upper bound (integer, included)
     :param scaling: Determines internal representation, whereby
-        `parameter = scaling(internal)`.
+        ``parameter = scaling(internal)``.
     :param active_lower_bound: See above
     :param active_upper_bound: See above
     """
@@ -252,19 +252,19 @@ class HyperparameterRangeInteger(HyperparameterRange):
 class HyperparameterRangeFiniteRange(HyperparameterRange):
     """
     Finite range numerical hyperparameter, see
-    :class:`~syne_tune.config_space.FiniteRange`. Internally, we use an `int`
+    :class:`~syne_tune.config_space.FiniteRange`. Internally, we use an ``int``
     with linear scaling.
 
     Note: Different to :class:`HyperparameterRangeContinuous`, we require that
-    `lower_bound < upper_bound` and `size >=2`.
+    ``lower_bound < upper_bound`` and ``size >=2``.
 
     :param name: Name of hyperparameter
     :param lower_bound: Lower bound (included)
     :param upper_bound: Upper bound (included)
     :param size: Number of values in range
     :param scaling: Determines internal representation, whereby
-        `parameter = scaling(internal)`.
-    :param cast_int: If True, values are cast to `int`
+        ``parameter = scaling(internal)``.
+    :param cast_int: If True, values are cast to ``int``
     """
 
     def __init__(
@@ -400,7 +400,7 @@ class HyperparameterRangeCategoricalNonBinary(HyperparameterRangeCategorical):
 
     :param name: Name of hyperparameter
     :param choices: Values parameter can take
-    :param active_choices: If given, must be nonempty subset of `choices`.
+    :param active_choices: If given, must be nonempty subset of ``choices``.
     """
 
     def __init__(
@@ -457,7 +457,7 @@ class HyperparameterRangeCategoricalBinary(HyperparameterRangeCategorical):
 
     :param name: Name of hyperparameter
     :param choices: Values parameter can take (must be size 2)
-    :param active_choices: If given, must be nonempty subset of `choices`.
+    :param active_choices: If given, must be nonempty subset of ``choices``.
     """
 
     def __init__(
@@ -554,8 +554,8 @@ class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
 
     :param name: Name of hyperparameter
     :param choices: Values parameter can take (numerical values, strictly
-        increasing, size `>= 2`)
-    :param log_scale: If `True`, nearest neighbour done in log (`choices` must
+        increasing, size ``>= 2``)
+    :param log_scale: If ``True``, nearest neighbour done in log (``choices`` must
         be positive)
     """
 
@@ -761,8 +761,8 @@ def decode_extended_features(
     split into feature matrix from normal configs and resource values.
 
     :param features_ext: Matrix of features from extended configs
-    :param resource_attr_range: `(r_min, r_max)`
-    :return: `(features, resources)`
+    :param resource_attr_range: ``(r_min, r_max)``
+    :return: ``(features, resources)``
     """
     r_min, r_max = resource_attr_range
     features = features_ext[:, :-1]

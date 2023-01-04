@@ -55,8 +55,8 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
     :param mode: Mode to use for the metric given, can be "min" or "max". Is
         obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"
     :param num_min_data_points: Minimum number of data points that we use to fit
-        the KDEs. If set to `None`, we set this to the number of hyperparameters.
-        Defaults to `None`.
+        the KDEs. If set to ``None``, we set this to the number of hyperparameters.
+        Defaults to ``None``.
     :param top_n_percent: Determines how many datapoints we use to fit the first
         KDE model for modeling the well performing configurations.
         Defaults to 15
@@ -90,10 +90,9 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             config_space=config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
+            mode="min" if mode is None else mode,
             **kwargs,
         )
-        if mode is None:
-            mode = "min"
         if top_n_percent is None:
             top_n_percent = 15
         if min_bandwidth is None:
@@ -104,7 +103,6 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             bandwidth_factor = 3
         if random_fraction is None:
             random_fraction = 0.33
-        self.mode = mode
         self.num_evaluations = 0
         self.min_bandwidth = min_bandwidth
         self.random_fraction = random_fraction
@@ -211,7 +209,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                     b = domain.upper
                     return np.ceil(values * (b - a) + a)
 
-        res = {}
+        res = dict()
         curr_pos = 0
         for k, domain in self.config_space.items():
             if isinstance(domain, sp.Domain):
@@ -228,18 +226,19 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         return res
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+        from syne_tune.optimizer.schedulers.scheduler_searcher import (
+            TrialSchedulerWithSearcher,
+        )
 
         assert isinstance(
-            scheduler, FIFOScheduler
-        ), "This searcher requires FIFOScheduler scheduler"
+            scheduler, TrialSchedulerWithSearcher
+        ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
-        self.mode = scheduler.mode
 
     def _to_objective(self, result: dict):
-        if self.mode == "min":
+        if self._mode == "min":
             return result[self._metric]
-        elif self.mode == "max":
+        else:
             return -result[self._metric]
 
     def _update(self, trial_id: str, config: dict, result: dict):

@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 """
-An example showing to launch a tuning of a python function `train_height`.
+An example showing to launch a tuning of a python function ``train_height``.
 """
 
 from syne_tune import Tuner, StoppingCriterion
@@ -23,7 +23,8 @@ from syne_tune.optimizer.baselines import ASHA
 def train_height(steps: int, width: float, height: float):
     """
     The function to be tuned, note that import must be in PythonBackend and no global variable are allowed,
-    more details on requirements of tuned functions can be found in `PythonBackend`.
+    more details on requirements of tuned functions can be found in
+    :class:`~syne_tune.backend.PythonBackend`.
     """
     import logging
     from syne_tune import Reporter
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     import logging
 
     root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
+    root.setLevel(logging.INFO)
 
     max_steps = 100
     n_workers = 4

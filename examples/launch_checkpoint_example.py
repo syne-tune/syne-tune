@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 """
 An example showing how to retrieve the best checkpoint of an XGBoost model.
-The script being tuned `xgboost_checkpoint.py` stores the checkpoint obtained after each trial evaluation.
+The script being tuned ``xgboost_checkpoint.py`` stores the checkpoint obtained after each trial evaluation.
 After the tuning is done, this example loads the best checkpoint and evaluate the model.
 """
 

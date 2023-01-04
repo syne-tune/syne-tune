@@ -43,10 +43,10 @@ __all__ = ["ScikitLearnCostModel", "UnivariateSplineCostModel"]
 
 class NonLinearCostModel(CostModel):
     """
-    Deterministic cost model, where `c0(x) = b0` (constant), and `c1(x)` is given
-    by a nonlinear regression model specified in subclasses. Parameters are `b0`
+    Deterministic cost model, where ``c0(x) = b0`` (constant), and ``c1(x)`` is given
+    by a nonlinear regression model specified in subclasses. Parameters are ``b0``
     and those of the regression model. We use a simple algorithm to jointly fit
-    `b0` and `c1(x)`.
+    ``b0`` and ``c1(x)``.
 
     """
 
@@ -64,7 +64,7 @@ class NonLinearCostModel(CostModel):
     ) -> dict:
         """
         Transforms dataset (see :meth:`_data_for_c1_regression`) into a dataset
-        representation (dict), which is used as `kwargs` in :meth:`fit_regressor`.
+        representation (dict), which is used as ``kwargs`` in :meth:`fit_regressor`.
 
         :param dataset:
         :param num_data0:
@@ -76,20 +76,20 @@ class NonLinearCostModel(CostModel):
     @staticmethod
     def fit_regressor(b0: float, **kwargs):
         """
-        Given value for `b0`, fits regressor to dataset specified via kwargs
+        Given value for ``b0``, fits regressor to dataset specified via kwargs
         (see :meth:`transform_dataset`). Returns the criterion function value for
-        `b0` as well as the fitted regression model.
+        ``b0`` as well as the fitted regression model.
 
         :param b0:
         :param kwargs:
-        :return: `fval, model`
+        :return: ``fval, model``
         """
         raise NotImplementedError
 
     def predict_c1_values(self, candidates: List[Configuration]):
         """
         :param candidates: Test configs
-        :return: Corresponding `c1` values
+        :return: Corresponding ``c1`` values
         """
         raise NotImplementedError
 
@@ -103,7 +103,7 @@ class NonLinearCostModel(CostModel):
         # Since :func:`critfunc` is not strictly well-defined, we need to
         # cache values for previous evals at the same b0. In
         # particular, this avoids "invalid bracket" errors when
-        # `brentq` evaluates at the bracket ends.
+        # ``brentq`` evaluates at the bracket ends.
         cf_cache = dict()
 
         def critfunc(b0):
@@ -142,12 +142,12 @@ class NonLinearCostModel(CostModel):
 
     def _data_for_c1_regression(self, state: TuningJobState):
         """
-        Extracts `dataset` as list of `(config, target)` tuples. The first
-        `num_data0` records correspond to configs appearing only once in
-        `state`, at the minimum resource level `res_min`.
+        Extracts ``dataset`` as list of ``(config, target)`` tuples. The first
+        ``num_data0`` records correspond to configs appearing only once in
+        ``state``, at the minimum resource level ``res_min``.
 
         :param state: TuningJobState
-        :return: `dataset, num_data0, res_min, target_min`
+        :return: ``dataset, num_data0, res_min, target_min``
         """
         data_config = []
         for ev in state.trials_evaluations:
@@ -182,11 +182,11 @@ _supported_model_types = {"random_forest", "gradient_boosting"}
 
 class ScikitLearnCostModel(NonLinearCostModel):
     """
-    Deterministic cost model, where `c0(x) = b0` (constant), and `c1(x)` is given
-    by a `scikit.learn` (or `scipy`) regression model. Parameters are `b0` and
+    Deterministic cost model, where ``c0(x) = b0`` (constant), and ``c1(x)`` is given
+    by a ``scikit.learn`` (or ``scipy``) regression model. Parameters are ``b0`` and
     those of the regression model.
 
-    :param model_type: Regression model for `c1(x)`
+    :param model_type: Regression model for ``c1(x)``
     """
 
     def __init__(self, model_type: Optional[str] = None):
@@ -247,14 +247,14 @@ class ScikitLearnCostModel(NonLinearCostModel):
 
 class UnivariateSplineCostModel(NonLinearCostModel):
     """
-    Here, `c1(x)` is given by a univariate spline
+    Here, ``c1(x)`` is given by a univariate spline
     (:class:`~scipy.optimize.UnivariateSpline`), where a single scalar is
     extracted from x.
 
-    In the second part of the dataset (`pos >= num_data0`), duplicate entries with
+    In the second part of the dataset (``pos >= num_data0``), duplicate entries with
     the same config in dataset are grouped into one, using the mean as target
     value, and a weight equal to the number of duplicates. This still leaves
-    duplicates in the overall dataset, one in data0, the other in `data1`, but
+    duplicates in the overall dataset, one in data0, the other in ``data1``, but
     spline smoothing can deal with this.
 
     """
@@ -267,8 +267,8 @@ class UnivariateSplineCostModel(NonLinearCostModel):
     ):
         """
         :param scalar_attribute: Maps config to scalar input attribute
-        :param input_range: `(lower, upper)`, range for input attribute
-        :param spline_degree: Degree for smoothing spline, in `1, ..., 5`
+        :param input_range: ``(lower, upper)``, range for input attribute
+        :param spline_degree: Degree for smoothing spline, in ``1, ..., 5``
         """
         assert (
             spline_degree >= 1 and spline_degree <= 5

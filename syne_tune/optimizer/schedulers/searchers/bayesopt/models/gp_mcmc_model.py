@@ -41,12 +41,12 @@ class GaussProcMCMCModelFactory(GaussProcModelFactory):
     values are sampled here.
 
     We draw one fantasy sample per MCMC sample here. This could be extended
-    by sampling `> 1` fantasy samples for each MCMC sample.
+    by sampling ``> 1`` fantasy samples for each MCMC sample.
 
     :param gpmodel: GPRegressionMCMC model
     :param active_metric: Name of the metric to optimize.
     :param normalize_targets: Normalize target values in
-        `state.trials_evaluations`?
+        ``state.trials_evaluations``?
     """
 
     def __init__(

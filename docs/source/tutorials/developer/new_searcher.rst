@@ -11,12 +11,12 @@ The Searcher Factory
 --------------------
 
 Recall that our generic schedulers, such as
-`FIFOScheduler <random_search.html#fifoscheduler-and-randomsearcher>`__ or
-`HyperbandScheduler <extend_async_hb.html#hyperbandscheduler>`__ allow the
+`FIFOScheduler <random_search.html#fifoscheduler-and-randomsearcher>`_ or
+`HyperbandScheduler <extend_async_hb.html#hyperbandscheduler>`_ allow the
 user to choose a searcher via the string argument ``searcher``, and to
 configure the searcher (away from defaults) by the dictionary argument
 ``search_options``. While ``searcher`` can also be a
-`BaseSearcher <random_search.html#fifoscheduler-and-randomsearcher>`__
+`BaseSearcher <random_search.html#fifoscheduler-and-randomsearcher>`_
 instance, it is simpler and more convenient to choose the searcher by
 name. For example:
 
@@ -61,12 +61,12 @@ like ``mode``, ``points_to_evaluate``, ``random_seed_generator``, ``scheduler``.
 Your searcher is not required to make use of them, even though we strongly
 recommend to support ``points_to_evaluate`` and to make use of
 ``random_seed_generator`` (as is
-`shown here <random_search.html#fifoscheduler-and-randomsearcher>`__). Here are
+`shown here <random_search.html#fifoscheduler-and-randomsearcher>`_). Here are
 some best practices for linking a new searcher into the factory:
 
 * The Syne Tune code is written in a way which allows to run certain scenarios
   with a restricted set of all possible dependencies (see
-  `FAQ <../../faq.html#what-are-the-different-installations-options-supported>`__).
+  `FAQ <../../faq.html#what-are-the-different-installations-options-supported>`_).
   This is achieved by conditional imports. If your searcher requires
   dependencies beyond the core, please make sure to use
   ``try ... except ImportError`` as you see in the code.
@@ -74,11 +74,13 @@ some best practices for linking a new searcher into the factory:
   being specified by the user. You will always have the fields contributed by
   the generic schedulers, and for all others, your code should ideally come with
   sensible defaults.
+* Make sure to implement the ``configure_scheduler`` method of your new searcher,
+  restricting usage to supported scheduler types.
 
 Contribute your Extension
 -------------------------
 
 At this point, you are ready to plug in your latest idea and make it work in
 Syne Tune. Given that it works well, we would encourage you to
-`contribute it back to the community <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__.
+`contribute it back to the community <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`_.
 We are looking forward to your pull request.

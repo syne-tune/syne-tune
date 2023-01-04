@@ -252,7 +252,7 @@ def objective(config):
 
             clip = config["clip"]
             if clip > 0:
-                # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
+                # ``clip_grad_norm`` helps prevent the exploding gradient problem in RNNs / LSTMs.
                 if precision == "half":
                     params = amp.master_params(optimizer)
                 else:
@@ -323,10 +323,10 @@ def objective(config):
         )
 
     # Checkpointing
-    # Note that `best_val_loss` and `logs` are also part of the state to be
+    # Note that ``best_val_loss`` and ``logs`` are also part of the state to be
     # checkpointed. In order for things to work out, we keep them in a
-    # dict (otherwise, they'd not be mutable in `load_model_fn`,
-    # `save_model_fn`).
+    # dict (otherwise, they'd not be mutable in ``load_model_fn``,
+    # ``save_model_fn``).
     mutable_state = {"best_val_loss": None, "logs": []}
     state_dict_objects = {
         "model": model,

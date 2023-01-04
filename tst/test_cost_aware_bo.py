@@ -19,8 +19,8 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import uniform
 
 
-# TODO: Turn `train_constrained_example` into a blackbox and use the simulator
-# back-end to run this test rapidly
+# TODO: Turn ``train_constrained_example`` into a blackbox and use the simulator
+# backend to run this test rapidly
 @pytest.mark.skip("this unit test takes about a minute and is skipped for now")
 @pytest.mark.parametrize(
     "scheduler, searcher, cost",

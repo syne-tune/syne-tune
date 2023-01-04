@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.optimizer.scheduler import TrialScheduler
+from syne_tune.optimizer.schedulers.scheduler_searcher import TrialSchedulerWithSearcher
 from syne_tune.optimizer.schedulers.synchronous.hyperband import (
     SynchronousHyperbandScheduler,
 )
@@ -28,7 +28,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
 )
 
 
-_ARGUMENT_KEYS = {"grace_period", "max_resource_level", "reduction_factor", "brackets"}
+_ARGUMENT_KEYS = {"grace_period", "reduction_factor", "brackets"}
 
 _DEFAULT_OPTIONS = {
     "grace_period": 1,
@@ -37,7 +37,6 @@ _DEFAULT_OPTIONS = {
 
 _CONSTRAINTS = {
     "grace_period": Integer(1, None),
-    "max_resource_level": Integer(1, None),
     "reduction_factor": Float(2, None),
     "brackets": Integer(1, None),
 }
@@ -77,30 +76,31 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to `[dict()]`, a single default config
-        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        If None (default), this is mapped to ``[dict()]``, a single default config
+        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
-    :type points_to_evaluate: `List[dict]`, optional
+    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
         :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
-    :param max_resource_level: Largest rung level, corresponds to `max_t` in
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
-        `grace_period`. If this is not given, it is inferred like in
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
+    :param max_resource_level: Largest rung level, corresponds to ``max_t`` in
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive
+        int larger than ``grace_period``. If this is not given, it is inferred
+        like in :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. In
+        particular, it is not needed if ``max_resource_attr`` is given.
     :type max_resource_level: int, optional
     :param max_resource_attr: Key name in config for fixed attribute
         containing the maximum resource. If given, trials need not be
         stopped, which can run more efficiently.
     :type max_resource_attr: str, optional
     :param resource_attr: Name of resource attribute in results obtained via
-        `:meth:`on_trial_result`. The type of resource must be int. Default to
+        ``:meth:`on_trial_result`. The type of resource must be int. Default to
         "epoch"
     :type resource_attr: str, optional
     :param searcher_data: Relevant only if a model-based searcher is used.
-        Example: For NN tuning and `resource_attr == "epoch"`, we receive a
+        Example: For NN tuning and ``resource_attr == "epoch"``, we receive a
         result for each epoch, but not all epoch values are also rung levels.
         searcher_data determines which of these results are passed to the
         searcher. As a rule, the more data the searcher receives, the better
@@ -115,14 +115,13 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
     """
 
     def __init__(self, config_space: dict, **kwargs):
-        TrialScheduler.__init__(self, config_space)
+        TrialSchedulerWithSearcher.__init__(self, config_space, **kwargs)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
             kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
         )
         self.grace_period = kwargs["grace_period"]
         self.reduction_factor = kwargs["reduction_factor"]
-        num_brackets = kwargs.get("brackets")
         max_resource_level = self._infer_max_resource_level(
             kwargs.get("max_resource_level"), kwargs.get("max_resource_attr")
         )
@@ -131,12 +130,11 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
             + "explicit argument 'max_resource_level', or as entry in "
             + "'config_space', with name 'max_resource_attr'"
         )
-        self.max_resource_level = max_resource_level
         bracket_rungs = SynchronousHyperbandRungSystem.geometric(
             min_resource=self.grace_period,
             max_resource=max_resource_level,
             reduction_factor=self.reduction_factor,
-            num_brackets=num_brackets,
+            num_brackets=kwargs.get("brackets"),
         )
         self._create_internal(bracket_rungs, **filter_by_key(kwargs, _ARGUMENT_KEYS))
 
@@ -164,11 +162,11 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
     :type metric: str
     :param searcher: Selects searcher. Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`..
-        If `searcher == "random_encoded"` (default), the encoded configs are
+        If ``searcher == "random_encoded"`` (default), the encoded configs are
         sampled directly, each entry independently from U([0, 1]).
         This distribution has higher entropy than for "random" if
-        there are discrete hyperparameters in `config_space`. Note that
-        `points_to_evaluate` is still used in this case.
+        there are discrete hyperparameters in ``config_space``. Note that
+        ``points_to_evaluate`` is still used in this case.
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
@@ -180,19 +178,20 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to `[dict()]`, a single default config
-        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        If None (default), this is mapped to ``[dict()]``, a single default config
+        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
-    :type points_to_evaluate: `List[dict]`, optional
+    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
         :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
         If not given, the master random seed is drawn at random here.
     :type random_seed: int, optional
-    :param max_resource_level: Largest rung level, corresponds to `max_t` in
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive int larger than
-        `grace_period`. If this is not given, it is inferred like in
-        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
+    :param max_resource_level: Largest rung level, corresponds to ``max_t`` in
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive
+        int larger than ``grace_period``. If this is not given, it is inferred
+        like in :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. In
+        particular, it is not needed if ``max_resource_attr`` is given.
     :type max_resource_level: int, optional
     :param max_resource_attr: Key name in config for fixed attribute
         containing the maximum resource. If given, trials need not be
@@ -209,16 +208,16 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
         in crossover operation (child entries are chosen with probability
         :math:`p`). Defaults to 0.5
     :type crossover_probability: float, optional
-    :param support_pause_resume: If `True`, :meth:`_suggest` supports pause and
+    :param support_pause_resume: If ``True``, :meth:`_suggest` supports pause and
         resume in the first bracket (this is the default). If the objective
-        supports checkpointing, this is made use of. Defaults to `True`.
-        Note: The resumed trial still gets assigned a new `trial_id`, but it
+        supports checkpointing, this is made use of. Defaults to ``True``.
+        Note: The resumed trial still gets assigned a new ``trial_id``, but it
         starts from the earlier checkpoint.
     :type support_pause_resume: bool, optional
     """
 
     def __init__(self, config_space: dict, **kwargs):
-        TrialScheduler.__init__(self, config_space)
+        TrialSchedulerWithSearcher.__init__(self, config_space, **kwargs)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
             kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
@@ -236,7 +235,6 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
             + f"max_resource_attr = {kwargs.get('max_resource_attr')}\n"
             + f"config_space = {config_space}"
         )
-        self.max_resource_level = max_resource_level
         bracket_rungs = SynchronousHyperbandRungSystem.geometric(
             min_resource=self.grace_period,
             max_resource=max_resource_level,

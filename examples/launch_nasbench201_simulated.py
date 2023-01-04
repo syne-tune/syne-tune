@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 """
-Example for running the simulator back-end on a tabulated benchmark
+Example for running the simulator backend on a tabulated benchmark
 """
 import logging
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     dataset_name = "cifar100"
     benchmark = nas201_benchmark(dataset_name)
 
-    # Simulator back-end specialized to tabulated blackboxes
+    # Simulator backend specialized to tabulated blackboxes
     max_resource_attr = benchmark.max_resource_attr
     trial_backend = BlackboxRepositoryBackend(
         elapsed_time_attr=benchmark.elapsed_time_attr,
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # storing results.
     print_update_interval = 700
     results_update_interval = 300
-    # It is important to set `sleep_time` to 0 here (mandatory for simulator
+    # It is important to set ``sleep_time`` to 0 here (mandatory for simulator
     # backend)
     tuner = Tuner(
         trial_backend=trial_backend,

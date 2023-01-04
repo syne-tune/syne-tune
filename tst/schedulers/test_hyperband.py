@@ -70,7 +70,7 @@ def test_register_pending():
     reduction_factor = 3
 
     for searcher_data in ("rungs", "all"):
-        # We need to plug in a searcher which logs calls to `register_pending`
+        # We need to plug in a searcher which logs calls to ``register_pending``
         scheduler = HyperbandScheduler(
             config_space,
             searcher="random",
@@ -86,7 +86,7 @@ def test_register_pending():
         new_searcher = MyRandomSearcher(
             old_searcher.config_space, metric=old_searcher._metric
         )
-        scheduler.searcher = new_searcher
+        scheduler._searcher = new_searcher
 
         # Start 4 trials (0, 1, 2, 3)
         trials = dict()

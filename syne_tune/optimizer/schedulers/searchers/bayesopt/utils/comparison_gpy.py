@@ -158,7 +158,7 @@ def expand_data(data: dict) -> dict:
 
 
 # Recall that inputs in data are encoded, so we have to decode them to their
-# native ranges for `trials_evaluations`
+# native ranges for ``trials_evaluations``
 def data_to_state(data: dict) -> TuningJobState:
     configs, cs = decode_inputs(data["train_inputs"], data["ss_limits"])
     config_for_trial = {

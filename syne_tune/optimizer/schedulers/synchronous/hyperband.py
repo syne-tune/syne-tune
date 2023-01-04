@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Set
 import logging
 import numpy as np
 
@@ -22,7 +22,8 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system import (
     RungSystemsPerBracket,
 )
 from syne_tune.optimizer.scheduler import TrialSuggestion, SchedulerDecision
-from syne_tune.optimizer.schedulers.fifo import ResourceLevelsScheduler
+from syne_tune.optimizer.schedulers.scheduler_searcher import TrialSchedulerWithSearcher
+from syne_tune.optimizer.schedulers.multi_fidelity import MultiFidelitySchedulerMixin
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
@@ -32,11 +33,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     assert_no_invalid_options,
     Integer,
 )
-from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
-
-__all__ = ["SynchronousHyperbandScheduler"]
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +47,7 @@ _ARGUMENT_KEYS = {
     "points_to_evaluate",
     "random_seed",
     "max_resource_attr",
+    "max_resource_level",
     "resource_attr",
     "searcher_data",
 }
@@ -65,12 +64,91 @@ _CONSTRAINTS = {
     "mode": Categorical(choices=("min", "max")),
     "random_seed": Integer(0, 2**32 - 1),
     "max_resource_attr": String(),
+    "max_resource_level": Integer(1, None),
     "resource_attr": String(),
     "searcher_data": Categorical(("rungs", "all")),
 }
 
 
-class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
+class SynchronousHyperbandCommon(
+    TrialSchedulerWithSearcher, MultiFidelitySchedulerMixin
+):
+    """
+    Common code for :meth:`_create_internal` in
+    :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`
+    and
+    :class:`~syne_tune.optimizer.schedulers.synchronous.DifferentialEvolutionHyperbandScheduler`
+    """
+
+    def _create_internal_common(
+        self, skip_searchers: Optional[Set[str]] = None, **kwargs
+    ) -> dict:
+        self.metric = kwargs.get("metric")
+        assert self.metric is not None, (
+            "Argument 'metric' is mandatory. Pass the name of the metric "
+            + "reported by your training script, which you'd like to "
+            + "optimize, and use 'mode' to specify whether it should "
+            + "be minimized or maximized"
+        )
+        self.mode = kwargs["mode"]
+        self.max_resource_attr = kwargs.get("max_resource_attr")
+        self._resource_attr = kwargs["resource_attr"]
+        self._max_resource_level = self._infer_max_resource_level(
+            max_resource_level=kwargs.get("max_resource_level"),
+            max_resource_attr=self.max_resource_attr,
+        )
+        assert self._max_resource_level is not None, (
+            "Maximum resource level has to be specified, please provide "
+            "max_resource_attr or max_resource_level argument."
+        )
+        self._searcher_data = kwargs["searcher_data"]
+        # Generate searcher
+        searcher = kwargs["searcher"]
+        assert isinstance(
+            searcher, str
+        ), f"searcher must be of type string, but has type {type(searcher)}"
+        search_options = kwargs.get("search_options")
+        if search_options is None:
+            search_options = dict()
+        else:
+            search_options = search_options.copy()
+        if skip_searchers is None or searcher not in skip_searchers:
+            search_options.update(
+                {
+                    "config_space": self.config_space.copy(),
+                    "metric": self.metric,
+                    "points_to_evaluate": kwargs.get("points_to_evaluate"),
+                    "mode": kwargs["mode"],
+                    "random_seed_generator": self.random_seed_generator,
+                    "resource_attr": self._resource_attr,
+                    "scheduler": "hyperband_synchronous",
+                }
+            )
+            if searcher == "bayesopt":
+                search_options["max_epochs"] = self._max_resource_level
+            self._searcher: BaseSearcher = searcher_factory(searcher, **search_options)
+        else:
+            self._searcher = None
+        return search_options
+
+    @property
+    def searcher(self) -> Optional[BaseSearcher]:
+        return self._searcher
+
+    @property
+    def resource_attr(self) -> str:
+        return self._resource_attr
+
+    @property
+    def max_resource_level(self) -> int:
+        return self._max_resource_level
+
+    @property
+    def searcher_data(self) -> str:
+        return self._searcher_data
+
+
+class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
     """
     Synchronous Hyperband. Compared to
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, this is also
@@ -104,10 +182,10 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to `[dict()]`, a single default config
-        determined by the midpoint heuristic. If `[]` (empty list), no initial
+        If None (default), this is mapped to ``[dict()]``, a single default config
+        determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
-    :type points_to_evaluate: `List[dict]`, optional
+    :type points_to_evaluate: ``List[dict]``, optional
     :param random_seed: Master random seed. Generators used in the scheduler
         or searcher are seeded using
         :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`.
@@ -117,12 +195,18 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         containing the maximum resource. If given, trials need not be
         stopped, which can run more efficiently.
     :type max_resource_attr: str, optional
+    :param max_resource_level: Largest rung level, corresponds to ``max_t`` in
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Must be positive
+        int larger than ``grace_period``. If this is not given, it is inferred
+        like in :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. In
+        particular, it is not needed if ``max_resource_attr`` is given.
+    :type max_resource_level: int, optional
     :param resource_attr: Name of resource attribute in results obtained via
-        `:meth:`on_trial_result`. The type of resource must be int. Default to
+        ``:meth:`on_trial_result`. The type of resource must be int. Default to
         "epoch"
     :type resource_attr: str, optional
     :param searcher_data: Relevant only if a model-based searcher is used.
-        Example: For NN tuning and `resource_attr == "epoch"`, we receive a
+        Example: For NN tuning and ``resource_attr == "epoch"``, we receive a
         result for each epoch, but not all epoch values are also rung levels.
         searcher_data determines which of these results are passed to the
         searcher. As a rule, the more data the searcher receives, the better
@@ -139,8 +223,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
     def __init__(
         self, config_space: dict, bracket_rungs: RungSystemsPerBracket, **kwargs
     ):
-        """ """
-        super().__init__(config_space)
+        super().__init__(config_space, **kwargs)
         self._create_internal(bracket_rungs, **kwargs)
 
     def _create_internal(self, bracket_rungs: RungSystemsPerBracket, **kwargs):
@@ -151,77 +234,35 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         kwargs = check_and_merge_defaults(
             kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
         )
-        self.metric = kwargs.get("metric")
-        assert self.metric is not None, (
-            "Argument 'metric' is mandatory. Pass the name of the metric "
-            + "reported by your training script, which you'd like to "
-            + "optimize, and use 'mode' to specify whether it should "
-            + "be minimized or maximized"
-        )
-        self.mode = kwargs["mode"]
-        self.max_resource_attr = kwargs.get("max_resource_attr")
-        self._resource_attr = kwargs["resource_attr"]
-        # Generator for random seeds
-        random_seed = kwargs.get("random_seed")
-        if random_seed is None:
-            random_seed = np.random.randint(0, 2**32)
-        logger.info(f"Master random_seed = {random_seed}")
-        self.random_seed_generator = RandomSeedGenerator(random_seed)
-        # Generate searcher
-        searcher = kwargs["searcher"]
-        assert isinstance(
-            searcher, str
-        ), f"searcher must be of type string, but has type {type(searcher)}"
-        search_options = kwargs.get("search_options")
-        if search_options is None:
-            search_options = dict()
-        else:
-            search_options = search_options.copy()
-        search_options.update(
-            {
-                "config_space": self.config_space.copy(),
-                "metric": self.metric,
-                "points_to_evaluate": kwargs.get("points_to_evaluate"),
-                "mode": kwargs["mode"],
-                "random_seed_generator": self.random_seed_generator,
-                "resource_attr": self._resource_attr,
-                "scheduler": "hyperband_synchronous",
-            }
-        )
-        if searcher == "bayesopt":
-            # We need `max_epochs` in this case
-            max_epochs = self._infer_max_resource_level(
-                max_resource_level=None, max_resource_attr=self.max_resource_attr
-            )
-            assert max_epochs is not None, (
-                "If searcher='bayesopt', need to know the maximum resource "
-                + "level. Please provide max_resource_attr argument."
-            )
-            search_options["max_epochs"] = max_epochs
-        self.searcher: BaseSearcher = searcher_factory(searcher, **search_options)
+        self._create_internal_common(**kwargs)
         # Bracket manager
         self.bracket_manager = SynchronousHyperbandBracketManager(
-            bracket_rungs, mode=self.mode
+            bracket_rungs,
+            mode=self.mode,
         )
-        self.searcher_data = kwargs["searcher_data"]
         # Maps trial_id to tuples (bracket_id, slot_in_rung), as returned
-        # by `bracket_manager.next_job`, and required by
-        # `bracket_manager.on_result`. Entries are removed once passed to
-        # `on_result`. Note that a trial_id can be associated with different
+        # by ``bracket_manager.next_job``, and required by
+        # ``bracket_manager.on_result``. Entries are removed once passed to
+        # ``on_result``. Note that a trial_id can be associated with different
         # job descriptions in its lifetime
         self._trial_to_pending_slot = dict()
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
+        self._rung_levels = [level for _, level in bracket_rungs[0]]
 
     @property
-    def resource_attr(self) -> str:
-        return self._resource_attr
+    def rung_levels(self) -> List[int]:
+        return self._rung_levels
+
+    @property
+    def num_brackets(self) -> int:
+        return len(self.bracket_manager.bracket_rungs)
 
     def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
         do_debug_log = self.searcher.debug_log is not None
         if do_debug_log and trial_id == 0:
             # This is printed at the start of the experiment. Cannot do this
-            # at construction, because with `RemoteLauncher` this does not end
+            # at construction, because with ``RemoteLauncher`` this does not end
             # up in the right log
             parts = ["Rung systems for each bracket:"] + [
                 f"Bracket {bracket}: {rungs}"
@@ -232,7 +273,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
         bracket_id, slot_in_rung = self.bracket_manager.next_job()
         suggestion = None
         if slot_in_rung.trial_id is not None:
-            # Paused trial to be resumed (`trial_id` passed in is ignored)
+            # Paused trial to be resumed (``trial_id`` passed in is ignored)
             trial_id = slot_in_rung.trial_id
             _config = self._trial_to_config[trial_id]
             if self.max_resource_attr is not None:
@@ -245,7 +286,7 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             if do_debug_log:
                 logger.info(f"trial_id {trial_id} promoted to {slot_in_rung.level}")
         else:
-            # New trial to be started (id is `trial_id` passed in)
+            # New trial to be started (id is ``trial_id`` passed in)
             config = self.searcher.get_config(trial_id=str(trial_id))
             if config is not None:
                 config = cast_config_values(config, self.config_space)
@@ -304,7 +345,6 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
             )
             resource = int(result[self._resource_attr])
             milestone = slot_in_rung.level
-            prev_level = self.bracket_manager.level_to_prev_level(bracket_id, milestone)
             trial_decision = SchedulerDecision.CONTINUE
             if resource >= milestone:
                 assert resource == milestone, (
@@ -319,10 +359,11 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
                 del self._trial_to_pending_slot[trial_id]
                 # Trial should be paused
                 trial_decision = SchedulerDecision.PAUSE
+            prev_level = self.bracket_manager.level_to_prev_level(bracket_id, milestone)
             if resource > prev_level:
                 # If the training script does not implement checkpointing, each
                 # trial starts from scratch. In this case, the condition
-                # `resource > prev_level` ensures that the searcher does not
+                # ``resource > prev_level`` ensures that the searcher does not
                 # receive multiple reports for the same resource
                 update = self.searcher_data == "all" or resource == milestone
                 self.searcher.on_trial_result(
@@ -342,13 +383,13 @@ class SynchronousHyperbandScheduler(ResourceLevelsScheduler):
 
     def on_trial_error(self, trial: Trial):
         """
-        Given the `trial` is currently pending, we send a result at its
+        Given the ``trial`` is currently pending, we send a result at its
         milestone for metric value NaN. Such trials are ranked after all others
         and will most likely not be promoted.
 
         """
+        super().on_trial_error(trial)
         trial_id = trial.trial_id
-        self.searcher.evaluation_failed(str(trial_id))
         if trial_id in self._trial_to_pending_slot:
             bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]
             self._report_as_failed(bracket_id, slot_in_rung)

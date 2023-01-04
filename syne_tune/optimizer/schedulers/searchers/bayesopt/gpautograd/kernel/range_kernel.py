@@ -27,7 +27,7 @@ class RangeKernelFunction(KernelFunction):
         """
         :param dimension: Input dimension
         :param kernel: Kernel function K
-        :param start: Range is `range(start, start + kernel.dimension)`
+        :param start: Range is ``range(start, start + kernel.dimension)``
 
         """
         super().__init__(dimension, **kwargs)

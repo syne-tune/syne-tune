@@ -35,13 +35,13 @@ MAX_RETRIES_CANDIDATES_EN_BULK = 20
 class ExclusionList:
     """
     Maintains exclusion list of configs, to avoid choosing configs several
-    times. In fact, `self.excl_set` maintains a set of match strings.
+    times. In fact, ``self.excl_set`` maintains a set of match strings.
 
     The exclusion list contains non-extended configs, but it can be fed with
     and queried with extended configs. In that case, the resource attribute
     is removed from the config.
 
-    :param state: Either tuning job state, or a `dict` containing the members
+    :param state: Either tuning job state, or a ``dict`` containing the members
         to be used (copy constructor)
     :param filter_observed_data: Filter on observed data, optional
     """
@@ -55,7 +55,7 @@ class ExclusionList:
         if is_new:
             self.hp_ranges = state.hp_ranges
             keys = self.hp_ranges.internal_keys
-            # Remove resource attribute from `self.keys` if present
+            # Remove resource attribute from ``self.keys`` if present
             resource_attr = self.hp_ranges.name_last_pos
             if resource_attr is None:
                 self.keys = keys
@@ -113,6 +113,16 @@ class ExclusionList:
             self.excl_set
         ) >= self.configspace_size
 
+    def get_state(self) -> dict:
+        return {
+            "excl_set": list(self.excl_set),
+            "keys": self.keys,
+        }
+
+    def clone_from_state(self, state: dict):
+        self.keys = state["keys"]
+        self.excl_set = set(state["excl_set"])
+
 
 class CandidateGenerator:
     """
@@ -130,8 +140,8 @@ class CandidateGenerator:
         """
         :param num_cands: Number of candidates to generate
         :param exclusion_list: If given, these candidates must not be returned
-        :return: List of `num_cands` candidates. If `exclusion_list` is given,
-            the number of candidates returned can be `< num_cands`
+        :return: List of ``num_cands`` candidates. If ``exclusion_list`` is given,
+            the number of candidates returned can be ``< num_cands``
         """
         raise NotImplementedError
 

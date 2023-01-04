@@ -4,28 +4,28 @@ Why should I use Syne Tune?
 Hyperparameter Optimization (HPO) has been an important problem for many years,
 and a variety of commercial and open-source tools are available to help
 practitioners run HPO efficiently. Notable examples for open source
-tools are `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`__ and
-`Optuna <https://optuna.readthedocs.io/en/stable/>`__. Here are some reasons
+tools are `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`_ and
+`Optuna <https://optuna.readthedocs.io/en/stable/>`_. Here are some reasons
 why you may prefer Syne Tune over these alternatives:
 
 * **Lightweight and platform-agnostic**: Syne Tune is designed to work with
-  different execution back-ends, so you are not locked into a particular
+  different execution backends, so you are not locked into a particular
   distributed system architecture. Syne Tune runs with minimal dependencies.
 * **Wide range of modalities**: Syne Tune supports multi-fidelity HPO,
   constrained HPO, multi-objective HPO, transfer tuning, cost-aware HPO,
   population based training.
 * **Simple, modular design**: Rather than wrapping all sorts of other HPO
   frameworks, Syne Tune provides simple APIs and scheduler templates, which can
-  easily be `extended to your specific needs <tutorials/developer/README.html>`__.
+  easily be `extended to your specific needs <tutorials/developer/README.html>`_.
 * **Industry-strength Bayesian optimization**: Syne Tune has special support
-  for `Gaussian process based Bayesian optimization <tutorials/basics/basics_bayesopt.html>`__.
+  for `Gaussian process based Bayesian optimization <tutorials/basics/basics_bayesopt.html>`_.
   The same code powers modalities like multi-fidelity HPO, constrained HPO, or
   cost-aware HPO, having been tried and tested for several years.
 * **Special support for researchers**: Syne Tune allows for rapid development
   and comparison between different tuning algorithms. Its
-  `blackbox repository and simulator back-end <tutorials/multifidelity/mf_setup.html>`__
+  `blackbox repository and simulator backend <tutorials/multifidelity/mf_setup.html>`_
   run realistic simulations of experiments many times faster than real time.
-  `Benchmarking <tutorials/benchmarking/README.html>`__ is simple and efficient.
+  `Benchmarking <tutorials/benchmarking/README.html>`_ is simple and efficient.
 
 If you are an AWS customer, there are additional good reasons to use Syne Tune
 over the alternatives:
@@ -33,7 +33,7 @@ over the alternatives:
 * If you use AWS services or SageMaker frameworks day to day, Syne Tune works
   out of the box and fits into your normal workflow.
 * Syne Tune is developed in collaboration with the team behind the
-  `Automatic Model Tuning <https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html>`__
+  `Automatic Model Tuning <https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html>`_
   service.
 
 What are the different installations options supported?
@@ -54,7 +54,7 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
   :class:`~syne_tune.optimizer.baselines.MOBSTER`, or
   :class:`~syne_tune.optimizer.baselines.HyperTune`)
 * ``aws``: AWS SageMaker dependencies. These are required for
-  `remote launching <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__
+  `remote launching <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`_
   or for the :class:`~syne_tune.backend.SageMakerBackend`
 * ``raytune``: For Ray Tune optimizers (see
   :class:`~syne_tune.optimizer.schedulers.RayTuneScheduler`), installs all Ray
@@ -67,7 +67,7 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
 * ``kde``: For BOHB (such as :class:`~syne_tune.optimizer.baselines.SyncBOHB`,
   or :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` or
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
-  `searcher="kde"`)
+  ``searcher="kde"``)
 * ``botorch``: Bayesian optimization from BOTorch (see
   :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BotorchSearcher`)
 * ``dev``: For developers who would like to extend Syne Tune
@@ -108,11 +108,11 @@ your local machine, you will need access to AWS and SageMaker on your machine.
 Make sure that:
 
 * ``awscli`` is installed (see
-  `this link <https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html>`__)
+  `this link <https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html>`_)
 * AWS credentials have been set properly (see
-  `this link <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html>`__).
+  `this link <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html>`_).
 * The necessary SageMaker role has been created (see
-  `this page <https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role-sagemaker-notebook.html>`__
+  `this page <https://docs.aws.amazon.com/glue/latest/dg/create-an-iam-role-sagemaker-notebook.html>`_
   for instructions. If you’ve created a SageMaker notebook in the past, this
   role should already have been created for you).
 
@@ -162,7 +162,7 @@ To utilize multiple GPUs you can either use the backend
 :class:`~syne_tune.backend.LocalBackend`, which will run on the GPU available
 in a local machine. You can also run on a remote AWS instance with multiple GPUs
 using the local backend and the remote launcher, see
-`here <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__,
+`here <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`_,
 or run with the :class:`~syne_tune.backend.SageMakerBackend` which spins-up one
 training job per trial.
 
@@ -245,16 +245,16 @@ checkpointing enabled:
    :lines: 13-
 
 When using SageMaker backend or tuning remotely, we use the
-`SageMaker checkpoint mechanism <https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html>`__
+`SageMaker checkpoint mechanism <https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html>`_
 under the hood to sync local checkpoints to s3. Checkpoints are synced to
 ``s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/``,
 where ``sagemaker-default-bucket`` is the default bucket for SageMaker. A
 complete example is given by
-`examples/launch_height_sagemaker_checkpoints.py <examples.html#sageMaker-backend-and-checkpointing>`__.
+`examples/launch_height_sagemaker_checkpoints.py <examples.html#sageMaker-backend-and-checkpointing>`_.
 
 There are some convenience functions which help you to implement checkpointing
 for your training script. Have a look at
-`resnet_cifar10.py <training_scripts.html#resnet-18-trained-on-cifar-10>`__:
+`resnet_cifar10.py <training_scripts.html#resnet-18-trained-on-cifar-10>`_:
 
 * Checkpoints have to be written at the end of certain epochs (namely
   those after which the scheduler may pause the trial). This is dealt with
@@ -287,7 +287,7 @@ How can I retrieve the best checkpoint obtained after tuning?
 =============================================================
 
 You can take a look at this example
-`examples/launch_checkpoint_example.py <examples.html#retrieving-the-best-checkpoint>`__
+`examples/launch_checkpoint_example.py <examples.html#retrieving-the-best-checkpoint>`_
 which shows how to retrieve the best checkpoint obtained after tuning an XGBoost model.
 
 Which schedulers make use of checkpointing?
@@ -300,7 +300,7 @@ from scratch. The following schedulers make use of checkpointing:
 
 * Promotion-based asynchronous Hyperband:
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
-  `type="promotion"`, as well as other asynchronous multi-fidelity schedulers.
+  ``type="promotion"``, as well as other asynchronous multi-fidelity schedulers.
   The code runs without checkpointing, but in this case, any trial which is
   resumed is started from scratch. For example, if a trial was paused after 9
   epochs of training and is resumed later, training starts from scratch
@@ -380,7 +380,7 @@ How can I plot the results of a tuning?
 
 Some basic plots can be obtained via
 :class:`~syne_tune.experiments.ExperimentResult`. An example is given in
-`examples/launch_plot_results.py <examples.html#plot-results-of-tuning-experiment>`__.
+`examples/launch_plot_results.py <examples.html#plot-results-of-tuning-experiment>`_.
 
 How can I specify additional tuning metadata?
 =============================================
@@ -407,14 +407,14 @@ How do I append additional information to the results which are stored?
 =======================================================================
 
 Results are processed and stored by callbacks passed to
-:class:`~syne_tune.Tuner``, in particular see
+:class:`~syne_tune.Tuner`, in particular see
 :class:`~syne_tune.tuner_callback.StoreResultsCallback`. In order to add more
 information, you can inherit from this class. An example is given in
 :class:`~syne_tune.optimizer.schedulers.searchers.searcher_callback.StoreResultsAndModelParamsCallback`.
 
 If you run experiments with tabulated benchmarks using the
 :class:`~syne_tune.blackbox_repository.BlackboxRepositoryBackend`, as demonstrated in
-`launch_nasbench201_simulated.py <examples.html#launch-hpo-experiment-with-simulator-backend>`__,
+`launch_nasbench201_simulated.py <examples.html#launch-hpo-experiment-with-simulator-backend>`_,
 results are stored by
 :class:`~syne_tune.backend.simulator_backend.simulator_callback.SimulatorCallback`
 instead, and you need to inherit from this class. An example is given in
@@ -438,25 +438,25 @@ trials will be evaluated on the remote machine (one use-case being to use a
 beefy machine), in the latter case trials will be evaluated as separate
 SageMaker training jobs. An example for running the remote launcher is
 given in
-`launch_height_sagemaker_remotely.py <examples.html#launch-experiments-remotely-on-sagemaker>`__.
+`launch_height_sagemaker_remotely.py <examples.html#launch-experiments-remotely-on-sagemaker>`_.
 
 Remote launching for benchmarking (i.e., running many remote experiments
 in order to compare multiple methods) is detailed in
-`this tutorial <tutorials/benchmarking/README.html>`__.
+`this tutorial <tutorials/benchmarking/README.html>`_.
 
 How can I run many experiments in parallel?
 ===========================================
 
 You can remotely launch any number of experiments, which will then run
 in parallel, as detailed in
-`this tutorial <tutorials/benchmarking/README.html>`__, see also these examples:
+`this tutorial <tutorials/benchmarking/README.html>`_, see also these examples:
 
 * Local backend:
-  `benchmarking/nursery/launch_local/ <benchmarking/launch_local.html>`__
+  `benchmarking/nursery/launch_local/ <benchmarking/launch_local.html>`_
 * Simulator backend:
-  `benchmarking/nursery/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
+  `benchmarking/nursery/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`_
 * SageMaker backend:
-  `benchmarking/nursery/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
+  `benchmarking/nursery/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`_
 
 How can I access results after tuning remotely?
 ===============================================
@@ -487,31 +487,31 @@ When you run remote code, you often need to install packages
   launcher or on a SageMaker framework to a list of folders. The
   folders indicated will be compressed, sent to S3 and added to the
   python path when the container starts. More details are given in
-  `this tutorial <tutorials/benchmarking/bm_sagemaker.html>`__.
+  `this tutorial <tutorials/benchmarking/bm_sagemaker.html>`_.
 
 How can I benchmark different methods?
 ======================================
 
 The most flexible way to do so is to write a custom launcher script, as
-detailed in `this tutorial <tutorials/benchmarking/README.html>`__, see
+detailed in `this tutorial <tutorials/benchmarking/README.html>`_, see
 also these examples:
 
 * Local backend:
-  `benchmarking/nursery/launch_local/ <benchmarking/launch_local.html>`__
+  `benchmarking/nursery/launch_local/ <benchmarking/launch_local.html>`_
 * Simulator backend:
-  `benchmarking/nursery/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
+  `benchmarking/nursery/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`_
 * SageMaker backend:
-  `benchmarking/nursery/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
+  `benchmarking/nursery/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`_
 * Fine-tuning transformers:
-  `benchmarking/nursery/fine_tuning_transformer_glue/ <benchmarking/fine_tuning_transformer_glue.html>`__
+  `benchmarking/nursery/fine_tuning_transformer_glue/ <benchmarking/fine_tuning_transformer_glue.html>`_
 * Hyper-Tune:
-  `benchmarking/nursery/benchmark_hypertune/ <benchmarking/benchmark_hypertune.html>`__
+  `benchmarking/nursery/benchmark_hypertune/ <benchmarking/benchmark_hypertune.html>`_
 
 What different schedulers do you support? What are the main differences between them?
 =====================================================================================
 
 A succinct overview of supported schedulers is provided
-`here <getting_started.html#supported-hpo-methods>`__.
+`here <getting_started.html#supported-hpo-methods>`_.
 
 We refer to HPO algorithms as *schedulers*. A scheduler decides which
 configurations to assign to new trials, but also when to stop a running
@@ -531,25 +531,25 @@ single-objective case are:
   latter can be more expensive if a lot of trials are run, but can also
   be more sample-efficient.
 
-An overview of this landscape is given `here <schedulers.html>`__.
+An overview of this landscape is given `here <schedulers.html>`_.
 
 Here is a
-`tutorial for multi-fidelity schedulers <tutorials/multifidelity/README.html>`__.
+`tutorial for multi-fidelity schedulers <tutorials/multifidelity/README.html>`_.
 Further schedulers provided by Syne Tune include:
 
-* `Population based training (PBT) <examples.html#population-based-training-pbt>`__
-* `Multi-objective asynchronous successive halving (MOASHA) <examples.html#multi-objective-asynchronous-successive-halving-moasha>`__
-* `Constrained Bayesian optimization <examples.html#constrained-bayesian-optimization>`__
+* `Population based training (PBT) <examples.html#population-based-training-pbt>`_
+* `Multi-objective asynchronous successive halving (MOASHA) <examples.html#multi-objective-asynchronous-successive-halving-moasha>`_
+* `Constrained Bayesian optimization <examples.html#constrained-bayesian-optimization>`_
 * Bayesian optimization by density-ratio estimation:
   :class:`~syne_tune.optimizer.baselines.BORE`
 * Regularized evolution: :class:`~syne_tune.optimizer.baselines.REA`
 * Median stopping rule:
   :class:`~syne_tune.optimizer.schedulers.median_stopping_rule.MedianStoppingRule`
-* `Synchronous Hyperband <tutorials/multifidelity/mf_syncsh.html>`__
-* `Differential Evolution Hyperband (DEHB) <tutorials/multifidelity/mf_sync_model.html#differential-evolution-hyperband>`__
-* `Hyper-Tune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__
-* `Transfer learning schedulers <examples.html#transfer-tuning-on-nasbench-201>`__
-* `Wrappers for Ray Tune schedulers <examples.html#launch-hpo-experiment-with-ray-tune-scheduler>`__
+* `Synchronous Hyperband <tutorials/multifidelity/mf_syncsh.html>`_
+* `Differential Evolution Hyperband (DEHB) <tutorials/multifidelity/mf_sync_model.html#differential-evolution-hyperband>`_
+* `Hyper-Tune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`_
+* `Transfer learning schedulers <examples.html#transfer-tuning-on-nasbench-201>`_
+* `Wrappers for Ray Tune schedulers <examples.html#launch-hpo-experiment-with-ray-tune-scheduler>`_
 
 Most of those methods can be accessed with short names by from
 :mod:`syne_tune.optimizer.baselines`.
@@ -561,7 +561,7 @@ While the training script defines the function to be optimized, some
 care needs to be taken to define the search space for the hyperparameter
 optimization problem. This being a global optimization problem without
 gradients easily available, it is most important to reduce the number of
-parameters. Some advice is given `here <search_space.html>`__.
+parameters. Some advice is given `here <search_space.html>`_.
 
 A powerful approach is to run experiments in parallel. Namely, split
 your hyperparameters into groups A, B, such that HPO over B is
@@ -569,13 +569,13 @@ tractable. Draw a set of N configurations from A at random, then start N
 HPO experiments in parallel, where in each of them the search space is
 over B only, while the parameters in A are fixed. Syne Tune supports
 massively parallel experimentation, see
-`this tutorial <tutorials/benchmarking/README.html>`__.
+`this tutorial <tutorials/benchmarking/README.html>`_.
 
 How can I visualize the progress of my tuning experiment with Tensorboard?
 ==========================================================================
 
 To visualize the progress of Syne Tune in
-`Tensorboard <https://www.tensorflow.org/tensorboard>`__, you can pass
+`Tensorboard <https://www.tensorflow.org/tensorboard>`_, you can pass
 the :class:`~syne_tune.callbacks.TensorboardCallback` to the
 :class:`~syne_tune.Tuner` object:
 
@@ -589,7 +589,7 @@ the :class:`~syne_tune.callbacks.TensorboardCallback` to the
    )
 
 Note that, you need to install
-`TensorboardX <https://github.com/lanpa/tensorboardX>`__ to use this callback:
+`TensorboardX <https://github.com/lanpa/tensorboardX>`_ to use this callback:
 
 .. code:: bash
 
@@ -606,17 +606,17 @@ If you want to plot the cumulative optimum of the metric you want to
 optimize, you can pass the ``target_metric`` argument to
 class:`syne_tune.callbacks.TensorboardCallback`. This will also report the best
 found hyperparameter configuration over time. A complete example is
-`examples/launch_tensorboard_example.py <examples.html#visualize-tuning-progress-with-tensorboard>`__.
+`examples/launch_tensorboard_example.py <examples.html#visualize-tuning-progress-with-tensorboard>`_.
 
 How can I add a new scheduler?
 ==============================
 
 This is explained in detail in
-`this tutorial <tutorials/developer/README.html>`__, and also in
-`examples/launch_height_standalone_scheduler <examples.html#launch-hpo-experiment-with-home-made-scheduler>`__.
+`this tutorial <tutorials/developer/README.html>`_, and also in
+`examples/launch_height_standalone_scheduler <examples.html#launch-hpo-experiment-with-home-made-scheduler>`_.
 
 Please do consider
-`contributing back <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__
+`contributing back <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`_
 your efforts to the Syne Tune community, thanks!
 
 How can I add a new tabular or surrogate benchmark?
@@ -632,8 +632,20 @@ To add a new dataset of tabular evaluations, you need to:
   :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench`
   for an example.
 * add your new recipe class in
-  :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.recipes` to make
+  :mod:`syne_tune.blackbox_repository.conversion_scripts.recipes` to make
   it available in Syne Tune.
 
 Further details are given
-`here <tutorials/benchmarking/bm_contributing.html#contributing-a-tabulated-benchmark>`__.
+`here <tutorials/benchmarking/bm_contributing.html#contributing-a-tabulated-benchmark>`_.
+
+How can I reduce delays in starting trials with the SageMaker backend?
+======================================================================
+
+The SageMaker backend executes each trial as a SageMaker training job, which
+encurs start-up delays up to several minutes. These delays can be reduced to
+about 20 seconds with
+`SageMaker managed warm pools <https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html>`_,
+as is detailed in
+`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_
+or `this example <examples.html#sagemaker-backend-and-checkpointing>`_. We
+strongly recommend to use managed warm pools with the SageMaker backend.

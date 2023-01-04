@@ -41,9 +41,9 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
         | Valerio Perrone, Huibin Shen, Matthias Seeger, Cédric Archambeau, Rodolphe Jenatton.
         | NeurIPS 2019.
 
-    `scheduler_fun` is used to create the scheduler to be used here, feeding
+    ``scheduler_fun`` is used to create the scheduler to be used here, feeding
     it with the modified config space. Any additional scheduler arguments
-    (such as `points_to_evaluate`) should be encoded inside this function.
+    (such as ``points_to_evaluate``) should be encoded inside this function.
     Example:
 
     .. code-block::
@@ -55,9 +55,9 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
 
        bb_scheduler = BoundingBox(scheduler_fun, ...)
 
-    Here, `bb_scheduler` represents random search, where the hyperparameter
+    Here, ``bb_scheduler`` represents random search, where the hyperparameter
     ranges are restricted to contain the best evalutions of previous tasks,
-    as provided by `transfer_learning_evaluations`.
+    as provided by ``transfer_learning_evaluations``.
 
     :param scheduler_fun: Maps tuple of configuration space (dict), mode (str),
         metric (str) to a scheduler. This is required since the final

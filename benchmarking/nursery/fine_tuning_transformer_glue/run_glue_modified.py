@@ -73,7 +73,7 @@ logger = logging.getLogger(__name__)
 
 # We start from the Hugging Face example script
 #
-#     `examples/pytorch/text-classification/run_glue.py`
+#     ``examples/pytorch/text-classification/run_glue.py``
 #
 # which fine-tunes library models for text classification on GLUE. We make the
 # following modifications:
@@ -86,18 +86,18 @@ logger = logging.getLogger(__name__)
 #      along with the others and report them as 'test_*'. This is for results
 #      analysis only, HPO must not access them.
 #
-# [ 2] We use a custom `TrainerCallback` in order to report metrics to Syne Tune,
-#      using the `on_evaluate` method. This needs `evaluation_strategy` to be set
+# [ 2] We use a custom ``TrainerCallback`` in order to report metrics to Syne Tune,
+#      using the ``on_evaluate`` method. This needs ``evaluation_strategy`` to be set
 #      to 'epoch', which we do here.
 #      For convenience, test metrics are computed and reported alongside.
 #
 # [ 3] Optionally, we estimate prediction latency by running a few forward
 #      passes. This is done at the start, and the same metrics are reported with
-#      each `on_evaluate`.
+#      each ``on_evaluate``.
 #
-# [ 4] If Syne Tune passes a checkpoint directory, this overwrites `output_dir`,
+# [ 4] If Syne Tune passes a checkpoint directory, this overwrites ``output_dir``,
 #      where checkpoints are written. Note that checkpointing is done only if
-#      `training_args.save_strategy != "no"` (and it must be set to "epoch"
+#      ``training_args.save_strategy != "no"`` (and it must be set to "epoch"
 #      then). If the HPO method does not require checkpoints, we recommend
 #      switching checkpointing off, in order to save local disk space.
 
@@ -105,14 +105,14 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SyneTuneArguments:
     """
-    Syne Tune is passing additional arguments. In `HfArgumentParser`, they can be
+    Syne Tune is passing additional arguments. In ``HfArgumentParser``, they can be
     kept separately from the ones in the default script.
     """
 
     st_checkpoint_dir: Optional[str] = field(
         default=None,
         metadata={
-            "help": "The checkpoint directory for SyneTune. Overwrites `output_dir`."
+            "help": "The checkpoint directory for SyneTune. Overwrites ``output_dir``."
         },
     )
 
@@ -155,13 +155,13 @@ class SyneTuneArguments:
 class ReportBackMetrics(transformers.trainer_callback.TrainerCallback):
     """
     This callback is used in order to report metrics back to Syne Tune, using a
-    `Reporter` object.
+    ``Reporter`` object.
 
-    If `test_dataset` is given, we also compute and report test set metrics here.
+    If ``test_dataset`` is given, we also compute and report test set metrics here.
     These are just for final evaluations. HPO must use validation metrics (in
-    `metrics` passed to `on_evaluate`).
+    ``metrics`` passed to ``on_evaluate``).
 
-    If `additional_info` is given, it is a static dict reported with each call.
+    If ``additional_info`` is given, it is a static dict reported with each call.
     """
 
     def __init__(self, trainer, test_dataset, additional_info=None):
@@ -253,7 +253,7 @@ class DataTrainingArguments:
     """
     Arguments pertaining to what data we are going to input our model for training and eval.
 
-    Using `HfArgumentParser` we can turn this class
+    Using ``HfArgumentParser`` we can turn this class
     into argparse arguments to be able to specify them on
     the command line.
     """
@@ -289,7 +289,7 @@ class DataTrainingArguments:
     pad_to_max_length: bool = field(
         default=True,
         metadata={
-            "help": "Whether to pad all samples to `max_seq_length`. "
+            "help": "Whether to pad all samples to ``max_seq_length``. "
             "If False, will pad the samples dynamically when batching to the maximum length in the batch."
         },
     )
@@ -346,11 +346,11 @@ class DataTrainingArguments:
             assert train_extension in [
                 "csv",
                 "json",
-            ], "`train_file` should be a csv or a json file."
+            ], "``train_file`` should be a csv or a json file."
             validation_extension = self.validation_file.split(".")[-1]
             assert (
                 validation_extension == train_extension
-            ), "`validation_file` should have the same extension (csv or json) as `train_file`."
+            ), "``validation_file`` should have the same extension (csv or json) as ``train_file``."
 
 
 @dataclass
@@ -397,7 +397,7 @@ class ModelArguments:
     use_auth_token: bool = field(
         default=False,
         metadata={
-            "help": "Will use the token generated when running `transformers-cli login` (necessary to use this script "
+            "help": "Will use the token generated when running ``transformers-cli login`` (necessary to use this script "
             "with private models)."
         },
     )
@@ -477,7 +477,7 @@ def main():
         ):
             logger.info(
                 f"Checkpoint detected, resuming training at {last_checkpoint}. To avoid this behavior, change "
-                "the `--output_dir` or add `--overwrite_output_dir` to train from scratch."
+                "the ``--output_dir`` or add ``--overwrite_output_dir`` to train from scratch."
             )
 
     # Set seed before initializing model.
@@ -516,18 +516,18 @@ def main():
         }
 
         # Get the test dataset: you can provide your own CSV/JSON test file (see below)
-        # when you use `do_predict` without specifying a GLUE benchmark task.
+        # when you use ``do_predict`` without specifying a GLUE benchmark task.
         if training_args.do_predict:
             if data_args.test_file is not None:
                 train_extension = data_args.train_file.split(".")[-1]
                 test_extension = data_args.test_file.split(".")[-1]
                 assert (
                     test_extension == train_extension
-                ), "`test_file` should have the same extension (csv or json) as `train_file`."
+                ), "``test_file`` should have the same extension (csv or json) as ``train_file``."
                 data_files["test"] = data_args.test_file
             else:
                 raise ValueError(
-                    "Need either a GLUE task or a test file for `do_predict`."
+                    "Need either a GLUE task or a test file for ``do_predict``."
                 )
 
         for key in data_files.keys():
@@ -733,7 +733,7 @@ def main():
     else:
         metric = load_metric("accuracy")
 
-    # You can define your custom compute_metrics function. It takes an `EvalPrediction` object (a namedtuple with a
+    # You can define your custom compute_metrics function. It takes an ``EvalPrediction`` object (a namedtuple with a
     # predictions and label_ids field) and has to return a dictionary string to float.
     def compute_metrics(p: EvalPrediction):
         preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
@@ -759,9 +759,9 @@ def main():
 
     # *** SYNE TUNE INSERT [ 1] ***
 
-    # Split `train_dataset` into training part (new `train_dataset`) and
-    # validation part `valid_dataset`. These two are used for HPO, while
-    # `eval_dataset` is used as test set.
+    # Split ``train_dataset`` into training part (new ``train_dataset``) and
+    # validation part ``valid_dataset``. These two are used for HPO, while
+    # ``eval_dataset`` is used as test set.
 
     split = train_dataset.train_test_split(
         train_size=syne_tune_args.train_valid_fraction,
@@ -773,7 +773,7 @@ def main():
     # *** END SYNE TUNE INSERT ***
 
     # Initialize our Trainer
-    # SYNE TUNE: `eval_dataset` is set to `valid_dataset`, whereas `eval_dataset`
+    # SYNE TUNE: ``eval_dataset`` is set to ``valid_dataset``, whereas ``eval_dataset``
     # is used in the original script
     trainer = Trainer(
         model=model,
@@ -860,7 +860,7 @@ def main():
             predict_datasets.append(raw_datasets["test_mismatched"])
 
         for predict_dataset, task in zip(predict_datasets, tasks):
-            # Removing the `label` columns because it contains -1 and Trainer won't like that.
+            # Removing the ``label`` columns because it contains -1 and Trainer won't like that.
             predict_dataset = predict_dataset.remove_columns("label")
             predictions = trainer.predict(
                 predict_dataset, metric_key_prefix="predict"

@@ -30,7 +30,7 @@ class Blackbox:
     :param configuration_space: Configuration space of blackbox.
     :param fidelity_space: Fidelity space for blackbox, optional.
     :param objectives_names: Names of the metrics, by default consider all
-        metrics prefixed by `"metric_"` to be metrics
+        metrics prefixed by ``"metric_"`` to be metrics
     """
 
     def __init__(
@@ -59,10 +59,10 @@ class Blackbox:
         :param fidelity: not passing a fidelity is possible if either the blackbox
             does not have a fidelity space or if it has a single fidelity in its
             fidelity space. In the latter case, all fidelities are returned in
-            form of a tensor with shape `(num_fidelities, num_objectives)`.
+            form of a tensor with shape ``(num_fidelities, num_objectives)``.
         :param seed: Only used if the blackbox defines multiple seeds
         :return: dictionary of objectives evaluated or tensor with shape
-            `(num_fidelities, num_objectives)` if no fidelity was given.
+            ``(num_fidelities, num_objectives)`` if no fidelity was given.
         """
         self._check_keys(config=configuration, fidelity=fidelity)
         if self.fidelity_space is None:
@@ -75,9 +75,9 @@ class Blackbox:
 
         if isinstance(fidelity, Number):
             # allows to call
-            # `objective_function(configuration=..., fidelity=2)`
+            # ``objective_function(configuration=..., fidelity=2)``
             # instead of
-            # `objective_function(configuration=..., {'num_epochs': 2})`
+            # ``objective_function(configuration=..., {'num_epochs': 2})``
             fidelity_names = list(self.fidelity_space.keys())
             assert (
                 len(fidelity_names) == 1
@@ -104,10 +104,10 @@ class Blackbox:
         :param fidelity: not passing a fidelity is possible if either the blackbox
             does not have a fidelity space or if it has a single fidelity in its
             fidelity space. In the latter case, all fidelities are returned in
-            form of a tensor with shape `(num_fidelities, num_objectives)`.
+            form of a tensor with shape ``(num_fidelities, num_objectives)``.
         :param seed: Only used if the blackbox defines multiple seeds
         :return: dictionary of objectives evaluated or tensor with shape
-            `(num_fidelities, num_objectives)` if no fidelity was given.
+            ``(num_fidelities, num_objectives)`` if no fidelity was given.
         """
         pass
 
@@ -132,21 +132,21 @@ class Blackbox:
         self, predict_curves: bool = False
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        If `predict_curves` is False, the shape of `X` is
-        `(num_evals * num_seeds * num_fidelities, num_hps + 1)`, the shape of `y`
-        is `(num_evals * num_seeds * num_fidelities, num_objectives)`.
-        This can be reshaped to `(num_fidelities, num_seeds, num_evals, *)`.
-        The final column of `X` is the fidelity value (only a single fidelity
+        If ``predict_curves`` is False, the shape of ``X`` is
+        ``(num_evals * num_seeds * num_fidelities, num_hps + 1)``, the shape of ``y``
+        is ``(num_evals * num_seeds * num_fidelities, num_objectives)``.
+        This can be reshaped to ``(num_fidelities, num_seeds, num_evals, *)``.
+        The final column of ``X`` is the fidelity value (only a single fidelity
         attribute is supported).
 
-        If `predict_curves` is True, the shape of `X` is
-        `(num_evals * num_seeds, num_hps)`, the shape of `y` is
-        `(num_evals * num_seeds, num_fidelities * num_objectives)`. The latter
-        can be reshaped to `(num_seeds, num_evals, num_fidelities,
-        num_objectives)`.
+        If ``predict_curves`` is True, the shape of ``X`` is
+        ``(num_evals * num_seeds, num_hps)``, the shape of ``y`` is
+        ``(num_evals * num_seeds, num_fidelities * num_objectives)``. The latter
+        can be reshaped to ``(num_seeds, num_evals, num_fidelities,
+        num_objectives)``.
 
-        :return: a tuple of two dataframes `(X, y)`, where `X` contains
-            hyperparameters values and `y` contains objective values, this is
+        :return: a tuple of two dataframes ``(X, y)``, where ``X`` contains
+            hyperparameters values and ``y`` contains objective values, this is
             used when fitting a surrogate model.
         """
         pass
@@ -174,7 +174,7 @@ def from_function(
         configuration and fidelity
     :param fidelity_space: Fidelity space for blackbox
     :param objectives_names: Objectives returned by blackbox
-    :return: Resulting blackbox wrapping `eval_fun`
+    :return: Resulting blackbox wrapping ``eval_fun``
     """
 
     class BB(Blackbox):

@@ -19,8 +19,8 @@ from syne_tune import Reporter
 
 
 def f(t, theta):
-    # Function drawing upper-right circles with radius set to `t` and with center set at
-    # (-t, -t). `t` is interpreted as a fidelity and larger `t` corresponds to larger radius and better candidates.
+    # Function drawing upper-right circles with radius set to ``t`` and with center set at
+    # (-t, -t). ``t`` is interpreted as a fidelity and larger ``t`` corresponds to larger radius and better candidates.
     # The optimal multiobjective solution should select theta uniformly from [0, pi/2].
     return {
         "y1": -t + t * np.cos(theta),

@@ -23,8 +23,8 @@ from syne_tune.blackbox_repository.conversion_scripts.utils import (
 class BlackboxRecipe:
     def __init__(self, name: str, cite_reference: str, hash: str = None):
         """
-        Parent class for a blackbox recipe that allows to generate the blackbox data on disk, see `FCNETRecipe` or
-        `LCBenchRecipe` classes for example on how to add a new benchmark.
+        Parent class for a blackbox recipe that allows to generate the blackbox data on disk, see ``FCNETRecipe`` or
+        ``LCBenchRecipe`` classes for example on how to add a new benchmark.
         :param name: name of the blackbox
         :param cite_reference: name of the paper to be referenced. A message is prompted when generating the blackbox
         to ask the user to cite the relevant paper.

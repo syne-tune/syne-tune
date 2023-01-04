@@ -70,9 +70,9 @@ class TransformerModelFactory:
         """
         Creates a
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`
-        object based on data in `state`. This involves fitting model parameters
-        if `fit_params == True`. Otherwise, the current model parameters are not
-        changed (so may be stale, given that `state` has changed). The idea is that
+        object based on data in ``state``. This involves fitting model parameters
+        if ``fit_params == True``. Otherwise, the current model parameters are not
+        changed (so may be stale, given that ``state`` has changed). The idea is that
         often, model fitting is much more expensive than just creating the final
         :class:`SurrogateModel` (posterior state). It then makes sense to partly
         work with stale model parameters.
@@ -95,7 +95,7 @@ class TransformerModelFactory:
     def configure_scheduler(self, scheduler):
         """
         Called by :meth:`configure_scheduler` of searchers which make use of a
-        class:`TransformerModelFactory`. Allows the factory to depend on
+        class:``TransformerModelFactory``. Allows the factory to depend on
         parameters of the scheduler.
 
         :param scheduler: Scheduler object
@@ -125,25 +125,25 @@ class ModelStateTransformer:
     The state transformer is generic, it uses :class:`TransformerModelFactory`
     for anything specific to the model type.
 
-    `skip_optimization` is a predicate depending on the state, determining
-    what is done at the next recent call of `model`. If `False`, the model
+    ``skip_optimization`` is a predicate depending on the state, determining
+    what is done at the next recent call of ``model``. If ``False``, the model
     parameters are refit, otherwise the current ones are not changed (which
     is usually faster, but risks stale-ness).
 
-    We also track the observed data `state.trials_evaluations`. If this
+    We also track the observed data ``state.trials_evaluations``. If this
     did not change since the last recent :meth:`model` call, we do not refit the
     model parameters. This is based on the assumption that model parameter
-    fitting only depends on `state.trials_evaluations` (observed data),
+    fitting only depends on ``state.trials_evaluations`` (observed data),
     not on other fields (e.g., pending evaluations).
 
-    Note that `model_factory` and `skip_optimization` can also be a dictionary mapping
+    Note that ``model_factory`` and ``skip_optimization`` can also be a dictionary mapping
     output names to models. In that case, the state is shared but the models for each
     output metric are updated independently.
 
     :param model_factory: Factory for surrogate models, given tuning job state
     :param init_state: Initial tuning job state
     :param skip_optimization: Skip optimization predicate (see above). Defaults to
-        `None` (fitting is never skipped)
+        ``None`` (fitting is never skipped)
     """
 
     def __init__(
@@ -224,7 +224,7 @@ class ModelStateTransformer:
 
     def model(self, **kwargs) -> SurrogateOutputModel:
         """
-        If skip_optimization is given, it overrides the `self._skip_optimization`
+        If skip_optimization is given, it overrides the ``self._skip_optimization``
         predicate.
 
         :return: Fitted surrogate model for current state in the standard single
@@ -319,13 +319,13 @@ class ModelStateTransformer:
     ):
         """
         Adds observed data for a trial. If it has observations in the state
-        already, `data.metrics` are appended. Otherwise, a new entry is
+        already, ``data.metrics`` are appended. Otherwise, a new entry is
         appended.
         If new observations replace pending evaluations, these are removed.
 
-        `config` must be passed if the trial has not yet been registered in
-        the state (this happens normally with the `append_trial` call). If
-        already registered, `config` is ignored.
+        ``config`` must be passed if the trial has not yet been registered in
+        the state (this happens normally with the ``append_trial`` call). If
+        already registered, ``config`` is ignored.
         """
         # Drop pending candidate if it exists
         trial_id = data.trial_id
@@ -353,7 +353,7 @@ class ModelStateTransformer:
         self, filter_pred: Callable[[PendingEvaluation], bool]
     ):
         """
-        Filters `state.pending_evaluations` with `filter_pred`.
+        Filters ``state.pending_evaluations`` with ``filter_pred``.
 
         :param filter_pred: Filtering predicate
         """

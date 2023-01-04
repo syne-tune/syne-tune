@@ -43,7 +43,7 @@ class Bore(SearcherWithRandomSeed):
 
     Note: Bore only works in the non-parallel non-multi-fidelity setting. Make
     sure that you use it with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
-    and set `n_workers=1` in :class:`~syne_tune.Tuner`.
+    and set ``n_workers=1`` in :class:`~syne_tune.Tuner`.
 
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
@@ -144,12 +144,13 @@ class Bore(SearcherWithRandomSeed):
         self.targets = []
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+        from syne_tune.optimizer.schedulers.scheduler_searcher import (
+            TrialSchedulerWithSearcher,
+        )
 
         assert isinstance(
-            scheduler, FIFOScheduler
-        ), "This searcher requires FIFOScheduler scheduler"
-
+            scheduler, TrialSchedulerWithSearcher
+        ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
     def _loss(self, x):
@@ -258,9 +259,9 @@ class Bore(SearcherWithRandomSeed):
             self.model = CalibratedClassifierCV(
                 self.model, cv=2, method=self.calibration
             )
-            self.model.fit(X, np.array(z, dtype=np.int))
+            self.model.fit(X, np.array(z, dtype=np.int64))
         else:
-            self.model.fit(X, np.array(z, dtype=np.int))
+            self.model.fit(X, np.array(z, dtype=np.int64))
 
         z_hat = self.model.predict(X)
         accuracy = np.mean(z_hat == z)

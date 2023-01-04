@@ -44,15 +44,15 @@ def resource_kernel_factory(
     name: str, kernel_x: KernelFunction, mean_x: MeanFunction, **kwargs
 ) -> (KernelFunction, MeanFunction):
     """
-    Given kernel function `kernel_x` and mean function `mean_x` over config `x`,
-    create kernel and mean functions over `(x, r)`, where `r` is the resource
-    attribute (nonnegative scalar, usually in `[0, 1]`).
+    Given kernel function ``kernel_x`` and mean function ``mean_x`` over config ``x``,
+    create kernel and mean functions over ``(x, r)``, where ``r`` is the resource
+    attribute (nonnegative scalar, usually in ``[0, 1]``).
 
     :param name: Selects resource kernel type
-    :param kernel_x: Kernel function over configs `x`
-    :param mean_x: Mean function over configs `x`
+    :param kernel_x: Kernel function over configs ``x``
+    :param mean_x: Mean function over configs ``x``
     :param kwargs: Extra arguments (optional)
-    :return: `(res_kernel, res_mean)`, both over `(x, r)`
+    :return: ``(res_kernel, res_mean)``, both over ``(x, r)``
     """
     if name == "matern52":
         res_kernel = Matern52(dimension=kernel_x.dimension + 1, ARD=True)
@@ -69,9 +69,9 @@ def resource_kernel_factory(
         res_kernel = FreezeThawKernelFunction(kernel_x, mean_x)
         res_mean = FreezeThawMeanFunction(kernel=res_kernel)
     elif name == "cross-validation":
-        # `CrossValidationKernelFunction` needs two kernels, one over the main
-        # effect f(x), the other over the residuals g_k(x). We use `kernel_x`,
-        # `mean_x` for the former, and create a `Matern52` kernel (no ARD) here
+        # ``CrossValidationKernelFunction`` needs two kernels, one over the main
+        # effect f(x), the other over the residuals g_k(x). We use ``kernel_x``,
+        # ``mean_x`` for the former, and create a ``Matern52`` kernel (no ARD) here
         # for the latter
         num_folds = kwargs.get("num_folds")
         assert (

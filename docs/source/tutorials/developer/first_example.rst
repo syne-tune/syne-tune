@@ -4,108 +4,15 @@ A First Example
 In this section, we start with a simple example and clarify some basic concepts.
 
 If you have not done so, we recommend you have a look at `Basics of Syne Tune
-<../basics/README.html>`__ in order to get familiar with basic concepts of Syne
+<../basics/README.html>`_ in order to get familiar with basic concepts of Syne
 Tune.
 
 First Example
 -------------
 
 A simple example for a new scheduler (called ``SimpleScheduler``) is given by
-the following script, which can be found in
-:mod:`examples.launch_height_standalone_scheduler`.
-
-.. code-block:: python
-
-   import logging
-   from pathlib import Path
-   from typing import Optional, List
-   import numpy as np
-
-   from syne_tune.backend import LocalBackend
-   from syne_tune.backend.trial_status import Trial
-   from syne_tune.optimizer.scheduler import (
-       TrialScheduler,
-       SchedulerDecision,
-       TrialSuggestion,
-   )
-   from syne_tune import Tuner, StoppingCriterion
-   from syne_tune.config_space import randint
-
-
-   class SimpleScheduler(TrialScheduler):
-       def __init__(self, config_space: dict, metric: str, mode: Optional[str] = None):
-           super(SimpleScheduler, self).__init__(config_space=config_space)
-           self.metric = metric
-           self.mode = mode if mode is not None else "min"
-           self.sorted_results = []
-
-       def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-           # Called when a slot exists to run a trial, here we simply draw a
-           # random candidate.
-           config = {
-               k: v.sample() if hasattr(v, "sample") else v
-               for k, v in self.config_space.items()
-           }
-           return TrialSuggestion.start_suggestion(config)
-
-       def on_trial_result(self, trial: Trial, result: dict) -> str:
-           # Given a new result, we decide whether the trial should stop or continue.
-
-           new_metric = result[self.metric]
-
-           # insert new metric in sorted results
-           index = np.searchsorted(self.sorted_results, new_metric)
-           self.sorted_results = np.insert(self.sorted_results, index, new_metric)
-           normalized_rank = index / float(len(self.sorted_results))
-
-           if self.mode == "max":
-               normalized_rank = 1 - normalized_rank
-
-           if normalized_rank < 0.8:
-               return SchedulerDecision.CONTINUE
-           else:
-               return SchedulerDecision.STOP
-
-       def metric_names(self) -> List[str]:
-           return [self.metric]
-
-
-   if __name__ == "__main__":
-       logging.getLogger().setLevel(logging.DEBUG)
-
-       random_seed = 31415927
-       max_steps = 100
-       n_workers = 4
-
-       config_space = {
-           "steps": max_steps,
-           "width": randint(0, 20),
-           "height": randint(-100, 100),
-       }
-       entry_point = str(
-           Path(__file__).parent
-           / "training_scripts"
-           / "height_example"
-           / "train_height.py"
-       )
-       metric = "mean_loss"
-
-       # Local back-end
-       trial_backend = LocalBackend(entry_point=entry_point)
-
-       np.random.seed(random_seed)
-       scheduler = SimpleScheduler(config_space=config_space, metric=metric)
-
-       stop_criterion = StoppingCriterion(max_wallclock_time=30)
-       tuner = Tuner(
-           trial_backend=trial_backend,
-           scheduler=scheduler,
-           stop_criterion=stop_criterion,
-           n_workers=n_workers,
-       )
-
-       tuner.run()
-
+the script
+`examples/launch_height_standalone_scheduler.py <../../examples.html#launch-hpo-experiment-with-home-made-scheduler>`_.
 All schedulers are subclasses of
 :class:`~syne_tune.optimizer.scheduler.TrialScheduler`. Important methods
 include:
@@ -131,7 +38,7 @@ include:
   state which is modified based on this information. The scheduler also
   decides what to do with this trial, returning a
   :class:`~syne_tune.optimizer.scheduler.SchedulerDecision` to the
-  :class:`~syne_tune.Tuner`, which in turn relays this decision to the back-end.
+  :class:`~syne_tune.Tuner`, which in turn relays this decision to the backend.
   Our ``SimpleScheduler`` maintains a sorted list of all metric values
   reported in ``self.sorted_results``. Whenever a trial reports a metric
   value which is worse than 4/5 of all previous reports (across all trials),
@@ -148,17 +55,17 @@ include:
 
 There are further methods in
 :class:`~syne_tune.optimizer.scheduler.TrialScheduler`, which will be discussed
-in detail `below <trial_scheduler_api.html>`__. This simple scheduler is also
+in detail `below <trial_scheduler_api.html>`_. This simple scheduler is also
 missing the ``points_to_evaluate`` argument, which we recommend every new
 scheduler to support, and which is discussed in more detail
-`here <random_search.html#fifoscheduler-and-randomsearcher>`__.
+`here <random_search.html#fifoscheduler-and-randomsearcher>`_.
 
 Basic Concepts
 --------------
 
-Recall from `Basics of Syne Tune <../basics/README.html>`__ that an HPO
-experiment is run as interplay between a *back-end* and a *scheduler*, which is
-orchestrated by the :class:`~syne_tune.Tuner`. The back-end starts, stops,
+Recall from `Basics of Syne Tune <../basics/README.html>`_ that an HPO
+experiment is run as interplay between a *backend* and a *scheduler*, which is
+orchestrated by the :class:`~syne_tune.Tuner`. The backend starts, stops,
 pauses, or resumes training jobs and relays their reports. A *trial* abstracts
 the evaluation of a hyperparameter *configuration*. There is a diverse range of
 schedulers which can be implemented in Syne Tune, some examples are:
@@ -167,7 +74,7 @@ schedulers which can be implemented in Syne Tune, some examples are:
   trials, but do not try to interact with running trials, even if the latter
   post intermediate results. A basic example is
   :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, to be discussed
-  `below <random_search.html#fifoscheduler-and-randomsearcher>`__.
+  `below <random_search.html#fifoscheduler-and-randomsearcher>`_.
 * Early-stopping schedulers. These require trials to post intermediate results
   (e.g., validation errors after every epoch), and their ``on_trial_result``
   may stop underperforming trials early. An example is
@@ -195,7 +102,7 @@ synchronous job execution setup, often for conceptual simplicity (examples
 include successive halving and Hyperband, as well as batch suggestions for
 Bayesian optimization). In general, it just takes a little extra effort to
 implement non-blocking versions of these, and Syne Tune provides ample support
-code for doing so, as will be `demonstrated in detail <extend_sync_hb.html>`__.
+code for doing so, as will be `demonstrated in detail <extend_sync_hb.html>`_.
 
 Searchers and Schedulers
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,10 +123,10 @@ Once such internal structure is recognized, we can use it to expand the range
 of methods while maintaining simple, modular implementations. In Syne Tune,
 this is done by configuring generic schedulers with internal *searchers*. A
 basic example is given
-`below <random_search.html#fifoscheduler-and-randomsearcher>`__, more advanced
+`below <random_search.html#fifoscheduler-and-randomsearcher>`_, more advanced
 examples follow further below.
 
-If you are familiar with `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`__,
+If you are familiar with `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`_,
 please note a difference in terminology. In Ray Tune, searcher and scheduler
 are two independent concepts, mapping to different decisions to be made by an
 HPO algorithm. In Syne Tune, the HPO algorithm is represented by the scheduler,
@@ -233,8 +140,8 @@ Syne Tune is this: **be lazy!**
 
 * Can your idea be implemented as a new searcher, to be plugged into an
   existing generic scheduler? Detailed examples are given
-  `here <random_search.html#fifoscheduler-and-randomsearcher>`__,
-  `here <extend_async_hb.html>`__, and `here <extend_sync_hb.html>`__.
+  `here <random_search.html#fifoscheduler-and-randomsearcher>`_,
+  `here <extend_async_hb.html>`_, and `here <extend_sync_hb.html>`_.
 * Does your idea involve changing the stop/continue or pause/resume decisions
   in asynchronous successive halving or Hyperband? All you need to do is to
   implement a new

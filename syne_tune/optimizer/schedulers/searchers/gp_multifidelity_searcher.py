@@ -31,9 +31,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     PendingEvaluation,
     MetricValues,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model import (
-    GaussProcAdditiveModelFactory,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -51,24 +48,24 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     It is *not* recommended to create :class:`GPMultiFidelitySearcher` searcher
     objects directly, but rather to create
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` objects with
-    `searcher="bayesopt"`, and passing arguments here in `search_options`.
+    ``searcher="bayesopt"``, and passing arguments here in ``search_options``.
     This will use the appropriate functions from
-    :mod:`syne_tune.optimizer.schedulers.searchers.gp_searcher_factory` to
+    :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`` to
     create components in a consistent way.
 
     Most of :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
     comments apply here as well. In multi-fidelity HPO, we optimize a function
     :math:`f(\mathbf{x}, r)`, :math:`\mathbf{x}` the configuration, :math:`r`
     the resource (or time) attribute. The latter must be a positive integer.
-    In most applications, `resource_attr == "epoch"`, and the resource is the
+    In most applications, ``resource_attr == "epoch"``, and the resource is the
     number of epochs already trained.
 
-    If `model == "gp_multitask"` (default), we model the function
+    If ``model == "gp_multitask"`` (default), we model the function
     :math:`f(\mathbf{x}, r)` jointly over all resource levels :math:`r` at
-    which it is observed (but see `searcher_data` in
+    which it is observed (but see ``searcher_data`` in
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`). The kernel
     and mean function of our surrogate model are over :math:`(\mathbf{x}, r)`.
-    The surrogate model is selected by `gp_resource_kernel`. More details about
+    The surrogate model is selected by ``gp_resource_kernel``. More details about
     the supported kernels is in:
 
         | Tiao, Klein, Lienart, Archambeau, Seeger (2020)
@@ -77,10 +74,10 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     The acquisition function (EI) which is optimized in :meth:`get_config`, is
     obtained by fixing the resource level :math:`r` to a value which is
-    determined depending on the current state. If `resource_acq` == 'bohb',
-    :math:`r` is the largest value `<= max_t`, where we have seen
+    determined depending on the current state. If ``resource_acq`` == 'bohb',
+    :math:`r` is the largest value ``<= max_t``, where we have seen
     :math:`\ge \mathrm{dimension}(\mathbf{x})` metric values. If
-    `resource_acq == "first"`, :math:`r` is the first milestone which config
+    ``resource_acq == "first"``, :math:`r` is the first milestone which config
     :math:`\mathbf{x}` would reach when started.
 
     Additional arguments on top of parent class
@@ -97,33 +94,33 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
           (as in *Freeze Thaw Bayesian Optimization*)
 
     :type model: str, optional
-    :param gp_resource_kernel: Only relevant for `model == "gp_multitask"`.
+    :param gp_resource_kernel: Only relevant for ``model == "gp_multitask"``.
         Surrogate model over criterion function :math:`f(\mathbf{x}, r)`,
         :math:`\mathbf{x}` the config, :math:`r` the resource. Note that
-        :math:`\mathbf{x}` is encoded to be a vector with entries in `[0, 1]`,
-        and :math:`r` is linearly mapped to `[0, 1]`, while the criterion data
+        :math:`\mathbf{x}` is encoded to be a vector with entries in ``[0, 1]``,
+        and :math:`r` is linearly mapped to ``[0, 1]``, while the criterion data
         is normalized to mean 0, variance 1. The reference above provides details
         on the models supported here. For the exponential decay kernel, the
         base kernel over :math:`\mathbf{x}` is Matern 5/2 ARD. See
         :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory.SUPPORTED_RESOURCE_MODELS`
         for supported choices. Defaults to "exp-decay-sum"
     :type gp_resource_kernel: str, optional
-    :param resource_acq: Only relevant for `model in
+    :param resource_acq: Only relevant for ``model in
         :code:`{"gp_multitask", "gp_independent"}`. Determines how the EI
         acquisition function is used. Values: "bohb", "first". Defaults to "bohb"
     :type resource_acq: str, optional
     :param opt_skip_num_max_resource: Parameter for surrogate model fitting,
-        skip predicate. If `True`, and number of observations above
-        `opt_skip_init_length`, fitting is done only when there is a new
-        datapoint at `r = max_t`, and skipped otherwise. Defaults to `False`
+        skip predicate. If ``True``, and number of observations above
+        ``opt_skip_init_length``, fitting is done only when there is a new
+        datapoint at ``r = max_t``, and skipped otherwise. Defaults to ``False``
     :type opt_skip_num_max_resource: bool, optional
-    :param issm_gamma_one: Only relevant for `model == "gp_issm"`.
-        If `True`, the gamma parameter of the ISSM is fixed to 1, otherwise it
-        is optimized over. Defaults to `False`
+    :param issm_gamma_one: Only relevant for ``model == "gp_issm"``.
+        If ``True``, the gamma parameter of the ISSM is fixed to 1, otherwise it
+        is optimized over. Defaults to ``False``
     :type issm_gamma_one: bool, optional
-    :param expdecay_normalize_inputs: Only relevant for `model ==
-        "gp_expdecay"`. If `True`, resource values r are normalized to `[0, 1]`
-        as input to the exponential decay surrogate model. Defaults to `False`
+    :param expdecay_normalize_inputs: Only relevant for ``model ==
+        "gp_expdecay"``. If ``True``, resource values r are normalized to ``[0, 1]``
+        as input to the exponential decay surrogate model. Defaults to ``False``
     :type expdecay_normalize_inputs: bool, optional
     """
 
@@ -137,6 +134,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         super().__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
+        self._resource_attr = None
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
@@ -159,27 +157,15 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         self._create_internal(**kwargs_int)
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-        from syne_tune.optimizer.schedulers.synchronous.hyperband import (
-            SynchronousHyperbandScheduler,
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
         )
 
         super().configure_scheduler(scheduler)
         assert isinstance(
-            scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
-        ), (
-            "This searcher requires HyperbandScheduler or "
-            + "SynchronousHyperbandScheduler scheduler"
-        )
+            scheduler, MultiFidelitySchedulerMixin
+        ), "This searcher requires MultiFidelitySchedulerMixin scheduler"
         self._resource_attr = scheduler.resource_attr
-        model_factory = self.state_transformer.model_factory
-        if isinstance(model_factory, GaussProcAdditiveModelFactory):
-            assert scheduler.searcher_data == "all", (
-                "For an additive Gaussian learning curve model (model="
-                + "'gp_issm' or model='gp_expdecay' in search_options), you "
-                + "need to set searcher_data='all' when creating the "
-                + "HyperbandScheduler"
-            )
 
     def _hp_ranges_in_state(self):
         return self.config_space_ext.hp_ranges_ext
@@ -222,9 +208,9 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     def _fix_resource_attribute(self, **kwargs):
         """
         Determines target resource level r at which the current call of
-        `get_config` operates. This is done based on
-        `resource_for_acquisition`. This resource level is then set in
-        `config_space_ext.hp_ranges_ext.value_for_last_pos`. This does the
+        ``get_config`` operates. This is done based on
+        ``resource_for_acquisition``. This resource level is then set in
+        ``config_space_ext.hp_ranges_ext.value_for_last_pos``. This does the
         job for GP surrogate models. But if in subclasses, other surrogate
         models are involved, they need to get informed separately (see
         :class:`CostAwareGPMultiFidelitySearcher` for an example).
@@ -246,7 +232,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
                 )
 
     def _postprocess_config(self, config: dict) -> dict:
-        # If `config` is normal (not extended), nothing is removed
+        # If ``config`` is normal (not extended), nothing is removed
         return self.config_space_ext.remove_resource(config)
 
     def evaluation_failed(self, trial_id: str):

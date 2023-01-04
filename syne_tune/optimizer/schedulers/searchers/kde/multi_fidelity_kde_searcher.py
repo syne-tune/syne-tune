@@ -37,7 +37,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
     :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`:
 
     :param resource_attr: Name of resource attribute. Defaults to
-        `scheduler.resource_attr` in :meth:`configure_scheduler`
+        ``scheduler.resource_attr`` in :meth:`configure_scheduler`
     """
 
     def __init__(
@@ -74,17 +74,14 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         self.resource_levels = []
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-        from syne_tune.optimizer.schedulers.synchronous.hyperband import (
-            SynchronousHyperbandScheduler,
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
         )
 
+        super().configure_scheduler(scheduler)
         assert isinstance(
-            scheduler, (HyperbandScheduler, SynchronousHyperbandScheduler)
-        ), (
-            "This searcher requires HyperbandScheduler or "
-            + "SynchronousHyperbandScheduler scheduler"
-        )
+            scheduler, MultiFidelitySchedulerMixin
+        ), "This searcher requires MultiFidelitySchedulerMixin scheduler"
         self.resource_attr = scheduler.resource_attr
 
     def _train_kde(self, train_data, train_targets):

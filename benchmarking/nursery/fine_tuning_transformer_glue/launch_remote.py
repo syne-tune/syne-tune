@@ -69,7 +69,7 @@ if __name__ == "__main__":
             experiment_name=experiment_name, tuner_name=tuner_name
         )
         print(f"Results stored to {checkpoint_s3_uri}")
-        # We use a different seed for each `run_id`
+        # We use a different seed for each ``run_id``
         seed = (random_seed_offset + run_id) % (2**32)
 
         # Each experiment run is executed as SageMaker training job

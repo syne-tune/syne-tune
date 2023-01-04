@@ -56,47 +56,47 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     :param initial_candidates_generator: generator of candidates
     :param initial_scoring_function: scoring function used to rank the initial
         candidates.
-        Note: If a batch is selected in one go (`num_requested_candidates > 1`,
-        `greedy_batch_selection == False`), this function should encourage
+        Note: If a batch is selected in one go (``num_requested_candidates > 1``,
+        ``greedy_batch_selection == False``), this function should encourage
         diversity among its top scorers. In general, greedy batch selection
         is recommended.
     :param num_initial_candidates: how many initial candidates to generate, if
         possible
     :param local_optimizer: local optimizer which starts from score minimizer.
         If a batch is selected in one go (not greedily), then local
-        optimizations are started from the top `num_requested_candidates` ranked
+        optimizations are started from the top ``num_requested_candidates`` ranked
         candidates (after scoring)
     :param pending_candidate_state_transformer: Once a candidate is selected, it
         becomes pending, and the state is transformed by appending information.
         This is done by the transformer.
         This is object is needed only if :meth:`next_candidates` goes through
-        more than one outer iterations (i.e., if `greedy_batch_selection == True`
-        and `num_requested_candidates > 1`. Otherwise, None can be passed here.
+        more than one outer iterations (i.e., if ``greedy_batch_selection == True``
+        and ``num_requested_candidates > 1``. Otherwise, None can be passed here.
         Note: Model updates (by the state transformer) for batch candidates beyond
         the first do not involve fitting hyperparameters, so they are usually
         cheap.
-    :param exclusion_candidates: set of candidates that should not be returned,
+    :param exclusion_candidates: Set of candidates that should not be returned,
         because they are already labeled, currently pending, or have failed
     :param num_requested_candidates: number of candidates to return
-    :param greedy_batch_selection: If True and `num_requested_candidates > 1`, we
+    :param greedy_batch_selection: If True and ``num_requested_candidates > 1``, we
         generate, order, and locally optimize for each single candidate to be
         selected. Otherwise, this is done just once, and
-        `num_requested_candidates` are extracted in one go.
-        Note: If this is True, `pending_candidate_state_transformer` is needed.
+        ``num_requested_candidates`` are extracted in one go.
+        Note: If this is True, ``pending_candidate_state_transformer`` is needed.
     :param duplicate_detector: used to make sure no candidates equal to already
         evaluated ones is returned
     :param num_initial_candidates_for_batch: This is used only if
-        `num_requested_candidates > 1` and `greedy_batch_selection == True`. In
-        this case, `num_initial_candidates_for_batch` overrides
-        `num_initial_candidates` when selecting all but the first candidate for
-        the batch. Typically, `num_initial_candidates` is larger than
-        `num_initial_candidates_for_batch` in this case, which speeds up
+        ``num_requested_candidates > 1`` and ``greedy_batch_selection == True``. In
+        this case, ``num_initial_candidates_for_batch`` overrides
+        ``num_initial_candidates`` when selecting all but the first candidate for
+        the batch. Typically, ``num_initial_candidates`` is larger than
+        ``num_initial_candidates_for_batch`` in this case, which speeds up
         selecting large batches, but still select the first candidate
         thoroughly
     :param profiler: If given, this is used for profiling parts in the code
-    :param sample_unique_candidates: If `True`, we check that initial candidates
+    :param sample_unique_candidates: If ``True``, we check that initial candidates
         sampled at random are unique and disjoint from the exclusion list.
-        This can be expensive. Defaults to `False`
+        This can be expensive. Defaults to ``False``
     :param debug_log: If a
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log.DebugLogPrinter`
         object is passed here, it is used to write log messages
@@ -138,11 +138,11 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             ), "Need pending_candidate_state_transformer for greedy batch selection"
             # For greedy batch selection, we need to assign new trial_id's to
             # configs included into the batch, in order to update the state
-            # maintained in `pending_candidate_state_transformer`.
+            # maintained in ``pending_candidate_state_transformer``.
             # This is just to make batch suggestion work: neither the state
             # nor these trial_id's are used in the future.
             # Note: This code also works if trial_id's are arbitrary strings.
-            # It guarantees that `str(next_trial_id + i)` is not equal to an
+            # It guarantees that ``str(next_trial_id + i)`` is not equal to an
             # existing trial_id for all i >= 0.
             next_trial_id = 0
             for (
@@ -235,7 +235,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                 self.exclusion_candidates,
             )
         else:
-            # Will not return candidates in `exclusion_candidates`, but there
+            # Will not return candidates in ``exclusion_candidates``, but there
             # can be duplicates
             initial_candidates = (
                 self.initial_candidates_generator.generate_candidates_en_bulk(
@@ -322,7 +322,7 @@ def _lazily_locally_optimize(
     Due to local deduplication we do not know in advance how many candidates
     we have to locally optimize, hence this helper to create a lazy generator
     of locally optimized candidates.
-    Note that `candidates` may contain duplicates, but such are skipped here.
+    Note that ``candidates`` may contain duplicates, but such are skipped here.
     """
     considered_already = ExclusionList.empty_list(hp_ranges)
     for cand in candidates:
@@ -331,10 +331,10 @@ def _lazily_locally_optimize(
             yield cand, local_optimizer.optimize(cand, model=model)
 
 
-# Note: If `duplicate_detector` is at least :class:`DuplicateDetectorIdentical`,
+# Note: If ``duplicate_detector`` is at least :class:`DuplicateDetectorIdentical`,
 # it will filter out candidates in exclusion_candidates here. Such can in
-# principle arise if `sample_unique_candidates == False`. This does not work
-# if `duplicate_detector` is of type :class:`DuplicateDetectorNoDetection`.
+# principle arise if ``sample_unique_candidates == False``. This does not work
+# if ``duplicate_detector`` is of type :class:`DuplicateDetectorNoDetection`.
 def _pick_from_locally_optimized(
     candidates_with_optimization: Iterator[Tuple[Configuration, Configuration]],
     exclusion_candidates: ExclusionList,

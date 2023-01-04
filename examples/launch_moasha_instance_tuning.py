@@ -48,7 +48,8 @@ if __name__ == "__main__":
     epochs = 4
 
     # Select the instance types that are searched.
-    # Alternatively, you can define the instance list explicitly: `instance_types = ['ml.c5.xlarge', 'ml.m5.2xlarge']`
+    # Alternatively, you can define the instance list explicitly:
+    # :code:`instance_types = ["ml.c5.xlarge", "ml.m5.2xlarge"]`
     instance_types = select_instance_type(min_gpu=1, max_cost_per_hour=5.0)
 
     print(f"tuning over hyperparameters and instance types: {instance_types}")

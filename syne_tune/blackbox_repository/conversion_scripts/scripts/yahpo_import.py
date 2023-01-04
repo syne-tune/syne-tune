@@ -50,6 +50,8 @@ from yahpo_gym.benchmark_set import BenchmarkSet
 from yahpo_gym.configuration import list_scenarios
 from yahpo_gym import local_config
 
+logger = logging.getLogger(__name__)
+
 
 def download(target_path: Path, version: str):
     import urllib
@@ -58,12 +60,12 @@ def download(target_path: Path, version: str):
 
     target_file = target_path / f"yahpo_data-{version}"
     if not target_file.exists():
-        logging.info(f"File {target_file} not found redownloading it.")
+        logger.info(f"File {target_file} not found redownloading it.")
         urllib.request.urlretrieve(root + f"v{version}.zip", str(target_path) + ".zip")
         with zipfile.ZipFile(str(target_path) + ".zip", "r") as zip_ref:
             zip_ref.extractall(target_path)
     else:
-        logging.info(f"File {target_file} found, skipping download.")
+        logger.info(f"File {target_file} found, skipping download.")
 
 
 def _check_whether_iaml(benchmark: BenchmarkSet) -> bool:
@@ -85,7 +87,7 @@ class BlackBoxYAHPO(Blackbox):
     """
     A wrapper that allows putting a 'YAHPO' BenchmarkInstance into a Blackbox.
 
-    If `fidelities` is given, it restricts `fidelity_values` to these values.
+    If ``fidelities`` is given, it restricts ``fidelity_values`` to these values.
     The sequence must be positive int and increasing. This works only if there
     is a single fidelity attribute with integer values (but note that for
     some specific YAHPO benchmarks, a fractional fidelity is transformed to
@@ -97,13 +99,13 @@ class BlackBoxYAHPO(Blackbox):
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, in that all
     their rungs levels have to be fidelity values.
 
-    For example, for YAHPO `iaml`, the fidelity `trainsize` has been
+    For example, for YAHPO ``iaml``, the fidelity ``trainsize`` has been
     acquired at [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1], this is transformed
     to [1, 2, 4, 8, 12, 16, 20]. By default, the fidelity is
-    represented by `cs.randint(1, 20)`, but if `fidelities` is passed,
-    it uses `cs.ordinal(fidelities)`.
+    represented by ``cs.randint(1, 20)``, but if ``fidelities`` is passed,
+    it uses ``cs.ordinal(fidelities)``.
 
-    :param benchmark: YAHPO `BenchmarkSet`
+    :param benchmark: YAHPO ``BenchmarkSet``
     :param fidelities: See above
     """
 
@@ -128,16 +130,16 @@ class BlackBoxYAHPO(Blackbox):
             self.configuration_space["repl"] = 10
         self._shortened_keys = None
         self._initialize_for_scenario()
-        # Has to be called after `_initialize_for_scenario`, in order to
+        # Has to be called after ``_initialize_for_scenario``, in order to
         # transform fidelity space for some of the YAHPO scenarios
         self._adjust_fidelity_space(fidelities)
 
     def _initialize_for_scenario(self):
         if self._is_iaml or self._is_rbv2:
-            # For `iaml_`, the fidelity `trainsize` has been evaluated at values
+            # For ``iaml_``, the fidelity ``trainsize`` has been evaluated at values
             # [0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1]. We multiply these values by 20
             # in order to obtain integers: [1, 2, 4, 8, 12, 16, 20]
-            # For `rbv2_`, the fidelity `trainsize` has been evaluated at values
+            # For ``rbv2_``, the fidelity ``trainsize`` has been evaluated at values
             # [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]. We
             # multiply these values by 20 in order to obtain integers:
             # [1, 2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20]
@@ -149,7 +151,7 @@ class BlackBoxYAHPO(Blackbox):
             assert domain.upper == 1 and domain.lower <= 0.05
             self.fidelity_space["trainsize"] = cs.randint(1, 20)
             if self._is_rbv2:
-                # For `rbv2_`, a second fidelity is `repl`, but it is constant
+                # For ``rbv2_``, a second fidelity is ``repl``, but it is constant
                 # 10, so can be removed
                 assert len(self.fidelity_space) == 2
                 assert "repl" in self.fidelity_space
@@ -334,10 +336,10 @@ def instantiate_yahpo(
     fidelities: Optional[List[int]] = None,
 ):
     """
-    Instantiates a dict of `BlackBoxYAHPO`, one entry for each instance.
+    Instantiates a dict of ``BlackBoxYAHPO``, one entry for each instance.
 
     :param scenario:
-    :param check: If False, `objective_function` of the blackbox does not
+    :param check: If False, ``objective_function`` of the blackbox does not
         check whether the input configuration is valid. This is faster, but
         calls fail silently if configurations are invalid.
     :return:

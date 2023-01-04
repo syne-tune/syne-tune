@@ -45,14 +45,14 @@ def parse_args(methods: dict, benchmark_definitions: dict):
         "--run_all_seeds",
         type=int,
         default=1,
-        help="if 1 run all the seeds [0, `num_seeds`-1], otherwise run seed `num_seeds` only",
+        help="if 1 run all the seeds [0, ``num_seeds``-1], otherwise run seed ``num_seeds`` only",
     )
     parser.add_argument(
         "--start_seed",
         type=int,
         required=False,
         default=0,
-        help="first seed to run (if `run_all_seed` == 1)",
+        help="first seed to run (if ``run_all_seed`` == 1)",
     )
     parser.add_argument(
         "--method", type=str, required=False, help="a method to run from baselines.py"

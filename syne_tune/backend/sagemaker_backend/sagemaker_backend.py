@@ -46,37 +46,37 @@ logger = logging.getLogger(__name__)
 
 class SageMakerBackend(TrialBackend):
     """
-    This back-end executes each trial evaluation as a separate SageMaker
-    training job, using `sm_estimator` as estimator.
+    This backend executes each trial evaluation as a separate SageMaker
+    training job, using ``sm_estimator`` as estimator.
 
-    Checkpoints are written to and loaded from S3, using `checkpoint_s3_uri`
+    Checkpoints are written to and loaded from S3, using ``checkpoint_s3_uri``
     of the estimator.
 
-    Compared to :class:`LocalBackend`, this back-end can run any number of
+    Compared to :class:`LocalBackend`, this backend can run any number of
     jobs in parallel (given sufficient resources), and any instance type can
     be used.
 
-    This back-end allows to select the instance type and count for a trial
+    This backend allows to select the instance type and count for a trial
     evaluation, by passing values in the configuration, using names
     :const:`~syne_tune.constants.ST_INSTANCE_TYPE` and
     :const:`~syne_tune.constants.ST_INSTANCE_COUNT`. If these are given in the
-    configuration, they overwrite the default in `sm_estimator`. This allows
+    configuration, they overwrite the default in ``sm_estimator``. This allows
     for tuning instance type and count along with the hyperparameter
     configuration.
 
     :param sm_estimator: SageMaker estimator for trial evaluations.
-    :param metrics_names: Names of metrics passed to `report`, used to plot
+    :param metrics_names: Names of metrics passed to ``report``, used to plot
         live curve in SageMaker (optional, only used for visualization)
     :param s3_path: S3 base path used for checkpointing. The full path
-        also involves the tuner name and the `trial_id`. The default base
+        also involves the tuner name and the ``trial_id``. The default base
         path is the S3 bucket associated with the SageMaker account
-    :param delete_checkpoints: If `True`, the checkpoints written by a trial
+    :param delete_checkpoints: If ``True``, the checkpoints written by a trial
         are deleted once the trial is stopped or is registered as
         completed. Also, as part of :meth:`stop_all` called at the end of the
         tuning loop, all remaining checkpoints are deleted. Defaults to
-        `False`.
+        ``False``.
     :param sagemaker_fit_kwargs: Extra arguments that passed to
-        `sagemaker.estimator.Framework` when fitting the job, for instance
+        :class:`sagemaker.estimator.Framework` when fitting the job, for instance
         :code:`{'train': 's3://my-data-bucket/path/to/my/training/data'}`
     """
 
@@ -121,10 +121,10 @@ class SageMakerBackend(TrialBackend):
             s3_path = s3_experiment_path()
         self.s3_path = s3_path.rstrip("/")
         self.tuner_name = None
-        # Trials which may currently be busy (status in `BUSY_STATUS`). The
-        # corresponding jobs are polled for status in `busy_trial_ids`, and
-        # new trials are addd in `_schedule`.
-        # Note: A trial can be in `paused_jobs` or `stopped_jobs` and still
+        # Trials which may currently be busy (status in ``BUSY_STATUS``). The
+        # corresponding jobs are polled for status in ``busy_trial_ids``, and
+        # new trials are addd in :meth:`_schedule`.
+        # Note: A trial can be in ``paused_jobs`` or ``stopped_jobs`` and still
         # be busy, because the underlying SM training job is still not completed
         self._busy_trial_id_candidates = set()
         # This is to estimate the stopping time for a trial (useful information
@@ -141,7 +141,7 @@ class SageMakerBackend(TrialBackend):
         return boto3.client(service_name="sagemaker", config=default_config())
 
     def add_metric_definitions_to_sagemaker_estimator(self, metrics_names: List[str]):
-        # We add metric definitions corresponding to the metrics passed by `report` that the user wants to track
+        # We add metric definitions corresponding to the metrics passed by ``report`` that the user wants to track
         # this allows to plot live learning curves of metrics in Sagemaker console.
         # The reason why we ask to the user metric names is that they are required to be known before hand so that live
         # plotting works.
@@ -198,11 +198,11 @@ class SageMakerBackend(TrialBackend):
         hyperparameters = config.copy()
 
         # This passes the instance type and instance count to the training function in Sagemaker as hyperparameters
-        # with reserved names `st_instance_type` and `st_instance_count`.
+        # with reserved names ``st_instance_type`` and ``st_instance_count``.
         # We pass them as hyperparameters as it is not easy to get efficiently from inside Sagemaker training script
         # (this information is not given for instance as Sagemaker environment variables).
         # This allows to: 1) measure cost in the worker 2) tune instance_type and instance_count by having
-        # `st_instance_type` or `st_instance_count` in the config space.
+        # ``st_instance_type`` or ``st_instance_count`` in the config space.
         # TODO once we have a multiobjective scheduler, we should add an example on how to tune instance-type/count.
         if ST_INSTANCE_TYPE not in hyperparameters:
             hyperparameters[ST_INSTANCE_TYPE] = self.sm_estimator.instance_type
@@ -256,7 +256,7 @@ class SageMakerBackend(TrialBackend):
         :param trial_id: ID of trial
         :param job_running_number: Number of times the trial was resumed
         :return: sagemaker job name with the form
-            `[trial_id]-[job_running_number]-[tuner_name]`. `trial_id` is put
+            ``[trial_id]-[job_running_number]-[tuner_name]``. ``trial_id`` is put
              first to avoid mismatch when searching for job information in
             SageMaker from prefix.
         """
@@ -305,7 +305,7 @@ class SageMakerBackend(TrialBackend):
             if status in BUSY_STATUS:
                 busy_list.append((trial_id, result.status))
                 if status == Status.stopping and trial_id not in self._stopping_time:
-                    # First time we see `Status.stopping` for this `trial_id`
+                    # First time we see ``Status.stopping`` for this ``trial_id``
                     self._stopping_time[trial_id] = time.time()
             elif trial_id in self._stopping_time:
                 # Trial just stopped being busy
@@ -314,12 +314,12 @@ class SageMakerBackend(TrialBackend):
                     f"Estimated stopping delay for trial_id {trial_id}: {stop_time:.2f} secs"
                 )
                 del self._stopping_time[trial_id]
-        # Note: It can happen that the result of `sagemaker_search` does
+        # Note: It can happen that the result of ``sagemaker_search`` does
         # not contain all trial_id's requested. We keep such trial_id's in
         # the busy list
         extra_trial_ids = []
         for trial_id in self._busy_trial_id_candidates.difference(reported_trial_ids):
-            # Assume that status is "in_progress": If `sagemaker_search`
+            # Assume that status is "in_progress": If ``sagemaker_search``
             # drops jobs, they are the ones that have just been started
             busy_list.append((trial_id, Status.in_progress))
             extra_trial_ids.append(trial_id)
@@ -331,10 +331,10 @@ class SageMakerBackend(TrialBackend):
         return busy_list
 
     def busy_trial_ids(self) -> List[Tuple[int, str]]:
-        # Note that at this point, `self._busy_trial_id_candidates` contains
+        # Note that at this point, ``self._busy_trial_id_candidates`` contains
         # trials whose jobs have been busy in the past, but they may have
         # stopped or terminated since. We query the current status for all
-        # these jobs and update `self._busy_trial_id_candidates` accordingly.
+        # these jobs and update ``self._busy_trial_id_candidates`` accordingly.
         # It can happen that the status for such a trial is not returned (if
         # it has just been started). In this case, the trial is kept in the
         # list and treated as busy.
@@ -344,7 +344,7 @@ class SageMakerBackend(TrialBackend):
                 for trial_id in self._busy_trial_id_candidates
             ]
             # This is calling the SageMaker API in order to query the current
-            # status for all trials in `_busy_trial_id_candidates`
+            # status for all trials in ``_busy_trial_id_candidates``
             trial_results = sagemaker_search(
                 trial_ids_and_names, sm_client=self.sm_client
             )
@@ -462,5 +462,5 @@ class SageMakerBackend(TrialBackend):
         self.tuner_name = tuner_name
 
     def on_tuner_save(self):
-        # Re-initialize the session after `Tuner` is serialized
+        # Re-initialize the session after :class:`~syne_tune.Tuner` is serialized
         self.initialize_sagemaker_session()

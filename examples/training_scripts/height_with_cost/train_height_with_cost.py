@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 """
-Derived from `train_height.py`, but add variable cost (elapsed time).
+Derived from ``train_height.py``, but add variable cost (elapsed time).
 """
 import argparse
 import logging

@@ -2,7 +2,7 @@ Code in benchmarking/nursery/benchmark_dehb
 ===========================================
 
 Comparison of
-`DEHB <tutorials/multifidelity/mf_sync_model.html#differential-evolution-hyperband>`__
+`DEHB <tutorials/multifidelity/mf_sync_model.html#differential-evolution-hyperband>`_
 against a number of baselines.
 
 .. literalinclude:: ../../../benchmarking/nursery/benchmark_dehb/baselines.py

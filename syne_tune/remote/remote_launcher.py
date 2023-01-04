@@ -42,7 +42,7 @@ class RemoteLauncher:
     to evaluate trials) or the Sagemaker backend in which case the remote instance
     will spawn one Sagemaker job per trial.
 
-    :param tuner: Tuner that should be run remotely on a `instance_type`
+    :param tuner: Tuner that should be run remotely on a ``instance_type``
         instance. Note that :class:`~syne_tune.StoppingCriterion` should be used
         for the :class:`~syne_tune.Tuner` rather than a lambda function to ensure
         serialization.
@@ -55,15 +55,15 @@ class RemoteLauncher:
         estimator for the tuning code.
     :param store_logs_localbackend: Whether to store logs of trials when
         using the local backend. When using SageMaker backend, logs are
-        persisted by SageMaker. Defauls to `False`
-    :param log_level: Logging level. Default is `logging.INFO`, while
-        `logging.DEBUG` gives more messages
+        persisted by SageMaker. Defauls to ``False``
+    :param log_level: Logging level. Default is ``logging.INFO``, while
+        ``logging.DEBUG`` gives more messages
     :param s3_path: S3 base path used for checkpointing, outputs of tuning
-        will be stored under `{s3_path}/{tuner_name}`. The logs of the local
-        backend are only stored if `store_logs_localbackend` is True.
+        will be stored under ``{s3_path}/{tuner_name}``. The logs of the local
+        backend are only stored if ``store_logs_localbackend`` is True.
         Defaults to :func:`~syne_tune.util.s3_experiment_path`
-    :param no_tuner_logging: If `True`, the logging level for `syne_tune.tuner`
-        is set to `logging.ERROR`. Defaults to `False`
+    :param no_tuner_logging: If ``True``, the logging level for ``syne_tune.tuner``
+        is set to ``logging.ERROR``. Defaults to ``False``
     """
 
     def __init__(
@@ -106,7 +106,7 @@ class RemoteLauncher:
     def is_lambda(self, f):
         """
         :param f: Object to test
-        :return: True iff `f` is a lambda function
+        :return: True iff ``f`` is a lambda function
         """
         try:
             return callable(f) and f.__name__ == "<lambda>"
@@ -119,7 +119,7 @@ class RemoteLauncher:
     ):
         """
         :param wait: Whether the call should wait until the job completes
-            (default: `True`). If False the call returns once the tuning job is
+            (default: ``True``). If False the call returns once the tuning job is
             scheduled on SageMaker.
         """
         self.prepare_upload()
@@ -191,7 +191,7 @@ class RemoteLauncher:
         with their remote location.
         """
         if self.is_source_dir_specified():
-            # the source_dir is deployed to `upload_dir`
+            # the source_dir is deployed to ``upload_dir``
             self.tuner.trial_backend.sm_estimator.source_dir = str(
                 Path(self.upload_dir().name)
             )
@@ -283,7 +283,7 @@ class RemoteLauncher:
             # todo RepositoryNotFoundException should be caught but I did not manage to import it
             logger.warning(
                 f"Docker-image of syne-tune {docker_image_name} could not be found, run \n"
-                f"`cd {Path(__file__).parent}/container; bash build_syne_tune_container.sh`\n"
+                f"``cd {Path(__file__).parent}/container; bash build_syne_tune_container.sh``\n"
                 f"in a terminal to build it. Trying to do it now."
             )
             subprocess.run(

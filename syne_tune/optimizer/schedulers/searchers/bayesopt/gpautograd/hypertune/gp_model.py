@@ -61,17 +61,17 @@ class HyperTuneModelMixin:
         self.hypertune_distribution_args = hypertune_distribution_args
         self._bracket_distribution = None
         # Tuple (num_supp_levels, data_size) for current distribution. If
-        # this signature is different in `fit`, the distribution is recomputed
+        # this signature is different in ``fit``, the distribution is recomputed
         self._hypertune_distribution_signature = None
 
     def hypertune_bracket_distribution(self) -> Optional[np.ndarray]:
         """
-        Distribution [w_k] of support size `num_supp_brackets`, where
-        `num_supp_brackets <= args.num_brackets` (the latter is maximum if
-        not given) is maximum such that the first `num_supp_brackets`
+        Distribution [w_k] of support size ``num_supp_brackets``, where
+        ``num_supp_brackets <= args.num_brackets`` (the latter is maximum if
+        not given) is maximum such that the first ``num_supp_brackets``
         brackets have >= 6 labeled datapoints each.
 
-        If `num_supp_brackets < args.num_brackets`, the distribution must be
+        If ``num_supp_brackets < args.num_brackets``, the distribution must be
         extended to full size before being used to sample the next bracket.
         """
         return self._bracket_distribution
@@ -199,7 +199,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         Delayed creation of likelihood, needs to know rung levels of Hyperband
         scheduler.
 
-        Note: last entry of `rung_levels` must be `max_t`, even if this is not
+        Note: last entry of ``rung_levels`` must be ``max_t``, even if this is not
         a rung level in Hyperband.
 
         :param rung_levels: Rung levels
@@ -290,7 +290,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         Delayed creation of likelihood, needs to know rung levels of Hyperband
         scheduler.
 
-        Note: last entry of `rung_levels` must be `max_t`, even if this is not
+        Note: last entry of ``rung_levels`` must be ``max_t``, even if this is not
         a rung level in Hyperband.
 
         :param rung_levels: Rung levels

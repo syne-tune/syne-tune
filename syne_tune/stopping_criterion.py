@@ -30,7 +30,7 @@ class StoppingCriterion:
     If several arguments are used, the combined criterion is true whenever
     one of the atomic criteria is true.
 
-    In principle, `stop_criterion` for `Tuner` can be any lambda function, but
+    In principle, ``stop_criterion`` for ``Tuner`` can be any lambda function, but
     this class should be used with remote launching in order to ensure
     proper serialization.
 

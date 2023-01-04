@@ -76,11 +76,11 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
     or integrated out by MCMC sampling
     (e.g., :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gpr_mcmc.GPRegressionMCMC`).
 
-    Both `state` and `gpmodel` are immutable. If parameters of the latter
+    Both ``state`` and ``gpmodel`` are immutable. If parameters of the latter
     are to be fit, this has to be done before.
 
-    `fantasy_samples` contains the sampled (normalized) target values for
-    pending configs. Only `active_metric` target values are considered.
+    ``fantasy_samples`` contains the sampled (normalized) target values for
+    pending configs. Only ``active_metric`` target values are considered.
     The target values for a pending config are a flat vector. If MCMC is
     used, its length is a multiple of the number of MCMC samples,
     containing the fantasy values for MCMC sample 0, sample 1, ...
@@ -242,7 +242,7 @@ class GaussProcModelFactory(TransformerModelFactory):
     :param no_fantasizing: If True, pending evaluations in the state are
         simply ignored, fantasizing is not done (not recommended)
     :param hp_ranges_for_prediction: If given, :class:`GaussProcSurrogateModel`
-        should use this instead of `state.hp_ranges`
+        should use this instead of ``state.hp_ranges``
     """
 
     def __init__(
@@ -281,8 +281,8 @@ class GaussProcModelFactory(TransformerModelFactory):
 
     def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
         """
-        Parameters of `self._gpmodel` are optimized iff `fit_params`. This
-        requires `state` to contain labeled examples.
+        Parameters of ``self._gpmodel`` are optimized iff ``fit_params``. This
+        requires ``state`` to contain labeled examples.
 
         If self.state.pending_evaluations is not empty, we proceed as follows:
 
@@ -339,9 +339,9 @@ class GaussProcModelFactory(TransformerModelFactory):
     ):
         """
         Computes posterior for state.
-        If `fit_params` and `state.pending_evaluations` is empty, we first
+        If ``fit_params`` and ``state.pending_evaluations`` is empty, we first
         optimize the model parameters.
-        If `state.pending_evaluations` are given, these must be of type
+        If ``state.pending_evaluations`` are given, these must be of type
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common.FantasizedPendingEvaluations`,
         i.e. the fantasy values must have been sampled.
         """
@@ -394,11 +394,11 @@ class GaussProcModelFactory(TransformerModelFactory):
 
         Note: A complication is that if the sampling methods of _gpmodel
         are called when there are no pending candidates (with fantasies) yet,
-        they do return a single sample (instead of `num_fantasy_samples`). This
+        they do return a single sample (instead of ``num_fantasy_samples``). This
         is because
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression.GaussianProcessRegression`
-        knows about `num_fantasy_samples` only due to the form of the posterior
-        state. In this case, we draw `num_fantasy_samples` i.i.d.
+        knows about ``num_fantasy_samples`` only due to the form of the posterior
+        state. In this case, we draw ``num_fantasy_samples`` i.i.d.
         """
         if state.pending_evaluations:
             configs = state.pending_configurations()
@@ -433,22 +433,25 @@ class GaussProcModelFactory(TransformerModelFactory):
         )
 
     def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
+        )
 
         if isinstance(
             self._gpmodel, (IndependentGPPerResourceModel, HyperTuneJointGPModel)
         ):
-            assert isinstance(scheduler, HyperbandScheduler), (
+            assert isinstance(scheduler, MultiFidelitySchedulerMixin), (
                 "gpmodel of type IndependentGPPerResourceModel requires "
-                + "HyperbandScheduler scheduler"
+                "MultiFidelitySchedulerMixin scheduler"
             )
             # Likelihood of internal model still has to be created (depends on
-            # rung levels of scheduler). Note that `max_t` must be included
-            max_t = scheduler.max_t
-            if scheduler.rung_levels[-1] == max_t:
+            # rung levels of scheduler). Note that ``max_resource_level`` must be
+            # included
+            max_resource_level = scheduler.max_resource_level
+            if scheduler.rung_levels[-1] == max_resource_level:
                 rung_levels = scheduler.rung_levels
             else:
-                rung_levels = scheduler.rung_levels + [max_t]
+                rung_levels = scheduler.rung_levels + [max_resource_level]
             self._gpmodel.create_likelihood(rung_levels)
 
 
@@ -462,7 +465,7 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
     :param num_fantasy_samples: See above
     :param active_metric: Name of the metric to optimize.
     :param normalize_targets: Normalize target values in
-        `state.candidate_evaluations`?
+        ``state.candidate_evaluations``?
     """
 
     def __init__(
@@ -502,5 +505,5 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
     def _num_samples_for_fantasies(self) -> int:
         # Special case (see header comment): If the current posterior state
         # does not contain pending candidates (no fantasies), we sample
-        # `num_fantasy_samples` times i.i.d.
+        # ``num_fantasy_samples`` times i.i.d.
         return 1 if self._gpmodel.multiple_targets() else self.num_fantasy_samples

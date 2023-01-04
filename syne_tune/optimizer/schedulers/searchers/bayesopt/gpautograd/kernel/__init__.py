@@ -35,3 +35,17 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.cross_v
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.range_kernel import (  # noqa: F401
     RangeKernelFunction,
 )
+
+__all__ = [
+    "KernelFunction",
+    "Matern52",
+    "ExponentialDecayResourcesKernelFunction",
+    "ExponentialDecayResourcesMeanFunction",
+    "FabolasKernelFunction",
+    "ProductKernelFunction",
+    "FreezeThawKernelFunction",
+    "FreezeThawMeanFunction",
+    "CrossValidationMeanFunction",
+    "CrossValidationKernelFunction",
+    "RangeKernelFunction",
+]

@@ -46,16 +46,16 @@ def get_benchmark(
 def parse_args(
     methods: Dict[str, Any], extra_args: Optional[List[dict]] = None
 ) -> (Any, List[str], List[int]):
-    """Parse command line arguments for local back-end experiments.
+    """Parse command line arguments for local backend experiments.
 
-    :param methods: If `--method` is not given, then `method_names` are the
+    :param methods: If ``--method`` is not given, then ``method_names`` are the
         keys of this dictionary
     :param extra_args: List of dictionaries, containing additional arguments
-        to be passed. Must contain `name` for argument name (without leading
-        `"--"`), and other kwargs to `parser.add_argument`. Optional
-    :return: `(args, method_names, seeds)`, where `args` is result of
-        `parser.parse_known_args()`, `method_names` see `methods`, and
-        `seeds` are list of seeds specified by `--num_seeds` and `--start_seed`
+        to be passed. Must contain ``name`` for argument name (without leading
+        ``"--"``), and other kwargs to ``parser.add_argument``. Optional
+    :return: ``(args, method_names, seeds)``, where ``args`` is result of
+        ``parser.parse_known_args()``, ``method_names`` see ``methods``, and
+        ``seeds`` are list of seeds specified by ``--num_seeds`` and ``--start_seed``
     """
     if extra_args is None:
         extra_args = []
@@ -94,16 +94,16 @@ def main(
     map_extra_args: Optional[callable] = None,
 ):
     """
-    Runs sequence of experiments with local back-end sequentially. The loop runs
-    over methods selected from `methods` and repetitions, both controlled by
+    Runs sequence of experiments with local backend sequentially. The loop runs
+    over methods selected from ``methods`` and repetitions, both controlled by
     command line arguments.
 
     :param methods: Dictionary with method constructors
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
     :param extra_args: Extra arguments for command line parser. Optional
-    :param map_extra_args: Maps `args` returned by `parse_args` to dictionary
-        for extra argument values. Needed if `extra_args` given
+    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
+        for extra argument values. Needed if ``extra_args`` given
     """
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag

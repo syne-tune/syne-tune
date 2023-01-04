@@ -50,7 +50,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
     As usual, we scan rungs from the top. If several trials are promotable,
     the one with the best metric value is promoted.
 
-    Note that costs :math:`c(\mathbf{x}, r)` reported via `cost_attr` need to
+    Note that costs :math:`c(\mathbf{x}, r)` reported via ``cost_attr`` need to
     be total costs of a trial. If the trial is paused and resumed, partial costs
     have to be added up. See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     for how this works.
@@ -70,22 +70,22 @@ class CostPromotionRungSystem(PromotionRungSystem):
             rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
         )
         self._cost_attr = cost_attr
-        # Note: The data entry in _rungs is now a dict mapping trial_id to
-        # (metric_value, cost_value, was_promoted), where metric_value is
-        # m(x, r), cost value is c(x, r).
+        # Note: The data entry in ``_rungs`` is now a dict mapping trial_id to
+        # ``(metric_value, cost_value, was_promoted)``, where metric_value is
+        # :math:`m(x, r)`, cost value is :math:`c(x, r)`.
 
     def _find_promotable_trial(
         self, recorded: dict, prom_quant: float, resource: int
     ) -> Optional[str]:
         """
-        Check whether any not yet promoted entry in `recorded` is
+        Check whether any not yet promoted entry in ``recorded`` is
         promotable (see header comment). If there are several such, the one
         with the best value is chosen.
 
         :param recorded: Dict to scan
         :param prom_quant: Quantile for promotion
         :param resource: Amount of resources spent on the rung.
-        :return: trial_id if found, otherwise None
+        :return: ``trial_id`` if found, otherwise ``None``
         """
         ret_id = None
         if len(recorded) > 1:

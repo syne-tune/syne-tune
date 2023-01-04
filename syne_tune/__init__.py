@@ -13,8 +13,8 @@
 from pathlib import Path
 
 try:
-    # The reason for conditional imports is that `read_version` is called
-    # by `setup.py` before any dependencies are installed
+    # The reason for conditional imports is that ``read_version`` is called
+    # by ``setup.py`` before any dependencies are installed
     from syne_tune.stopping_criterion import StoppingCriterion  # noqa: F401
     from syne_tune.report import Reporter  # noqa: F401
     from syne_tune.tuner import Tuner  # noqa: F401

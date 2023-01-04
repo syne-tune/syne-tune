@@ -94,13 +94,13 @@ if __name__ == "__main__":
     )
     metric = "mean_loss"
 
-    # Local back-end
+    # Local backend
     trial_backend = LocalBackend(entry_point=entry_point)
 
     np.random.seed(random_seed)
     scheduler = SimpleScheduler(config_space=config_space, metric=metric)
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=30)
+    stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

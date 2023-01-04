@@ -58,7 +58,7 @@ class Reporter:
     :param add_cost: If True (default), estimated dollar cost since creation of
         :class:`Reporter` object is reported automatically as
         :const:`~syne_tune.constants.ST_WORKER_COST`. This is available for
-        SageMaker back-end only. Requires `add_time=True`.
+        SageMaker backend only. Requires ``add_time=True``.
     """
 
     add_time: bool = True
@@ -99,7 +99,7 @@ class Reporter:
 
         :param kwargs: Keyword arguments for metrics to be reported, for instance
             :code:`report(epoch=1, loss=1.2)`. Values must be serializable with json,
-            keys should not start with `st_` which is a reserved namespace for
+            keys should not start with ``st_`` which is a reserved namespace for
             Syne Tune internals.
         """
         assert not any(key.startswith("st_") for key in kwargs), (

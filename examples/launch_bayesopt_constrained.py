@@ -44,12 +44,13 @@ if __name__ == "__main__":
     metric = "objective"
     constraint_attr = "my_constraint_metric"
 
-    # Local back-end
+    # Local backend
     trial_backend = LocalBackend(entry_point=entry_point)
 
     # Bayesian constrained optimization:
-    #   max_x f(x)   s.t. c(x) <= 0
-    # Here, `metric` represents f(x), `constraint_attr` represents c(x).
+    #   :math:`max_x f(x),   \mathrm{s.t.} c(x) <= 0`
+    # Here, ``metric`` represents :math:`f(x)`, ``constraint_attr`` represents
+    # :math:`c(x)`.
     search_options = {
         "num_init_random": n_workers,
         "constraint_attr": constraint_attr,
@@ -63,7 +64,7 @@ if __name__ == "__main__":
         random_seed=random_seed,
     )
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=30)
+    stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

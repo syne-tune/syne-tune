@@ -61,8 +61,8 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
     correct, because :meth:`predict` is not meant to be used for configs
     which have observations (it IS correct at :math:`r = r_{max}`).
 
-    `fantasy_samples` contains the sampled (normalized) target values for
-    pending configs. Only `active_metric` target values are considered.
+    ``fantasy_samples`` contains the sampled (normalized) target values for
+    pending configs. Only ``active_metric`` target values are considered.
     The target values for a pending config are a flat vector.
 
     :param state: TuningJobSubState
@@ -92,7 +92,7 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
         """
-        Input features `inputs` are w.r.t. extended configs `(x, r)`.
+        Input features ``inputs`` are w.r.t. extended configs ``(x, r)``.
 
         :param inputs: Input features
         :return: Predictive means, stddevs
@@ -140,10 +140,10 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
 
 class GaussProcAdditiveModelFactory(TransformerModelFactory):
     """
-    If `num_fantasy_samples > 0`, we draw this many fantasy targets
+    If ``num_fantasy_samples > 0``, we draw this many fantasy targets
     independently, while each sample is dependent over all pending
-    evaluations. If `num_fantasy_samples == 0`, pending evaluations
-    in `state` are ignored.
+    evaluations. If ``num_fantasy_samples == 0``, pending evaluations
+    in ``state`` are ignored.
 
     :param gpmodel: GaussianProcessLearningCurveModel
     :param num_fantasy_samples: See above
@@ -262,12 +262,12 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         self, state: TuningJobState, fantasy_samples: List[FantasizedPendingEvaluation]
     ) -> SurrogateModel:
         """
-        Same as `model` with `fit_params=False`, but `fantasy_samples` are
+        Same as ``model`` with ``fit_params=False``, but ``fantasy_samples`` are
         passed in, rather than sampled here.
 
-        :param state: See `model`
+        :param state: See ``model``
         :param fantasy_samples: See above
-        :return: See `model`
+        :return: See ``model``
 
         """
         assert state.num_observed_cases(self.active_metric) > 0, (
@@ -310,14 +310,28 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             **extra_kwargs,
         )
 
+    def configure_scheduler(self, scheduler):
+        from syne_tune.optimizer.schedulers.multi_fidelity import (
+            MultiFidelitySchedulerMixin,
+        )
+
+        assert isinstance(
+            scheduler, MultiFidelitySchedulerMixin
+        ), "GaussProcAdditiveModelFactory requires MultiFidelitySchedulerMixin scheduler"
+        assert scheduler.searcher_data == "all", (
+            "For an additive Gaussian learning curve model (model='gp_issm' or "
+            "model='gp_expdecay' in search_options), you need to set "
+            "searcher_data='all' when creating the multi-fidelity scheduler"
+        )
+
     def _draw_fantasy_values(self, state: TuningJobState) -> TuningJobState:
         """
         Note: Fantasized target values are not de-normalized, because they
-        are used internally only (see `prepare_data` with
-        `do_fantasizing=True`).
+        are used internally only (see ``prepare_data`` with
+        ``do_fantasizing=True``).
 
         :param state: State with pending evaluations without fantasies
-        :return: Copy of `state`, where `pending_evaluations` contains
+        :return: Copy of ``state``, where ``pending_evaluations`` contains
             fantasized target values
 
         """
@@ -336,7 +350,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             # as long as no trial has been stopped or paused.
             # In this case, we find the trial with the largest number of
             # observed targets and remove its pending evaluations, so
-            # `data_nopending` gets one entry. It is not possible to compute
+            # ``data_nopending`` gets one entry. It is not possible to compute
             # a posterior state without any data, so handling this case
             # correctly would be very tedious).
             assert data_pending[
@@ -361,10 +375,10 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         self._gpmodel.recompute_states(data_nopending)
         poster_state_nopending = self._gpmodel.states[0]
         # Loop over trials with pending evaluations: For each trial, we sample
-        # fantasy targets given observed ones, then update `poster_state` by
+        # fantasy targets given observed ones, then update ``poster_state`` by
         # conditioning on both. This ensures we obtain a joint sample (the
         # ordering of trials does not matter). For the application here, we
-        # do not need the final `poster_state`.
+        # do not need the final ``poster_state``.
         all_fantasy_targets = []
         for sample_it in range(self.num_fantasy_samples):
             fantasy_targets, _ = poster_state_nopending.sample_and_update_for_pending(
@@ -377,7 +391,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
                     all_fantasy_targets.append([fantasies])
                 else:
                     all_fantasy_targets[pos].append(fantasies)
-        # Convert into `FantasizedPendingEvaluation`
+        # Convert into ``FantasizedPendingEvaluation``
         r_min = self._config_space_ext.resource_attr_range[0]
         pending_evaluations_with_fantasies = []
         for trial_id, targets, fantasies in zip(
@@ -397,7 +411,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
                         resource=resource,
                     )
                 )
-        # Return new state, with `pending_evaluations` replaced
+        # Return new state, with ``pending_evaluations`` replaced
         return TuningJobState(
             hp_ranges=state.hp_ranges,
             config_for_trial=state.config_for_trial,

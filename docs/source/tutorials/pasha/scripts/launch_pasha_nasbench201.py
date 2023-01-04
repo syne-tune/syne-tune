@@ -97,7 +97,7 @@ def run_experiment(
 
     config_space = benchmark["config_space"]
 
-    # simulator back-end specialized to tabulated blackboxes
+    # simulator backend specialized to tabulated blackboxes
     trial_backend = BlackboxRepositoryBackend(
         blackbox_name=blackbox_name,
         elapsed_time_attr=benchmark["elapsed_time_attr"],
@@ -145,7 +145,7 @@ def run_experiment(
     # storing results
     print_update_interval = 700
     results_update_interval = 300
-    # it is important to set `sleep_time` to 0 here (mandatory for simulator
+    # it is important to set ``sleep_time`` to 0 here (mandatory for simulator
     # backend)
 
     tuner = Tuner(
@@ -225,9 +225,9 @@ if __name__ == "__main__":
     # To run PASHA with an alternative ranking function, e.g. soft ranking with $\epsilon=2\sigma$ use
     # rung_system_kwargs={'ranking_criterion': 'soft_ranking_std', 'epsilon_scaling': 2.0}
 
-    # To run an experiment with a different reduction factor, specify the value for `reduction_factor`
+    # To run an experiment with a different reduction factor, specify the value for ``reduction_factor``
 
-    # To run an experiment with a Bayesian Optimization search strategy, select `'pasha-bo'` for `hpo_approach`
+    # To run an experiment with a Bayesian Optimization search strategy, select ``'pasha-bo'`` for ``hpo_approach``
 
     # Analysis of the results
     print("\nExperiment results:\n")
