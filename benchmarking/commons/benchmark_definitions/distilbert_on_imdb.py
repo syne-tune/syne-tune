@@ -18,12 +18,13 @@ from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import 
     RESOURCE_ATTR,
     _config_space,
 )
+from syne_tune.remote.estimators import DEFAULT_GPU_INSTANCE_1GPU
 
 
 def distilbert_imdb_default_params() -> dict:
     return {
         "max_resource_level": 15,
-        "instance_type": "ml.g4dn.xlarge",
+        "instance_type": DEFAULT_GPU_INSTANCE_1GPU,
         "num_workers": 4,
         "framework": "HuggingFace",
         "framework_version": "4.4",
@@ -54,10 +55,6 @@ def distilbert_imdb_benchmark(sagemaker_backend: bool = False, **kwargs):
         max_resource_attr="epochs",
         resource_attr=RESOURCE_ATTR,
         framework="HuggingFace",
-        estimator_kwargs=dict(
-            framework_version="4.4",
-            pytorch_version="1.6",
-        ),
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)

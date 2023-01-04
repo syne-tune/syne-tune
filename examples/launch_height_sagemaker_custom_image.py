@@ -16,16 +16,16 @@ Example showing how to run on Sagemaker with a custom docker image.
 import logging
 from pathlib import Path
 
-from syne_tune.backend.sagemaker_backend.custom_framework import CustomFramework
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import SageMakerBackend
+from syne_tune.backend.sagemaker_backend.custom_framework import CustomFramework
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
-from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
-
+from syne_tune.optimizer.baselines import RandomSearch
+from syne_tune.remote.estimators import DEFAULT_CPU_INSTANCE_SMALL
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     trial_backend = SageMakerBackend(
         sm_estimator=CustomFramework(
             entry_point=entry_point,
-            instance_type="ml.m5.large",
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
             instance_count=1,
             role=get_execution_role(),
             image_uri=image_uri,

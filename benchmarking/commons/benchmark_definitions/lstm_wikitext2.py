@@ -18,16 +18,20 @@ from benchmarking.training_scripts.lstm_wikitext2.lstm_wikitext2 import (
     METRIC_NAME,
     RESOURCE_ATTR,
 )
+from syne_tune.remote.estimators import (
+    DEFAULT_GPU_INSTANCE_1GPU,
+    DEFAULT_GPU_INSTANCE_4GPU,
+)
 
 
 def lstm_wikitext2_default_params(sagemaker_backend: bool) -> dict:
     if sagemaker_backend:
-        instance_type = "ml.g4dn.xlarge"
+        instance_type = DEFAULT_GPU_INSTANCE_1GPU
         num_workers = 8
     else:
         # For local backend, GPU cores serve different workers, so we
         # need more memory
-        instance_type = "ml.g4dn.12xlarge"
+        instance_type = DEFAULT_GPU_INSTANCE_4GPU
         num_workers = 4
     return {
         "max_resource_level": 81,
@@ -61,10 +65,6 @@ def lstm_wikitext2_benchmark(sagemaker_backend: bool = False, **kwargs):
         max_resource_attr="epochs",
         resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
-        estimator_kwargs=dict(
-            framework_version="1.7.1",
-            py_version="py3",
-        ),
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)

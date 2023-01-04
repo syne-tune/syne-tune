@@ -19,15 +19,19 @@ from benchmarking.training_scripts.transformer_wikitext2.training_script import 
     RESOURCE_ATTR,
     MAX_RESOURCE_ATTR,
 )
+from syne_tune.remote.estimators import (
+    DEFAULT_GPU_INSTANCE_1GPU,
+    DEFAULT_GPU_INSTANCE_4GPU,
+)
 
 
 def transformer_wikitext2_default_params(sagemaker_backend: bool) -> dict:
     if sagemaker_backend:
-        instance_type = "ml.g4dn.xlarge"
+        instance_type = DEFAULT_GPU_INSTANCE_1GPU
     else:
         # For local backend, GPU cores serve different workers, so we
         # need more memory
-        instance_type = "ml.g4dn.12xlarge"
+        instance_type = DEFAULT_GPU_INSTANCE_4GPU
     return {
         "max_resource_level": 40,
         "instance_type": instance_type,
@@ -58,10 +62,6 @@ def transformer_wikitext2_benchmark(sagemaker_backend: bool = False, **kwargs):
         max_resource_attr=MAX_RESOURCE_ATTR,
         resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
-        estimator_kwargs=dict(
-            framework_version="1.7.1",
-            py_version="py3",
-        ),
     )
     _kwargs.update(kwargs)
     return RealBenchmarkDefinition(**_kwargs)

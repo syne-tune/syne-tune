@@ -10,22 +10,25 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from pathlib import Path
-import logging
-from typing import Dict, Optional, List
 import copy
+import logging
+from pathlib import Path
+from typing import Dict, Optional, List
+
 import pytest
 
-from sagemaker.pytorch import PyTorch
-
+from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend import SageMakerBackend
+from syne_tune.remote.estimators import (
+    pytorch_estimator,
+    DEFAULT_CPU_INSTANCE_SMALL,
+)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
-from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion, Trial
 from syne_tune.config_space import randint
-from syne_tune import StoppingCriterion, Tuner
+from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion, Trial
 
 logger = logging.getLogger(__name__)
 
@@ -70,14 +73,12 @@ def test_copy_checkpoint_sagemaker_backend():
     # Create SageMaker backend
     entry_point = Path(__file__).parent / "checkpoint_script.py"
     trial_backend = SageMakerBackend(
-        sm_estimator=PyTorch(
+        sm_estimator=pytorch_estimator(
             entry_point=str(entry_point),
-            instance_type="ml.m5.large",
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
             instance_count=1,
             role=get_execution_role(),
             max_run=10 * 60,
-            framework_version="1.7.1",
-            py_version="py3",
             sagemaker_session=default_sagemaker_session(),
         )
     )

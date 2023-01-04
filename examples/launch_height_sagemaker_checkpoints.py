@@ -13,17 +13,21 @@
 import logging
 from pathlib import Path
 
-from sagemaker.sklearn import SKLearn
+from sagemaker.pytorch import PyTorch
 
+from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
-from syne_tune.optimizer.baselines import ASHA
-from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
-
+from syne_tune.optimizer.baselines import ASHA
+from syne_tune.remote.estimators import (
+    DEFAULT_CPU_INSTANCE,
+    PYTORCH_LATEST_FRAMEWORK,
+    PYTORCH_LATEST_PY_VERSION,
+)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -62,14 +66,14 @@ if __name__ == "__main__":
     )
     # SageMaker backend: We use the warm pool feature here
     trial_backend = SageMakerBackend(
-        sm_estimator=SKLearn(
+        sm_estimator=PyTorch(
+            framework_version=PYTORCH_LATEST_FRAMEWORK,
+            py_version=PYTORCH_LATEST_PY_VERSION,
             entry_point=str(entry_point),
-            instance_type="ml.c5.4xlarge",
+            instance_type=DEFAULT_CPU_INSTANCE,
             instance_count=1,
             role=get_execution_role(),
             max_run=10 * 60,
-            framework_version="1.0-1",
-            py_version="py3",
             sagemaker_session=default_sagemaker_session(),
             disable_profiler=True,
             debugger_hook_config=False,

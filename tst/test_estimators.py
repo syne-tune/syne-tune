@@ -12,14 +12,13 @@
 # permissions and limitations under the License.
 import pytest
 
+import benchmarking
+from benchmarking.commons.benchmark_definitions import real_benchmark_definitions
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
+from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     default_sagemaker_session,
 )
-import benchmarking
-from benchmarking.commons.benchmark_definitions import real_benchmark_definitions
-from benchmarking.commons.utils import sagemaker_estimator
-from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
-
 
 all_real_benchmarks = [
     (bm, False) for bm in real_benchmark_definitions(sagemaker_backend=False).values()

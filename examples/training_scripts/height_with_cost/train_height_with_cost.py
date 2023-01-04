@@ -13,21 +13,20 @@
 """
 Derived from ``train_height.py``, but add variable cost (elapsed time).
 """
-import os
 import argparse
 import logging
-import time
 import math
+import os
+import time
 
-from syne_tune import Reporter
-from syne_tune.config_space import randint, add_to_argparse
 from benchmarking.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
     add_checkpointing_to_argparse,
     parse_bool,
 )
-
+from syne_tune import Reporter
+from syne_tune.config_space import randint, add_to_argparse
 
 _config_space = {
     "width": randint(0, 20),
@@ -41,10 +40,6 @@ def height_with_cost_default_params(params=None):
         "max_resource_level": 100,
         "grace_period": 1,
         "reduction_factor": 3,
-        "instance_type": "ml.m5.large",
-        "num_workers": 4,
-        "framework": "PyTorch",
-        "framework_version": "1.6",
         "dont_sleep": dont_sleep,
     }
 

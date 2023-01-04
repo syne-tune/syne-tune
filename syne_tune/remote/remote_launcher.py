@@ -11,24 +11,26 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
+import os
 import shutil
 import subprocess
 from pathlib import Path
 from typing import Optional, List
-import os
 
 import boto3
-from sagemaker.pytorch import PyTorch
 
+import syne_tune
+from syne_tune import Tuner
+from syne_tune.remote.estimators import (
+    instance_sagemaker_estimator,
+    DEFAULT_CPU_INSTANCE,
+)
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     add_syne_tune_dependency,
     get_execution_role,
 )
-from syne_tune import Tuner
-from syne_tune.util import s3_experiment_path
 from syne_tune.constants import ST_REMOTE_UPLOAD_DIR_NAME
-
-import syne_tune
+from syne_tune.util import s3_experiment_path
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +48,7 @@ class RemoteLauncher:
         serialization.
     :param role: SageMaker role to be used to launch the remote tuning instance.
     :param instance_type: Instance where the tuning is going to happen.
-        Defaults to "ml.m5.xlarge"
+        Defaults to "ml.c5.4xlarge"
     :param dependencies: List of folders that should be included as
         dependencies for the backend script to run
     :param estimator_kwargs: Extra arguments for creating the SageMaker
@@ -68,7 +70,7 @@ class RemoteLauncher:
         self,
         tuner: Tuner,
         role: Optional[str] = None,
-        instance_type: str = "ml.m5.xlarge",
+        instance_type: str = DEFAULT_CPU_INSTANCE,
         dependencies: Optional[List[str]] = None,
         store_logs_localbackend: bool = False,
         log_level: Optional[int] = None,
@@ -236,16 +238,15 @@ class RemoteLauncher:
         else:
             image_uri = self.syne_tune_image_uri()
 
-        # the choice of the estimator is arbitrary here since we use a base image of Syne Tune.
-        tuner_estimator = PyTorch(
+        # the choice of the estimator is arbitrary here since we use a base image of Syne Tune
+        # (beyond the framework version that determines the python+pypi versions)
+        tuner_estimator = instance_sagemaker_estimator(
             # path which calls the tuner
             entry_point="remote_main.py",
             source_dir=str(self.remote_script_dir()),
             instance_type=self.instance_type,
             instance_count=1,
             role=self.role,
-            py_version="py38",
-            framework_version="1.10.0",
             image_uri=image_uri,
             hyperparameters=hyperparameters,
             checkpoint_s3_uri=checkpoint_s3_root,

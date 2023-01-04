@@ -10,26 +10,27 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Any
-from pathlib import Path
-from tqdm import tqdm
 import itertools
 import logging
+from pathlib import Path
+from typing import Optional, List, Dict, Any
 
-from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
+from tqdm import tqdm
+
+from benchmarking.commons.baselines import MethodDefinitions
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
     parse_args,
 )
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
     filter_none,
     message_sync_from_s3,
-    sagemaker_estimator,
     find_or_create_requirements_txt,
     combine_requirements_txt,
 )
-from benchmarking.commons.baselines import MethodDefinitions
+from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.util import random_string
 
 logger = logging.getLogger(__name__)
