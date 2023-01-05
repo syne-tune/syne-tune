@@ -127,7 +127,7 @@ def check_initial_candidates_scorer(initial_scoring: Optional[str]) -> str:
 class ModelBasedSearcher(SearcherWithRandomSeed):
     """Common code for surrogate model based searchers
 
-    If ``num_initial_candidates > 0``, initial configurations are drawn using
+    If ``num_initial_random_choices > 0``, initial configurations are drawn using
     an internal :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
     object, which is created in :meth:`_assign_random_searcher`. This internal
     random searcher shares :attr:`random_state` with the searcher here. This ensures
