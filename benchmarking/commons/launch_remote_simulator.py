@@ -26,6 +26,7 @@ from benchmarking.commons.utils import (
     filter_none,
     message_sync_from_s3,
     find_or_create_requirements_txt,
+    get_master_random_seed,
 )
 from syne_tune.remote.estimators import (
     basic_cpu_instance_sagemaker_estimator,
@@ -37,6 +38,7 @@ def get_hyperparameters(
     seed: int,
     method: str,
     experiment_tag: str,
+    random_seed: int,
     args,
     map_extra_args: Optional[callable],
 ) -> Dict[str, Any]:
@@ -45,6 +47,7 @@ def get_hyperparameters(
     :param seed: Seed of repetition
     :param method: Method name
     :param experiment_tag: Tag of experiment
+    :param random_seed: Master random seed
     :param args: Result from `:func:parse_args`
     :param map_extra_args: Hyperparameters are updated with
         ``map_extra_args(args)``. Optional
@@ -54,6 +57,7 @@ def get_hyperparameters(
         "experiment_tag": experiment_tag,
         "method": method,
         "save_tuner": int(args.save_tuner),
+        "random_seed": random_seed,
     }
     if seed is not None:
         hyperparameters["num_seeds"] = seed + 1
@@ -119,6 +123,7 @@ def launch_remote(
     )
     nested_dict = is_dict_of_dict(benchmark_definitions)
     experiment_tag = args.experiment_tag
+    master_random_seed = get_master_random_seed(args.random_seed)
     suffix = random_string(4)
     find_or_create_requirements_txt(entry_point)
 
@@ -144,7 +149,12 @@ def launch_remote(
             tuner_name=tuner_name,
         )
         hyperparameters = get_hyperparameters(
-            seed, method, experiment_tag, args, map_extra_args
+            seed=seed,
+            method=method,
+            experiment_tag=experiment_tag,
+            random_seed=master_random_seed,
+            args=args,
+            map_extra_args=map_extra_args,
         )
         hyperparameters["support_checkpointing"] = int(args.support_checkpointing)
         hyperparameters["verbose"] = int(args.verbose)

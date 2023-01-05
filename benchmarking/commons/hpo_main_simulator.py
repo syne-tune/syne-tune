@@ -24,6 +24,7 @@ from benchmarking.commons.hpo_main_common import (
     set_logging_level,
     get_metadata,
 )
+from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
@@ -217,6 +218,7 @@ def main(
         methods, benchmark_definitions, extra_args
     )
     experiment_tag = args.experiment_tag
+    master_random_seed = get_master_random_seed(args.random_seed)
     if is_dict_of_dict(benchmark_definitions):
         assert (
             args.benchmark_key is not None
@@ -227,7 +229,8 @@ def main(
     combinations = list(itertools.product(method_names, seeds, benchmark_names))
     print(combinations)
     for method, seed, benchmark_name in tqdm(combinations):
-        np.random.seed(seed)
+        random_seed = effective_random_seed(master_random_seed, seed)
+        np.random.seed(random_seed)
         benchmark = benchmark_definitions[benchmark_name]
         if args.n_workers is not None:
             benchmark.n_workers = args.n_workers
@@ -277,7 +280,7 @@ def main(
                 config_space=config_space,
                 metric=benchmark.metric,
                 mode=benchmark.mode,
-                random_seed=seed,
+                random_seed=random_seed,
                 resource_attr=resource_attr,
                 verbose=args.verbose,
                 fcnet_ordinal=args.fcnet_ordinal,
@@ -291,7 +294,12 @@ def main(
             max_num_evaluations=benchmark.max_num_evaluations,
         )
         metadata = get_metadata(
-            seed, method, experiment_tag, benchmark_name, extra_args=extra_args
+            seed=seed,
+            method=method,
+            experiment_tag=experiment_tag,
+            benchmark_name=benchmark_name,
+            random_seed=master_random_seed,
+            extra_args=extra_args,
         )
         metadata["fcnet_ordinal"] = args.fcnet_ordinal
         if benchmark.add_surrogate_kwargs is not None:

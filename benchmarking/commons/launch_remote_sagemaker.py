@@ -32,6 +32,7 @@ from benchmarking.commons.hpo_main_sagemaker import parse_args
 from benchmarking.commons.utils import (
     message_sync_from_s3,
     find_or_create_requirements_txt,
+    get_master_random_seed,
 )
 from syne_tune.remote.estimators import (
     basic_cpu_instance_sagemaker_estimator,
@@ -70,6 +71,7 @@ def launch_remote(
         os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
     environment = {"AWS_DEFAULT_REGION": boto3.Session().region_name}
     benchmark = get_benchmark(args, benchmark_definitions, sagemaker_backend=True)
+    master_random_seed = get_master_random_seed(args.random_seed)
     find_or_create_requirements_txt(entry_point)
 
     combinations = list(itertools.product(method_names, seeds))
@@ -84,7 +86,12 @@ def launch_remote(
         )
         sm_args["environment"] = environment
         hyperparameters = get_hyperparameters(
-            seed, method, experiment_tag, args, map_extra_args
+            seed=seed,
+            method=method,
+            experiment_tag=experiment_tag,
+            random_seed=master_random_seed,
+            args=args,
+            map_extra_args=map_extra_args,
         )
         hyperparameters["max_failures"] = args.max_failures
         hyperparameters["warm_pool"] = int(args.warm_pool)

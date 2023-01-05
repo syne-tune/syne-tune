@@ -154,3 +154,54 @@ and second, ``requirements.txt`` next to the training script. The remote
 launching script is creating a ``requirements.txt`` file with this union in
 ``benchmarking/nursery/launch_local/``, which should not become part of the
 repository.
+
+Random Seeds and Paired Comparisons
+-----------------------------------
+
+Random effects are the most important reason for variations in experimental
+outcomes, due to which a meaningful comparison of HPO methods needs to run
+a number of repetitions (also called *seeds* above). There are two types of
+random effects:
+
+* Randomness in the evaluation of the objective :math:`f(x)` to optimize:
+  repeated evaluations of :math:`f` for the same configuration :math:`x`
+  result in different metric values.
+  In neural network training, these variations originate from random weight
+  initialization and the ordering of mini-batches.
+* Randomness in the HPO algorithm itself. This is evident for random search
+  and ASHA, but just as well concerns Bayesian optimization, since the
+  initial configurations are drawn at random, and the optimization of the
+  acquisition function involves random choices as well.
+
+Syne Tune allows the second source of randomness to be controlled by passing
+a random seed to the scheduler at initialization. If random search is run
+several times with the same random seed for the same configuration space,
+exactly the same sequence of configurations is suggested. The same holds for ASHA.
+When running random search and Bayesian optimization with the same random seed,
+the initial configurations (which in BO are either taken from
+``points_to_evaluate`` or drawn at random) are identical.
+
+The scheduler random seed used in a benchmark experiment is a combination of
+a *master random seed* and the seed number introduced above (the latter has
+values :math:`0, 1, 2, \dots`). The master random seed is passed to
+``launch_remote.py`` or ``hpo_main.py`` as ``--random_seed`. If no master
+random seed is passed, it is drawn at random and output. The master random
+seed is also written into ``metadata.json`` as part of experimental results.
+Importantly, the scheduler random seed is the same across different methods
+for the same seed. This implements a practice called *paired comparison*,
+whereby for each seed, different methods are fed with the same random number
+sequence. This practice reduces variance between method outcomes, while
+still taking account of randomness by running the experiment several times
+(for different seeds :math:`0, 1, 2, \dots`).
+
+.. note::
+   When comparing several methods on the same benchmark, it is recommended
+   to (a) repeat the experiment several times (via ``--num_seeds``), and
+   to (b) use the same master random seed. If all comparisons are done
+   with a single call of ``launch_remote.py`` or ``hpo_main.py``, this is
+   automatically the case, as the master random seed is drawn at random.
+   However, if the comparison extends over several calls, make sure to
+   note down the master random seed from the first call and pass this
+   value via ``--random_seed`` to subsequent calls. The master random seed
+   is also stored as ``random_seed`` in the metadata ``metadata.json`` as
+   part of experimental results.

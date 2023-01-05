@@ -76,6 +76,11 @@ def parse_args(
         type=int,
         help="Maximum runtime for experiment (overwrites default of benchmark)",
     )
+    parser.add_argument(
+        "--random_seed",
+        type=int,
+        help="Master random seed (drawn at random if not given)",
+    )
     if extra_args is not None:
         extra_args = copy.deepcopy(extra_args)
         for kwargs in extra_args:
@@ -104,6 +109,7 @@ def get_metadata(
     method: str,
     experiment_tag: str,
     benchmark_name: str,
+    random_seed: int,
     benchmark: Optional[BenchmarkDefinition] = None,
     extra_args: Optional[dict] = None,
 ) -> Dict[str, Any]:
@@ -113,6 +119,7 @@ def get_metadata(
     :param method: Name of method
     :param experiment_tag: Tag of experiment
     :param benchmark_name: Name of benchmark
+    :param random_seed: Master random seed
     :param benchmark: Optional. Take ``n_workers``, ``max_wallclock_time``
         from there
     :param extra_args: ``metadata`` updated by these at the end. Optional
@@ -123,6 +130,7 @@ def get_metadata(
         "algorithm": method,
         "tag": experiment_tag,
         "benchmark": benchmark_name,
+        "random_seed": random_seed,
     }
     if benchmark is not None:
         metadata.update(

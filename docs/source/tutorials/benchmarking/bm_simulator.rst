@@ -104,7 +104,8 @@ This call runs a number of experiments sequentially on the local machine:
   Fortunately, these are cheap to obtain in the simulation context. Another
   parameter is ``start_seed`` (default: 0), giving seeds
   ``start_seed, ..., num_seeds - 1``. For example, ``--start_seed 5  --num_seeds 6``
-  runs for a single seed equal to 5.
+  runs for a single seed equal to 5. The dependence of random choices on the
+  seed is detailed `below <bm_local.html#random-seeds-and-paired-comparisons>`_.
 * ``max_wallclock_time``, ``n_workers``: These arguments overwrite the defaults
   specified in the benchmark definitions.
 
