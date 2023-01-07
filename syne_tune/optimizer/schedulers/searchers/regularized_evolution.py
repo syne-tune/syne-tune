@@ -19,6 +19,10 @@ from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 from syne_tune.config_space import Domain
+from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
+from syne_tune.optimizer.schedulers.searchers.searcher import (
+    sample_random_configuration,
+)
 
 
 @dataclass
@@ -69,6 +73,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         self.sample_size = sample_size
         self.population = deque()
         self.num_sample_try = 1000  # number of times allowed to sample a mutation
+        self._hp_ranges = make_hyperparameter_ranges(self.config_space)
 
     def _mutate_config(self, config: dict) -> dict:
         child_config = copy.deepcopy(config)
@@ -101,10 +106,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         return child_config
 
     def _sample_random_config(self) -> dict:
-        return {
-            k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
-            for k, v in self.config_space.items()
-        }
+        return sample_random_configuration(self._hp_ranges, self.random_state)
 
     def get_config(self, **kwargs) -> Optional[dict]:
         initial_config = self._next_initial_config()

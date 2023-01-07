@@ -31,7 +31,10 @@ except ImportError:
     print(try_import_botorch_message())
 
 import syne_tune.config_space as cs
-from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers.searcher import (
+    SearcherWithRandomSeed,
+    sample_random_configuration,
+)
 from syne_tune.optimizer.schedulers.searchers.utils import (
     make_hyperparameter_ranges,
 )
@@ -54,8 +57,9 @@ class BotorchSearcher(SearcherWithRandomSeed):
     :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
 
     :param mode: "min" (default) or "max"
-    :param num_init_random: Number of initial random draws, after this
-        number the suggestion are obtained from the GP surrogate model.
+    :param num_init_random: :meth:`get_config` returns randomly drawn
+        configurations until at least ``init_random`` observations have been
+        recorded in :meth:`update`. After that, the BOTorch algorithm is used.
         Defaults to 3
     :param no_fantasizing: If ``True``, fantasizing is not done and pending
         evaluations are ignored. This may lead to loss of diversity in
@@ -246,12 +250,10 @@ class BotorchSearcher(SearcherWithRandomSeed):
         return tuple(config.values()) in self.config_seen
 
     def _sample_random(self) -> dict:
-        return {
-            k: v.sample(random_state=self.random_state)
-            if isinstance(v, cs.Domain)
-            else v
-            for k, v in self.config_space.items()
-        }
+        return sample_random_configuration(
+            hp_ranges=self.hp_ranges,
+            random_state=self.random_state,
+        )
 
     def _configs_with_results(self) -> List[dict]:
         return [

@@ -19,14 +19,39 @@ from syne_tune.optimizer.baselines import (
     BayesianOptimization,
     ASHA,
     MOBSTER,
+    BORE,
+    SyncBOHB,
+    BOTorch,
+    BOHB,
+    KDE,
+    ASHABORE,
 )
 from syne_tune.config_space import randint, uniform, loguniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 
 
-@pytest.mark.timeout(5)
-def test_same_initial_suggests():
+KDE_METHODS = {"BOHB", "SyncBOHB", "KDE"}
+
+MULTIFID_METHODS = {"ASHA", "MOB", "BOHB", "SyncBOHB", "ASHABORE"}
+
+
+@pytest.mark.timeout(3)
+@pytest.mark.parametrize(
+    "name, scheduler_cls",
+    [
+        ("BO", BayesianOptimization),
+        ("ASHA", ASHA),
+        ("MOB", MOBSTER),
+        ("BORE", BORE),
+        ("SyncBOHB", SyncBOHB),
+        ("BOTorch", BOTorch),
+        ("BOHB", BOHB),
+        ("KDE", KDE),
+        ("ASHABORE", ASHABORE),
+    ],
+)
+def test_same_initial_suggests(name, scheduler_cls):
     random_seed = 31415927
     np.random.seed(random_seed)
     num_init_random = 5
@@ -44,23 +69,27 @@ def test_same_initial_suggests():
         "weight_decay": loguniform(1e-8, 1),
         max_resource_attr: 27,
     }
-    schedulers = {
-        "RS": RandomSearch,
-        "BO": BayesianOptimization,
-        "ASHA": ASHA,
-        "MOB": MOBSTER,
-    }
+    schedulers = [("RS", RandomSearch), (name, scheduler_cls)]
 
-    initial_configs = {k: [] for k in schedulers.keys()}
-    for name, scheduler_cls in schedulers.items():
-        is_multifidelity = name in {"ASHA", "MOB"}
+    initial_configs = {k: [] for k in ("RS", name)}
+    for name, scheduler_cls in schedulers:
+        is_multifidelity = name in MULTIFID_METHODS
+        if name in KDE_METHODS:
+            name_num_init_random = "num_min_data_points"
+        elif name in {"BORE", "ASHABORE"}:
+            name_num_init_random = "init_random"
+        else:
+            name_num_init_random = "num_init_random"
+        val_num_init = (
+            max(num_init_random, 7) if name in KDE_METHODS else num_init_random
+        )
         kwargs = dict(
             metric=metric,
             max_resource_attr=max_resource_attr,
-            search_options=dict(
-                debug_log=False,
-                num_init_random=num_init_random,
-            ),
+            search_options={
+                "debug_log": False,
+                name_num_init_random: val_num_init,
+            },
             random_seed=random_seed,
         )
         if is_multifidelity:

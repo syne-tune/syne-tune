@@ -35,6 +35,7 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     SyncMOBSTER,
     ZeroShotTransfer,
+    BOTorch,
     # ASHACTS,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
@@ -44,9 +45,6 @@ from syne_tune.optimizer.schedulers import (
     HyperbandScheduler,
     PopulationBasedTraining,
     RayTuneScheduler,
-)
-from syne_tune.optimizer.schedulers.searchers.botorch import (
-    BotorchSearcher,
 )
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -156,6 +154,14 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         HyperbandScheduler(
             config_space,
             searcher="bayesopt",
+            resource_attr=resource_attr,
+            max_t=max_t,
+            metric=metric1,
+            mode=mode,
+        ),
+        HyperbandScheduler(
+            config_space,
+            searcher="kde",
             resource_attr=resource_attr,
             max_t=max_t,
             metric=metric1,
@@ -327,18 +333,14 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         #     max_t=max_t,
         #     resource_attr=resource_attr,
         # ),
-        # FIXME: Resolve #324 and bring back in:
-        FIFOScheduler(
-            config_space,
-            searcher=BotorchSearcher(
-                config_space=config_space, metric=metric1, mode=mode
-            ),
+        BOTorch(
+            config_space=config_space,
             metric=metric1,
             mode=mode,
         ),
     ],
 )
-def test_async_schedulers_api(scheduler):
+def test_schedulers_api(scheduler):
     trial_ids = range(4)
 
     if isinstance(scheduler, MOASHA):

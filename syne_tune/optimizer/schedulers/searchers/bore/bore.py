@@ -20,9 +20,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
-from syne_tune.optimizer.schedulers.searchers.searcher import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers.searcher import (
+    SearcherWithRandomSeed,
+    sample_random_configuration,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    ExclusionList,
 )
 from syne_tune.optimizer.schedulers.searchers.bore.de import (
     DifferentialevolutionOptimizer,
@@ -40,10 +46,6 @@ class Bore(SearcherWithRandomSeed):
         | Tiao, Louis C and Klein, Aaron and Seeger, Matthias W and Bonilla, Edwin V. and Archambeau, Cedric and Ramos, Fabio
         | Proceedings of the 38th International Conference on Machine Learning
         | https://arxiv.org/abs/2102.09009
-
-    Note: Bore only works in the non-parallel non-multi-fidelity setting. Make
-    sure that you use it with :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
-    and set ``n_workers=1`` in :class:`~syne_tune.Tuner`.
 
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
@@ -63,8 +65,9 @@ class Bore(SearcherWithRandomSeed):
         function. Defaults to 500
     :param random_prob: probability for returning a random configurations
         (epsilon greedy). Defaults to 0
-    :param init_random: Number of initial random configurations before we
-        start with the optimization. Defaults to 6
+    :param init_random: :meth:`get_config` returns randomly drawn configurations
+        until at least ``init_random`` observations have been recorded in
+        :meth:`update`. After that, the BORE algorithm is used. Defaults to 6
     :param classifier_kwargs: Parameters for classifier. Optional
     """
 
@@ -117,7 +120,8 @@ class Bore(SearcherWithRandomSeed):
         self.random_prob = random_prob
         self.mode = mode
 
-        self._hp_ranges = make_hyperparameter_ranges(config_space)
+        self._hp_ranges = make_hyperparameter_ranges(self.config_space)
+        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
 
         if classifier_kwargs is None:
             classifier_kwargs = dict()
@@ -163,25 +167,32 @@ class Bore(SearcherWithRandomSeed):
         else:
             return y[:, 1]  # return probability of class 1
 
+    def _get_random_config(
+        self, exclusion_list: Optional[ExclusionList] = None
+    ) -> dict:
+        if exclusion_list is None:
+            exclusion_list = self._excl_list
+        return sample_random_configuration(
+            hp_ranges=self._hp_ranges,
+            random_state=self.random_state,
+            exclusion_list=exclusion_list,
+        )
+
     def get_config(self, **kwargs):
         start_time = time.time()
         config = self._next_initial_config()
-        if config is not None:
-            return config
-
-        if len(self.inputs) < self.init_random or np.random.rand() < self.random_prob:
-            config = self._hp_ranges.random_config(self.random_state)
-
-        else:
-            # train model
-            self._train_model(self.inputs, self.targets)
-
-            if self.model is None:
-                config = self._hp_ranges.random_config(self.random_state)
-
+        if config is None:
+            if (
+                len(self.inputs) < self.init_random
+                or self.random_state.rand() < self.random_prob
+            ):
+                config = self._get_random_config()
             else:
-
-                if self.acq_optimizer == "de":
+                # train model
+                self._train_model(self.inputs, self.targets)
+                if self.model is None:
+                    config = self._get_random_config()
+                elif self.acq_optimizer == "de":
 
                     def wrapper(x):
                         l = self._loss(x)
@@ -197,33 +208,23 @@ class Bore(SearcherWithRandomSeed):
                     best, traj = de.run()
                     config = self._hp_ranges.from_ndarray(best)
 
-                elif self.acq_optimizer == "rs_with_replacement":
+                else:
+                    # sample random configurations with or without replacement
                     values = []
                     X = []
-                    for i in range(self.feval_acq):
-                        xi = self._hp_ranges.random_config(self.random_state)
+                    if self.acq_optimizer == "rs":
+                        new_excl_list = self._excl_list.copy()
+                    else:
+                        assert self.acq_optimizer == "rs_with_replacement"
+                        new_excl_list = None
+                    for _ in range(self.feval_acq):
+                        xi = self._get_random_config(new_excl_list)
+                        if xi is None:
+                            break
                         X.append(xi)
                         values.append(self._loss(self._hp_ranges.to_ndarray(xi))[0])
-
-                    ind = np.array(values).argmin()
-                    config = X[ind]
-                else:
-
-                    # sample random configurations without replacement
-                    values = []
-                    X = []
-                    counter = 0
-                    while len(values) < self.feval_acq and counter < 10:
-                        xi = self._hp_ranges.random_config(self.random_state)
-                        if xi not in X:
-                            X.append(xi)
-                            values.append(self._loss(self._hp_ranges.to_ndarray(xi))[0])
-                            counter = 0
-                        else:
-                            logging.warning(
-                                "Re-sampled the same configuration. Retry..."
-                            )
-                            counter += 1  # we stop sampling if after 10 retires we are not able to find a new config
+                        if new_excl_list is not None:
+                            new_excl_list.add(xi)
                     if len(values) < self.feval_acq:
                         logging.warning(
                             f"Only {len(values)} instead of {self.feval_acq} configurations "
@@ -232,12 +233,14 @@ class Bore(SearcherWithRandomSeed):
                     ind = np.array(values).argmin()
                     config = X[ind]
 
-        opt_time = time.time() - start_time
-        logging.debug(
-            f"[Select new candidate: "
-            f"config={config}] "
-            f"optimization time : {opt_time}"
-        )
+        if config is not None:
+            opt_time = time.time() - start_time
+            logging.debug(
+                f"[Select new candidate: "
+                f"config={config}] "
+                f"optimization time : {opt_time}"
+            )
+            self._excl_list.add(config)
 
         return config
 
