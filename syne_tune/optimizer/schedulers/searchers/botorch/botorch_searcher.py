@@ -30,7 +30,6 @@ try:
 except ImportError:
     print(try_import_botorch_message())
 
-import syne_tune.config_space as cs
 from syne_tune.optimizer.schedulers.searchers.searcher import (
     SearcherWithRandomSeed,
     sample_random_configuration,
