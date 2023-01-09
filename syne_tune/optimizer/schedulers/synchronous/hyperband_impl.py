@@ -136,6 +136,7 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
             reduction_factor=self.reduction_factor,
             num_brackets=kwargs.get("brackets"),
         )
+        print(f"*** bracket_rungs = {bracket_rungs}")
         self._create_internal(bracket_rungs, **filter_by_key(kwargs, _ARGUMENT_KEYS))
 
 
