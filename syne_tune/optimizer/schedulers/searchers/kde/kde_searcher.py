@@ -356,9 +356,15 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                         val_current_best = val
 
                 suggestion = current_best
+                if suggestion is None:
+                    # This can happen if the configuration space is almost exhausted
+                    logger.warning(
+                        "Could not find configuration by optimizing the acquisition function. Drawing at random instead."
+                    )
+                    suggestion = self._get_random_config()
 
         if suggestion is not None:
-            self._excl_list.add(suggestion)
+            self._excl_list.add(suggestion)  # Should not be suggested again
         return suggestion
 
     def _train_kde(self, train_data, train_targets):
