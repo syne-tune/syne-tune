@@ -971,7 +971,6 @@ def hyperband_rung_levels(
         max_rungs = 0
         while min_t * np.power(rf, max_rungs) < max_t:
             max_rungs += 1
-        max_rungs += 1
         rung_levels = [int(round(min_t * np.power(rf, k))) for k in range(max_rungs)]
         assert rung_levels[-1] <= max_t  # Sanity check
     if rung_levels[-1] == max_t:
