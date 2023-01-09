@@ -189,8 +189,7 @@ class Bore(SearcherWithRandomSeed):
                 config = self._get_random_config()
             else:
                 # train model
-                self._train_model(self.inputs, self.targets)
-                if self.model is None:
+                if not self._train_model(self.inputs, self.targets):
                     config = self._get_random_config()
                 elif self.acq_optimizer == "de":
 
@@ -225,13 +224,20 @@ class Bore(SearcherWithRandomSeed):
                         values.append(self._loss(self._hp_ranges.to_ndarray(xi))[0])
                         if new_excl_list is not None:
                             new_excl_list.add(xi)
-                    if len(values) < self.feval_acq:
-                        logging.warning(
-                            f"Only {len(values)} instead of {self.feval_acq} configurations "
-                            f"sampled to optimize the acquisition function"
+                    if len(values) > 0:
+                        if len(values) < self.feval_acq:
+                            logging.warning(
+                                f"Only {len(values)} instead of {self.feval_acq} configurations "
+                                f"sampled to optimize the acquisition function"
+                            )
+                        ind = np.array(values).argmin()
+                        config = X[ind]
+                    else:
+                        # This can happen if the configuration space is almost exhausted
+                        logger.warning(
+                            "Could not find configuration by optimizing the acquisition function. Drawing at random instead."
                         )
-                    ind = np.array(values).argmin()
-                    config = X[ind]
+                        config = self._get_random_config()
 
         if config is not None:
             opt_time = time.time() - start_time
@@ -240,20 +246,25 @@ class Bore(SearcherWithRandomSeed):
                 f"config={config}] "
                 f"optimization time : {opt_time}"
             )
-            self._excl_list.add(config)
+            self._excl_list.add(config)  # Should not be suggested again
 
         return config
 
-    def _train_model(self, train_data, train_targets):
+    def _train_model(self, train_data: np.ndarray, train_targets: np.ndarray) -> bool:
+        """
+        :param train_data: Training input feature matrix X
+        :param train_targets: Training targets y
+        :return: Was training successful?
+        """
 
         start_time = time.time()
 
-        X = np.array(self.inputs)
+        X = np.array(train_data)
 
         if self.mode == "min":
-            y = np.array(self.targets)
+            y = np.array(train_targets)
         else:
-            y = -np.array(self.targets)
+            y = -np.array(train_targets)
 
         tau = np.quantile(y, q=self.gamma)
         z = np.less(y, tau)
@@ -276,6 +287,7 @@ class Bore(SearcherWithRandomSeed):
             f"dataset size: {X.shape[0]}, "
             f"train time : {train_time}"
         )
+        return True
 
     def _update(self, trial_id: str, config: dict, result: dict):
         self.inputs.append(self._hp_ranges.to_ndarray(config))
