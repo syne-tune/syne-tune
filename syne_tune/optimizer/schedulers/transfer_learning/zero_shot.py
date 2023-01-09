@@ -64,10 +64,11 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
         use_surrogates: bool = False,
         **kwargs,
     ) -> None:
+        if "points_to_evaluate" in kwargs:
+            kwargs["points_to_evaluate"] = []
         super().__init__(
             config_space=config_space,
             metric=metric,
-            points_to_evaluate=[],
             transfer_learning_evaluations=transfer_learning_evaluations,
             metric_names=[metric],
             **kwargs,

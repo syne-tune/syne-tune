@@ -17,10 +17,12 @@ from syne_tune.try_import import try_import_gpsearchers_message
 from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
     BaseSearcher,
     SearcherWithRandomSeed,
-    RandomSearcher,
-    GridSearcher,
     impute_points_to_evaluate,
     extract_random_seed,
+)
+from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # noqa: F401
+    RandomSearcher,
+    GridSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa: F401
     searcher_factory,
@@ -29,10 +31,10 @@ from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa:
 __all__ = [
     "BaseSearcher",
     "SearcherWithRandomSeed",
-    "RandomSearcher",
-    "GridSearcher",
     "impute_points_to_evaluate",
     "extract_random_seed",
+    "RandomSearcher",
+    "GridSearcher",
     "searcher_factory",
 ]
 

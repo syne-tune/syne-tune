@@ -125,8 +125,10 @@ BOHB | Falkner, et al. (2018) | model-based | yes | yes | no
 MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no 
 DEHB | Awad, et al. (2021) | evolutionary | no | yes | no 
 HyperTune | Li, et al. (2022) | model-based | yes | yes | no 
+ASHABORE | Tiao, et al. (2021) | model-based | yes | yes | no 
 PASHA | Bohdal, et al. (2022)| random or model-based | yes | yes | no 
 REA | Real, et al. (2019) | evolutionary | yes | no | no 
+KDE | Falkner, et al. (2018) | model-based | yes | no | no 
 PBT | Jaderberg, et al. (2017) | evolutionary | no | yes | no 
 ZeroShotTransfer | Wistuba, et al. (2015) | deterministic | yes | no | yes 
 ASHA-CTS | Salinas, et al. (2021)| random | yes | yes | yes 

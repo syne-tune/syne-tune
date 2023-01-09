@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Optional
-import numpy as np
 import logging
 import copy
 
@@ -31,10 +30,24 @@ from syne_tune.optimizer.schedulers.synchronous import (
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
+from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
 from syne_tune.try_import import (
     try_import_blackbox_repository_message,
     try_import_bore_message,
+    try_import_botorch_message,
 )
+
+
+def _random_seed_from_generator(random_seed: int) -> int:
+    """
+    This helper makes sure that a searcher within
+    :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` is seeded in the same
+    way whether it is created by the searcher factory, or by hand.
+
+    :param random_seed: Random seed for scheduler
+    :return: Random seed to be used for searcher created by hand
+    """
+    return RandomSeedGenerator(random_seed)()
 
 
 class RandomSearch(FIFOScheduler):
@@ -238,6 +251,37 @@ class PASHA(HyperbandScheduler):
         )
 
 
+class BOHB(HyperbandScheduler):
+    """Asynchronous BOHB
+
+    Combines :class:`ASHA` with TPE-like Bayesian optimization, using kernel
+    density estimators.
+
+    One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
+    ``type="promotion"``, the latter is more useful, see also
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    See
+    :class:`~syne_tune.optimizer.schedulers.searchers.kde.MultiFidelityKernelDensityEstimator`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+    """
+
+    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
+        _assert_need_one(kwargs)
+        super(BOHB, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher="kde",
+            resource_attr=resource_attr,
+            **kwargs,
+        )
+
+
 class SyncHyperband(SynchronousGeometricHyperbandScheduler):
     """Synchronous Hyperband.
 
@@ -275,7 +319,8 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
     kernel density estimators.
 
     One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
-    The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    The latter is more useful, see also
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -375,6 +420,24 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
         )
 
 
+def _create_searcher_kwargs(
+    config_space: dict,
+    metric: str,
+    random_seed: Optional[int],
+    kwargs: dict,
+) -> dict:
+    searcher_kwargs = dict(
+        config_space=config_space,
+        metric=metric,
+        points_to_evaluate=kwargs.get("points_to_evaluate"),
+    )
+    search_options = kwargs.get("search_options", dict())
+    searcher_kwargs.update(search_options)
+    if random_seed is not None:
+        searcher_kwargs["random_seed"] = _random_seed_from_generator(random_seed)
+    return searcher_kwargs
+
+
 class BORE(FIFOScheduler):
     """Bayesian Optimization by Density-Ratio Estimation (BORE).
 
@@ -383,24 +446,113 @@ class BORE(FIFOScheduler):
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
+    :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, mode: str, **kwargs):
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
         try:
             from syne_tune.optimizer.schedulers.searchers.bore import Bore
         except ImportError:
             logging.info(try_import_bore_message())
             raise
 
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
         super(BORE, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=Bore(
-                config_space=config_space, metric=metric, mode=mode, **kwargs
-            ),
-            mode=mode,
+            searcher=Bore(**searcher_kwargs),
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class ASHABORE(HyperbandScheduler):
+    """Model-based ASHA with BORE searcher
+
+    See :class:`~syne_tune.optimizer.schedulers.searchers.bore.MultiFidelityBore`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param resource_attr: Name of resource attribute
+    :param random_seed: Random seed, optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        resource_attr: str,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        try:
+            from syne_tune.optimizer.schedulers.searchers.bore import MultiFidelityBore
+        except ImportError:
+            logging.info(try_import_bore_message())
+            raise
+
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs["resource_attr"] = resource_attr
+        searcher_kwargs["mode"] = kwargs.get("mode")
+        super(ASHABORE, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher=MultiFidelityBore(**searcher_kwargs),
+            resource_attr=resource_attr,
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class BOTorch(FIFOScheduler):
+    """Bayesian Optimization using BOTorch
+
+    See :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BotorchSearcher`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param random_seed: Random seed, optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: dict,
+        metric: str,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        try:
+            from syne_tune.optimizer.schedulers.searchers.botorch import BotorchSearcher
+        except ImportError:
+            logging.info(try_import_botorch_message())
+            raise
+
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        super(BOTorch, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher=BotorchSearcher(**searcher_kwargs),
+            random_seed=random_seed,
             **kwargs,
         )
 
@@ -419,6 +571,7 @@ class REA(FIFOScheduler):
     :param sample_size: See
         :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
         Defaults to 10
+    :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
@@ -429,23 +582,19 @@ class REA(FIFOScheduler):
         metric: str,
         population_size: int = 100,
         sample_size: int = 10,
+        random_seed: Optional[int] = None,
         **kwargs,
     ):
-        search_options = kwargs.get("search_options")
-        if search_options is None:
-            search_options = dict()
-        else:
-            del kwargs["search_options"]
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs["population_size"] = population_size
+        searcher_kwargs["sample_size"] = sample_size
         super(REA, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=RegularizedEvolution(
-                config_space=config_space,
-                metric=metric,
-                population_size=population_size,
-                sample_size=sample_size,
-                **search_options,
-            ),
+            searcher=RegularizedEvolution(**searcher_kwargs),
+            random_seed=random_seed,
             **kwargs,
         )
 
@@ -518,19 +667,23 @@ class ZeroShotTransfer(FIFOScheduler):
             logging.info(try_import_blackbox_repository_message())
             raise
 
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs.update(
+            dict(
+                mode=mode,
+                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations,
+                transfer_learning_evaluations=transfer_learning_evaluations,
+                use_surrogates=use_surrogates,
+            )
+        )
         super(ZeroShotTransfer, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=zero_shot.ZeroShotTransfer(
-                config_space=config_space,
-                metric=metric,
-                mode=mode,
-                sort_transfer_learning_evaluations=sort_transfer_learning_evaluations,
-                random_seed=random_seed,
-                transfer_learning_evaluations=transfer_learning_evaluations,
-                use_surrogates=use_surrogates,
-            ),
             mode=mode,
+            searcher=zero_shot.ZeroShotTransfer(**searcher_kwargs),
+            random_seed=random_seed,
             **kwargs,
         )
 
@@ -578,20 +731,46 @@ class ASHACTS(HyperbandScheduler):
             logging.info(try_import_blackbox_repository_message())
             raise
 
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs.update(
+            dict(
+                mode=mode,
+                transfer_learning_evaluations=transfer_learning_evaluations,
+            )
+        )
         super(ASHACTS, self).__init__(
             config_space=config_space,
-            searcher=QuantileBasedSurrogateSearcher(
-                mode=mode,
-                config_space=config_space,
-                metric=metric,
-                transfer_learning_evaluations=transfer_learning_evaluations,
-                random_seed=random_seed
-                if random_seed
-                else np.random.randint(0, 2**32),
-            ),
-            mode=mode,
             metric=metric,
+            mode=mode,
+            searcher=QuantileBasedSurrogateSearcher(**searcher_kwargs),
             resource_attr=resource_attr,
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class KDE(FIFOScheduler):
+    """Single-fidelity variant of BOHB
+
+    Combines :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` with TPE-like
+    Bayesian optimization, using kernel density estimators.
+
+    See
+    :class:`~syne_tune.optimizer.schedulers.searchers.kde.KernelDensityEstimator`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(self, config_space: dict, metric: str, **kwargs):
+        super(KDE, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            searcher="kde",
             **kwargs,
         )
 

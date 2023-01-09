@@ -18,8 +18,8 @@ import time
 
 from syne_tune.optimizer.schedulers.searchers.searcher import (
     SearcherWithRandomSeed,
-    RandomSearcher,
 )
+from syne_tune.optimizer.schedulers.searchers import RandomSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
     gp_fifo_searcher_factory,
     gp_fifo_searcher_defaults,

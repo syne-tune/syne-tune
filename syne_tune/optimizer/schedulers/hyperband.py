@@ -45,12 +45,6 @@ from syne_tune.optimizer.schedulers.searchers.bracket_distribution import (
     DefaultHyperbandBracketDistribution,
 )
 
-__all__ = [
-    "HyperbandScheduler",
-    "HyperbandBracketManager",
-    "hyperband_rung_levels",
-]
-
 logger = logging.getLogger(__name__)
 
 
@@ -974,7 +968,9 @@ def hyperband_rung_levels(
         ), f"max_t ({max_t}) must be greater than grace_period ({grace_period})"
         rf = reduction_factor
         min_t = grace_period
-        max_rungs = int(np.log(max_t / min_t) / np.log(rf) + 1)
+        max_rungs = 0
+        while min_t * np.power(rf, max_rungs) < max_t:
+            max_rungs += 1
         rung_levels = [int(round(min_t * np.power(rf, k))) for k in range(max_rungs)]
         assert rung_levels[-1] <= max_t  # Sanity check
     if rung_levels[-1] == max_t:
