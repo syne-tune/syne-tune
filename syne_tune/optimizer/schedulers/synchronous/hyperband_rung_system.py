@@ -62,11 +62,9 @@ class SynchronousHyperbandRungSystem:
         assert (
             reduction_factor >= 2
         ), f"reduction_factor = {reduction_factor} must be >= 2"
-        s_max = int(
-            np.ceil(
-                (np.log(max_resource) - np.log(min_resource)) / np.log(reduction_factor)
-            )
-        )
+        s_max = 0
+        while min_resource * np.power(reduction_factor, s_max) < max_resource:
+            s_max += 1
         if num_brackets is not None:
             SynchronousHyperbandRungSystem._assert_positive_int(
                 num_brackets, "num_brackets"
