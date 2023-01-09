@@ -135,9 +135,13 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 +---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`_                 | `Li, et al. (2022) <https://arxiv.org/abs/2201.06834>`_                        | model-based   | yes           | yes             | no        |
 +---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
+| :class:`~syne_tune.optimizer.baselines.ASHABORE`                                      | `Tiao, et al. (2021) <https://proceedings.mlr.press/v139/tiao21a.html>`_       | model-based   | yes           | yes             | no        |
++---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.PASHA`                                         | `Bohdal, et al. (2022) <https://arxiv.org/abs/2207.06940>`_                    | random        | yes           | yes             | no        |
 +---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.REA`                                           | `Real, et al. (2019) <https://arxiv.org/abs/1802.01548>`_                      | evolutionary  | yes           | no              | no        |
++---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
+| :class:`~syne_tune.optimizer.baselines.KDE`                                           | `Falkner, et al. (2018) <https://arxiv.org/abs/1807.01774>`_                   | model-based   | yes           | no              | no        |
 +---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.schedulers.PopulationBasedTraining`                      | `Jaderberg, et al. (2017) <https://arxiv.org/abs/1711.09846>`_                 | evolutionary  | no            | yes             | no        |
 +---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
@@ -150,7 +154,8 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 
-Syne Tune also supports `BoTorch <https://github.com/pytorch/botorch>`_ searchers.
+Syne Tune also supports `BoTorch <https://github.com/pytorch/botorch>`_ searchers,
+see :class:`~syne_tune.optimizer.baselines.BOTorch`.
 
 Supported multi-objective optimization methods
 ----------------------------------------------
