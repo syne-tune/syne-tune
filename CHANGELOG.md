@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.3.4] - 2023-01-10
+
+We release version 0.3.4 which you can install with `pip install syne-tune[extra]`.
+
+Thanks to all contributors (sorted by chronological commit order):
+@mseeger, @wesk, @aaronkl, @jgolebiowski, @geoalgo, @wistuba, @610v4nn1
+
+### Changed
+* Different searchers suggest the same initial random configurations if run
+  with the same random seed
+* Streamlined how SageMaker backend uses pre-built containers
+* Improvements in documentation
+* Improved random seed management in benchmarking
+* New baseline wrappers: BOHB, ASHABORE, BOTorch, KDE
+
+### Fixed
+* Switch of hash checking of blackbox repository by default, since hash
+  computations seem system-dependent. Hash computation will be fixed in a
+  forthcoming release, and will be switched on again
+* Fixed defaults of Hyper-Tune in benchmarking
+* Bug fix of SyncMOBSTER (along with refactoring)
+* Bug fix in REA (RegularizedEvolution)
+* Bug fix in examples for constrained and cost-aware BO
+
+
 ## [0.3.3] - 2022-12-19
 
 We release version 0.3.3 which you can install with `pip install syne-tune[extra]`.
