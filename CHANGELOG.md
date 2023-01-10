@@ -8,8 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 We release version 0.3.4 which you can install with `pip install syne-tune[extra]`.
 
-Thanks to all contributors (sorted by chronological commit order):
-@mseeger, @wesk, @aaronkl, @jgolebiowski, @geoalgo, @wistuba, @610v4nn1
+Thanks to all contributors!
 
 ### Changed
 * Different searchers suggest the same initial random configurations if run
@@ -20,8 +19,8 @@ Thanks to all contributors (sorted by chronological commit order):
 * New baseline wrappers: BOHB, ASHABORE, BOTorch, KDE
 
 ### Fixed
-* Switch of hash checking of blackbox repository by default, since hash
-  computations seem system-dependent. Hash computation will be fixed in a
+* Switch off hash checking of blackbox repository by default, since hash
+  computation seem system-dependent. Hash computation will be fixed in a
   forthcoming release, and will be switched on again
 * Fixed defaults of Hyper-Tune in benchmarking
 * Bug fix of SyncMOBSTER (along with refactoring)
