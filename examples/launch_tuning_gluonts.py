@@ -39,6 +39,7 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
     np.random.seed(0)
     epochs = 50
+    n_workers = 4
 
     config_space = {
         "lr": loguniform(1e-4, 1e-1),
@@ -55,10 +56,12 @@ if __name__ == "__main__":
         Path(__file__).parent / "training_scripts" / "gluonts" / "train_gluonts.py"
     )
 
-    evaluate_trials_on_sagemaker = False
+    # Note: In order to run this locally (value False), you need to have GluonTS and its
+    # dependencies installed
+    evaluate_trials_on_sagemaker = True
 
     if evaluate_trials_on_sagemaker:
-        # evaluate trials on Sagemaker
+        # Evaluate trials on Sagemaker
         trial_backend = SageMakerBackend(
             sm_estimator=MXNet(
                 framework_version=MXNET_LATEST_VERSION,
@@ -74,20 +77,18 @@ if __name__ == "__main__":
                 disable_profiler=True,
                 debugger_hook_config=False,
             ),
-            # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
-            # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example
             metrics_names=[metric],
         )
     else:
         # evaluate trials locally, replace with SageMakerBackend to evaluate trials on Sagemaker
         trial_backend = LocalBackend(entry_point=str(entry_point))
 
-    # see examples to see other schedulers, mobster, Raytune, multiobjective, etc...
+    # Use asynchronous successive halving (ASHA)
     scheduler = ASHA(
         config_space, max_t=epochs, resource_attr="epoch_no", mode="min", metric=metric
     )
 
-    wallclock_time_budget = 3600 if evaluate_trials_on_sagemaker else 600
+    max_wallclock_time = 3600 if evaluate_trials_on_sagemaker else 600
     dollar_cost_budget = 20.0
 
     tuner = Tuner(
@@ -96,9 +97,9 @@ if __name__ == "__main__":
         # stops if wallclock time or dollar-cost exceeds budget,
         # dollar-cost is only available when running on Sagemaker
         stop_criterion=StoppingCriterion(
-            max_wallclock_time=wallclock_time_budget, max_cost=dollar_cost_budget
+            max_wallclock_time=max_wallclock_time, max_cost=dollar_cost_budget
         ),
-        n_workers=4,
+        n_workers=n_workers,
         # some failures may happen when SGD diverges with NaNs
         max_failures=10,
     )
