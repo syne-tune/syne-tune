@@ -1,7 +1,7 @@
 syne-tune[extra]
 tqdm
 coolname
-numpy
+numpy>=1.16.0, <1.24.0
 pandas
 fastparquet
 s3fs
