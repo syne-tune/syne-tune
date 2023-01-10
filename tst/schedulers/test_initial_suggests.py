@@ -55,7 +55,6 @@ def test_same_initial_suggests(name, scheduler_cls):
     random_seed = 31415927
     np.random.seed(random_seed)
     num_init_random = 5
-    num_total_candidates = 7
     metric = "accuracy"
     max_resource_attr = "epochs"
     resource_attr = "epoch"
@@ -95,11 +94,10 @@ def test_same_initial_suggests(name, scheduler_cls):
         if is_multifidelity:
             kwargs["resource_attr"] = resource_attr
         scheduler = scheduler_cls(config_space, **kwargs)
-        for trial_id in range(num_total_candidates):
+        for trial_id in range(num_init_random):
             suggestion = scheduler.suggest(trial_id)
             assert suggestion.spawn_new_trial_id
-            if trial_id < num_init_random:
-                initial_configs[name].append(suggestion.config)
+            initial_configs[name].append(suggestion.config)
             trial = Trial(
                 trial_id=trial_id,
                 config=suggestion.config,
