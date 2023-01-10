@@ -23,6 +23,7 @@ from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCall
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune import Tuner, StoppingCriterion
+from syne_tune.config_space import Domain
 
 
 def plot_yahpo_learning_curves(
@@ -34,7 +35,10 @@ def plot_yahpo_learning_curves(
         f"Learning curves from Yahpo {benchmark} for 10 different hyperparameters."
     )
     for i in range(10):
-        config = {k: v.sample() for k, v in bb.configuration_space.items()}
+        config = {
+            k: v.sample() if isinstance(v, Domain) else v
+            for k, v in bb.configuration_space.items()
+        }
         evals = bb(config)
         time_index = next(
             i for i, name in enumerate(bb.objectives_names) if name == time_col
@@ -119,7 +123,7 @@ if __name__ == "__main__":
             metric=benchmark_info.metric,
         )
 
-        stop_criterion = StoppingCriterion(max_num_trials_started=200)
+        stop_criterion = StoppingCriterion(max_num_trials_started=100)
 
         tuner = Tuner(
             trial_backend=trial_backend,
