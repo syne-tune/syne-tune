@@ -31,7 +31,6 @@ jobs:
         python examples/launch_height_baselines.py
         python examples/launch_height_python_backend.py
         python examples/launch_height_moasha.py
-        # python examples/launch_height_ray.py  # TODO: RayTuneScheduler needs fixing
         python examples/launch_height_standalone_scheduler.py
         python examples/launch_pbt.py
         python examples/launch_bayesopt_constrained.py
