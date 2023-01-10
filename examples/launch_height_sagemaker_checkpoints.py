@@ -24,9 +24,9 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune.remote.estimators import (
-    DEFAULT_CPU_INSTANCE,
     PYTORCH_LATEST_FRAMEWORK,
     PYTORCH_LATEST_PY_VERSION,
+    DEFAULT_CPU_INSTANCE_SMALL,
 )
 
 if __name__ == "__main__":
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     max_steps = 100
     n_workers = 4
     delete_checkpoints = True
-    max_wallclock_time = 10 * 60
+    max_wallclock_time = 5 * 60
 
     mode = "min"
     metric = "mean_loss"
@@ -67,11 +67,11 @@ if __name__ == "__main__":
     # SageMaker backend: We use the warm pool feature here
     trial_backend = SageMakerBackend(
         sm_estimator=PyTorch(
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+            instance_count=1,
             framework_version=PYTORCH_LATEST_FRAMEWORK,
             py_version=PYTORCH_LATEST_PY_VERSION,
             entry_point=str(entry_point),
-            instance_type=DEFAULT_CPU_INSTANCE,
-            instance_count=1,
             role=get_execution_role(),
             max_run=10 * 60,
             sagemaker_session=default_sagemaker_session(),

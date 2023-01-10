@@ -62,6 +62,7 @@ if __name__ == "__main__":
         trial_backend = SageMakerBackend(
             sm_estimator=PyTorch(
                 instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+                instance_count=1,
                 framework_version=PYTORCH_LATEST_FRAMEWORK,
                 py_version=PYTORCH_LATEST_PY_VERSION,
                 entry_point=entry_point,

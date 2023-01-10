@@ -163,12 +163,18 @@ class SageMakerBackend(TrialBackend):
             ]
 
     def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
-        res = sagemaker_search(
-            trial_ids_and_names=[
-                (jobid, self.job_id_mapping[jobid]) for jobid in trial_ids
-            ],
-            sm_client=self.sm_client,
-        )
+        trial_ids_and_names = []
+        for jobid in trial_ids:
+            name = self.job_id_mapping.get(jobid)
+            if name is not None:
+                trial_ids_and_names.append((jobid, name))
+        if trial_ids_and_names:
+            res = sagemaker_search(
+                trial_ids_and_names=trial_ids_and_names,
+                sm_client=self.sm_client,
+            )
+        else:
+            res = []
 
         # overrides the status return by Sagemaker as the stopping decision may not have been propagated yet.
         for trial_res in res:
