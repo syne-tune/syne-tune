@@ -55,7 +55,7 @@ if __name__ == "__main__":
         random_seed=random_seed,
     )
 
-    max_wallclock_time = 600
+    max_wallclock_time = 3600
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
     # Printing the status during tuning takes a lot of time, and so does
     # storing results.

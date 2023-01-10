@@ -281,9 +281,10 @@ class RemoteLauncher:
             boto3.client("ecr").list_images(repositoryName=docker_image_name)
         except Exception:
             # todo RepositoryNotFoundException should be caught but I did not manage to import it
+            script_path = Path(syne_tune.__path__[0]).parent / "container"
             logger.warning(
                 f"Docker-image of syne-tune {docker_image_name} could not be found, run \n"
-                f"``cd {Path(__file__).parent}/container; bash build_syne_tune_container.sh``\n"
+                f"``cd {script_path}; bash build_syne_tune_container.sh``\n"
                 f"in a terminal to build it. Trying to do it now."
             )
             subprocess.run(

@@ -38,9 +38,13 @@ if __name__ == "__main__":
     random_seed = 31415927
     max_steps = 100
     n_workers = 4
+    max_wallclock_time = 5 * 60
 
+    mode = "min"
+    metric = "mean_loss"
+    max_resource_attr = "steps"
     config_space = {
-        "steps": max_steps,
+        max_resource_attr: max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -50,8 +54,6 @@ if __name__ == "__main__":
         / "height_example"
         / "train_height.py"
     )
-    mode = "min"
-    metric = "mean_loss"
 
     # Random search without stopping
     scheduler = RandomSearch(
@@ -62,6 +64,7 @@ if __name__ == "__main__":
         # we tune a PyTorch Framework from Sagemaker
         sm_estimator=PyTorch(
             instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+            instance_count=1,
             framework_version=PYTORCH_LATEST_FRAMEWORK,
             py_version=PYTORCH_LATEST_PY_VERSION,
             entry_point=str(entry_point),
@@ -76,7 +79,7 @@ if __name__ == "__main__":
         metrics_names=[metric],
     )
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=600)
+    stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

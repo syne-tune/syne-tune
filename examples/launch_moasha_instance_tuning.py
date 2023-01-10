@@ -63,7 +63,8 @@ if __name__ == "__main__":
         "dataset_path": "./",
     }
     entry_point = (
-        Path(__file__).parent
+        Path(__file__).parent.parent
+        / "benchmarking"
         / "training_scripts"
         / "distilbert_on_imdb"
         / "distilbert_on_imdb.py"
