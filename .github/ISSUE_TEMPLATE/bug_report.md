@@ -7,25 +7,26 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+**Describe the bug**  
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+**To reproduce**  
 Steps to reproduce the behavior:
 1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+2. Run the following command '....'
+3. See error
 
-**Expected behavior**
+**Expected behavior**  
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
+**Paste the output of the `pip freeze` command below:**
+
+**Desktop (please complete the following information):**  
+ - OS: [e.g. MacOS Monterey 12.6.1 / Ubuntu Linux / Windows 11]
+ - Syne Tune Version [e.g. v0.3.4]
+
+**Screenshots**  
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Version [e.g. 22]
-
-**Additional context**
+**Additional context**  
 Add any other context about the problem here.
