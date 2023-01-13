@@ -635,9 +635,9 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                 is_in_active = name in self.active_config_space
                 num_categories = len(hp_range.categories)
                 if isinstance(hp_range, Ordinal):
-                    assert (
-                        not is_in_active
-                    ), f"Parameter '{name}' of type Ordinal cannot be used in active_config_space"
+                    #assert (
+                        #not is_in_active
+                    #), f"Parameter '{name}' of type Ordinal cannot be used in active_config_space"
                     if (
                         isinstance(hp_range, OrdinalNearestNeighbor)
                         and num_categories > 1

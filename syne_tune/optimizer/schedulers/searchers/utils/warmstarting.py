@@ -48,7 +48,7 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
     prefix_keys = None
     active_config_space = None
     if task_attr is not None:
-        from syne_tune.config_space import Categorical
+        from syne_tune.config_space import Categorical, Ordinal
 
         active_task = kwargs.get("transfer_learning_active_task")
         assert (
@@ -68,7 +68,12 @@ def create_hp_ranges_for_warmstarting(**kwargs) -> HyperparameterRanges:
             active_config_space = config_space
         # The parameter ``task_attr`` in ``active_config_space`` must be restricted
         # to ``active_task`` as a single value
-        task_param = Categorical(categories=[active_task])
+        if isinstance(hp_range, Ordinal):
+            # If it's Ordinal, we want to make the ``task_param`` Ordinal as well
+            task_param = Ordinal(categories=[active_task])
+        else:
+            # Otherwise we make it Categorical
+            task_param = Categorical(categories=[active_task])
         active_config_space = dict(active_config_space, **{task_attr: task_param})
     return make_hyperparameter_ranges(
         config_space, active_config_space=active_config_space, prefix_keys=prefix_keys
