@@ -38,10 +38,10 @@ if __name__ == "__main__":
         "height": randint(-100, 100),
     }
     entry_point = (
-            Path(__file__).parent
-            / "training_scripts"
-            / "height_example"
-            / "train_height.py"
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
     )
 
     # Random search without stopping

@@ -66,4 +66,7 @@ if __name__ == "__main__":
         py_version=PYTORCH_LATEST_PY_VERSION,
         sagemaker_session=default_sagemaker_session(),
     )
-    sm_estimator.fit(wait=False, job_name=f"launch-height-sagemaker-remotely-{np.random.randint(0, 2**31)}")
+    sm_estimator.fit(
+        wait=False,
+        job_name=f"launch-height-sagemaker-remotely-{np.random.randint(0, 2**31)}",
+    )

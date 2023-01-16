@@ -67,16 +67,16 @@ class RemoteLauncher:
     """
 
     def __init__(
-            self,
-            tuner: Tuner,
-            role: Optional[str] = None,
-            instance_type: str = DEFAULT_CPU_INSTANCE,
-            dependencies: Optional[List[str]] = None,
-            store_logs_localbackend: bool = False,
-            log_level: Optional[int] = None,
-            s3_path: Optional[str] = None,
-            no_tuner_logging: bool = False,
-            **estimator_kwargs,
+        self,
+        tuner: Tuner,
+        role: Optional[str] = None,
+        instance_type: str = DEFAULT_CPU_INSTANCE,
+        dependencies: Optional[List[str]] = None,
+        store_logs_localbackend: bool = False,
+        log_level: Optional[int] = None,
+        s3_path: Optional[str] = None,
+        no_tuner_logging: bool = False,
+        **estimator_kwargs,
     ):
         assert not self.is_lambda(tuner.stop_criterion), (
             "remote launcher does not support using lambda functions for stopping criterion. Use StoppingCriterion, "
@@ -114,8 +114,8 @@ class RemoteLauncher:
             return False
 
     def run(
-            self,
-            wait: bool = True,
+        self,
+        wait: bool = True,
     ):
         """
         :param wait: Whether the call should wait until the job completes
@@ -162,7 +162,7 @@ class RemoteLauncher:
 
         # Pass entrypoint requirements
         endpoint_requirements = (
-                self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
+            self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
         )
         if endpoint_requirements.exists():
             logger.info(
@@ -183,8 +183,8 @@ class RemoteLauncher:
 
     def is_source_dir_specified(self) -> bool:
         return (
-                hasattr(self.tuner.trial_backend, "source_dir")
-                and self.tuner.trial_backend.sm_estimator.source_dir is not None
+            hasattr(self.tuner.trial_backend, "source_dir")
+            and self.tuner.trial_backend.sm_estimator.source_dir is not None
         )
 
     def update_backend_with_remote_paths(self):
@@ -282,9 +282,7 @@ def syne_tune_image_uri() -> str:
     docker_image_name = "syne-tune-cpu-py38"
     account_id = boto3.client("sts").get_caller_identity()["Account"]
     region_name = boto3.Session().region_name
-    image_uri = (
-        f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
-    )
+    image_uri = f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
     try:
         logger.info(f"Fetching Syne Tune image {image_uri}")
         boto3.client("ecr").list_images(repositoryName=docker_image_name)
