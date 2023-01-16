@@ -1,5 +1,5 @@
 numpy>=1.16.0, <1.24.0
-dill
+dill>=0.3.6
 pandas
 # only needed for python version lower than 3.8
 typing_extensions

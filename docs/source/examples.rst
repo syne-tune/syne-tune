@@ -238,8 +238,8 @@ after which you can refer to it with ``image_uri``.
 Launch Experiments Remotely on SageMaker
 ========================================
 
-.. literalinclude:: ../../examples/launch_height_sagemaker_remotely.py
-   :caption: examples/launch_height_sagemaker_remotely.py
+.. literalinclude:: ../../examples/launch_height_sagemaker_remote_launcher.py
+   :caption: examples/launch_height_sagemaker_remote_launcher.py
    :lines: 16-
 
 Makes use of :ref:`train_height.py <train_height_script>`.

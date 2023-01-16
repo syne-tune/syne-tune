@@ -14,24 +14,12 @@
 Example showing how to run on Sagemaker with a Sagemaker Framework.
 """
 import logging
-import os
 from pathlib import Path
 
-from sagemaker.pytorch import PyTorch
-
 from syne_tune import Tuner, StoppingCriterion
-from syne_tune.backend import SageMakerBackend
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
-    get_execution_role,
-    default_sagemaker_session,
-)
+from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune.remote.estimators import (
-    PYTORCH_LATEST_FRAMEWORK,
-    PYTORCH_LATEST_PY_VERSION,
-    DEFAULT_CPU_INSTANCE_SMALL,
-)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
@@ -50,46 +38,27 @@ if __name__ == "__main__":
         "height": randint(-100, 100),
     }
     entry_point = (
-        Path(__file__).parent
-        / "training_scripts"
-        / "height_example"
-        / "train_height.py"
+            Path(__file__).parent
+            / "training_scripts"
+            / "height_example"
+            / "train_height.py"
     )
 
     # Random search without stopping
     scheduler = RandomSearch(
         config_space, mode=mode, metric=metric, random_seed=random_seed
     )
-    if "AWS_DEFAULT_REGION" not in os.environ:
-        os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
 
-    trial_backend = SageMakerBackend(
-        # we tune a PyTorch Framework from Sagemaker
-        sm_estimator=PyTorch(
-            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
-            instance_count=1,
-            framework_version=PYTORCH_LATEST_FRAMEWORK,
-            py_version=PYTORCH_LATEST_PY_VERSION,
-            entry_point=str(entry_point),
-            role=get_execution_role(),
-            max_run=10 * 60,
-            sagemaker_session=default_sagemaker_session(),
-            disable_profiler=True,
-            debugger_hook_config=False,
-        ),
-        # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
-        # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example
-        metrics_names=[metric],
+    trial_backend = LocalBackend(entry_point=str(entry_point))
+
+    stop_criterion = StoppingCriterion(
+        max_wallclock_time=5, min_metric_value={metric: -6.0}
     )
-
-    stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=n_workers,
-        sleep_time=5.0,
-        tuner_name="hpo-hyperband",
     )
 
     tuner.run()

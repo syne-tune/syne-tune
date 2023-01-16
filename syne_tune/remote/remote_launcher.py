@@ -67,16 +67,16 @@ class RemoteLauncher:
     """
 
     def __init__(
-        self,
-        tuner: Tuner,
-        role: Optional[str] = None,
-        instance_type: str = DEFAULT_CPU_INSTANCE,
-        dependencies: Optional[List[str]] = None,
-        store_logs_localbackend: bool = False,
-        log_level: Optional[int] = None,
-        s3_path: Optional[str] = None,
-        no_tuner_logging: bool = False,
-        **estimator_kwargs,
+            self,
+            tuner: Tuner,
+            role: Optional[str] = None,
+            instance_type: str = DEFAULT_CPU_INSTANCE,
+            dependencies: Optional[List[str]] = None,
+            store_logs_localbackend: bool = False,
+            log_level: Optional[int] = None,
+            s3_path: Optional[str] = None,
+            no_tuner_logging: bool = False,
+            **estimator_kwargs,
     ):
         assert not self.is_lambda(tuner.stop_criterion), (
             "remote launcher does not support using lambda functions for stopping criterion. Use StoppingCriterion, "
@@ -114,8 +114,8 @@ class RemoteLauncher:
             return False
 
     def run(
-        self,
-        wait: bool = True,
+            self,
+            wait: bool = True,
     ):
         """
         :param wait: Whether the call should wait until the job completes
@@ -129,6 +129,7 @@ class RemoteLauncher:
             # todo restore the env variable if present to avoid a side effect
             os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
         self.launch_tuning_job_on_sagemaker(wait=wait)
+        self.clean_requirements_file()
 
     def prepare_upload(self):
         """
@@ -157,20 +158,21 @@ class RemoteLauncher:
         self.tuner.trial_backend.set_entrypoint(backup)
 
         # todo clean copy of remote dir
-        tgt_requirement = self.remote_script_dir() / "requirements.txt"
-        try:
-            os.remove(tgt_requirement)
-        except OSError:
-            pass
+        tgt_requirement = self.clean_requirements_file()
+
+        # Pass entrypoint requirements
         endpoint_requirements = (
-            self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
+                self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
         )
         if endpoint_requirements.exists():
             logger.info(
                 f"copy endpoint script requirements to {self.remote_script_dir()}"
             )
             shutil.copy(endpoint_requirements, tgt_requirement)
-            pass
+
+        # add tuner requirements, this will create the req file if it does not exist
+        with open(tgt_requirement, "a") as reqf:
+            reqf.write("syne-tune[extra]\n")
 
     def get_source_dir(self) -> Path:
         # note: this logic would be better moved to the backend.
@@ -181,8 +183,8 @@ class RemoteLauncher:
 
     def is_source_dir_specified(self) -> bool:
         return (
-            hasattr(self.tuner.trial_backend, "source_dir")
-            and self.tuner.trial_backend.sm_estimator.source_dir is not None
+                hasattr(self.tuner.trial_backend, "source_dir")
+                and self.tuner.trial_backend.sm_estimator.source_dir is not None
         )
 
     def update_backend_with_remote_paths(self):
@@ -235,15 +237,12 @@ class RemoteLauncher:
             logger.info(
                 f"Using custom image {image_uri}, make sure that Syne Tune is installed in your custom container."
             )
-        else:
-            image_uri = self.syne_tune_image_uri()
 
-        # the choice of the estimator is arbitrary here since we use a base image of Syne Tune
-        # (beyond the framework version that determines the python+pypi versions)
+        entry_point = Path(__file__).parent / "remote_main.py"
         tuner_estimator = instance_sagemaker_estimator(
             # path which calls the tuner
-            entry_point="remote_main.py",
-            source_dir=str(self.remote_script_dir()),
+            entry_point=str(entry_point.name),
+            source_dir=str(entry_point.parent),
             instance_type=self.instance_type,
             instance_count=1,
             role=self.role,
@@ -265,33 +264,43 @@ class RemoteLauncher:
         # launches job on Sagemaker
         return tuner_estimator.fit(wait=wait, job_name=self.tuner.name)
 
-    def syne_tune_image_uri(self) -> str:
-        """
-        :return: syne tune docker uri, if not present try to build it and returns
-            an error if this failed.
-        """
-        docker_image_name = "syne-tune-cpu-py38"
-        account_id = boto3.client("sts").get_caller_identity()["Account"]
-        region_name = boto3.Session().region_name
-        image_uri = (
-            f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
-        )
+    def clean_requirements_file(self) -> Path:
+        tgt_requirement = self.remote_script_dir() / "requirements.txt"
         try:
-            logger.info(f"Fetching Syne Tune image {image_uri}")
-            boto3.client("ecr").list_images(repositoryName=docker_image_name)
-        except Exception:
-            # todo RepositoryNotFoundException should be caught but I did not manage to import it
-            script_path = Path(syne_tune.__path__[0]).parent / "container"
-            logger.warning(
-                f"Docker-image of syne-tune {docker_image_name} could not be found, run \n"
-                f"``cd {script_path}; bash build_syne_tune_container.sh``\n"
-                f"in a terminal to build it. Trying to do it now."
-            )
-            subprocess.run(
-                "./build_syne_tune_container.sh",
-                cwd=Path(syne_tune.__path__[0]).parent / "container",
-            )
-            logger.info(f"attempting to fetch {docker_image_name} again.")
-            boto3.client("ecr").list_images(repositoryName=docker_image_name)
+            os.remove(tgt_requirement)
+        except OSError:
+            pass
 
-        return image_uri
+        return tgt_requirement
+
+
+def syne_tune_image_uri() -> str:
+    """
+    :return: syne tune docker uri, if not present try to build it and returns
+        an error if this failed.
+    """
+    docker_image_name = "syne-tune-cpu-py38"
+    account_id = boto3.client("sts").get_caller_identity()["Account"]
+    region_name = boto3.Session().region_name
+    image_uri = (
+        f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{docker_image_name}"
+    )
+    try:
+        logger.info(f"Fetching Syne Tune image {image_uri}")
+        boto3.client("ecr").list_images(repositoryName=docker_image_name)
+    except Exception:
+        # todo RepositoryNotFoundException should be caught but I did not manage to import it
+        script_path = Path(syne_tune.__path__[0]).parent / "container"
+        logger.warning(
+            f"Docker-image of syne-tune {docker_image_name} could not be found, run \n"
+            f"``cd {script_path}; bash build_syne_tune_container.sh``\n"
+            f"in a terminal to build it. Trying to do it now."
+        )
+        subprocess.run(
+            "./build_syne_tune_container.sh",
+            cwd=Path(syne_tune.__path__[0]).parent / "container",
+        )
+        logger.info(f"attempting to fetch {docker_image_name} again.")
+        boto3.client("ecr").list_images(repositoryName=docker_image_name)
+
+    return image_uri
