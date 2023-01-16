@@ -51,7 +51,6 @@ if __name__ == "__main__":
     # Alternatively, you can define the instance list explicitly:
     # :code:`instance_types = ["ml.c5.xlarge", "ml.m5.2xlarge"]`
     instance_types = select_instance_type(min_gpu=1, max_cost_per_hour=5.0)
-    instance_types = ["ml.g4dn.xlarge"]
 
     print(f"tuning over hyperparameters and instance types: {instance_types}")
 

@@ -1,1 +1,0 @@
-syne-tune[gpsearchers,aws]

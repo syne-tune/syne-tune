@@ -16,57 +16,87 @@ This example show how to launch a tuning job that will be executed on Sagemaker 
 import logging
 from pathlib import Path
 
-import numpy as np
 from sagemaker.pytorch import PyTorch
 
+from syne_tune import StoppingCriterion, Tuner
+from syne_tune.backend import LocalBackend
+from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,
 )
+from syne_tune.config_space import randint
+from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.remote.estimators import (
     DEFAULT_CPU_INSTANCE_SMALL,
     PYTORCH_LATEST_FRAMEWORK,
     PYTORCH_LATEST_PY_VERSION,
 )
-from syne_tune.util import repository_root_path
+from syne_tune.remote.remote_launcher import RemoteLauncher
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
-    # Here, we specify the training script we want to tune what is reported in the training script
+    max_steps = 100
+    n_workers = 4
+
+    config_space = {
+        "steps": max_steps,
+        "width": randint(0, 20),
+        "height": randint(-100, 100),
+    }
+    entry_point = str(
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
+    mode = "min"
+    metric = "mean_loss"
+
     # We can use the local or sagemaker backend when tuning remotely.
     # Using the local backend means that the remote instance will evaluate the trials locally.
     # Using the sagemaker backend means the remote instance will launch one sagemaker job per trial.
-    # For runnig the actual tuning job we will rely on two other example scripts from our repo
-    distribute_trials_on_sagemaker = True
+    distribute_trials_on_sagemaker = False
     if distribute_trials_on_sagemaker:
-        entry_point = Path(__file__).parent / "launch_height_sagemaker.py"
+        trial_backend = SageMakerBackend(
+            sm_estimator=PyTorch(
+                instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+                instance_count=1,
+                framework_version=PYTORCH_LATEST_FRAMEWORK,
+                py_version=PYTORCH_LATEST_PY_VERSION,
+                entry_point=entry_point,
+                role=get_execution_role(),
+                max_run=10 * 60,
+                base_job_name="hpo-height",
+                sagemaker_session=default_sagemaker_session(),
+                disable_profiler=True,
+                debugger_hook_config=False,
+            ),
+        )
     else:
-        entry_point = Path(__file__).parent / "launch_height_local_backend.py"
+        trial_backend = LocalBackend(entry_point=entry_point)
 
-    max_wallclock_time = 60 * 60  # Run for 60 min
+    for seed in range(2):
+        # Random search without stopping
+        scheduler = RandomSearch(
+            config_space, mode=mode, metric=metric, random_seed=seed
+        )
 
-    # SageMaker back-end: Responsible for scheduling trials
-    # Each trial is run as a separate SageMaker training job. This is useful for
-    # expensive workloads, where all resources of an instance (or several ones)
-    # are used for training. On the other hand, training job start-up overhead
-    # is incurred for every trial.
-    sm_estimator = PyTorch(
-        entry_point=str(entry_point.name),
-        source_dir=str(entry_point.parent),
-        instance_type=DEFAULT_CPU_INSTANCE_SMALL,
-        instance_count=1,
-        role=get_execution_role(),
-        dependencies=[
-            str(repository_root_path() / "syne_tune"),
-            str(repository_root_path() / "benchmarking"),
-        ],
-        max_run=max_wallclock_time,
-        framework_version=PYTORCH_LATEST_FRAMEWORK,
-        py_version=PYTORCH_LATEST_PY_VERSION,
-        sagemaker_session=default_sagemaker_session(),
-    )
-    sm_estimator.fit(
-        wait=False,
-        job_name=f"launch-height-sagemaker-remotely-{np.random.randint(0, 2**31)}",
-    )
+        tuner = RemoteLauncher(
+            tuner=Tuner(
+                trial_backend=trial_backend,
+                scheduler=scheduler,
+                n_workers=n_workers,
+                tuner_name="height-tuning",
+                stop_criterion=StoppingCriterion(max_wallclock_time=600),
+            ),
+            # Extra arguments describing the resource of the remote tuning instance and whether we want to wait
+            # the tuning to finish. The instance-type where the tuning job runs can be different than the
+            # instance-type used for evaluating the training jobs.
+            instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+            # We can specify a custom container to use with this launcher with <image_uri=TK>
+            # otherwise a sagemaker pre-build will be used
+        )
+
+        tuner.run(wait=False)

@@ -438,7 +438,7 @@ trials will be evaluated on the remote machine (one use-case being to use a
 beefy machine), in the latter case trials will be evaluated as separate
 SageMaker training jobs. An example for running the remote launcher is
 given in
-`launch_height_sagemaker_remote_launcher.py <examples.html#launch-experiments-remotely-on-sagemaker>`_.
+`launch_height_sagemaker_remotely.py <examples.html#launch-experiments-remotely-on-sagemaker>`_.
 
 Remote launching for benchmarking (i.e., running many remote experiments
 in order to compare multiple methods) is detailed in
