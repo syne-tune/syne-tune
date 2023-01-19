@@ -28,6 +28,24 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 * HPO can be run in different environments (locally, AWS, simulation) by changing just one line of code.
 * Out-of-the-box tabulated benchmarks that allows you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
 
+What's New?
+-----------
+
+* New tutorial: `How to Contribute a New Scheduler <tutorials/developer/README.html>`_.
+  Learn how to implement your own scheduler, wrap external code, or modify
+  one of the existing templates in order to get your job done.
+* New tutorial: `Benchmarking in Syne Tune <tutorials/benchmarking/README.html>`_.
+  You'd like to run many experiments in parallel, or launch training jobs on
+  different instances, all by modifying some simple scripts to your needs? Then
+  our benchmarking mechanism is for you.
+* You can now
+  `do paired comparisons and manage seed choices <tutorials/benchmarking/bm_local.html#random-seeds-and-paired-comparisons>`_
+  in order to control randomness in your comparisons.
+* The `YAHPO benchmarking <tutorials/benchmarking/bm_simulator.html#the-yahpo-family>`_
+  suite is integrated in our blackbox repository
+* New benchmark: Transformer on WikiText-2
+  (:func:`~benchmarking.commons.benchmark_definitions.transformer_wikitext2_benchmark`)
+
 
 .. toctree::
    :name: Getting Started
