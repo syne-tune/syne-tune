@@ -1,4 +1,4 @@
-name: Run Syne Tune Example
+name: Run Syne Tune
 
 on:
   workflow_call:
@@ -23,4 +23,4 @@ jobs:
           python -m pip install -e '.[extra]'
       - name: Run ${{ inputs.script-path }}
         run: |
-          python -m ${{ inputs.script-path }}
+          python ${{ inputs.script-path }}
