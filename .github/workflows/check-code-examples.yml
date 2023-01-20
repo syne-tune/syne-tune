@@ -8,11 +8,11 @@ on:
 
 jobs:
   launch_height_baselines:
-    uses: awslabs/syne-tune/.github/workflows/run-syne-tune.yml@main
+    uses: ./.github/workflows/run-syne-tune.yml@main
     with:
       script-path: examples/launch_height_baselines.py
 
   launch_height_python_backend:
-    uses: awslabs/syne-tune/.github/workflows/run-syne-tune.yml@main
+    uses: ./.github/workflows/run-syne-tune.yml@main
     with:
       script-path: examples/launch_height_python_backend.py
