@@ -1,10 +1,14 @@
-name: Install Syne Tune
+name: Run Syne Tune Example
 
 on:
-  workflow_call
+  workflow_call:
+    inputs:
+      script-path:
+        required: true
+        type: string
 
 jobs:
-  install-syne-tune:
+  run-syne-tune:
     runs-on:
       labels: temporary-sizing-testing_ubuntu-latest_8-core 
     steps:
@@ -17,3 +21,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e '.[extra]'
+      - name: Run ${{ inputs.script-path }}
+        run: |
+          python -m ${{ inputs.script-path }}
