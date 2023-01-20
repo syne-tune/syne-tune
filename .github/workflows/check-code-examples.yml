@@ -25,31 +25,80 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82,F401 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         # flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test examples
+    - name: Run examples/launch_height_baselines.py
       run: |
         python examples/launch_height_baselines.py
+    - name: Run examples/launch_height_python_backend.py
+      run: |
         python examples/launch_height_python_backend.py
+    - name: Run examples/launch_height_moasha.py
+      run: | 
         python examples/launch_height_moasha.py
+    - name: Run launch_height_standalone_scheduler.py
+      run: |
         python examples/launch_height_standalone_scheduler.py
+    - name: Run examples/launch_pbt.py
+      run: |
         python examples/launch_pbt.py
-        python examples/launch_bayesopt_constrained.py                        
+    - name: Run examples/launch_bayesopt_constrained.py
+      run: |
+        python examples/launch_bayesopt_constrained.py
+    - name: Run examples/launch_checkpoint_example.py
+      run: |                   
         python examples/launch_checkpoint_example.py
+    - name: Run examples/launch_height_ray.py
+      run: |
         python examples/launch_height_ray.py
+    - name: Run examples/launch_huggingface_classification.py
+      run: |
         python examples/launch_huggingface_classification.py
-        # python examples/launch_rl_tuning.py # TODO enable once fixed
+    # - name: 
+    #   run: | python examples/launch_rl_tuning.py # TODO enable once fixed
+    - name: Run examples/launch_fashionmnist.py
+      run: |
         python examples/launch_fashionmnist.py
+    - name: Run examples/launch_height_sagemaker.py
+      run: |
         python examples/launch_height_sagemaker.py
+    - name: Run examples/launch_moasha_instance_tuning.py
+      run: |
         python examples/launch_moasha_instance_tuning.py
+    - name: Run examples/launch_simulated_benchmark.py
+      run: |
         python examples/launch_simulated_benchmark.py 
+    - name: Run examples/launch_asha_yahpo.py
+      run: |
         python examples/launch_asha_yahpo.py
+    - name: Run examples/launch_fashionmnist_costaware.py
+      run: |
         python examples/launch_fashionmnist_costaware.py
+    - name: Run examples/launch_height_sagemaker_checkpoints.py
+      run: |
         python examples/launch_height_sagemaker_checkpoints.py
+    - name: Run examples/launch_nas201_transfer_learning.py
+      run: |
         python examples/launch_nas201_transfer_learning.py
+    - name: Run examples/launch_standalone_bayesian_optimization.py
+      run: |
         python examples/launch_standalone_bayesian_optimization.py
+    - name: Run examples/launch_ask_tell_scheduler.py
+      run: |
         python examples/launch_ask_tell_scheduler.py
+    - name: Run examples/launch_nasbench201_simulated.py
+      run: |
         python examples/launch_nasbench201_simulated.py
+    - name: Run examples/launch_tensorboard_example.py
+      run: |
         python examples/launch_tensorboard_example.py
+    - name: Run examples/launch_ask_tell_scheduler_hyperband.py
+      run: |
         python examples/launch_ask_tell_scheduler_hyperband.py
+    - name: Run examples/launch_height_sagemaker_remotely.py
+      run: |
         python examples/launch_height_sagemaker_remotely.py
+    - name: Run examples/launch_tuning_gluonts.py
+      run: |
         python examples/launch_tuning_gluonts.py
+    - name: Run examples/launch_plot_results.py
+      run: |
         python examples/launch_plot_results.py
