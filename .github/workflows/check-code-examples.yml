@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  uses: awslabs/syne-tune/.github/workflows/install-syne-tune.yml@main
   launch_height_baselines.py:
+    uses: awslabs/syne-tune/.github/workflows/install-syne-tune.yml@main
     runs-on: 
       labels: temporary-sizing-testing_ubuntu-latest_8-core
     steps:
@@ -17,6 +17,7 @@ jobs:
         python examples/launch_height_baselines.py
 
   launch_height_python_backend.py:
+    uses: awslabs/syne-tune/.github/workflows/install-syne-tune.yml@main
     runs-on: 
       labels: temporary-sizing-testing_ubuntu-latest_8-core
     steps:
