@@ -8,9 +8,8 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    runs-on: 
+      labels: temporary-sizing-testing_ubuntu-latest_8-core
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -48,7 +47,6 @@ jobs:
         python examples/launch_nas201_transfer_learning.py
         python examples/launch_standalone_bayesian_optimization.py
         python examples/launch_ask_tell_scheduler.py
-        # python examples/launch_height_sagemaker_custom_image.py
         python examples/launch_nasbench201_simulated.py
         python examples/launch_tensorboard_example.py
         python examples/launch_ask_tell_scheduler_hyperband.py
