@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         script-path: [examples/launch_height_moasha.py, examples/launch_height_moasha.py, examples/launch_height_standalone_scheduler.py, examples/launch_height_standalone_scheduler.py, examples/launch_pbt.py, examples/launch_pbt.py, examples/launch_bayesopt_constrained.py,examples/launch_bayesopt_constrained.py,examples/launch_checkpoint_example.py,examples/launch_height_ray.py,examples/launch_huggingface_classification.py,examples/launch_fashionmnist.py,examples/launch_height_sagemaker.py,examples/launch_moasha_instance_tuning.py,examples/launch_simulated_benchmark.py,examples/launch_asha_yahpo.py,examples/launch_fashionmnist_costaware.py,examples/launch_height_sagemaker_checkpoints.py,examples/launch_nas201_transfer_learning.py,examples/launch_standalone_bayesian_optimization.py,examples/launch_ask_tell_scheduler.py,examples/launch_nasbench201_simulated.py,examples/launch_tensorboard_example.py,examples/launch_ask_tell_scheduler_hyperband.py,examples/launch_height_sagemaker_remotely.py,examples/launch_tuning_gluonts.py,examples/launch_plot_results.py]
-        fail-fast: false # TODO remove before merge, this is for testing
+      fail-fast: false # TODO remove before merge, this is for testing
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: ${{ matrix.script-path }}
