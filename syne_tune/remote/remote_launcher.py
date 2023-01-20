@@ -158,9 +158,10 @@ class RemoteLauncher:
         self.tuner.trial_backend.set_entrypoint(backup)
 
         # todo clean copy of remote dir
-        tgt_requirement = self.clean_requirements_file()
+        self.clean_requirements_file()
 
         # Pass entrypoint requirements
+        tgt_requirement = self.remote_script_dir() / "requirements.txt"
         endpoint_requirements = (
             self.tuner.trial_backend.entrypoint_path().parent / "requirements.txt"
         )
@@ -264,14 +265,12 @@ class RemoteLauncher:
         # launches job on Sagemaker
         return tuner_estimator.fit(wait=wait, job_name=self.tuner.name)
 
-    def clean_requirements_file(self) -> Path:
+    def clean_requirements_file(self):
         tgt_requirement = self.remote_script_dir() / "requirements.txt"
         try:
             os.remove(tgt_requirement)
         except OSError:
             pass
-
-        return tgt_requirement
 
 
 def syne_tune_image_uri() -> str:
