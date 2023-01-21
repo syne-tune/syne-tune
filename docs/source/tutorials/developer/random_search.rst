@@ -100,21 +100,30 @@ Below ``BaseSearcher``, there is
 should be used by all searchers which make random decisions. It maintains a PRN
 generator and provides methods to serialize and de-serialize its state.
 
+:class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+extends ``SearcherWithRandomSeed``. It should be used by all searchers which
+make random decisions, and which (optionally) avoid to suggest the same
+configuration more than once. All built-in Syne Tune searchers either inherit
+from this class, or avoid duplicate suggestions in a different way. While we
+in general recommend to use the default ``allow_duplicates == False``,
+allowing for duplicates can be useful when dealing with configuration spaces of
+small finite size.
+
 Finally, let us walk through
 :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`:
 
 * There are a few features beyond ``SimpleScheduler`` above. The searcher does
-  not suggest the same configuration twice, and also warns if a finite
-  configuration space has been exhausted. It also uses
+  not suggest the same configuration twice (if ``allow_duplicates == False``),
+  and also warns if a finite configuration space has been exhausted. It also uses
   :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`
   for random sampling and comparing configurations (to spot duplicates). This
-  is a useful helper class, also for encoding configurations as vectors.
-  Detecting duplicates is done by a
-  :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common.ExclusionList`.
+  is a useful helper class, also for encoding configurations as vectors. The
+  logic of detecting duplicates is implemented in the base class
+  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`.
   Finally, ``debug_log`` is used for diagnostic logs.
 * ``get_config`` first asks for another entry from ``points_to_evaluate`` by
   way of ``_next_initial_config``. It then samples a new configuration at
-  random, checking whether the configuration space is not yet exhausted. If
-  successful, it also feeds ``debug_log``.
+  random. This is done without replacement if ``allow_duplicates == False``,
+  and with replacement otherwise. If successful, it also feeds ``debug_log``.
 * ``_update``: This is not needed for random search, but is used here in order
   to feed ``debug_log``.

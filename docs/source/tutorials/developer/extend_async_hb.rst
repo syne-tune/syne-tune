@@ -34,9 +34,9 @@ multi-fidelity scheduler, where trials report intermediate results (e.g.,
 validation error at the end of each epoch of training). We can formalize this
 notion by the concept of *resource* :math:`r = 1, 2, 3, \dots` (e.g.,
 :math:`r` is the number of epochs trained). A generic implementation of this
-method is provided in class:`syne_tune.optimizer.schedulers.HyperbandScheduler`.
+method is provided in class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
 Let us have a look at its arguments not shared with the base class
-class:`syne_tune.optimizer.schedulers.FIFOScheduler`:
+class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
 
 * A mandatory argument is ``resource_attr``, which is the name of a field in
   the ``result`` dictionary passed to ``scheduler.on_trial_report``. This field
@@ -44,7 +44,7 @@ class:`syne_tune.optimizer.schedulers.FIFOScheduler`:
   For example, if a trial reports validation error at the end of the 5-th epoch
   of training, ``result`` contains ``{resource_attr: 5}``.
 * We already noted the arguments ``max_resource_attr`` and ``max_t`` in
-  class:`syne_tune.optimizer.schedulers.FIFOScheduler`. They are used to
+  class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. They are used to
   determine the maximum resource :math:`r_{max}` (e.g., the total number of
   epochs a trial is to be trained, if not stopped before). As discussed in
   detail `here <../multifidelity/mf_setup.html#the-launcher-script>`_, it is
@@ -122,7 +122,7 @@ but already implements most of what is needed in the multi-fidelity context.
    which mainly makes sure that
    :meth:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher.configure_scheduler`
    is called before the searcher is first used. It is also strongly recommended
-   to implement `configure_scheduler`` for a new searcher, restrictoing usage
+   to implement ``configure_scheduler`` for a new searcher, restricting usage
    to compatible schedulers.
 
 The class
