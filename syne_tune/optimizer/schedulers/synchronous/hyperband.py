@@ -168,9 +168,11 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
     :param metric: Name of metric to optimize, key in result's obtained via
         :meth:`on_trial_result`
     :type metric: str
-    :param searcher: Selects searcher. Passed to
-        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
-        Defaults to "random"
+    :param searcher: Searcher for ``get_config`` decisions. Passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
+        with ``search_options`` and extra information. Supported values:
+        :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_HYPERBAND`.
+        Defaults to "random" (i.e., random search)
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.

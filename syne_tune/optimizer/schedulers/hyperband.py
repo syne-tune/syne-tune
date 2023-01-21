@@ -226,6 +226,14 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
 
+    :param searcher: Searcher for ``get_config`` decisions. String values
+        are passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
+        with ``search_options`` and extra information. Supported values:
+        :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_HYPERBAND`.
+        Defaults to "random" (i.e., random search)
+    :type searcher: str or
+        :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param resource_attr: Name of resource attribute in results obtained
         via ``on_trial_result``, defaults to "epoch"
     :type resource_attr: str, optional

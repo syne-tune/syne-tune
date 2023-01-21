@@ -519,10 +519,10 @@ class ASHABORE(HyperbandScheduler):
         )
 
 
-class BOTorch(FIFOScheduler):
-    """Bayesian Optimization using BOTorch
+class BoTorch(FIFOScheduler):
+    """Bayesian Optimization using BoTorch
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BotorchSearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher`
     for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
@@ -540,7 +540,7 @@ class BOTorch(FIFOScheduler):
         **kwargs,
     ):
         try:
-            from syne_tune.optimizer.schedulers.searchers.botorch import BotorchSearcher
+            from syne_tune.optimizer.schedulers.searchers.botorch import BoTorchSearcher
         except ImportError:
             logging.info(try_import_botorch_message())
             raise
@@ -548,10 +548,10 @@ class BOTorch(FIFOScheduler):
         searcher_kwargs = _create_searcher_kwargs(
             config_space, metric, random_seed, kwargs
         )
-        super(BOTorch, self).__init__(
+        super(BoTorch, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher=BotorchSearcher(**searcher_kwargs),
+            searcher=BoTorchSearcher(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )

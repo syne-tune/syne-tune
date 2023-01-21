@@ -35,7 +35,7 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     SyncMOBSTER,
     ZeroShotTransfer,
-    BOTorch,
+    BoTorch,
     # ASHACTS,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
@@ -333,7 +333,7 @@ transfer_learning_evaluations = make_transfer_learning_evaluations()
         #     max_t=max_t,
         #     resource_attr=resource_attr,
         # ),
-        BOTorch(
+        BoTorch(
             config_space=config_space,
             metric=metric1,
             mode=mode,
