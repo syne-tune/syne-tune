@@ -21,6 +21,11 @@ Fine-Tuning Hugging Face Model for Sentiment Classification
    :caption: examples/launch_huggingface_classification.py
    :lines: 16-
 
+**Requirements**:
+
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+* Runs on four ``ml.g4dn.xlarge`` instances
+
 In this example, we use the SageMaker backend together with the
 SageMaker Hugging Face framework in order to fine-tune a DistilBERT
 model on the IMDB sentiment classification task. This task is one of
@@ -71,6 +76,10 @@ Visualize Tuning Progress with Tensorboard
    :caption: examples/launch_tensorboard_example.py
    :lines: 14-
 
+**Requirements**:
+
+* Needs ``tensorboardX`` to be installed: ``pip install tensorboardX``
+
 Makes use of :ref:`train_height.py <train_height_script>`.
 
 Tensorboard visualization works by using a callback, for example
@@ -86,6 +95,14 @@ Launch HPO Experiment with Simulator Backend
    :caption: examples/launch_nasbench201_simulated.py
    :lines: 16-
 
+**Requirements**:
+
+* Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
+  take quite a while when done for the first time
+* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+  or an S3 bucket is accessible, the blackbox files are uploaded to your S3
+  bucket
+
 In this example, we use the simulator backend with the NASBench-201
 blackbox. Since time is simulated, we can use
 ``max_wallclock_time=600`` (so 10 minutes), but the experiment finishes
@@ -99,6 +116,14 @@ Joint Tuning of Instance Type and Hyperparameters using MOASHA
 .. literalinclude:: ../../examples/launch_moasha_instance_tuning.py
    :caption: examples/launch_moasha_instance_tuning.py
    :lines: 16-
+
+**Requirements**:
+
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+* Runs training jobs on instances of type ``ml.g4dn.xlarge``, ``ml.g5.xlarge``,
+  ``ml.g4dn.2xlarge``, ``ml.p2.xlarge``, ``ml.g5.2xlarge``, ``ml.g5.4xlarge``,
+  ``ml.g4dn.4xlarge``, ``ml.g5.8xlarge``, ``ml.g4dn.8xlarge``,
+  ``ml.p3.2xlarge``, ``ml.g5.16xlarge``
 
 In this example, we use the SageMaker backend together with the
 SageMaker Hugging Face framework in order to fine-tune a DistilBERT
@@ -173,14 +198,15 @@ Launch HPO Experiment with SageMaker Backend
    :caption: examples/launch_height_sagemaker.py
    :lines: 16-
 
+**Requirements**:
+
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+  More details are provided in
+  `this tutorial <tutorials/basics/basics_backend.html>`_.
+* This example can be sped up by using SageMaker managed warm pools, as in
+  `this example <#sagemaker-backend-and-checkpointing>`_.
+
 Makes use of :ref:`train_height.py <train_height_script>`.
-
-You need to `setup SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
-before being able to use the SageMaker backend. More details are provided
-in `this tutorial <tutorials/basics/basics_backend.html>`_.
-
-This example can be sped up by using SageMaker managed warm pools, as in
-`this example <#sagemaker-backend-and-checkpointing>`_.
 
 
 SageMaker Backend and Checkpointing
@@ -189,6 +215,10 @@ SageMaker Backend and Checkpointing
 .. literalinclude:: ../../examples/launch_height_sagemaker_checkpoints.py
    :caption: examples/launch_height_sagemaker_checkpoints.py
    :lines: 13-
+
+**Requirements**:
+
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
 
 This launcher script is using the following
 :ref:`train_height_checkpoint.py <train_height_checkpoint_script>` training script:
@@ -218,7 +248,13 @@ Retrieving the best checkpoint
    :caption: examples/launch_checkpoint_example.py
    :lines: 13-
 
-Example showing how to retrieve the best checkpoint obtained after tuning.
+This launcher script is using the following
+:ref:`xgboost_checkpoint.py <xgboost_checkpoint.py>` training script:
+
+.. literalinclude:: ../../examples/training_scripts/xgboost/xgboost_checkpoint.py
+   :name: xgboost_checkpoint.py
+   :caption: examples/training_scripts/xgboost/xgboost_checkpoint.py
+   :lines: 13-
 
 
 Launch with SageMaker Backend and Custom Docker Image
@@ -228,11 +264,14 @@ Launch with SageMaker Backend and Custom Docker Image
    :caption: examples/launch_height_sagemaker_custom_image.py
    :lines: 16-
 
-Makes use of :ref:`train_height.py <train_height_script>`.
+**Requirements**:
 
-This example is incomplete. If your training script has dependencies which
-you would to provide as a Docker image, you need to upload it to ECR,
-after which you can refer to it with ``image_uri``.
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+* This example is incomplete. If your training script has dependencies which
+  you would to provide as a Docker image, you need to upload it to ECR,
+  after which you can refer to it with ``image_uri``.
+
+Makes use of :ref:`train_height.py <train_height_script>`.
 
 
 Launch Experiments Remotely on SageMaker
@@ -241,6 +280,10 @@ Launch Experiments Remotely on SageMaker
 .. literalinclude:: ../../examples/launch_height_sagemaker_remotely.py
    :caption: examples/launch_height_sagemaker_remotely.py
    :lines: 16-
+
+**Requirements**:
+
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
@@ -261,7 +304,7 @@ Launch HPO Experiment with Home-Made Scheduler
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
-For a more thorough introduction how to develop new schedulers and
+For a more thorough introduction on how to develop new schedulers and
 searchers in Syne Tune, consider
 `this tutorial <tutorials/developer/README.html>`_.
 
@@ -286,6 +329,14 @@ Transfer Tuning on NASBench-201
    :caption: examples/launch_nas201_transfer_learning.py
    :lines: 13-
 
+**Requirements**:
+
+* Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
+  take quite a while when done for the first time
+* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+  or an S3 bucket is accessible, the blackbox files are uploaded to your S3
+  bucket
+
 In this example, we use the simulator backend with the NASBench-201
 blackbox. It serves as a simple demonstration how evaluations from
 related tasks can be used to speed up HPO.
@@ -297,6 +348,10 @@ Plot Results of Tuning Experiment
 .. literalinclude:: ../../examples/launch_plot_results.py
    :caption: examples/launch_plot_results.py
    :lines: 13-
+
+**Requirements**:
+
+* Needs ``matplotlib`` to be installed: ``pip install matplotlib``
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
