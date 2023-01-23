@@ -44,7 +44,7 @@ def try_import_aws_message() -> str:
 
 
 def try_import_botorch_message() -> str:
-    return _try_import_message("BOTorch dependencies are not imported", tag="botorch")
+    return _try_import_message("BoTorch dependencies are not imported", tag="botorch")
 
 
 def try_import_blackbox_repository_message() -> str:

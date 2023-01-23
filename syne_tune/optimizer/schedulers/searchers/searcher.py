@@ -464,11 +464,10 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
     In order to make use of these features:
 
     * Reject configurations in :meth:`get_config` if they are in the exclusion list.
-      If the configuration is drawn at random, please use
-      :func:`~syne_tune.optimizer.schedulers.searchers.searcher.sample_random_configuration`
-      and pass the exclusion list
-    * Before returning a configuration in :meth:`get_config`, add it to the exclusion
-      list iff ``allow_duplicates == False`
+      If the configuration is drawn at random, use :meth:`_get_random_config`,
+      which incorporates this filtering
+    * Implement :meth:`_get_config` instead of :meth:`get_config`. The latter
+      aads the new config to the exclusion list if ``allow_duplicates == False``
 
     Note: Not all searchers which filter duplicates make use of this class.
 

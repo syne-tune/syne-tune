@@ -157,8 +157,10 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
     :param metric: Name of metric to optimize, key in result's obtained via
         :meth:`on_trial_result`
     :type metric: str
-    :param searcher: Selects searcher. Passed to
-        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`..
+    :param searcher: Searcher for ``get_config`` decisions. Passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
+        with ``search_options`` and extra information. Supported values:
+        :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_HYPERBAND`.
         If ``searcher == "random_encoded"`` (default), the encoded configs are
         sampled directly, each entry independently from U([0, 1]).
         This distribution has higher entropy than for "random" if

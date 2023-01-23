@@ -70,8 +70,11 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
     :param config_space: Configuration space for evaluation function
     :type config_space: dict
     :param searcher: Searcher for ``get_config`` decisions. String values
-        are passed to ``searcher_factory`` along with ``search_options`` and
-        extra information. Defaults to "random" (i.e., random search)
+        are passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
+        with ``search_options`` and extra information. Supported values:
+        :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_FIFO`.
+        Defaults to "random" (i.e., random search)
     :type searcher: str or
         :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`
     :param search_options: If searcher is ``str``, these arguments are
