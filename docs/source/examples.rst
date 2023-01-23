@@ -455,3 +455,23 @@ Ask Tell interface for Hyperband
 This is an extension of
 :ref:`launch_ask_tell_scheduler.py <launch_ask_tell_scheduler_script>` to run
 multi-fidelity methods such as Hyperband.
+
+
+Benchmark different HPO methods on optimizing a custom script
+========================================
+
+.. literalinclude:: ../../examples/launch_height_benchmark_remotely.py
+   :caption: examples/launch_height_benchmark_remotely.py
+   :lines: 16-
+
+Makes use of :ref:`train_height.py <train_height_script>`.
+
+This launcher script starts the HPO experiment as SageMaker training job,
+which allows you to test multiple HPO methods on the custom optimization
+problem, while not having your local machine being blocked.
+This example implements the guidelines in the benchmarking
+`tutorial <tutorials/benchmarking/README.html>`_ . Beyond remote lanuching
+[launch_height_benchmark_local.py](examples/launch_height_benchmark_local.py)
+explains how to run a custom benchmark locally and
+[launch_height_benchmark_sagemaker.py](examples/launch_height_benchmark_sagemaker.py)
+covers running a custom benchmark using sagemaker backend.

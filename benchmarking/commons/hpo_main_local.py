@@ -70,12 +70,7 @@ def parse_args(
         extra_args = extra_args.copy()
     extra_args.extend(
         [
-            dict(
-                name="benchmark",
-                type=str,
-                default="resnet_cifar10",
-                help="Benchmark to run",
-            ),
+            dict(name="benchmark", type=str, help="Benchmark to run", required=True),
             dict(
                 name="verbose",
                 type=int,
