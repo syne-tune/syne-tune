@@ -123,7 +123,8 @@ Joint Tuning of Instance Type and Hyperparameters using MOASHA
 * Runs training jobs on instances of type ``ml.g4dn.xlarge``, ``ml.g5.xlarge``,
   ``ml.g4dn.2xlarge``, ``ml.p2.xlarge``, ``ml.g5.2xlarge``, ``ml.g5.4xlarge``,
   ``ml.g4dn.4xlarge``, ``ml.g5.8xlarge``, ``ml.g4dn.8xlarge``,
-  ``ml.p3.2xlarge``, ``ml.g5.16xlarge``
+  ``ml.p3.2xlarge``, ``ml.g5.16xlarge``. This list of instances types to be
+  searched over can be modified by the user
 
 In this example, we use the SageMaker backend together with the
 SageMaker Hugging Face framework in order to fine-tune a DistilBERT
