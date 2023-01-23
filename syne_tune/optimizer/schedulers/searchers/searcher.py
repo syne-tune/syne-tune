@@ -415,7 +415,7 @@ class SearcherWithRandomSeed(BaseSearcher):
     Making proper use of this interface allows us to run experiments with
     control of random seeds, e.g. for paired comparisons or integration testing.
 
-    Additional arguments on top of parent class :class:`BaseSearcher`.
+    Additional arguments on top of parent class :class:`BaseSearcher`:
 
     :param random_seed_generator: If given, random seed is drawn from there
     :type random_seed_generator: :class:`~syne_tune.optimizer.schedulers.random_seeds.RandomSeedGenerator`, optional
@@ -471,6 +471,10 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
       list iff ``allow_duplicates == False`
 
     Note: Not all searchers which filter duplicates make use of this class.
+
+    Additional arguments on top of parent class :class:`SearcherWithRandomSeed`:
+
+    :param allow_duplicates: See above. Defaults to ``False``
     """
 
     def __init__(
@@ -478,13 +482,15 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
-        allow_duplicates: bool = False,
+        allow_duplicates: Optional[bool] = None,
         **kwargs,
     ):
         super().__init__(
             config_space, metric=metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
         self._hp_ranges = make_hyperparameter_ranges(config_space)
+        if allow_duplicates is None:
+            allow_duplicates = False
         self._allow_duplicates = allow_duplicates
         # Used to avoid returning the same config more than once. If
         # ``allow_duplicates == True``, this is used to block failed trials
@@ -497,6 +503,37 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
     @property
     def allow_duplicates(self) -> bool:
         return self._allow_duplicates
+
+    def _get_config(self, **kwargs) -> Optional[dict]:
+        """
+        Child classes implement this instead of :meth:`get_config`.
+        """
+        raise NotImplementedError
+
+    def get_config(self, **kwargs) -> Optional[dict]:
+        new_config = self._get_config(**kwargs)
+        if not self._allow_duplicates and new_config is not None:
+            self._excl_list.add(new_config)
+        return new_config
+
+    def _get_random_config(
+        self, exclusion_list: Optional[ExclusionList] = None
+    ) -> Optional[dict]:
+        """
+        Child classes should use this helper method in order to draw a configuration at
+        random.
+
+        :param exclusion_list: Configurations to be avoided. Defaults to ``self._excl_list``
+        :return: Configuration drawn at random, or ``None`` if the configuration space
+            has been exhausted w.r.t. ``exclusion_list``
+        """
+        if exclusion_list is None:
+            exclusion_list = self._excl_list
+        return sample_random_configuration(
+            hp_ranges=self._hp_ranges,
+            random_state=self.random_state,
+            exclusion_list=exclusion_list,
+        )
 
     def register_pending(
         self,

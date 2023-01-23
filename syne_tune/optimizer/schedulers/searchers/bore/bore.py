@@ -22,7 +22,6 @@ from sklearn.calibration import CalibratedClassifierCV
 
 from syne_tune.optimizer.schedulers.searchers.searcher import (
     SearcherWithRandomSeedAndFilterDuplicates,
-    sample_random_configuration,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     ExclusionList,
@@ -73,6 +72,7 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: Optional[bool] = None,
         mode: Optional[str] = None,
         gamma: Optional[float] = None,
         calibrate: Optional[bool] = None,
@@ -82,11 +82,8 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         random_prob: Optional[float] = None,
         init_random: Optional[int] = None,
         classifier_kwargs: Optional[dict] = None,
-        allow_duplicates: Optional[bool] = None,
         **kwargs,
     ):
-        if allow_duplicates is None:
-            allow_duplicates = False
         super().__init__(
             config_space=config_space,
             metric=metric,
@@ -165,18 +162,7 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         else:
             return y[:, 1]  # return probability of class 1
 
-    def _get_random_config(
-        self, exclusion_list: Optional[ExclusionList] = None
-    ) -> Optional[dict]:
-        if exclusion_list is None:
-            exclusion_list = self._excl_list
-        return sample_random_configuration(
-            hp_ranges=self._hp_ranges,
-            random_state=self.random_state,
-            exclusion_list=exclusion_list,
-        )
-
-    def get_config(self, **kwargs):
+    def _get_config(self, **kwargs):
         start_time = time.time()
         config = self._next_initial_config()
         if config is None:
@@ -244,8 +230,6 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
                 f"config={config}] "
                 f"optimization time : {opt_time}"
             )
-            if not self.allow_duplicates:
-                self._excl_list.add(config)  # Should not be suggested again
 
         return config
 

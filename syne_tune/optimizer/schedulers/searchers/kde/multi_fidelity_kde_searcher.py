@@ -45,6 +45,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: Optional[bool] = None,
         mode: Optional[str] = None,
         num_min_data_points: Optional[int] = None,
         top_n_percent: Optional[int] = None,
@@ -52,7 +53,6 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
         num_candidates: Optional[int] = None,
         bandwidth_factor: Optional[int] = None,
         random_fraction: Optional[float] = None,
-        allow_duplicates: Optional[bool] = None,
         resource_attr: Optional[str] = None,
         **kwargs
     ):
@@ -62,6 +62,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
+            allow_duplicates=allow_duplicates,
             mode=mode,
             num_min_data_points=num_min_data_points,
             top_n_percent=top_n_percent,
@@ -69,7 +70,6 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             num_candidates=num_candidates,
             bandwidth_factor=bandwidth_factor,
             random_fraction=random_fraction,
-            allow_duplicates=allow_duplicates,
             **kwargs
         )
         self.resource_attr = resource_attr

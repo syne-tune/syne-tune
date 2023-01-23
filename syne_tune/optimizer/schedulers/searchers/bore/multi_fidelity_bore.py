@@ -49,6 +49,7 @@ class MultiFidelityBore(Bore):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: Optional[bool] = None,
         mode: Optional[str] = None,
         gamma: Optional[float] = None,
         calibrate: Optional[bool] = None,
@@ -58,7 +59,6 @@ class MultiFidelityBore(Bore):
         random_prob: Optional[float] = None,
         init_random: Optional[int] = None,
         classifier_kwargs: Optional[dict] = None,
-        allow_duplicates: Optional[bool] = None,
         resource_attr: str = "epoch",
         **kwargs,
     ):
@@ -68,6 +68,7 @@ class MultiFidelityBore(Bore):
             config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
+            allow_duplicates=allow_duplicates,
             mode=mode,
             gamma=gamma,
             calibrate=calibrate,
@@ -77,7 +78,6 @@ class MultiFidelityBore(Bore):
             random_prob=random_prob,
             init_random=init_random,
             classifier_kwargs=classifier_kwargs,
-            allow_duplicates=allow_duplicates,
             **kwargs,
         )
         self.resource_attr = resource_attr

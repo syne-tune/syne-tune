@@ -27,7 +27,6 @@ from syne_tune.config_space import (
 )
 from syne_tune.optimizer.schedulers.searchers.searcher import (
     SearcherWithRandomSeed,
-    sample_random_configuration,
     SearcherWithRandomSeedAndFilterDuplicates,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
@@ -61,7 +60,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         points_to_evaluate: Optional[List[dict]] = None,
         debug_log: Union[bool, DebugLogPrinter] = False,
         resource_attr: Optional[str] = None,
-        allow_duplicates: bool = False,
+        allow_duplicates: Optional[bool] = None,
         **kwargs,
     ):
         super().__init__(
@@ -93,27 +92,19 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         if isinstance(scheduler, MultiFidelitySchedulerMixin):
             self._resource_attr = scheduler.resource_attr
 
-    def get_config(self, **kwargs) -> Optional[dict]:
+    def _get_config(self, **kwargs) -> Optional[dict]:
         """Sample a new configuration at random
 
-        This is done without replacement, so previously returned configs are
-        not suggested again.
+        If ``allow_duplicates == False``, this is done without replacement, so
+        previously returned configs are not suggested again.
 
         :param trial_id: Optional. Used for ``debug_log``
         :return: New configuration, or None
         """
         new_config = self._next_initial_config()
         if new_config is None:
-            # Note: Even if ``allow_duplicates`` is true, :attr:`_excl_list` is
-            # used in order to avoid failed configurations
-            new_config = sample_random_configuration(
-                hp_ranges=self._hp_ranges,
-                random_state=self.random_state,
-                exclusion_list=self._excl_list,
-            )
+            new_config = self._get_random_config()
         if new_config is not None:
-            if not self.allow_duplicates:
-                self._excl_list.add(new_config)  # Should not be suggested again
             if self._debug_log is not None:
                 trial_id = kwargs.get("trial_id")
                 self._debug_log.start_get_config("random", trial_id=trial_id)
