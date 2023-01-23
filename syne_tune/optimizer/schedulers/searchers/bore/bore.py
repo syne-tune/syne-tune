@@ -23,9 +23,6 @@ from sklearn.calibration import CalibratedClassifierCV
 from syne_tune.optimizer.schedulers.searchers.searcher import (
     SearcherWithRandomSeedAndFilterDuplicates,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
 from syne_tune.optimizer.schedulers.searchers.bore.de import (
     DifferentialevolutionOptimizer,
 )
