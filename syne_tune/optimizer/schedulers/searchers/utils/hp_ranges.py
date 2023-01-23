@@ -122,17 +122,15 @@ class HyperparameterRanges:
             assert (
                 k in self.config_space
             ), f"active_config_space[{k}] not in config_space"
-            same_value_type = v.value_type == self.config_space[k].value_type
-            same_log_type = is_log_space(v) == is_log_space(
-                self.config_space[k]
-            ) and is_reverse_log_space(v) == is_reverse_log_space(self.config_space[k])
-            same_domain_type = isinstance(v, type(self.config_space[k]))
-            assert (
-                k in self.config_space
-                and same_value_type
-                and same_log_type
-                and same_domain_type
-            ), f"active_config_space[{k}] has different type"
+            v2 = self.config_space[k]
+            checks = {
+                "value_type": v.value_type == v2.value_type,
+                "log_type": is_log_space(v) == is_log_space(v2)
+                and is_reverse_log_space(v) == is_reverse_log_space(v2),
+                "domain_type": isinstance(v, type(v2)),
+            }
+            for name, check in checks.items():
+                assert check, f"active_config_space[{k}] has different {name}"
 
     @property
     def internal_keys(self) -> List[str]:

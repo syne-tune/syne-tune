@@ -381,6 +381,27 @@ class HyperparameterRangeCategorical(HyperparameterRange):
             type(x) == value_type for x in choices
         ), f"All entries in choices = {choices} must have the same type {value_type}"
 
+    @staticmethod
+    def _assert_choices_and_active_choices(
+        choices: Tuple[Any, ...], active_choices: Optional[Tuple[Any, ...]] = None
+    ) -> Optional[int]:
+        HyperparameterRangeCategorical._assert_choices(choices)
+        firstpos = None
+        if active_choices is not None:
+            HyperparameterRangeCategorical._assert_choices(active_choices)
+            err_msg = (
+                f"active_choices = {active_choices} not contiguous subsequence "
+                f"of choices = {choices}"
+            )
+            try:
+                firstpos = choices.index(active_choices[0])
+                assert all(
+                    a == b for a, b in zip(active_choices, choices[firstpos:])
+                ), err_msg
+            except ValueError:
+                raise AssertionError(err_msg)
+        return firstpos
+
     def __repr__(self) -> str:
         return "{}({}, {})".format(
             self.__class__.__name__, repr(self.name), repr(self.choices)
@@ -517,15 +538,31 @@ class HyperparameterRangeOrdinalEqual(HyperparameterRangeCategorical):
 
     :param name: Name of hyperparameter
     :param choices: Values parameter can take
+    :param active_choices: If given, must be nonempty contiguous
+        subsequence of ``choices``.
     """
 
-    def __init__(self, name: str, choices: Tuple[Any, ...]):
+    def __init__(
+        self,
+        name: str,
+        choices: Tuple[Any, ...],
+        active_choices: Optional[Tuple[Any, ...]] = None,
+    ):
         super().__init__(name, choices)
+        active_lower_bound = self._assert_choices_and_active_choices(
+            choices, active_choices
+        )
+        if active_choices is not None:
+            active_upper_bound = active_lower_bound + len(active_choices) - 1
+        else:
+            active_upper_bound = None
         self._range_int = HyperparameterRangeInteger(
             name=name + "_INTERNAL",
             lower_bound=0,
             upper_bound=self.num_choices - 1,
             scaling=LinearScaling(),
+            active_lower_bound=active_lower_bound,
+            active_upper_bound=active_upper_bound,
         )
 
     def to_ndarray(self, hp: Hyperparameter) -> np.ndarray:
@@ -557,18 +594,59 @@ class HyperparameterRangeOrdinalNearestNeighbor(HyperparameterRangeCategorical):
         increasing, size ``>= 2``)
     :param log_scale: If ``True``, nearest neighbour done in log (``choices`` must
         be positive)
+    :param active_choices: If given, must be nonempty contiguous
+        subsequence of ``choices``.
     """
 
-    def __init__(self, name: str, choices: Tuple[Any, ...], log_scale: bool = False):
+    def __init__(
+        self,
+        name: str,
+        choices: Tuple[Any, ...],
+        log_scale: bool = False,
+        active_choices: Optional[Tuple[Any, ...]] = None,
+    ):
         assert len(choices) > 1, "Use HyperparameterRangeOrdinalEqual"
         super().__init__(name, choices)
         self._domain_int = OrdinalNearestNeighbor(choices, log_scale=log_scale)
+        active_lower_bound, active_upper_bound = self._get_active_bounds(active_choices)
         self._range_int = HyperparameterRangeContinuous(
             name=name + "_INTERNAL",
             lower_bound=self._domain_int.lower_int,
             upper_bound=self._domain_int.upper_int,
             scaling=LinearScaling(),
+            active_lower_bound=active_lower_bound,
+            active_upper_bound=active_upper_bound,
         )
+
+    def _get_active_bounds(
+        self, active_choices: Optional[Tuple[Any, ...]]
+    ) -> Tuple[Optional[float], Optional[float]]:
+        if active_choices is None:
+            return None, None
+        else:
+            di = self._domain_int
+            firstpos = self._assert_choices_and_active_choices(
+                di.categories, active_choices
+            )
+            left_thres = di._categories_int[firstpos]
+            num_active_choices = len(active_choices)
+            if num_active_choices == 1:
+                # Fix this value
+                active_lower_bound = left_thres
+                active_upper_bound = left_thres
+            if firstpos > 0:
+                diff = left_thres - di._categories_int[firstpos - 1]
+                active_lower_bound = left_thres - 0.499 * diff
+            else:
+                active_lower_bound = di._lower_int
+            lastpos = firstpos + num_active_choices - 1
+            right_thres = di._categories_int[lastpos]
+            if lastpos < len(di) - 1:
+                diff = di._categories_int[lastpos + 1] - right_thres
+                active_upper_bound = right_thres + 0.499 * diff
+            else:
+                active_upper_bound = di._upper_int
+            return active_lower_bound, active_upper_bound
 
     @property
     def log_scale(self) -> bool:
@@ -612,10 +690,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
 
     def __init__(
         self,
-        config_space: Dict,
+        config_space: dict,
         name_last_pos: str = None,
         value_for_last_pos=None,
-        active_config_space: Dict = None,
+        active_config_space: dict = None,
         prefix_keys: Optional[List[str]] = None,
     ):
         super().__init__(
@@ -634,27 +712,19 @@ class HyperparameterRangesImpl(HyperparameterRanges):
                 kwargs = dict()
                 is_in_active = name in self.active_config_space
                 num_categories = len(hp_range.categories)
-                if isinstance(hp_range, Ordinal):
-                    assert (
-                        not is_in_active
-                    ), f"Parameter '{name}' of type Ordinal cannot be used in active_config_space"
-                    if (
-                        isinstance(hp_range, OrdinalNearestNeighbor)
-                        and num_categories > 1
-                    ):
-                        _cls = HyperparameterRangeOrdinalNearestNeighbor
-                        kwargs["log_scale"] = hp_range.log_scale
-                    else:
-                        _cls = HyperparameterRangeOrdinalEqual
+                if is_in_active:
+                    kwargs["active_choices"] = tuple(
+                        self.active_config_space[name].categories
+                    )
+                if isinstance(hp_range, OrdinalNearestNeighbor):
+                    _cls = HyperparameterRangeOrdinalNearestNeighbor
+                    kwargs["log_scale"] = hp_range.log_scale
+                elif isinstance(hp_range, Ordinal):
+                    _cls = HyperparameterRangeOrdinalEqual
+                elif num_categories == 2:
+                    _cls = HyperparameterRangeCategoricalBinary
                 else:
-                    if is_in_active:
-                        kwargs["active_choices"] = tuple(
-                            self.active_config_space[name].categories
-                        )
-                    if num_categories == 2:
-                        _cls = HyperparameterRangeCategoricalBinary
-                    else:
-                        _cls = HyperparameterRangeCategoricalNonBinary
+                    _cls = HyperparameterRangeCategoricalNonBinary
                 hp_ranges.append(
                     _cls(
                         name,

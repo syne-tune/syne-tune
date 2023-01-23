@@ -299,10 +299,12 @@ def test_active_ranges_valid():
         "3": randint(1, 1000),
         "4": lograndint(1, 1000),
         "5": choice(["a", "b", "c"]),
+        "6": ordinal([1, 2, 3, 4], kind="equal"),
+        "7": ordinal([1, 2, 3, 4], kind="nn"),
     }
     invalid_active_spaces = [
         {
-            "6": randint(0, 1),
+            "8": randint(0, 1),
         },
         {
             "0": uniform(2.0, 500.0),
@@ -323,6 +325,30 @@ def test_active_ranges_valid():
         {
             "2": reverseloguniform(0.9, 0.999),
             "4": lograndint(10, 1005),
+        },
+        {
+            "3": randint(1, 100),
+            "6": ordinal([5], kind="equal"),
+        },
+        {
+            "3": randint(1, 100),
+            "6": ordinal([1, 2, 4], kind="equal"),
+        },
+        {
+            "3": randint(1, 100),
+            "6": ordinal([1, 3, 2], kind="equal"),
+        },
+        {
+            "3": randint(1, 100),
+            "6": ordinal([5], kind="nn"),
+        },
+        {
+            "3": randint(1, 100),
+            "6": ordinal([1, 2, 4], kind="nn"),
+        },
+        {
+            "3": randint(1, 100),
+            "6": ordinal([1, 4, 5], kind="nn"),
         },
     ]
     for active_config_space in invalid_active_spaces:
@@ -362,6 +388,26 @@ def test_active_ranges_valid():
             },
             {
                 "0": lograndint(3, 4),
+            },
+        ),
+        (
+            {
+                "0": uniform(1.0, 2.0),
+                "1": ordinal([1, 2, 3], kind="equal"),
+            },
+            {
+                "0": uniform(1.1, 1.9),
+                "1": ordinal([2, 3], kind="equal"),
+            },
+        ),
+        (
+            {
+                "0": uniform(1.0, 2.0),
+                "1": ordinal([1, 2, 3], kind="nn"),
+            },
+            {
+                "0": uniform(1.1, 1.9),
+                "1": ordinal([2, 3], kind="nn"),
             },
         ),
     ],
