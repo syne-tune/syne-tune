@@ -21,14 +21,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
 from syne_tune.optimizer.schedulers.searchers.searcher import (
-    SearcherWithRandomSeed,
-    sample_random_configuration,
-)
-from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
-    make_hyperparameter_ranges,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
+    SearcherWithRandomSeedAndFilterDuplicates,
 )
 from syne_tune.optimizer.schedulers.searchers.bore.de import (
     DifferentialevolutionOptimizer,
@@ -37,7 +30,7 @@ from syne_tune.optimizer.schedulers.searchers.bore.de import (
 logger = logging.getLogger(__name__)
 
 
-class Bore(SearcherWithRandomSeed):
+class Bore(SearcherWithRandomSeedAndFilterDuplicates):
     """
     Implements "Bayesian optimization by Density Ratio Estimation" as described
     in the following paper:
@@ -48,7 +41,7 @@ class Bore(SearcherWithRandomSeed):
         | https://arxiv.org/abs/2102.09009
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`:
 
     :param mode: Can be "min" (default) or "max".
     :param gamma: Defines the percentile, i.e how many percent of configurations
@@ -76,6 +69,7 @@ class Bore(SearcherWithRandomSeed):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: Optional[bool] = None,
         mode: Optional[str] = None,
         gamma: Optional[float] = None,
         calibrate: Optional[bool] = None,
@@ -91,6 +85,7 @@ class Bore(SearcherWithRandomSeed):
             config_space=config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
+            allow_duplicates=allow_duplicates,
             **kwargs,
         )
         if mode is None:
@@ -119,9 +114,6 @@ class Bore(SearcherWithRandomSeed):
         self.init_random = init_random
         self.random_prob = random_prob
         self.mode = mode
-
-        self._hp_ranges = make_hyperparameter_ranges(self.config_space)
-        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
 
         if classifier_kwargs is None:
             classifier_kwargs = dict()
@@ -167,18 +159,7 @@ class Bore(SearcherWithRandomSeed):
         else:
             return y[:, 1]  # return probability of class 1
 
-    def _get_random_config(
-        self, exclusion_list: Optional[ExclusionList] = None
-    ) -> dict:
-        if exclusion_list is None:
-            exclusion_list = self._excl_list
-        return sample_random_configuration(
-            hp_ranges=self._hp_ranges,
-            random_state=self.random_state,
-            exclusion_list=exclusion_list,
-        )
-
-    def get_config(self, **kwargs):
+    def _get_config(self, **kwargs):
         start_time = time.time()
         config = self._next_initial_config()
         if config is None:
@@ -246,7 +227,6 @@ class Bore(SearcherWithRandomSeed):
                 f"config={config}] "
                 f"optimization time : {opt_time}"
             )
-            self._excl_list.add(config)  # Should not be suggested again
 
         return config
 

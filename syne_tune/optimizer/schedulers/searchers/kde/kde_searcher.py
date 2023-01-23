@@ -17,24 +17,17 @@ import statsmodels.api as sm
 import scipy.stats as sps
 
 from syne_tune.optimizer.schedulers.searchers.searcher import (
-    SearcherWithRandomSeed,
-    sample_random_configuration,
+    SearcherWithRandomSeedAndFilterDuplicates,
 )
 import syne_tune.config_space as sp
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
-    make_hyperparameter_ranges,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
 
 logger = logging.getLogger(__name__)
 
 
-class KernelDensityEstimator(SearcherWithRandomSeed):
+class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
     """
     Fits two kernel density estimators (KDE) to model the density of the top N
     configurations as well as the density of the configurations that are not
@@ -59,7 +52,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         | https://arxiv.org/abs/1807.01774
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`:
 
     :param mode: Mode to use for the metric given, can be "min" or "max". Is
         obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"
@@ -89,6 +82,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         config_space: dict,
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
+        allow_duplicates: Optional[bool] = None,
         mode: Optional[str] = None,
         num_min_data_points: Optional[int] = None,
         top_n_percent: Optional[int] = None,
@@ -102,6 +96,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             config_space=config_space,
             metric=metric,
             points_to_evaluate=points_to_evaluate,
+            allow_duplicates=allow_duplicates,
             mode="min" if mode is None else mode,
             **kwargs,
         )
@@ -158,9 +153,6 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             self.vartypes
         ), f"num_min_data_points = {num_min_data_points}, must be >= {len(self.vartypes)}"
         self._resource_attr = kwargs.get("resource_attr")
-        # Used for sampling initial random configs, and to avoid duplicates
-        self._hp_ranges = make_hyperparameter_ranges(self.config_space)
-        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
         # Debug log printing (switched on by default)
         debug_log = kwargs.get("debug_log", True)
         if isinstance(debug_log, bool):
@@ -252,7 +244,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
-    def _to_objective(self, result: dict):
+    def _to_objective(self, result: dict) -> float:
         if self._mode == "min":
             return result[self._metric]
         else:
@@ -270,18 +262,7 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
-    def _get_random_config(
-        self, exclusion_list: Optional[ExclusionList] = None
-    ) -> dict:
-        if exclusion_list is None:
-            exclusion_list = self._excl_list
-        return sample_random_configuration(
-            hp_ranges=self._hp_ranges,
-            random_state=self.random_state,
-            exclusion_list=exclusion_list,
-        )
-
-    def get_config(self, **kwargs) -> Optional[dict]:
+    def _get_config(self, **kwargs) -> Optional[dict]:
         suggestion = self._next_initial_config()
         if suggestion is None:
             models = self._train_kde(np.array(self.X), np.array(self.y))
@@ -363,8 +344,6 @@ class KernelDensityEstimator(SearcherWithRandomSeed):
                     )
                     suggestion = self._get_random_config()
 
-        if suggestion is not None:
-            self._excl_list.add(suggestion)  # Should not be suggested again
         return suggestion
 
     def _train_kde(self, train_data, train_targets):

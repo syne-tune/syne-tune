@@ -100,6 +100,11 @@ class BotorchSearcher(SearcherWithRandomSeed):
         self.trial_configs = dict()
         self.pending_trials = set()
         self.trial_observations = dict()
+        allow_duplicates = kwargs.get("allow_duplicates")
+        if allow_duplicates is not None and (not allow_duplicates):
+            logger.warning(
+                "This class does not support allow_duplicates argument. Sampling is with replacement"
+            )
 
     def _update(self, trial_id: str, config: dict, result: dict):
         trial_id = int(trial_id)

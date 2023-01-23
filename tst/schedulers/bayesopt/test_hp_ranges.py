@@ -196,6 +196,7 @@ def test_integer_to_ndarray_and_back(lower, upper, domain):
 # it generates random candidates and checks the distribution is correct
 # and also that they can be transformed to internal representation and back while still obtaining
 # the same value
+@pytest.mark.timeout(3)
 def test_distribution_of_random_candidates():
     random_state = np.random.RandomState(0)
     hp_ranges = make_hyperparameter_ranges(

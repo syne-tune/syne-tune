@@ -155,6 +155,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         cost_attr: Optional[str] = None,
         resource_attr: Optional[str] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
+        allow_duplicates: bool = False,
     ):
         self.hp_ranges = hp_ranges
         self.num_initial_candidates = num_initial_candidates
@@ -190,6 +191,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self._cost_attr = cost_attr
         self._resource_attr = resource_attr
         self._filter_observed_data = filter_observed_data
+        self._allow_duplicates = allow_duplicates
         self._random_searcher = None
         # Tracks the cumulative time spent in ``get_config`` calls
         self.cumulative_get_config_time = 0
@@ -202,6 +204,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
                 num_initial_random_choices
             )
             deb_msg += "- initial_scoring = {}\n".format(self.initial_scoring)
+            deb_msg += f"- allow_duplicates = {self._allow_duplicates}\n"
             logger.info(deb_msg)
 
     def _copy_kwargs_to_kwargs_int(self, kwargs_int: dict, kwargs: dict):
@@ -287,7 +290,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         self, exclusion_candidates: ExclusionList, **kwargs
     ) -> Optional[Configuration]:
         """
-        Implements ``get_config`` part if the surrogate model is used, instead
+        Implements :meth:`get_config` part if the surrogate model is used, instead
         of initial choices from ``points_to_evaluate`` or initial random
         choices.
 
@@ -298,10 +301,15 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         """
         raise NotImplementedError
 
-    def _get_exclusion_candidates(self, **kwargs) -> ExclusionList:
+    def _get_exclusion_candidates(self, skip_observed: bool = False) -> ExclusionList:
+        def skip_all(config: Configuration) -> bool:
+            return False
+
         return ExclusionList(
             self.state_transformer.state,
-            filter_observed_data=self._filter_observed_data,
+            filter_observed_data=skip_all
+            if skip_observed
+            else self._filter_observed_data,
         )
 
     def _should_pick_random_config(self, exclusion_candidates: ExclusionList) -> bool:
@@ -331,7 +339,9 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         model-based search. If False is returned, model-based search must be
         called.
 
-        :param exclusion_candidates: Configs to be avoided
+        :param exclusion_candidates: Configs to be avoided, even if
+            ``allow_duplicates == True`` (in this case, we avoid configs of
+            failed or pending trials)
         :return: ``(config, use_get_config_modelbased)``
         """
         self._assign_random_searcher()
@@ -376,8 +386,10 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             }
             self.profiler.begin_block(meta)
             self.profiler.start("all")
-            # Initial configs come from ``points_to_evaluate`` or are drawn at random
-        exclusion_candidates = self._get_exclusion_candidates(**kwargs)
+        # Initial configs come from ``points_to_evaluate`` or are drawn at random
+        # We use ``exclusion_candidates`` even if ``allow_duplicates == True``, in order
+        # to count how many unique configs have been suggested
+        exclusion_candidates = self._get_exclusion_candidates()
         config, pick_random = self._get_config_not_modelbased(exclusion_candidates)
         if self.debug_log is not None:
             trial_id = kwargs.get("trial_id")
@@ -386,8 +398,18 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             )
         if not pick_random:
             # Model-based decision
-            if not exclusion_candidates.config_space_exhausted():
-                config = self._get_config_modelbased(exclusion_candidates, **kwargs)
+            if self._allow_duplicates or (
+                not exclusion_candidates.config_space_exhausted()
+            ):
+                # Even if ``allow_duplicates == True``, we exclude configs which are
+                # pending or failed
+                if self._allow_duplicates:
+                    excl_cands = self._get_exclusion_candidates(skip_observed=True)
+                else:
+                    excl_cands = exclusion_candidates
+                config = self._get_config_modelbased(
+                    exclusion_candidates=excl_cands, **kwargs
+                )
 
         if config is not None:
             if self.debug_log is not None:
@@ -468,6 +490,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
                 points_to_evaluate=[],
                 random_seed=0,
                 debug_log=False,
+                allow_duplicates=self._allow_duplicates,
             )
             self._random_searcher.set_random_state(self.random_state)
 
@@ -597,6 +620,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
         ``opt_skip_init_length``, fitting is done only K-th call, and skipped
         otherwise. Defaults to 1 (no skipping)
     :type opt_skip_period: int, optional
+    :param allow_duplicates: If ``True``, :meth:`get_config` may return the same
+        configuration more than once. Defaults to ``False``
+    :type allow_duplicates: bool, optional
     :param map_reward: In the scheduler, the metric may be minimized or
         maximized, but internally, Bayesian optimization is minimizing
         the criterion. ``map_reward`` converts from metric to internal
@@ -738,7 +764,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def _get_config_modelbased(
         self, exclusion_candidates, **kwargs
     ) -> Optional[Configuration]:
-        # Obtain current SurrogateModel from state transformer. Based on
+        # Obtain current :class:`SurrogateModel` from state transformer. Based on
         # this, the BO algorithm components can be constructed
         if self.do_profile:
             self.profiler.push_prefix("getconfig")
@@ -820,14 +846,16 @@ class GPFIFOSearcher(ModelBasedSearcher):
             if config is not None:
                 configs.append(config)
         else:
-            # ``DebugLogWriter`` does not support batch selection right now,
+            # :class:`DebugLogWriter` does not support batch selection right now,
             # must be switched off
             assert self.debug_log is None, (
                 "``get_batch_configs`` does not support debug_log right now. "
                 + "Please set ``debug_log=False`` in search_options argument "
                 + "of scheduler, or create your searcher with ``debug_log=False``"
             )
-            exclusion_candidates = self._get_exclusion_candidates(**kwargs)
+            exclusion_candidates = self._get_exclusion_candidates(
+                skip_observed=self._allow_duplicates
+            )
             pick_random = True
             while pick_random and len(configs) < batch_size:
                 config, pick_random = self._get_config_not_modelbased(
@@ -836,6 +864,8 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 if pick_random:
                     if config is not None:
                         configs.append(config)
+                        # Even if ``allow_duplicates == True``, we don't want to have
+                        # duplicates in the same batch
                         exclusion_candidates.add(config)
                     else:
                         break  # Space exhausted
@@ -921,6 +951,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
             cost_attr=self._cost_attr,
             resource_attr=self._resource_attr,
             filter_observed_data=self._filter_observed_data,
+            allow_duplicates=self._allow_duplicates,
         )
 
     def clone_from_state(self, state):
