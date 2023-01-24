@@ -80,11 +80,8 @@ def test_points_to_evaluate(scheduler_cls, mul_fid, constr):
         / "height_example"
         / "train_height.py"
     )
-    max_steps = 5
-    config_space = height_config_space(max_steps=max_steps)
-    metric = METRIC_ATTR
-    n_workers = 4
 
+    max_steps = 5
     # The points we require the schedulers to start by evaluating
     points_to_evaluate = [
         {"steps": max_steps, "width": 3, "height": 0},
@@ -94,8 +91,8 @@ def test_points_to_evaluate(scheduler_cls, mul_fid, constr):
 
     # The scheduler specification varies depending on the type of scheduler
     kwargs = {
-        "config_space": config_space,
-        "metric": metric,
+        "config_space": height_config_space(max_steps=max_steps),
+        "metric": METRIC_ATTR,
         "points_to_evaluate": points_to_evaluate,
     }
 
@@ -110,7 +107,7 @@ def test_points_to_evaluate(scheduler_cls, mul_fid, constr):
         trial_backend=LocalBackend(entry_point=entry_point),
         scheduler=scheduler_cls(**kwargs),
         stop_criterion=StoppingCriterion(max_num_evaluations=5),
-        n_workers=n_workers,
+        n_workers=4,
         sleep_time=0.001,
     )
     tuner.run()
