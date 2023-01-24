@@ -42,9 +42,12 @@ def get_num_gpus() -> int:
             if proc.poll() is None:
                 raise ValueError("nvidia-smi timed out after 10 secs.")
 
-            with open("std.out", "r") as stdout:
-                _num_gpus = len(stdout.readlines())
-            return _num_gpus
+            if proc.poll() != 0:
+                return 0
+            else:
+                with open("std.out", "r") as stdout:
+                    _num_gpus = len(stdout.readlines())
+                return _num_gpus
 
         except (OSError, FileNotFoundError):
             logging.info(
