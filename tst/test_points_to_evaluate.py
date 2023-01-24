@@ -21,10 +21,9 @@ from examples.training_scripts.height_example.train_height import (
 )
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
-from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import (
-    RandomSearch,
     GridSearch,
+    RandomSearch,
     BayesianOptimization,
     ASHA,
     HyperTune,
