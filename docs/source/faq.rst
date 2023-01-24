@@ -36,7 +36,7 @@ over the alternatives:
   `Automatic Model Tuning <https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html>`_
   service.
 
-What are the different installations options supported?
+What are the different installation options supported?
 =======================================================
 
 To install Syne Tune with minimal dependencies from pip, you can simply do:
