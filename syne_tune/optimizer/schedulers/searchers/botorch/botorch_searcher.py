@@ -186,7 +186,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             Y_tensor = standardize(Tensor(y).reshape(-1, 1))
             gp = self._make_gp(X_tensor=X_tensor, Y_tensor=Y_tensor)
             mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
-            fit_gpytorch_mll(mll, max_attempts=0)
+            fit_gpytorch_mll(mll, max_attempts=1)
 
             if self.pending_trials and self.fantasising and not subsample:
                 X_pending = self._config_to_feature_matrix(self._configs_pending())
