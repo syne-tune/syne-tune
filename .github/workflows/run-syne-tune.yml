@@ -7,11 +7,23 @@ on:
         required: true
         type: string
 
+
+env:
+  AWS_DEFAULT_REGION: us-west-2
+
 jobs:
   run-syne-tune:
     runs-on:
-      labels: temporary-sizing-testing_ubuntu-latest_8-core 
+      labels: temporary-sizing-testing_ubuntu-latest_8-core
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read  # This is required for actions/checkout
     steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
