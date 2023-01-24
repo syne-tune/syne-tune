@@ -13,6 +13,12 @@
 from pathlib import Path
 import pytest
 
+from examples.training_scripts.height_example.train_height import (
+    height_config_space,
+    METRIC_ATTR,
+    RESOURCE_ATTR,
+    MAX_RESOURCE_ATTR,
+)
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
@@ -38,34 +44,34 @@ from syne_tune.optimizer.baselines import (
     KDE,
 )
 
-# List of schedulers to test, and whether they are multi-fidelity
+# List of schedulers to test, and whether they are multi-fidelity or constrained
 # Does not test transfer learning schedulers
 SCHEDULERS = [
-    (GridSearch, False),
-    (RandomSearch, False),
-    (BayesianOptimization, False),
-    (ASHA, True),
-    (HyperTune, True),
-    (SyncHyperband, True),
-    (DEHB, True),
-    (BOHB, True),
-    (SyncBOHB, True),
-    (BORE, False),
-    (KDE, False),
-    (MOBSTER, True),
-    (PASHA, True),
-    (SyncMOBSTER, True),
-    (ASHABORE, True),
-    (BoTorch, False),
-    (REA, False),
-    (ConstrainedBayesianOptimization, False),
-    (KDE, False),
+    (GridSearch, False, False),
+    (RandomSearch, False, False),
+    (BayesianOptimization, False, False),
+    (ASHA, True, False),
+    (HyperTune, True, False),
+    (SyncHyperband, True, False),
+    (DEHB, True, False),
+    (BOHB, True, False),
+    (SyncBOHB, True, False),
+    (BORE, False, False),
+    (KDE, False, False),
+    (MOBSTER, True, False),
+    (PASHA, True, False),
+    (SyncMOBSTER, True, False),
+    (ASHABORE, True, False),
+    (BoTorch, False, False),
+    (REA, False, False),
+    (ConstrainedBayesianOptimization, False, True),
+    (KDE, False, False),
 ]
 
 
 @pytest.mark.timeout(20)
-@pytest.mark.parametrize("Scheduler, mul_fid", SCHEDULERS)
-def test_points_to_evaluate(Scheduler, mul_fid):
+@pytest.mark.parametrize("scheduler_cls, mul_fid, constr", SCHEDULERS)
+def test_points_to_evaluate(scheduler_cls, mul_fid, constr):
 
     # Use train_height backend for our tests
     entry_point = str(
@@ -76,12 +82,8 @@ def test_points_to_evaluate(Scheduler, mul_fid):
         / "train_height.py"
     )
     max_steps = 5
-    config_space = {
-        "steps": max_steps,
-        "width": randint(0, 20),
-        "height": randint(-100, 100),
-    }
-    metric = "mean_loss"
+    config_space = height_config_space(max_steps=max_steps)
+    metric = METRIC_ATTR
     n_workers = 4
 
     # The points we require the schedulers to start by evaluating
@@ -92,32 +94,22 @@ def test_points_to_evaluate(Scheduler, mul_fid):
     ]
 
     # The scheduler specification varies depending on the type of scheduler
-    if Scheduler is ConstrainedBayesianOptimization:
-        scheduler = Scheduler(
-            config_space=config_space,
-            metric=metric,
-            points_to_evaluate=points_to_evaluate,
-            constraint_attr="height",
-        )
-    elif mul_fid:
-        scheduler = Scheduler(
-            config_space=config_space,
-            metric=metric,
-            points_to_evaluate=points_to_evaluate,
-            resource_attr="epoch",
-            max_resource_attr="steps",
-        )
-    else:
-        scheduler = Scheduler(
-            config_space=config_space,
-            metric=metric,
-            points_to_evaluate=points_to_evaluate,
-        )
+    kwargs = {
+        "config_space": config_space,
+        "metric": metric,
+        "points_to_evaluate": points_to_evaluate,
+    }
+
+    if constr:
+        kwargs["constraint_attr"] = "height"
+    if mul_fid:
+        kwargs["resource_attr"] = RESOURCE_ATTR
+        kwargs["max_resource_attr"] = MAX_RESOURCE_ATTR
 
     # Set up tuner and run for a few evaluations
     tuner = Tuner(
         trial_backend=LocalBackend(entry_point=entry_point),
-        scheduler=scheduler,
+        scheduler=scheduler_cls(**kwargs),
         stop_criterion=StoppingCriterion(max_num_evaluations=5),
         n_workers=n_workers,
         sleep_time=0.001,
@@ -130,7 +122,8 @@ def test_points_to_evaluate(Scheduler, mul_fid):
     # Check that the first points match those defined in points_to_evaluate
     for ii in range(len(points_to_evaluate)):
         for key in points_to_evaluate[ii]:
-            if not mul_fid or key != "steps":
+            if not mul_fid or key != MAX_RESOURCE_ATTR:
+                # Multi-fidelity schedulers might not do as many steps of the point
                 assert df[key][ii] == points_to_evaluate[ii][key], (
                     "Initial point %s does not match listed points_to_evaluate." % ii
                 )
