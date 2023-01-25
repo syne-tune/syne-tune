@@ -16,8 +16,7 @@ env:
 
 jobs:
   run-syne-tune:
-    runs-on:
-      labels: temporary-sizing-testing_ubuntu-latest_8-core
+    runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
