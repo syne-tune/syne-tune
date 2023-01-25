@@ -23,6 +23,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
+          role-session-name: integtestsession
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
