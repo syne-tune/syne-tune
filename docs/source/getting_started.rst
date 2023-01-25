@@ -155,7 +155,7 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 
 Syne Tune also supports `BoTorch <https://github.com/pytorch/botorch>`_ searchers,
-see :class:`~syne_tune.optimizer.baselines.BOTorch`.
+see :class:`~syne_tune.optimizer.baselines.BoTorch`.
 
 Supported multi-objective optimization methods
 ----------------------------------------------

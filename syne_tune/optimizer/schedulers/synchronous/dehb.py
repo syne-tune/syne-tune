@@ -157,8 +157,10 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
     :param metric: Name of metric to optimize, key in result's obtained via
         :meth:`on_trial_result`
     :type metric: str
-    :param searcher: Selects searcher. Passed to
-        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`..
+    :param searcher: Searcher for ``get_config`` decisions. Passed to
+        :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
+        with ``search_options`` and extra information. Supported values:
+        :const:`~syne_tune.optimizer.schedulers.searchers.searcher_factory.SUPPORTED_SEARCHERS_HYPERBAND`.
         If ``searcher == "random_encoded"`` (default), the encoded configs are
         sampled directly, each entry independently from U([0, 1]).
         This distribution has higher entropy than for "random" if
@@ -167,6 +169,8 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
+        Note: If :code:`search_options["allow_duplicates"] == True`, then
+        :meth:`suggest` may return a configuration more than once
     :type search_options: dict, optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
@@ -272,6 +276,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         else:
             self._debug_log = self._searcher.debug_log
             self._points_to_evaluate = None
+        self._allow_duplicates = search_options.get("allow_duplicates", False)
         # Bracket manager
         self.bracket_manager = DifferentialEvolutionHyperbandBracketManager(
             rungs_first_bracket=rungs_first_bracket,
@@ -434,18 +439,23 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
 
     def _encoded_config_by_promotion(
         self, ext_slot: ExtendedSlotInRung
-    ) -> (np.ndarray, int):
+    ) -> (Optional[np.ndarray], Optional[int]):
         parent_trial_id = self.bracket_manager.top_of_previous_rung(
             bracket_id=ext_slot.bracket_id, pos=ext_slot.slot_index
         )
-        trial_info = self._trial_info[parent_trial_id]
-        assert trial_info.metric_val is not None  # Sanity check
-        if self._debug_log is not None:
-            logger.info(
-                f"Promote config from trial_id {parent_trial_id}"
-                f", level {trial_info.level}"
-            )
-        return trial_info.encoded_config, parent_trial_id
+        if parent_trial_id is not None:
+            trial_info = self._trial_info[parent_trial_id]
+            assert trial_info.metric_val is not None  # Sanity check
+            if self._debug_log is not None:
+                logger.info(
+                    f"Promote config from trial_id {parent_trial_id}"
+                    f", level {trial_info.level}"
+                )
+            encoded_config = trial_info.encoded_config
+        else:
+            # This can happen when all trials in the previous rung failed
+            encoded_config = None
+        return encoded_config, parent_trial_id
 
     def _extended_config_by_mutation_crossover(
         self, ext_slot: ExtendedSlotInRung
@@ -489,11 +499,16 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         )
         # Return new config
         config = self._hp_ranges.from_ndarray(encoded_config)
-        self._excl_list.add(config)  # Should not be suggested again
+        if not self._allow_duplicates:
+            self._excl_list.add(config)  # Should not be suggested again
         if self._debug_log is not None and self.searcher is None:
             self._debug_log.set_final_config(config)
             self._debug_log.write_block()
         config = cast_config_values(config, self.config_space)
+        if self.searcher is not None:
+            self.searcher.register_pending(
+                trial_id=str(trial_id), config=config, milestone=ext_slot.level
+            )
         if self.max_resource_attr is not None:
             config = dict(config, **{self.max_resource_attr: ext_slot.level})
         return TrialSuggestion.start_suggestion(config=config)
@@ -729,6 +744,8 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         if trial_id in self._trial_to_pending_slot:
             ext_slot = self._trial_to_pending_slot[trial_id]
             self._report_as_failed(ext_slot)
+            # A failed trial is not pending anymore
+            del self._trial_to_pending_slot[trial_id]
         else:
             logger.warning(
                 f"Trial trial_id {trial_id} not registered at pending: "

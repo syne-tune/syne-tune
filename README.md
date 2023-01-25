@@ -164,7 +164,9 @@ by Syne Tune:
   in the top 80%
 * [launch_height_sagemaker_remotely.py](examples/launch_height_sagemaker_remotely.py):
   launches the HPO loop on SageMaker rather than a local machine, trial can be executed either
-  the remote machine or distributed again as separate SageMaker training jobs
+  the remote machine or distributed again as separate SageMaker training jobs. See 
+  [launch_height_sagemaker_remote_launcher.py](examples/launch_height_sagemaker_remote_launcher.py)
+  for remote launching with the help of RemoteTuner also discussed in one of the FAQs.
 * [launch_height_sagemaker.py](examples/launch_height_sagemaker.py):
   launches HPO on SageMaker to tune a SageMaker Pytorch estimator
 * [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py):

@@ -29,6 +29,7 @@ We hope this information inspires you to give it a try. Please do consider
    first_example
    random_search
    trial_scheduler_api
+   wrap_code
    extend_async_hb
    extend_sync_hb
    new_searcher

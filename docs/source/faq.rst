@@ -36,7 +36,7 @@ over the alternatives:
   `Automatic Model Tuning <https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html>`_
   service.
 
-What are the different installations options supported?
+What are the different installation options supported?
 =======================================================
 
 To install Syne Tune with minimal dependencies from pip, you can simply do:
@@ -68,8 +68,8 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
   or :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` or
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
   ``searcher="kde"``)
-* ``botorch``: Bayesian optimization from BOTorch (see
-  :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BotorchSearcher`)
+* ``botorch``: Bayesian optimization from BoTorch (see
+  :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher`)
 * ``dev``: For developers who would like to extend Syne Tune
 * ``extra``: For installing all the above
 * ``bore``: For Bore optimizer (see :class:`~syne_tune.optimizer.baselines.BORE`)

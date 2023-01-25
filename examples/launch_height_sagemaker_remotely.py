@@ -95,6 +95,8 @@ if __name__ == "__main__":
             # the tuning to finish. The instance-type where the tuning job runs can be different than the
             # instance-type used for evaluating the training jobs.
             instance_type=DEFAULT_CPU_INSTANCE_SMALL,
+            # We can specify a custom container to use with this launcher with <image_uri=TK>
+            # otherwise a sagemaker pre-build will be used
         )
 
         tuner.run(wait=False)

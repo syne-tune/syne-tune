@@ -445,7 +445,12 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
         )
     result["num_initial_candidates"] = kwargs["num_init_candidates"]
     result["num_initial_random_choices"] = kwargs["num_init_random"]
-    for k in ("initial_scoring", "cost_attr", "skip_local_optimization"):
+    for k in (
+        "initial_scoring",
+        "cost_attr",
+        "skip_local_optimization",
+        "allow_duplicates",
+    ):
         result[k] = kwargs[k]
 
     return result
@@ -797,6 +802,7 @@ def _common_defaults(
         "cost_attr": "elapsed_time",
         "normalize_targets": True,
         "no_fantasizing": False,
+        "allow_duplicates": False,
     }
     if is_hyperband:
         if is_hypertune:
@@ -834,6 +840,8 @@ def _common_defaults(
         "skip_local_optimization": Boolean(),
         "debug_log": Boolean(),
         "normalize_targets": Boolean(),
+        "no_fantasizing": Boolean(),
+        "allow_duplicates": Boolean(),
     }
 
     if is_hyperband:

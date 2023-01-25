@@ -24,6 +24,8 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (
     sample_random_configuration,
 )
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class PopulationElement:
@@ -74,6 +76,11 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         self.population = deque()
         self.num_sample_try = 1000  # number of times allowed to sample a mutation
         self._hp_ranges = make_hyperparameter_ranges(self.config_space)
+        allow_duplicates = kwargs.get("allow_duplicates")
+        if allow_duplicates is not None and (not allow_duplicates):
+            logger.warning(
+                "This class does not support allow_duplicates argument. Sampling is with replacement"
+            )
 
     def _mutate_config(self, config: dict) -> dict:
         child_config = copy.deepcopy(config)
@@ -97,7 +104,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             else:
                 break
         if sample_try == self.num_sample_try:
-            logging.info(
+            logger.info(
                 f"Did not manage to sample a different configuration with {self.num_sample_try}, "
                 f"sampling at random"
             )

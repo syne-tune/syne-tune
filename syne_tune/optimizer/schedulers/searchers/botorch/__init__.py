@@ -16,9 +16,11 @@ __all__ = []
 
 try:
     from syne_tune.optimizer.schedulers.searchers.botorch.botorch_searcher import (  # noqa: F401
-        BotorchSearcher,
+        BoTorchSearcher,
+        BotorchSearcher,  # deprecated
     )
 
-    __all__.append("BotorchSearcher")
+    __all__.append("BoTorchSearcher")
+    __all__.append("BotorchSearcher")  # deprecated
 except ImportError:
     print(try_import_botorch_message())

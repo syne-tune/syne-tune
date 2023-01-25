@@ -14,6 +14,7 @@
 Example showing how to run on Sagemaker with a Sagemaker Framework.
 """
 import logging
+import os
 from pathlib import Path
 
 from sagemaker.pytorch import PyTorch
@@ -59,6 +60,8 @@ if __name__ == "__main__":
     scheduler = RandomSearch(
         config_space, mode=mode, metric=metric, random_seed=random_seed
     )
+    if "AWS_DEFAULT_REGION" not in os.environ:
+        os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
 
     trial_backend = SageMakerBackend(
         # we tune a PyTorch Framework from Sagemaker
