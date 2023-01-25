@@ -30,4 +30,4 @@ jobs:
       # Upload a file to AWS s3
       - name:  Copy index.html to s3
         run: |
-          aws s3 cp ./index.html s3://${{ env.BUCKET_NAME }}/
+          aws s3 cp s3://syne-tune-integ-tests-beta/deleteme-2023-01-25/source/cat.jpg s3://syne-tune-integ-tests-beta/deleteme-2023-01-25/destination/cat.jpg
