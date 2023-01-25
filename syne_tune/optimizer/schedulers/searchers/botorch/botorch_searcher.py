@@ -155,6 +155,12 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
+    def _get_gp_bounds(self):
+        return Tensor(self._hp_ranges.get_ndarray_bounds()).T
+
+    def _config_from_ndarray(self, candidate) -> dict:
+        return self._hp_ranges.from_ndarray(candidate)
+
     def _sample_next_candidate(self) -> Optional[dict]:
         """
         :return: A next candidate to evaluate, if possible it is obtained by
@@ -201,14 +207,14 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 
             candidate, acq_value = optimize_acqf(
                 acq,
-                bounds=Tensor(self._hp_ranges.get_ndarray_bounds()).T,
+                bounds=self._get_gp_bounds(),
                 q=1,
                 num_restarts=3,
                 raw_samples=100,
             )
 
             candidate = candidate.detach().numpy()[0]
-            config = self._hp_ranges.from_ndarray(candidate)
+            config = self._config_from_ndarray(candidate)
             if not self._is_config_already_seen(config):
                 return config
             else:
