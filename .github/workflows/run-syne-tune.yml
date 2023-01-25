@@ -1,12 +1,15 @@
 name: Run Syne Tune
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
 on:
   workflow_call:
     inputs:
       script-path:
         required: true
         type: string
-
 
 env:
   AWS_DEFAULT_REGION: us-west-2
@@ -15,9 +18,6 @@ jobs:
   run-syne-tune:
     runs-on:
       labels: temporary-sizing-testing_ubuntu-latest_8-core
-    permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read  # This is required for actions/checkout
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
