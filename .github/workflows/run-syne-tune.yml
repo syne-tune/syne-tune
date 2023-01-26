@@ -16,7 +16,7 @@ on:
 
 env:
   AWS_DEFAULT_REGION: us-west-2
-  SCRIPT_PATH: ${{ inputs.script-path }}
+  # SCRIPT_PATH: ${{ inputs.script-path }}
 
 jobs:
   run ${{ inputs.script-path }}:
