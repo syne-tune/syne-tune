@@ -10,6 +10,9 @@ on:
       script-path:
         required: true
         type: string
+    secrets:
+      BETA_AWS_INTEG_TEST_ROLE_ARN:
+        required: true
 
 env:
   AWS_DEFAULT_REGION: us-east-1
