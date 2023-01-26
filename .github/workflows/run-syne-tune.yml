@@ -39,6 +39,6 @@ jobs:
       - name: (maybe) Install additional script-specific dependencies
         if: inputs.script-path == "examples/launch_asha_yahpo.py"
         run: pip install matplotlib
-      - name: Run ${{ inputs.script-path }}
+      - name: Run Syne Tune
         run: |
           python ${{ inputs.script-path }}
