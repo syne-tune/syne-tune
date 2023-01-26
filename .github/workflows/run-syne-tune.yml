@@ -16,6 +16,7 @@ on:
 
 env:
   AWS_DEFAULT_REGION: us-west-2
+  SCRIPT_PATH: ${{ inputs.script-path }}
 
 jobs:
   run ${{ inputs.script-path }}:
@@ -37,7 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[extra]'
       - name: (maybe) Install additional script-specific dependencies
-        if: inputs.script-path == "examples/launch_asha_yahpo.py"
+        if: ${{ env.SCRIPT_PATH == 'examples/launch_asha_yahpo.py' }}
         run: pip install matplotlib
       - name: Run Syne Tune
         run: |
