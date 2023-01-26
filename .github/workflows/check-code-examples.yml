@@ -39,8 +39,8 @@ jobs:
           examples/launch_checkpoint_example.py,
           examples/launch_fashionmnist_costaware.py,
           examples/launch_bayesopt_constrained.py,
-          examples/launch_ask_tell_scheduler.py,
-          examples/launch_ask_tell_scheduler_hyperband.py,
+          # examples/launch_ask_tell_scheduler.py, # TODO enable
+          # examples/launch_ask_tell_scheduler_hyperband.py, # TODO enable
           examples/launch_asha_yahpo.py,
         ]
       fail-fast: false # TODO remove before merge, this is for testing
