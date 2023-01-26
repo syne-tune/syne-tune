@@ -17,6 +17,7 @@ on:
 env:
   AWS_DEFAULT_REGION: us-west-2
   SCRIPT_PATH: ${{ inputs.script-path }}
+  AWS_ROLE: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
 
 jobs:
   run:
