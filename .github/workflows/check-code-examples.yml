@@ -11,7 +11,7 @@ permissions:
   contents: read  # This is required for actions/checkout
 
 jobs:
-  examples:
+  ex:
     strategy:
       matrix:
         script-path: [examples/launch_height_moasha.py, 
@@ -44,6 +44,8 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: ${{ matrix.script-path }}
+    secrets:
+      BETA_AWS_INTEG_TEST_ROLE_ARN: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
 
 # TODO include
 # python examples/launch_height_sagemaker_custom_image.py
