@@ -39,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[extra]'
       - name: (maybe) Install additional script-specific dependencies
-        if: ${{ ( env.SCRIPT_PATH == 'examples/launch_asha_yahpo.py') || ( env.SCRIPT_PATH == 'examples/launch_plot_results.py') }}
+        if: ${{ ( env.SCRIPT_PATH == 'examples/launch_asha_yahpo.py') || ( env.SCRIPT_PATH == 'examples/launch_plot_results.py') || ( env.SCRIPT_PATH == 'examples/launch_nas201_transfer_learning.py') }}
         run: pip install matplotlib
       - name: Run Syne Tune
         run: |
