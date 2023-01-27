@@ -1,4 +1,4 @@
-name: Check code quality and examples on python3.8
+name: Check code examples on python3.8
 
 on:
   push:
@@ -6,31 +6,46 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.8
-    - name: Install dependencies
-      run: |
-        python -m pip install .[extra] --upgrade pip
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82,F401 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        # flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test examples
-      run: |
-        python examples/launch_height_baselines.py
-        python examples/launch_height_python_backend.py
-        python examples/launch_height_moasha.py
-        python examples/launch_height_standalone_scheduler.py
-        python examples/launch_pbt.py
-        python examples/launch_bayesopt_constrained.py
+  ex:
+    strategy:
+      matrix:
+        script-path: [
+          examples/launch_tensorboard_example.py,
+          examples/launch_tuning_gluonts.py, # pending limit increase for `ml.c5.4xlarge for training job usage`
+          examples/launch_plot_results.py,
+          # examples/launch_rl_tuning.py, # TODO enable
+          examples/launch_simulated_benchmark.py, # TODO needs to run on machine with more disk space
+          examples/launch_standalone_bayesian_optimization.py,
+          examples/launch_moasha_instance_tuning.py,
+          examples/launch_nas201_transfer_learning.py, # TODO needs to run on a machine with more disk space
+          examples/launch_nasbench201_simulated.py, # TODO needs to run on machine with more disk space
+          examples/launch_pbt.py,
+          examples/launch_height_sagemaker.py,
+          examples/launch_height_standalone_scheduler.py,
+          examples/launch_huggingface_classification.py, # pending limit increase for `ml.g4dn.xlarge for training job usage`
+          # examples/launch_height_sagemaker_custom_image.py # TODO enable
+          examples/launch_height_sagemaker_remotely.py,
+          examples/launch_height_python_backend.py,
+          examples/launch_height_ray.py,
+          examples/launch_height_sagemaker_checkpoints.py,
+          examples/launch_height_baselines.py,
+          examples/launch_height_moasha.py,
+          examples/launch_fashionmnist.py,
+          examples/launch_checkpoint_example.py,
+          examples/launch_fashionmnist_costaware.py,
+          examples/launch_bayesopt_constrained.py,
+          examples/launch_ask_tell_scheduler.py, # TODO enable
+          examples/launch_ask_tell_scheduler_hyperband.py, # TODO enable
+          examples/launch_asha_yahpo.py,
+        ]
+      fail-fast: false # TODO remove before merge, this is for testing
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: ${{ matrix.script-path }}
+    secrets:
+      BETA_AWS_INTEG_TEST_ROLE_ARN: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}

@@ -1,0 +1,46 @@
+name: Run Syne Tune
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+on:
+  workflow_call:
+    inputs:
+      script-path:
+        required: true
+        type: string
+    secrets:
+      BETA_AWS_INTEG_TEST_ROLE_ARN:
+        required: true
+
+env:
+  AWS_DEFAULT_REGION: us-west-2
+  SCRIPT_PATH: ${{ inputs.script-path }}
+  AWS_ROLE: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
+
+jobs:
+  run:
+    runs-on: temporary-sizing-testing_ubuntu-latest_8-core 
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
+          role-session-name: integtestsession
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Syne Tune
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[extra]'
+      - name: (maybe) Install additional script-specific dependencies
+        if: ${{ ( env.SCRIPT_PATH == 'examples/launch_asha_yahpo.py') || ( env.SCRIPT_PATH == 'examples/launch_plot_results.py') }}
+        run: pip install matplotlib
+      - name: Run Syne Tune
+        run: |
+          python ${{ inputs.script-path }}
