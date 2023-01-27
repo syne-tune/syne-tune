@@ -13,7 +13,6 @@
 import os
 import re
 import sys
-import numpy as np
 import json
 import logging
 from ast import literal_eval
@@ -29,6 +28,7 @@ from syne_tune.constants import (
     ST_WORKER_TIMESTAMP,
     ST_WORKER_ITER,
 )
+from syne_tune.util import dump_json_with_numpy
 
 # this is required so that metrics are written
 from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfos
@@ -131,12 +131,7 @@ def _serialize_report_dict(report_dict: dict) -> str:
     if the dictionary values are not JSON-serializable
     """
     try:
-
-        def np_encoder(obj):
-            if isinstance(obj, np.generic):
-                return obj.item()
-
-        report_str = json.dumps(report_dict, default=np_encoder)
+        report_str = dump_json_with_numpy(report_dict)
         assert sys.getsizeof(report_str) < 50_000
         return report_str
     except TypeError as e:

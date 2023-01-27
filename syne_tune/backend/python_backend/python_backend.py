@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import hashlib
-import json
 import logging
 import types
 from pathlib import Path
@@ -21,6 +20,7 @@ import dill
 
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import config_space_to_json_dict
+from syne_tune.util import dump_json_with_numpy
 
 
 def file_md5(filename: str) -> str:
@@ -123,5 +123,7 @@ class PythonBackend(LocalBackend):
         self.tune_function_path.mkdir(parents=True, exist_ok=True)
         with open(self.tune_function_path / "tune_function.dill", "wb") as file:
             dill.dump(tune_function, file)
-        with open(self.tune_function_path / "configspace.json", "w") as file:
-            json.dump(config_space_to_json_dict(self.config_space), file)
+        dump_json_with_numpy(
+            config_space_to_json_dict(self.config_space),
+            filename=self.tune_function_path / "configspace.json",
+        )

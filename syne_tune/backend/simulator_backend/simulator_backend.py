@@ -10,15 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import json
 import logging
 import os
 from datetime import timedelta
 import copy
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-
-import numpy as np
 import subprocess
 
 from syne_tune.report import retrieve
@@ -26,7 +23,8 @@ from syne_tune.backend.trial_backend import (
     TrialAndStatusInformation,
     TrialIdAndResultList,
 )
-from syne_tune.backend import LocalBackend
+from syne_tune.backend.local_backend import LocalBackend
+from syne_tune.util import dump_json_with_numpy
 from syne_tune.backend.trial_status import TrialResult, Status, Trial
 from syne_tune.backend.simulator_backend.time_keeper import SimulatedTimeKeeper
 from syne_tune.backend.simulator_backend.events import (
@@ -490,13 +488,7 @@ class SimulatorBackend(LocalBackend):
             [f"--{key} {value}" for key, value in config_copy.items()]
         )
 
-        def np_encoder(obj):
-            if isinstance(obj, np.generic):
-                return obj.item()
-
-        with open(trial_path / "config.json", "w") as f:
-            # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
-            json.dump(config, f, default=np_encoder)
+        dump_json_with_numpy(config, trial_path / "config.json")
         cmd = f"python {self.entry_point} {config_str}"
         env = dict(os.environ)
         logging.info(f"running script with command: {cmd}")

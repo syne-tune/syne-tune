@@ -18,18 +18,20 @@ from syne_tune.config_space import (
     config_space_from_json_dict,
     config_space_to_json_dict,
 )
+from syne_tune.util import dump_json_with_numpy
 
 
 def serialize_configspace(
     path: str, configuration_space: Dict, fidelity_space: Optional[Dict] = None
 ):
     path = Path(path)
-    with open(path / "configspace.json", "w") as f:
-        json.dump(config_space_to_json_dict(configuration_space), f)
-
+    dump_json_with_numpy(
+        config_space_to_json_dict(configuration_space), path / "configspace.json"
+    )
     if fidelity_space is not None:
-        with open(path / "fidelityspace.json", "w") as f:
-            json.dump(config_space_to_json_dict(fidelity_space), f)
+        dump_json_with_numpy(
+            config_space_to_json_dict(fidelity_space), path / "fidelityspace.json"
+        )
 
 
 def deserialize_configspace(path: str):
@@ -46,9 +48,8 @@ def deserialize_configspace(path: str):
     return configuration_space, fidelity_space
 
 
-def serialize_metadata(path: str, metadata):
-    with open(path / "metadata.json", "w") as f:
-        json.dump(metadata, f)
+def serialize_metadata(path: str, metadata: dict):
+    dump_json_with_numpy(metadata, path / "metadata.json")
 
 
 def deserialize_metadata(path: str):
