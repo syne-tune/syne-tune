@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Dict, Optional, Callable, Any
+from typing import Dict, Optional, Callable, Any, List
 
 from syne_tune.config_space import ordinal, Categorical
 from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
@@ -38,7 +38,8 @@ class MethodArguments:
         ``max_t`` is mandatory
     :param transfer_learning_evaluations: Support for transfer learning. Only
         for simulator backend experiments right now
-    :param use_surrogates: For simulator backend experiments, defaults to False
+    :param use_surrogates: For simulator backend experiments, defaults to
+        ``False``
     :param num_brackets: Parameter for Hyperband schedulers, optional
     :param verbose: If True, fine-grained log information about the tuning is
         printed. Defaults to False
@@ -53,6 +54,8 @@ class MethodArguments:
         sets limit to number of observations to which GP surrogate model is fit to
     :param scheduler_kwargs: If given, overwrites defaults of scheduler
         arguments
+    :param restrict_configurations: Only for simulator backend. If given, the
+        scheduler is restricted to suggest configs from this list only
     """
 
     config_space: Dict[str, Any]
@@ -62,14 +65,15 @@ class MethodArguments:
     resource_attr: str
     max_resource_attr: Optional[str] = None
     max_t: Optional[int] = None
-    transfer_learning_evaluations: Optional[Dict] = None
+    transfer_learning_evaluations: Optional[Dict[str, Any]] = None
     use_surrogates: bool = False
     num_brackets: Optional[int] = None
     verbose: Optional[bool] = False
     num_samples: int = 50
     fcnet_ordinal: Optional[str] = None
     max_size_data_for_model: Optional[int] = None
-    scheduler_kwargs: Optional[dict] = None
+    scheduler_kwargs: Optional[Dict[str, Any]] = None
+    restrict_configurations: Optional[List[Dict[str, Any]]] = None
 
 
 MethodDefinitions = Dict[str, Callable[[MethodArguments], TrialScheduler]]
@@ -77,6 +81,8 @@ MethodDefinitions = Dict[str, Callable[[MethodArguments], TrialScheduler]]
 
 def search_options(args: MethodArguments) -> Dict[str, Any]:
     result = {"debug_log": args.verbose}
+    if args.restrict_configurations is not None:
+        result["restrict_configurations"] = args.restrict_configurations
     max_size = args.max_size_data_for_model
     if max_size is not None:
         result["max_size_data_for_model"] = max_size
@@ -105,7 +111,7 @@ def _is_fcnet(config_space: Dict[str, Any]) -> bool:
 def convert_categorical_to_ordinal_numeric(
     config_space: Dict[str, Any],
     kind: Optional[str],
-    do_convert: Optional[Callable[[dict], bool]] = None,
+    do_convert: Optional[Callable[[Dict[str, Any]], bool]] = None,
 ) -> Dict[str, Any]:
     """
     Converts categorical domains to ordinal ones, of type ``kind``. This is not

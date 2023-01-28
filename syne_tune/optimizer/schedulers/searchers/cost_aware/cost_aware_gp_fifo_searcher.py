@@ -115,7 +115,9 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
-            kwargs, *cost_aware_gp_fifo_searcher_defaults(), dict_name="search_options"
+            kwargs,
+            *cost_aware_gp_fifo_searcher_defaults(kwargs),
+            dict_name="search_options",
         )
         # If ``resource_attr`` is specified, we do fine-grained, otherwise
         # coarse-grained

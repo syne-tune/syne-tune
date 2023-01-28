@@ -148,7 +148,9 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
-            kwargs, *gp_multifidelity_searcher_defaults(), dict_name="search_options"
+            kwargs,
+            *gp_multifidelity_searcher_defaults(kwargs),
+            dict_name="search_options",
         )
         kwargs_int = gp_multifidelity_searcher_factory(**_kwargs)
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)

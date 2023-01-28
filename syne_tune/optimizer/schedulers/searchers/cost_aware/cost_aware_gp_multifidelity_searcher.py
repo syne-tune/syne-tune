@@ -113,7 +113,7 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
             kwargs,
-            *cost_aware_gp_multifidelity_searcher_defaults(),
+            *cost_aware_gp_multifidelity_searcher_defaults(kwargs),
             dict_name="search_options",
         )
         kwargs_int = cost_aware_gp_multifidelity_searcher_factory(**_kwargs)

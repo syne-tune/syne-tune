@@ -246,3 +246,67 @@ def generate_unique_candidates(
                 )
             break
     return result
+
+
+class RandomFromSetCandidateGenerator(CandidateGenerator):
+    """
+    In this generator, candidates are sampled from a given set.
+
+    :param base_set: Set of all configurations to sample from
+    :param random_state: PRN generator
+    """
+
+    def __init__(
+        self, base_set: List[Configuration], random_state: np.random.RandomState
+    ):
+        self.random_state = random_state
+        self.base_set = base_set
+        self.num_base = len(base_set)
+        # Maintains index of positions of entries returned
+        self.pos_returned = set()
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        while True:
+            pos = self.random_state.randint(low=0, high=self.num_base)
+            self.pos_returned.add(pos)
+            yield self.base_set[pos]
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list=None
+    ) -> List[Configuration]:
+        if num_cands >= self.num_base:
+            if exclusion_list is None:
+                configs = self.base_set.copy()
+                self.pos_returned = set(range(self.num_base))
+            else:
+                configs, new_pos = zip(
+                    *[
+                        (config, pos)
+                        for pos, config in enumerate(self.base_set)
+                        if not exclusion_list.contains(config)
+                    ]
+                )
+                configs = list(configs)
+                self.pos_returned = set(new_pos)
+        else:
+            if exclusion_list is None:
+                randset = self.random_state.choice(
+                    self.num_base, num_cands, replace=False
+                )
+                self.pos_returned.update(randset)
+                configs = [self.base_set[pos] for pos in randset]
+            else:
+                randperm = self.random_state.permutation(self.num_base)
+                configs = []
+                new_pos = []
+                len_configs = 0
+                for pos in randperm:
+                    if len_configs == num_cands:
+                        break
+                    config = self.base_set[pos]
+                    if not exclusion_list.contains(config):
+                        configs.append(config)
+                        new_pos.append(pos)
+                        len_configs += 1
+                self.pos_returned.update(new_pos)
+        return configs

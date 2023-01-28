@@ -70,6 +70,7 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: Optional[bool] = None,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         mode: Optional[str] = None,
         gamma: Optional[float] = None,
         calibrate: Optional[bool] = None,
@@ -86,6 +87,7 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
             metric=metric,
             points_to_evaluate=points_to_evaluate,
             allow_duplicates=allow_duplicates,
+            restrict_configurations=restrict_configurations,
             **kwargs,
         )
         if mode is None:
@@ -109,6 +111,9 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         self.gamma = gamma
         self.classifier = classifier
         assert acq_optimizer in {"rs", "de", "rs_with_replacement"}
+        assert (
+            acq_optimizer != "de" or restrict_configurations is None
+        ), "acq_optimizer == 'de' does not support restrict_configurations"
         self.acq_optimizer = acq_optimizer
         self.feval_acq = feval_acq
         self.init_random = init_random

@@ -26,7 +26,7 @@ try:
     from botorch.acquisition import qExpectedImprovement
     from botorch.optim import optimize_acqf
     from gpytorch.mlls import ExactMarginalLogLikelihood
-    from gpytorch.utils.errors import NotPSDError
+    from linear_operator.utils.errors import NotPSDError
 except ImportError:
     print(try_import_botorch_message())
 
@@ -73,6 +73,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: bool = False,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         mode: str = "min",
         num_init_random: int = 3,
         no_fantasizing: bool = False,
@@ -85,6 +86,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             metric=metric,
             points_to_evaluate=points_to_evaluate,
             allow_duplicates=allow_duplicates,
+            restrict_configurations=restrict_configurations,
             **kwargs,
         )
         assert num_init_random >= 2
@@ -199,23 +201,25 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
                 X_pending=X_pending,
             )
 
-            candidate, acq_value = optimize_acqf(
-                acq,
-                bounds=Tensor(self._hp_ranges.get_ndarray_bounds()).T,
-                q=1,
-                num_restarts=3,
-                raw_samples=100,
-            )
-
-            candidate = candidate.detach().numpy()[0]
-            config = self._hp_ranges.from_ndarray(candidate)
-            if not self._is_config_already_seen(config):
-                return config
-            else:
-                logger.warning(
-                    "Optimization of the acquisition function yielded a config that was already seen."
+            config = None
+            if self._restrict_configurations is None:
+                # Continuous optimization of acquisition function only if
+                # ``restrict_configurations`` not used
+                candidate, acq_value = optimize_acqf(
+                    acq,
+                    bounds=Tensor(self._hp_ranges.get_ndarray_bounds()).T,
+                    q=1,
+                    num_restarts=3,
+                    raw_samples=100,
                 )
-                return self._sample_and_pick_acq_best(acq)
+                candidate = candidate.detach().numpy()[0]
+                config = self._hp_ranges.from_ndarray(candidate)
+                if self.should_not_suggest(config):
+                    logger.warning(
+                        "Optimization of the acquisition function yielded a config that was already seen."
+                    )
+                    config = None
+            return self._sample_and_pick_acq_best(acq) if config is None else config
         except NotPSDError as _:
             logging.warning("Chlolesky inversion failed, sampling randomly.")
             return self._get_random_config()
@@ -260,13 +264,6 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             return configs_candidates[ei.argmax()]
         else:
             return self._get_random_config()
-
-    def _is_config_already_seen(self, config) -> bool:
-        """
-        If ``allow_duplicates == True``, this method checks whether ``config``
-        is pending or has failed before.
-        """
-        return self._excl_list.contains(config)
 
     def _configs_with_results(self) -> List[dict]:
         return [

@@ -50,6 +50,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     IndependentThompsonSampling,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    RandomStatefulCandidateGenerator,
+    RandomFromSetCandidateGenerator,
+    CandidateGenerator,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector import (
     DuplicateDetectorIdentical,
 )
@@ -123,7 +128,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
       search), and ranked by a scoring function (``initial_scoring``).
     * BFGS local optimization is then run starting from the top scoring config,
       where EI is minimized (this is skipped if
-      ``skip_local_optimization=True``).
+      ``skip_local_optimization == True``).
 
     Note that the full logic of construction based on arguments is given in
     :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory``. In
@@ -206,6 +211,11 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :param allow_duplicates: If ``True``, :meth:`get_config` may return the same
         configuration more than once. Defaults to ``False``
     :type allow_duplicates: bool, optional
+    :param restrict_configurations: If given, the searcher only suggests
+        configurations from this list. This needs
+        ``skip_local_optimization == True``. If ``allow_duplicates == False``,
+         entries are popped off this list once suggested.
+    :type restrict_configurations: List[dict], optional
     :param map_reward: In the scheduler, the metric may be minimized or
         maximized, but internally, Bayesian optimization is minimizing
         the criterion. ``map_reward`` converts from metric to internal
@@ -265,7 +275,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        points_to_evaluate: Optional[List[dict]] = None,
+        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
         clone_from_state: bool = False,
         **kwargs,
     ):
@@ -289,7 +299,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
-            kwargs, *gp_fifo_searcher_defaults(), dict_name="search_options"
+            kwargs, *gp_fifo_searcher_defaults(kwargs), dict_name="search_options"
         )
         kwargs_int = gp_fifo_searcher_factory(**_kwargs)
         # Extra arguments not parsed in factory
@@ -321,7 +331,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
             model_factory.configure_scheduler(scheduler)
 
     def register_pending(
-        self, trial_id: str, config: Optional[dict] = None, milestone=None
+        self, trial_id: str, config: Optional[Dict[str, Any]] = None, milestone=None
     ):
         """
         Registers trial as pending. This means the corresponding evaluation
@@ -344,6 +354,49 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         return config
 
+    def _create_random_generator(self) -> CandidateGenerator:
+        if self._restrict_configurations is None:
+            return RandomStatefulCandidateGenerator(
+                hp_ranges=self._hp_ranges_for_prediction(),
+                random_state=self.random_state,
+            )
+        else:
+            return RandomFromSetCandidateGenerator(
+                base_set=self._restrict_configurations,
+                random_state=self.random_state,
+            )
+
+    def _update_restrict_configurations(
+        self,
+        new_configs: List[Dict[str, Any]],
+        random_generator: RandomFromSetCandidateGenerator,
+    ):
+        # ``random_generator`` maintains all positions returned during the
+        # search. This is used to restrict the search of ``new_configs``
+        new_ms = set(
+            self.hp_ranges.config_to_match_string(config) for config in new_configs
+        )
+        num_new = len(new_configs)
+        assert num_new >= 1
+        remove_pos = []
+        for pos in random_generator.pos_returned:
+            config_ms = self.hp_ranges.config_to_match_string(
+                self._restrict_configurations[pos]
+            )
+            if config_ms in new_ms:
+                remove_pos.append(pos)
+                if len(remove_pos) == num_new:
+                    break
+        if len(remove_pos) == 1:
+            self._restrict_configurations.pop(remove_pos[0])
+        else:
+            remove_pos = set(remove_pos)
+            self._restrict_configurations = [
+                config
+                for pos, config in enumerate(self._restrict_configurations)
+                if pos not in remove_pos
+            ]
+
     def _get_config_modelbased(
         self, exclusion_candidates, **kwargs
     ) -> Optional[Configuration]:
@@ -360,6 +413,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         # Select and fix target resource attribute (relevant in subclasses)
         self._fix_resource_attribute(**kwargs)
         # Create BO algorithm
+        random_generator = self._create_random_generator()
         initial_candidates_scorer = create_initial_candidates_scorer(
             initial_scoring=self.initial_scoring,
             model=model,
@@ -373,7 +427,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
             active_metric=INTERNAL_METRIC_NAME,
         )
         bo_algorithm = BayesianOptimizationAlgorithm(
-            initial_candidates_generator=self.random_generator,
+            initial_candidates_generator=random_generator,
             initial_candidates_scorer=initial_candidates_scorer,
             num_initial_candidates=self.num_initial_candidates,
             local_optimizer=local_optimizer,
@@ -390,6 +444,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
         _config = bo_algorithm.next_candidates()
         if len(_config) > 0:
             config = self._postprocess_config(_config[0])
+            if self._restrict_configurations is not None:
+                # Remove ``config`` from ``_restrict_configurations``
+                self._update_restrict_configurations([config], random_generator)
         else:
             config = None
         if self.do_profile:
@@ -459,6 +516,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 # Select and fix target resource attribute (relevant in subclasses)
                 self._fix_resource_attribute(**kwargs)
                 # Create BO algorithm
+                random_generator = self._create_random_generator()
                 initial_candidates_scorer = create_initial_candidates_scorer(
                     initial_scoring=self.initial_scoring,
                     model=model,
@@ -486,7 +544,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
                         skip_optimization=AlwaysSkipPredicate(),
                     )
                 bo_algorithm = BayesianOptimizationAlgorithm(
-                    initial_candidates_generator=self.random_generator,
+                    initial_candidates_generator=random_generator,
                     initial_candidates_scorer=initial_candidates_scorer,
                     num_initial_candidates=self.num_initial_candidates,
                     num_initial_candidates_for_batch=num_init_candidates_for_batch,
@@ -500,8 +558,13 @@ class GPFIFOSearcher(ModelBasedSearcher):
                     debug_log=self.debug_log,
                 )
                 # Next candidate decision
-                _configs = bo_algorithm.next_candidates()
-                configs.extend(self._postprocess_config(config) for config in _configs)
+                _configs = [
+                    self._postprocess_config(config)
+                    for config in bo_algorithm.next_candidates()
+                ]
+                configs.extend(_configs)
+                if self._restrict_configurations is not None:
+                    self._update_restrict_configurations(_configs, random_generator)
         return configs
 
     def evaluation_failed(self, trial_id: str):
@@ -535,6 +598,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
             resource_attr=self._resource_attr,
             filter_observed_data=self._filter_observed_data,
             allow_duplicates=self._allow_duplicates,
+            restrict_configurations=self._restrict_configurations,
         )
 
     def clone_from_state(self, state):

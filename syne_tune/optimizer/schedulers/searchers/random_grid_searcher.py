@@ -61,6 +61,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         debug_log: Union[bool, DebugLogPrinter] = False,
         resource_attr: Optional[str] = None,
         allow_duplicates: Optional[bool] = None,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -68,6 +69,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             metric=metric,
             points_to_evaluate=points_to_evaluate,
             allow_duplicates=allow_duplicates,
+            restrict_configurations=restrict_configurations,
             **kwargs,
         )
         self._resource_attr = resource_attr

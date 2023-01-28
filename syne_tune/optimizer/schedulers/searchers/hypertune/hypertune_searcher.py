@@ -82,7 +82,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
-            kwargs, *hypertune_searcher_defaults(), dict_name="search_options"
+            kwargs, *hypertune_searcher_defaults(kwargs), dict_name="search_options"
         )
         kwargs_int = hypertune_searcher_factory(**_kwargs)
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
