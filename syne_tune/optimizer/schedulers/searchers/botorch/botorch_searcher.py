@@ -17,7 +17,7 @@ import numpy as np
 from syne_tune.try_import import try_import_botorch_message
 
 try:
-    from torch import Tensor, randn_like
+    from torch import Tensor, randn_like, random
     from botorch.models import SingleTaskGP
     from botorch.fit import fit_gpytorch_mll
     from botorch.models.transforms import Warp
@@ -25,6 +25,7 @@ try:
     from botorch.utils.transforms import normalize
     from botorch.acquisition import qExpectedImprovement
     from botorch.optim import optimize_acqf
+    from botorch.exceptions.errors import ModelFittingError
     from gpytorch.mlls import ExactMarginalLogLikelihood
     from gpytorch.utils.errors import NotPSDError
 except ImportError:
@@ -96,6 +97,10 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         self.trial_configs = dict()
         self.pending_trials = set()
         self.trial_observations = dict()
+
+        # Set the random seed for botorch as well
+        if 'random_seed' in kwargs:
+            random.manual_seed(kwargs['random_seed'])
 
     def _update(self, trial_id: str, config: dict, result: dict):
         trial_id = int(trial_id)
@@ -218,6 +223,11 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
                 return self._sample_and_pick_acq_best(acq)
         except NotPSDError as _:
             logging.warning("Chlolesky inversion failed, sampling randomly.")
+            return self._get_random_config()
+        except ModelFittingError as _:
+            logging.warning(
+                    "Botorch was unable to fit the model, sampling randomly."
+                    )
             return self._get_random_config()
 
     def _make_gp(self, X_tensor: Tensor, Y_tensor: Tensor) -> SingleTaskGP:
