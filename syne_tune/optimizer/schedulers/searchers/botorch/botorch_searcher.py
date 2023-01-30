@@ -99,8 +99,8 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         self.trial_observations = dict()
 
         # Set the random seed for botorch as well
-        if 'random_seed' in kwargs:
-            random.manual_seed(kwargs['random_seed'])
+        if "random_seed" in kwargs:
+            random.manual_seed(kwargs["random_seed"])
 
     def _update(self, trial_id: str, config: dict, result: dict):
         trial_id = int(trial_id)
@@ -225,9 +225,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             logging.warning("Chlolesky inversion failed, sampling randomly.")
             return self._get_random_config()
         except ModelFittingError as _:
-            logging.warning(
-                    "Botorch was unable to fit the model, sampling randomly."
-                    )
+            logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
 
     def _make_gp(self, X_tensor: Tensor, Y_tensor: Tensor) -> SingleTaskGP:
