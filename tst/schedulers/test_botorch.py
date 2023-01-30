@@ -25,7 +25,11 @@ import pandas as pd
 
 @pytest.mark.timeout(20)
 def test_botorch_reproducible():
-
+    """
+    This test checks that the output of the BoTorch scheduler is reproducible
+    (when using one worker), that the scheduler runs and that the
+    ModelFittingError is caught.
+    """
     # Use train_height backend for our tests
     entry_point = "examples/training_scripts/height_example/train_height.py"
 
