@@ -16,19 +16,18 @@ jobs:
       matrix:
         script-path: [
           examples/launch_tensorboard_example.py,
-          examples/launch_tuning_gluonts.py, # pending limit increase for `ml.c5.4xlarge for training job usage`
+          examples/launch_tuning_gluonts.py,
           examples/launch_plot_results.py,
-          # examples/launch_rl_tuning.py, # TODO enable
-          examples/launch_simulated_benchmark.py, # TODO needs to run on machine with more disk space
+          examples/launch_rl_tuning.py,
+          examples/launch_simulated_benchmark.py,
           examples/launch_standalone_bayesian_optimization.py,
           examples/launch_moasha_instance_tuning.py,
-          examples/launch_nas201_transfer_learning.py, # TODO needs to run on a machine with more disk space
-          examples/launch_nasbench201_simulated.py, # TODO needs to run on machine with more disk space
+          examples/launch_nas201_transfer_learning.py,
+          examples/launch_nasbench201_simulated.py,
           examples/launch_pbt.py,
           examples/launch_height_sagemaker.py,
           examples/launch_height_standalone_scheduler.py,
-          examples/launch_huggingface_classification.py, # pending limit increase for `ml.g4dn.xlarge for training job usage`
-          # examples/launch_height_sagemaker_custom_image.py # TODO enable
+          examples/launch_huggingface_classification.py,
           examples/launch_height_sagemaker_remotely.py,
           examples/launch_height_python_backend.py,
           examples/launch_height_ray.py,
@@ -39,8 +38,8 @@ jobs:
           examples/launch_checkpoint_example.py,
           examples/launch_fashionmnist_costaware.py,
           examples/launch_bayesopt_constrained.py,
-          examples/launch_ask_tell_scheduler.py, # TODO enable
-          examples/launch_ask_tell_scheduler_hyperband.py, # TODO enable
+          examples/launch_ask_tell_scheduler.py,
+          examples/launch_ask_tell_scheduler_hyperband.py,
           examples/launch_asha_yahpo.py,
         ]
       fail-fast: false # TODO remove before merge, this is for testing
