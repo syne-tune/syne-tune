@@ -4,3 +4,4 @@ ray[rllib]
 dm-tree
 gym
 tensorflow
+pygame
