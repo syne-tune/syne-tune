@@ -1,4 +1,4 @@
-name: Check code examples on python3.8
+name: Check code examples on python3.9
 
 on:
   push:

@@ -21,7 +21,7 @@ env:
 
 jobs:
   run:
-    runs-on: temporary-sizing-testing_ubuntu-latest_8-core 
+    runs-on: temporary-sizing-testing_ubuntu-latest_16-core 
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
