@@ -19,7 +19,6 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.baselines import BoTorch
 import pytest
-import pandas as pd
 
 
 @pytest.mark.timeout(30)
