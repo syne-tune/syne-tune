@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from syne_tune.optimizer.schedulers.hyperband_stopping import (
     quantile_cutoff,
@@ -70,12 +70,12 @@ class PromotionRungSystem(RungSystem):
         # is required for ``on_task_report`` to properly report ``ignore_data``.
         self._running = dict()
 
-    def _cutoff(self, recorded: dict, prom_quant: float):
+    def _cutoff(self, recorded: Dict[str, Any], prom_quant: float):
         values = [x[0] for x in recorded.values()]
         return quantile_cutoff(values, prom_quant, self._mode)
 
     def _find_promotable_trial(
-        self, recorded: dict, prom_quant: float, resource: int
+        self, recorded: Dict[str, Any], prom_quant: float, resource: int
     ) -> Optional[str]:
         """
         Check whether any not yet promoted entry in ``recorded`` is
@@ -125,7 +125,7 @@ class PromotionRungSystem(RungSystem):
         return is_paused
 
     @staticmethod
-    def _mark_as_promoted(recorded: dict, trial_id: str):
+    def _mark_as_promoted(recorded: Dict[str, Any], trial_id: str):
         curr_val = recorded[trial_id]
         assert not curr_val[-1]  # Sanity check
         recorded[trial_id] = curr_val[:-1] + (True,)
@@ -138,7 +138,7 @@ class PromotionRungSystem(RungSystem):
         """
         return self._max_t
 
-    def on_task_schedule(self) -> dict:
+    def on_task_schedule(self) -> Dict[str, Any]:
         """
         Used to implement
         :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`.
@@ -202,13 +202,15 @@ class PromotionRungSystem(RungSystem):
         self._running[trial_id] = {"milestone": milestone, "resume_from": resume_from}
 
     def _register_metrics_at_rung_level(
-        self, trial_id: str, result: dict, recorded: dict
+        self, trial_id: str, result: Dict[str, Any], recorded: Dict[str, Any]
     ):
         metric_value = result[self._metric]
         assert trial_id not in recorded  # Sanity check
         recorded[trial_id] = (metric_value, False)
 
-    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(
+        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
+    ) -> Dict[str, Any]:
         """
         Decision on whether task may continue (``task_continues=True``), or
         should be paused (``task_continues=False``).

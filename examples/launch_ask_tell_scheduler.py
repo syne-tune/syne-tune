@@ -21,6 +21,7 @@ In some cases, experiments needed for function evaluations can be very complex a
 (example vary from setting up jobs on non-aws clusters to runnig physical lab experiments) in which case this
 interface provides all the necessary flexibility
 """
+from typing import Dict
 import datetime
 import logging
 
@@ -36,7 +37,7 @@ from syne_tune.optimizer.scheduler import TrialScheduler
 class AskTellScheduler:
     bscheduler: TrialScheduler
     trial_counter: int
-    completed_experiments: dict[int, TrialResult]
+    completed_experiments: Dict[int, TrialResult]
 
     def __init__(self, base_scheduler: TrialScheduler):
         self.bscheduler = base_scheduler
@@ -57,7 +58,7 @@ class AskTellScheduler:
         self.trial_counter += 1
         return trial
 
-    def tell(self, trial: Trial, experiment_result: dict[str, float]):
+    def tell(self, trial: Trial, experiment_result: Dict[str, float]):
         """
         Feed experiment results back to the Scheduler
 

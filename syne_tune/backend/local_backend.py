@@ -20,7 +20,7 @@ import numpy as np
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 
 from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.num_gpu import get_num_gpus
@@ -147,7 +147,7 @@ class LocalBackend(TrialBackend):
         self.gpu_times_assigned[res_gpu] += 1
         return res_gpu
 
-    def _schedule(self, trial_id: int, config: dict):
+    def _schedule(self, trial_id: int, config: Dict[str, Any]):
         self._prepare_for_schedule()
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
@@ -182,7 +182,7 @@ class LocalBackend(TrialBackend):
                 )
         self._busy_trial_id_candidates.add(trial_id)  # Mark trial as busy
 
-    def _allocate_gpu(self, trial_id: int, env: dict):
+    def _allocate_gpu(self, trial_id: int, env: Dict[str, Any]):
         if self.rotate_gpus:
             gpu = self._gpu_for_new_trial()
             env["CUDA_VISIBLE_DEVICES"] = str(gpu)

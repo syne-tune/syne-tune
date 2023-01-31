@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.cost_aware.cost_aware_gp_fifo_searcher import (
@@ -46,7 +46,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
@@ -67,7 +67,9 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         return kwargs_int
 
-    def _copy_kwargs_to_kwargs_int(self, kwargs_int: dict, kwargs: dict):
+    def _copy_kwargs_to_kwargs_int(
+        self, kwargs_int: Dict[str, Any], kwargs: Dict[str, Any]
+    ):
         super()._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
         k = "constraint_attr"
         kwargs_int[k] = kwargs[k]
@@ -76,7 +78,7 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         self._constraint_attr = kwargs_int.pop("constraint_attr")
         super()._call_create_internal(kwargs_int)
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         # We can call the superclass method, because
         # ``state_transformer.label_trial`` can be called two times
         # with parts of the metrics

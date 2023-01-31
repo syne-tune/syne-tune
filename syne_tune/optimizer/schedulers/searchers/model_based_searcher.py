@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import time
-from typing import Optional, Type
+from typing import Optional, Type, Any, Dict
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import (
@@ -170,7 +170,9 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             deb_msg += f"- allow_duplicates = {self._allow_duplicates}\n"
             logger.info(deb_msg)
 
-    def _copy_kwargs_to_kwargs_int(self, kwargs_int: dict, kwargs: dict):
+    def _copy_kwargs_to_kwargs_int(
+        self, kwargs_int: Dict[str, Any], kwargs: Dict[str, Any]
+    ):
         """Copies extra arguments not dealt with by ``gp_fifo_searcher_factory``
 
         :param kwargs_int: Output of factory, to be passed to ``searcher_factory``
@@ -193,10 +195,18 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         """
         return self._hp_ranges_in_state()
 
-    def _metric_val_update(self, crit_val: float, result: dict) -> MetricValues:
+    def _metric_val_update(
+        self, crit_val: float, result: Dict[str, Any]
+    ) -> MetricValues:
         return crit_val
 
-    def on_trial_result(self, trial_id: str, config: dict, result: dict, update: bool):
+    def on_trial_result(
+        self,
+        trial_id: str,
+        config: Dict[str, Any],
+        result: Dict[str, Any],
+        update: bool,
+    ):
         # If both ``cost_attr`` and ``resource_attr`` are given, cost data (if
         # given) is written out from every ``result``, independent of ``update``
         cattr = self._cost_attr
@@ -216,13 +226,13 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         if update:
             self._update(trial_id, config, result)
 
-    def _trial_id_string(self, trial_id: str, result: dict):
+    def _trial_id_string(self, trial_id: str, result: Dict[str, Any]):
         """
         For multi-fidelity, we also want to output the resource level
         """
         return trial_id
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         metric_val = result[self._metric]
         # Transform to criterion to be minimized
         if self.map_reward is not None:
@@ -402,7 +412,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
     def set_params(self, param_dict):
         self.state_transformer.set_params(param_dict)
 
-    def get_state(self) -> dict:
+    def get_state(self) -> Dict[str, Any]:
         """
         The mutable state consists of the GP model parameters, the
         ``TuningJobState``, and the ``skip_optimization`` predicate (which can have a
@@ -421,7 +431,7 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         )
         return state
 
-    def _restore_from_state(self, state: dict):
+    def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
         self.state_transformer.set_params(state["model_params"])
         self.random_generator.random_state = self.random_state

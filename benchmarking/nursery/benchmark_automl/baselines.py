@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
@@ -32,7 +32,7 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
 
 @dataclass
 class MethodArguments:
-    config_space: dict
+    config_space: Dict[str, Any]
     metric: str
     mode: str
     random_seed: int
@@ -61,7 +61,7 @@ class Methods:
 
 def _max_resource_attr_or_max_t(
     args: MethodArguments, max_t_name: str = "max_t"
-) -> dict:
+) -> Dict[str, Any]:
     if args.max_resource_attr is not None:
         return {"max_resource_attr": args.max_resource_attr}
     else:
@@ -69,7 +69,7 @@ def _max_resource_attr_or_max_t(
         return {max_t_name: args.max_t}
 
 
-def search_options(args: MethodArguments) -> dict:
+def search_options(args: MethodArguments) -> Dict[str, Any]:
     return {"debug_log": False}
 
 

@@ -54,7 +54,7 @@ def get_transfer_learning_evaluations(
     test_task: str,
     datasets: Optional[List[str]],
     n_evals: Optional[int] = None,
-) -> dict:
+) -> Dict[str, Any]:
     """
     :param blackbox_name: name of blackbox
     :param test_task: task where the performance would be tested, it is excluded from transfer-learning evaluations

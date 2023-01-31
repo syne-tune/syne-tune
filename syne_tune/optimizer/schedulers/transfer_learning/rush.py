@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -53,7 +53,7 @@ class RUSHScheduler(TransferLearningMixin, HyperbandScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         metric: str,
         type: str = "stopping",

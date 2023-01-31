@@ -15,7 +15,7 @@ Example similar to Raytune, https://github.com/ray-project/ray/blob/master/pytho
 """
 import logging
 import time
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from syne_tune import Reporter
 from argparse import ArgumentParser
@@ -39,7 +39,9 @@ def train_height(step: int, width: float, height: float) -> float:
     return 100 / (10 + width * step) + 0.1 * height
 
 
-def height_config_space(max_steps: int, sleep_time: Optional[float] = None) -> dict:
+def height_config_space(
+    max_steps: int, sleep_time: Optional[float] = None
+) -> Dict[str, Any]:
     kwargs = {"sleep_time": sleep_time} if sleep_time is not None else dict()
     return {
         MAX_RESOURCE_ATTR: max_steps,

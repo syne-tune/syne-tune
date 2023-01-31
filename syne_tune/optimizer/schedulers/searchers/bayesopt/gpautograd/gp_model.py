@@ -13,7 +13,7 @@
 import numpy as np
 import autograd.numpy as anp
 from autograd.builtins import isinstance
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants import (
@@ -60,7 +60,7 @@ class GaussianProcessModel:
         """
         raise NotImplementedError
 
-    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
         """
         Adjust model parameters based on training data ``data``. Can be done via
         optimization or MCMC sampling. The posterior states are computed at the
@@ -71,7 +71,7 @@ class GaussianProcessModel:
         """
         raise NotImplementedError
 
-    def recompute_states(self, data: dict):
+    def recompute_states(self, data: Dict[str, Any]):
         """
         Recomputes posterior states for current model parameters.
 
@@ -214,7 +214,7 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
     def likelihood(self) -> MarginalLikelihood:
         raise NotImplementedError
 
-    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
         """
         Fit the model parameters by optimizing the marginal likelihood,
         and set posterior states.
@@ -277,16 +277,16 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
         # Recompute posterior state for new hyperparameters
         self._recompute_states(data)
 
-    def _set_likelihood_params(self, params: dict):
+    def _set_likelihood_params(self, params: Dict[str, Any]):
         for param in self.likelihood.collect_params().values():
             vec = params.get(param.name)
             if vec is not None:
                 param.set_data(vec)
 
-    def recompute_states(self, data: dict):
+    def recompute_states(self, data: Dict[str, Any]):
         self._recompute_states(data)
 
-    def _recompute_states(self, data: dict):
+    def _recompute_states(self, data: Dict[str, Any]):
         self.likelihood.data_precomputations(data)
         self._states = [self.likelihood.get_posterior_state(data)]
 

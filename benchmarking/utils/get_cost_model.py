@@ -10,11 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Tuple
+from typing import Tuple, Dict, Any
 
 
 def get_cost_model_for_batch_size(
-    params: dict, batch_size_key: str, batch_size_range: Tuple[int, int]
+    params: Dict[str, Any], batch_size_key: str, batch_size_range: Tuple[int, int]
 ):
     """
     Returns cost model depending on the batch size only.

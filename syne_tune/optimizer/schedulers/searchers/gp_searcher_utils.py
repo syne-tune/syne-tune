@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from collections import Counter
-from typing import Callable
+from typing import Callable, Dict, Any
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
@@ -53,7 +53,7 @@ SUPPORTED_INITIAL_SCORING = {"thompson_indep", "acq_func"}
 DEFAULT_INITIAL_SCORING = "thompson_indep"
 
 
-def encode_state(state: TuningJobState) -> dict:
+def encode_state(state: TuningJobState) -> Dict[str, Any]:
     trials_evaluations = [
         {"trial_id": x.trial_id, "metrics": x.metrics} for x in state.trials_evaluations
     ]
@@ -72,7 +72,9 @@ def encode_state(state: TuningJobState) -> dict:
     return enc_state
 
 
-def decode_state(enc_state: dict, hp_ranges: HyperparameterRanges) -> TuningJobState:
+def decode_state(
+    enc_state: Dict[str, Any], hp_ranges: HyperparameterRanges
+) -> TuningJobState:
     trials_evaluations = [
         TrialEvaluations(**x) for x in enc_state["trials_evaluations"]
     ]
@@ -90,9 +92,9 @@ def decode_state(enc_state: dict, hp_ranges: HyperparameterRanges) -> TuningJobS
 
 def _get_trial_id(
     hp_ranges: HyperparameterRanges,
-    config: dict,
-    config_for_trial: dict,
-    trial_for_config: dict,
+    config: Dict[str, Any],
+    config_for_trial: Dict[str, Any],
+    trial_for_config: Dict[str, Any],
 ) -> str:
     match_str = hp_ranges.config_to_match_string(config, skip_last=True)
     trial_id = trial_for_config.get(match_str)
@@ -104,7 +106,7 @@ def _get_trial_id(
 
 
 def decode_state_from_old_encoding(
-    enc_state: dict, hp_ranges: HyperparameterRanges
+    enc_state: Dict[str, Any], hp_ranges: HyperparameterRanges
 ) -> TuningJobState:
     """
     Decodes ``TuningJobState`` from encoding done for the old definition of
@@ -193,7 +195,7 @@ class ResourceForAcquisitionBOHB(ResourceForAcquisitionMap):
         """
         Get largest key of ``counter`` whose value is at least ``threshold``.
 
-        :param counter: dict with keys that support comparison operators
+        :param counter: Dict[str, Any] with keys that support comparison operators
         :return: largest key of ``counter``
         """
         return max(
@@ -233,7 +235,7 @@ SUPPORTED_RESOURCE_FOR_ACQUISITION = {"bohb", "first", "final"}
 
 
 def resource_for_acquisition_factory(
-    kwargs: dict, hp_ranges: HyperparameterRanges
+    kwargs: Dict[str, Any], hp_ranges: HyperparameterRanges
 ) -> ResourceForAcquisitionMap:
     resource_acq = kwargs.get("resource_acq", "bohb")
     assert (

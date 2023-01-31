@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -78,7 +79,9 @@ class StoreResultsAndModelParamsCallback(StoreResultsCallback):
         super().on_tuning_start(tuner)
         self._searcher = _get_model_based_searcher(tuner)
 
-    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
+    def on_trial_result(
+        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+    ):
         result = _extended_result(self._searcher, result)
         super().on_trial_result(trial, status, result, decision)
 
@@ -100,6 +103,8 @@ class SimulatorAndModelParamsCallback(SimulatorCallback):
         super().on_tuning_start(tuner)
         self._searcher = _get_model_based_searcher(tuner)
 
-    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
+    def on_trial_result(
+        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+    ):
         result = _extended_result(self._searcher, result)
         super().on_trial_result(trial, status, result, decision)

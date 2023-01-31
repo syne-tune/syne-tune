@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 import json
 from pathlib import Path
 
@@ -242,7 +243,7 @@ yahpo_iaml_selected_instances = {
 
 def _yahpo_iaml_benchmark_definitions(
     instances_dict, method, restrict_fidelities=False
-) -> dict:
+) -> Dict[str, Any]:
     assert (
         method in yahpo_iaml_benchmark
     ), f"method = {method} must be in {list(yahpo_iaml_benchmark.keys())}"
@@ -258,7 +259,9 @@ def _yahpo_iaml_benchmark_definitions(
     }
 
 
-def yahpo_iaml_benchmark_definitions(method, restrict_fidelities=False) -> dict:
+def yahpo_iaml_benchmark_definitions(
+    method, restrict_fidelities=False
+) -> Dict[str, Any]:
     instances_dict = {
         method: {metric: yahpo_iaml_instances for metric, _ in yahpo_iaml_metrics}
         for method in yahpo_iaml_methods
@@ -270,7 +273,7 @@ def yahpo_iaml_benchmark_definitions(method, restrict_fidelities=False) -> dict:
 
 def yahpo_iaml_selected_benchmark_definitions(
     method, restrict_fidelities=False
-) -> dict:
+) -> Dict[str, Any]:
     return _yahpo_iaml_benchmark_definitions(
         yahpo_iaml_selected_instances, method, restrict_fidelities
     )
@@ -534,7 +537,7 @@ with open(Path(__file__).parent / "yahpo_rbv2_max_wallclock_time.json", "r") as 
 
 def _yahpo_rbv2_benchmark_definitions(
     instances_dict, method, restrict_fidelities=False
-) -> dict:
+) -> Dict[str, Any]:
     assert (
         method in yahpo_rbv2_benchmark
     ), f"method = {method} must be in {list(yahpo_iaml_benchmark.keys())}"
@@ -553,7 +556,9 @@ def _yahpo_rbv2_benchmark_definitions(
     }
 
 
-def yahpo_rbv2_benchmark_definitions(method, restrict_fidelities=False) -> dict:
+def yahpo_rbv2_benchmark_definitions(
+    method, restrict_fidelities=False
+) -> Dict[str, Any]:
     return _yahpo_rbv2_benchmark_definitions(
         yahpo_rbv2_instances, method, restrict_fidelities
     )
@@ -561,7 +566,7 @@ def yahpo_rbv2_benchmark_definitions(method, restrict_fidelities=False) -> dict:
 
 def yahpo_rbv2_selected_benchmark_definitions(
     method, restrict_fidelities=False
-) -> dict:
+) -> Dict[str, Any]:
     return _yahpo_rbv2_benchmark_definitions(
         yahpo_rbv2_selected_instances, method, restrict_fidelities
     )

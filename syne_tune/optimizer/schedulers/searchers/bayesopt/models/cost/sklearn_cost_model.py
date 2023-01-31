@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Tuple, Callable, Optional
+from typing import List, Tuple, Callable, Optional, Dict, Any
 import numpy as np
 import logging
 from syne_tune.try_import import try_import_blackbox_repository_message
@@ -61,7 +61,7 @@ class NonLinearCostModel(CostModel):
 
     def transform_dataset(
         self, dataset: List[Tuple[Configuration, float]], num_data0: int, res_min: int
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """
         Transforms dataset (see :meth:`_data_for_c1_regression`) into a dataset
         representation (dict), which is used as ``kwargs`` in :meth:`fit_regressor`.
@@ -203,7 +203,7 @@ class ScikitLearnCostModel(NonLinearCostModel):
 
     def transform_dataset(
         self, dataset: List[Tuple[Configuration, float]], num_data0: int, res_min: int
-    ) -> dict:
+    ) -> Dict[str, Any]:
         num_hps = len(self.hp_ranges)
         num_data = len(dataset)
         features = np.zeros((num_data, num_hps))
@@ -283,7 +283,7 @@ class UnivariateSplineCostModel(NonLinearCostModel):
 
     def transform_dataset(
         self, dataset: List[Tuple[Configuration, float]], num_data0: int, res_min: int
-    ) -> dict:
+    ) -> Dict[str, Any]:
         # We combine duplicates in the second part of the dataset
         config_lst, target_lst = zip(*dataset[:num_data0])
         config_lst = list(config_lst)

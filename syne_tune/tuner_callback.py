@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from time import perf_counter
 import copy
 import logging
@@ -75,7 +76,7 @@ class TunerCallback:
         """
         pass
 
-    def on_trial_complete(self, trial: Trial, result: dict):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         """Called when a trial completes (``Status.completed``)
 
         The arguments here also have been passed to ``scheduler.on_trial_complete``,
@@ -86,7 +87,9 @@ class TunerCallback:
         """
         pass
 
-    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
+    def on_trial_result(
+        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+    ):
         """Called when a new result (reported by a trial) is observed
 
         The arguments here are inputs or outputs of ``scheduler.on_trial_result``
@@ -128,7 +131,7 @@ class StoreResultsCallback(TunerCallback):
         self.add_wallclock_time = add_wallclock_time
         self._start_time_stamp = None
 
-    def _set_time_fields(self, result: dict):
+    def _set_time_fields(self, result: Dict[str, Any]):
         """
         Note that we only add wallclock time to the result if this has not
         already been done (by the backend)
@@ -136,7 +139,9 @@ class StoreResultsCallback(TunerCallback):
         if self._start_time_stamp is not None and ST_TUNER_TIME not in result:
             result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp
 
-    def on_trial_result(self, trial: Trial, status: str, result: dict, decision: str):
+    def on_trial_result(
+        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
+    ):
         assert (
             self.save_results_at_frequency is not None
         ), "on_tuning_start must always be called before on_trial_result."

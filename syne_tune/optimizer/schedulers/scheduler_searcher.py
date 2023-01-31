@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional
+from typing import Optional, Dict, Any
 import logging
 import numpy as np
 
@@ -36,7 +36,7 @@ class TrialSchedulerWithSearcher(TrialScheduler):
     * Master seed, :attr:`random_seed_generator`
     """
 
-    def __init__(self, config_space: dict, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], **kwargs):
         super().__init__(config_space)
         self._searcher_initialized = False
         # Generator for random seeds
@@ -69,7 +69,7 @@ class TrialSchedulerWithSearcher(TrialScheduler):
             if self.searcher.debug_log is not None:
                 logger.info(f"trial_id {trial_id}: Evaluation failed!")
 
-    def on_trial_complete(self, trial: Trial, result: dict):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         self._initialize_searcher()
         if self.searcher is not None:
             config = self._preprocess_config(trial.config)

@@ -14,7 +14,7 @@ import copy
 import logging
 
 from collections import deque
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PopulationElement:
     score: int = 0
-    config: dict = None
+    config: Dict[str, Any] = None
 
 
 class RegularizedEvolution(SearcherWithRandomSeed):
@@ -82,7 +82,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
                 "This class does not support allow_duplicates argument. Sampling is with replacement"
             )
 
-    def _mutate_config(self, config: dict) -> dict:
+    def _mutate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         child_config = copy.deepcopy(config)
 
         # sample mutation until a different configuration is found
@@ -112,7 +112,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
 
         return child_config
 
-    def _sample_random_config(self) -> dict:
+    def _sample_random_config(self) -> Dict[str, Any]:
         return sample_random_configuration(self._hp_ranges, self.random_state)
 
     def get_config(self, **kwargs) -> Optional[dict]:
@@ -132,7 +132,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
 
         return config
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         score = result[self._metric]
 
         if self.mode == "max":
@@ -156,5 +156,5 @@ class RegularizedEvolution(SearcherWithRandomSeed):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError

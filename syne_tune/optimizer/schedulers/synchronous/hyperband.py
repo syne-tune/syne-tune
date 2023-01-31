@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Dict, Any
 import logging
 import numpy as np
 
@@ -82,7 +82,7 @@ class SynchronousHyperbandCommon(
 
     def _create_internal_common(
         self, skip_searchers: Optional[Set[str]] = None, **kwargs
-    ) -> dict:
+    ) -> Dict[str, Any]:
         self.metric = kwargs.get("metric")
         assert self.metric is not None, (
             "Argument 'metric' is mandatory. Pass the name of the metric "
@@ -176,7 +176,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
-    :type search_options: dict, optional
+    :type search_options: Dict[str, Any], optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
     :type mode: str, optional
@@ -223,7 +223,10 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
     """
 
     def __init__(
-        self, config_space: dict, bracket_rungs: RungSystemsPerBracket, **kwargs
+        self,
+        config_space: Dict[str, Any],
+        bracket_rungs: RungSystemsPerBracket,
+        **kwargs,
     ):
         super().__init__(config_space, **kwargs)
         self._create_internal(bracket_rungs, **kwargs)
@@ -334,7 +337,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
         )
         self.bracket_manager.on_result((bracket_id, result_failed))
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         trial_id = trial.trial_id
         if trial_id in self._trial_to_pending_slot:
             bracket_id, slot_in_rung = self._trial_to_pending_slot[trial_id]
