@@ -109,6 +109,16 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         :code:`{"gp_multitask", "gp_independent"}`. Determines how the EI
         acquisition function is used. Values: "bohb", "first". Defaults to "bohb"
     :type resource_acq: str, optional
+    :param max_size_data_for_model: If this is set, we limit the number of
+        observations the surrogate model is fitted on this value. If there are
+        more observations, they are down sampled, see
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.utils.subsample_state.SubsampleMultiFidelityStateConverter`
+        for details. This down sampling is repeated every time the model is
+        fit, which ensures that most recent data is taken into account.
+
+        Pass ``None`` not to apply such a threshold. The default is
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+    :type max_size_data_for_model: int, optional
     :param opt_skip_num_max_resource: Parameter for surrogate model fitting,
         skip predicate. If ``True``, and number of observations above
         ``opt_skip_init_length``, fitting is done only when there is a new

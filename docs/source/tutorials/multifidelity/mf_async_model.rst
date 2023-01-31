@@ -177,6 +177,38 @@ so can MOBSTER, simply by selecting ``brackets`` when creating
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. In our experience so
 far, just like with ASHA, MOBSTER tends to work best with a single bracket.
 
+Controlling MOBSTER Computations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MOBSTER often outperforms ASHA substantially. However, when applied to a problem
+where many evaluations can be done, fitting the GP surrogate model to all observed
+data can become slow. In fact, Gaussian process inference scales cubically in the
+number of observations. The amount of computation spent by MOBSTER can be controlled:
+
+* Setting the limit ``max_size_data_for_model``: Once the total number of
+  observations is above this limit, the data is sampled down to this size. This is
+  done in a way which retains all observations from trials which reached higher
+  rung levels, while data from trials stopped early are more likely to be removed.
+  This down sampling is redone every time the surrogate model is fit, so that
+  new data (especially at higher rungs) is taken into account. Also, scheduling
+  decisions about stopping, pausing, or promoting trials are always done based on
+  all data.
+
+  The default value for ``max_size_data_for_model`` is
+  :const:`~syne_tune.syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+  It can be changed by passing
+  :code:`search_options = {"max_size_data_for_model": XYZ}` when creating the
+  MOBSTER scheduler. You can switch off the limit mechanism by passing ``None``
+  or a very large value. As the current default value is on the smaller end, to
+  ensure fast computations, you may want to experiment with larger values as
+  well.
+* Parameters ``opt_skip_init_length``, ``opt_skip_period``: When fitting the GP
+  surrogate model, the most expensive computation by far is refitting its own
+  parameters, such as kernel parameters. The frequency of this computation can
+  be regulated, as detailed
+  `here <../basics/basics_bayesopt.html#speeding-up-decision-making>`_.
+
+
 Hyper-Tune
 ----------
 
@@ -204,6 +236,9 @@ used in MOBSTER. In result plots for this tutorial, original Hyper-Tune is
 called HYPERTUNE-INDEP, while this latter variant is called HYPERTUNE-JOINT.
 Our `launcher script <mf_setup.html#the-launcher-script>`_ runs this variant
 if ``method="HYPERTUNE-JOINT"``.
+
+Finally, computations of Hyper-Tune can be
+`controlled in the same way as in MOBSTER <#controlling-mobster-computations>`_.
 
 Hyper-Tune with Multiple Brackets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -108,6 +108,8 @@ This call runs a number of experiments sequentially on the local machine:
   seed is detailed `below <bm_local.html#random-seeds-and-paired-comparisons>`_.
 * ``max_wallclock_time``, ``n_workers``: These arguments overwrite the defaults
   specified in the benchmark definitions.
+* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
 
 If you defined additional arguments via ``extra_args``, you can use them
 here as well. For example, ``--num_brackets 3`` would run all

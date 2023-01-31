@@ -18,7 +18,7 @@ from syne_tune.tuner_callback import TunerCallback
 from syne_tune import Tuner
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.schedulers import FIFOScheduler
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import ModelBasedSearcher
+from syne_tune.optimizer.schedulers.searchers import ModelBasedSearcher
 
 
 class StoreSearcherStatesCallback(TunerCallback):

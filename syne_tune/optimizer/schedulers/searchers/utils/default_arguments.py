@@ -68,6 +68,15 @@ class Integer(CheckType):
         )
 
 
+class IntegerOrNone(Integer):
+    def __init__(self, lower: int = None, upper: int = None):
+        super().__init__(lower, upper)
+
+    def assert_valid(self, key: str, value):
+        if value is not None:
+            super().assert_valid(key, value)
+
+
 class Categorical(CheckType):
     def __init__(self, choices: Tuple[str, ...]):
         self.choices = set(choices)

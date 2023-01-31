@@ -65,7 +65,12 @@ def get_hyperparameters(
         "start_seed": seed,
         "random_seed": random_seed,
     }
-    for k in ("n_workers", "max_wallclock_time", "instance_type"):
+    for k in (
+        "n_workers",
+        "max_wallclock_time",
+        "instance_type",
+        "max_size_data_for_model",
+    ):
         v = getattr(args, k)
         if v is not None:
             hyperparameters[k] = v
