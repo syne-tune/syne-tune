@@ -40,12 +40,25 @@ class TrialEvaluations:
     trial_id: str
     metrics: Dict[str, MetricValues]
 
-    def num_cases(self, metric_name: str = INTERNAL_METRIC_NAME) -> int:
+    def num_cases(
+        self, metric_name: str = INTERNAL_METRIC_NAME, resource: Optional[int] = None
+    ) -> int:
+        """
+        Counts the number of observations for metric ``metric_name``.
+
+        :param metric_name: Defaults to :const:`INTERNAL_METRIC_NAME`
+        :param resource: In the multi-fidelity case, we only count observations
+            at this resource level
+        :return: Number of observations
+        """
         metric_vals = self.metrics.get(metric_name)
         if metric_vals is None:
             return 0
         elif isinstance(metric_vals, dict):
-            return len(metric_vals)
+            if resource is None:
+                return len(metric_vals)
+            else:
+                return 1 if str(resource) in metric_vals else 0
         else:
             return 1
 

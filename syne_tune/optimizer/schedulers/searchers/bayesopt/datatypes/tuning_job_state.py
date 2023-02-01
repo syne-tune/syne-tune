@@ -150,8 +150,20 @@ class TuningJobState:
             self.trials_evaluations.append(new_eval)
         return metrics
 
-    def num_observed_cases(self, metric_name: str = INTERNAL_METRIC_NAME) -> int:
-        return sum(ev.num_cases(metric_name) for ev in self.trials_evaluations)
+    def num_observed_cases(
+        self, metric_name: str = INTERNAL_METRIC_NAME, resource: Optional[int] = None
+    ) -> int:
+        """
+        Counts the number of observations for metric ``metric_name``.
+
+        :param metric_name: Defaults to :const:`INTERNAL_METRIC_NAME`
+        :param resource: In the multi-fidelity case, we only count observations
+            at this resource level
+        :return: Number of observations
+        """
+        return sum(
+            ev.num_cases(metric_name, resource) for ev in self.trials_evaluations
+        )
 
     def observed_data_for_metric(
         self, metric_name: str = INTERNAL_METRIC_NAME, resource_attr_name: str = None

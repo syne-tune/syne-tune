@@ -30,6 +30,7 @@ from syne_tune.optimizer.baselines import (
     MOBSTER as _MOBSTER,
     HyperTune as _HyperTune,
     BOHB as _BOHB,
+    DyHPO as _DyHPO,
     ASHABORE as _ASHABORE,
     SyncHyperband as _SyncHyperband,
     SyncBOHB as _SyncBOHB,
@@ -106,6 +107,10 @@ def HyperTune(method_arguments: MethodArguments, **kwargs):
 
 def BOHB(method_arguments: MethodArguments, **kwargs):
     return _BOHB(**_baseline_kwargs(method_arguments, kwargs, is_multifid=True))
+
+
+def DyHPO(method_arguments: MethodArguments, **kwargs):
+    return _DyHPO(**_baseline_kwargs(method_arguments, kwargs, is_multifid=True))
 
 
 def ASHABORE(method_arguments: MethodArguments, **kwargs):

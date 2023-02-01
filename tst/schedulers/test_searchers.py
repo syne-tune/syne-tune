@@ -21,6 +21,7 @@ from syne_tune.optimizer.baselines import (
     BayesianOptimization,
     ASHA,
     HyperTune,
+    DyHPO,
     SyncHyperband,
     DEHB,
     BOHB,
@@ -45,6 +46,7 @@ SCHEDULERS = [
     (BayesianOptimization, False),
     (ASHA, True),
     (HyperTune, True),
+    (DyHPO, True),
     (SyncHyperband, True),
     (DEHB, True),
     (BOHB, True),
@@ -107,7 +109,7 @@ def test_allow_duplicates_or_not(tpl1, tpl2):
     trials = dict()
     while trial_id <= cs_size:
         err_msg = (
-            f"trial_id {trial_id}, cs_size {cs_size}, allow_duplicates "
+            f"{scheduler_cls}: trial_id {trial_id}, cs_size {cs_size}, allow_duplicates "
             f"{allow_duplicates}, trials_fail {trials_fail}"
         )
         print(f"suggest: trial_id = {trial_id}")
