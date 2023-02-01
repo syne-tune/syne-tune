@@ -18,6 +18,18 @@ permissions:
   contents: read  # This is required for actions/checkout
 
 jobs:
+  stop_all_training_jobs: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: 
+        run: |
+          aws sagemaker list-training-jobs --status-equals InProgress > /tmp/running_jobs.json
+          jq -c '.[][]["TrainingJobName"]' /tmp/running_jobs.json | while read i; do
+            jobName=`echo $i | cut -d "\"" -f 2`
+            echo "stopping training job $jobName"
+            aws sagemaker stop-training-job --training-job-name $jobName
+          done
+
   launch_tensorboard_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
@@ -25,6 +37,7 @@ jobs:
     secrets: inherit
   
   launch_tuning_gluonts:
+    needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_tuning_gluonts.py
@@ -58,6 +71,7 @@ jobs:
     secrets: inherit
 
   launch_moasha_instance_tuning:
+    needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_moasha_instance_tuning.py
@@ -83,6 +97,7 @@ jobs:
     secrets: inherit
 
   launch_height_sagemaker:
+    needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_sagemaker.py
@@ -95,6 +110,7 @@ jobs:
     secrets: inherit
 
   launch_huggingface_classification:
+    needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_huggingface_classification.py
@@ -102,6 +118,7 @@ jobs:
     secrets: inherit
 
   launch_height_sagemaker_remotely:
+    needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_sagemaker_remotely.py
@@ -120,6 +137,7 @@ jobs:
     secrets: inherit
 
   launch_height_sagemaker_checkpoints:
+    needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_sagemaker_checkpoints.py
