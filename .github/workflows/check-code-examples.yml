@@ -2,49 +2,176 @@ name: Check code examples on python3.9
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+    types: 
+      - ready_for_review
+      - review_requested
 
 permissions:
   id-token: write # This is required for requesting the JWT
   contents: read  # This is required for actions/checkout
 
 jobs:
-  ex:
-    strategy:
-      matrix:
-        script-path: [
-          examples/launch_tensorboard_example.py,
-          examples/launch_tuning_gluonts.py,
-          examples/launch_plot_results.py,
-          examples/launch_rl_tuning.py,
-          examples/launch_simulated_benchmark.py,
-          examples/launch_standalone_bayesian_optimization.py,
-          examples/launch_moasha_instance_tuning.py,
-          examples/launch_nas201_transfer_learning.py,
-          examples/launch_nasbench201_simulated.py,
-          examples/launch_pbt.py,
-          examples/launch_height_sagemaker.py,
-          examples/launch_height_standalone_scheduler.py,
-          examples/launch_huggingface_classification.py,
-          examples/launch_height_sagemaker_remotely.py,
-          examples/launch_height_python_backend.py,
-          examples/launch_height_ray.py,
-          examples/launch_height_sagemaker_checkpoints.py,
-          examples/launch_height_baselines.py,
-          examples/launch_height_moasha.py,
-          examples/launch_fashionmnist.py,
-          examples/launch_checkpoint_example.py,
-          examples/launch_fashionmnist_costaware.py,
-          examples/launch_bayesopt_constrained.py,
-          examples/launch_ask_tell_scheduler.py,
-          examples/launch_ask_tell_scheduler_hyperband.py,
-          examples/launch_asha_yahpo.py,
-        ]
-      fail-fast: false # TODO remove before merge, this is for testing
+  launch_tensorboard_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      script-path: ${{ matrix.script-path }}
-    secrets:
-      BETA_AWS_INTEG_TEST_ROLE_ARN: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
+      script-path: examples/launch_tensorboard_example.py
+    secrets: inherit
+  
+  launch_tuning_gluonts:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_tuning_gluonts.py
+    secrets: inherit
+
+  launch_plot_results:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      additional-command: pip install matplotlib
+      script-path: examples/launch_plot_results.py
+    secrets: inherit
+
+  launch_rl_tuning:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      additional-command: pip install -r examples/training_scripts/rl_cartpole/requirements.txt
+      script-path: examples/launch_rl_tuning.py
+    secrets: inherit
+
+  launch_simulated_benchmark:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_simulated_benchmark.py
+    secrets: inherit
+
+  launch_standalone_bayesian_optimization:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_standalone_bayesian_optimization.py
+    secrets: inherit
+
+  launch_moasha_instance_tuning:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_moasha_instance_tuning.py
+    secrets: inherit
+
+  launch_nas201_transfer_learning:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      additional-command: pip install matplotlib
+      script-path: examples/launch_nas201_transfer_learning.py
+    secrets: inherit
+
+  launch_nasbench201_simulated:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_nasbench201_simulated.py
+    secrets: inherit
+
+  launch_pbt:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_pbt.py
+    secrets: inherit
+
+  launch_height_sagemaker:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_sagemaker.py
+    secrets: inherit
+
+  launch_height_standalone_scheduler:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_standalone_scheduler.py
+    secrets: inherit
+
+  launch_huggingface_classification:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_huggingface_classification.py
+    secrets: inherit
+
+  launch_height_sagemaker_remotely:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_sagemaker_remotely.py
+    secrets: inherit
+
+  launch_height_python_backend:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_python_backend.py
+    secrets: inherit
+
+  launch_height_ray:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_ray.py
+    secrets: inherit
+
+  launch_height_sagemaker_checkpoints:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_sagemaker_checkpoints.py
+    secrets: inherit
+
+  launch_height_baselines:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_baselines.py
+    secrets: inherit
+
+  launch_height_moasha:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_moasha.py
+    secrets: inherit
+
+  launch_fashionmnist:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_fashionmnist.py
+    secrets: inherit
+
+  launch_checkpoint_example:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_checkpoint_example.py
+    secrets: inherit
+
+  launch_fashionmnist_costaware:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_fashionmnist_costaware.py
+    secrets: inherit
+
+  launch_bayesopt_constrained:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_bayesopt_constrained.py
+    secrets: inherit
+
+  launch_ask_tell_scheduler:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_ask_tell_scheduler.py
+    secrets: inherit
+
+  launch_ask_tell_scheduler_hyperband:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_ask_tell_scheduler_hyperband.py
+    secrets: inherit
+
+  launch_asha_yahpo:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      additional-command: pip install matplotlib
+      script-path: examples/launch_asha_yahpo.py
+    secrets: inherit

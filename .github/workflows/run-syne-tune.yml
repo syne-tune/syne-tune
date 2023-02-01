@@ -7,17 +7,20 @@ permissions:
 on:
   workflow_call:
     inputs:
+      additional-command:
+        required: false
+        type: string
       script-path:
         required: true
         type: string
     secrets:
-      BETA_AWS_INTEG_TEST_ROLE_ARN:
+      PROD_AWS_INTEG_TEST_ROLE_ARN:
         required: true
 
 env:
   AWS_DEFAULT_REGION: us-west-2
   SCRIPT_PATH: ${{ inputs.script-path }}
-  AWS_ROLE: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
+  AWS_ROLE: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
 
 jobs:
   run:
@@ -26,7 +29,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.BETA_AWS_INTEG_TEST_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
           role-session-name: integtestsession
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - uses: actions/checkout@v2
@@ -39,12 +42,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e '.[extra]'
-      - name: Conditionally install matplotlib
-        if: ${{ ( env.SCRIPT_PATH == 'examples/launch_asha_yahpo.py') || ( env.SCRIPT_PATH == 'examples/launch_plot_results.py') || ( env.SCRIPT_PATH == 'examples/launch_nas201_transfer_learning.py') }}
-        run: pip install matplotlib
-      - name: Conditionally install RL cartpole dependencies
-        if: ${{ ( env.SCRIPT_PATH == 'examples/launch_rl_tuning.py') }}
-        run: pip install -r examples/training_scripts/rl_cartpole/requirements.txt
+      - name: Run optional custom command
+        if: ${{ inputs.additional-command != '' }}
+        run: ${{ inputs.additional-command }}
       - name: Run Syne Tune
         run: |
           python ${{ inputs.script-path }}

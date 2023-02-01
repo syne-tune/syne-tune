@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: 
-      labels: temporary-sizing-testing_ubuntu-latest_8-core
+      labels: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
