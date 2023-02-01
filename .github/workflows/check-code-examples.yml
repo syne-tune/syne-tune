@@ -7,9 +7,9 @@ on:
   pull_request:
     branches:
       - main
-    types: 
-      - ready_for_review
-      - review_requested
+    # types: 
+    #   - ready_for_review
+    #   - review_requested
 
 permissions:
   id-token: write # This is required for requesting the JWT
