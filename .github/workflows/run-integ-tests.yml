@@ -23,8 +23,8 @@ jobs:
     steps:
       - name: 
         run: |
-          aws sagemaker list-training-jobs --status-equals InProgress > /tmp/running_jobs.json
-          jq -c '.[][]["TrainingJobName"]' /tmp/running_jobs.json | while read i; do
+          aws sagemaker list-training-jobs --status-equals InProgress > running_jobs.json
+          jq -c '.[][]["TrainingJobName"]' running_jobs.json | while read i; do
             jobName=`echo $i | cut -d "\"" -f 2`
             echo "stopping training job $jobName"
             aws sagemaker stop-training-job --training-job-name $jobName
