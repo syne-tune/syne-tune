@@ -15,7 +15,7 @@ import json
 import logging
 import types
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, Any
 
 import dill
 
@@ -107,7 +107,7 @@ class PythonBackend(LocalBackend):
                 f"Path {self.local_path} already exists, make sure you have a unique tuner name."
             )
 
-    def _schedule(self, trial_id: int, config: dict):
+    def _schedule(self, trial_id: int, config: Dict[str, Any]):
         if not (self.tune_function_path / "tune_function.dill").exists():
             self.save_tune_function(self.tune_function)
         config = config.copy()

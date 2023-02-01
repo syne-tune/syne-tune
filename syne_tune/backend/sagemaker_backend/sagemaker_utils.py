@@ -18,7 +18,7 @@ import subprocess
 import tarfile
 from ast import literal_eval
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Any
 
 import boto3
 from botocore.config import Config
@@ -308,7 +308,9 @@ def map_identifier_limited_length(
         return name[: (max_length - rnd_digits)] + postfix
 
 
-def _s3_traverse_recursively(s3_client, action, bucket: str, prefix: str) -> dict:
+def _s3_traverse_recursively(
+    s3_client, action, bucket: str, prefix: str
+) -> Dict[str, Any]:
     """
     Traverses directory from root ``prefix``. The function ``action`` is applied
     to all objects encountered, the signature is
@@ -377,7 +379,9 @@ def _split_bucket_prefix(s3_path: str) -> (str, str):
     return bucket, prefix
 
 
-def s3_copy_files_recursively(s3_source_path: str, s3_target_path: str) -> dict:
+def s3_copy_files_recursively(
+    s3_source_path: str, s3_target_path: str
+) -> Dict[str, Any]:
     """
     Recursively copies files from ``s3_source_path`` to ``s3_target_path``.
 
@@ -416,7 +420,7 @@ def s3_copy_files_recursively(s3_source_path: str, s3_target_path: str) -> dict:
     )
 
 
-def s3_delete_files_recursively(s3_path: str) -> dict:
+def s3_delete_files_recursively(s3_path: str) -> Dict[str, Any]:
     """
     Recursively deletes files from ``s3_path``.
 

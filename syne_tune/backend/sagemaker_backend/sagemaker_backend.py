@@ -14,7 +14,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 import boto3
 from botocore.exceptions import ClientError
 import numpy as np
@@ -199,7 +199,7 @@ class SageMakerBackend(TrialBackend):
             res_path = f"{res_path}/{self.tuner_name}"
         return f"{res_path}/{str(trial_id)}/checkpoints/"
 
-    def _schedule(self, trial_id: int, config: dict):
+    def _schedule(self, trial_id: int, config: Dict[str, Any]):
         config[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
         hyperparameters = config.copy()
 

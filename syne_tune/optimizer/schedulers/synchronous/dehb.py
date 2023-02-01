@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 import logging
 import numpy as np
 from dataclasses import dataclass
@@ -171,7 +171,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
         Note: If :code:`search_options["allow_duplicates"] == True`, then
         :meth:`suggest` may return a configuration more than once
-    :type search_options: dict, optional
+    :type search_options: Dict[str, Any], optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
     :type mode: str, optional
@@ -234,7 +234,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         rungs_first_bracket: List[Tuple[int, int]],
         num_brackets_per_iteration: Optional[int] = None,
         **kwargs,
@@ -540,7 +540,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         result_failed.metric_val = np.NAN
         self.bracket_manager.on_result((ext_slot.bracket_id, result_failed))
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         trial_id = trial.trial_id
         if trial_id in self._trial_to_pending_slot:
             ext_slot = self._trial_to_pending_slot[trial_id]
@@ -590,7 +590,9 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
 
         return trial_decision
 
-    def _extract_from_result(self, trial_id: int, result: dict) -> (float, int):
+    def _extract_from_result(
+        self, trial_id: int, result: Dict[str, Any]
+    ) -> (float, int):
         metric_vals = []
         for name in (self.metric, self._resource_attr):
             assert name in result, (

@@ -81,6 +81,11 @@ def parse_args(
         type=int,
         help="Master random seed (drawn at random if not given)",
     )
+    parser.add_argument(
+        "--max_size_data_for_model",
+        type=int,
+        help=f"Limits number of datapoints for surrogate model of MOBSTER or HyperTune",
+    )
     if extra_args is not None:
         extra_args = copy.deepcopy(extra_args)
         for kwargs in extra_args:
@@ -110,6 +115,7 @@ def get_metadata(
     experiment_tag: str,
     benchmark_name: str,
     random_seed: int,
+    max_size_data_for_model: Optional[int] = None,
     benchmark: Optional[BenchmarkDefinition] = None,
     extra_args: Optional[dict] = None,
 ) -> Dict[str, Any]:
@@ -120,6 +126,8 @@ def get_metadata(
     :param experiment_tag: Tag of experiment
     :param benchmark_name: Name of benchmark
     :param random_seed: Master random seed
+    :param max_size_data_for_model: Limits number of datapoints for surrogate
+        model of MOBSTER or HyperTune
     :param benchmark: Optional. Take ``n_workers``, ``max_wallclock_time``
         from there
     :param extra_args: ``metadata`` updated by these at the end. Optional
@@ -132,6 +140,8 @@ def get_metadata(
         "benchmark": benchmark_name,
         "random_seed": random_seed,
     }
+    if max_size_data_for_model is not None:
+        metadata["max_size_data_for_model"] = max_size_data_for_model
     if benchmark is not None:
         metadata.update(
             {

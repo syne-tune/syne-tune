@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (
@@ -97,7 +97,7 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,

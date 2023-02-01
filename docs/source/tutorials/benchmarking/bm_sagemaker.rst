@@ -68,6 +68,8 @@ arguments are:
   entire experiment.
 * ``warm_pool``: This flag is discussed
   `below <bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_.
+* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
 
 If you defined additional arguments via ``extra_args``, you can use them here
 as well.

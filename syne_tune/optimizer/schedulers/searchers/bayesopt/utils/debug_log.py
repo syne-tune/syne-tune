@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List
+from typing import List, Dict, Any
 import logging
 import numpy as np
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 __all__ = ["DebugLogPrinter"]
 
 
-def _param_dict_to_str(params: dict) -> str:
+def _param_dict_to_str(params: Dict[str, Any]) -> str:
     parts = []
     for name, param in params.items():
         if isinstance(param, float):
@@ -110,7 +110,7 @@ class DebugLogPrinter:
         msg = "Targets: " + str(targets.reshape((-1,)))
         self.block_info["targets"] = msg
 
-    def set_model_params(self, params: dict):
+    def set_model_params(self, params: Dict[str, Any]):
         assert self.get_config_type == "BO", "Need to be in 'BO' block"
         msg = "Model params: " + _param_dict_to_str(params)
         self.block_info["params"] = msg

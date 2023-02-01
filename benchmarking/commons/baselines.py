@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Dict, Optional, Callable
+from typing import Dict, Optional, Callable, Any
 
 from syne_tune.config_space import ordinal, Categorical
 from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
@@ -48,11 +48,14 @@ class MethodArguments:
         irregular spacing. If ``fcnet_ordinal="none"``, this is left as
         categorical, otherwise we use ordinal encoding with
         ``kind=fcnet_ordinal``.
+    :param max_size_data_for_model: Parameter of
+        :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`,
+        sets limit to number of observations to which GP surrogate model is fit to
     :param scheduler_kwargs: If given, overwrites defaults of scheduler
         arguments
     """
 
-    config_space: dict
+    config_space: Dict[str, Any]
     metric: str
     mode: str
     random_seed: int
@@ -65,17 +68,22 @@ class MethodArguments:
     verbose: Optional[bool] = False
     num_samples: int = 50
     fcnet_ordinal: Optional[str] = None
+    max_size_data_for_model: Optional[int] = None
     scheduler_kwargs: Optional[dict] = None
 
 
 MethodDefinitions = Dict[str, Callable[[MethodArguments], TrialScheduler]]
 
 
-def search_options(args: MethodArguments) -> dict:
-    return {"debug_log": args.verbose}
+def search_options(args: MethodArguments) -> Dict[str, Any]:
+    result = {"debug_log": args.verbose}
+    max_size = args.max_size_data_for_model
+    if max_size is not None:
+        result["max_size_data_for_model"] = max_size
+    return result
 
 
-def convert_categorical_to_ordinal(config_space: dict) -> dict:
+def convert_categorical_to_ordinal(config_space: Dict[str, Any]) -> Dict[str, Any]:
     """
     :param config_space: Configuration space
     :return: New configuration space where all categorical domains are
@@ -89,16 +97,16 @@ def convert_categorical_to_ordinal(config_space: dict) -> dict:
     }
 
 
-def _is_fcnet(config_space: dict) -> bool:
+def _is_fcnet(config_space: Dict[str, Any]) -> bool:
     fcnet_keys = set(CONFIGURATION_SPACE.keys())
     return fcnet_keys.issubset(set(config_space.keys()))
 
 
 def convert_categorical_to_ordinal_numeric(
-    config_space: dict,
+    config_space: Dict[str, Any],
     kind: Optional[str],
     do_convert: Optional[Callable[[dict], bool]] = None,
-) -> dict:
+) -> Dict[str, Any]:
     """
     Converts categorical domains to ordinal ones, of type ``kind``. This is not
     done if ``kind="none"``, or if ``do_convert(config_space) == False``.

@@ -16,7 +16,7 @@ Wrap Surrogates from
 YAHPO Gym - An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization
 Florian Pfisterer, Lennart Schneider, Julia Moosbauer, Martin Binder, Bernd Bischl
 """
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 import shutil
 
@@ -193,7 +193,7 @@ class BlackBoxYAHPO(Blackbox):
             self._fidelity_values = np.array(fidelities)
             self.fidelity_space[self._fidelity_name] = cs.ordinal(fidelities.copy())
 
-    def _map_configuration(self, config: dict) -> dict:
+    def _map_configuration(self, config: Dict[str, Any]) -> Dict[str, Any]:
         if self._is_nb301:
 
             def map_key(k: str) -> str:
@@ -206,7 +206,7 @@ class BlackBoxYAHPO(Blackbox):
         else:
             return config
 
-    def _active_hyperparameters(self, configuration: dict) -> List[str]:
+    def _active_hyperparameters(self, configuration: Dict[str, Any]) -> List[str]:
         return self.benchmark.config_space.get_active_hyperparameters(
             ConfigSpace.Configuration(
                 self.benchmark.config_space,
@@ -217,10 +217,10 @@ class BlackBoxYAHPO(Blackbox):
 
     def _objective_function(
         self,
-        configuration: dict,
+        configuration: Dict[str, Any],
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         configuration = self._map_configuration(configuration.copy())
 
         if fidelity is not None:

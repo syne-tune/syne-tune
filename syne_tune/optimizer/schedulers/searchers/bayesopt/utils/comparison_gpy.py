@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict
+from typing import List, Dict, Any
 import numpy as np
 import copy
 
@@ -110,7 +110,7 @@ def evaluate_blackbox(bb_func, inputs: np.ndarray) -> np.ndarray:
 # blackbox are done. This avoids silly errors.
 def sample_data(
     bb_cls, num_train: int, num_grid: int, expand_datadct: bool = True
-) -> dict:
+) -> Dict[str, Any]:
     bb_func = bb_cls()
     ss_limits = bb_func.search_space
     num_dims = len(ss_limits)
@@ -138,7 +138,7 @@ def sample_data(
     return data
 
 
-def expand_data(data: dict) -> dict:
+def expand_data(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Appends derived entries to data dict, which have non-elementary types.
     """
@@ -159,7 +159,7 @@ def expand_data(data: dict) -> dict:
 
 # Recall that inputs in data are encoded, so we have to decode them to their
 # native ranges for ``trials_evaluations``
-def data_to_state(data: dict) -> TuningJobState:
+def data_to_state(data: Dict[str, Any]) -> TuningJobState:
     configs, cs = decode_inputs(data["train_inputs"], data["ss_limits"])
     config_for_trial = {
         str(trial_id): config for trial_id, config in enumerate(configs)

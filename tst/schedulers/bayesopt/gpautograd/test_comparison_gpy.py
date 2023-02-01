@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import os
-from typing import List
+from typing import List, Dict, Any
 import numpy as np
 import pickle
 import tempfile
@@ -98,10 +98,10 @@ def download(url, path=None, overwrite=False):
 # Note: Instead of a ScalarMeanFunction, we use a ZeroMeanFunction here. This
 # is because it is too annoying to make GPy use such a mean function
 def fit_predict_ours(
-    data: dict,
+    data: Dict[str, Any],
     random_seed: int,
     optimization_config: OptimizationConfig,
-) -> dict:
+) -> Dict[str, Any]:
     # Create surrogate model
     num_dims = len(data["ss_limits"])
     _gpmodel = GaussianProcessRegression(
@@ -125,8 +125,8 @@ def fit_predict_ours(
 # GPy as a dependency of the tests. With GPy 1.9.9, it can be executed to generate
 # the numerical values that are tested in the main testing function ``test_comparison_gpy``
 def fit_predict_gpy(
-    data: dict, random_seed: int, optimization_config: OptimizationConfig
-) -> dict:
+    data: Dict[str, Any], random_seed: int, optimization_config: OptimizationConfig
+) -> Dict[str, Any]:
     import GPy  # Needs GPy to be installed
 
     assert GPy.__version__ == "1.9.9"
@@ -202,7 +202,12 @@ def _plot_comparison(y_list: List[np.ndarray]):
 
 # Note: this function is not ran by the tests but can be executed separately
 # to get a visual interpretation, see ``test_comparison_gpy``
-def plot_predictions(data: dict, pred_ours: dict, pred_gpy: dict, title: str):
+def plot_predictions(
+    data: Dict[str, Any],
+    pred_ours: Dict[str, Any],
+    pred_gpy: Dict[str, Any],
+    title: str,
+):
     import matplotlib.pyplot as plt
 
     grid_shape = data["grid_shape"]

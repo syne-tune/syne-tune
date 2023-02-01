@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 import numpy as np
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 
 from syne_tune.config_space import (
     Domain,
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 def _impute_default_config(
-    default_config: Configuration, config_space: dict
+    default_config: Configuration, config_space: Dict[str, Any]
 ) -> Configuration:
     """Imputes missing values in ``default_config`` by mid-point rule
 
@@ -113,16 +113,16 @@ def _non_default_config(hp_range: Domain) -> Hyperparameter:
     return midpoint
 
 
-def _to_tuple(config: dict, keys: List) -> Tuple:
+def _to_tuple(config: Dict[str, Any], keys: List) -> Tuple:
     return tuple(config[k] for k in keys)
 
 
-def _sorted_keys(config_space: dict) -> List[str]:
+def _sorted_keys(config_space: Dict[str, Any]) -> List[str]:
     return sorted(k for k, v in config_space.items() if isinstance(v, Domain))
 
 
 def impute_points_to_evaluate(
-    points_to_evaluate: Optional[List[dict]], config_space: dict
+    points_to_evaluate: Optional[List[dict]], config_space: Dict[str, Any]
 ) -> List[dict]:
     """
     Transforms ``points_to_evaluate`` argument to
@@ -175,7 +175,7 @@ class BaseSearcher:
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         mode: str = "min",
@@ -228,7 +228,13 @@ class BaseSearcher:
         """
         raise NotImplementedError
 
-    def on_trial_result(self, trial_id: str, config: dict, result: dict, update: bool):
+    def on_trial_result(
+        self,
+        trial_id: str,
+        config: Dict[str, Any],
+        result: Dict[str, Any],
+        update: bool,
+    ):
         """Inform searcher about result
 
         The scheduler passes every result. If ``update == True``, the searcher
@@ -247,7 +253,7 @@ class BaseSearcher:
         if update:
             self._update(trial_id, config, result)
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         """Update surrogate model with result
 
         :param trial_id: See :meth:`~syne_tune.optimizer.schedulers.TrialScheduler.on_trial_result`
@@ -323,7 +329,7 @@ class BaseSearcher:
         """
         return dict()
 
-    def get_state(self) -> dict:
+    def get_state(self) -> Dict[str, Any]:
         """
         Together with :meth:`clone_from_state`, this is needed in order to
         store and re-create the mutable state of the searcher.
@@ -333,7 +339,7 @@ class BaseSearcher:
         """
         return {"points_to_evaluate": self._points_to_evaluate}
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         """
         Together with :meth:`get_state`, this is needed in order to store and
         re-create the mutable state of the searcher.
@@ -348,7 +354,7 @@ class BaseSearcher:
         """
         raise NotImplementedError
 
-    def _restore_from_state(self, state: dict):
+    def _restore_from_state(self, state: Dict[str, Any]):
         self._points_to_evaluate = state["points_to_evaluate"].copy()
 
     @property
@@ -425,7 +431,7 @@ class SearcherWithRandomSeed(BaseSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
@@ -439,13 +445,13 @@ class SearcherWithRandomSeed(BaseSearcher):
         random_seed, _ = extract_random_seed(**kwargs)
         self.random_state = np.random.RandomState(random_seed)
 
-    def get_state(self) -> dict:
+    def get_state(self) -> Dict[str, Any]:
         return dict(
             super().get_state(),
             random_state=self.random_state.get_state(),
         )
 
-    def _restore_from_state(self, state: dict):
+    def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
         self.random_state.set_state(state["random_state"])
 
@@ -478,7 +484,7 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: Optional[bool] = None,
@@ -555,14 +561,14 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
             # Blacklist this configuration
             self._excl_list.add(self._config_for_trial_id[trial_id])
 
-    def get_state(self) -> dict:
+    def get_state(self) -> Dict[str, Any]:
         state = super().get_state()
         state["excl_list"] = self._excl_list.get_state()
         if self._allow_duplicates:
             state["config_for_trial_id"] = self._config_for_trial_id
         return state
 
-    def _restore_from_state(self, state: dict):
+    def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
         self._excl_list = ExclusionList.empty_list(self._hp_ranges)
         self._excl_list.clone_from_state(state["excl_list"])

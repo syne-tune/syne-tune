@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
@@ -109,6 +109,16 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         :code:`{"gp_multitask", "gp_independent"}`. Determines how the EI
         acquisition function is used. Values: "bohb", "first". Defaults to "bohb"
     :type resource_acq: str, optional
+    :param max_size_data_for_model: If this is set, we limit the number of
+        observations the surrogate model is fitted on this value. If there are
+        more observations, they are down sampled, see
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.utils.subsample_state.SubsampleMultiFidelityStateConverter`
+        for details. This down sampling is repeated every time the model is
+        fit, which ensures that most recent data is taken into account.
+
+        Pass ``None`` not to apply such a threshold. The default is
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+    :type max_size_data_for_model: int, optional
     :param opt_skip_num_max_resource: Parameter for surrogate model fitting,
         skip predicate. If ``True``, and number of observations above
         ``opt_skip_init_length``, fitting is done only when there is a new
@@ -126,7 +136,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
@@ -174,11 +184,13 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         resource = int(result[self._resource_attr])
         return self.config_space_ext.get(config, resource)
 
-    def _metric_val_update(self, crit_val: float, result: dict) -> MetricValues:
+    def _metric_val_update(
+        self, crit_val: float, result: Dict[str, Any]
+    ) -> MetricValues:
         resource = result[self._resource_attr]
         return {str(resource): crit_val}
 
-    def _trial_id_string(self, trial_id: str, result: dict):
+    def _trial_id_string(self, trial_id: str, result: Dict[str, Any]):
         """
         For multi-fidelity, we also want to output the resource level
         """
@@ -231,7 +243,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
                     f"Score values computed at target_resource = {target_resource}"
                 )
 
-    def _postprocess_config(self, config: dict) -> dict:
+    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         # If ``config`` is normal (not extended), nothing is removed
         return self.config_space_ext.remove_resource(config)
 

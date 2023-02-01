@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Dict, Callable, Optional
+from typing import Dict, Callable, Optional, Any
 
 import pandas as pd
 
@@ -50,7 +50,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
 
        from syne_tune.optimizer.baselines import RandomSearch
 
-       def scheduler_fun(new_config_space: dict, mode: str, metric: str):
+       def scheduler_fun(new_config_space: Dict[str, Any], mode: str, metric: str):
            return RandomSearch(new_config_space, metric, mode)
 
        bb_scheduler = BoundingBox(scheduler_fun, ...)
@@ -76,7 +76,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
     def __init__(
         self,
         scheduler_fun: Callable[[dict, str, str], TrialScheduler],
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         mode: Optional[str] = None,
@@ -105,12 +105,12 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
 
     def _compute_box(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         mode: str,
         num_hyperparameters_per_task: int,
         metric: str,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         top_k_per_task = self.top_k_hyperparameter_configurations_per_task(
             transfer_learning_evaluations=transfer_learning_evaluations,
             num_hyperparameters_per_task=num_hyperparameters_per_task,
@@ -152,7 +152,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
     def on_trial_add(self, trial: Trial):
         self.scheduler.on_trial_add(trial)
 
-    def on_trial_complete(self, trial: Trial, result: dict):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         self.scheduler.on_trial_complete(trial, result)
 
     def on_trial_remove(self, trial: Trial):
@@ -161,7 +161,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
     def on_trial_error(self, trial: Trial):
         self.scheduler.on_trial_error(trial)
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         return self.scheduler.on_trial_result(trial, result)
 
     def metric_mode(self) -> str:

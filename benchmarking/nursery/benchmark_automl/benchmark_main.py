@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 import numpy as np
 import itertools
 import logging
@@ -27,7 +28,7 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
 
-def parse_args(methods: dict, benchmark_definitions: dict):
+def parse_args(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
     parser = ArgumentParser()
     parser.add_argument(
         "--experiment_tag",
@@ -78,7 +79,7 @@ def parse_args(methods: dict, benchmark_definitions: dict):
     return args, method_names, benchmark_names, seeds
 
 
-def main(methods: dict, benchmark_definitions: dict):
+def main(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
     args, method_names, benchmark_names, seeds = parse_args(
         methods, benchmark_definitions
     )

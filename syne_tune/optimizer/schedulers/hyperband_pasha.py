@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List
+from typing import List, Dict, Any
 import numpy as np
 from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 
@@ -217,7 +217,9 @@ class PASHARungSystem(PromotionRungSystem):
 
         return not keep_current_budget
 
-    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(
+        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
+    ) -> Dict[str, Any]:
         """
         Apart from calling the superclass method, we also check the rankings
         and decides if to increase the current maximum resources.

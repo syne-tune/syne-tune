@@ -17,7 +17,7 @@ import numpy as np
 import json
 import logging
 from ast import literal_eval
-from typing import List, Dict
+from typing import List, Dict, Any
 from time import time, perf_counter
 from dataclasses import dataclass
 
@@ -124,7 +124,7 @@ def _report_logger(**kwargs):
     sys.stdout.flush()
 
 
-def _serialize_report_dict(report_dict: dict) -> str:
+def _serialize_report_dict(report_dict: Dict[str, Any]) -> str:
     """
     :param report_dict: a dictionary of metrics to be serialized
     :return: serialized string of the reported metrics, an exception is raised if the size is too large or

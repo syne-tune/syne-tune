@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
@@ -21,7 +22,7 @@ from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist imp
 from syne_tune.remote.estimators import DEFAULT_CPU_INSTANCE
 
 
-def mlp_fashionmnist_default_params() -> dict:
+def mlp_fashionmnist_default_params() -> Dict[str, Any]:
     return {
         "max_resource_level": 81,
         "instance_type": DEFAULT_CPU_INSTANCE,

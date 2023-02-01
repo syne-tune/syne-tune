@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
@@ -110,7 +110,7 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
     def _task_continues(
         self,
         metric_value: float,
-        recorded: dict,
+        recorded: Dict[str, Any],
         prom_quant: float,
         trial_id: str,
         resource: int,

@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 
 import numpy as np
 
@@ -29,7 +29,7 @@ class RungEntry:
 
     level: int
     prom_quant: float
-    data: dict
+    data: Dict[str, Any]
 
 
 def quantile_cutoff(values, prom_quant, mode):
@@ -83,7 +83,7 @@ class RungSystem:
             for x, y in reversed(list(zip(rung_levels, promote_quantiles)))
         ]
 
-    def on_task_schedule(self) -> dict:
+    def on_task_schedule(self) -> Dict[str, Any]:
         """Called when new task is to be scheduled.
 
         For a promotion-based rung system, check whether any trial can be
@@ -107,7 +107,9 @@ class RungSystem:
         """
         pass
 
-    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(
+        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
+    ) -> Dict[str, Any]:
         """Called when a trial reports metric results.
 
         Returns dict with keys "milestone_reached" (trial reaches its milestone),
@@ -201,7 +203,7 @@ class StoppingRungSystem(RungSystem):
     def _task_continues(
         self,
         metric_value: float,
-        recorded: dict,
+        recorded: Dict[str, Any],
         prom_quant: float,
         trial_id: str,
         resource: int,
@@ -221,10 +223,12 @@ class StoppingRungSystem(RungSystem):
             return True
         return metric_value <= cutoff if self._mode == "min" else metric_value >= cutoff
 
-    def on_task_schedule(self) -> dict:
+    def on_task_schedule(self) -> Dict[str, Any]:
         return dict()
 
-    def on_task_report(self, trial_id: str, result: dict, skip_rungs: int) -> dict:
+    def on_task_report(
+        self, trial_id: str, result: Dict[str, Any], skip_rungs: int
+    ) -> Dict[str, Any]:
         resource = result[self._resource_attr]
         metric_value = result[self._metric]
         if resource == self._max_t:
