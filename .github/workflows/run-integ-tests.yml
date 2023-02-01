@@ -17,11 +17,21 @@ permissions:
   id-token: write # This is required for requesting the JWT
   contents: read  # This is required for actions/checkout
 
+env:
+  AWS_DEFAULT_REGION: us-west-2
+  AWS_ROLE: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
+
 jobs:
   stop_all_training_jobs: 
     runs-on: ubuntu-latest
     steps:
-      - name: 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
+          role-session-name: integtestsession
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+      - name: Stop all left-over training jobs
         run: |
           aws sagemaker list-training-jobs --status-equals InProgress > running_jobs.json
           jq -c '.[][]["TrainingJobName"]' running_jobs.json | while read i; do
