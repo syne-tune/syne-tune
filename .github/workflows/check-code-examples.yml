@@ -23,6 +23,7 @@ jobs:
     secrets: inherit
   
   launch_tuning_gluonts:
+    timeout-minutes: 5
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_tuning_gluonts.py
@@ -92,6 +93,7 @@ jobs:
     secrets: inherit
 
   launch_huggingface_classification:
+    timeout-minutes: 5
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_huggingface_classification.py
