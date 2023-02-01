@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Tuple, List, Iterable, Dict, Optional
+from typing import Tuple, List, Iterable, Dict, Optional, Any
 import numpy as np
 from numpy.random import RandomState
 
@@ -26,7 +26,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import (
 )
 
 
-def _filter_constant_hyperparameters(config_space: dict) -> dict:
+def _filter_constant_hyperparameters(config_space: Dict[str, Any]) -> Dict[str, Any]:
     nonconst_keys = set(non_constant_hyperparameter_keys(config_space))
     return {k: v for k, v in config_space.items() if k in nonconst_keys}
 
@@ -77,7 +77,7 @@ class HyperparameterRanges:
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         name_last_pos: Optional[str] = None,
         value_for_last_pos=None,
         active_config_space: Optional[dict] = None,
@@ -106,7 +106,7 @@ class HyperparameterRanges:
             keys = keys[:pos] + keys[(pos + 1) :] + [self.name_last_pos]
         self._internal_keys = keys
 
-    def _set_active_config_space(self, active_config_space: dict):
+    def _set_active_config_space(self, active_config_space: Dict[str, Any]):
         if active_config_space is None:
             self.active_config_space = dict()
             self._config_space_for_sampling = self.config_space
@@ -117,7 +117,7 @@ class HyperparameterRanges:
                 self.config_space, **active_config_space
             )
 
-    def _assert_sub_config_space(self, active_config_space: dict):
+    def _assert_sub_config_space(self, active_config_space: Dict[str, Any]):
         for k, v in active_config_space.items():
             assert (
                 k in self.config_space
@@ -137,7 +137,7 @@ class HyperparameterRanges:
         return self._internal_keys
 
     @property
-    def config_space_for_sampling(self) -> dict:
+    def config_space_for_sampling(self) -> Dict[str, Any]:
         return self._config_space_for_sampling
 
     def to_ndarray(self, config: Configuration) -> np.ndarray:

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Dict, Any
 import autograd.numpy as anp
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
@@ -132,7 +132,7 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
     def set_profiler(self, profiler: Optional[SimpleProfiler]):
         self._profiler = profiler
 
-    def get_posterior_state(self, data: dict) -> PosteriorState:
+    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         return self._type(
             data,
             **self._posterstate_kwargs,
@@ -140,7 +140,7 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
             profiler=self._profiler
         )
 
-    def forward(self, data: dict):
+    def forward(self, data: Dict[str, Any]):
         assert not data["do_fantasizing"], (
             "data must not be for fantasizing. Call prepare_data with "
             + "do_fantasizing=False"
@@ -180,11 +180,13 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
             func.set_params(stripped_dict)
         self._set_noise_variance(param_dict["noise_variance"])
 
-    def data_precomputations(self, data: dict, overwrite: bool = False):
+    def data_precomputations(self, data: Dict[str, Any], overwrite: bool = False):
         if overwrite or not self._type.has_precomputations(data):
             self._type.data_precomputations(data)
 
-    def on_fit_start(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def on_fit_start(
+        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
+    ):
         assert not data["do_fantasizing"], (
             "data must not be for fantasizing. Call prepare_data with "
             + "do_fantasizing=False"

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Callable, Tuple, List, Optional, Dict
+from typing import Callable, Tuple, List, Optional, Dict, Any
 from dataclasses import dataclass
 import numpy as np
 
@@ -88,7 +88,7 @@ class HyperTuneModelMixin:
     def fit_distributions(
         self,
         poster_state: PerResourcePosteriorState,
-        data: dict,
+        data: Dict[str, Any],
         resource_attr_range: Tuple[int, int],
         random_state: np.random.RandomState,
     ) -> Optional[Dict[int, float]]:
@@ -222,7 +222,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         else:
             return None
 
-    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
         super().fit(data, profiler)
         poster_state: IndependentGPPerResourcePosteriorState = self.states[0]
         ensemble_distribution = self.fit_distributions(
@@ -310,7 +310,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         else:
             return None
 
-    def fit(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
         super().fit(data, profiler)
         resource_attr_range = self._likelihood_kwargs["resource_attr_range"]
         poster_state = GaussProcPosteriorStateAndRungLevels(

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Iterator, List, Union, Optional
+from typing import Iterator, List, Union, Optional, Dict, Any
 import numpy as np
 import logging
 
@@ -113,13 +113,13 @@ class ExclusionList:
             self.excl_set
         ) >= self.configspace_size
 
-    def get_state(self) -> dict:
+    def get_state(self) -> Dict[str, Any]:
         return {
             "excl_set": list(self.excl_set),
             "keys": self.keys,
         }
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         self.keys = state["keys"]
         self.excl_set = set(state["excl_set"])
 

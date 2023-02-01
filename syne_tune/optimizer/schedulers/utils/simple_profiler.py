@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict
+from typing import List, Dict, Any
 import time
 import logging
 from dataclasses import dataclass
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ProfilingBlock:
-    meta: dict
+    meta: Dict[str, Any]
     time_stamp: float
     durations: Dict[str, List[float]]
 
@@ -48,7 +48,7 @@ class SimpleProfiler:
         self.meta_keys = None
         self.prefix = ""
 
-    def begin_block(self, meta: dict):
+    def begin_block(self, meta: Dict[str, Any]):
         assert not self.start_time, "Timers for these tags still running:\n{}".format(
             self.start_time.keys()
         )
@@ -110,7 +110,7 @@ class SimpleProfiler:
             )
         self.start_time = dict()
 
-    def records_as_dict(self) -> dict:
+    def records_as_dict(self) -> Dict[str, Any]:
         """
         Return records as a dict of lists, can be converted into Pandas
         data-frame by:

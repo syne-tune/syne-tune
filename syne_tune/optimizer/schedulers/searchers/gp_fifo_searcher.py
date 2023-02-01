@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 import copy
 
@@ -245,7 +245,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         parameter is set to a categorical with ``transfer_learning_active_task``
         as single value, so that new configs are chosen for the active task
         only.
-    :type transfer_learning_active_config_space: dict, optional
+    :type transfer_learning_active_config_space: Dict[str, Any], optional
     :param transfer_learning_model: See ``transfer_learning_task_attr``.
         Specifies the surrogate model to be used for transfer learning:
 
@@ -263,7 +263,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         clone_from_state: bool = False,
@@ -341,7 +341,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     def _fix_resource_attribute(self, **kwargs):
         pass
 
-    def _postprocess_config(self, config: dict) -> dict:
+    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         return config
 
     def _get_config_modelbased(
@@ -511,7 +511,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
         # future get_config calls)
         self.state_transformer.mark_trial_failed(trial_id)
 
-    def _new_searcher_kwargs_for_clone(self) -> dict:
+    def _new_searcher_kwargs_for_clone(self) -> Dict[str, Any]:
         """
         Helper method for ``clone_from_state``. Args need to be extended
         by ``model_factory``, ``init_state``, ``skip_optimization``, and others

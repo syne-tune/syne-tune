@@ -14,7 +14,7 @@ import numpy as np
 import autograd.numpy as anp
 from autograd import grad
 from autograd.tracer import getval
-from typing import Tuple, Optional, Dict, Callable
+from typing import Tuple, Optional, Dict, Callable, Any
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
@@ -200,7 +200,7 @@ class GaussProcPosteriorState(PosteriorStateWithSampleJoint):
     def num_fantasies(self):
         return self.pred_mat.shape[1]
 
-    def _state_kwargs(self) -> dict:
+    def _state_kwargs(self) -> Dict[str, Any]:
         return {
             "features": self.features,
             "mean": self.mean,

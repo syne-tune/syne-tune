@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
+
 from syne_tune.optimizer.schedulers.scheduler_searcher import TrialSchedulerWithSearcher
 from syne_tune.optimizer.schedulers.synchronous.hyperband import (
     SynchronousHyperbandScheduler,
@@ -68,7 +70,7 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
-    :type search_options: dict, optional
+    :type search_options: Dict[str, Any], optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
     :type mode: str, optional
@@ -114,7 +116,7 @@ class SynchronousGeometricHyperbandScheduler(SynchronousHyperbandScheduler):
     :type searcher_data: str, optional
     """
 
-    def __init__(self, config_space: dict, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], **kwargs):
         TrialSchedulerWithSearcher.__init__(self, config_space, **kwargs)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(
@@ -170,7 +172,7 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
     :type searcher: str, optional
     :param search_options: Passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`.
-    :type search_options: dict, optional
+    :type search_options: Dict[str, Any], optional
     :param mode: Mode to use for the metric given, can be "min" (default) or
         "max"
     :type mode: str, optional
@@ -216,7 +218,7 @@ class GeometricDifferentialEvolutionHyperbandScheduler(
     :type support_pause_resume: bool, optional
     """
 
-    def __init__(self, config_space: dict, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], **kwargs):
         TrialSchedulerWithSearcher.__init__(self, config_space, **kwargs)
         # Additional parameters to determine rung systems
         kwargs = check_and_merge_defaults(

@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
@@ -138,7 +138,7 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         mode: Optional[str] = None,
@@ -176,10 +176,10 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
                 self.mu_pred = self.mu_pred.reshape(-1, 1)
             self.sigma_pred = np.ones_like(self.mu_pred) * sigma_val
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         pass
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError
 
     def get_config(self, **kwargs) -> Optional[dict]:

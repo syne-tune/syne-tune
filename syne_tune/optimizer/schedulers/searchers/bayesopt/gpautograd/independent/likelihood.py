@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Any
 import numpy as np
 import autograd.numpy as anp
 
@@ -153,7 +153,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             for resource, internal in self.covariance_scale_internal.items()
         }
 
-    def get_posterior_state(self, data: dict) -> PosteriorState:
+    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         return IndependentGPPerResourcePosteriorState(
             features=data["features"],
@@ -165,7 +165,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             resource_attr_range=self.resource_attr_range,
         )
 
-    def forward(self, data: dict):
+    def forward(self, data: Dict[str, Any]):
         return self.get_posterior_state(data).neg_log_likelihood()
 
     def param_encoding_pairs(self) -> List[tuple]:
@@ -246,7 +246,9 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         else:
             self._set_noise_variance(1, param_dict["noise_variance"])
 
-    def on_fit_start(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def on_fit_start(
+        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
+    ):
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = data["targets"]
         assert (

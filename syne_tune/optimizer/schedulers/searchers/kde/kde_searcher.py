@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 import numpy as np
 import statsmodels.api as sm
@@ -79,7 +79,7 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: Optional[bool] = None,
@@ -244,13 +244,13 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
-    def _to_objective(self, result: dict) -> float:
+    def _to_objective(self, result: Dict[str, Any]) -> float:
         if self._mode == "min":
             return result[self._metric]
         else:
             return -result[self._metric]
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         self.X.append(self._to_feature(config=config))
         self.y.append(self._to_objective(result))
         if self._debug_log is not None:
@@ -382,5 +382,5 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
 
         return bad_kde, good_kde
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError

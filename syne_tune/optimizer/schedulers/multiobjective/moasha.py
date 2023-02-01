@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict, Any
 
 import numpy as np
 from syne_tune.backend.trial_status import Trial
@@ -70,7 +70,7 @@ class MOASHA(TrialScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metrics: List[str],
         mode: Optional[Union[str, List[str]]] = None,
         time_attr: str = "training_iteration",
@@ -149,7 +149,7 @@ class MOASHA(TrialScheduler):
         print(f"adding trial {trial.trial_id}")
         self._trial_info[trial.trial_id] = self._brackets[idx]
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         self._check_metrics_are_present(result)
         if result[self._time_attr] >= self._max_t:
             action = SchedulerDecision.STOP
@@ -165,18 +165,18 @@ class MOASHA(TrialScheduler):
             self._num_stopped += 1
         return action
 
-    def _metric_dict(self, reported_results: dict) -> dict:
+    def _metric_dict(self, reported_results: Dict[str, Any]) -> Dict[str, Any]:
         return {
             metric: reported_results[metric] * self._metric_op[metric]
             for metric in self._metrics
         }
 
-    def _check_metrics_are_present(self, result: dict):
+    def _check_metrics_are_present(self, result: Dict[str, Any]):
         for key in [self._time_attr] + self._metrics:
             if key not in result:
                 assert key in result, f"{key} not found in reported result {result}"
 
-    def on_trial_complete(self, trial: Trial, result: dict):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         self._check_metrics_are_present(result)
         bracket = self._trial_info[trial.trial_id]
         bracket.on_result(

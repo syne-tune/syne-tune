@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 import numpy as np
 from scipy import optimize
 from autograd import value_and_grad
@@ -42,7 +43,7 @@ STARTING_POINT_RANDOMIZATION_STD = 1.0
 
 
 class ParamVecDictConverter:
-    def __init__(self, param_dict: dict):
+    def __init__(self, param_dict: Dict[str, Any]):
         self.param_dict = param_dict
         self.names = sorted(
             [name for name, value in param_dict.items() if value is not None]

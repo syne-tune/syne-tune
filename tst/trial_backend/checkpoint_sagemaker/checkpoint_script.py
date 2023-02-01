@@ -19,7 +19,7 @@ import logging
 import os
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from syne_tune.constants import ST_CHECKPOINT_DIR
 from syne_tune import Reporter
@@ -33,7 +33,7 @@ def load_checkpoint(checkpoint_path: Path) -> Optional[dict]:
     return result
 
 
-def save_checkpoint(checkpoint_path: Path, content: dict):
+def save_checkpoint(checkpoint_path: Path, content: Dict[str, Any]):
     os.makedirs(checkpoint_path.parent, exist_ok=True)
     with open(checkpoint_path, "w") as f:
         json.dump(content, f)

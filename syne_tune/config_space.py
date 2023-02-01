@@ -1035,7 +1035,7 @@ def is_uniform_space(domain: Domain) -> bool:
         )
 
 
-def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict):
+def add_to_argparse(parser: argparse.ArgumentParser, config_space: Dict[str, Any]):
     """
     Use this to prepare argument parser in endpoint script, for the
     non-fixed parameters in ``config_space``.
@@ -1048,7 +1048,9 @@ def add_to_argparse(parser: argparse.ArgumentParser, config_space: dict):
         parser.add_argument(f"--{name}", type=tp, required=True)
 
 
-def cast_config_values(config: dict, config_space: dict) -> dict:
+def cast_config_values(
+    config: Dict[str, Any], config_space: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Returns config with keys, values of ``config``, but values are cast to
     their specific types.
@@ -1064,7 +1066,7 @@ def cast_config_values(config: dict, config_space: dict) -> dict:
     }
 
 
-def non_constant_hyperparameter_keys(config_space: dict) -> List[str]:
+def non_constant_hyperparameter_keys(config_space: Dict[str, Any]) -> List[str]:
     """
     :param config_space: Configuration space
     :return: Keys corresponding to (non-fixed) hyperparameters
@@ -1072,7 +1074,9 @@ def non_constant_hyperparameter_keys(config_space: dict) -> List[str]:
     return [name for name, domain in config_space.items() if isinstance(domain, Domain)]
 
 
-def config_space_size(config_space: dict, upper_limit: int = 2**20) -> Optional[int]:
+def config_space_size(
+    config_space: Dict[str, Any], upper_limit: int = 2**20
+) -> Optional[int]:
     """
     Counts the number of distinct configurations in the configuration space
     ``config_space``. If this is infinite (due to real-valued parameters) or
@@ -1096,7 +1100,9 @@ def config_space_size(config_space: dict, upper_limit: int = 2**20) -> Optional[
     return size
 
 
-def config_to_match_string(config: dict, config_space: dict, keys: List[str]) -> str:
+def config_to_match_string(
+    config: Dict[str, Any], config_space: Dict[str, Any], keys: List[str]
+) -> str:
     """
     Maps configuration to a match string, which can be used to compare configs
     for (approximate) equality. Only keys in ``keys`` are used, in that ordering.
@@ -1114,7 +1120,7 @@ def config_to_match_string(config: dict, config_space: dict, keys: List[str]) ->
     return ",".join(parts)
 
 
-def to_dict(x: Domain) -> dict:
+def to_dict(x: Domain) -> Dict[str, Any]:
     """
     We assume that for each :class:`Domain` subclass, the :meth:`__init__`
     kwargs are also members, and all other members start with ``_``.
@@ -1135,7 +1141,7 @@ def to_dict(x: Domain) -> dict:
     return result
 
 
-def from_dict(d: dict) -> Domain:
+def from_dict(d: Dict[str, Any]) -> Domain:
     """
     :param d: Representation of :class:`Domain` object as ``dict``
     :return: Decoded :class:`Domain` object

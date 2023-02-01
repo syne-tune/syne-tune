@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Any
 import numpy as np
 import autograd.numpy as anp
 from numpy.random import RandomState
@@ -51,10 +51,10 @@ class MarginalLikelihood(Block):
     Interface for marginal likelihood of Gaussian-linear model.
     """
 
-    def get_posterior_state(self, data: dict) -> PosteriorState:
+    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         raise NotImplementedError
 
-    def forward(self, data: dict):
+    def forward(self, data: Dict[str, Any]):
         return self.get_posterior_state(data).neg_log_likelihood()
 
     def param_encoding_pairs(self) -> List[tuple]:
@@ -96,7 +96,7 @@ class MarginalLikelihood(Block):
         # defaults to ``np.random.uniform``, whose seed we do not control).
         self.initialize(init=random_state.uniform, force_reinit=True)
 
-    def data_precomputations(self, data: dict, overwrite: bool = False):
+    def data_precomputations(self, data: Dict[str, Any], overwrite: bool = False):
         """
         Some models require precomputations based on ``data``. Precomputed
         variables are appended to ``data``. This is done only if not already
@@ -107,7 +107,9 @@ class MarginalLikelihood(Block):
         """
         pass
 
-    def on_fit_start(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def on_fit_start(
+        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
+    ):
         """
         Called at the beginning of ``fit``.
 
@@ -167,7 +169,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         )
 
     @staticmethod
-    def assert_data_entries(data: dict):
+    def assert_data_entries(data: Dict[str, Any]):
         features = data.get("features")
         targets = data.get("targets")
         assert (
@@ -182,7 +184,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             + f"(received {features.shape[0]} and {targets.shape[0]})"
         )
 
-    def get_posterior_state(self, data: dict) -> PosteriorState:
+    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         self.assert_data_entries(data)
         return GaussProcPosteriorState(
             features=data["features"],
@@ -192,7 +194,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             noise_variance=self._noise_variance(),
         )
 
-    def forward(self, data: dict):
+    def forward(self, data: Dict[str, Any]):
         """
         Actual computation of the marginal likelihood
         See http://www.gaussianprocess.org/gpml/chapters/RW.pdf, equation (2.30)
@@ -232,7 +234,9 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             func.set_params(stripped_dict)
         self._set_noise_variance(param_dict["noise_variance"])
 
-    def on_fit_start(self, data: dict, profiler: Optional[SimpleProfiler] = None):
+    def on_fit_start(
+        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
+    ):
         self.assert_data_entries(data)
         targets = data["targets"]
         assert (

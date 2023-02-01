@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import pandas as pd
 import xgboost
@@ -56,7 +56,7 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         mode: str = "min",
@@ -120,7 +120,7 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
 
     def _create_surrogate_transfer_learning_evaluations(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         metric: str,
     ) -> Dict[str, TransferLearningTaskEvaluations]:
@@ -177,7 +177,7 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
             self._ranks = self._update_ranks()
         return best_config.to_dict()
 
-    def _sample_random_config(self, config_space: dict) -> dict:
+    def _sample_random_config(self, config_space: Dict[str, Any]) -> Dict[str, Any]:
         return {
             k: v.sample(random_state=self.random_state) if isinstance(v, Domain) else v
             for k, v in config_space.items()
@@ -186,5 +186,7 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
     def _update_ranks(self) -> pd.DataFrame:
         return self._scores.rank(axis=1)
 
-    def _update(self, trial_id: str, config: dict, result: dict) -> None:
+    def _update(
+        self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]
+    ) -> None:
         pass

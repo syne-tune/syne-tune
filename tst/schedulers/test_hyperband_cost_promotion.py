@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from datetime import datetime
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
@@ -22,7 +23,7 @@ def _make_result(epoch, metric, cost):
     return dict(epoch=epoch, metric=metric, cost=cost)
 
 
-def _new_trial(trial_id: int, config: dict):
+def _new_trial(trial_id: int, config: Dict[str, Any]):
     return Trial(trial_id=trial_id, config=config, creation_time=datetime.now())
 
 

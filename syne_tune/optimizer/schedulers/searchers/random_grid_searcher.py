@@ -13,7 +13,7 @@
 import logging
 from collections import OrderedDict
 from itertools import product
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, Any
 
 import numpy as np
 
@@ -55,7 +55,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         debug_log: Union[bool, DebugLogPrinter] = False,
@@ -122,7 +122,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             logger.warning(msg)
         return new_config
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         if self._debug_log is not None:
             metric_val = result[self._metric]
             if self._resource_attr is not None:
@@ -132,7 +132,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         new_searcher = RandomSearcher(
             self.config_space,
             metric=self._metric,
@@ -177,7 +177,7 @@ class GridSearcher(SearcherWithRandomSeed):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         num_samples: Optional[Dict[str, int]] = None,
@@ -200,7 +200,7 @@ class GridSearcher(SearcherWithRandomSeed):
         self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
 
     def _validate_config_space(
-        self, config_space: dict, num_samples: Optional[Dict[str, int]]
+        self, config_space: Dict[str, Any], num_samples: Optional[Dict[str, int]]
     ):
         """
         Validates ``config_space`` from two aspects: first, that all
@@ -340,7 +340,7 @@ class GridSearcher(SearcherWithRandomSeed):
             # No more candidates
             return None
 
-    def get_state(self) -> dict:
+    def get_state(self) -> Dict[str, Any]:
         state = dict(
             super().get_state(),
             next_index=self._next_index,
@@ -348,7 +348,7 @@ class GridSearcher(SearcherWithRandomSeed):
         )
         return state
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         new_searcher = GridSearcher(
             config_space=self.config_space,
             num_samples=self.num_samples,
@@ -358,11 +358,11 @@ class GridSearcher(SearcherWithRandomSeed):
         new_searcher._restore_from_state(state)
         return new_searcher
 
-    def _restore_from_state(self, state: dict):
+    def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
         self._next_index = state["next_index"]
         self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
         self._all_initial_configs.clone_from_state(state["all_initial_configs"])
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         pass

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
@@ -68,7 +68,7 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
     many use cases by choosing ``searcher`` along with ``search_options``.
 
     :param config_space: Configuration space for evaluation function
-    :type config_space: dict
+    :type config_space: Dict[str, Any]
     :param searcher: Searcher for ``get_config`` decisions. String values
         are passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory` along
@@ -80,7 +80,7 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
     :param search_options: If searcher is ``str``, these arguments are
         passed to
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`
-    :type search_options: dict, optional
+    :type search_options: Dict[str, Any], optional
     :param metric: Name of metric to optimize, key in results obtained via
         ``on_trial_result``
     :type metric: str
@@ -131,7 +131,7 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         optional
     """
 
-    def __init__(self, config_space: dict, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], **kwargs):
         super().__init__(config_space, **kwargs)
         # Check values and impute default values
         assert_no_invalid_options(kwargs, _ARGUMENT_KEYS, name="FIFOScheduler")
@@ -211,7 +211,7 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         ), "Argument must be of type TimeKeeper"
         self.time_keeper = time_keeper
 
-    def _extend_search_options(self, search_options: dict) -> dict:
+    def _extend_search_options(self, search_options: Dict[str, Any]) -> Dict[str, Any]:
         """Allows child classes to extend ``search_options``.
 
         :param search_options: Original dict of options
@@ -253,7 +253,9 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
             config = TrialSuggestion.start_suggestion(config)
         return config
 
-    def _on_config_suggest(self, config: dict, trial_id: str, **kwargs) -> dict:
+    def _on_config_suggest(
+        self, config: Dict[str, Any], trial_id: str, **kwargs
+    ) -> Dict[str, Any]:
         """Called by ``suggest`` to allow scheduler to register a new config.
 
         We register the config here, not in ``on_trial_add``. While this risks
@@ -301,16 +303,16 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         assert self.time_keeper is not None, "Experiment has not been started yet"
         return self.time_keeper.time()
 
-    def _check_key_of_result(self, result: dict, key: str):
+    def _check_key_of_result(self, result: Dict[str, Any], key: str):
         assert key in result, (
             "Your training evaluation function needs to report values "
             + f"for the key {key}:\n   report({key}=..., ...)"
         )
 
-    def _check_result(self, result: dict):
+    def _check_result(self, result: Dict[str, Any]):
         self._check_key_of_result(result, self.metric)
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         """
         We simply relay ``result`` to the searcher. Other decisions are done
         in ``on_trial_complete``.

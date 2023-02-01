@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Set, Optional
+from typing import Set, Optional, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
@@ -184,7 +184,7 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
 
 def _create_gp_model_factory(
     gpmodel,
-    result: dict,
+    result: Dict[str, Any],
     hp_ranges_for_prediction: Optional[HyperparameterRanges],
     active_metric: Optional[str],
     **kwargs,
@@ -466,7 +466,7 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
     return result
 
 
-def gp_fifo_searcher_factory(**kwargs) -> dict:
+def gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher._create_internal`,
@@ -497,7 +497,7 @@ def gp_fifo_searcher_factory(**kwargs) -> dict:
     return dict(**result, acquisition_class=EIAcquisitionFunction)
 
 
-def gp_multifidelity_searcher_factory(**kwargs) -> dict:
+def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher._create_internal`,
@@ -534,7 +534,7 @@ def gp_multifidelity_searcher_factory(**kwargs) -> dict:
     return kwargs_int
 
 
-def hypertune_searcher_factory(**kwargs) -> dict:
+def hypertune_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher._create_internal`,
@@ -555,7 +555,7 @@ def hypertune_searcher_factory(**kwargs) -> dict:
     return gp_multifidelity_searcher_factory(**kwargs, is_hypertune=True)
 
 
-def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
+def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`,
@@ -606,7 +606,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
     )
 
 
-def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
+def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
@@ -662,7 +662,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     )
 
 
-def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
+def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
@@ -726,7 +726,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
     )
 
 
-def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> dict:
+def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`,

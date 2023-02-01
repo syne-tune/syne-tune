@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
@@ -136,7 +136,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
@@ -184,11 +184,13 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         resource = int(result[self._resource_attr])
         return self.config_space_ext.get(config, resource)
 
-    def _metric_val_update(self, crit_val: float, result: dict) -> MetricValues:
+    def _metric_val_update(
+        self, crit_val: float, result: Dict[str, Any]
+    ) -> MetricValues:
         resource = result[self._resource_attr]
         return {str(resource): crit_val}
 
-    def _trial_id_string(self, trial_id: str, result: dict):
+    def _trial_id_string(self, trial_id: str, result: Dict[str, Any]):
         """
         For multi-fidelity, we also want to output the resource level
         """
@@ -241,7 +243,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
                     f"Score values computed at target_resource = {target_resource}"
                 )
 
-    def _postprocess_config(self, config: dict) -> dict:
+    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         # If ``config`` is normal (not extended), nothing is removed
         return self.config_space_ext.remove_resource(config)
 

@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
@@ -24,7 +25,7 @@ from syne_tune.remote.estimators import (
 )
 
 
-def lstm_wikitext2_default_params(sagemaker_backend: bool) -> dict:
+def lstm_wikitext2_default_params(sagemaker_backend: bool) -> Dict[str, Any]:
     if sagemaker_backend:
         instance_type = DEFAULT_GPU_INSTANCE_1GPU
         num_workers = 8

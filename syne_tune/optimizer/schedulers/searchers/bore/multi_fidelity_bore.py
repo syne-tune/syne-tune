@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 import numpy as np
 
@@ -46,7 +46,7 @@ class MultiFidelityBore(Bore):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: Optional[bool] = None,
@@ -114,7 +114,7 @@ class MultiFidelityBore(Bore):
 
         return super()._train_model(train_data, train_targets)
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         super()._update(trial_id=trial_id, config=config, result=result)
         resource_level = int(result[self.resource_attr])
         self.resource_levels.append(resource_level)

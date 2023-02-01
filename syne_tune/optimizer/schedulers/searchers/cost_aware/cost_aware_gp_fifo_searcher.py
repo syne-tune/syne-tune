@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
@@ -100,7 +100,7 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,

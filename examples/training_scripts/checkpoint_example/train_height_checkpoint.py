@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 import time
-from typing import Optional
+from typing import Optional, Dict, Any
 import json
 from pathlib import Path
 import os
@@ -37,7 +37,7 @@ METRIC_MODE = "min"
 MAX_RESOURCE_ATTR = "steps"
 
 
-def load_checkpoint(checkpoint_path: Path) -> dict:
+def load_checkpoint(checkpoint_path: Path) -> Dict[str, Any]:
     with open(checkpoint_path, "r") as f:
         return json.load(f)
 
@@ -72,7 +72,9 @@ def train_height_delta(step: int, width: float, height: float, value: float) -> 
         return value * (1.0 + u * width / (width * (step - 1) + 10))
 
 
-def height_config_space(max_steps: int, sleep_time: Optional[float] = None) -> dict:
+def height_config_space(
+    max_steps: int, sleep_time: Optional[float] = None
+) -> Dict[str, Any]:
     kwargs = {"sleep_time": sleep_time} if sleep_time is not None else dict()
     return {
         MAX_RESOURCE_ATTR: max_steps,

@@ -15,7 +15,7 @@ import logging
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple, Any
 
 import dill as dill
 
@@ -333,7 +333,7 @@ class Tuner:
             callback.on_tuning_sleep(self.sleep_time)
 
     @staticmethod
-    def _set_metadata(metadata: dict, name: str, value):
+    def _set_metadata(metadata: Dict[str, Any], name: str, value):
         if name in metadata:
             logger.warning(
                 f"Entry {name} in metadata is used, but will be overwritten:\n"
@@ -342,7 +342,7 @@ class Tuner:
             )
         metadata[name] = value
 
-    def _enrich_metadata(self, metadata: dict) -> dict:
+    def _enrich_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
         :param metadata: Original metadata
         :return: ``metadata`` enriched by default entries
