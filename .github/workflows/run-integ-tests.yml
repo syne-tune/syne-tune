@@ -1,17 +1,8 @@
-name: Run Integ Tests on Python3.9
+name: Run Integ Tests
 
 # TODO set this up to gate new releases of Syne Tune
 # This workflow is stateful and only one instance of it should run at any given time
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-    # types: 
-    #   - ready_for_review
-    #   - review_requested
+on: workflow_dispatch
 
 permissions:
   id-token: write # This is required for requesting the JWT

@@ -1,4 +1,4 @@
-name: Run fast examples on Python3.9
+name: Run fast examples
 
 on:
   push:
