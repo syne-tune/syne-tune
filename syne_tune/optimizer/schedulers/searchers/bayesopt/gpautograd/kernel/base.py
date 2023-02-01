@@ -96,7 +96,7 @@ class SquaredDistance(Block):
     :param ARD: Automatic relevance determination (``inverse_bandwidth`` vector
         of size ``d``)? Defaults to ``False``
     :param encoding_type: Encoding for ``inverse_bandwidth``. Defaults to
-        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING``
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING`
     """
 
     def __init__(

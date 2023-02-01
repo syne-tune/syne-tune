@@ -34,7 +34,7 @@ from syne_tune.config_space import (
 
 
 def test_convert_config_space():
-    from ray.tune.sample import Float, Integer, Categorical
+    from ray.tune.search.sample import Float, Integer, Categorical
     from syne_tune.optimizer.schedulers.ray_scheduler import RayTuneScheduler
 
     config_space = {

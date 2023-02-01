@@ -166,8 +166,8 @@ def test_matern52_wrongshape():
 
 
 def _create_product_kernel(kernel1, kernel2):
-    kernel1.collect_params().initialize()
-    kernel2.collect_params().initialize()
+    kernel1.collect_params().initialize(force_reinit=True)
+    kernel2.collect_params().initialize(force_reinit=True)
     return ProductKernelFunction(kernel1, kernel2)
 
 

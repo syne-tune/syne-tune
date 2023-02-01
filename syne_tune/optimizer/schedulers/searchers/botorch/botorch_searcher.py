@@ -237,7 +237,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 
     def _config_to_feature_matrix(self, configs: List[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
-        X = Tensor([self._hp_ranges.to_ndarray(config) for config in configs])
+        X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)
 
     def objectives(self):
