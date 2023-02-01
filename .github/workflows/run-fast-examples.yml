@@ -1,4 +1,4 @@
-name: Check code examples on python3.9
+name: Run fast examples on Python3.9
 
 on:
   push:
@@ -7,9 +7,6 @@ on:
   pull_request:
     branches:
       - main
-    # types: 
-    #   - ready_for_review
-    #   - review_requested
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -22,25 +19,11 @@ jobs:
       script-path: examples/launch_tensorboard_example.py
     secrets: inherit
   
-  launch_tuning_gluonts:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_tuning_gluonts.py
-      timeout-minutes: 5
-    secrets: inherit
-
   launch_plot_results:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       additional-command: pip install matplotlib
       script-path: examples/launch_plot_results.py
-    secrets: inherit
-
-  launch_rl_tuning:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      additional-command: pip install -r examples/training_scripts/rl_cartpole/requirements.txt
-      script-path: examples/launch_rl_tuning.py
     secrets: inherit
 
   launch_simulated_benchmark:
@@ -68,41 +51,16 @@ jobs:
       script-path: examples/launch_nas201_transfer_learning.py
     secrets: inherit
 
-  launch_nasbench201_simulated:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_nasbench201_simulated.py
-    secrets: inherit
-
   launch_pbt:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_pbt.py
     secrets: inherit
 
-  launch_height_sagemaker:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_height_sagemaker.py
-    secrets: inherit
-
   launch_height_standalone_scheduler:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_standalone_scheduler.py
-    secrets: inherit
-
-  launch_huggingface_classification:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_huggingface_classification.py
-      timeout-minutes: 5
-    secrets: inherit
-
-  launch_height_sagemaker_remotely:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_height_sagemaker_remotely.py
     secrets: inherit
 
   launch_height_python_backend:
@@ -115,12 +73,6 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_ray.py
-    secrets: inherit
-
-  launch_height_sagemaker_checkpoints:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_height_sagemaker_checkpoints.py
     secrets: inherit
 
   launch_height_baselines:
