@@ -1,2 +1,2 @@
-botorch>=0.6.2
+botorch>=0.7.2
 gpytorch>=1.6
