@@ -35,6 +35,7 @@ jobs:
             jobName=`echo $i | cut -d "\"" -f 2`
             echo "stopping training job $jobName"
             aws sagemaker stop-training-job --training-job-name $jobName
+            sleep 5
           done
 
   launch_tensorboard_example:
