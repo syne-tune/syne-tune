@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
@@ -75,7 +75,7 @@ class CostPromotionRungSystem(PromotionRungSystem):
         # :math:`m(x, r)`, cost value is :math:`c(x, r)`.
 
     def _find_promotable_trial(
-        self, recorded: dict, prom_quant: float, resource: int
+        self, recorded: Dict[str, Any], prom_quant: float, resource: int
     ) -> Optional[str]:
         """
         Check whether any not yet promoted entry in ``recorded`` is

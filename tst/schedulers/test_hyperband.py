@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from datetime import datetime
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, Any
 import pytest
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
@@ -35,7 +35,7 @@ def _make_result(epoch, metric):
     return dict(epoch=epoch, metric=metric)
 
 
-def _new_trial(trial_id: int, config: dict):
+def _new_trial(trial_id: int, config: Dict[str, Any]):
     return Trial(trial_id=trial_id, config=config, creation_time=datetime.now())
 
 

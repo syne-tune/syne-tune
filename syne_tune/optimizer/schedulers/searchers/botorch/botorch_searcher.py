@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 
 import numpy as np
@@ -70,7 +70,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: bool = False,
@@ -102,13 +102,13 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         if "random_seed" in kwargs:
             random.manual_seed(kwargs["random_seed"])
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         trial_id = int(trial_id)
         self.trial_observations[trial_id] = result[self._metric]
         if trial_id in self.pending_trials:
             self.pending_trials.remove(trial_id)
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError
 
     def num_suggestions(self):
@@ -304,7 +304,7 @@ class BotorchSearcher(BoTorchSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,

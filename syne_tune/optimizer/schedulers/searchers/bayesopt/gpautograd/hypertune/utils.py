@@ -13,7 +13,7 @@
 import numpy as np
 import autograd.numpy as anp
 from autograd.tracer import getval
-from typing import Optional, Tuple, List, Union, Dict, Callable
+from typing import Optional, Tuple, List, Union, Dict, Callable, Any
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_impl import (
@@ -298,7 +298,7 @@ def _posterior_state_for_rung_level(
 
 def hypertune_ranking_losses(
     poster_state: PerResourcePosteriorState,
-    data: dict,
+    data: Dict[str, Any],
     num_samples: int,
     resource_attr_range: Tuple[int, int],
     random_state: Optional[RandomState] = None,
@@ -401,7 +401,7 @@ def hypertune_ranking_losses(
 
 def number_supported_levels_and_data_highest_level(
     rung_levels: List[int],
-    data: dict,
+    data: Dict[str, Any],
     resource_attr_range: Tuple[int, int],
 ) -> Tuple[int, dict]:
     """
@@ -437,8 +437,8 @@ def number_supported_levels_and_data_highest_level(
 
 
 def _extract_data_at_resource(
-    data: dict, resource: int, resource_attr_range: Tuple[int, int]
-) -> dict:
+    data: Dict[str, Any], resource: int, resource_attr_range: Tuple[int, int]
+) -> Dict[str, Any]:
     features_ext = data["features"]
     targets = data["targets"]
     num_fantasies = targets.shape[1] if targets.ndim == 2 else 1
@@ -461,7 +461,7 @@ def _losses_for_maximum_rung_by_cross_validation(
     poster_state_for_fold: Callable[
         [np.ndarray, np.ndarray], PosteriorStateWithSampleJoint
     ],
-    data_max_resource: dict,
+    data_max_resource: Dict[str, Any],
     num_samples: int,
     random_state: Optional[RandomState],
 ) -> np.ndarray:
@@ -520,7 +520,7 @@ def _losses_for_maximum_rung_by_cross_validation(
 
 def _losses_for_rung(
     poster_state: PosteriorStateWithSampleJoint,
-    data_max_resource: dict,
+    data_max_resource: Dict[str, Any],
     num_samples: int,
     random_state: Optional[RandomState],
 ) -> np.ndarray:

@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict, Any
 
 
 @dataclass
@@ -82,7 +82,7 @@ class RealBenchmarkDefinition:
     """
 
     script: Path
-    config_space: dict
+    config_space: Dict[str, Any]
     max_wallclock_time: float
     n_workers: int
     instance_type: str

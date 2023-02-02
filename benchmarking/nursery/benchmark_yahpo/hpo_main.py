@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from benchmarking.commons.hpo_main_simulator import main
 from benchmarking.nursery.benchmark_yahpo.baselines import methods
 from benchmarking.nursery.benchmark_yahpo.benchmark_definitions import (
@@ -33,7 +34,7 @@ extra_args = [
 ]
 
 
-def map_extra_args(args) -> dict:
+def map_extra_args(args) -> Dict[str, Any]:
     return {
         "grace_period": args.grace_period,
         "reduction_factor": args.reduction_factor,

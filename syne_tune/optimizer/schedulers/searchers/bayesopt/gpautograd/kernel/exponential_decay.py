@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional
+from typing import Optional, Dict, Any
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 
@@ -275,7 +275,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
 
         return anp.add(mean, anp.multiply(kappa, kr_pref))
 
-    def get_params(self) -> dict:
+    def get_params(self) -> Dict[str, Any]:
         """
         Parameter keys are "alpha", "mean_lam", "gamma", "delta" (only if not
         fixed to ``delta_fixed_value``), as well as those of ``self.kernel_x`` (prefix

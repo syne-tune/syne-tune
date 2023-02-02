@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -53,7 +53,7 @@ class TrialSuggestion:
 
     @staticmethod
     def start_suggestion(
-        config: dict, checkpoint_trial_id: Optional[int] = None
+        config: Dict[str, Any], checkpoint_trial_id: Optional[int] = None
     ) -> "TrialSuggestion":
         """Suggestion to start new trial
 
@@ -106,7 +106,7 @@ class TrialScheduler:
     :param config_space: Configuration spoce
     """
 
-    def __init__(self, config_space: dict):
+    def __init__(self, config_space: Dict[str, Any]):
         self.config_space = config_space
         self._hyperparameter_keys = set(non_constant_hyperparameter_keys(config_space))
 
@@ -150,7 +150,7 @@ class TrialScheduler:
                 )
         return ret_val
 
-    def _postprocess_config(self, config: dict) -> dict:
+    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Post-processes a config as returned by a searcher
 
         * Adding parameters which are constant, therefore do not feature
@@ -165,7 +165,7 @@ class TrialScheduler:
         new_config.update(cast_config_values(config, config_space=self.config_space))
         return new_config
 
-    def _preprocess_config(self, config: dict) -> dict:
+    def _preprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Pre-processes a config before passing it to a searcher
 
         * Removing parameters which are constant in ``config_space`` (these do
@@ -212,7 +212,7 @@ class TrialScheduler:
         """
         pass
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         """Called on each intermediate result reported by a trial.
 
         At this point, the trial scheduler can make a decision by returning
@@ -226,7 +226,7 @@ class TrialScheduler:
         """
         return SchedulerDecision.CONTINUE
 
-    def on_trial_complete(self, trial: Trial, result: dict):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         """Notification for the completion of trial.
 
         Note that :meth:`on_trial_result` is called with the same result before.

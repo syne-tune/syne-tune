@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 import logging
 import copy
 
@@ -62,7 +62,7 @@ class RandomSearch(FIFOScheduler):
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
         super(RandomSearch, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -83,7 +83,7 @@ class GridSearch(FIFOScheduler):
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
         super(GridSearch, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -104,7 +104,7 @@ class BayesianOptimization(FIFOScheduler):
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
         super(BayesianOptimization, self).__init__(
             config_space=config_space,
             metric=metric,
@@ -113,7 +113,7 @@ class BayesianOptimization(FIFOScheduler):
         )
 
 
-def _assert_need_one(kwargs: dict, need_one: Optional[set] = None):
+def _assert_need_one(kwargs: Dict[str, Any], need_one: Optional[set] = None):
     if need_one is None:
         need_one = {"max_t", "max_resource_attr"}
     assert need_one.intersection(kwargs.keys()), f"Need one of these: {need_one}"
@@ -132,7 +132,9 @@ class ASHA(HyperbandScheduler):
     :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(
+        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+    ):
         _assert_need_one(kwargs)
         super(ASHA, self).__init__(
             config_space=config_space,
@@ -165,7 +167,9 @@ class MOBSTER(HyperbandScheduler):
     :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(
+        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+    ):
         _assert_need_one(kwargs)
         super(MOBSTER, self).__init__(
             config_space=config_space,
@@ -239,7 +243,9 @@ class PASHA(HyperbandScheduler):
     :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(
+        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+    ):
         _assert_need_one(kwargs)
         super(PASHA, self).__init__(
             config_space=config_space,
@@ -271,7 +277,9 @@ class BOHB(HyperbandScheduler):
     :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, resource_attr: str, **kwargs):
+    def __init__(
+        self, config_space: Dict[str, Any], metric: str, resource_attr: str, **kwargs
+    ):
         _assert_need_one(kwargs)
         super(BOHB, self).__init__(
             config_space=config_space,
@@ -297,7 +305,7 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -331,7 +339,7 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -363,7 +371,7 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -401,7 +409,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
         **kwargs,
@@ -421,11 +429,11 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
 
 def _create_searcher_kwargs(
-    config_space: dict,
+    config_space: Dict[str, Any],
     metric: str,
     random_seed: Optional[int],
-    kwargs: dict,
-) -> dict:
+    kwargs: Dict[str, Any],
+) -> Dict[str, Any]:
     searcher_kwargs = dict(
         config_space=config_space,
         metric=metric,
@@ -453,7 +461,7 @@ class BORE(FIFOScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -492,7 +500,7 @@ class ASHABORE(HyperbandScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
         random_seed: Optional[int] = None,
@@ -534,7 +542,7 @@ class BoTorch(FIFOScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -578,7 +586,7 @@ class REA(FIFOScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         population_size: int = 100,
         sample_size: int = 10,
@@ -612,7 +620,9 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, constraint_attr: str, **kwargs):
+    def __init__(
+        self, config_space: Dict[str, Any], metric: str, constraint_attr: str, **kwargs
+    ):
         search_options = kwargs.get("search_options", dict())
         kwargs["search_options"] = dict(search_options, constraint_attr=constraint_attr)
         super(ConstrainedBayesianOptimization, self).__init__(
@@ -652,7 +662,7 @@ class ZeroShotTransfer(FIFOScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         metric: str,
         mode: str = "min",
@@ -715,7 +725,7 @@ class ASHACTS(HyperbandScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         resource_attr: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
@@ -766,7 +776,7 @@ class KDE(FIFOScheduler):
     :param kwargs: Additional arguments to :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
 
-    def __init__(self, config_space: dict, metric: str, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], metric: str, **kwargs):
         super(KDE, self).__init__(
             config_space=config_space,
             metric=metric,

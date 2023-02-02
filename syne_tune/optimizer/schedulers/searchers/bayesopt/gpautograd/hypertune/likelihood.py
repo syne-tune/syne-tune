@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
     GaussianProcessMarginalLikelihood,
@@ -78,7 +78,7 @@ class HyperTuneIndependentGPMarginalLikelihood(
         assert_ensemble_distribution(distribution, set(self.mean.keys()))
         self._ensemble_distribution = distribution.copy()
 
-    def get_posterior_state(self, data: dict) -> PosteriorState:
+    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         return HyperTuneIndependentGPPosteriorState(
             features=data["features"],
@@ -129,7 +129,7 @@ class HyperTuneJointGPMarginalLikelihood(GaussianProcessMarginalLikelihood):
     def set_ensemble_distribution(self, distribution: Dict[int, float]):
         self._ensemble_distribution = distribution.copy()
 
-    def get_posterior_state(self, data: dict) -> PosteriorState:
+    def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         return HyperTuneJointGPPosteriorState(
             features=data["features"],

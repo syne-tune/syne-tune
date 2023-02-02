@@ -690,10 +690,10 @@ class HyperparameterRangesImpl(HyperparameterRanges):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         name_last_pos: str = None,
         value_for_last_pos=None,
-        active_config_space: dict = None,
+        active_config_space: Dict[str, Any] = None,
         prefix_keys: Optional[List[str]] = None,
     ):
         super().__init__(

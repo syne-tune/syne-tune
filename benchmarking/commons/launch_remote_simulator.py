@@ -67,7 +67,7 @@ def get_hyperparameters(
         hyperparameters["start_seed"] = args.start_seed
     if args.benchmark is not None:
         hyperparameters["benchmark"] = args.benchmark
-    for k in ("n_workers", "max_wallclock_time"):
+    for k in ("n_workers", "max_wallclock_time", "max_size_data_for_model"):
         v = getattr(args, k)
         if v is not None:
             hyperparameters[k] = v
@@ -78,7 +78,7 @@ def get_hyperparameters(
 
 def launch_remote(
     entry_point: Path,
-    methods: dict,
+    methods: Dict[str, Any],
     benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[List[dict]] = None,
     map_extra_args: Optional[Callable] = None,

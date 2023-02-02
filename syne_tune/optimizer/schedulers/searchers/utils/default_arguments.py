@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Set, Tuple, Dict, Optional
+from typing import Set, Tuple, Dict, Optional, Any
 import logging
 import numbers
 
@@ -68,6 +68,15 @@ class Integer(CheckType):
         )
 
 
+class IntegerOrNone(Integer):
+    def __init__(self, lower: int = None, upper: int = None):
+        super().__init__(lower, upper)
+
+    def assert_valid(self, key: str, value):
+        if value is not None:
+            super().assert_valid(key, value)
+
+
 class Categorical(CheckType):
     def __init__(self, choices: Tuple[str, ...]):
         self.choices = set(choices)
@@ -98,12 +107,12 @@ class Dictionary(CheckType):
 
 
 def check_and_merge_defaults(
-    options: dict,
+    options: Dict[str, Any],
     mandatory: Set[str],
-    default_options: dict,
+    default_options: Dict[str, Any],
     constraints: Optional[Dict[str, CheckType]] = None,
     dict_name: Optional[str] = None,
-) -> dict:
+) -> Dict[str, Any]:
     """
     First, check that all keys in mandatory appear in options. Second, create
     result_options by merging ``options`` and ``default_options``, where entries in
@@ -157,7 +166,7 @@ def check_and_merge_defaults(
     return result_options
 
 
-def filter_by_key(options: dict, remove_keys: Set[str]) -> dict:
+def filter_by_key(options: Dict[str, Any], remove_keys: Set[str]) -> Dict[str, Any]:
     """
     Filter options by removing entries whose keys are in ``remove_keys``.
     Used to filter kwargs passed to a constructor, before passing it to
@@ -170,6 +179,6 @@ def filter_by_key(options: dict, remove_keys: Set[str]) -> dict:
     return {k: v for k, v in options.items() if k not in remove_keys}
 
 
-def assert_no_invalid_options(options: dict, all_keys: Set[str], name: str):
+def assert_no_invalid_options(options: Dict[str, Any], all_keys: Set[str], name: str):
     for k in options:
         assert k in all_keys, "{}: Invalid argument '{}'".format(name, k)

@@ -10,14 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
 
 
 def metrics_for_configuration(
     blackbox: Blackbox,
-    config: dict,
+    config: Dict[str, Any],
     resource_attr: str,
     fidelity_range: Optional[Tuple[float, float]] = None,
     seed: Optional[int] = None,

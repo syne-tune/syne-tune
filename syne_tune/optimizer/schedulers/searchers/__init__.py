@@ -41,8 +41,10 @@ __all__ = [
 ]
 
 try:
-    from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (  # noqa: F401
+    from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (  # noqa: F401
         ModelBasedSearcher,
+    )
+    from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (  # noqa: F401
         GPFIFOSearcher,
     )
     from syne_tune.optimizer.schedulers.searchers.gp_multifidelity_searcher import (  # noqa: F401

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict, Callable, Optional, Union
+from typing import List, Dict, Callable, Optional, Union, Any
 import json
 import logging
 from datetime import datetime
@@ -45,7 +45,7 @@ class ExperimentResult:
 
     name: str
     results: pd.DataFrame
-    metadata: dict
+    metadata: Dict[str, Any]
     tuner: Tuner
     path: Path
 
@@ -93,7 +93,7 @@ class ExperimentResult:
     def entrypoint_name(self) -> str:
         return self.metadata["entrypoint"]
 
-    def best_config(self) -> dict:
+    def best_config(self) -> Dict[str, Any]:
         """
         Return the best config found for the first metric defined in the scheduler.
         :return: Configuration corresponding to best metric value

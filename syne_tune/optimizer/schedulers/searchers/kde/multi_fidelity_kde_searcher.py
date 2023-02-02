@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 import logging
 import numpy as np
 
@@ -42,7 +42,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: Optional[bool] = None,

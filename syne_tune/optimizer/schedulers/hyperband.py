@@ -13,7 +13,7 @@
 import copy
 import logging
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 import numpy as np
 
@@ -121,7 +121,7 @@ class TrialInformation:
     attributes ``self.metric`` and ``self._resource_attr``.
     """
 
-    config: dict
+    config: Dict[str, Any]
     time_stamp: float
     bracket: int
     keep_case: bool
@@ -359,7 +359,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
           continuation of training tasks. See
           :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
 
-    :type rung_system_kwargs: dict, optional
+    :type rung_system_kwargs: Dict[str, Any], optional
     """
 
     def __init__(self, config_space, **kwargs):
@@ -490,7 +490,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             super()._initialize_searcher()
             self.bracket_distribution.configure(self)
 
-    def _extend_search_options(self, search_options: dict) -> dict:
+    def _extend_search_options(self, search_options: Dict[str, Any]) -> Dict[str, Any]:
         # Note: Needs ``self.scheduler_type`` to be set
         scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
@@ -534,7 +534,9 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         else:
             return self._cost_attr
 
-    def _on_config_suggest(self, config: dict, trial_id: str, **kwargs) -> dict:
+    def _on_config_suggest(
+        self, config: Dict[str, Any], trial_id: str, **kwargs
+    ) -> Dict[str, Any]:
         """
         ``kwargs`` being used here:
 
@@ -710,7 +712,9 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         super().on_trial_error(trial)
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.STOP)
 
-    def _update_searcher_internal(self, trial_id: str, config: dict, result: dict):
+    def _update_searcher_internal(
+        self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]
+    ):
         if self.searcher_data == "rungs_and_last":
             # Remove last recently added result for this task. This is not
             # done if it fell on a rung level (i.e., ``keep_case`` is True)
@@ -720,7 +724,11 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
                 self.searcher.remove_case(trial_id, **rem_result)
 
     def _update_searcher(
-        self, trial_id: str, config: dict, result: dict, task_info: dict
+        self,
+        trial_id: str,
+        config: Dict[str, Any],
+        result: Dict[str, Any],
+        task_info: Dict[str, Any],
     ):
         """Updates searcher with ``result``, registers pending config there
 
@@ -771,7 +779,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             )
         return do_update
 
-    def _check_result(self, result: dict):
+    def _check_result(self, result: Dict[str, Any]):
         super()._check_result(result)
         self._check_key_of_result(result, self._resource_attr)
         if self.scheduler_type == "cost_promotion":
@@ -783,7 +791,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             + f"value {resource}, which is not permitted"
         )
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         self._check_result(result)
         trial_id = str(trial.trial_id)
         debug_log = self.searcher.debug_log
@@ -918,7 +926,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     def on_trial_remove(self, trial: Trial):
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.PAUSE)
 
-    def on_trial_complete(self, trial: Trial, result: dict):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         # Check whether searcher was already updated based on ``result``
         trial_id = str(trial.trial_id)
         largest_update_resource = self._active_trials[trial_id].largest_update_resource
@@ -1028,7 +1036,7 @@ class HyperbandBracketManager:
         rung_system_per_bracket: bool,
         cost_attr: str,
         random_seed: int,
-        rung_system_kwargs: dict,
+        rung_system_kwargs: Dict[str, Any],
         scheduler: HyperbandScheduler,
     ):
         assert (
@@ -1132,7 +1140,7 @@ class HyperbandBracketManager:
             milestones.insert(0, self._max_t)
         return milestones
 
-    def on_task_report(self, trial_id: str, result: dict) -> dict:
+    def on_task_report(self, trial_id: str, result: Dict[str, Any]) -> Dict[str, Any]:
         """
         This method is called whenever a new report is received. It returns a
         dictionary with all the information needed for making decisions

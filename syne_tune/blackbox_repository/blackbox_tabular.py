@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Union
+from typing import List, Dict, Optional, Tuple, Union, Any
 import pandas as pd
 import numpy as np
 
@@ -50,8 +50,8 @@ class BlackboxTabular(Blackbox):
     def __init__(
         self,
         hyperparameters: pd.DataFrame,
-        configuration_space: dict,
-        fidelity_space: dict,
+        configuration_space: Dict[str, Any],
+        fidelity_space: Dict[str, Any],
         objectives_evaluations: np.array,
         fidelity_values: Optional[np.array] = None,
         objectives_names: Optional[List[str]] = None,
