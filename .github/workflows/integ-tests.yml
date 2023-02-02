@@ -49,7 +49,6 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_tuning_gluonts.py
-      timeout-minutes: 60
       requires-aws-credentials: true
     secrets: inherit
 
@@ -125,7 +124,6 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_huggingface_classification.py
-      timeout-minutes: 60
       requires-aws-credentials: true
     secrets: inherit
 
