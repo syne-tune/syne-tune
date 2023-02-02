@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import json
 import logging
 import time
 from collections import OrderedDict
@@ -35,6 +34,7 @@ from syne_tune.util import (
     check_valid_sagemaker_name,
     experiment_path,
     name_from_base,
+    dump_json_with_numpy,
 )
 
 logger = logging.getLogger(__name__)
@@ -357,15 +357,14 @@ class Tuner:
         self._set_metadata(
             res, "scheduler_name", str(self.scheduler.__class__.__name__)
         )
-        config_space_json = json.dumps(
+        config_space_json = dump_json_with_numpy(
             config_space_to_json_dict(self.scheduler.config_space)
         )
         self._set_metadata(res, "config_space", config_space_json)
         return res
 
     def _save_metadata(self):
-        with open(self.tuner_path / "metadata.json", "w") as f:
-            json.dump(self.metadata, f)
+        dump_json_with_numpy(self.metadata, self.tuner_path / "metadata.json")
 
     def _stop_condition(self) -> bool:
         return (

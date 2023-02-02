@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import json
 import os
 import re
 import string
@@ -20,6 +21,8 @@ from pathlib import Path
 from typing import Optional, List, Union
 from time import perf_counter
 from contextlib import contextmanager
+
+import numpy as np
 
 from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER, SYNE_TUNE_ENV_FOLDER
 from syne_tune.try_import import try_import_aws_message
@@ -207,3 +210,28 @@ def is_positive_integer(lst: List[int]) -> bool:
     :return: Are all entries of ``lst`` of type ``int`` and positive?
     """
     return all(x == int(x) and x >= 1 for x in lst)
+
+
+def dump_json_with_numpy(
+    x: dict, filename: Optional[Union[str, Path]] = None
+) -> Optional[str]:
+    """
+    Serializes dictionary ``x`` in JSON, taking into account NumPy specific
+    value types such as ``n.p.int64``.
+
+    :param x: Dictionary to serialize or encode
+    :param filename: Name of file to store JSON to. Optional. If not given,
+        the JSON encoding is returned as string
+    :return: If ``filename is None``, JSON encoding is returned
+    """
+
+    def np_encoder(obj):
+        if isinstance(obj, np.generic):
+            return obj.item()
+
+    if filename is None:
+        return json.dumps(x, default=np_encoder)
+    else:
+        with open(filename, "w") as f:
+            json.dump(x, f, default=np_encoder)
+        return None

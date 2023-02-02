@@ -10,13 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import json
 import logging
 import os
 import shutil
 import sys
 
-import numpy as np
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -27,7 +25,7 @@ from syne_tune.num_gpu import get_num_gpus
 from syne_tune.report import retrieve
 from syne_tune.backend.trial_status import TrialResult, Status
 from syne_tune.constants import ST_CHECKPOINT_DIR
-from syne_tune.util import experiment_path, random_string
+from syne_tune.util import experiment_path, random_string, dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -162,19 +160,10 @@ class LocalBackend(TrialBackend):
                     [f"--{key} {value}" for key, value in config_copy.items()]
                 )
 
-                def np_encoder(obj):
-                    if isinstance(obj, np.generic):
-                        return obj.item()
-
-                with open(trial_path / "config.json", "w") as f:
-                    # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
-                    json.dump(config, f, default=np_encoder)
-
+                dump_json_with_numpy(config, trial_path / "config.json")
                 cmd = f"{sys.executable} {self.entry_point} {config_str}"
-
                 env = dict(os.environ)
                 self._allocate_gpu(trial_id, env)
-
                 logger.info(f"running subprocess with command: {cmd}")
 
                 self.trial_subprocess[trial_id] = subprocess.Popen(
