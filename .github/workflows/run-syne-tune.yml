@@ -10,6 +10,9 @@ on:
       script-path:
         required: true
         type: string
+      requires-aws-credentials:
+        required: false
+        type: boolean
       additional-command:
         required: false
         type: string
@@ -27,10 +30,11 @@ env:
 
 jobs:
   run:
-    runs-on: temporary-sizing-testing_ubuntu-latest_16-core
+    runs-on: syne-tune_ubuntu-latest_16-core
     timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials (if required)
+        if: ${{ inputs.requires-aws-credentials == 'true' }}
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}

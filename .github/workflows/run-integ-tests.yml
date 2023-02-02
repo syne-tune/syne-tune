@@ -1,8 +1,14 @@
 name: Run Integ Tests
 
 # TODO set this up to gate new releases of Syne Tune
-# This workflow is stateful and only one instance of it should run at any given time
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  pull_request: # remove before merging, this is for testing
+    branches:   # remove before merging, this is for testing
+      - main    # remove before merging, this is for testing
 
 permissions:
   id-token: write # This is required for requesting the JWT
