@@ -380,7 +380,7 @@ class DEHB(GeometricDifferentialEvolutionHyperbandScheduler):
         super(DEHB, self).__init__(
             config_space=config_space,
             metric=metric,
-            searcher="random",
+            searcher="random_encoded",
             resource_attr=resource_attr,
             **kwargs,
         )
