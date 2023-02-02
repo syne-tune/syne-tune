@@ -49,6 +49,7 @@ jobs:
     with:
       script-path: examples/launch_tuning_gluonts.py
       timeout-minutes: 60
+      requires-aws-credentials: true
     secrets: inherit
 
   launch_plot_results:
@@ -82,6 +83,7 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_moasha_instance_tuning.py
+      requires-aws-credentials: true
     secrets: inherit
 
   launch_nas201_transfer_learning:
@@ -108,6 +110,7 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_sagemaker.py
+      requires-aws-credentials: true
     secrets: inherit
 
   launch_height_standalone_scheduler:
@@ -122,6 +125,7 @@ jobs:
     with:
       script-path: examples/launch_huggingface_classification.py
       timeout-minutes: 60
+      requires-aws-credentials: true
     secrets: inherit
 
   launch_height_sagemaker_remotely:
@@ -129,6 +133,7 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_sagemaker_remotely.py
+      requires-aws-credentials: true
     secrets: inherit
 
   launch_height_python_backend:
@@ -148,6 +153,7 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_sagemaker_checkpoints.py
+      requires-aws-credentials: true
     secrets: inherit
 
   launch_height_baselines:

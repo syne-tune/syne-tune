@@ -1,4 +1,4 @@
-name: Run fast examples
+name: Run Fast Tests
 
 on:
   pull_request:
@@ -33,12 +33,6 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_standalone_bayesian_optimization.py
-    secrets: inherit
-
-  launch_moasha_instance_tuning:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_moasha_instance_tuning.py
     secrets: inherit
 
   launch_nas201_transfer_learning:
