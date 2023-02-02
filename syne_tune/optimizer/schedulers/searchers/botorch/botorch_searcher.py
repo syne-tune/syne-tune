@@ -16,20 +16,21 @@ import logging
 import numpy as np
 from syne_tune.try_import import try_import_botorch_message
 
-try:
-    from torch import Tensor, randn_like, random
-    from botorch.models import SingleTaskGP
-    from botorch.fit import fit_gpytorch_mll
-    from botorch.models.transforms import Warp
-    from botorch.utils import standardize
-    from botorch.utils.transforms import normalize
-    from botorch.acquisition import qExpectedImprovement
-    from botorch.optim import optimize_acqf
-    from botorch.exceptions.errors import ModelFittingError
-    from gpytorch.mlls import ExactMarginalLogLikelihood
-    from gpytorch.utils.errors import NotPSDError
-except ImportError:
-    print(try_import_botorch_message())
+# try:
+from torch import Tensor, randn_like, random
+from botorch.models import SingleTaskGP
+from botorch.fit import fit_gpytorch_mll
+from botorch.models.transforms import Warp
+from botorch.utils import standardize
+from botorch.utils.transforms import normalize
+from botorch.acquisition import qExpectedImprovement
+from botorch.optim import optimize_acqf
+from botorch.exceptions.errors import ModelFittingError
+from gpytorch.mlls import ExactMarginalLogLikelihood
+from gpytorch.utils.errors import NotPSDError
+
+# except ImportError:
+# print(try_import_botorch_message())
 
 from syne_tune.optimizer.schedulers.searchers.searcher import (
     SearcherWithRandomSeedAndFilterDuplicates,
