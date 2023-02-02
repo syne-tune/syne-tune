@@ -14,7 +14,8 @@ from typing import Optional, List, Dict, Any
 import logging
 
 import numpy as np
-from syne_tune.try_import import try_import_botorch_message
+
+# from syne_tune.try_import import try_import_botorch_message
 
 # try:
 from torch import Tensor, randn_like, random
