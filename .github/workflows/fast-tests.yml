@@ -1,4 +1,4 @@
-name: Run Fast Tests
+name: Fast Tests
 
 on:
   pull_request:
@@ -11,111 +11,111 @@ permissions:
 
 jobs:
   launch_tensorboard_example:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_tensorboard_example.py
     secrets: inherit
   
   launch_plot_results:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       additional-command: pip install matplotlib
       script-path: examples/launch_plot_results.py
     secrets: inherit
 
   launch_simulated_benchmark:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_simulated_benchmark.py
     secrets: inherit
 
   launch_standalone_bayesian_optimization:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_standalone_bayesian_optimization.py
     secrets: inherit
 
   launch_nas201_transfer_learning:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       additional-command: pip install matplotlib
       script-path: examples/launch_nas201_transfer_learning.py
     secrets: inherit
 
   launch_pbt:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_pbt.py
     secrets: inherit
 
   launch_height_standalone_scheduler:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_standalone_scheduler.py
     secrets: inherit
 
   launch_height_python_backend:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_python_backend.py
     secrets: inherit
 
   launch_height_ray:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_ray.py
     secrets: inherit
 
   launch_height_baselines:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_baselines.py
     secrets: inherit
 
   launch_height_moasha:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_moasha.py
     secrets: inherit
 
   launch_fashionmnist:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_fashionmnist.py
     secrets: inherit
 
   launch_checkpoint_example:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_checkpoint_example.py
     secrets: inherit
 
   launch_fashionmnist_costaware:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_fashionmnist_costaware.py
     secrets: inherit
 
   launch_bayesopt_constrained:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_bayesopt_constrained.py
     secrets: inherit
 
   launch_ask_tell_scheduler:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_ask_tell_scheduler.py
     secrets: inherit
 
   launch_ask_tell_scheduler_hyperband:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_ask_tell_scheduler_hyperband.py
     secrets: inherit
 
   launch_asha_yahpo:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/reusable_workflows/run-syne-tune.yml
     with:
       additional-command: pip install matplotlib
       script-path: examples/launch_asha_yahpo.py
