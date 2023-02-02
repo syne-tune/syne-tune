@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
       - name: Configure AWS Credentials (if required)
-        if: ${{ inputs.requires-aws-credentials == 'true' }}
+        if: ${{ inputs.requires-aws-credentials == true }}
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
