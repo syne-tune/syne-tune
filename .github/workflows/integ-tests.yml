@@ -26,6 +26,13 @@ jobs:
       script-path: examples/launch_plot_results.py
     secrets: inherit
 
+  launch_rl_tuning:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      additional-command: pip install -r examples/training_scripts/rl_cartpole/requirements.txt
+      script-path: examples/launch_rl_tuning.py
+    secrets: inherit
+
   launch_simulated_benchmark:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
@@ -43,6 +50,12 @@ jobs:
     with:
       additional-command: pip install matplotlib
       script-path: examples/launch_nas201_transfer_learning.py
+    secrets: inherit
+
+  launch_nasbench201_simulated:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_nasbench201_simulated.py
     secrets: inherit
 
   launch_pbt:
