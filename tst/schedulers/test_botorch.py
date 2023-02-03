@@ -19,9 +19,13 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.baselines import BoTorch
 import pytest
+import sys
 
 
 @pytest.mark.timeout(30)
+@pytest.mark.skipif(
+    sys.version_info <= (3, 7), reason="BoTorch requires python 3.8 or higher"
+)
 def test_botorch_reproducible():
     """
     This test checks that the output of the BoTorch scheduler is reproducible
