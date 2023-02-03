@@ -21,7 +21,7 @@ on:
         type: number
     secrets:
       PROD_AWS_INTEG_TEST_ROLE_ARN:
-        required: true
+        required: false
 
 env:
   AWS_DEFAULT_REGION: us-west-2
