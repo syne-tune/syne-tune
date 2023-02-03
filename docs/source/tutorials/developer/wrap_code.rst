@@ -75,6 +75,17 @@ as we demonstrate here. Here is
   :meth:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates.get_config`,
   where if ``allow_duplicates == False``, the new configuration is added to the
   exclusion list.
+* In :meth:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher._sample_next_candidate`,
+  the usage of :code:`self._restrict_configurations` is of interest. It relates to
+  the ``restrict_configurations`` argument. If this is not
+  ``None``, configurations are suggested from a finite set, namely those in
+  :code:`self._restrict_configurations`. If ``allows_duplicates == False``,
+  entries are removed from there once suggested. For our example, we need to avoid
+  doing a local optimization of the acquisition function (via :code:`optimize_acqf`)
+  in this case, but use
+  :meth:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher._sample_and_pick_acq_best`
+  instead. Since the latter uses :code:`self._get_random_config()`, we are all set,
+  since this makes use of :code:`self._restrict_configurations` already.
 
 Other methods are straightforward:
 
@@ -117,6 +128,12 @@ encoded as vectors with values in :math:`[0, 1]`, which is done using the
    uses the built-in exclusion list, properly deals with configuration spaces
    of finite size, and uses the random generator seeded in a consistent and
    reproducible way.
+
+   We also recommend to implement the ``restrict_configurations`` argument,
+   unless this is hard to do for your scheduler. Often, a scheduler can be made
+   to score a certain number of configurations and return the best. If so, you
+   use ``self._get_random_config()`` to select the configurations to score, which
+   take care of ``restrict_configurations``.
 
 HyperparameterRanges
 --------------------

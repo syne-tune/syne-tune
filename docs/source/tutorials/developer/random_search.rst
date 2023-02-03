@@ -101,15 +101,25 @@ should be used by all searchers which make random decisions. It maintains a PRN
 generator and provides methods to serialize and de-serialize its state.
 
 :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
-extends ``SearcherWithRandomSeed``. It should be used by all searchers which
-make random decisions, and which (optionally) avoid to suggest the same
-configuration more than once. All built-in Syne Tune searchers either inherit
-from this class, or avoid duplicate suggestions in a different way. While we
-in general recommend to use the default ``allow_duplicates == False``,
-allowing for duplicates can be useful when dealing with configuration spaces of
-small finite size.
+extends ``SearcherWithRandomSeed``. It supports a number of features which are
+desirable for most searchers:
 
-Finally, let us walk through
+* Seed management for random decisions.
+* Avoid to suggest the same configuration more than once. While we in general
+  recommend to use the default ``allow_duplicates == False``, allowing for
+  duplicates can be useful when dealing with configuration spaces of small
+  finite size.
+* Restrict configurations which can be suggested to a finite set. This can be
+  very useful when
+  `using tabulated blackboxes <../benchmarking/bm_simulator.html#restricting-scheduler-to-configurations-of-tabulated-blackbox>`_.
+  It does not make sense for every scheduler though, as some rely on a
+  continuous search over the configuration space. You can inherit from
+  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+  and still not support this feature, by insisting on
+  ``restrict_configurations == None``.
+
+All built-in Syne Tune searchers either inherit from this class, or avoid
+duplicate suggestions in a different way. Finally, let us walk through
 :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`:
 
 * There are a few features beyond ``SimpleScheduler`` above. The searcher does
