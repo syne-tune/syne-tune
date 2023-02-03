@@ -102,6 +102,7 @@ class Reporter:
             keys should not start with ``st_`` which is a reserved namespace for
             Syne Tune internals.
         """
+        self._check_reported_values(kwargs)
         assert not any(key.startswith("st_") for key in kwargs), (
             "The metric prefix 'st_' is used by Syne Tune internals, "
             "please use a metric name that does not start with 'st_'."
@@ -117,6 +118,12 @@ class Reporter:
         kwargs[ST_WORKER_ITER] = self.iter
         self.iter += 1
         _report_logger(**kwargs)
+
+    @staticmethod
+    def _check_reported_values(kwargs: Dict[str, Any]):
+        assert all(
+            v is not None for v in kwargs.values()
+        ), f"Invalid value in report: kwargs = {kwargs}"
 
 
 def _report_logger(**kwargs):
