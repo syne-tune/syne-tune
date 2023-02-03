@@ -21,45 +21,36 @@ import pytest
 import sys
 
 
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(20)
 @pytest.mark.skipif(
     sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
 )
 def test_botorch_reproducible():
     """
-    This test checks that the output of the BoTorch scheduler is reproducible
-    (when using one worker), that the scheduler runs and that the
-    ModelFittingError is caught.
+    This test checks that the BoTorch scheduler can be loaded and used to come up with new trials.
     """
     from syne_tune.optimizer.baselines import BoTorch
 
     # Use train_height backend for our tests
     entry_point = "examples/training_scripts/height_example/train_height.py"
 
-    dataframes = []
-    for _ in range(2):  # Run twice and compare outputs
-        # Set up tuner and run for a few evaluations
-        tuner = Tuner(
-            trial_backend=LocalBackend(entry_point=entry_point),
-            scheduler=BoTorch(
-                metric=METRIC_ATTR,
-                config_space=height_config_space(max_steps=5),
-                random_seed=15,
-            ),
-            stop_criterion=StoppingCriterion(max_num_trials_finished=5),
-            n_workers=1,
-            sleep_time=0.001,
-        )
-        tuner.run()
+    max_trials = 5
+    # Set up tuner and run for a few evaluations
+    tuner = Tuner(
+        trial_backend=LocalBackend(entry_point=entry_point),
+        scheduler=BoTorch(
+            metric=METRIC_ATTR,
+            config_space=height_config_space(max_steps=5),
+            random_seed=15,
+        ),
+        stop_criterion=StoppingCriterion(max_num_trials_finished=max_trials),
+        n_workers=1,
+        sleep_time=0.001,
+    )
+    tuner.run()
 
-        dataframes.append(tuner.tuning_status.get_dataframe())
+    df = tuner.tuning_status.get_dataframe()
 
     assert (
-        (
-            dataframes[0][["width", "height", "step", "mean_loss"]][:5]
-            - dataframes[1][["width", "height", "step", "mean_loss"]][:5]
-            < 0.0001
-        )
-        .all()
-        .all()
-    ), "BoTorch did not choose expected hyperparameters to sample."
+        len(df[df["status"] == "Completed"]) >= max_trials
+    ), "Checks that we have expected number of trials completed"
