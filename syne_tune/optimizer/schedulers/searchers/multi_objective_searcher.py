@@ -13,7 +13,10 @@
 import logging
 from typing import Optional, List
 
-from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher, impute_points_to_evaluate
+from syne_tune.optimizer.schedulers.searchers.searcher import (
+    BaseSearcher,
+    impute_points_to_evaluate,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +44,7 @@ class BaseMultiObjectiveSearcher(BaseSearcher):
         self,
         config_space: dict,
         metrics: List[str],
-        modes: Optional[List[dict], str] = 'min',
+        modes: Optional[List[dict], str] = "min",
         points_to_evaluate: Optional[List[dict]] = None,
     ):
         self.config_space = config_space
@@ -64,5 +67,3 @@ class BaseMultiObjectiveSearcher(BaseSearcher):
             self._metrics = getattr(scheduler, "metrics")
         if hasattr(scheduler, "mode"):
             self._modes = getattr(scheduler, "modes")
-
-
