@@ -289,9 +289,7 @@ def main(
                     datasets=benchmark.datasets,
                 ),
             )
-        use_surrogates = "lcbench" in benchmark_name  # TODO!
         if args.restrict_configurations:
-            use_surrogates = False
             method_kwargs[
                 "restrict_configurations"
             ] = trial_backend.blackbox.all_configurations()
@@ -304,7 +302,7 @@ def main(
                 resource_attr=resource_attr,
                 verbose=args.verbose,
                 fcnet_ordinal=args.fcnet_ordinal,
-                use_surrogates=use_surrogates,
+                use_surrogates="lcbench" in benchmark_name,
                 max_size_data_for_model=args.max_size_data_for_model,
                 **method_kwargs,
             )
