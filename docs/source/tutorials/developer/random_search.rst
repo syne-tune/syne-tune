@@ -105,7 +105,7 @@ extends ``SearcherWithRandomSeed``. It supports a number of features which are
 desirable for most searchers:
 
 * Seed management for random decisions.
-* Avoid to suggest the same configuration more than once. While we in general
+* Avoid suggesting the same configuration more than once. While we in general
   recommend to use the default ``allow_duplicates == False``, allowing for
   duplicates can be useful when dealing with configuration spaces of small
   finite size.

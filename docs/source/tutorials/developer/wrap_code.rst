@@ -129,7 +129,7 @@ encoded as vectors with values in :math:`[0, 1]`, which is done using the
    of finite size, and uses the random generator seeded in a consistent and
    reproducible way.
 
-   We also recommend to implement the ``restrict_configurations`` argument,
+   We also recommend that you implement the ``restrict_configurations`` argument,
    unless this is hard to do for your scheduler. Often, a scheduler can be made
    to score a certain number of configurations and return the best. If so, you
    use ``self._get_random_config()`` to select the configurations to score, which
