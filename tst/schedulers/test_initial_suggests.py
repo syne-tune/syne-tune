@@ -13,6 +13,7 @@
 import numpy as np
 from datetime import datetime
 import pytest
+import sys
 
 from syne_tune.optimizer.baselines import (
     RandomSearch,
@@ -21,7 +22,6 @@ from syne_tune.optimizer.baselines import (
     MOBSTER,
     BORE,
     SyncBOHB,
-    BoTorch,
     BOHB,
     KDE,
     ASHABORE,
@@ -36,21 +36,27 @@ KDE_METHODS = {"BOHB", "SyncBOHB", "KDE"}
 MULTIFID_METHODS = {"ASHA", "MOB", "BOHB", "SyncBOHB", "ASHABORE"}
 
 
+list_schedulers_to_test = [
+    ("BO", BayesianOptimization),
+    ("ASHA", ASHA),
+    ("MOB", MOBSTER),
+    ("BORE", BORE),
+    ("SyncBOHB", SyncBOHB),
+    ("BOHB", BOHB),
+    ("KDE", KDE),
+    ("ASHABORE", ASHABORE),
+]
+if sys.version_info >= (3, 8):
+    # BoTorch scheduler requires Python 3.8 or later
+    from syne_tune.optimizer.baselines import BoTorch
+
+    list_schedulers_to_test.append(
+        ("BoTorch", BoTorch),
+    )
+
+
 @pytest.mark.timeout(3)
-@pytest.mark.parametrize(
-    "name, scheduler_cls",
-    [
-        ("BO", BayesianOptimization),
-        ("ASHA", ASHA),
-        ("MOB", MOBSTER),
-        ("BORE", BORE),
-        ("SyncBOHB", SyncBOHB),
-        ("BOTorch", BoTorch),
-        ("BOHB", BOHB),
-        ("KDE", KDE),
-        ("ASHABORE", ASHABORE),
-    ],
-)
+@pytest.mark.parametrize("name, scheduler_cls", list_schedulers_to_test)
 def test_same_initial_suggests(name, scheduler_cls):
     random_seed = 31415927
     np.random.seed(random_seed)
