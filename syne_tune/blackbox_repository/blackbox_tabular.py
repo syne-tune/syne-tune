@@ -281,6 +281,20 @@ class BlackboxTabular(Blackbox):
             objectives_names=list(objective_name_mapping.values()),
         )
 
+    def all_configurations(self) -> List[Dict[str, Any]]:
+        """
+        This method is useful in order to set ``restrict_configurations`` in
+        :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+        or
+        :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`,
+        which restricts the searcher to only return configurations in this set.
+        This allows you to use a tabular blackbox without a surrogate.
+
+        :return: List of all hyperparameter configurations for which objective
+            values can be returned
+        """
+        return self.hyperparameters.to_dict("records")
+
     def __str__(self):
         (
             num_evals,

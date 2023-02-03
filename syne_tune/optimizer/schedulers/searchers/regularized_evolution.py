@@ -81,6 +81,8 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             logger.warning(
                 "This class does not support allow_duplicates argument. Sampling is with replacement"
             )
+        if kwargs.get("restrict_configurations") is not None:
+            logger.warning("This class does not support restrict_configurations")
 
     def _mutate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         child_config = copy.deepcopy(config)

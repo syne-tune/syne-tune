@@ -61,6 +61,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         debug_log: Union[bool, DebugLogPrinter] = False,
         resource_attr: Optional[str] = None,
         allow_duplicates: Optional[bool] = None,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -68,6 +69,7 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             metric=metric,
             points_to_evaluate=points_to_evaluate,
             allow_duplicates=allow_duplicates,
+            restrict_configurations=restrict_configurations,
             **kwargs,
         )
         self._resource_attr = resource_attr
@@ -188,6 +190,10 @@ class GridSearcher(SearcherWithRandomSeed):
         super().__init__(
             config_space, metric=metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
+        k = "restrict_configurations"
+        if kwargs.get(k) is not None:
+            logger.warning(f"{k} is not supported")
+            del kwargs[k]
         self._validate_config_space(config_space, num_samples)
         self._hp_ranges = make_hyperparameter_ranges(config_space)
 

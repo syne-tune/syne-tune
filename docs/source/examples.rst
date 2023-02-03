@@ -105,7 +105,7 @@ Launch HPO Experiment with Simulator Backend
 
 In this example, we use the simulator backend with the NASBench-201
 blackbox. Since time is simulated, we can use
-``max_wallclock_time=600`` (so 10 minutes), but the experiment finishes
+``max_wallclock_time=3600`` (one hour), but the experiment finishes
 in mere seconds. More details about the simulator backend is found in
 `this tutorial <tutorials/benchmarking/bm_simulator.html>`_.
 
@@ -168,6 +168,35 @@ script:
    :name: train_constrained_script
    :caption: examples/training_scripts/constrained_hpo/train_constrained_example.py
    :lines: 13-
+
+
+Restrict Scheduler to Tabulated Configurations with Simulator Backend
+=====================================================================
+
+.. literalinclude:: ../../examples/launch_lcbench_simulated.py
+   :caption: examples/launch_lcbench_simulated.py
+   :lines: 18-
+
+**Requirements**:
+
+* Needs ``lcbench`` blackbox to be downloaded and preprocessed. This can
+  take quite a while when done for the first time
+* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+  or an S3 bucket is accessible, the blackbox files are uploaded to your S3
+  bucket
+
+This example is similar to the one
+`above <#launch-hpo-experiment-with-simulator-backend>`_, but here we use
+the tabulated LCBench benchmark, whose configuration space is infinite, and
+whose objective values have not been evaluated on a grid. With such a
+benchmark, we can either use a surrogate to interpolate objective values, or
+we can restrict the scheduler to only suggest configurations which have
+been observed in the benchmark. This example demonstrates the latter.
+
+Since time is simulated, we can use ``max_wallclock_time=3600`` (one hour),
+but the experiment finishes in mere seconds. More details about the simulator
+backend is found in
+`this tutorial <tutorials/benchmarking/bm_simulator.html>`_.
 
 
 Tuning Reinforcement Learning
@@ -242,7 +271,7 @@ More details are found in
 `this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_.
 
 
-Retrieving the best checkpoint
+Retrieving the Best Checkpoint
 ==============================
 
 .. literalinclude:: ../../examples/launch_checkpoint_example.py

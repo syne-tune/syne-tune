@@ -160,6 +160,12 @@ def parse_args(
                 default="none",
                 help="Ordinal encoding for fcnet categorical HPs",
             ),
+            dict(
+                name="restrict_configurations",
+                type=int,
+                default=0,
+                help="If 1, scheduler only suggests configs contained in tabulated benchmark",
+            ),
         ]
     )
     if nested_dict:
@@ -173,6 +179,7 @@ def parse_args(
     args, method_names, seeds = _parse_args(methods, extra_args)
     args.verbose = bool(args.verbose)
     args.support_checkpointing = bool(args.support_checkpointing)
+    args.restrict_configurations = bool(args.restrict_configurations)
     if args.benchmark is not None:
         benchmark_names = [args.benchmark]
     else:
@@ -241,27 +248,34 @@ def main(
         )
 
         max_resource_attr = benchmark.max_resource_attr
-        backend = BlackboxRepositoryBackend(
+        if args.restrict_configurations:
+            # Don't need surrogate in this case
+            kwargs = dict()
+        else:
+            kwargs = dict(
+                surrogate=benchmark.surrogate,
+                surrogate_kwargs=benchmark.surrogate_kwargs,
+                add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
+            )
+        trial_backend = BlackboxRepositoryBackend(
             blackbox_name=benchmark.blackbox_name,
             elapsed_time_attr=benchmark.elapsed_time_attr,
             max_resource_attr=max_resource_attr,
             support_checkpointing=args.support_checkpointing,
             dataset=benchmark.dataset_name,
-            surrogate=benchmark.surrogate,
-            surrogate_kwargs=benchmark.surrogate_kwargs,
-            add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
+            **kwargs,
         )
 
-        resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
-        max_resource_level = int(max(backend.blackbox.fidelity_values))
+        resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
+        max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
         if max_resource_attr is not None:
             config_space = dict(
-                backend.blackbox.configuration_space,
+                trial_backend.blackbox.configuration_space,
                 **{max_resource_attr: max_resource_level},
             )
             method_kwargs = {"max_resource_attr": max_resource_attr}
         else:
-            config_space = backend.blackbox.configuration_space
+            config_space = trial_backend.blackbox.configuration_space
             method_kwargs = {"max_t": max_resource_level}
         if extra_args is not None:
             assert map_extra_args is not None
@@ -275,6 +289,10 @@ def main(
                     datasets=benchmark.datasets,
                 ),
             )
+        if args.restrict_configurations:
+            method_kwargs[
+                "restrict_configurations"
+            ] = trial_backend.blackbox.all_configurations()
         scheduler = methods[method](
             MethodArguments(
                 config_space=config_space,
@@ -309,7 +327,7 @@ def main(
                 benchmark.add_surrogate_kwargs["predict_curves"]
             )
         tuner = Tuner(
-            trial_backend=backend,
+            trial_backend=trial_backend,
             scheduler=scheduler,
             stop_criterion=stop_criterion,
             n_workers=benchmark.n_workers,

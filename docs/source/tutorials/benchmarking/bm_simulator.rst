@@ -189,13 +189,55 @@ benchmarking only. Here are some pitfalls:
 * Tabulated benchmarks do not reflect the stochasticity of real benchmarks
   (e.g., random weight initialization, random ordering of mini-batches)
 * While tabulated benchmarks like ``nas201`` or ``fcnet`` are evaluated
-  exhaustively or on a fine grid, other benchmarks (like ``lcbench``) depend
-  on surrogate models fit to a certain amount of data, typically on randomly
-  chosen configurations. Unfortunately, the choice of surrogate model is
-  strongly affecting the benchmark, for the same underlying data. As a general
-  recommendation, you should be careful with surrogate benchmarks which offer
-  a large configuration space, but are based on only medium amounts of real
-  data.
+  exhaustively or on a fine grid, other benchmarks (like ``lcbench``) contain
+  observations only at a set of randomly chosen configurations, while their
+  configuration space is much larger or even infinite. For such benchmarks,
+  you can either restrict the scheduler to suggest configurations only from
+  the set supported by the benchmark (see subsection just below), or you can
+  use a surrogate model which interpolates observations from those contained
+  in the benchmark to all others in the configuration space. Unfortunately, the
+  choice of surrogate model can strongly affect the benchmark, for the same
+  underlying data. As a general recommendation, you should be careful with
+  surrogate benchmarks which offer a large configuration space, but are based
+  on only medium amounts of real data.
+
+Restricting Scheduler to Configurations of Tabulated Blackbox
+-------------------------------------------------------------
+
+For a tabulated benchmark like ``lcbench``, most entries of the configuration
+space are not covered by data. For such, you can either use a surrogate, which
+can be configured by attributes ``surrogate``, ``surrogate_kwargs``, and
+``add_surrogate_kwargs`` of
+:class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
+Or you can restrict the scheduler to only suggest configurations covered by
+data. The latter is done by the option ``--restrict_configurations 1``. The
+advantage of doing so is that your comparison does not depend on the choice of
+surrogate, but only on the benchmark data itself. However, there are also some
+drawbacks:
+
+* This option is currently not supported for the following schedulers:
+
+  * Grid Search
+  * SyncBOHB
+  * BOHB
+  * DEHB
+  * REA
+  * KDE
+  * PopulationBasedTraining
+  * ZeroShotTransfer
+  * ASHACTS
+  * MOASHA
+
+* Schedulers like Gaussian process based Bayesian optimization typically use
+  local gradient-based optimization of the acquisition function. This is not
+  possible with ``--restrict_configurations 1``. Instead, they evaluate the
+  acquisition function at a finite number ``num_init_candidates`` of points and
+  pick the best one
+* In general, you should avoid to use surrogate benchmarks which offer a large
+  configuration space, but are based on only medium amounts of real data. When
+  using ``--restrict_configurations 1`` with such a benchmark, your methods
+  may perform better than they should, just because they nearly sample the
+  space exhaustively
 
 Selecting Benchmarks from benchmark_definitions
 -----------------------------------------------

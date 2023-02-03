@@ -158,6 +158,7 @@ def launch_remote(
         )
         hyperparameters["support_checkpointing"] = int(args.support_checkpointing)
         hyperparameters["verbose"] = int(args.verbose)
+        hyperparameters["restrict_configurations"] = int(args.restrict_configurations)
         if benchmark_key is not None:
             hyperparameters["benchmark_key"] = benchmark_key
         sm_args["hyperparameters"] = hyperparameters

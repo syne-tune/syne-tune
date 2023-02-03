@@ -154,6 +154,12 @@ class PopulationBasedTraining(FIFOScheduler):
         self._quantile_fraction = kwargs["quantile_fraction"]
         self._resample_probability = kwargs["resample_probability"]
         self._custom_explore_fn = custom_explore_fn
+        search_options = kwargs.get("search_options")
+        if search_options is not None:
+            k = "restrict_configurations"
+            if search_options.get(k) is not None:
+                logger.warning(f"{k} is not supported")
+                del search_options[k]
         # Superclass constructor
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
         assert self.max_t is not None, (

@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import time
-from typing import Optional, Type, Any, Dict
+from typing import Optional, Type, Dict, Any, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import (
@@ -44,7 +44,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
     NoOptimization,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    RandomStatefulCandidateGenerator,
     ExclusionList,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults import (
@@ -114,17 +113,30 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         filter_observed_data: Optional[ConfigurationFilter] = None,
         state_converter: Optional[StateForModelConverter] = None,
         allow_duplicates: bool = False,
+        restrict_configurations: List[Dict[str, Any]] = None,
     ):
         self.hp_ranges = hp_ranges
         self.num_initial_candidates = num_initial_candidates
         self.num_initial_random_choices = num_initial_random_choices
         self.map_reward = map_reward
+        if restrict_configurations is not None:
+            restrict_configurations = self._filter_points_to_evaluate(
+                restrict_configurations, hp_ranges, allow_duplicates
+            )
+            if not skip_local_optimization:
+                logger.warning(
+                    "If restrict_configurations is given, need to have skip_local_optimization == True"
+                )
+                skip_local_optimization = True
+        self._restrict_configurations = restrict_configurations
         if skip_local_optimization:
             self.local_minimizer_class = NoOptimization
-        elif local_minimizer_class is None:
-            self.local_minimizer_class = DEFAULT_LOCAL_OPTIMIZER_CLASS
         else:
-            self.local_minimizer_class = local_minimizer_class
+            self.local_minimizer_class = (
+                DEFAULT_LOCAL_OPTIMIZER_CLASS
+                if local_minimizer_class is None
+                else local_minimizer_class
+            )
         self.acquisition_class = acquisition_class
         if isinstance(model_factory, dict):
             model_factory_main = model_factory[INTERNAL_METRIC_NAME]
@@ -147,9 +159,6 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             skip_optimization=skip_optimization,
             state_converter=state_converter,
         )
-        self.random_generator = RandomStatefulCandidateGenerator(
-            self._hp_ranges_for_prediction(), random_state=self.random_state
-        )
         self.set_profiler(model_factory_main.profiler)
         self._cost_attr = cost_attr
         self._resource_attr = resource_attr
@@ -159,16 +168,16 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         # Tracks the cumulative time spent in ``get_config`` calls
         self.cumulative_get_config_time = 0
         if self._debug_log is not None:
-            deb_msg = "[ModelBasedSearcher.__init__]\n"
-            deb_msg += "- acquisition_class = {}\n".format(acquisition_class)
-            deb_msg += "- local_minimizer_class = {}\n".format(local_minimizer_class)
-            deb_msg += "- num_initial_candidates = {}\n".format(num_initial_candidates)
-            deb_msg += "- num_initial_random_choices = {}\n".format(
-                num_initial_random_choices
-            )
-            deb_msg += "- initial_scoring = {}\n".format(self.initial_scoring)
-            deb_msg += f"- allow_duplicates = {self._allow_duplicates}\n"
-            logger.info(deb_msg)
+            msg_parts = [
+                "[ModelBasedSearcher._create_internal]",
+                f"- acquisition_class = {acquisition_class}",
+                f"- local_minimizer_class = {self.local_minimizer_class}",
+                f"- num_initial_candidates = {num_initial_candidates}",
+                f"- num_initial_random_choices = {num_initial_random_choices}",
+                f"- initial_scoring = {initial_scoring}",
+                f"- allow_duplicates = {self._allow_duplicates}",
+            ]
+            logger.info("\n".join(msg_parts))
 
     def _copy_kwargs_to_kwargs_int(
         self, kwargs_int: Dict[str, Any], kwargs: Dict[str, Any]
@@ -179,7 +188,13 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
         :param kwargs: Input arguments
         """
         # Extra arguments not parsed in factory
-        for k in ("init_state", "local_minimizer_class", "cost_attr", "resource_attr"):
+        for k in (
+            "init_state",
+            "local_minimizer_class",
+            "cost_attr",
+            "resource_attr",
+            "restrict_configurations",
+        ):
             kwargs_int[k] = kwargs.get(k)
 
     def _hp_ranges_in_state(self):
@@ -335,9 +350,14 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
                     break
             if self.do_profile:
                 self.profiler.stop("random")
+            # ``_random_searcher`` modified ``restrict_configurations``
+            if self._restrict_configurations is not None:
+                self._restrict_configurations = (
+                    self._random_searcher._restrict_configurations.copy()
+                )
         return config, pick_random
 
-    def get_config(self, **kwargs) -> Optional[dict]:
+    def get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
         """
         Runs Bayesian optimization in order to suggest the next config to evaluate.
 
@@ -429,12 +449,14 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
             state=encode_state(self.state_transformer.state),
             skip_optimization=self.state_transformer.skip_optimization,
         )
+        if self._restrict_configurations is not None:
+            state["restrict_configurations"] = self._restrict_configurations
         return state
 
     def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
         self.state_transformer.set_params(state["model_params"])
-        self.random_generator.random_state = self.random_state
+        self._restrict_configurations = state.get("restrict_configurations")
         # The internal random searcher is generated once needed, and it shares its
         # ``random_state`` with this searcher here
         self._random_searcher = None
@@ -462,5 +484,6 @@ class ModelBasedSearcher(SearcherWithRandomSeed):
                 random_seed=0,
                 debug_log=False,
                 allow_duplicates=self._allow_duplicates,
+                restrict_configurations=self._restrict_configurations,
             )
             self._random_searcher.set_random_state(self.random_state)
