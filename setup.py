@@ -1,6 +1,7 @@
 from syne_tune import read_version
 from setuptools import setup, find_packages
 from pathlib import Path
+import sys
 
 
 def load_requirements(filename):
@@ -45,11 +46,14 @@ required_extra = (
     + required_benchmarks
     + required_blackbox_repository
     + required_kde
-    + required_botorch
     + required_dev
     + required_aws
     + required_yahpo
 )
+
+if sys.version_info >= (3, 8):
+    required_extra += required_botorch
+
 setup(
     name="syne_tune",
     version=read_version(),
