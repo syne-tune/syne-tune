@@ -136,7 +136,8 @@ RUSH | Zappella, et al. (2021)| random | yes | yes | yes
 
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 
-Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers.
+Syne Tune also supports [BoTorch](https://github.com/pytorch/botorch) searchers, with [an example](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py) used by the [BoTorch scheduler](https://github.com/awslabs/syne-tune/blob/main/syne_tune/optimizer/baselines.py).
+Note that this requires Python >= 3.8.
 
 ## Supported multi-objective optimization methods
 
