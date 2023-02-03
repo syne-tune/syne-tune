@@ -53,6 +53,6 @@ jobs:
       - name: Run optional custom command
         if: ${{ inputs.additional-command != '' }}
         run: ${{ inputs.additional-command }}
-      - name: Run Syne Tune
+      - name: Run Syne Tune Script
         run: |
           python ${{ inputs.script-path }}
