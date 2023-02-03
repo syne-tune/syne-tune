@@ -215,11 +215,24 @@ advantage of doing so is that your comparison does not depend on the choice of
 surrogate, but only on the benchmark data itself. However, there are also some
 drawbacks:
 
-* This option is currently not supported for all schedulers
+* This option is currently not supported for the following schedulers:
+
+  * Grid Search
+  * SyncBOHB
+  * BOHB
+  * DEHB
+  * REA
+  * KDE
+  * PopulationBasedTraining
+  * ZeroShotTransfer
+  * ASHACTS
+  * MOASHA
+
 * Schedulers like Gaussian process based Bayesian optimization typically use
   local gradient-based optimization of the acquisition function. This is not
   possible with ``--restrict_configurations 1``. Instead, they evaluate the
-  acquisition function at a finite number of points and pick the best one
+  acquisition function at a finite number ``num_init_candidates`` of points and
+  pick the best one
 * In general, you should avoid to use surrogate benchmarks which offer a large
   configuration space, but are based on only medium amounts of real data. When
   using ``--restrict_configurations 1`` with such a benchmark, your methods

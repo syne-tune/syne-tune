@@ -190,6 +190,10 @@ class GridSearcher(SearcherWithRandomSeed):
         super().__init__(
             config_space, metric=metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
+        k = "restrict_configurations"
+        if kwargs.get(k) is not None:
+            logger.warning(f"{k} is not supported")
+            del kwargs[k]
         self._validate_config_space(config_space, num_samples)
         self._hp_ranges = make_hyperparameter_ranges(config_space)
 
