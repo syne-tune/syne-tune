@@ -51,6 +51,7 @@ required_extra = (
     + required_yahpo
 )
 
+# Botorch only supports python version > 3.8
 if sys.version_info >= (3, 8):
     required_extra += required_botorch
 
