@@ -1,0 +1,58 @@
+name: Run Syne Tune
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+on:
+  workflow_call:
+    inputs:
+      script-path:
+        required: true
+        type: string
+      requires-aws-credentials:
+        required: false
+        type: boolean
+      additional-command:
+        required: false
+        type: string
+      timeout-minutes:
+        required: false
+        type: number
+    secrets:
+      PROD_AWS_INTEG_TEST_ROLE_ARN:
+        required: false
+
+env:
+  AWS_DEFAULT_REGION: us-west-2
+  SCRIPT_PATH: ${{ inputs.script-path }}
+  AWS_ROLE: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
+
+jobs:
+  run:
+    runs-on: syne-tune_ubuntu-latest_16-core
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - name: Configure AWS Credentials (if required)
+        if: ${{ inputs.requires-aws-credentials == true }}
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
+          role-session-name: integtestsession
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+          cache: 'pip'
+      - name: Install Syne Tune
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[extra]'
+      - name: Run optional custom command
+        if: ${{ inputs.additional-command != '' }}
+        run: ${{ inputs.additional-command }}
+      - name: Run Syne Tune Script
+        run: |
+          python ${{ inputs.script-path }}
