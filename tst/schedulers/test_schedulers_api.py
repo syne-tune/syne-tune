@@ -15,6 +15,7 @@ from pathlib import Path
 
 import dill
 import pytest
+import sys
 
 # FIXME: Needs Ray to be installed
 # from ray.tune.schedulers import AsyncHyperBandScheduler
@@ -35,7 +36,6 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     SyncMOBSTER,
     ZeroShotTransfer,
-    BoTorch,
     # ASHACTS,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
@@ -133,213 +133,217 @@ def make_transfer_learning_evaluations(num_evals: int = 10):
 transfer_learning_evaluations = make_transfer_learning_evaluations()
 
 
-@pytest.mark.parametrize(
-    "scheduler",
-    [
-        FIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
-        FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
-        FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
-        FIFOScheduler(config_space, searcher="bore", metric=metric1, mode=mode),
-        FIFOScheduler(
-            categorical_config_space, searcher="grid", metric=metric1, mode=mode
+list_schedulers_to_test = [
+    FIFOScheduler(config_space, searcher="random", metric=metric1, mode=mode),
+    FIFOScheduler(config_space, searcher="bayesopt", metric=metric1, mode=mode),
+    FIFOScheduler(config_space, searcher="kde", metric=metric1, mode=mode),
+    FIFOScheduler(config_space, searcher="bore", metric=metric1, mode=mode),
+    FIFOScheduler(categorical_config_space, searcher="grid", metric=metric1, mode=mode),
+    HyperbandScheduler(
+        config_space,
+        searcher="random",
+        resource_attr=resource_attr,
+        max_t=max_t,
+        metric=metric1,
+        mode=mode,
+    ),
+    HyperbandScheduler(
+        config_space,
+        searcher="bayesopt",
+        resource_attr=resource_attr,
+        max_t=max_t,
+        metric=metric1,
+        mode=mode,
+    ),
+    HyperbandScheduler(
+        config_space,
+        searcher="kde",
+        resource_attr=resource_attr,
+        max_t=max_t,
+        metric=metric1,
+        mode=mode,
+    ),
+    HyperbandScheduler(
+        config_space,
+        searcher="bore",
+        resource_attr=resource_attr,
+        max_t=max_t,
+        metric=metric1,
+        mode=mode,
+    ),
+    HyperbandScheduler(
+        config_space,
+        searcher="random",
+        type="pasha",
+        max_t=max_t,
+        resource_attr=resource_attr,
+        metric=metric1,
+        mode=mode,
+    ),
+    PopulationBasedTraining(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+    ),
+    # TODO: RayTuneScheduler needs fixing!
+    # RayTuneScheduler(
+    #     config_space=config_space,
+    #     ray_scheduler=AsyncHyperBandScheduler(
+    #         max_t=max_t, time_attr=resource_attr, mode=mode, metric=metric1
+    #     ),
+    # ),
+    # RayTuneScheduler(
+    #     config_space=config_space,
+    #     ray_scheduler=AsyncHyperBandScheduler(
+    #         max_t=max_t, time_attr=resource_attr, mode=mode, metric=metric1
+    #     ),
+    #     ray_searcher=make_ray_skopt(),
+    # ),
+    SimpleScheduler(config_space=config_space, metric=metric1, mode=mode),
+    RandomSearch(config_space=config_space, metric=metric1, mode=mode),
+    GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
+    BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
+    REA(
+        config_space=config_space,
+        metric=metric1,
+        population_size=1,
+        sample_size=2,
+        mode=mode,
+    ),
+    ASHA(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+    ),
+    MOBSTER(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+    ),
+    MOBSTER(
+        config_space=config_space,
+        search_options={"model": "gp_independent"},
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+    ),
+    HyperTune(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+    ),
+    # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
+    # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    MOASHA(
+        config_space=config_space,
+        time_attr=resource_attr,
+        metrics=[metric1, metric2],
+        mode=mode,
+    ),
+    MedianStoppingRule(
+        scheduler=FIFOScheduler(
+            config_space, searcher="random", metric=metric1, mode=mode
         ),
-        HyperbandScheduler(
-            config_space,
-            searcher="random",
-            resource_attr=resource_attr,
-            max_t=max_t,
-            metric=metric1,
+        resource_attr=resource_attr,
+        metric=metric1,
+    ),
+    BoundingBox(
+        scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(
+            new_config_space,
+            points_to_evaluate=[],
+            metric=metric,
             mode=mode,
         ),
-        HyperbandScheduler(
-            config_space,
-            searcher="bayesopt",
-            resource_attr=resource_attr,
-            max_t=max_t,
-            metric=metric1,
-            mode=mode,
-        ),
-        HyperbandScheduler(
-            config_space,
-            searcher="kde",
-            resource_attr=resource_attr,
-            max_t=max_t,
-            metric=metric1,
-            mode=mode,
-        ),
-        HyperbandScheduler(
-            config_space,
-            searcher="bore",
-            resource_attr=resource_attr,
-            max_t=max_t,
-            metric=metric1,
-            mode=mode,
-        ),
-        HyperbandScheduler(
-            config_space,
-            searcher="random",
-            type="pasha",
-            max_t=max_t,
-            resource_attr=resource_attr,
-            metric=metric1,
-            mode=mode,
-        ),
-        PopulationBasedTraining(
-            config_space=config_space,
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_t=max_t,
-            mode=mode,
-        ),
-        # TODO: RayTuneScheduler needs fixing!
-        # RayTuneScheduler(
-        #     config_space=config_space,
-        #     ray_scheduler=AsyncHyperBandScheduler(
-        #         max_t=max_t, time_attr=resource_attr, mode=mode, metric=metric1
-        #     ),
-        # ),
-        # RayTuneScheduler(
-        #     config_space=config_space,
-        #     ray_scheduler=AsyncHyperBandScheduler(
-        #         max_t=max_t, time_attr=resource_attr, mode=mode, metric=metric1
-        #     ),
-        #     ray_searcher=make_ray_skopt(),
-        # ),
-        SimpleScheduler(config_space=config_space, metric=metric1, mode=mode),
-        RandomSearch(config_space=config_space, metric=metric1, mode=mode),
-        GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
-        BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
-        REA(
-            config_space=config_space,
-            metric=metric1,
-            population_size=1,
-            sample_size=2,
-            mode=mode,
-        ),
-        ASHA(
-            config_space=config_space,
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_t=max_t,
-            mode=mode,
-        ),
-        MOBSTER(
-            config_space=config_space,
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_t=max_t,
-            mode=mode,
-        ),
-        MOBSTER(
-            config_space=config_space,
-            search_options={"model": "gp_independent"},
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_t=max_t,
-            mode=mode,
-        ),
-        HyperTune(
-            config_space=config_space,
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_t=max_t,
-            mode=mode,
-        ),
-        # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
-        # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
-        MOASHA(
-            config_space=config_space,
-            time_attr=resource_attr,
-            metrics=[metric1, metric2],
-            mode=mode,
-        ),
-        MedianStoppingRule(
-            scheduler=FIFOScheduler(
-                config_space, searcher="random", metric=metric1, mode=mode
-            ),
-            resource_attr=resource_attr,
-            metric=metric1,
-        ),
-        BoundingBox(
-            scheduler_fun=lambda new_config_space, mode, metric: RandomSearch(
-                new_config_space,
-                points_to_evaluate=[],
-                metric=metric,
-                mode=mode,
-            ),
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=transfer_learning_evaluations,
+    ),
+    FIFOScheduler(
+        searcher=QuantileBasedSurrogateSearcher(
             mode=mode,
             config_space=config_space,
             metric=metric1,
             transfer_learning_evaluations=transfer_learning_evaluations,
         ),
-        FIFOScheduler(
-            searcher=QuantileBasedSurrogateSearcher(
-                mode=mode,
-                config_space=config_space,
-                metric=metric1,
-                transfer_learning_evaluations=transfer_learning_evaluations,
-            ),
-            mode=mode,
-            config_space=config_space,
-            metric=metric1,
-        ),
-        RUSHScheduler(
-            resource_attr=resource_attr,
-            max_t=max_t,
-            mode=mode,
-            config_space=config_space,
-            metric=metric1,
-            transfer_learning_evaluations=make_transfer_learning_evaluations(),
-        ),
-        SyncHyperband(
-            config_space=config_space,
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_resource_level=max_t,
-            max_resource_attr="steps",
-            brackets=3,
-            mode=mode,
-        ),
-        SyncMOBSTER(
-            config_space=config_space,
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_resource_level=max_t,
-            max_resource_attr="steps",
-            brackets=3,
-            mode=mode,
-        ),
-        SyncBOHB(
-            config_space=config_space,
-            metric=metric1,
-            resource_attr=resource_attr,
-            max_resource_level=max_t,
-            max_resource_attr="steps",
-            brackets=3,
-            mode=mode,
-        ),
-        ZeroShotTransfer(
-            config_space=config_space,
-            metric=metric1,
-            transfer_learning_evaluations=transfer_learning_evaluations,
-            use_surrogates=True,
-            mode=mode,
-        ),
-        # Commented out for now as takes ~4s to run
-        # ASHACTS(
-        #     config_space=config_space,
-        #     metric=metric1,
-        #     transfer_learning_evaluations=transfer_learning_evaluations,
-        #     max_t=max_t,
-        #     resource_attr=resource_attr,
-        # ),
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+    ),
+    RUSHScheduler(
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=make_transfer_learning_evaluations(),
+    ),
+    SyncHyperband(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
+        max_resource_attr="steps",
+        brackets=3,
+        mode=mode,
+    ),
+    SyncMOBSTER(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
+        max_resource_attr="steps",
+        brackets=3,
+        mode=mode,
+    ),
+    SyncBOHB(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_resource_level=max_t,
+        max_resource_attr="steps",
+        brackets=3,
+        mode=mode,
+    ),
+    ZeroShotTransfer(
+        config_space=config_space,
+        metric=metric1,
+        transfer_learning_evaluations=transfer_learning_evaluations,
+        use_surrogates=True,
+        mode=mode,
+    ),
+    # Commented out for now as takes ~4s to run
+    # ASHACTS(
+    #     config_space=config_space,
+    #     metric=metric1,
+    #     transfer_learning_evaluations=transfer_learning_evaluations,
+    #     max_t=max_t,
+    #     resource_attr=resource_attr,
+    # ),
+]
+if sys.version_info >= (3, 8):
+    # BoTorch scheduler requires Python 3.8 or later
+    from syne_tune.optimizer.baselines import BoTorch
+
+    list_schedulers_to_test.append(
         BoTorch(
             config_space=config_space,
             metric=metric1,
             mode=mode,
         ),
-    ],
-)
+    )
+
+
+@pytest.mark.parametrize("scheduler", list_schedulers_to_test)
 def test_schedulers_api(scheduler):
     trial_ids = range(4)
 

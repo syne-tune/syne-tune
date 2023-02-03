@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 from pathlib import Path
 import pytest
+import sys
 
 from examples.training_scripts.height_example.train_height import (
     height_config_space,
@@ -37,7 +38,6 @@ from syne_tune.optimizer.baselines import (
     PASHA,
     SyncMOBSTER,
     ASHABORE,
-    BoTorch,
     REA,
     ConstrainedBayesianOptimization,
     KDE,
@@ -61,11 +61,15 @@ SCHEDULERS = [
     (PASHA, True, False),
     (SyncMOBSTER, True, False),
     (ASHABORE, True, False),
-    (BoTorch, False, False),
     (REA, False, False),
     (ConstrainedBayesianOptimization, False, True),
     (KDE, False, False),
 ]
+if sys.version_info >= (3, 8):
+    # BoTorch scheduler requires Python 3.8 or later
+    from syne_tune.optimizer.baselines import BoTorch
+
+    SCHEDULERS.append((BoTorch, False, False))
 
 
 @pytest.mark.timeout(20)

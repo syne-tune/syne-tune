@@ -17,7 +17,6 @@ from examples.training_scripts.height_example.train_height import (
 
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
-from syne_tune.optimizer.baselines import BoTorch
 import pytest
 import sys
 
@@ -32,6 +31,8 @@ def test_botorch_reproducible():
     (when using one worker), that the scheduler runs and that the
     ModelFittingError is caught.
     """
+    from syne_tune.optimizer.baselines import BoTorch
+
     # Use train_height backend for our tests
     entry_point = "examples/training_scripts/height_example/train_height.py"
 
