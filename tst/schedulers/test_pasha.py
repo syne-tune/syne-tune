@@ -13,9 +13,7 @@
 from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
 
 
-def create_pasha_rung_system(
-    mode="max", epsilon=1.0, epsilon_scaling=1.0, ranking_criterion="soft_ranking"
-):
+def create_pasha_rung_system(mode="max"):
     """
     Function to set-up the rung system for testing. It is possible to pass the relevant arguments for testing.
     """
@@ -37,17 +35,16 @@ def create_pasha_rung_system(
         metric,
         mode,
         resource_attr,
-        max_t,
-        ranking_criterion,
-        epsilon,
-        epsilon_scaling,
+        max_t
     )
     return pasha_rung_rystem
 
 
 def test_resources_increase():
-    # a simple test for a simple method
-    prs = create_pasha_rung_system(epsilon=0.1)
+    prs = create_pasha_rung_system(mode="max")
+
+    # define the current value of epsilon
+    prs.epsilon = 0.1
 
     oneranking = [[("0", 0, 10.0), ("1", 3, 19.6), ("2", 2, 14.3), ("3", 1, 11.6)]]
     tworankings = [
@@ -75,7 +72,8 @@ def test_soft_ranking_criterion():
     for estimating the value of epsilon - so it is enough to have one set of tests.
     """
     # test if the ranking is the same
-    pasha_rung_system = create_pasha_rung_system(mode="min", epsilon=0.3)
+    pasha_rung_system = create_pasha_rung_system(mode="min")
+    pasha_rung_system.epsilon = 0.3
     rankings = [
         [("0", 0, 10.0), ("1", 3, 19.6), ("2", 2, 14.3), ("3", 1, 11.6)],
         [("0", 0, 10.1), ("1", 3, 19.7), ("2", 2, 14.2), ("3", 1, 11.5)],
@@ -104,7 +102,8 @@ def test_soft_ranking_criterion():
     assert keep_current_budget == True
 
     # test if the change is outside the group
-    pasha_rung_system = create_pasha_rung_system(mode="min", epsilon=0.03)
+    pasha_rung_system = create_pasha_rung_system(mode="min")
+    pasha_rung_system.epsilon = 0.03
     rankings = [
         [("0", 0, 10.0), ("1", 3, 14.6), ("2", 2, 14.3), ("3", 1, 11.6)],
         [("0", 0, 10.0), ("1", 2, 14.2), ("2", 3, 14.3), ("3", 1, 11.6)],
@@ -119,7 +118,8 @@ def test_soft_ranking_criterion():
     assert keep_current_budget == False
 
     # test if the change is within the group while maximizing the objective
-    pasha_rung_system = create_pasha_rung_system(mode="max", epsilon=0.3)
+    pasha_rung_system = create_pasha_rung_system(mode="max")
+    pasha_rung_system.epsilon = 0.3
     rankings = [
         [("0", 0, 10.0), ("1", 3, 14.6), ("2", 2, 14.3), ("3", 1, 11.6)],
         [("0", 0, 10.0), ("1", 2, 14.2), ("2", 3, 14.3), ("3", 1, 11.6)],
