@@ -14,12 +14,13 @@ from typing import Dict, Any
 from benchmarking.commons.baselines import (
     convert_categorical_to_ordinal,
     convert_categorical_to_ordinal_numeric,
-    search_options,
 )
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.synchronous import (
-    SynchronousGeometricHyperbandScheduler,
-    GeometricDifferentialEvolutionHyperbandScheduler,
+from benchmarking.commons.default_baselines import (
+    ASHA,
+    SyncHyperband,
+    SyncBOHB,
+    DEHB,
+    SyncMOBSTER,
 )
 
 
@@ -51,116 +52,47 @@ def conv_numeric_then_rest(margs) -> Dict[str, Any]:
 
 
 methods = {
-    Methods.ASHA: lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA: lambda method_arguments: ASHA(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
         type="promotion",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.SYNCHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+    Methods.SYNCHB: lambda method_arguments: SyncHyperband(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.DEHB: lambda method_arguments: GeometricDifferentialEvolutionHyperbandScheduler(
+    Methods.DEHB: lambda method_arguments: DEHB(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random_encoded",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.BOHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+    Methods.BOHB: lambda method_arguments: SyncBOHB(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="kde",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.ASHA_ORD: lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA_ORD: lambda method_arguments: ASHA(
+        method_arguments,
         config_space=conv_numeric_then_rest(method_arguments),
-        searcher="random",
         type="promotion",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
     ),
-    Methods.SYNCHB_ORD: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+    Methods.SYNCHB_ORD: lambda method_arguments: SyncHyperband(
+        method_arguments,
         config_space=conv_numeric_then_rest(method_arguments),
-        searcher="random",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.DEHB_ORD: lambda method_arguments: GeometricDifferentialEvolutionHyperbandScheduler(
+    Methods.DEHB_ORD: lambda method_arguments: DEHB(
+        method_arguments,
         config_space=conv_numeric_then_rest(method_arguments),
-        searcher="random_encoded",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.BOHB_ORD: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+    Methods.BOHB_ORD: lambda method_arguments: SyncBOHB(
+        method_arguments,
         config_space=conv_numeric_then_rest(method_arguments),
-        searcher="kde",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.ASHA_STOP: lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA_STOP: lambda method_arguments: ASHA(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
         type="stopping",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.SYNCMOBSTER: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+    Methods.SYNCMOBSTER: lambda method_arguments: SyncMOBSTER(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="bayesopt",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
 }

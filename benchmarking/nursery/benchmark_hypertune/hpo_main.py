@@ -16,16 +16,17 @@ from benchmarking.nursery.benchmark_hypertune.baselines import methods
 from benchmarking.nursery.benchmark_hypertune.benchmark_definitions import (
     benchmark_definitions,
 )
+from syne_tune.util import recursive_merge
 
 
 extra_args = [
     dict(
-        name="--num_brackets",
+        name="num_brackets",
         type=int,
         help="Number of brackets",
     ),
     dict(
-        name="--num_samples",
+        name="num_samples",
         type=int,
         default=50,
         help="Number of samples for Hyper-Tune distribution",
@@ -33,11 +34,20 @@ extra_args = [
 ]
 
 
-def map_extra_args(args) -> Dict[str, Any]:
-    return dict(
-        num_brackets=args.num_brackets,
-        num_samples=args.num_samples,
-    )
+def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    if method.startswith("HYPERTUNE"):
+        scheduler_kwargs = {
+            "search_options": {"hypertune_distribution_num_samples": args.num_samples},
+        }
+    else:
+        scheduler_kwargs = dict()
+    if args.num_brackets is not None:
+        scheduler_kwargs["brackets"] = args.num_brackets
+    if scheduler_kwargs:
+        method_kwargs = recursive_merge(
+            method_kwargs, {"scheduler_kwargs": scheduler_kwargs}
+        )
+    return method_kwargs
 
 
 if __name__ == "__main__":

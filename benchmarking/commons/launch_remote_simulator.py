@@ -12,10 +12,11 @@
 # permissions and limitations under the License.
 import itertools
 from pathlib import Path
-from typing import Optional, List, Callable, Dict, Any
+from typing import Optional, Callable, Dict, Any
 
 from tqdm import tqdm
 
+from benchmarking.commons.hpo_main_common import extra_metadata, ExtraArgsType
 from benchmarking.commons.hpo_main_simulator import (
     parse_args,
     SurrogateBenchmarkDefinitions,
@@ -40,7 +41,7 @@ def get_hyperparameters(
     experiment_tag: str,
     random_seed: int,
     args,
-    map_extra_args: Optional[callable],
+    extra_args: Optional[ExtraArgsType],
 ) -> Dict[str, Any]:
     """Compose hyperparameters for SageMaker training job
 
@@ -48,9 +49,8 @@ def get_hyperparameters(
     :param method: Method name
     :param experiment_tag: Tag of experiment
     :param random_seed: Master random seed
-    :param args: Result from `:func:parse_args`
-    :param map_extra_args: Hyperparameters are updated with
-        ``map_extra_args(args)``. Optional
+    :param args: Result from :func:`parse_args`
+    :param extra_args: Argument of ``launch_remote``
     :return: Dictionary of hyperparameters
     """
     hyperparameters = {
@@ -71,8 +71,8 @@ def get_hyperparameters(
         v = getattr(args, k)
         if v is not None:
             hyperparameters[k] = v
-    if map_extra_args is not None:
-        hyperparameters.update(filter_none(map_extra_args(args)))
+    if extra_args is not None:
+        hyperparameters.update(filter_none(extra_metadata(args, extra_args)))
     return hyperparameters
 
 
@@ -80,8 +80,7 @@ def launch_remote(
     entry_point: Path,
     methods: Dict[str, Any],
     benchmark_definitions: SurrogateBenchmarkDefinitions,
-    extra_args: Optional[List[dict]] = None,
-    map_extra_args: Optional[Callable] = None,
+    extra_args: Optional[ExtraArgsType] = None,
     is_expensive_method: Optional[Callable[[str], bool]] = None,
 ):
     """
@@ -108,8 +107,6 @@ def launch_remote(
     :param benchmark_definitions: Definitions of benchmarks, can be nested
         (see above)
     :param extra_args: Extra arguments for command line parser, optional
-    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
-        for extra argument values. Needed only if ``extra_args`` given
     :param is_expensive_method: See above. The default is a predicative always
         returning False (no method is expensive)
     """
@@ -154,7 +151,7 @@ def launch_remote(
             experiment_tag=experiment_tag,
             random_seed=master_random_seed,
             args=args,
-            map_extra_args=map_extra_args,
+            extra_args=extra_args,
         )
         hyperparameters["support_checkpointing"] = int(args.support_checkpointing)
         hyperparameters["verbose"] = int(args.verbose)

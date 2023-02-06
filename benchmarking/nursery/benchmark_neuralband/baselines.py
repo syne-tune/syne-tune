@@ -14,9 +14,16 @@ from typing import Dict, Any
 from benchmarking.commons.baselines import (
     search_options,
     convert_categorical_to_ordinal_numeric,
+    default_arguments,
 )
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
+from benchmarking.commons.default_baselines import (
+    RandomSearch,
+    BayesianOptimization,
+    ASHA,
+    MOBSTER,
+    BOHB,
+    KDE,
+)
 from syne_tune.optimizer.schedulers.neuralbands.neuralband import NeuralbandScheduler
 from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import (
     NeuralbandUCBScheduler,
@@ -28,7 +35,6 @@ from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import (
 class Methods:
     RS = "RS"
     ASHA = "ASHA"
-    HP = "HP"
     GP = "GP"
     BOHB = "BOHB"
     MOBSTER = "MOB"
@@ -47,145 +53,102 @@ def conv_numeric_only(margs) -> Dict[str, Any]:
 
 
 methods = {
-    Methods.RS: lambda method_arguments: FIFOScheduler(
+    Methods.RS: lambda method_arguments: RandomSearch(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
-        search_options=search_options(method_arguments),
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
     ),
-    Methods.ASHA: lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA: lambda method_arguments: ASHA(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
     ),
-    Methods.HP: lambda method_arguments: HyperbandScheduler(
+    Methods.BOHB: lambda method_arguments: BOHB(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        brackets=method_arguments.num_brackets,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
     ),
-    Methods.BOHB: lambda method_arguments: HyperbandScheduler(
+    Methods.TPE: lambda method_arguments: KDE(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="kde",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        brackets=method_arguments.num_brackets,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
     ),
-    Methods.TPE: lambda method_arguments: FIFOScheduler(
+    Methods.GP: lambda method_arguments: BayesianOptimization(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="kde",
-        search_options=search_options(method_arguments),
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
     ),
-    Methods.GP: lambda method_arguments: FIFOScheduler(
+    Methods.MOBSTER: lambda method_arguments: MOBSTER(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="bayesopt",
-        search_options=search_options(method_arguments),
-        metric=method_arguments.metric,
-        mode=method_arguments.mode,
-        random_seed=method_arguments.random_seed,
-    ),
-    Methods.MOBSTER: lambda method_arguments: HyperbandScheduler(
-        config_space=conv_numeric_only(method_arguments),
-        searcher="bayesopt",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        brackets=method_arguments.num_brackets,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
     ),
     Methods.NeuralBandSH: lambda method_arguments: NeuralbandScheduler(
-        config_space=conv_numeric_only(method_arguments),
-        gamma=0.05,
-        nu=0.02,
-        max_while_loop=50,
-        step_size=5,
-        brackets=method_arguments.num_brackets,
-        searcher="random",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
+        **default_arguments(
+            method_arguments,
+            dict(
+                config_space=conv_numeric_only(method_arguments),
+                searcher="random",
+                search_options=search_options(method_arguments),
+                gamma=0.05,
+                nu=0.02,
+                max_while_loop=50,
+                step_size=5,
+                resource_attr=method_arguments.resource_attr,
+            ),
+        )
     ),
     Methods.NeuralBandHB: lambda method_arguments: NeuralbandScheduler(
-        config_space=conv_numeric_only(method_arguments),
-        gamma=0.04,
-        nu=0.02,
-        max_while_loop=50,
-        step_size=5,
-        brackets=method_arguments.num_brackets,
-        searcher="random",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
+        **default_arguments(
+            method_arguments,
+            dict(
+                config_space=conv_numeric_only(method_arguments),
+                searcher="random",
+                search_options=search_options(method_arguments),
+                gamma=0.04,
+                nu=0.02,
+                max_while_loop=50,
+                step_size=5,
+                resource_attr=method_arguments.resource_attr,
+            ),
+        )
     ),
     Methods.NeuralBand_UCB: lambda method_arguments: NeuralbandUCBScheduler(
-        config_space=conv_numeric_only(method_arguments),
-        lamdba=0.1,
-        nu=0.001,
-        max_while_loop=50,
-        step_size=5,
-        searcher="random",
-        brackets=method_arguments.num_brackets,
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
+        **default_arguments(
+            method_arguments,
+            dict(
+                config_space=conv_numeric_only(method_arguments),
+                searcher="random",
+                search_options=search_options(method_arguments),
+                lamdba=0.1,
+                nu=0.001,
+                max_while_loop=50,
+                step_size=5,
+                resource_attr=method_arguments.resource_attr,
+            ),
+        )
     ),
     Methods.NeuralBand_TS: lambda method_arguments: NeuralbandTSScheduler(
-        config_space=conv_numeric_only(method_arguments),
-        lamdba=0.1,
-        nu=0.001,
-        max_while_loop=50,
-        step_size=5,
-        searcher="random",
-        brackets=method_arguments.num_brackets,
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
+        **default_arguments(
+            method_arguments,
+            dict(
+                config_space=conv_numeric_only(method_arguments),
+                searcher="random",
+                search_options=search_options(method_arguments),
+                lamdba=0.1,
+                nu=0.001,
+                max_while_loop=50,
+                step_size=5,
+                resource_attr=method_arguments.resource_attr,
+            ),
+        )
     ),
     Methods.NeuralBandEpsilon: lambda method_arguments: NeuralbandEGreedyScheduler(
-        config_space=conv_numeric_only(method_arguments),
-        epsilon=0.1,
-        max_while_loop=1000,
-        step_size=5,
-        searcher="random",
-        brackets=method_arguments.num_brackets,
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_t=method_arguments.max_t,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
+        **default_arguments(
+            method_arguments,
+            dict(
+                config_space=conv_numeric_only(method_arguments),
+                searcher="random",
+                search_options=search_options(method_arguments),
+                epsilon=0.1,
+                max_while_loop=1000,
+                step_size=5,
+                resource_attr=method_arguments.resource_attr,
+            ),
+        )
     ),
 }

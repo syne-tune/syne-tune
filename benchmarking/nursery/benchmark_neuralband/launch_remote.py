@@ -20,10 +20,7 @@ from benchmarking.nursery.benchmark_neuralband.baselines import (
     methods,
     Methods,
 )
-from benchmarking.nursery.benchmark_neuralband.hpo_main import (
-    extra_args,
-    map_extra_args,
-)
+from benchmarking.nursery.benchmark_neuralband.hpo_main import extra_args
 
 
 if __name__ == "__main__":
@@ -44,6 +41,5 @@ if __name__ == "__main__":
         methods=methods,
         benchmark_definitions=benchmark_definitions,
         extra_args=extra_args,
-        map_extra_args=map_extra_args,
         is_expensive_method=_is_expensive_method,
     )

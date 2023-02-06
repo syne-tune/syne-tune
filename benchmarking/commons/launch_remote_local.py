@@ -13,11 +13,12 @@
 import itertools
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 from tqdm import tqdm
 
 from benchmarking.commons.baselines import MethodDefinitions
+from benchmarking.commons.hpo_main_common import extra_metadata, ExtraArgsType
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
@@ -43,7 +44,7 @@ def get_hyperparameters(
     experiment_tag: str,
     random_seed: int,
     args,
-    map_extra_args: Optional[callable],
+    extra_args: Optional[ExtraArgsType],
 ) -> Dict[str, Any]:
     """Compose hyperparameters for SageMaker training job
 
@@ -52,8 +53,7 @@ def get_hyperparameters(
     :param experiment_tag: Tag of experiment
     :param random_seed: Master random seed
     :param args: Result from :func:`parse_args`
-    :param map_extra_args: Hyperparameters are updated with
-        ``map_extra_args(args)``. Optional
+    :param extra_args: Argument of ``launch_remote``
     :return: Dictionary of hyperparameters
     """
     hyperparameters = {
@@ -74,8 +74,8 @@ def get_hyperparameters(
         v = getattr(args, k)
         if v is not None:
             hyperparameters[k] = v
-    if map_extra_args is not None:
-        hyperparameters.update(filter_none(map_extra_args(args)))
+    if extra_args is not None:
+        hyperparameters.update(filter_none(extra_metadata(args, extra_args)))
     return hyperparameters
 
 
@@ -83,8 +83,7 @@ def launch_remote(
     entry_point: Path,
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
-    extra_args: Optional[List[dict]] = None,
-    map_extra_args: Optional[callable] = None,
+    extra_args: Optional[ExtraArgsType] = None,
 ):
     """
     Launches sequence of SageMaker training jobs, each running an experiment
@@ -109,8 +108,6 @@ def launch_remote(
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
     :param extra_args: Extra arguments for command line parser, optional
-    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
-        for extra argument values. Needed only if ``extra_args`` given
     """
     args, method_names, seeds = parse_args(methods, extra_args)
     experiment_tag = args.experiment_tag
@@ -138,7 +135,7 @@ def launch_remote(
             experiment_tag=experiment_tag,
             random_seed=master_random_seed,
             args=args,
-            map_extra_args=map_extra_args,
+            extra_args=extra_args,
         )
         hyperparameters["verbose"] = int(args.verbose)
         sm_args["hyperparameters"] = hyperparameters

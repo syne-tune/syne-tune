@@ -12,12 +12,14 @@
 # permissions and limitations under the License.
 from typing import Dict, Any
 from benchmarking.commons.baselines import (
-    search_options,
     convert_categorical_to_ordinal_numeric,
 )
-from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.optimizer.schedulers.synchronous import (
-    SynchronousGeometricHyperbandScheduler,
+from benchmarking.commons.default_baselines import (
+    ASHA,
+    MOBSTER,
+    HyperTune,
+    SyncHyperband,
+    SyncBOHB,
 )
 
 
@@ -38,97 +40,40 @@ def conv_numeric_only(margs) -> Dict[str, Any]:
 
 
 methods = {
-    Methods.ASHA: lambda method_arguments: HyperbandScheduler(
+    Methods.ASHA: lambda method_arguments: ASHA(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
         type="promotion",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.MOBSTER_JOINT: lambda method_arguments: HyperbandScheduler(
+    Methods.MOBSTER_JOINT: lambda method_arguments: MOBSTER(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="bayesopt",
         type="promotion",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.MOBSTER_INDEP: lambda method_arguments: HyperbandScheduler(
+    Methods.MOBSTER_INDEP: lambda method_arguments: MOBSTER(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="bayesopt",
         type="promotion",
-        search_options=dict(
-            search_options(method_arguments),
-            model="gp_independent",
-        ),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
+        search_options=dict(model="gp_independent"),
     ),
-    Methods.HYPERTUNE_INDEP: lambda method_arguments: HyperbandScheduler(
+    Methods.HYPERTUNE_INDEP: lambda method_arguments: HyperTune(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="hypertune",
         type="promotion",
-        search_options=dict(
-            search_options(method_arguments),
-            model="gp_independent",
-            hypertune_distribution_num_samples=method_arguments.num_samples,
-        ),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
+        search_options=dict(model="gp_independent"),
     ),
-    Methods.HYPERTUNE_JOINT: lambda method_arguments: HyperbandScheduler(
+    Methods.HYPERTUNE_JOINT: lambda method_arguments: HyperTune(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="hypertune",
         type="promotion",
-        search_options=dict(
-            search_options(method_arguments),
-            model="gp_multitask",
-            hypertune_distribution_num_samples=method_arguments.num_samples,
-        ),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
+        search_options=dict(model="gp_multitask"),
     ),
-    Methods.SYNCHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+    Methods.SYNCHB: lambda method_arguments: SyncHyperband(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="random",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
-    Methods.BOHB: lambda method_arguments: SynchronousGeometricHyperbandScheduler(
+    Methods.BOHB: lambda method_arguments: SyncBOHB(
+        method_arguments,
         config_space=conv_numeric_only(method_arguments),
-        searcher="kde",
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        brackets=method_arguments.num_brackets,
     ),
 }

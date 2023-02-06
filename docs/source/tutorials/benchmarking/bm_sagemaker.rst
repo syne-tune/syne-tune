@@ -83,11 +83,6 @@ type, within which trials are executed as SageMaker training jobs as well. The
 usage is the same as in the
 `local backend case <bm_local.html#launching-experiments-remotely>`_.
 
-.. note::
-   At present, there are still some glitches which affect remote launching of
-   SageMaker backend experiments. As long as these are not resolved, this
-   feature remains experimental.
-
 Using SageMaker Managed Warm Pools
 ----------------------------------
 
