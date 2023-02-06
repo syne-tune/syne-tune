@@ -73,11 +73,7 @@ _DEFAULT_OPTIONS = {
     "register_pending_myopic": False,
     "do_snapshots": False,
     "rung_system_per_bracket": False,
-    "rung_system_kwargs": {
-        "ranking_criterion": "soft_ranking",
-        "epsilon": 1.0,
-        "epsilon_scaling": 1.0,
-    },
+    "rung_system_kwargs": {},
 }
 
 _CONSTRAINTS = {
@@ -338,21 +334,6 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         Note: Currently, only the stopping variant supports snapshots.
     :type do_snapshots: bool, optional
     :param rung_system_kwargs: Arguments passed to the rung system:
-
-        * ranking_criterion: Used if ``type == "pasha"``. Specifies what strategy
-          to use for deciding if the ranking is stable and if to increase the
-          resource. Available options are soft_ranking, soft_ranking_std,
-          soft_ranking_median_dst and soft_ranking_mean_dst. The simplest
-          soft_ranking accepts a manually specified value of epsilon and
-          groups configurations with similar performance within the given range
-          of objective values. The other strategies calculate the value of epsilon
-          automatically, with the option to rescale it using ``epsilon_scaling``.
-        * epsilon: Used if ``type == "pasha"``. Parameter for soft ranking in
-          PASHA to say which configurations should be grouped together based on
-          the similarity of their performance.
-        * epsilon_scaling: Used if ``type == "pasha"``. When epsilon for soft
-          ranking in PASHA is calculated automatically, it is possible to
-          rescale it using ``epsilon_scaling``.
         * num_threshold_candidates: Used if ``type in ["rush_promotion",
           "rush_stopping"]``. The first ``num_threshold_candidates`` in
           ``points_to_evaluate`` enforce stricter requirements to the
@@ -1065,9 +1046,6 @@ class HyperbandBracketManager:
         if scheduler_type == "stopping":
             rs_type = StoppingRungSystem
         elif scheduler_type == "pasha":
-            kwargs["ranking_criterion"] = rung_system_kwargs["ranking_criterion"]
-            kwargs["epsilon"] = rung_system_kwargs["epsilon"]
-            kwargs["epsilon_scaling"] = rung_system_kwargs["epsilon_scaling"]
             rs_type = PASHARungSystem
         elif scheduler_type in ["rush_promotion", "rush_stopping"]:
             kwargs["num_threshold_candidates"] = rung_system_kwargs.get(

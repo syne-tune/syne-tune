@@ -10,18 +10,24 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict, Any
+import itertools
+from typing import Any, Dict, List
+
 import numpy as np
-from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
+from syne_tune.optimizer.schedulers.hyperband_promotion import \
+    PromotionRungSystem
 
 
 class PASHARungSystem(PromotionRungSystem):
     """
-    Implements PASHA algorithm. It is very similar to ASHA, but it progressively
-    extends the maximum resources if the ranking in the top two current rungs
-    changes. A report introducing and evaluating the approach is available at:
+    Implements PASHA algorithm. PASHA is a more efficient version of ASHA
+    and is able to dynamically allocate maximum resources for the tuning procedure
+    depending on the need. Experimental evaluation has shown PASHA consumes
+    significantly fewer computational resources than ASHA.
 
-    TODO: add link
+    For more details, see the paper:
+    PASHA: Efficient HPO and NAS with Progressive Resource Allocation
+    https://openreview.net/forum?id=syfgJE6nFRW (ICLR'23)
     """
 
     def __init__(
@@ -32,14 +38,10 @@ class PASHARungSystem(PromotionRungSystem):
         mode: str,
         resource_attr: str,
         max_t: int,
-        ranking_criterion: str,
-        epsilon: float,
-        epsilon_scaling: float,
     ):
         super().__init__(
             rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
         )
-        self.ranking_criterion = ranking_criterion
         # define the index of the current top rung, starting from 1 for the
         # lowest rung
         assert self.num_rungs >= 1, "rung_levels must not be empty"
@@ -49,8 +51,10 @@ class PASHARungSystem(PromotionRungSystem):
         self.current_rung_idx = min(len(rung_levels) - 1, 2)
         self.current_max_t = rung_levels[self.current_rung_idx - 1]
 
-        self.epsilon = epsilon
-        self.epsilon_scaling = epsilon_scaling
+        self.epsilon = 0.0
+        self.per_epoch_results = {}
+        self.epoch_to_trials = {}
+        self.current_max_epoch = -1
 
     # overriding the method in HB promotion to accommodate the increasing max
     # resources level
@@ -131,31 +135,6 @@ class PASHARungSystem(PromotionRungSystem):
         keep_current_budget = True
         if len(sorted_previous_rung) < 2:
             epsilon = 0.0
-        elif self.ranking_criterion == "soft_ranking_std":
-            epsilon = (
-                np.std([e[2] for e in sorted_previous_rung]) * self.epsilon_scaling
-            )
-        elif (
-            self.ranking_criterion == "soft_ranking_median_dst"
-            or self.ranking_criterion == "soft_ranking_mean_dst"
-        ):
-            scores = [e[2] for e in sorted_previous_rung]
-            distances = [
-                abs(e1 - e2)
-                for idx1, e1 in enumerate(scores)
-                for idx2, e2 in enumerate(scores)
-                if idx1 != idx2
-            ]
-            if self.ranking_criterion == "soft_ranking_mean_dst":
-                epsilon = np.mean(distances) * self.epsilon_scaling
-            elif self.ranking_criterion == "soft_ranking_median_dst":
-                epsilon = np.median(distances) * self.epsilon_scaling
-            else:
-                raise ValueError(
-                    "Ranking criterion {} is not supported".format(
-                        self.ranking_criterion
-                    )
-                )
         else:
             epsilon = self.epsilon
 
@@ -194,6 +173,61 @@ class PASHARungSystem(PromotionRungSystem):
 
         return keep_current_budget
 
+    def _update_epsilon(self):
+        """
+        This function is used to automatically calculate the value of epsilon.
+        It finds the configurations which swapped their rankings across rungs
+        and estimates the value of epsilon as the 90th percentile of the difference
+        between their performance in the previous rung.
+
+        The original value of epsilon is kept if no suitable configurations were found.
+        """
+
+        seen_pairs = set()
+        noisy_cfg_distances = []
+        top_epoch = min(self.current_max_epoch, self._rungs[-self.current_rung_idx].level)
+        bottom_epoch = min(self._rungs[-self.current_rung_idx+1].level, self.current_max_epoch)
+        for epoch in range(top_epoch, bottom_epoch, -1):
+            if len(self.epoch_to_trials[epoch]) > 1:
+                for pair in itertools.combinations(self.epoch_to_trials[epoch], 2):
+                    c1, c2 = pair[0], pair[1]
+                    if (c1, c2) not in seen_pairs:
+                        seen_pairs.add((c1, c2))
+                        p1, p2 = self.per_epoch_results[c1][epoch], self.per_epoch_results[c2][epoch]
+                        cond = p1 > p2
+
+                        opposite_order = False
+                        same_order_after_opposite = False
+                        # now we need to check the earlier epochs to see if at any point they had a different order
+                        for prev_epoch in range(epoch - 1, 0, -1):
+                            pp1, pp2 = self.per_epoch_results[c1][prev_epoch], self.per_epoch_results[c2][prev_epoch]
+                            p_cond = pp1 > pp2
+                            if p_cond == (not cond):
+                                opposite_order = True
+                            if opposite_order and p_cond == cond:
+                                same_order_after_opposite = True
+                                break
+
+                        if opposite_order and same_order_after_opposite:
+                            noisy_cfg_distances.append(abs(p1 - p2))
+
+        if len(noisy_cfg_distances) > 0:
+            self.epsilon = np.percentile(noisy_cfg_distances, 90)
+            if str(self.epsilon) == 'nan':
+                raise ValueError('Epsilon became nan') 
+
+    def _update_per_epoch_results(self, trial_id, result):
+        if trial_id not in self.per_epoch_results:
+            self.per_epoch_results[trial_id] = {}
+        self.per_epoch_results[trial_id][result[self._resource_attr]] = result[self._metric]
+
+        if result[self._resource_attr] not in self.epoch_to_trials:
+            self.epoch_to_trials[result[self._resource_attr]] = set() 
+        self.epoch_to_trials[result[self._resource_attr]].add(trial_id)
+
+        if result[self._resource_attr] > self.current_max_epoch:
+            self.current_max_epoch = result[self._resource_attr]
+
     def _decide_resource_increase(self, rankings) -> bool:
         """
         Decide if to increase the resources given the current rankings.
@@ -225,6 +259,9 @@ class PASHARungSystem(PromotionRungSystem):
         and decides if to increase the current maximum resources.
         """
         ret_dict = super().on_task_report(trial_id, result, skip_rungs)
+
+        self._update_per_epoch_results(trial_id, result)
+        self._update_epsilon()
 
         # check the rankings and decide if to increase the current maximum resources
         rankings = self._get_top_two_rungs_rankings()
