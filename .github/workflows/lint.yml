@@ -1,4 +1,4 @@
-name: Run flake8 linter on python3.8
+name: Lint
 
 on:
   push:
@@ -27,13 +27,10 @@ jobs:
         # flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Run Black code formatter
       run: |
-        # runs black only on all python files committed in git
-        echo "Running black."
+        # Based on the code from githooks/pre-commit
+        # runs Black on all python files committed in git
+        echo "Running black: https://github.com/psf/black"
+        echo "Black should pass before commit! If this fails, run the command on the next line to fix the errors, then commit the changes"
+        echo "git ls-files | grep "\.py$" |  xargs black"
+        echo "Run 'pip install .[extra,dev]' if you do not have Black installed locally."
         git ls-files | grep "\.py$" |  xargs black --check
-
-        if [ $? -ne 0 ]; then
-          echo "Black should pass before commit! Run the command on the next line to fix the errors, then commit the changes:"
-          echo "git ls-files | grep "\.py$" |  xargs black"
-          echo "Run 'pip install .[extra,dev]' if you do not have Black installed locally."
-          exit 1
-        fi
