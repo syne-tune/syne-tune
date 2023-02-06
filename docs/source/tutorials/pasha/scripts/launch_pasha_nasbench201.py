@@ -1,21 +1,18 @@
-# PASHA: Efficient HPO with Progressive Resource Allocation
+# PASHA: Efficient HPO and NAS with Progressive Resource Allocation
 
+import logging
+
+import pandas as pd
+from benchmarking.commons.benchmark_definitions.nas201 import nas201_benchmark
+from syne_tune.backend.simulator_backend.simulator_callback import \
+    SimulatorCallback
+from syne_tune.blackbox_repository import BlackboxRepositoryBackend
+from syne_tune.blackbox_repository.repository import load_blackbox
 from syne_tune.experiments import load_experiment
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
 from syne_tune.optimizer.baselines import baselines_dict
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from benchmarking.definitions.definition_nasbench201 import (
-    nasbench201_benchmark,
-    nasbench201_default_params,
-)
-from benchmarking.blackbox_repository.simulated_tabular_backend import (
-    BlackboxRepositoryBackend,
-)
-from benchmarking.blackbox_repository import load
-import pandas as pd
-import logging
+from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.tuner import Tuner
 
 
 def load_nb201(dataset_name, nb201_random_seed):
@@ -28,7 +25,7 @@ def load_nb201(dataset_name, nb201_random_seed):
     """
 
     # Load NASBench201 benchmark
-    bb_dict = load("nasbench201")
+    bb_dict = load_blackbox("nasbench201")
 
     metric_valid_error_dim = 0
     metric_runtime_dim = 2
@@ -63,84 +60,69 @@ def load_nb201(dataset_name, nb201_random_seed):
 
 
 def run_experiment(
-    dataset_name,
-    random_seed,
-    nb201_random_seed,
-    hpo_approach,
-    reduction_factor=None,
-    rung_system_kwargs={"ranking_criterion": "soft_ranking", "epsilon": 0.025},
-):
+        dataset_name,
+        random_seed,
+        nb201_random_seed,
+        hpo_approach):
     """
     Function to run a NASBench201 experiment. It is similar to the NASBench201 example script
     in syne-tune but extended to make it simple to run our experiments.
 
     :param dataset_name: one of 'cifar10', 'cifar100', 'ImageNet16-120'
-    :param random_seed: e.g. 31415927
+    :param random_seed: e.g. 1
     :param nb201_random_seed: one of 0, 1, 2
     :param hpo_approach: one of 'pasha', 'pasha-bo'
-    :param reduction_factor: by default None (resulting in using the default value 3)
-    :param rung_system_kwargs: dictionary of ranking criterion (str) and epsilon or epsilon scaling (both float)
     :return: tuner.name
     """
 
     logging.getLogger().setLevel(logging.WARNING)
 
-    default_params = nasbench201_default_params({"backend": "simulated"})
-    benchmark = nasbench201_benchmark(default_params)
-    # benchmark must be tabulated to support simulation
-    assert benchmark.get("supports_simulated", False)
-    mode = benchmark["mode"]
-    metric = benchmark["metric"]
-    blackbox_name = benchmark.get("blackbox_name")
-    # NASBench201 is a blackbox from the repository
-    assert blackbox_name is not None
-
-    config_space = benchmark["config_space"]
+    benchmark = nas201_benchmark(dataset_name)
 
     # simulator backend specialized to tabulated blackboxes
+    max_resource_attr = benchmark.max_resource_attr
     trial_backend = BlackboxRepositoryBackend(
-        blackbox_name=blackbox_name,
-        elapsed_time_attr=benchmark["elapsed_time_attr"],
+        blackbox_name=benchmark.blackbox_name,
+        elapsed_time_attr=benchmark.elapsed_time_attr,
+        max_resource_attr=max_resource_attr,
         dataset=dataset_name,
         seed=nb201_random_seed,
     )
 
-    # set logging of the simulator backend to WARNING level
-    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
-        logging.WARNING
+    resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
+    max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
+    config_space = dict(
+        trial_backend.blackbox.configuration_space,
+        **{max_resource_attr: max_resource_level},
     )
 
-    if not reduction_factor:
-        reduction_factor = default_params["reduction_factor"]
+    # set logging of the simulator backend to WARNING level
+    logging.getLogger("syne_tune.backend.simulator_backend.simulator_backend").setLevel(
+        logging.WARNING)
 
     if hpo_approach == "pasha":
         scheduler = baselines_dict["PASHA"](
             config_space,
-            max_t=default_params["max_resource_level"],
-            grace_period=default_params["grace_period"],
-            reduction_factor=reduction_factor,
-            resource_attr=benchmark["resource_attr"],
-            mode=mode,
-            metric=metric,
-            random_seed=random_seed,
-            rung_system_kwargs=rung_system_kwargs,
+            max_resource_attr=max_resource_attr,
+            resource_attr=resource_attr,
+            mode=benchmark.mode,
+            metric=benchmark.metric,
+            random_seed=random_seed
         )
     elif hpo_approach == "pasha-bo":
         scheduler = HyperbandScheduler(
             config_space,
-            max_t=default_params["max_resource_level"],
-            grace_period=default_params["grace_period"],
-            reduction_factor=reduction_factor,
-            resource_attr=benchmark["resource_attr"],
-            mode=mode,
+            max_resource_attr=max_resource_attr,
+            resource_attr=resource_attr,
+            mode=benchmark.mode,
             searcher="bayesopt",
             type="pasha",
-            metric=metric,
-            random_seed=random_seed,
-            rung_system_kwargs=rung_system_kwargs,
+            metric=benchmark.metric,
+            random_seed=random_seed
         )
 
-    stop_criterion = StoppingCriterion(max_num_trials_started=max_num_trials_started)
+    stop_criterion = StoppingCriterion(
+        max_num_trials_started=max_num_trials_started)
     # printing the status during tuning takes a lot of time, and so does
     # storing results
     print_update_interval = 700
@@ -207,9 +189,9 @@ def analyse_experiment(experiment_name, nb201_df, reference_time=None):
 
 if __name__ == "__main__":
     # Define our settings
-    dataset_name = "ImageNet16-120"
+    dataset_name = "cifar100"
     nb201_random_seed = 0
-    random_seed = 31415927
+    random_seed = 1
     n_workers = 4
     max_num_trials_started = 256
     hpo_approach = "pasha"
@@ -221,11 +203,6 @@ if __name__ == "__main__":
     experiment_name = run_experiment(
         dataset_name, random_seed, nb201_random_seed, hpo_approach
     )
-
-    # To run PASHA with an alternative ranking function, e.g. soft ranking with $\epsilon=2\sigma$ use
-    # rung_system_kwargs={'ranking_criterion': 'soft_ranking_std', 'epsilon_scaling': 2.0}
-
-    # To run an experiment with a different reduction factor, specify the value for ``reduction_factor``
 
     # To run an experiment with a Bayesian Optimization search strategy, select ``'pasha-bo'`` for ``hpo_approach``
 
