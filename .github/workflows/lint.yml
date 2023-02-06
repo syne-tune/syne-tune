@@ -29,9 +29,11 @@ jobs:
       run: |
         # runs black only on all python files committed in git
         echo "Running black."
-        git ls-files | grep "\.py$" |  xargs black
+        git ls-files | grep "\.py$" |  xargs black --check
 
         if [ $? -ne 0 ]; then
-          echo "Black should pass before commit! Run 'pip install .[extra,dev]' if you do not have it installed locally."
+          echo "Black should pass before commit! Run the command on the next line to fix the errors, then commit the changes:"
+          echo "git ls-files | grep "\.py$" |  xargs black"
+          echo "Run 'pip install .[extra,dev]' if you do not have Black installed locally."
           exit 1
         fi
