@@ -14,8 +14,7 @@ import itertools
 from typing import Any, Dict, List
 
 import numpy as np
-from syne_tune.optimizer.schedulers.hyperband_promotion import \
-    PromotionRungSystem
+from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 
 
 class PASHARungSystem(PromotionRungSystem):
@@ -26,8 +25,9 @@ class PASHARungSystem(PromotionRungSystem):
     significantly fewer computational resources than ASHA.
 
     For more details, see the paper:
-    PASHA: Efficient HPO and NAS with Progressive Resource Allocation
-    https://openreview.net/forum?id=syfgJE6nFRW (ICLR'23)
+        | Bohdal, Balles, Wistuba, Ermis, Archambeau, Zappella (2023)
+        | PASHA: Efficient HPO and NAS with Progressive Resource Allocation
+        | https://openreview.net/forum?id=syfgJE6nFRW
     """
 
     def __init__(
@@ -185,22 +185,32 @@ class PASHARungSystem(PromotionRungSystem):
 
         seen_pairs = set()
         noisy_cfg_distances = []
-        top_epoch = min(self.current_max_epoch, self._rungs[-self.current_rung_idx].level)
-        bottom_epoch = min(self._rungs[-self.current_rung_idx+1].level, self.current_max_epoch)
+        top_epoch = min(
+            self.current_max_epoch, self._rungs[-self.current_rung_idx].level
+        )
+        bottom_epoch = min(
+            self._rungs[-self.current_rung_idx + 1].level, self.current_max_epoch
+        )
         for epoch in range(top_epoch, bottom_epoch, -1):
             if len(self.epoch_to_trials[epoch]) > 1:
                 for pair in itertools.combinations(self.epoch_to_trials[epoch], 2):
                     c1, c2 = pair[0], pair[1]
                     if (c1, c2) not in seen_pairs:
                         seen_pairs.add((c1, c2))
-                        p1, p2 = self.per_epoch_results[c1][epoch], self.per_epoch_results[c2][epoch]
+                        p1, p2 = (
+                            self.per_epoch_results[c1][epoch],
+                            self.per_epoch_results[c2][epoch],
+                        )
                         cond = p1 > p2
 
                         opposite_order = False
                         same_order_after_opposite = False
                         # now we need to check the earlier epochs to see if at any point they had a different order
                         for prev_epoch in range(epoch - 1, 0, -1):
-                            pp1, pp2 = self.per_epoch_results[c1][prev_epoch], self.per_epoch_results[c2][prev_epoch]
+                            pp1, pp2 = (
+                                self.per_epoch_results[c1][prev_epoch],
+                                self.per_epoch_results[c2][prev_epoch],
+                            )
                             p_cond = pp1 > pp2
                             if p_cond == (not cond):
                                 opposite_order = True
@@ -213,16 +223,18 @@ class PASHARungSystem(PromotionRungSystem):
 
         if len(noisy_cfg_distances) > 0:
             self.epsilon = np.percentile(noisy_cfg_distances, 90)
-            if str(self.epsilon) == 'nan':
-                raise ValueError('Epsilon became nan') 
+            if str(self.epsilon) == "nan":
+                raise ValueError("Epsilon became nan")
 
     def _update_per_epoch_results(self, trial_id, result):
         if trial_id not in self.per_epoch_results:
             self.per_epoch_results[trial_id] = {}
-        self.per_epoch_results[trial_id][result[self._resource_attr]] = result[self._metric]
+        self.per_epoch_results[trial_id][result[self._resource_attr]] = result[
+            self._metric
+        ]
 
         if result[self._resource_attr] not in self.epoch_to_trials:
-            self.epoch_to_trials[result[self._resource_attr]] = set() 
+            self.epoch_to_trials[result[self._resource_attr]] = set()
         self.epoch_to_trials[result[self._resource_attr]].add(trial_id)
 
         if result[self._resource_attr] > self.current_max_epoch:
