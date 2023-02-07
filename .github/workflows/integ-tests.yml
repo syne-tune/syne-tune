@@ -30,21 +30,10 @@ jobs:
       additional-command: pip install -r examples/training_scripts/rl_cartpole/requirements.txt
       script-path: examples/launch_rl_tuning.py
 
-  launch_simulated_benchmark:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_simulated_benchmark.py
-
   launch_standalone_bayesian_optimization:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_standalone_bayesian_optimization.py
-
-  launch_nas201_transfer_learning:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      additional-command: pip install matplotlib
-      script-path: examples/launch_nas201_transfer_learning.py
 
   launch_nasbench201_simulated:
     uses: ./.github/workflows/run-syne-tune.yml
