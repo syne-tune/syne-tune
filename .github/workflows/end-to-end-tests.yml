@@ -1,6 +1,6 @@
 name: End-to-end Tests
 
-# Tests in this file run after code has been merged to `main` and before every release. 
+# Tests in this file can be invoked manually. We run them before every release.
 # These tests can invoke AWS services from our integ test account.
 
 on:
