@@ -116,13 +116,3 @@ jobs:
     with:
       additional-command: pip install matplotlib
       script-path: examples/launch_asha_yahpo.py
-
-  launch_pasha_nasbench201:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: docs/source/tutorials/pasha/scripts/launch_pasha_nasbench201.py  
-
-  launch_pasha_nasbench201_study:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: docs/source/tutorials/pasha/scripts/launch_pasha_nasbench201_study.py  
