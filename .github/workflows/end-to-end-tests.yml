@@ -4,9 +4,6 @@ name: End-to-end Tests
 # These tests can invoke AWS services from our integ test account.
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
   # pull_request: # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
   #   branches:   # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
