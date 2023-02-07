@@ -77,7 +77,9 @@ if __name__ == "__main__":
         config_space, mode=mode, metric=metric, random_seed=random_seed
     )
 
-    stop_criterion = StoppingCriterion(max_wallclock_time=3000) # wall clock time can be increased to 1 hour for more performance
+    stop_criterion = StoppingCriterion(
+        max_wallclock_time=3000
+    )  # wall clock time can be increased to 1 hour for more performance
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,

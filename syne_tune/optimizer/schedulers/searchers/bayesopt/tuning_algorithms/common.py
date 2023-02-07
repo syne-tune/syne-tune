@@ -254,14 +254,20 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
 
     :param base_set: Set of all configurations to sample from
     :param random_state: PRN generator
+    :param ext_config: If given, each configuration is updated with this
+        dictionary before being returned
     """
 
     def __init__(
-        self, base_set: List[Configuration], random_state: np.random.RandomState
+        self,
+        base_set: List[Configuration],
+        random_state: np.random.RandomState,
+        ext_config: Optional[Configuration] = None,
     ):
         self.random_state = random_state
         self.base_set = base_set
         self.num_base = len(base_set)
+        self._ext_config = ext_config
         # Maintains index of positions of entries returned
         self.pos_returned = set()
 
@@ -269,7 +275,14 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
         while True:
             pos = self.random_state.randint(low=0, high=self.num_base)
             self.pos_returned.add(pos)
-            yield self.base_set[pos]
+            config = self._extend_configs([self.base_set[pos]])[0]
+            yield config
+
+    def _extend_configs(self, configs: List[Configuration]) -> List[Configuration]:
+        if self._ext_config is None:
+            return configs
+        else:
+            return [dict(config, **self._ext_config) for config in configs]
 
     def generate_candidates_en_bulk(
         self, num_cands: int, exclusion_list=None
@@ -309,4 +322,4 @@ class RandomFromSetCandidateGenerator(CandidateGenerator):
                         new_pos.append(pos)
                         len_configs += 1
                 self.pos_returned.update(new_pos)
-        return configs
+        return self._extend_configs(configs)
