@@ -18,4 +18,3 @@ problems.
    mf_sync_model
    mf_async_model
    mf_comparison
-   mf_pasha
