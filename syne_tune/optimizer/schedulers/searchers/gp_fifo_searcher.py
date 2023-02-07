@@ -361,9 +361,15 @@ class GPFIFOSearcher(ModelBasedSearcher):
                 random_state=self.random_state,
             )
         else:
+            hp_ranges = self._hp_ranges_for_prediction()
+            if hp_ranges.is_attribute_fixed():
+                ext_config = {hp_ranges.name_last_pos: hp_ranges.value_for_last_pos}
+            else:
+                ext_config = None
             return RandomFromSetCandidateGenerator(
                 base_set=self._restrict_configurations,
                 random_state=self.random_state,
+                ext_config=ext_config,
             )
 
     def _update_restrict_configurations(
