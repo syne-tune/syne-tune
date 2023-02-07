@@ -35,11 +35,6 @@ jobs:
     with:
       script-path: examples/launch_standalone_bayesian_optimization.py
 
-  launch_nasbench201_simulated:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/launch_nasbench201_simulated.py
-
   launch_pbt:
     uses: ./.github/workflows/run-syne-tune.yml
     with:

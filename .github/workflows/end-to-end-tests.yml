@@ -102,3 +102,11 @@ jobs:
       script-path: examples/launch_nas201_transfer_learning.py
       requires-aws-credentials: true
     secrets: inherit
+
+  launch_nasbench201_simulated:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_nasbench201_simulated.py
+      requires-aws-credentials: true
+    secrets: inherit
