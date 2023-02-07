@@ -83,7 +83,7 @@ maximum resources and progressively increases them if the ranking of the
 configurations in the top two rungs has not stabilized. In practice PASHA
 leads to e.g. 3x speedup compared to ASHA, but this can be even higher
 for large datasets with millions of examples. A tutorial about PASHA is
-`here <mf_pasha.html>`_.
+`here <../pasha/pasha.html>`_.
 
 Asynchronous Hyperband
 ----------------------
