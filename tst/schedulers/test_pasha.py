@@ -30,12 +30,7 @@ def create_pasha_rung_system(mode="max"):
     max_t = 200
 
     pasha_rung_rystem = PASHARungSystem(
-        rung_levels,
-        promote_quantiles,
-        metric,
-        mode,
-        resource_attr,
-        max_t
+        rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
     )
     return pasha_rung_rystem
 

@@ -42,12 +42,11 @@ if __name__ == "__main__":
         resource_attr=resource_attr,
         mode=benchmark.mode,
         metric=benchmark.metric,
-        random_seed=random_seed
+        random_seed=random_seed,
     )
 
     max_num_trials_started = 256
-    stop_criterion = StoppingCriterion(
-        max_num_trials_started=max_num_trials_started)
+    stop_criterion = StoppingCriterion(max_num_trials_started=max_num_trials_started)
     # printing the status during tuning takes a lot of time, and so does
     # storing results
     print_update_interval = 700
