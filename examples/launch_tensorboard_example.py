@@ -32,6 +32,7 @@ from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from syne_tune.callbacks.tensorboard_callback import TensorboardCallback
+from syne_tune.tuner_callback import StoreResultsCallback
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
@@ -68,7 +69,9 @@ if __name__ == "__main__":
         n_workers=n_workers,
         stop_criterion=stop_criterion,
         results_update_interval=5,
-        callbacks=[TensorboardCallback(target_metric=metric, mode=mode)],
+        # Adding the TensorboardCallback overwrites the default callback which consists of the StoreResultsCallback.
+        # To write results on this disk as well, we put this in here as well.
+        callbacks=[TensorboardCallback(target_metric=metric, mode=mode), StoreResultsCallback()],
         tuner_name="tensorboardx-demo",
         metadata={"description": "just an example"},
     )
