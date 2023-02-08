@@ -162,7 +162,7 @@ class BaseSearcher:
     :param config_space: Configuration space
     :param metric: Name of metric passed to :meth:`~update`. Can be obtained from
         scheduler in :meth:`~configure_scheduler`. In the case of multi-objective optimization,
-         metric is a list of strings.
+         metric is a list of strings specifying all objectives to be optimized.
     :param points_to_evaluate: List of configurations to be evaluated
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
