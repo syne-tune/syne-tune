@@ -171,7 +171,8 @@ class BaseSearcher:
         determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
     :param mode: Should metric be minimized ("min", default) or maximized
-        ("max"). In the case of multi-objective optimization, mode can be a list defining for each metric if it is minimized or maximized
+        ("max"). In the case of multi-objective optimization, mode can be a list defining for
+        each metric if it is minimized or maximized
     """
 
     def __init__(
