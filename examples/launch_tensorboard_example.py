@@ -71,7 +71,10 @@ if __name__ == "__main__":
         results_update_interval=5,
         # Adding the TensorboardCallback overwrites the default callback which consists of the StoreResultsCallback.
         # To write results on this disk as well, we put this in here as well.
-        callbacks=[TensorboardCallback(target_metric=metric, mode=mode), StoreResultsCallback()],
+        callbacks=[
+            TensorboardCallback(target_metric=metric, mode=mode),
+            StoreResultsCallback(),
+        ],
         tuner_name="tensorboardx-demo",
         metadata={"description": "just an example"},
     )
