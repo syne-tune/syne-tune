@@ -63,8 +63,8 @@ Launcher script
 --------------------------------------------
 
 We provide an example script 
-`launch_pasha_nasbench201.py <https://github.com/awslabs/syne-tune/blob/main/examples/launch_pasha_nasbench201.py>`_
-that shows how to run experiments with PASHA on NASBench201.
+`launch_pasha_nasbench201.py <../../examples.html#pasha-efficient-hpo-and-nas-with-progressive-resource-allocation>`_
+that shows how to run an experiment with PASHA on NASBench201.
 
 Recommendations
 --------------------------------------------

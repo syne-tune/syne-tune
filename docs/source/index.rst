@@ -73,6 +73,7 @@ What's New?
    tutorials/multifidelity/README
    tutorials/benchmarking/README
    tutorials/developer/README
+   tutorials/pasha/pasha
 
 .. toctree::
    :name: API docs

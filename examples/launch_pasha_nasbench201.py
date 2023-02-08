@@ -70,6 +70,3 @@ if __name__ == "__main__":
     )
 
     tuner.run()
-
-    # this script finds a strong configuration
-    # the next step is to fully train a model with this configuration
