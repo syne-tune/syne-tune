@@ -34,8 +34,17 @@ from botorch.utils.transforms import normalize
 # TODO: clean up imports
 
 
+def parse_value(val):
+    if isinstance(val, np.int64):
+        return int(val)
+    else:
+        return val
+
+
 def configs_from_df(df) -> List[dict]:
-    return [{key: df[key][ii] for key in df.keys()} for ii in range(len(df))]
+    return [
+        {key: parse_value(df[key][ii]) for key in df.keys()} for ii in range(len(df))
+    ]
 
 
 class BoTorchTransfer(BoTorch):
@@ -93,6 +102,10 @@ class BoTorchTransferSearcher(BoTorchSearcher):
             name_last_pos="task",
             value_for_last_pos=self._new_task_id,
         )
+        self._ext_hp_ranges_for_bounds = make_hyperparameter_ranges(
+            self._ext_config_space,
+            name_last_pos="task",
+        )
         super(BoTorchTransferSearcher, self).__init__(
             config_space,
             metric=metric,
@@ -135,7 +148,7 @@ class BoTorchTransferSearcher(BoTorchSearcher):
     ) -> Tensor:
         if task_val is None:
             task_val = self._new_task_id
-        bounds = Tensor(self._ext_hp_ranges.get_ndarray_bounds()).T
+        bounds = Tensor(self._ext_hp_ranges_for_bounds.get_ndarray_bounds()).T
         ext_inp_configs = [
             self._extend_config_with_task(config, task_val)
             if "task" not in config.keys()
