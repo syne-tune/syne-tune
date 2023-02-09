@@ -77,11 +77,7 @@ class BoTorchTransferSearcher(BoTorchSearcher):
         new_task_id: str,  # TODO: string for now but want to allow ordinal
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: bool = False,
-        mode: str = "min",
-        num_init_random: int = 3,
-        no_fantasizing: bool = False,
-        max_num_observations: Optional[int] = 200,
-        input_warping: bool = True,
+        num_init_random: int = 0,
         **kwargs,
     ):
         self._transfer_learning_evaluations = transfer_learning_evaluations
@@ -105,6 +101,7 @@ class BoTorchTransferSearcher(BoTorchSearcher):
             **kwargs,
         )
         # Want to sample a few observations at random to start with
+        self.num_minimum_observations = num_init_random
         self.num_minimum_observations += len(self.objectives())
 
     def dataset_size(self):
