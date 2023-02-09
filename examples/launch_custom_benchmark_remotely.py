@@ -21,22 +21,18 @@ from benchmarking.nursery.launch_sagemaker.baselines import (
     methods as all_methods,
     Methods,
 )
-from examples.training_scripts.height_example.launch_height_benchmark_sagemaker import (
+from examples.launch_custom_benchmark import (
     height_benchmark,
 )
 
 if __name__ == "__main__":
     """
-    Use this example to run the custom-defined benchmark on sagemaker remotely using all methods.
+    Use this example to run the custom-defined benchmark remotely using specified methods.
     The benchmark name needs to be passed using --benchmark <bench_name> command line argument.
+    For the custom height example, one needs to specify `--benchmark height_benchmark`
     """
     logging.getLogger().setLevel(logging.INFO)
-    entry_point = (
-        Path(__file__).parent
-        / "training_scripts"
-        / "height_example"
-        / "launch_height_benchmark_sagemaker.py"
-    )
+    entry_point = Path(__file__).parent / "launch_custom_benchmark.py"
     single_fidelity_methods = {
         Methods.RS: all_methods[Methods.RS],
         Methods.BO: all_methods[Methods.BO],
@@ -45,4 +41,13 @@ if __name__ == "__main__":
         entry_point=entry_point,
         methods=single_fidelity_methods,
         benchmark_definitions=height_benchmark,
+        extra_args=[
+            dict(
+                name="backend",
+                choices=["local", "sagemaker"],
+                required=True,
+                type=str,
+                help="Backed to use for experiment",
+            )
+        ],
     )

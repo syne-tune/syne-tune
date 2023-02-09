@@ -68,7 +68,7 @@ def parse_args(
             dict(
                 name="benchmark",
                 type=str,
-                default="resnet_cifar10",
+                required=True,
                 help="Benchmark to run",
             ),
             dict(

@@ -13,12 +13,14 @@
 """
 This example show how to launch a tuning job that will be executed on Sagemaker rather than on your local machine.
 """
+import argparse
 import logging
 from pathlib import Path
 from typing import Dict
 
 from benchmarking.commons.benchmark_definitions import RealBenchmarkDefinition
 from benchmarking.commons.hpo_main_sagemaker import main as main_sagemaker
+from benchmarking.commons.hpo_main_local import main as main_local
 from benchmarking.nursery.launch_sagemaker.baselines import (
     methods as all_methods,
     Methods,
@@ -44,7 +46,12 @@ def height_benchmark(
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
-    script = Path(__file__).parent / "train_height.py"
+    script = (
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
     mode = "min"
     metric = "mean_loss"
 
@@ -67,13 +74,40 @@ if __name__ == "__main__":
     """
     Use this example to run the custom-defined benchmark with remote workers for selected SF methods.
     The benchmark name needs to be passed using --benchmark <bench_name> command line argument.
+    Methods can be specified using --method <method>, for example <--method BO>
     """
+    parser = argparse.ArgumentParser(
+        description="Launch a custom <train_height.py> benchmark using selected backend"
+    )
+    parser.add_argument(
+        "--backend",
+        choices=["local", "sagemaker"],
+        required=True,
+        type=str,
+        help="Backed to use for experiment",
+    )
+    parser.add_argument(
+        "--benchmark",
+        type=str,
+        required=True,
+        help="Benchmark to run, should be <height_benchmark> for this example",
+    )
+    args, unknown = parser.parse_known_args()
+
     logging.getLogger().setLevel(logging.INFO)
     single_fidelity_methods = {
         Methods.RS: all_methods[Methods.RS],
         Methods.BO: all_methods[Methods.BO],
     }
-    main_sagemaker(
-        methods=single_fidelity_methods,
-        benchmark_definitions=height_benchmark,
-    )
+
+    print(f"Got the backend argument of {args.backend}, starting tuning")
+    if args.backend == "local":
+        main_local(
+            methods=single_fidelity_methods,
+            benchmark_definitions=height_benchmark,
+        )
+    elif args.backend == "sagemaker":
+        main_sagemaker(
+            methods=single_fidelity_methods,
+            benchmark_definitions=height_benchmark,
+        )
