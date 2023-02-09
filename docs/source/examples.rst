@@ -155,11 +155,11 @@ script:
 
 
 PASHA: Efficient HPO and NAS with Progressive Resource Allocation
-========================================================
+=================================================================
 
 .. literalinclude:: ../../examples/launch_pasha_nasbench201.py
    :caption: examples/launch_pasha_nasbench201.py
-   :lines: 4-
+   :lines: 16-
 
 This script uses the simulator backend to run an experiment on NASBench-201.
 It takes only a few seconds to run, but it needs ``nasbench201`` blackbox

@@ -1,5 +1,5 @@
 PASHA: Efficient HPO and NAS with Progressive Resource Allocation
-============================================
+=================================================================
 
 Hyperparameter optimization (HPO) and neural architecture search (NAS) are methods
 of choice to obtain the best-in-class machine learning models, but in practice they
@@ -14,7 +14,7 @@ configurations and architectures while consuming significantly fewer computation
 resources than ASHA.
 
 What is PASHA?
---------------------------------------------
+--------------
 
 The goal of `PASHA <https://openreview.net/forum?id=syfgJE6nFRW>`_ is to identify
 well-performing configurations significantly faster than current methods,
@@ -52,23 +52,27 @@ The value of :math:`\epsilon` is automatically estimated by measuring noise in r
    :width: 768 px
 
 How well does PASHA work?
---------------------------------------------
+-------------------------
 
 Experimental evaluation has shown PASHA consistently leads to strong improvements in runtime,
 while achieving similar accuracies as ASHA. PASHA is e.g. three times faster than ASHA on NASBench201.
 Full experiments and further details are available in 
 `PASHA: Efficient HPO and NAS with Progressive Resource Allocation <https://openreview.net/forum?id=syfgJE6nFRW>`_.
 
-Launcher script
---------------------------------------------
-
-We provide an example script 
+We provide an example script
 `launch_pasha_nasbench201.py <../../examples.html#pasha-efficient-hpo-and-nas-with-progressive-resource-allocation>`_
 that shows how to run an experiment with PASHA on NASBench201.
 
 Recommendations
---------------------------------------------
+---------------
 
-* PASHA is particularly useful for large-scale datasets with millions of datapoints, where it can lead to e.g. 15x speedup compared to ASHA.
-* If only a few epochs are used for training, it is useful to define rung levels in terms of the number of datapoints processed rather than the number of epochs. This makes it possible for PASHA to stop the HPO significantly earlier and obtain a large speedup.
-* A suitable stopping criterion for PASHA is the number of configurations that have been evaluated so far, but it can also be evaluated using stopping criteria based on the wallclock time. With time-based criteria PASHA would make an impact when the stopping time is selected as a small value.
+* PASHA is particularly useful for large-scale datasets with millions of
+  datapoints, where it can lead to e.g. 15x speedup compared to ASHA.
+* If only a few epochs are used for training, it is useful to define rung levels
+  in terms of the number of datapoints processed rather than the number of
+  epochs. This makes it possible for PASHA to stop the HPO significantly earlier
+  and obtain a large speedup.
+* A suitable stopping criterion for PASHA is the number of configurations that
+  have been evaluated so far, but it can also be evaluated using stopping
+  criteria based on the wallclock time. With time-based criteria PASHA would
+  make an impact when the stopping time is selected as a small value.
