@@ -76,6 +76,15 @@ passes a configuration to the backend with ``{max_resource_attr: 9}``. This
 means that the training code knows how long it has to run, it does not have to
 be stopped by the backend.
 
+ASHA can be significantly accelerated by using `PASHA <https://openreview.net/forum?id=syfgJE6nFRW>`_
+(Progressive ASHA) that dynamically allocates maximum resources for the tuning
+procedure depending on the need. PASHA starts with a small initial amount of
+maximum resources and progressively increases them if the ranking of the
+configurations in the top two rungs has not stabilized. In practice PASHA
+leads to e.g. 3x speedup compared to ASHA, but this can be even higher
+for large datasets with millions of examples. A tutorial about PASHA is
+`here <../pasha/pasha.html>`_.
+
 Asynchronous Hyperband
 ----------------------
 
