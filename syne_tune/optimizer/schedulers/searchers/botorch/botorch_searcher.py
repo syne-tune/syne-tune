@@ -237,6 +237,10 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         except ModelFittingError as _:
             logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
+        except ValueError as _:
+            # TODO: Expected parameter concentration1 (Parameter of shape ([...],)) of distribution Kumaraswamy
+            logging.warning("Botorch was unable to fit the model, sampling randomly.")
+            return self._get_random_config()
 
     def _make_gp(self, X_tensor: Tensor, Y_tensor: Tensor) -> SingleTaskGP:
         double_precision = False
