@@ -11,22 +11,24 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any
+
 from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.nursery.benchmark_yahpo.baselines import methods
+from benchmarking.nursery.benchmark_yahpo.baselines import methods, Methods
 from benchmarking.nursery.benchmark_yahpo.benchmark_definitions import (
     benchmark_definitions,
 )
+from syne_tune.util import recursive_merge
 
 
 extra_args = [
     dict(
-        name="--grace_period",
+        name="grace_period",
         type=int,
         default=1,
         help="Minimum resource level in Hyperband",
     ),
     dict(
-        name="--reduction_factor",
+        name="reduction_factor",
         type=int,
         default=3,
         help="Reduction factor in Hyperband",
@@ -34,11 +36,16 @@ extra_args = [
 ]
 
 
-def map_extra_args(args) -> Dict[str, Any]:
-    return {
-        "grace_period": args.grace_period,
-        "reduction_factor": args.reduction_factor,
-    }
+def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    if method in (Methods.ASHA, Methods.MOBSTER):
+        new_dict = {
+            "scheduler_kwargs": {
+                "grace_period": args.grace_period,
+                "reduction_factor": args.reduction_factor,
+            },
+        }
+        method_kwargs = recursive_merge(method_kwargs, new_dict)
+    return method_kwargs
 
 
 if __name__ == "__main__":
