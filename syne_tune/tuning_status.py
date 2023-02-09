@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Tuple, Union, Set, Optional
+from typing import List, Tuple, Union, Set, Optional, Dict, Any
 import numbers
 import logging
 import time
@@ -42,7 +42,7 @@ class MetricsStatistics:
         self.last_metrics = dict()
         self.is_numeric = dict()
 
-    def add(self, metrics: dict):
+    def add(self, metrics: Dict[str, Any]):
         for metric_name, current_metric in metrics.items():
             if metric_name in self.is_numeric:
                 if self.is_numeric[metric_name] != isinstance(

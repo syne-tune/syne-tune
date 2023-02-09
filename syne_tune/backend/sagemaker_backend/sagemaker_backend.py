@@ -14,10 +14,9 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 import boto3
 from botocore.exceptions import ClientError
-import numpy as np
 import time
 
 from sagemaker import LocalSession
@@ -25,7 +24,7 @@ from sagemaker.estimator import Framework
 
 from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_CHECKPOINT_DIR
-from syne_tune.util import s3_experiment_path
+from syne_tune.util import s3_experiment_path, dump_json_with_numpy
 from syne_tune.backend.trial_status import TrialResult, Status
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     sagemaker_search,
@@ -187,11 +186,7 @@ class SageMakerBackend(TrialBackend):
 
     @staticmethod
     def _numpy_serialize(mydict):
-        def np_encoder(myobject):
-            if isinstance(myobject, np.generic):
-                return myobject.item()
-
-        return json.loads(json.dumps(mydict, default=np_encoder))
+        return json.loads(dump_json_with_numpy(mydict))
 
     def _checkpoint_s3_uri_for_trial(self, trial_id: int) -> str:
         res_path = self.s3_path
@@ -199,7 +194,7 @@ class SageMakerBackend(TrialBackend):
             res_path = f"{res_path}/{self.tuner_name}"
         return f"{res_path}/{str(trial_id)}/checkpoints/"
 
-    def _schedule(self, trial_id: int, config: dict):
+    def _schedule(self, trial_id: int, config: Dict[str, Any]):
         config[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
         hyperparameters = config.copy()
 
@@ -234,7 +229,6 @@ class SageMakerBackend(TrialBackend):
         try:
             jobname = sagemaker_fit(
                 sm_estimator=self.sm_estimator,
-                # the encoder fixes json error "TypeError: Object of type 'int64' is not JSON serializable"
                 hyperparameters=self._numpy_serialize(hyperparameters),
                 checkpoint_s3_uri=checkpoint_s3_uri,
                 job_name=self._make_sagemaker_jobname(

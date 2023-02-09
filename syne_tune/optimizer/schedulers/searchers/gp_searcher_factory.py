@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Set, Optional
+from typing import Set, Optional, Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
@@ -84,6 +84,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults import (
     DEFAULT_NUM_INITIAL_CANDIDATES,
     DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
+    DEFAULT_MAX_SIZE_DATA_FOR_MODEL,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
@@ -93,12 +94,16 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.subsample_state import (
+    SubsampleMultiFidelityStateConverter,
+)
 from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Integer,
     Categorical,
     Boolean,
     Float,
+    IntegerOrNone,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.warmstarting import (
     create_hp_ranges_for_warmstarting,
@@ -179,7 +184,7 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
 
 def _create_gp_model_factory(
     gpmodel,
-    result: dict,
+    result: Dict[str, Any],
     hp_ranges_for_prediction: Optional[HyperparameterRanges],
     active_metric: Optional[str],
     **kwargs,
@@ -403,12 +408,17 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
         "skip_optimization": skip_optimization,
     }
     if is_hyperband:
+        # Extended config space
         epoch_range = (1, kwargs["max_epochs"])
         result["config_space_ext"] = ExtendedConfiguration(
             hp_ranges,
             resource_attr_key=kwargs["resource_attr"],
             resource_attr_range=epoch_range,
         )
+        # State converter to down sample data
+        max_size = kwargs.get("max_size_data_for_model")
+        if max_size is not None:
+            result["state_converter"] = SubsampleMultiFidelityStateConverter(max_size)
 
     # Create model factory
     if model == "gp_multitask":
@@ -452,11 +462,16 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
         "allow_duplicates",
     ):
         result[k] = kwargs[k]
+    if kwargs.get("restrict_configurations") is not None:
+        # If ``restrict_configurations`` is given, the searcher may only suggest
+        # one the configs in this list. This rules out local optimization of the
+        # acquisition function
+        result["skip_local_optimization"] = True
 
     return result
 
 
-def gp_fifo_searcher_factory(**kwargs) -> dict:
+def gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher._create_internal`,
@@ -487,7 +502,7 @@ def gp_fifo_searcher_factory(**kwargs) -> dict:
     return dict(**result, acquisition_class=EIAcquisitionFunction)
 
 
-def gp_multifidelity_searcher_factory(**kwargs) -> dict:
+def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher._create_internal`,
@@ -524,7 +539,7 @@ def gp_multifidelity_searcher_factory(**kwargs) -> dict:
     return kwargs_int
 
 
-def hypertune_searcher_factory(**kwargs) -> dict:
+def hypertune_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher._create_internal`,
@@ -545,7 +560,7 @@ def hypertune_searcher_factory(**kwargs) -> dict:
     return gp_multifidelity_searcher_factory(**kwargs, is_hypertune=True)
 
 
-def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
+def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.constrained.ConstrainedGPFIFOSearcher._create_internal`,
@@ -596,7 +611,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> dict:
     )
 
 
-def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
+def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
@@ -652,7 +667,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> dict:
     )
 
 
-def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
+def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPFIFOSearcher._create_internal`,
@@ -716,7 +731,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> dict:
     )
 
 
-def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> dict:
+def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
     :meth:`~syne_tune.optimizer.schedulers.searchers.cost_aware.CostAwareGPMultiFidelitySearcher._create_internal`,
@@ -779,7 +794,10 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> dict:
 
 
 def _common_defaults(
-    is_hyperband: bool, is_multi_output: bool, is_hypertune: bool = False
+    is_hyperband: bool,
+    is_multi_output: bool = False,
+    is_hypertune: bool = False,
+    is_restrict_configs: bool = False,
 ) -> (Set[str], dict, dict):
     mandatory = set()
 
@@ -804,6 +822,9 @@ def _common_defaults(
         "no_fantasizing": False,
         "allow_duplicates": False,
     }
+    if is_restrict_configs:
+        default_options["initial_scoring"] = "acq_func"
+        default_options["skip_local_optimization"] = True
     if is_hyperband:
         if is_hypertune:
             default_options["model"] = "gp_independent"
@@ -819,6 +840,7 @@ def _common_defaults(
         default_options["separate_noise_variances"] = False
         default_options["hypertune_distribution_num_samples"] = 50
         default_options["hypertune_distribution_num_brackets"] = 1
+        default_options["max_size_data_for_model"] = DEFAULT_MAX_SIZE_DATA_FOR_MODEL
     if is_multi_output:
         default_options["initial_scoring"] = "acq_func"
         default_options["exponent_cost"] = 1.0
@@ -835,7 +857,7 @@ def _common_defaults(
         "opt_debug_writer": Boolean(),
         "num_fantasy_samples": Integer(1, None),
         "num_init_random": Integer(0, None),
-        "num_init_candidates": Integer(5, None),
+        "num_init_candidates": Integer(2, None),
         "initial_scoring": Categorical(choices=tuple(SUPPORTED_INITIAL_SCORING)),
         "skip_local_optimization": Boolean(),
         "debug_log": Boolean(),
@@ -861,6 +883,7 @@ def _common_defaults(
         constraints["separate_noise_variances"] = Boolean()
         constraints["hypertune_distribution_num_samples"] = Integer(1, None)
         constraints["hypertune_distribution_num_brackets"] = Integer(1, None)
+        constraints["max_size_data_for_model"] = IntegerOrNone(1, None)
     if is_multi_output:
         constraints["initial_scoring"] = Categorical(choices=tuple({"acq_func"}))
         constraints["exponent_cost"] = Float(0.0, 1.0)
@@ -868,7 +891,7 @@ def _common_defaults(
     return mandatory, default_options, constraints
 
 
-def gp_fifo_searcher_defaults() -> (Set[str], dict, dict):
+def gp_fifo_searcher_defaults(kwargs: Optional[dict] = None) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -878,10 +901,17 @@ def gp_fifo_searcher_defaults() -> (Set[str], dict, dict):
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    return _common_defaults(is_hyperband=False, is_multi_output=False)
+    if kwargs is None:
+        kwargs = dict()
+    return _common_defaults(
+        is_hyperband=False,
+        is_restrict_configs=kwargs.get("restrict_configurations") is not None,
+    )
 
 
-def gp_multifidelity_searcher_defaults() -> (Set[str], dict, dict):
+def gp_multifidelity_searcher_defaults(
+    kwargs: Optional[dict] = None,
+) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -891,10 +921,17 @@ def gp_multifidelity_searcher_defaults() -> (Set[str], dict, dict):
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    return _common_defaults(is_hyperband=True, is_multi_output=False)
+    if kwargs is None:
+        kwargs = dict()
+    return _common_defaults(
+        is_hyperband=True,
+        is_restrict_configs=kwargs.get("restrict_configurations") is not None,
+    )
 
 
-def hypertune_searcher_defaults() -> (Set[str], dict, dict):
+def hypertune_searcher_defaults(
+    kwargs: Optional[dict] = None,
+) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -904,10 +941,18 @@ def hypertune_searcher_defaults() -> (Set[str], dict, dict):
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    return _common_defaults(is_hyperband=True, is_multi_output=False, is_hypertune=True)
+    if kwargs is None:
+        kwargs = dict()
+    return _common_defaults(
+        is_hyperband=True,
+        is_hypertune=True,
+        is_restrict_configs=kwargs.get("restrict_configurations") is not None,
+    )
 
 
-def constrained_gp_fifo_searcher_defaults() -> (Set[str], dict, dict):
+def constrained_gp_fifo_searcher_defaults(
+    kwargs: Optional[dict] = None,
+) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults` to be applied to ``search_options`` for
@@ -916,10 +961,18 @@ def constrained_gp_fifo_searcher_defaults() -> (Set[str], dict, dict):
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    return _common_defaults(is_hyperband=False, is_multi_output=True)
+    if kwargs is None:
+        kwargs = dict()
+    return _common_defaults(
+        is_hyperband=False,
+        is_multi_output=True,
+        is_restrict_configs=kwargs.get("restrict_configurations") is not None,
+    )
 
 
-def cost_aware_gp_fifo_searcher_defaults() -> (Set[str], dict, dict):
+def cost_aware_gp_fifo_searcher_defaults(
+    kwargs: Optional[dict] = None,
+) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -929,10 +982,18 @@ def cost_aware_gp_fifo_searcher_defaults() -> (Set[str], dict, dict):
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    return _common_defaults(is_hyperband=False, is_multi_output=True)
+    if kwargs is None:
+        kwargs = dict()
+    return _common_defaults(
+        is_hyperband=False,
+        is_multi_output=True,
+        is_restrict_configs=kwargs.get("restrict_configurations") is not None,
+    )
 
 
-def cost_aware_gp_multifidelity_searcher_defaults() -> (Set[str], dict, dict):
+def cost_aware_gp_multifidelity_searcher_defaults(
+    kwargs: Optional[dict] = None,
+) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -942,4 +1003,10 @@ def cost_aware_gp_multifidelity_searcher_defaults() -> (Set[str], dict, dict):
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    return _common_defaults(is_hyperband=True, is_multi_output=True)
+    if kwargs is None:
+        kwargs = dict()
+    return _common_defaults(
+        is_hyperband=True,
+        is_multi_output=True,
+        is_restrict_configs=kwargs.get("restrict_configurations") is not None,
+    )

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 import numpy as np
 import statsmodels.api as sm
@@ -51,6 +51,9 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
         | Proceedings of the 35th International Conference on Machine Learning
         | https://arxiv.org/abs/1807.01774
 
+    Note: ``restrict_configurations`` is not supported here, this would require
+    reimplementing the selection of configs in :meth:`_get_config`.
+
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`:
 
@@ -79,7 +82,7 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: Optional[bool] = None,
@@ -92,6 +95,10 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
         random_fraction: Optional[float] = None,
         **kwargs,
     ):
+        k = "restrict_configurations"
+        if kwargs.get(k) is not None:
+            logger.warning(f"{k} is not supported")
+            del kwargs[k]
         super().__init__(
             config_space=config_space,
             metric=metric,
@@ -244,13 +251,13 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
-    def _to_objective(self, result: dict) -> float:
+    def _to_objective(self, result: Dict[str, Any]) -> float:
         if self._mode == "min":
             return result[self._metric]
         else:
             return -result[self._metric]
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         self.X.append(self._to_feature(config=config))
         self.y.append(self._to_objective(result))
         if self._debug_log is not None:
@@ -332,7 +339,7 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
                     config = self._from_feature(candidate)
                     if (
                         val_current_best is None or val_current_best > val
-                    ) and not self._excl_list.contains(config):
+                    ) and not self.should_not_suggest(config):
                         current_best = config
                         val_current_best = val
 
@@ -382,5 +389,5 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
 
         return bad_kde, good_kde
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError

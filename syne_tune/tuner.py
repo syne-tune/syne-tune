@@ -10,12 +10,11 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import json
 import logging
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple, Any
 
 import dill as dill
 
@@ -35,6 +34,7 @@ from syne_tune.util import (
     check_valid_sagemaker_name,
     experiment_path,
     name_from_base,
+    dump_json_with_numpy,
 )
 
 logger = logging.getLogger(__name__)
@@ -333,7 +333,7 @@ class Tuner:
             callback.on_tuning_sleep(self.sleep_time)
 
     @staticmethod
-    def _set_metadata(metadata: dict, name: str, value):
+    def _set_metadata(metadata: Dict[str, Any], name: str, value):
         if name in metadata:
             logger.warning(
                 f"Entry {name} in metadata is used, but will be overwritten:\n"
@@ -342,7 +342,7 @@ class Tuner:
             )
         metadata[name] = value
 
-    def _enrich_metadata(self, metadata: dict) -> dict:
+    def _enrich_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
         :param metadata: Original metadata
         :return: ``metadata`` enriched by default entries
@@ -357,15 +357,14 @@ class Tuner:
         self._set_metadata(
             res, "scheduler_name", str(self.scheduler.__class__.__name__)
         )
-        config_space_json = json.dumps(
+        config_space_json = dump_json_with_numpy(
             config_space_to_json_dict(self.scheduler.config_space)
         )
         self._set_metadata(res, "config_space", config_space_json)
         return res
 
     def _save_metadata(self):
-        with open(self.tuner_path / "metadata.json", "w") as f:
-            json.dump(self.metadata, f)
+        dump_json_with_numpy(self.metadata, self.tuner_path / "metadata.json")
 
     def _stop_condition(self) -> bool:
         return (

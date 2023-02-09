@@ -68,6 +68,8 @@ arguments are:
   entire experiment.
 * ``warm_pool``: This flag is discussed
   `below <bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_.
+* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
 
 If you defined additional arguments via ``extra_args``, you can use them here
 as well.
@@ -80,11 +82,6 @@ each experiment is run in a SageMaker training job, using a cheap instance
 type, within which trials are executed as SageMaker training jobs as well. The
 usage is the same as in the
 `local backend case <bm_local.html#launching-experiments-remotely>`_.
-
-.. note::
-   At present, there are still some glitches which affect remote launching of
-   SageMaker backend experiments. As long as these are not resolved, this
-   feature remains experimental.
 
 Using SageMaker Managed Warm Pools
 ----------------------------------

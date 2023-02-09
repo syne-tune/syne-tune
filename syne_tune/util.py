@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import json
 import os
 import re
 import string
@@ -17,9 +18,11 @@ import random
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict, Any
 from time import perf_counter
 from contextlib import contextmanager
+
+import numpy as np
 
 from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER, SYNE_TUNE_ENV_FOLDER
 from syne_tune.try_import import try_import_aws_message
@@ -207,3 +210,88 @@ def is_positive_integer(lst: List[int]) -> bool:
     :return: Are all entries of ``lst`` of type ``int`` and positive?
     """
     return all(x == int(x) and x >= 1 for x in lst)
+
+
+def dump_json_with_numpy(
+    x: dict, filename: Optional[Union[str, Path]] = None
+) -> Optional[str]:
+    """
+    Serializes dictionary ``x`` in JSON, taking into account NumPy specific
+    value types such as ``n.p.int64``.
+
+    :param x: Dictionary to serialize or encode
+    :param filename: Name of file to store JSON to. Optional. If not given,
+        the JSON encoding is returned as string
+    :return: If ``filename is None``, JSON encoding is returned
+    """
+
+    def np_encoder(obj):
+        if isinstance(obj, np.generic):
+            return obj.item()
+
+    if filename is None:
+        return json.dumps(x, default=np_encoder)
+    else:
+        with open(filename, "w") as f:
+            json.dump(x, f, default=np_encoder)
+        return None
+
+
+def dict_get(params: Dict[str, Any], key: str, default: Any) -> Any:
+    """
+    Returns ``params[key]`` if this exists and is not None, and ``default`` otherwise.
+    Note that this is not the same as ``params.get(key, default)``. Namely, if ``params[key]``
+    is equal to None, this would return None, but this method returns ``default``.
+
+    This function is particularly helpful when dealing with a dict returned by
+    :class:`argparse.ArgumentParser`. Whenever ``key`` is added as argument to the parser,
+    but a value is not provided, this leads to ``params[key] = None``.
+
+    """
+    v = params.get(key)
+    return default if v is None else v
+
+
+def recursive_merge(
+    a: Dict[str, Any],
+    b: Dict[str, Any],
+    stop_keys: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Merge dictionaries ``a`` and ``b``, where ``b`` takes precedence. We
+    typically use this to modify a dictionary ``a``, so ``b`` is smaller
+    than ``a``. Further recursion is stopped on any node with key in
+    ``stop_keys``. Use this for dictionary-valued entries not to be merged,
+    but to be replaced by what is in ``b``.
+
+    :param a: Dictionary
+    :param b: Dictionary (can be empty)
+    :param stop_keys: See above, optional
+    :return: Merged dictionary
+    """
+    if b:
+        if stop_keys is None:
+            stop_keys = []
+        result = dict()
+        keys_b = set(b.keys())
+        for k, va in a.items():
+            if k in keys_b:
+                keys_b.remove(k)
+                vb = b[k]
+                stop_recursion = k in stop_keys
+                if isinstance(va, dict) and not stop_recursion:
+                    assert isinstance(
+                        vb, dict
+                    ), f"k={k} has dict value in a, but not in b:\n{va}\n{vb}"
+                    result[k] = recursive_merge(va, vb)
+                else:
+                    assert stop_recursion or not isinstance(
+                        vb, dict
+                    ), f"k={k} has dict value in b, but not in a:\n{va}\n{vb}"
+                    result[k] = vb
+            else:
+                result[k] = va
+        result.update({k: b[k] for k in keys_b})
+        return result
+    else:
+        return a

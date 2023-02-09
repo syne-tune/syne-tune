@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Iterator, List, Union, Optional
+from typing import Iterator, List, Union, Optional, Dict, Any
 import numpy as np
 import logging
 
@@ -113,13 +113,13 @@ class ExclusionList:
             self.excl_set
         ) >= self.configspace_size
 
-    def get_state(self) -> dict:
+    def get_state(self) -> Dict[str, Any]:
         return {
             "excl_set": list(self.excl_set),
             "keys": self.keys,
         }
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         self.keys = state["keys"]
         self.excl_set = set(state["excl_set"])
 
@@ -246,3 +246,80 @@ def generate_unique_candidates(
                 )
             break
     return result
+
+
+class RandomFromSetCandidateGenerator(CandidateGenerator):
+    """
+    In this generator, candidates are sampled from a given set.
+
+    :param base_set: Set of all configurations to sample from
+    :param random_state: PRN generator
+    :param ext_config: If given, each configuration is updated with this
+        dictionary before being returned
+    """
+
+    def __init__(
+        self,
+        base_set: List[Configuration],
+        random_state: np.random.RandomState,
+        ext_config: Optional[Configuration] = None,
+    ):
+        self.random_state = random_state
+        self.base_set = base_set
+        self.num_base = len(base_set)
+        self._ext_config = ext_config
+        # Maintains index of positions of entries returned
+        self.pos_returned = set()
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        while True:
+            pos = self.random_state.randint(low=0, high=self.num_base)
+            self.pos_returned.add(pos)
+            config = self._extend_configs([self.base_set[pos]])[0]
+            yield config
+
+    def _extend_configs(self, configs: List[Configuration]) -> List[Configuration]:
+        if self._ext_config is None:
+            return configs
+        else:
+            return [dict(config, **self._ext_config) for config in configs]
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list=None
+    ) -> List[Configuration]:
+        if num_cands >= self.num_base:
+            if exclusion_list is None:
+                configs = self.base_set.copy()
+                self.pos_returned = set(range(self.num_base))
+            else:
+                configs, new_pos = zip(
+                    *[
+                        (config, pos)
+                        for pos, config in enumerate(self.base_set)
+                        if not exclusion_list.contains(config)
+                    ]
+                )
+                configs = list(configs)
+                self.pos_returned = set(new_pos)
+        else:
+            if exclusion_list is None:
+                randset = self.random_state.choice(
+                    self.num_base, num_cands, replace=False
+                )
+                self.pos_returned.update(randset)
+                configs = [self.base_set[pos] for pos in randset]
+            else:
+                randperm = self.random_state.permutation(self.num_base)
+                configs = []
+                new_pos = []
+                len_configs = 0
+                for pos in randperm:
+                    if len_configs == num_cands:
+                        break
+                    config = self.base_set[pos]
+                    if not exclusion_list.contains(config):
+                        configs.append(config)
+                        new_pos.append(pos)
+                        len_configs += 1
+                self.pos_returned.update(new_pos)
+        return self._extend_configs(configs)

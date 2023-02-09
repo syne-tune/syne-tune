@@ -9,6 +9,7 @@
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
+from typing import Dict, Any
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import GPMultiFidelitySearcher
@@ -81,7 +82,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
-            kwargs, *hypertune_searcher_defaults(), dict_name="search_options"
+            kwargs, *hypertune_searcher_defaults(kwargs), dict_name="search_options"
         )
         kwargs_int = hypertune_searcher_factory(**_kwargs)
         self._copy_kwargs_to_kwargs_int(kwargs_int, kwargs)
@@ -94,7 +95,7 @@ class HyperTuneSearcher(GPMultiFidelitySearcher):
         """
         return self.hp_ranges
 
-    def _postprocess_config(self, config: dict) -> dict:
+    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Different to :class:`GPMultiFidelitySearcher`, we need non-extended
         configs here.

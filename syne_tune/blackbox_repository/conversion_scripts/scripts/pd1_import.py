@@ -46,7 +46,7 @@ from syne_tune.config_space import (
     randint,
     uniform,
 )
-from syne_tune.util import catchtime
+from syne_tune.util import catchtime, dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -267,8 +267,10 @@ def serialize(
             engine="fastparquet",
         )
 
-        with open(path / f"{task}-fidelity_space.json", "w") as f:
-            json.dump(config_space_to_json_dict(bb_dict[task].fidelity_space), f)
+        dump_json_with_numpy(
+            config_space_to_json_dict(bb_dict[task].fidelity_space),
+            filename=path / f"{task}-fidelity_space.json",
+        )
 
         with open(path / f"{task}-objectives_evaluations.npy", "wb") as f:
             np.save(

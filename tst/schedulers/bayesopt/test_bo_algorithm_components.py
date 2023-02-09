@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import pytest
+import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
@@ -24,6 +25,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 from syne_tune.config_space import uniform, choice, randint
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
     create_tuning_job_state,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    RandomFromSetCandidateGenerator,
+    ExclusionList,
 )
 
 
@@ -53,3 +58,98 @@ def tuning_job_state():
 def tuning_job_sub_state():
     hp_ranges = make_hyperparameter_ranges(dict())
     return TuningJobState.empty_state(hp_ranges)
+
+
+BASE_SET = [
+    {"a": 0.5, "b": "a"},
+    {"a": 0.4, "b": "b"},
+    {"a": 0.1, "b": "c"},
+    {"a": 0.51, "b": "a"},
+    {"a": 0.39, "b": "b"},
+    {"a": 0.0, "b": "c"},
+    {"a": 0.99, "b": "c"},
+    {"a": 0.2, "b": "a"},
+    {"a": 0.25, "b": "b"},
+    {"a": 0.25, "b": "c"},
+]
+
+
+COMBINATIONS = [
+    (
+        15,
+        [],
+        10,
+        list(range(10)),
+    ),
+    (
+        15,
+        [{"a": 0.51, "b": "a"}, {"a": 0.25, "b": "c"}],
+        8,
+        [0, 1, 2, 4, 5, 6, 7, 8],
+    ),
+    (
+        8,
+        [],
+        8,
+        None,
+    ),
+    (
+        8,
+        [{"a": 0.51, "b": "a"}, {"a": 0.25, "b": "c"}],
+        8,
+        [0, 1, 2, 4, 5, 6, 7, 8],
+    ),
+    (
+        1,
+        [
+            {"a": 0.4, "b": "b"},
+            {"a": 0.1, "b": "c"},
+            {"a": 0.51, "b": "a"},
+            {"a": 0.39, "b": "b"},
+            {"a": 0.0, "b": "c"},
+            {"a": 0.99, "b": "c"},
+            {"a": 0.2, "b": "a"},
+            {"a": 0.25, "b": "b"},
+            {"a": 0.25, "b": "c"},
+        ],
+        1,
+        [0],
+    ),
+]
+
+
+@pytest.mark.parametrize("num_cands, excl_list, num_ret, pos_returned", COMBINATIONS)
+def test_random_from_set_candidate_generator(
+    num_cands, excl_list, num_ret, pos_returned
+):
+    random_seed = 31415927
+    config_space = {
+        "a": uniform(0.0, 1.0),
+        "b": choice(["a", "b", "c"]),
+    }
+    hp_ranges = make_hyperparameter_ranges(config_space)
+    random_state = np.random.RandomState(random_seed)
+    random_generator = RandomFromSetCandidateGenerator(
+        base_set=BASE_SET,
+        random_state=random_state,
+    )
+    if excl_list:
+        exclusion_list = ExclusionList.empty_list(hp_ranges)
+        for c in excl_list:
+            exclusion_list.add(c)
+    else:
+        exclusion_list = None
+    configs = random_generator.generate_candidates_en_bulk(
+        num_cands, exclusion_list=exclusion_list
+    )
+    assert len(configs) == num_ret
+    if pos_returned is not None:
+        assert set(pos_returned) == random_generator.pos_returned
+    else:
+        pos_returned = random_generator.pos_returned
+        assert len(pos_returned) == len(configs)
+        configs_ms = set(hp_ranges.config_to_match_string(c) for c in configs)
+        posret_ms = set(
+            hp_ranges.config_to_match_string(BASE_SET[pos]) for pos in pos_returned
+        )
+        assert configs_ms == posret_ms

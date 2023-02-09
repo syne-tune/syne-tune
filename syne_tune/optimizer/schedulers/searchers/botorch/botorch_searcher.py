@@ -10,14 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import logging
 
 import numpy as np
 from syne_tune.try_import import try_import_botorch_message
 
 try:
-    from torch import Tensor, randn_like
+    from torch import Tensor, randn_like, random
     from botorch.models import SingleTaskGP
     from botorch.fit import fit_gpytorch_mll
     from botorch.models.transforms import Warp
@@ -25,8 +25,9 @@ try:
     from botorch.utils.transforms import normalize
     from botorch.acquisition import qExpectedImprovement
     from botorch.optim import optimize_acqf
+    from botorch.exceptions.errors import ModelFittingError
     from gpytorch.mlls import ExactMarginalLogLikelihood
-    from gpytorch.utils.errors import NotPSDError
+    from linear_operator.utils.errors import NotPSDError
 except ImportError:
     print(try_import_botorch_message())
 
@@ -69,10 +70,11 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: bool = False,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         mode: str = "min",
         num_init_random: int = 3,
         no_fantasizing: bool = False,
@@ -85,6 +87,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             metric=metric,
             points_to_evaluate=points_to_evaluate,
             allow_duplicates=allow_duplicates,
+            restrict_configurations=restrict_configurations,
             **kwargs,
         )
         assert num_init_random >= 2
@@ -97,13 +100,17 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         self.pending_trials = set()
         self.trial_observations = dict()
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+        # Set the random seed for botorch as well
+        if "random_seed" in kwargs:
+            random.manual_seed(kwargs["random_seed"])
+
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         trial_id = int(trial_id)
         self.trial_observations[trial_id] = result[self._metric]
         if trial_id in self.pending_trials:
             self.pending_trials.remove(trial_id)
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError
 
     def num_suggestions(self):
@@ -205,25 +212,30 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
                 X_pending=X_pending,
             )
 
-            candidate, acq_value = optimize_acqf(
-                acq,
-                bounds=self._get_gp_bounds(),
-                q=1,
-                num_restarts=3,
-                raw_samples=100,
-            )
-
-            candidate = candidate.detach().numpy()[0]
-            config = self._config_from_ndarray(candidate)
-            if not self._is_config_already_seen(config):
-                return config
-            else:
-                logger.warning(
-                    "Optimization of the acquisition function yielded a config that was already seen."
+            config = None
+            if self._restrict_configurations is None:
+                # Continuous optimization of acquisition function only if
+                # ``restrict_configurations`` not used
+                candidate, acq_value = optimize_acqf(
+                    acq,
+                    bounds=self._get_gp_bounds(),
+                    q=1,
+                    num_restarts=3,
+                    raw_samples=100,
                 )
-                return self._sample_and_pick_acq_best(acq)
+                candidate = candidate.detach().numpy()[0]
+                config = self._config_from_ndarray(candidate)
+                if self.should_not_suggest(config):
+                    logger.warning(
+                        "Optimization of the acquisition function yielded a config that was already seen."
+                    )
+                    config = None
+            return self._sample_and_pick_acq_best(acq) if config is None else config
         except NotPSDError as _:
             logging.warning("Chlolesky inversion failed, sampling randomly.")
+            return self._get_random_config()
+        except ModelFittingError as _:
+            logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
 
     def _make_gp(self, X_tensor: Tensor, Y_tensor: Tensor) -> SingleTaskGP:
@@ -243,7 +255,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 
     def _config_to_feature_matrix(self, configs: List[dict]) -> Tensor:
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
-        X = Tensor([self._hp_ranges.to_ndarray(config) for config in configs])
+        X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)
 
     def objectives(self):
@@ -266,13 +278,6 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             return configs_candidates[ei.argmax()]
         else:
             return self._get_random_config()
-
-    def _is_config_already_seen(self, config) -> bool:
-        """
-        If ``allow_duplicates == True``, this method checks whether ``config``
-        is pending or has failed before.
-        """
-        return self._excl_list.contains(config)
 
     def _configs_with_results(self) -> List[dict]:
         return [
@@ -302,7 +307,7 @@ class BotorchSearcher(BoTorchSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,

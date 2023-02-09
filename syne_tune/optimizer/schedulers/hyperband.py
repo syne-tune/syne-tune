@@ -13,7 +13,7 @@
 import copy
 import logging
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 import numpy as np
 
@@ -73,11 +73,7 @@ _DEFAULT_OPTIONS = {
     "register_pending_myopic": False,
     "do_snapshots": False,
     "rung_system_per_bracket": False,
-    "rung_system_kwargs": {
-        "ranking_criterion": "soft_ranking",
-        "epsilon": 1.0,
-        "epsilon_scaling": 1.0,
-    },
+    "rung_system_kwargs": {},
 }
 
 _CONSTRAINTS = {
@@ -121,7 +117,7 @@ class TrialInformation:
     attributes ``self.metric`` and ``self._resource_attr``.
     """
 
-    config: dict
+    config: Dict[str, Any]
     time_stamp: float
     bracket: int
     keep_case: bool
@@ -338,28 +334,13 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         Note: Currently, only the stopping variant supports snapshots.
     :type do_snapshots: bool, optional
     :param rung_system_kwargs: Arguments passed to the rung system:
-
-        * ranking_criterion: Used if ``type == "pasha"``. Specifies what strategy
-          to use for deciding if the ranking is stable and if to increase the
-          resource. Available options are soft_ranking, soft_ranking_std,
-          soft_ranking_median_dst and soft_ranking_mean_dst. The simplest
-          soft_ranking accepts a manually specified value of epsilon and
-          groups configurations with similar performance within the given range
-          of objective values. The other strategies calculate the value of epsilon
-          automatically, with the option to rescale it using ``epsilon_scaling``.
-        * epsilon: Used if ``type == "pasha"``. Parameter for soft ranking in
-          PASHA to say which configurations should be grouped together based on
-          the similarity of their performance.
-        * epsilon_scaling: Used if ``type == "pasha"``. When epsilon for soft
-          ranking in PASHA is calculated automatically, it is possible to
-          rescale it using ``epsilon_scaling``.
         * num_threshold_candidates: Used if ``type in ["rush_promotion",
           "rush_stopping"]``. The first ``num_threshold_candidates`` in
           ``points_to_evaluate`` enforce stricter requirements to the
           continuation of training tasks. See
           :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
 
-    :type rung_system_kwargs: dict, optional
+    :type rung_system_kwargs: Dict[str, Any], optional
     """
 
     def __init__(self, config_space, **kwargs):
@@ -490,7 +471,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             super()._initialize_searcher()
             self.bracket_distribution.configure(self)
 
-    def _extend_search_options(self, search_options: dict) -> dict:
+    def _extend_search_options(self, search_options: Dict[str, Any]) -> Dict[str, Any]:
         # Note: Needs ``self.scheduler_type`` to be set
         scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
@@ -534,7 +515,9 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         else:
             return self._cost_attr
 
-    def _on_config_suggest(self, config: dict, trial_id: str, **kwargs) -> dict:
+    def _on_config_suggest(
+        self, config: Dict[str, Any], trial_id: str, **kwargs
+    ) -> Dict[str, Any]:
         """
         ``kwargs`` being used here:
 
@@ -710,7 +693,9 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         super().on_trial_error(trial)
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.STOP)
 
-    def _update_searcher_internal(self, trial_id: str, config: dict, result: dict):
+    def _update_searcher_internal(
+        self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]
+    ):
         if self.searcher_data == "rungs_and_last":
             # Remove last recently added result for this task. This is not
             # done if it fell on a rung level (i.e., ``keep_case`` is True)
@@ -720,7 +705,11 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
                 self.searcher.remove_case(trial_id, **rem_result)
 
     def _update_searcher(
-        self, trial_id: str, config: dict, result: dict, task_info: dict
+        self,
+        trial_id: str,
+        config: Dict[str, Any],
+        result: Dict[str, Any],
+        task_info: Dict[str, Any],
     ):
         """Updates searcher with ``result``, registers pending config there
 
@@ -771,7 +760,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             )
         return do_update
 
-    def _check_result(self, result: dict):
+    def _check_result(self, result: Dict[str, Any]):
         super()._check_result(result)
         self._check_key_of_result(result, self._resource_attr)
         if self.scheduler_type == "cost_promotion":
@@ -783,7 +772,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             + f"value {resource}, which is not permitted"
         )
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         self._check_result(result)
         trial_id = str(trial.trial_id)
         debug_log = self.searcher.debug_log
@@ -918,7 +907,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     def on_trial_remove(self, trial: Trial):
         self._cleanup_trial(str(trial.trial_id), trial_decision=SchedulerDecision.PAUSE)
 
-    def on_trial_complete(self, trial: Trial, result: dict):
+    def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         # Check whether searcher was already updated based on ``result``
         trial_id = str(trial.trial_id)
         largest_update_resource = self._active_trials[trial_id].largest_update_resource
@@ -1028,7 +1017,7 @@ class HyperbandBracketManager:
         rung_system_per_bracket: bool,
         cost_attr: str,
         random_seed: int,
-        rung_system_kwargs: dict,
+        rung_system_kwargs: Dict[str, Any],
         scheduler: HyperbandScheduler,
     ):
         assert (
@@ -1057,9 +1046,6 @@ class HyperbandBracketManager:
         if scheduler_type == "stopping":
             rs_type = StoppingRungSystem
         elif scheduler_type == "pasha":
-            kwargs["ranking_criterion"] = rung_system_kwargs["ranking_criterion"]
-            kwargs["epsilon"] = rung_system_kwargs["epsilon"]
-            kwargs["epsilon_scaling"] = rung_system_kwargs["epsilon_scaling"]
             rs_type = PASHARungSystem
         elif scheduler_type in ["rush_promotion", "rush_stopping"]:
             kwargs["num_threshold_candidates"] = rung_system_kwargs.get(
@@ -1132,7 +1118,7 @@ class HyperbandBracketManager:
             milestones.insert(0, self._max_t)
         return milestones
 
-    def on_task_report(self, trial_id: str, result: dict) -> dict:
+    def on_task_report(self, trial_id: str, result: Dict[str, Any]) -> Dict[str, Any]:
         """
         This method is called whenever a new report is received. It returns a
         dictionary with all the information needed for making decisions

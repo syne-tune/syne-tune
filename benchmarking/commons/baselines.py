@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Dict, Optional, Callable
+from typing import Dict, Optional, Callable, Any, List
 
 from syne_tune.config_space import ordinal, Categorical
 from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
@@ -38,11 +38,10 @@ class MethodArguments:
         ``max_t`` is mandatory
     :param transfer_learning_evaluations: Support for transfer learning. Only
         for simulator backend experiments right now
-    :param use_surrogates: For simulator backend experiments, defaults to False
-    :param num_brackets: Parameter for Hyperband schedulers, optional
+    :param use_surrogates: For simulator backend experiments, defaults to
+        ``False``
     :param verbose: If True, fine-grained log information about the tuning is
         printed. Defaults to False
-    :param num_samples: Parameter for Hyper-Tune schedulers, defaults to 50
     :param fcnet_ordinal: Only for simulator backend and ``fcnet`` blackbox.
         This blackbox is tabulated with finite domains, one of which has
         irregular spacing. If ``fcnet_ordinal="none"``, this is left as
@@ -50,32 +49,56 @@ class MethodArguments:
         ``kind=fcnet_ordinal``.
     :param scheduler_kwargs: If given, overwrites defaults of scheduler
         arguments
+    :param restrict_configurations: Only for simulator backend. If given, the
+        scheduler is restricted to suggest configs from this list only
     """
 
-    config_space: dict
+    config_space: Dict[str, Any]
     metric: str
     mode: str
     random_seed: int
     resource_attr: str
     max_resource_attr: Optional[str] = None
     max_t: Optional[int] = None
-    transfer_learning_evaluations: Optional[Dict] = None
+    transfer_learning_evaluations: Optional[Dict[str, Any]] = None
     use_surrogates: bool = False
-    num_brackets: Optional[int] = None
     verbose: Optional[bool] = False
-    num_samples: int = 50
     fcnet_ordinal: Optional[str] = None
-    scheduler_kwargs: Optional[dict] = None
+    restrict_configurations: Optional[List[Dict[str, Any]]] = None
+    scheduler_kwargs: Optional[Dict[str, Any]] = None
 
 
 MethodDefinitions = Dict[str, Callable[[MethodArguments], TrialScheduler]]
 
 
-def search_options(args: MethodArguments) -> dict:
-    return {"debug_log": args.verbose}
+def search_options(args: MethodArguments) -> Dict[str, Any]:
+    result = {"debug_log": args.verbose}
+    if args.restrict_configurations is not None:
+        result["restrict_configurations"] = args.restrict_configurations
+    k = "search_options"
+    if args.scheduler_kwargs is not None and k in args.scheduler_kwargs:
+        result.update(args.scheduler_kwargs[k])
+    return result
 
 
-def convert_categorical_to_ordinal(config_space: dict) -> dict:
+def default_arguments(
+    args: MethodArguments,
+    extra_args: Dict[str, Any],
+) -> Dict[str, Any]:
+    result = dict() if args.scheduler_kwargs is None else args.scheduler_kwargs.copy()
+    result.update(
+        dict(
+            mode=args.mode,
+            metric=args.metric,
+            max_resource_attr=args.max_resource_attr,
+            random_seed=args.random_seed,
+        )
+    )
+    result.update(extra_args)
+    return result
+
+
+def convert_categorical_to_ordinal(config_space: Dict[str, Any]) -> Dict[str, Any]:
     """
     :param config_space: Configuration space
     :return: New configuration space where all categorical domains are
@@ -89,16 +112,16 @@ def convert_categorical_to_ordinal(config_space: dict) -> dict:
     }
 
 
-def _is_fcnet(config_space: dict) -> bool:
+def _is_fcnet(config_space: Dict[str, Any]) -> bool:
     fcnet_keys = set(CONFIGURATION_SPACE.keys())
     return fcnet_keys.issubset(set(config_space.keys()))
 
 
 def convert_categorical_to_ordinal_numeric(
-    config_space: dict,
+    config_space: Dict[str, Any],
     kind: Optional[str],
-    do_convert: Optional[Callable[[dict], bool]] = None,
-) -> dict:
+    do_convert: Optional[Callable[[Dict[str, Any]], bool]] = None,
+) -> Dict[str, Any]:
     """
     Converts categorical domains to ordinal ones, of type ``kind``. This is not
     done if ``kind="none"``, or if ``do_convert(config_space) == False``.

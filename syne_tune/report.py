@@ -13,11 +13,10 @@
 import os
 import re
 import sys
-import numpy as np
 import json
 import logging
 from ast import literal_eval
-from typing import List, Dict
+from typing import List, Dict, Any
 from time import time, perf_counter
 from dataclasses import dataclass
 
@@ -29,6 +28,7 @@ from syne_tune.constants import (
     ST_WORKER_TIMESTAMP,
     ST_WORKER_ITER,
 )
+from syne_tune.util import dump_json_with_numpy
 
 # this is required so that metrics are written
 from syne_tune.backend.sagemaker_backend.instance_info import InstanceInfos
@@ -102,6 +102,7 @@ class Reporter:
             keys should not start with ``st_`` which is a reserved namespace for
             Syne Tune internals.
         """
+        self._check_reported_values(kwargs)
         assert not any(key.startswith("st_") for key in kwargs), (
             "The metric prefix 'st_' is used by Syne Tune internals, "
             "please use a metric name that does not start with 'st_'."
@@ -118,25 +119,26 @@ class Reporter:
         self.iter += 1
         _report_logger(**kwargs)
 
+    @staticmethod
+    def _check_reported_values(kwargs: Dict[str, Any]):
+        assert all(
+            v is not None for v in kwargs.values()
+        ), f"Invalid value in report: kwargs = {kwargs}"
+
 
 def _report_logger(**kwargs):
     print(f"[tune-metric]: {_serialize_report_dict(kwargs)}")
     sys.stdout.flush()
 
 
-def _serialize_report_dict(report_dict: dict) -> str:
+def _serialize_report_dict(report_dict: Dict[str, Any]) -> str:
     """
     :param report_dict: a dictionary of metrics to be serialized
     :return: serialized string of the reported metrics, an exception is raised if the size is too large or
     if the dictionary values are not JSON-serializable
     """
     try:
-
-        def np_encoder(obj):
-            if isinstance(obj, np.generic):
-                return obj.item()
-
-        report_str = json.dumps(report_dict, default=np_encoder)
+        report_str = dump_json_with_numpy(report_dict)
         assert sys.getsizeof(report_str) < 50_000
         return report_str
     except TypeError as e:

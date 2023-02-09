@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.backend.trial_status import TrialResult, Status
@@ -55,10 +55,10 @@ class DeterministicBackend(TrialBackend):
     def _resume_trial(self, trial_id: int):
         pass
 
-    def _pause_trial(self, trial_id: int, result: dict):
+    def _pause_trial(self, trial_id: int, result: Dict[str, Any]):
         pass
 
-    def _stop_trial(self, trial_id: int, result: dict):
+    def _stop_trial(self, trial_id: int, result: Dict[str, Any]):
         pass
 
     def _schedule(self, trial_id: int, config: Dict):

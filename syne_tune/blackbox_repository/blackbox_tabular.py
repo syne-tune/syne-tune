@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Union
+from typing import List, Dict, Optional, Tuple, Union, Any
 import pandas as pd
 import numpy as np
 
@@ -50,8 +50,8 @@ class BlackboxTabular(Blackbox):
     def __init__(
         self,
         hyperparameters: pd.DataFrame,
-        configuration_space: dict,
-        fidelity_space: dict,
+        configuration_space: Dict[str, Any],
+        fidelity_space: Dict[str, Any],
         objectives_evaluations: np.array,
         fidelity_values: Optional[np.array] = None,
         objectives_names: Optional[List[str]] = None,
@@ -280,6 +280,20 @@ class BlackboxTabular(Blackbox):
             fidelity_values=self._fidelity_values,
             objectives_names=list(objective_name_mapping.values()),
         )
+
+    def all_configurations(self) -> List[Dict[str, Any]]:
+        """
+        This method is useful in order to set ``restrict_configurations`` in
+        :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+        or
+        :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`,
+        which restricts the searcher to only return configurations in this set.
+        This allows you to use a tabular blackbox without a surrogate.
+
+        :return: List of all hyperparameter configurations for which objective
+            values can be returned
+        """
+        return self.hyperparameters.to_dict("records")
 
     def __str__(self):
         (

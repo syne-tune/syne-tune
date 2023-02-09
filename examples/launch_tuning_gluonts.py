@@ -88,7 +88,9 @@ if __name__ == "__main__":
         config_space, max_t=epochs, resource_attr="epoch_no", mode="min", metric=metric
     )
 
-    max_wallclock_time = 3600 if evaluate_trials_on_sagemaker else 600
+    max_wallclock_time = (
+        3000 if evaluate_trials_on_sagemaker else 600
+    )  # wall clock time can be increased to 1 hour for more performance
     dollar_cost_budget = 20.0
 
     tuner = Tuner(

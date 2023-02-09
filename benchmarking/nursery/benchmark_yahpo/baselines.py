@@ -10,10 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.baselines import (
-    search_options,
-)
-from syne_tune.optimizer.baselines import (
+from benchmarking.commons.default_baselines import (
     RandomSearch,
     BayesianOptimization,
     ASHA,
@@ -29,48 +26,8 @@ class Methods:
 
 
 methods = {
-    Methods.RS: lambda method_arguments: RandomSearch(
-        config_space=method_arguments.config_space,
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        random_seed=method_arguments.random_seed,
-    ),
-    Methods.BO: lambda method_arguments: BayesianOptimization(
-        config_space=method_arguments.config_space,
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        random_seed=method_arguments.random_seed,
-    ),
-    Methods.ASHA: lambda method_arguments: ASHA(
-        config_space=method_arguments.config_space,
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        **(
-            method_arguments.scheduler_kwargs
-            if method_arguments.scheduler_kwargs is not None
-            else dict()
-        ),
-    ),
-    Methods.MOBSTER: lambda method_arguments: MOBSTER(
-        config_space=method_arguments.config_space,
-        search_options=search_options(method_arguments),
-        mode=method_arguments.mode,
-        metric=method_arguments.metric,
-        max_resource_attr=method_arguments.max_resource_attr,
-        resource_attr=method_arguments.resource_attr,
-        random_seed=method_arguments.random_seed,
-        **(
-            method_arguments.scheduler_kwargs
-            if method_arguments.scheduler_kwargs is not None
-            else dict()
-        ),
-    ),
+    Methods.RS: lambda method_arguments: RandomSearch(method_arguments),
+    Methods.BO: lambda method_arguments: BayesianOptimization(method_arguments),
+    Methods.ASHA: lambda method_arguments: ASHA(method_arguments),
+    Methods.MOBSTER: lambda method_arguments: MOBSTER(method_arguments),
 }

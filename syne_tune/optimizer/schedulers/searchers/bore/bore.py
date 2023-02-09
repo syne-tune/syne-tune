@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import time
 import xgboost
 import logging
@@ -66,10 +66,11 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: Optional[bool] = None,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         mode: Optional[str] = None,
         gamma: Optional[float] = None,
         calibrate: Optional[bool] = None,
@@ -86,6 +87,7 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
             metric=metric,
             points_to_evaluate=points_to_evaluate,
             allow_duplicates=allow_duplicates,
+            restrict_configurations=restrict_configurations,
             **kwargs,
         )
         if mode is None:
@@ -109,6 +111,9 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         self.gamma = gamma
         self.classifier = classifier
         assert acq_optimizer in {"rs", "de", "rs_with_replacement"}
+        assert (
+            acq_optimizer != "de" or restrict_configurations is None
+        ), "acq_optimizer == 'de' does not support restrict_configurations"
         self.acq_optimizer = acq_optimizer
         self.feval_acq = feval_acq
         self.init_random = init_random
@@ -269,9 +274,9 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         )
         return True
 
-    def _update(self, trial_id: str, config: dict, result: dict):
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         self.inputs.append(self._hp_ranges.to_ndarray(config))
         self.targets.append(result[self._metric])
 
-    def clone_from_state(self, state: dict):
+    def clone_from_state(self, state: Dict[str, Any]):
         raise NotImplementedError

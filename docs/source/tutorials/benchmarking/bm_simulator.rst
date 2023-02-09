@@ -28,10 +28,16 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   dictionary ``methods`` which maps method names to factory functions, which in
   turn map :class:`~benchmarking.commons.baselines.MethodArguments` to scheduler
   objects. The :class:`~benchmarking.commons.baselines.MethodArguments` class
-  contains the union of attributes needed to configure schedulers. Note that if
-  you like to compare different variants of a method, you need to create
-  different entries in ``methods``, for example ``Methods.MOBSTER_JOINT`` and
-  ``Methods.MOBSTER_INDEP`` are different variants of MOBSTER.
+  contains the union of attributes needed to configure schedulers. In particular,
+  ``scheduler_kwargs`` contains constructor arguments. For your convenience, the
+  mapping from ``MethodsArguments`` to scheduler are defined for most baseline
+  methods in :mod:`benchmarking.commons.default_baselines` (as noted just below,
+  this mapping involves merging argument dictionaries), but you can override
+  arguments as well (for example, ``config_space`` and ``type`` in the examples
+  here). Note that if you like to compare different variants of a method, you
+  need to create different entries in ``methods``, for example
+  ``Methods.MOBSTER_JOINT`` and ``Methods.MOBSTER_INDEP`` are different variants
+  of MOBSTER.
 * `benchmarking/nursery/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`_:
   Defines the benchmarks to be considered in this experiment, in the form of a
   dictionary ``benchmark_definitions`` with values of type
@@ -48,8 +54,9 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   experiment with. In our example here, we add two options, ``num_brackets``
   which configures Hyperband schedulers, and ``num_samples`` which configures
   the Hyper-Tune methods only. Apart from ``extra_args``, you also need to
-  define ``map_extra_args``, which maps these command line arguments
-  to class:`benchmarking.commons.baselines.MethodArguments` entries. Finally,
+  define ``map_extra_args``, which modifies ``method_kwargs`` (the arguments of
+  :class:`~benchmarking.commons.baselines.MethodArguments`) based on the extra
+  arguments. Details for ``map_extra_kwargs`` are given just below. Finally,
   :func:`~benchmarking.commons.hpo_main_simulator.main` is called with your
   ``methods`` and ``benchmark_definitions`` dictionaries, and (optionally) with
   ``extra_args`` and ``map_extra_args``. We will see shortly how the launcher
@@ -76,6 +83,42 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   In our example here, we need ``gpsearchers`` and ``kde`` for methods. For
   simulated experiments, you always need to have ``blackbox-repository`` here.
   In order to use YAHPO benchmarks, also add ``yahpo``.
+
+Specifying Extra Arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As noted above, you can define extra command line arguments for your experiment
+via ``extra_args`` and ``map_extra_args``. This is typically used in order to be
+able to configure scheduler arguments for certain methods. But in principle, any
+argument of :class:`~benchmarking.commons.baselines.MethodArguments` can be
+modified. Here, ``extra_args`` is simply extending arguments to the command
+line parser, where the ``name`` field contains the name of the option without
+any leading "-". ``map_extra_args`` has the signature
+
+.. code-block:: python
+
+   method_kwargs = map_extra_args(args, method, method_kwargs)
+
+Here, ``method_kwargs`` are arguments of
+:class:`~benchmarking.commons.baselines.MethodArguments`, which can be modified
+by ``map_extra_kwargs`` (the modified dictionary is returned). ``args`` is the
+result of command line parsing, and ``method`` is the name of the method to
+be constructed based on these arguments. The latter argument allows
+``map_extra_kwargs`` to depend on the method. In our example
+`benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`_,
+``num_brackets`` applies to all methods, while ``num_samples`` only applies
+to the variants of Hyper-Tune. Both arguments modify the dictionary
+``scheduler_kwargs`` in :class:`~benchmarking.commons.baselines.MethodArguments`,
+which contains constructor arguments for the scheduler.
+
+Note the use of ``recursive_merge``. This means that the changes done in
+``map_extra_args`` are recursively merged into the prior ``method_kwargs``. In
+our example, we may already have ``method_kwargs.scheduler_kwargs`` or even
+``method_kwargs.scheduler_kwargs.search_options``. While the new settings here
+take precedence, prior content of ``method_kwargs`` not affected remains in
+place. In the same way, extra arguments passed to baseline wrappers in
+:mod:`benchmarking.commons.default_baselines` are recursively merged into the
+arguments determined by the default logic.
 
 Launching Experiments Locally
 -----------------------------
@@ -108,6 +151,8 @@ This call runs a number of experiments sequentially on the local machine:
   seed is detailed `below <bm_local.html#random-seeds-and-paired-comparisons>`_.
 * ``max_wallclock_time``, ``n_workers``: These arguments overwrite the defaults
   specified in the benchmark definitions.
+* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
 
 If you defined additional arguments via ``extra_args``, you can use them
 here as well. For example, ``--num_brackets 3`` would run all
@@ -187,13 +232,55 @@ benchmarking only. Here are some pitfalls:
 * Tabulated benchmarks do not reflect the stochasticity of real benchmarks
   (e.g., random weight initialization, random ordering of mini-batches)
 * While tabulated benchmarks like ``nas201`` or ``fcnet`` are evaluated
-  exhaustively or on a fine grid, other benchmarks (like ``lcbench``) depend
-  on surrogate models fit to a certain amount of data, typically on randomly
-  chosen configurations. Unfortunately, the choice of surrogate model is
-  strongly affecting the benchmark, for the same underlying data. As a general
-  recommendation, you should be careful with surrogate benchmarks which offer
-  a large configuration space, but are based on only medium amounts of real
-  data.
+  exhaustively or on a fine grid, other benchmarks (like ``lcbench``) contain
+  observations only at a set of randomly chosen configurations, while their
+  configuration space is much larger or even infinite. For such benchmarks,
+  you can either restrict the scheduler to suggest configurations only from
+  the set supported by the benchmark (see subsection just below), or you can
+  use a surrogate model which interpolates observations from those contained
+  in the benchmark to all others in the configuration space. Unfortunately, the
+  choice of surrogate model can strongly affect the benchmark, for the same
+  underlying data. As a general recommendation, you should be careful with
+  surrogate benchmarks which offer a large configuration space, but are based
+  on only medium amounts of real data.
+
+Restricting Scheduler to Configurations of Tabulated Blackbox
+-------------------------------------------------------------
+
+For a tabulated benchmark like ``lcbench``, most entries of the configuration
+space are not covered by data. For such, you can either use a surrogate, which
+can be configured by attributes ``surrogate``, ``surrogate_kwargs``, and
+``add_surrogate_kwargs`` of
+:class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
+Or you can restrict the scheduler to only suggest configurations covered by
+data. The latter is done by the option ``--restrict_configurations 1``. The
+advantage of doing so is that your comparison does not depend on the choice of
+surrogate, but only on the benchmark data itself. However, there are also some
+drawbacks:
+
+* This option is currently not supported for the following schedulers:
+
+  * Grid Search
+  * SyncBOHB
+  * BOHB
+  * DEHB
+  * REA
+  * KDE
+  * PopulationBasedTraining
+  * ZeroShotTransfer
+  * ASHACTS
+  * MOASHA
+
+* Schedulers like Gaussian process based Bayesian optimization typically use
+  local gradient-based optimization of the acquisition function. This is not
+  possible with ``--restrict_configurations 1``. Instead, they evaluate the
+  acquisition function at a finite number ``num_init_candidates`` of points and
+  pick the best one
+* In general, you should avoid to use surrogate benchmarks which offer a large
+  configuration space, but are based on only medium amounts of real data. When
+  using ``--restrict_configurations 1`` with such a benchmark, your methods
+  may perform better than they should, just because they nearly sample the
+  space exhaustively
 
 Selecting Benchmarks from benchmark_definitions
 -----------------------------------------------

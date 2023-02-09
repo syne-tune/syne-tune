@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
@@ -21,7 +22,7 @@ from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import 
 from syne_tune.remote.estimators import DEFAULT_GPU_INSTANCE_1GPU
 
 
-def distilbert_imdb_default_params() -> dict:
+def distilbert_imdb_default_params() -> Dict[str, Any]:
     return {
         "max_resource_level": 15,
         "instance_type": DEFAULT_GPU_INSTANCE_1GPU,

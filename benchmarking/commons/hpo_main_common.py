@@ -13,9 +13,10 @@
 import copy
 import logging
 from argparse import ArgumentParser
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Callable
 
 from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
+from syne_tune import Tuner
 
 try:
     from coolname import generate_slug
@@ -23,8 +24,20 @@ except ImportError:
     print("coolname is not installed, will not be used")
 
 
+DictStrKey = Dict[str, Any]
+
+
+MapExtraArgsType = Callable[[Any, str, DictStrKey], DictStrKey]
+
+
+ExtraArgsType = List[DictStrKey]
+
+
+PostProcessingType = Callable[[Tuner], Any]
+
+
 def parse_args(
-    methods: Dict[str, Any], extra_args: Optional[List[dict]] = None
+    methods: DictStrKey, extra_args: Optional[ExtraArgsType] = None
 ) -> (Any, List[str], List[int]):
     """Default implementation for parsing command line arguments.
 
@@ -81,10 +94,18 @@ def parse_args(
         type=int,
         help="Master random seed (drawn at random if not given)",
     )
+    parser.add_argument(
+        "--max_size_data_for_model",
+        type=int,
+        help=f"Limits number of datapoints for surrogate model of MOBSTER or HyperTune",
+    )
     if extra_args is not None:
         extra_args = copy.deepcopy(extra_args)
         for kwargs in extra_args:
             name = kwargs.pop("name")
+            assert (
+                name[0] != "-"
+            ), f"Name entry '{name}' in extra_args invalid: No leading '-'"
             parser.add_argument("--" + name, **kwargs)
     args, _ = parser.parse_known_args()
     args.save_tuner = bool(args.save_tuner)
@@ -110,8 +131,9 @@ def get_metadata(
     experiment_tag: str,
     benchmark_name: str,
     random_seed: int,
+    max_size_data_for_model: Optional[int] = None,
     benchmark: Optional[BenchmarkDefinition] = None,
-    extra_args: Optional[dict] = None,
+    extra_args: Optional[DictStrKey] = None,
 ) -> Dict[str, Any]:
     """Returns default value for ``metadata`` passed to :class:`~syne_tune.Tuner`.
 
@@ -120,6 +142,8 @@ def get_metadata(
     :param experiment_tag: Tag of experiment
     :param benchmark_name: Name of benchmark
     :param random_seed: Master random seed
+    :param max_size_data_for_model: Limits number of datapoints for surrogate
+        model of MOBSTER or HyperTune
     :param benchmark: Optional. Take ``n_workers``, ``max_wallclock_time``
         from there
     :param extra_args: ``metadata`` updated by these at the end. Optional
@@ -132,6 +156,8 @@ def get_metadata(
         "benchmark": benchmark_name,
         "random_seed": random_seed,
     }
+    if max_size_data_for_model is not None:
+        metadata["max_size_data_for_model"] = max_size_data_for_model
     if benchmark is not None:
         metadata.update(
             {
@@ -142,3 +168,13 @@ def get_metadata(
     if extra_args is not None:
         metadata.update(extra_args)
     return metadata
+
+
+def extra_metadata(args, extra_args: ExtraArgsType) -> DictStrKey:
+    result = dict()
+    for extra_arg in extra_args:
+        name = extra_arg["name"]
+        value = getattr(args, name)
+        if value is not None:
+            result[name] = value
+    return result

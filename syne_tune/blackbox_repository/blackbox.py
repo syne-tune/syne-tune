@@ -13,7 +13,7 @@
 from numbers import Number
 
 import pandas as pd
-from typing import Optional, Callable, List, Tuple, Union, Dict
+from typing import Optional, Callable, List, Tuple, Union, Dict, Any
 import numpy as np
 
 
@@ -35,7 +35,7 @@ class Blackbox:
 
     def __init__(
         self,
-        configuration_space: dict,
+        configuration_space: Dict[str, Any],
         fidelity_space: Optional[dict] = None,
         objectives_names: Optional[List[str]] = None,
     ):
@@ -45,7 +45,7 @@ class Blackbox:
 
     def objective_function(
         self,
-        configuration: dict,
+        configuration: Dict[str, Any],
         fidelity: Union[dict, Number] = None,
         seed: Optional[int] = None,
     ) -> ObjectiveFunctionResult:
@@ -93,7 +93,7 @@ class Blackbox:
 
     def _objective_function(
         self,
-        configuration: dict,
+        configuration: Dict[str, Any],
         fidelity: Optional[dict] = None,
         seed: Optional[int] = None,
     ) -> ObjectiveFunctionResult:
@@ -160,7 +160,7 @@ class Blackbox:
 
 
 def from_function(
-    configuration_space: dict,
+    configuration_space: Dict[str, Any],
     eval_fun: Callable,
     fidelity_space: Optional[dict] = None,
     objectives_names: Optional[List[str]] = None,
@@ -187,7 +187,7 @@ def from_function(
 
         def objective_function(
             self,
-            configuration: dict,
+            configuration: Dict[str, Any],
             fidelity: Optional[dict] = None,
             seed: Optional[int] = None,
         ) -> ObjectiveFunctionResult:

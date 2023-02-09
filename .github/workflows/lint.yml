@@ -1,4 +1,4 @@
-name: Check code quality and examples on python3.8
+name: Lint
 
 on:
   push:
@@ -8,9 +8,8 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    runs-on: 
+      labels: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.8
@@ -26,11 +25,12 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82,F401 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         # flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test examples
+    - name: Run Black code formatter
       run: |
-        python examples/launch_height_baselines.py
-        python examples/launch_height_python_backend.py
-        python examples/launch_height_moasha.py
-        python examples/launch_height_standalone_scheduler.py
-        python examples/launch_pbt.py
-        python examples/launch_bayesopt_constrained.py
+        # Based on the code from githooks/pre-commit
+        # runs Black on all python files committed in git
+        echo "Running black: https://github.com/psf/black"
+        echo "Black should pass before commit! If this fails, run the command on the next line to fix the errors, then commit the changes"
+        echo "git ls-files | grep "\.py$" |  xargs black"
+        echo "Run 'pip install .[extra,dev]' if you do not have Black installed locally."
+        git ls-files | grep "\.py$" |  xargs black --check

@@ -1,6 +1,7 @@
-tensorboardX
+tensorboardX==2.5.1
 opencv-python
-ray[rllib]
-dm-tree
-gym
-tensorflow
+ray[rllib]==2.2.0
+dm-tree==0.1.8
+gym==0.23.1
+tensorflow==2.11.0
+pygame==2.1.2

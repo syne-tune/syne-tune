@@ -17,7 +17,7 @@ import numpy as np
 
 from dataclasses import dataclass
 from collections import deque
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Dict, Any
 
 from syne_tune.config_space import Domain, Integer, Float, FiniteRange
 from syne_tune.backend.trial_status import Trial
@@ -135,7 +135,7 @@ class PopulationBasedTraining(FIFOScheduler):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         custom_explore_fn: Optional[Callable[[dict], dict]] = None,
         **kwargs,
     ):
@@ -154,6 +154,12 @@ class PopulationBasedTraining(FIFOScheduler):
         self._quantile_fraction = kwargs["quantile_fraction"]
         self._resample_probability = kwargs["resample_probability"]
         self._custom_explore_fn = custom_explore_fn
+        search_options = kwargs.get("search_options")
+        if search_options is not None:
+            k = "restrict_configurations"
+            if search_options.get(k) is not None:
+                logger.warning(f"{k} is not supported")
+                del search_options[k]
         # Superclass constructor
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
         assert self.max_t is not None, (
@@ -197,7 +203,7 @@ class PopulationBasedTraining(FIFOScheduler):
         else:
             return trial_id
 
-    def on_trial_result(self, trial: Trial, result: dict) -> str:
+    def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         if self._resource_attr not in result:
             time_missing_msg = (
                 f"Cannot find resource_attr {self._resource_attr} "
@@ -251,7 +257,9 @@ class PopulationBasedTraining(FIFOScheduler):
             self._trial_decisions_stack.append((trial_id_to_continue, config))
             return SchedulerDecision.PAUSE
 
-    def _save_trial_state(self, state: PBTTrialState, time: int, result: dict) -> float:
+    def _save_trial_state(
+        self, state: PBTTrialState, time: int, result: Dict[str, Any]
+    ) -> float:
         """Saves necessary trial information when result is received.
 
         :param state: State object for trial.
@@ -310,7 +318,7 @@ class PopulationBasedTraining(FIFOScheduler):
                 config=config, checkpoint_trial_id=trial_id_to_continue
             )
 
-    def _explore(self, config: dict) -> dict:
+    def _explore(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """Return a config perturbed as specified.
 
         :param config: Original hyperparameter configuration from the cloned trial

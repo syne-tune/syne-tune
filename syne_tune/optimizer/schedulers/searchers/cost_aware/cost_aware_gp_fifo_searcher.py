@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import GPFIFOSearcher
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
@@ -100,7 +100,7 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def __init__(
         self,
-        config_space: dict,
+        config_space: Dict[str, Any],
         metric: str,
         points_to_evaluate: Optional[List[dict]] = None,
         **kwargs,
@@ -115,7 +115,9 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
 
     def _create_kwargs_int(self, kwargs):
         _kwargs = check_and_merge_defaults(
-            kwargs, *cost_aware_gp_fifo_searcher_defaults(), dict_name="search_options"
+            kwargs,
+            *cost_aware_gp_fifo_searcher_defaults(kwargs),
+            dict_name="search_options",
         )
         # If ``resource_attr`` is specified, we do fine-grained, otherwise
         # coarse-grained

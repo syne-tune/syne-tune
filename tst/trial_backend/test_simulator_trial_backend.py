@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 import math
 import pytest
 
@@ -34,7 +35,7 @@ from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.scheduler import SchedulerDecision
 
 
-def _compare_results(res_local: dict, res_simul: dict, num: int):
+def _compare_results(res_local: Dict[str, Any], res_simul: Dict[str, Any], num: int):
     for key in (ST_TRIAL_ID, ST_DECISION, "epoch", "mean_loss"):
         rloc = res_local[key]
         rsim = res_simul[key]

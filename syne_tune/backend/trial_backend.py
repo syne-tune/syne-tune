@@ -14,7 +14,7 @@ from collections import defaultdict
 
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 import logging
 
 from syne_tune.backend.trial_status import TrialResult, Trial, Status
@@ -52,7 +52,7 @@ class TrialBackend:
         self._last_metric_seen_index = defaultdict(lambda: 0)
 
     def start_trial(
-        self, config: dict, checkpoint_trial_id: Optional[int] = None
+        self, config: Dict[str, Any], checkpoint_trial_id: Optional[int] = None
     ) -> TrialResult:
         """Start new trial with new trial ID
 
@@ -186,7 +186,7 @@ class TrialBackend:
     def new_trial_id(self) -> int:
         return len(self.trial_ids)
 
-    def _schedule(self, trial_id: int, config: dict):
+    def _schedule(self, trial_id: int, config: Dict[str, Any]):
         """Schedules job for trial evaluation.
 
         Called by :meth:`start_trial`, :meth:`resume_trial`.

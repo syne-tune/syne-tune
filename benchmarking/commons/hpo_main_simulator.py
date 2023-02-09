@@ -23,6 +23,10 @@ from benchmarking.commons.hpo_main_common import (
     parse_args as _parse_args,
     set_logging_level,
     get_metadata,
+    ExtraArgsType,
+    MapExtraArgsType,
+    PostProcessingType,
+    extra_metadata,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.blackbox_repository import load_blackbox
@@ -54,7 +58,7 @@ def get_transfer_learning_evaluations(
     test_task: str,
     datasets: Optional[List[str]],
     n_evals: Optional[int] = None,
-) -> dict:
+) -> Dict[str, Any]:
     """
     :param blackbox_name: name of blackbox
     :param test_task: task where the performance would be tested, it is excluded from transfer-learning evaluations
@@ -111,7 +115,7 @@ def get_transfer_learning_evaluations(
 def parse_args(
     methods: Dict[str, Any],
     benchmark_definitions: SurrogateBenchmarkDefinitions,
-    extra_args: Optional[List[dict]] = None,
+    extra_args: Optional[ExtraArgsType] = None,
 ) -> (Any, List[str], List[str], List[int]):
     """Parse command line arguments for simulator backend experiments.
 
@@ -160,6 +164,12 @@ def parse_args(
                 default="none",
                 help="Ordinal encoding for fcnet categorical HPs",
             ),
+            dict(
+                name="restrict_configurations",
+                type=int,
+                default=0,
+                help="If 1, scheduler only suggests configs contained in tabulated benchmark",
+            ),
         ]
     )
     if nested_dict:
@@ -173,6 +183,7 @@ def parse_args(
     args, method_names, seeds = _parse_args(methods, extra_args)
     args.verbose = bool(args.verbose)
     args.support_checkpointing = bool(args.support_checkpointing)
+    args.restrict_configurations = bool(args.restrict_configurations)
     if args.benchmark is not None:
         benchmark_names = [args.benchmark]
     else:
@@ -196,8 +207,9 @@ def parse_args(
 def main(
     methods: MethodDefinitions,
     benchmark_definitions: SurrogateBenchmarkDefinitions,
-    extra_args: Optional[List[dict]] = None,
-    map_extra_args: Optional[callable] = None,
+    extra_args: Optional[ExtraArgsType] = None,
+    map_extra_args: Optional[MapExtraArgsType] = None,
+    post_processing: Optional[PostProcessingType] = None,
     use_transfer_learning: bool = False,
 ):
     """
@@ -211,6 +223,9 @@ def main(
     :param extra_args: Extra arguments for command line parser. Optional
     :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
         for extra argument values. Needed if ``extra_args`` given
+    :param post_processing: Called after tuning has finished, passing the tuner
+        as argument. Can be used for postprocessing, such as output or storage
+        of extra information
     :param use_transfer_learning: If True, we use transfer tuning. Defaults to
         False
     """
@@ -241,32 +256,39 @@ def main(
         )
 
         max_resource_attr = benchmark.max_resource_attr
-        backend = BlackboxRepositoryBackend(
+        if args.restrict_configurations:
+            # Don't need surrogate in this case
+            kwargs = dict()
+        else:
+            kwargs = dict(
+                surrogate=benchmark.surrogate,
+                surrogate_kwargs=benchmark.surrogate_kwargs,
+                add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
+            )
+        trial_backend = BlackboxRepositoryBackend(
             blackbox_name=benchmark.blackbox_name,
             elapsed_time_attr=benchmark.elapsed_time_attr,
             max_resource_attr=max_resource_attr,
             support_checkpointing=args.support_checkpointing,
             dataset=benchmark.dataset_name,
-            surrogate=benchmark.surrogate,
-            surrogate_kwargs=benchmark.surrogate_kwargs,
-            add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
+            **kwargs,
         )
 
-        resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
-        max_resource_level = int(max(backend.blackbox.fidelity_values))
+        method_kwargs = dict(
+            fcnet_ordinal=args.fcnet_ordinal,
+            use_surrogates="lcbench" in benchmark_name,
+        )
+        resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
+        max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
         if max_resource_attr is not None:
             config_space = dict(
-                backend.blackbox.configuration_space,
+                trial_backend.blackbox.configuration_space,
                 **{max_resource_attr: max_resource_level},
             )
-            method_kwargs = {"max_resource_attr": max_resource_attr}
+            method_kwargs["max_resource_attr"] = max_resource_attr
         else:
-            config_space = backend.blackbox.configuration_space
-            method_kwargs = {"max_t": max_resource_level}
-        if extra_args is not None:
-            assert map_extra_args is not None
-            extra_args = map_extra_args(args)
-            method_kwargs["scheduler_kwargs"] = extra_args
+            config_space = trial_backend.blackbox.configuration_space
+            method_kwargs["max_t"] = max_resource_level
         if use_transfer_learning:
             method_kwargs["transfer_learning_evaluations"] = (
                 get_transfer_learning_evaluations(
@@ -275,19 +297,29 @@ def main(
                     datasets=benchmark.datasets,
                 ),
             )
-        scheduler = methods[method](
-            MethodArguments(
+        search_options = dict()
+        if args.restrict_configurations:
+            search_options[
+                "restrict_configurations"
+            ] = trial_backend.blackbox.all_configurations()
+        if args.max_size_data_for_model is not None:
+            search_options["max_size_data_for_model"] = args.max_size_data_for_model
+        if search_options:
+            method_kwargs["scheduler_kwargs"] = {"search_options": search_options}
+        if extra_args is not None:
+            assert map_extra_args is not None
+            method_kwargs = map_extra_args(args, method, method_kwargs)
+        method_kwargs.update(
+            dict(
                 config_space=config_space,
                 metric=benchmark.metric,
                 mode=benchmark.mode,
                 random_seed=random_seed,
                 resource_attr=resource_attr,
                 verbose=args.verbose,
-                fcnet_ordinal=args.fcnet_ordinal,
-                use_surrogates="lcbench" in benchmark_name,
-                **method_kwargs,
             )
         )
+        scheduler = methods[method](MethodArguments(**method_kwargs))
 
         stop_criterion = StoppingCriterion(
             max_wallclock_time=benchmark.max_wallclock_time,
@@ -299,7 +331,8 @@ def main(
             experiment_tag=experiment_tag,
             benchmark_name=benchmark_name,
             random_seed=master_random_seed,
-            extra_args=extra_args,
+            max_size_data_for_model=args.max_size_data_for_model,
+            extra_args=None if extra_args is None else extra_metadata(args, extra_args),
         )
         metadata["fcnet_ordinal"] = args.fcnet_ordinal
         if benchmark.add_surrogate_kwargs is not None:
@@ -307,7 +340,7 @@ def main(
                 benchmark.add_surrogate_kwargs["predict_curves"]
             )
         tuner = Tuner(
-            trial_backend=backend,
+            trial_backend=trial_backend,
             scheduler=scheduler,
             stop_criterion=stop_criterion,
             n_workers=benchmark.n_workers,
@@ -320,3 +353,5 @@ def main(
             save_tuner=args.save_tuner,
         )
         tuner.run()
+        if post_processing is not None:
+            post_processing(tuner)
