@@ -47,22 +47,6 @@ evals_task_1 = np.array([0.3, 0.6, 0.9], ndmin=4).T
 df_task_2 = pd.DataFrame([samp1, samp2])
 evals_task_2 = np.ones((2, 1, 1, 1)) * 3
 
-scheduler = BoTorchTransfer(
-    config_space=config_space,
-    metric="WhoKnows",
-    new_task_id="3",
-    transfer_learning_evaluations={
-        "2": TransferLearningTaskEvaluations(
-            config_space, df_task_2, ["WhoKnows"], evals_task_2
-        ),
-        "1": TransferLearningTaskEvaluations(
-            config_space, df_task_1, ["WhoKnows"], evals_task_1
-        ),
-    },
-)
-
-old_confs = scheduler.searcher._configs_with_results()
-
 
 def same_up_to_task(samp, samp_w_task):
     for key in samp:
@@ -75,21 +59,46 @@ def check_valid_encoding(encoding):
     return ((encoding >= 0) & (encoding <= 1) & ~pd.isna(encoding)).all()
 
 
-def test_transfer_samples_added():
+combinations = [
+    (False, ["1", "2", "3"]),
+    (False, [1, 2, 3]),
+    (True, [1, 2, 3]),
+]
+
+
+@pytest.mark.parametrize("encode_tasks_ordinal, task_id_list", combinations)
+def test_transfer_samples_added_and_encoding(encode_tasks_ordinal, task_id_list):
+    scheduler = BoTorchTransfer(
+        config_space=config_space,
+        metric="WhoKnows",
+        new_task_id=task_id_list[2],
+        transfer_learning_evaluations={
+            task_id_list[0]: TransferLearningTaskEvaluations(
+                config_space, df_task_2, ["WhoKnows"], evals_task_2
+            ),
+            task_id_list[1]: TransferLearningTaskEvaluations(
+                config_space, df_task_1, ["WhoKnows"], evals_task_1
+            ),
+        },
+        encode_tasks_ordinal=encode_tasks_ordinal,
+    )
+
+    assert encode_tasks_ordinal == isinstance(
+        scheduler.searcher._ext_config_space["task"], sp.Ordinal
+    ), "Check that we're using the right encoding of the task."
+
+    old_confs = scheduler.searcher._configs_with_results()
+
     for samp in [samp1, samp2, samp3, samp4, samp5]:
         assert np.any(
             [same_up_to_task(samp, conf) for conf in old_confs]
         ), "Check that all expected former samples appear"
 
-
-def test_valid_encoding_different_tasks():
-    for task_val in ["1", "2", "3"]:
+    for task_val in task_id_list:
         encoding = scheduler.searcher._config_to_feature_matrix(
             [samp1], task_val=task_val
         )
         assert check_valid_encoding(encoding), "Check for infs and nans in encoding"
 
-
-def test_valid_encoding_X_array():
     for encoding in np.array(scheduler.searcher._config_to_feature_matrix(old_confs)):
         assert check_valid_encoding(encoding), "Check for infs and nans in encoding"

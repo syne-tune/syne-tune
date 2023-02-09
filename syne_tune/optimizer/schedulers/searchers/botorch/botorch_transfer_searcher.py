@@ -13,7 +13,7 @@
 import syne_tune.config_space as sp
 from syne_tune.optimizer.baselines import BoTorch
 
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from syne_tune.optimizer.schedulers.searchers.botorch import BoTorchSearcher
 from syne_tune.optimizer.baselines import _create_searcher_kwargs
 
@@ -55,6 +55,7 @@ class BoTorchTransfer(BoTorch):
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
         new_task_id: str,  # TODO: string for now but want to allow ordinal
         random_seed: Optional[int] = None,
+        encode_tasks_ordinal: bool = False,
         **kwargs,
     ):
         try:
@@ -68,6 +69,7 @@ class BoTorchTransfer(BoTorch):
         )
         searcher_kwargs["transfer_learning_evaluations"] = transfer_learning_evaluations
         searcher_kwargs["new_task_id"] = new_task_id
+        searcher_kwargs["encode_tasks_ordinal"] = encode_tasks_ordinal
         super(BoTorch, self).__init__(  # TODO: change to BoTorchTransfer?
             config_space=config_space,
             metric=metric,
@@ -83,18 +85,24 @@ class BoTorchTransferSearcher(BoTorchSearcher):
         config_space: dict,
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        new_task_id: str,  # TODO: string for now but want to allow ordinal
+        new_task_id: Any,  # TODO: string for now but want to allow ordinal
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: bool = False,
         num_init_random: int = 0,
+        encode_tasks_ordinal: bool = False,
         **kwargs,
     ):
         self._transfer_learning_evaluations = transfer_learning_evaluations
         self._new_task_id = new_task_id
         self._transfer_task_order = sorted(transfer_learning_evaluations.keys())
-        self._task_space = sp.choice(
-            list(transfer_learning_evaluations.keys()) + [new_task_id]
-        )
+        if encode_tasks_ordinal:
+            self._task_space = sp.ordinal(
+                list(transfer_learning_evaluations.keys()) + [new_task_id], kind="equal"
+            )
+        else:
+            self._task_space = sp.choice(
+                list(transfer_learning_evaluations.keys()) + [new_task_id]
+            )
         self._ext_config_space = copy.deepcopy(config_space)
         self._ext_config_space["task"] = self._task_space
         self._ext_hp_ranges = make_hyperparameter_ranges(
