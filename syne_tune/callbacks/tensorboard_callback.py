@@ -41,7 +41,7 @@ class TensorboardCallback(TunerCallback):
         ignore_metrics: Optional[List[str]] = None,
         target_metric: Optional[str] = None,
         mode: Optional[str] = None,
-        log_hyperparameters: bool = True
+        log_hyperparameters: bool = True,
     ):
         if mode is None:
             mode = "min"
