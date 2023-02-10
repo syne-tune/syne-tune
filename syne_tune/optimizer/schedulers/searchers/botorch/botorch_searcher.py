@@ -237,7 +237,8 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
         except ModelFittingError as _:
             logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
-        except ValueError as _:
+        except:
+            # BoTorch can raise different errors, easier to not try to catch them individually
             # TODO: Expected parameter concentration1 (Parameter of shape ([...],)) of distribution Kumaraswamy
             logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
