@@ -25,7 +25,7 @@ from syne_tune.config_space import (
     Domain,
     config_space_size,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher import (
+from syne_tune.optimizer.schedulers.searchers import (
     SearcherWithRandomSeed,
     SearcherWithRandomSeedAndFilterDuplicates,
 )
