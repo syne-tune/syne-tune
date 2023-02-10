@@ -59,7 +59,7 @@ def plot_last_task(max_trials, df, label, metric, color):
 
 def extract_transferable_evaluations(df, metric, config_space):
     """
-    Take a dataframe from a tuner run, filters it and generates
+    Take a dataframe from a tuner run, filter it and generate
     TransferLearningTaskEvaluations from it
     """
 
