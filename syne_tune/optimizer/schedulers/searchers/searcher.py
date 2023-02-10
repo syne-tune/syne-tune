@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple, Dict, Any, Union
 
 from syne_tune.config_space import (
     Domain,
@@ -161,7 +161,8 @@ class BaseSearcher:
 
     :param config_space: Configuration space
     :param metric: Name of metric passed to :meth:`~update`. Can be obtained from
-        scheduler in :meth:`~configure_scheduler`
+        scheduler in :meth:`~configure_scheduler`. In the case of multi-objective optimization,
+         metric is a list of strings specifying all objectives to be optimized.
     :param points_to_evaluate: List of configurations to be evaluated
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
@@ -170,15 +171,16 @@ class BaseSearcher:
         determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
     :param mode: Should metric be minimized ("min", default) or maximized
-        ("max")
+        ("max"). In the case of multi-objective optimization, mode can be a list defining for
+        each metric if it is minimized or maximized
     """
 
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
+        metric: Union[List[str], str],
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
-        mode: str = "min",
+        mode: Union[List[str], str] = "min",
     ):
         self.config_space = config_space
         assert metric is not None, "Argument 'metric' is required"
