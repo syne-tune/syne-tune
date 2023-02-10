@@ -371,6 +371,14 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             }
         else:
             self._num_brackets_info = None
+        if self.does_pause_resume() and "max_resource_attr" not in kwargs:
+            logger.warning(
+                "You do not specify max_resource_attr, but use max_t instead. "
+                "This is not recommended best practice and may lead to a loss "
+                "of efficiency. Consider using max_resource_attr instead.\n"
+                "See https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/mf_setup.html#the-launcher-script "
+                "for details."
+            )
 
         # Superclass constructor
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))

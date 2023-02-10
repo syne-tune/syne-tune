@@ -278,17 +278,19 @@ def main(
             fcnet_ordinal=args.fcnet_ordinal,
             use_surrogates="lcbench" in benchmark_name,
         )
-        resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
-        max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
+        blackbox = trial_backend.blackbox
+        resource_attr = blackbox.fidelity_name()
         if max_resource_attr is not None:
-            config_space = dict(
-                trial_backend.blackbox.configuration_space,
-                **{max_resource_attr: max_resource_level},
+            config_space = blackbox.configuration_space_with_max_resource_attr(
+                max_resource_attr
             )
             method_kwargs["max_resource_attr"] = max_resource_attr
         else:
-            config_space = trial_backend.blackbox.configuration_space
-            method_kwargs["max_t"] = max_resource_level
+            config_space = blackbox.configuration_space
+            max_resource_value = blackbox.configuration_space_with_max_resource_attr(
+                "BOGUS123"
+            )["BOGUS123"]
+            method_kwargs["max_t"] = max_resource_value
         if use_transfer_learning:
             method_kwargs["transfer_learning_evaluations"] = (
                 get_transfer_learning_evaluations(
