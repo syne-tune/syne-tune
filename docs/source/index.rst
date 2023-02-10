@@ -74,6 +74,7 @@ What's New?
    tutorials/benchmarking/README
    tutorials/developer/README
    tutorials/pasha/pasha
+   tutorials/transfer_learning/transfer_learning
 
 .. toctree::
    :name: API docs

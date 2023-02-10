@@ -151,6 +151,8 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 +---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | RUSH (:class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`)       | `Zappella, et al. (2021) <https://arxiv.org/abs/2103.16111>`_                  | random        | yes           | yes             | yes       |
 +---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
+| BoundingBox (:class:`~syne_tune.optimizer.schedulers.transfer_learning.BoundingBox`)  | `Perrone, et al. (2019) <https://arxiv.org/abs/1909.12552>`_                   | TODO          | TODO          | TODO            | yes       |
++---------------------------------------------------------------------------------------+--------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 

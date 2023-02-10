@@ -140,6 +140,7 @@ if __name__ == "__main__":
 
     mode = "min"
     max_trials = 10
+    np.random.seed(1)
     # Use train_height backend for our tests
     entry_point = "../../../../examples/training_scripts/height_example/train_height.py"
 
@@ -149,7 +150,7 @@ if __name__ == "__main__":
         scheduler = init_scheduler(
             "BayesianOptimization",
             max_steps=max_steps,
-            seed=max_steps,
+            seed=np.random.randint(100),
             mode=mode,
             metric=METRIC_ATTR,
             transfer_learning_evaluations=None,
@@ -213,6 +214,21 @@ if __name__ == "__main__":
     """ Plot the configs tried for the transfer task """
     fig, ax = plt.subplots()
 
+    # Plot the configs tried by the different schedulers on the transfer task
+    for label in labels:
+        scatter_space_exploration(
+            ax, transfer_task_results[label], max_trials, label, color=colours[label]
+        )
+
+        # Plot the first config tested as a big square
+        ax.scatter(
+            transfer_task_results[label]["width"][0],
+            transfer_task_results[label]["height"][0],
+            marker="s",
+            color=colours[label],
+            s=100,
+        )
+
     # Plot the optima from the preliminary tasks as black crosses
     past_label = "Preliminary optima"
     for key in transfer_learning_evaluations:
@@ -227,20 +243,5 @@ if __name__ == "__main__":
             label=past_label,
         )
         past_label = None
-
-    # Plot the configs tried by the different schedulers on the transfer task
-    for label in labels:
-        scatter_space_exploration(
-            ax, transfer_task_results[label], max_trials, label, color=colours[label]
-        )
-        # Plot the first config tested as a big square
-        ax.scatter(
-            transfer_task_results[label]["width"][0],
-            transfer_task_results[label]["height"][0],
-            marker="s",
-            color=colours[label],
-            s=100,
-        )
-
     add_labels(ax, scheduler.config_space, "Explored locations for transfer task")
     plt.savefig("Configs_explored_transfer.png", bbox_inches="tight")
