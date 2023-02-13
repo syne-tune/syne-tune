@@ -153,6 +153,12 @@ This call runs a number of experiments sequentially on the local machine:
   specified in the benchmark definitions.
 * ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
   `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
+* ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
+  argument, but not ``max_wallclock_time``, the benchmark default
+  ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,
+  where ``A = n_workers``, ``B = benchmark.n_workers``. This means we run for
+  longer if ``n_workers < benchmark.n_workers``, but keep
+  ``benchmark.max_wallclock_time`` the same otherwise.
 
 If you defined additional arguments via ``extra_args``, you can use them
 here as well. For example, ``--num_brackets 3`` would run all

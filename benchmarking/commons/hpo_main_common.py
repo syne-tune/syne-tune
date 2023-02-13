@@ -54,7 +54,14 @@ def parse_args(
         default_experiment_tag = generate_slug(2)
     except Exception:
         default_experiment_tag = "syne-tune-experiment"
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        description=(
+            "Run Syne Tune experiments for several HPO methods, benchmarks, "
+            "and seeds (repetitions). Use hpo_main.py to launch experiments "
+            "locally, or launch_remote.py to launch experiments remotely on AWS"
+        ),
+        epilog="For more information, please visit:\nhttps://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html",
+    )
     parser.add_argument(
         "--experiment_tag",
         type=str,
