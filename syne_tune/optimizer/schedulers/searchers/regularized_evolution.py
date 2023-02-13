@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 from syne_tune.config_space import Domain
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
-from syne_tune.optimizer.schedulers.searchers.searcher import (
+from syne_tune.optimizer.schedulers.searchers.searcher_base import (
     sample_random_configuration,
 )
 

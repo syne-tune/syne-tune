@@ -31,7 +31,7 @@ try:
 except ImportError:
     print(try_import_botorch_message())
 
-from syne_tune.optimizer.schedulers.searchers.searcher import (
+from syne_tune.optimizer.schedulers.searchers import (
     SearcherWithRandomSeedAndFilterDuplicates,
 )
 

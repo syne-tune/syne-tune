@@ -110,7 +110,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.warmstarting import (
     create_filter_observed_data_for_warmstarting,
     create_base_gp_kernel_for_warmstarting,
 )
-from syne_tune.optimizer.schedulers.searchers.searcher import extract_random_seed
+from syne_tune.optimizer.schedulers.searchers import extract_random_seed
 
 __all__ = [
     "gp_fifo_searcher_factory",
