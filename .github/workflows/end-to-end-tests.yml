@@ -5,9 +5,9 @@ name: End-to-end Tests
 
 on:
   workflow_dispatch:
-  # pull_request: # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
-  #   branches:   # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
-  #     - main    # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
+  pull_request: # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
+    branches:   # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
+      - main    # Uncomment if you want to manually run the end-to-end tests against a new PR that you're drafting
 
 
 permissions:
@@ -108,5 +108,13 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_nasbench201_simulated.py
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_pasha_nasbench201:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_pasha_nasbench201.py
       requires-aws-credentials: true
     secrets: inherit
