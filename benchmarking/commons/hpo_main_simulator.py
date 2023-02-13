@@ -256,6 +256,8 @@ def main(
         )
 
         max_resource_attr = benchmark.max_resource_attr
+        if max_resource_attr is None:
+            max_resource_attr = "my_max_resource_attr"
         if args.restrict_configurations:
             # Don't need surrogate in this case
             kwargs = dict()
@@ -277,20 +279,13 @@ def main(
         method_kwargs = dict(
             fcnet_ordinal=args.fcnet_ordinal,
             use_surrogates="lcbench" in benchmark_name,
+            max_resource_attr=max_resource_attr,
         )
         blackbox = trial_backend.blackbox
         resource_attr = blackbox.fidelity_name()
-        if max_resource_attr is not None:
-            config_space = blackbox.configuration_space_with_max_resource_attr(
-                max_resource_attr
-            )
-            method_kwargs["max_resource_attr"] = max_resource_attr
-        else:
-            config_space = blackbox.configuration_space
-            max_resource_value = blackbox.configuration_space_with_max_resource_attr(
-                "BOGUS123"
-            )["BOGUS123"]
-            method_kwargs["max_t"] = max_resource_value
+        config_space = blackbox.configuration_space_with_max_resource_attr(
+            max_resource_attr
+        )
         if use_transfer_learning:
             method_kwargs["transfer_learning_evaluations"] = (
                 get_transfer_learning_evaluations(
