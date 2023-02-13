@@ -49,4 +49,4 @@ def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str
 
 
 if __name__ == "__main__":
-    main(methods, benchmark_definitions)
+    main(methods, benchmark_definitions, extra_args, map_extra_args)
