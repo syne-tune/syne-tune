@@ -39,7 +39,7 @@ from benchmarking.commons.benchmark_definitions.lcbench import (
 
 def yahpo_nb301_benchmark(dataset_name):
     return SurrogateBenchmarkDefinition(
-        max_wallclock_time=6 * 3600,
+        max_wallclock_time=12 * 3600,
         n_workers=4,
         elapsed_time_attr="runtime",
         metric="val_accuracy",

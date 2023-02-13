@@ -17,6 +17,7 @@ from benchmarking.commons.benchmark_definitions import (
     real_benchmark_definitions as benchmark_definitions,
 )
 from benchmarking.nursery.launch_sagemaker.baselines import methods
+from benchmarking.nursery.launch_sagemaker.hpo_main import extra_args
 
 
 if __name__ == "__main__":
@@ -25,4 +26,5 @@ if __name__ == "__main__":
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
+        extra_args=extra_args,
     )
