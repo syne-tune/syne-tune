@@ -39,17 +39,14 @@ if __name__ == "__main__":
         dataset=dataset_name,
     )
 
-    resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
-    max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
-    config_space = dict(
-        trial_backend.blackbox.configuration_space,
-        **{max_resource_attr: max_resource_level},
-    )
     # Asynchronous successive halving (ASHA)
+    blackbox = trial_backend.blackbox
     scheduler = ASHA(
-        config_space,
+        config_space=blackbox.configuration_space_with_max_resource_attr(
+            max_resource_attr
+        ),
         max_resource_attr=max_resource_attr,
-        resource_attr=resource_attr,
+        resource_attr=blackbox.fidelity_name(),
         mode=benchmark.mode,
         metric=benchmark.metric,
         random_seed=random_seed,

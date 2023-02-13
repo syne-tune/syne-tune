@@ -48,20 +48,21 @@ if __name__ == "__main__":
 
     max_steps = 100
     n_workers = 4
+    metric = "mean_loss"
+    mode = "min"
+    max_resource_attr = "steps"
 
     config_space = {
-        "steps": max_steps,
+        max_resource_attr: max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
-    metric = "mean_loss"
-    mode = "min"
 
     scheduler = ASHA(
         config_space,
         metric=metric,
+        max_resource_attr=max_resource_attr,
         resource_attr="epoch",
-        max_t=max_steps,
         mode=mode,
     )
 

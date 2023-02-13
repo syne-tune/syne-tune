@@ -375,7 +375,7 @@ class BlackboxSurrogate(Blackbox):
         single_fidelity = fidelity is not None
         do_fit_diffs = len(self.fit_differences) > 0
         if self.fidelity_values is not None:
-            fidelity_attr = next(iter(self.fidelity_space.keys()))
+            fidelity_attr = self.fidelity_name()
         else:
             fidelity_attr = None
         if not self.predict_curves:

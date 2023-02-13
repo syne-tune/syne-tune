@@ -30,6 +30,10 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
     np.random.seed(0)
     max_steps = 100
+    metric = "episode_reward_mean"
+    mode = "max"
+    max_resource_attr = "max_iterations"
+
     trial_backend = LocalBackend(
         entry_point=Path(__file__).parent
         / "training_scripts"
@@ -39,12 +43,13 @@ if __name__ == "__main__":
 
     scheduler = ASHA(
         config_space={
+            max_resource_attr: max_steps,
             "gamma": sp.uniform(0.5, 0.99),
             "lr": sp.loguniform(1e-6, 1e-3),
         },
-        metric="episode_reward_mean",
-        mode="max",
-        max_t=100,
+        metric=metric,
+        mode=mode,
+        max_resource_attr=max_resource_attr,
         resource_attr="training_iter",
         search_options={"debug_log": False},
     )
