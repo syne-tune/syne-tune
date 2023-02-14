@@ -137,7 +137,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     for default values.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
     :param clone_from_state: Internal argument, do not use
     :type clone_from_state: bool

@@ -69,7 +69,7 @@ def sample_random_configuration(
     return new_config
 
 
-class SearcherWithRandomSeed(BaseSearcher):
+class StochasticSearcher(BaseSearcher):
     """
     Base class of searchers which use random decisions. Creates the
     ``random_state`` member, which must be used for all random draws.
@@ -174,7 +174,7 @@ class SearcherWithRandomSeed(BaseSearcher):
         return restrict_configurations
 
 
-class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
+class SearcherWithRandomSeedAndFilterDuplicates(StochasticSearcher):
     """
     Base class for searchers with the following properties:
 
@@ -201,7 +201,7 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
 
     Note: Not all searchers which filter duplicates make use of this class.
 
-    Additional arguments on top of parent class :class:`SearcherWithRandomSeed`:
+    Additional arguments on top of parent class :class:`StochasticSearcher`:
 
     :param allow_duplicates: See above. Defaults to ``False``
     :param restrict_configurations: See above, optional

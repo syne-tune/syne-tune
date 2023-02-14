@@ -156,7 +156,7 @@ class BaseSearcher:
        This is an abstract base class. In order to implement a new searcher, try to
        start from
        :class:`~syne_tune.optimizer.scheduler.searcher.SearcherWithRandomSeedAndFilterDuplicates`
-       or :class:`~syne_tune.optimizer.scheduler.searcher.SearcherWithRandomSeed`,
+       or :class:`~syne_tune.optimizer.scheduler.searcher.StochasticSearcher`,
        which implement generally useful properties.
 
     :param config_space: Configuration space

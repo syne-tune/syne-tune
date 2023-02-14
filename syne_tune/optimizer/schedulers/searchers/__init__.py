@@ -19,7 +19,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
     impute_points_to_evaluate,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_base import (  # noqa: F401
-    SearcherWithRandomSeed,
+    StochasticSearcher,
     SearcherWithRandomSeedAndFilterDuplicates,
     extract_random_seed,
 )

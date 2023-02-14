@@ -17,7 +17,7 @@ import xgboost
 from sklearn.model_selection import train_test_split
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
-from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 
 import pandas as pd
 
@@ -109,7 +109,7 @@ def subsample(
     return X_train, z_train
 
 
-class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
+class QuantileBasedSurrogateSearcher(StochasticSearcher):
     """
     Implements the transfer-learning method:
 
@@ -123,7 +123,7 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
     from and the best configurations are returned as next candidate to evaluate.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
     :param mode: Whether to minimize or maximize, default to "min".
     :param transfer_learning_evaluations: Dictionary from task name to offline

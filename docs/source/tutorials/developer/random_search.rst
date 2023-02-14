@@ -96,12 +96,12 @@ searchers is :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
   ``FIFOScheduler`` and the Syne Tune searchers.
 
 Below ``BaseSearcher``, there is
-:class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`, which
+:class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`, which
 should be used by all searchers which make random decisions. It maintains a PRN
 generator and provides methods to serialize and de-serialize its state.
 
 :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
-extends ``SearcherWithRandomSeed``. It supports a number of features which are
+extends ``StochasticSearcher``. It supports a number of features which are
 desirable for most searchers:
 
 * Seed management for random decisions.

@@ -26,7 +26,7 @@ from syne_tune.config_space import (
     config_space_size,
 )
 from syne_tune.optimizer.schedulers.searchers import (
-    SearcherWithRandomSeed,
+    StochasticSearcher,
     SearcherWithRandomSeedAndFilterDuplicates,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
@@ -154,13 +154,13 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 DEFAULT_NSAMPLE = 5
 
 
-class GridSearcher(SearcherWithRandomSeed):
+class GridSearcher(StochasticSearcher):
     """Searcher that samples configurations from an equally spaced grid over config_space.
 
     It first evaluates configurations defined in points_to_evaluate and then
     continues with the remaining points from the grid.
 
-    Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
+    Additional arguments on top of parent class :class:`StochasticSearcher`.
 
     :param num_samples: Dictionary, optional. Number of samples per
         hyperparameter. This is required for hyperparameters of type float,

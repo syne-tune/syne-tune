@@ -18,7 +18,7 @@ import xgboost
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
-from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
     TransferLearningMixin,
@@ -27,7 +27,7 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 logger = logging.getLogger(__name__)
 
 
-class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
+class ZeroShotTransfer(TransferLearningMixin, StochasticSearcher):
     """
     A zero-shot transfer hyperparameter optimization method which jointly selects
     configurations that minimize the average rank obtained on historic metadata
@@ -39,7 +39,7 @@ class ZeroShotTransfer(TransferLearningMixin, SearcherWithRandomSeed):
         | IEEE International Conference on Data Mining (ICDM) 2015.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
     :param transfer_learning_evaluations: Dictionary from task name to
         offline evaluations.
