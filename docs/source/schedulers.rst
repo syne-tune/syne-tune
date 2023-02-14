@@ -202,6 +202,14 @@ full range of arguments. We list the most important ones:
   number of observations grows large. If so, you can choose to do it only
   every ``opt_skip_period`` rounds. Skipping optimizations is done only once
   the number of observations is above ``opt_skip_init_length``.
+* ``input_warping``: If this is ``True``, inputs are warped before being fed
+  into the covariance function, the effective kernel becomes
+  :math:`k(w(x), w(x'))`, where :math:`w(x)` is a warping transform with two
+  non-negative parameters per component. These parameters are learned along with
+  other parameters of the surrogate model. Input warping allows the surrogate
+  model to represent non-stationary functions, while still keeping the numbers
+  of parameters small. Note that only such components of :math:`x` are warped
+  which belong to non-categorical hyperparameters.
 
 HyperbandScheduler
 ------------------

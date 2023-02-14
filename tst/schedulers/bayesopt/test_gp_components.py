@@ -20,12 +20,14 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
-    dimensionality_and_warping_ranges,
     create_tuning_job_state,
 )
 from syne_tune.config_space import uniform, randint, choice, loguniform
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import (
+    warpings_for_hyperparameters,
 )
 
 
@@ -66,7 +68,7 @@ def test_get_internal_candidate_evaluations():
     np.testing.assert_almost_equal(result.std, 3.283629428273267)
 
 
-def test_dimensionality_and_warping_ranges():
+def test_warpings_for_hyperparameters():
     # Note: ``choice`` with binary value range is encoded as 1, not 2 dims
     hp_ranges = make_hyperparameter_ranges(
         {
@@ -74,10 +76,12 @@ def test_dimensionality_and_warping_ranges():
             "b": loguniform(0.1, 10.0),  # pos 1
             "c": choice(["a", "b", "c"]),  # pos 2
             "d": uniform(0.0, 10.0),  # pos 5
-            "e": choice(["X", "Y"]),
+            "e": choice(["X", "Y"]),  # pos 6
         }
-    )  # pos 6
+    )
 
-    dim, warping_ranges = dimensionality_and_warping_ranges(hp_ranges)
-    assert dim == 7
-    assert warping_ranges == {1: (0.0, 1.0), 5: (0.0, 1.0)}
+    warpings = warpings_for_hyperparameters(hp_ranges)
+    assert hp_ranges.ndarray_size == 7
+    assert len(warpings) == 2
+    assert warpings[0].lower == 1 and warpings[0].upper == 2
+    assert warpings[1].lower == 5 and warpings[1].upper == 6

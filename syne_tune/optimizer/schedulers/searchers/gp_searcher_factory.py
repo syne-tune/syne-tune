@@ -42,6 +42,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import 
     Matern52,
     KernelFunction,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import (
+    kernel_with_warping,
+    WarpedKernel,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     MeanFunction,
     ScalarMeanFunction,
@@ -139,7 +143,12 @@ def _create_base_gp_kernel(hp_ranges: HyperparameterRanges, **kwargs) -> KernelF
     parameter determining the task, the second ARD over the remaining
     parameters.
     """
+    input_warping = kwargs.get("input_warping", False)
     if kwargs.get("transfer_learning_task_attr") is not None:
+        if input_warping:
+            logger.warning(
+                "Cannot use input_warping=True together with transfer_learning_task_attr. Will use input_warping=False"
+            )
         # Transfer learning: Specific base kernel
         kernel = create_base_gp_kernel_for_warmstarting(hp_ranges, **kwargs)
     else:
@@ -149,6 +158,15 @@ def _create_base_gp_kernel(hp_ranges: HyperparameterRanges, **kwargs) -> KernelF
             ARD=True,
             has_covariance_scale=has_covariance_scale,
         )
+        if input_warping:
+            # Use input warping on all coordinates which do not belong to a
+            # categorical hyperparameter
+            kernel = kernel_with_warping(kernel, hp_ranges)
+            if kwargs.get("debug_log", False) and isinstance(kernel, WarpedKernel):
+                ranges = [(warp.lower, warp.upper) for warp in kernel.warpings]
+                logger.info(
+                    f"Creating base GP covariance kernel with input warping: ranges = {ranges}"
+                )
     return kernel
 
 
@@ -822,6 +840,7 @@ def _common_defaults(
         "normalize_targets": True,
         "no_fantasizing": False,
         "allow_duplicates": False,
+        "input_warping": False,
     }
     if is_restrict_configs:
         default_options["initial_scoring"] = "acq_func"
@@ -865,6 +884,7 @@ def _common_defaults(
         "normalize_targets": Boolean(),
         "no_fantasizing": Boolean(),
         "allow_duplicates": Boolean(),
+        "input_warping": Boolean(),
     }
 
     if is_hyperband:

@@ -54,15 +54,16 @@ def resource_kernel_factory(
     :param kwargs: Extra arguments (optional)
     :return: ``(res_kernel, res_mean)``, both over ``(x, r)``
     """
+    dim_x = kernel_x.dimension
     if name == "matern52":
-        res_kernel = Matern52(dimension=kernel_x.dimension + 1, ARD=True)
+        res_kernel = Matern52(dimension=dim_x + 1, ARD=True)
         res_mean = mean_x
     elif name == "matern52-res-warp":
         # Warping on resource dimension (last one)
-        dim_x = kernel_x.dimension
-        res_warping = Warping(dimension=dim_x + 1, index_to_range={dim_x: (0.0, 1.0)})
+        res_warping = Warping(dimension=dim_x + 1, coordinate_range=(dim_x, dim_x + 1))
         res_kernel = WarpedKernel(
-            kernel=Matern52(dimension=dim_x + 1, ARD=True), warping=res_warping
+            kernel=Matern52(dimension=dim_x + 1, ARD=True),
+            warpings=[res_warping],
         )
         res_mean = mean_x
     elif name == "freeze-thaw":
@@ -77,7 +78,6 @@ def resource_kernel_factory(
         assert (
             num_folds is not None
         ), f"Resource kenel '{name}' needs num_folds argument"
-        dim_x = kernel_x.dimension
         kernel_residual = Matern52(dimension=dim_x, ARD=False)
         res_kernel = CrossValidationKernelFunction(
             kernel_main=kernel_x,
