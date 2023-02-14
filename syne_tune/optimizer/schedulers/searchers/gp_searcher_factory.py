@@ -517,6 +517,7 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
         "hyperband_promotion",
         "hyperband_synchronous",
         "hyperband_pasha",
+        "hyperband_dyhpo",
     }
     assert (
         kwargs["scheduler"] in supp_schedulers

@@ -87,10 +87,15 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
         model: SurrogateOutputModel,
         active_metric: str = None,
         jitter: float = 0.01,
+        debug_collect_stats: bool = False,
     ):
         assert isinstance(model, SurrogateModel)
         super().__init__(model, active_metric)
         self.jitter = jitter
+        if debug_collect_stats:
+            self._debug_data = {"absdiff": [], "std": [], "u": []}
+        else:
+            self._debug_data = None
 
     def _head_needs_current_best(self) -> bool:
         return True
@@ -102,9 +107,9 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
     ) -> np.ndarray:
         assert current_best is not None
         means, stds = self._extract_mean_and_std(output_to_predictions)
-
         # phi, Phi is PDF and CDF of Gaussian
         phi, Phi, u = get_quantiles(self.jitter, current_best, means, stds)
+        self._debug_append_data(means, stds, current_best, u)
         return np.mean((-stds) * (u * Phi + phi), axis=1)
 
     def _compute_head_and_gradient(
@@ -119,6 +124,7 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
 
         # phi, Phi is PDF and CDF of Gaussian
         phi, Phi, u = get_quantiles(self.jitter, current_best, mean, std)
+        self._debug_append_data(mean, std, current_best, u)
         f_acqu = std * (u * Phi + phi)
         dh_dmean = _postprocess_gradient(Phi, nf=nf_mean)
         dh_dstd = _postprocess_gradient(-phi, nf=1)
@@ -126,6 +132,32 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
             hval=-np.mean(f_acqu),
             gradient={self.active_metric: dict(mean=dh_dmean, std=dh_dstd)},
         )
+
+    def _debug_append_data(
+        self,
+        means: np.ndarray,
+        stds: np.ndarray,
+        current_best: np.ndarray,
+        u: np.ndarray,
+    ):
+        if self._debug_data is not None:
+            new_data = [
+                ("absdiff", np.abs(current_best - means)),
+                ("std", stds),
+                ("u", u),
+            ]
+            for k, v in new_data:
+                self._debug_data[k].extend(list(v.flatten()))
+
+    def debug_stats_message(self) -> str:
+        if self._debug_data is None or len(self._debug_data["absdiff"]) == 0:
+            return ""
+        msg_parts = [
+            f"{k:7s}: min={np.min(v):.2e}, median={np.median(v):.2e}, "
+            f"max={np.max(v):.2e}, num={len(v)}"
+            for k, v in self._debug_data.items()
+        ]
+        return "\n".join(msg_parts)
 
 
 class LCBAcquisitionFunction(MeanStdAcquisitionFunction):

@@ -39,10 +39,10 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
     """
     Gaussian process Bayesian optimization for asynchronous Hyperband scheduler.
 
-    This searcher must be used with
-    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`. It provides a
-    novel combination of Bayesian optimization, based on a Gaussian process
-    surrogate model, with Hyperband scheduling. In particular, observations
+    This searcher must be used with a scheduler of type
+    :class:`~syne_tune.optimizer.schedulers.MultiFidelitySchedulerMixin`. It
+    provides a novel combination of Bayesian optimization, based on a Gaussian
+    process surrogate model, with Hyperband scheduling. In particular, observations
     across resource levels are modelled jointly.
 
     It is *not* recommended to create :class:`GPMultiFidelitySearcher` searcher
@@ -115,6 +115,7 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.utils.subsample_state.SubsampleMultiFidelityStateConverter`
         for details. This down sampling is repeated every time the model is
         fit, which ensures that most recent data is taken into account.
+        The ``opt_skip_*`` predicates are evaluated before the state is downsampled.
 
         Pass ``None`` not to apply such a threshold. The default is
         :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.

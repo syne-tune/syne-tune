@@ -49,6 +49,7 @@ if __name__ == "__main__":
         resource_attr=blackbox.fidelity_name(),
         mode=benchmark.mode,
         metric=benchmark.metric,
+        search_options={"debug_log": False},
         random_seed=random_seed,
     )
 

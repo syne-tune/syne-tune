@@ -138,7 +138,7 @@ class PromotionRungSystem(RungSystem):
         """
         return self._max_t
 
-    def on_task_schedule(self) -> Dict[str, Any]:
+    def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
         """
         Used to implement
         :meth:`~syne_tune.optimizer.schedulers.HyperbandScheduler._promote_trial`.
