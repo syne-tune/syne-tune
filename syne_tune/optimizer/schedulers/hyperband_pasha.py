@@ -289,6 +289,6 @@ class PASHARungSystem(PromotionRungSystem):
                 # we need to remember that counting from the beginning it's zero indexed
                 self.current_max_t = self.rung_levels[self.current_rung_idx - 1]
             else:
-                self.current_max_t = self.max_t
+                self.current_max_t = self._max_t
 
         return ret_dict
