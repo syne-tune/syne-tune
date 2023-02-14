@@ -186,7 +186,7 @@ the initial configurations (which in BO are either taken from
 The scheduler random seed used in a benchmark experiment is a combination of
 a *master random seed* and the seed number introduced above (the latter has
 values :math:`0, 1, 2, \dots`). The master random seed is passed to
-``launch_remote.py`` or ``hpo_main.py`` as ``--random_seed`. If no master
+``launch_remote.py`` or ``hpo_main.py`` as ``--random_seed``. If no master
 random seed is passed, it is drawn at random and output. The master random
 seed is also written into ``metadata.json`` as part of experimental results.
 Importantly, the scheduler random seed is the same across different methods

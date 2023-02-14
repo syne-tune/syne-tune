@@ -33,7 +33,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   mapping from ``MethodsArguments`` to scheduler are defined for most baseline
   methods in :mod:`benchmarking.commons.default_baselines` (as noted just below,
   this mapping involves merging argument dictionaries), but you can override
-  arguments as well (for example, ``config_space`` and ``type`` in the examples
+  arguments as well (for example, ``type`` in the examples
   here). Note that if you like to compare different variants of a method, you
   need to create different entries in ``methods``, for example
   ``Methods.MOBSTER_JOINT`` and ``Methods.MOBSTER_INDEP`` are different variants
@@ -65,7 +65,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   Script for launching experiments remotely, in that each experiment runs as its
   own SageMaker training job, in parallel with other experiments. You need to
   import :mod:`benchmarking.commons.launch_remote_simulator` and pass the same
-  ``methods``, ``benchmark_definitions``, ``extra_args``, ``map_extra_args`` as
+  ``methods``, ``benchmark_definitions``, ``extra_args`` as
   in :mod:`benchmarking.nursery.benchmark_hypertune.hpo_main`. On top of that,
   you can pass an indicator function ``is_expensive_method`` to tag the HPO
   methods which are themselves expensive to run. As detailed below, our script

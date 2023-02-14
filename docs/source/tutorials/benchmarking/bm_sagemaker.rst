@@ -108,10 +108,12 @@ The warm pool feature is most useful with multi-fidelity HPO methods (such as
 * When using SageMaker managed warm pools with the SageMaker backend, it is
   important to use ``start_jobs_without_delay=False`` when creating the
   :class:`~syne_tune.Tuner`.
-* Warm pools are a billable resource, and you may incur extra costs. You have
-  to request warm pool quota increases for instance types you would like to
-  use. For our example, you need to have quotas for (at least) four
-  ``ml.g4dn.xlarge`` instances, **both** for training and warm pool usage.
+* Warm pools are a billable resource, and you may incur extra costs arising
+  from the fact that up to ``n_workers`` instances are kept running for about
+  10 minutes at the end of your experiment. You have to request warm pool quota
+  increases for instance types you would like to use. For our example, you need
+  to have quotas for (at least) four ``ml.g4dn.xlarge`` instances, **both** for
+  training and warm pool usage.
 * As a sanity check, you can watch the training jobs in the console. You
   should see ``InUse`` and ``Reused`` in the *Warm pool status* column.
   Running the example above, the first 4 jobs should complete in about 7 to 8

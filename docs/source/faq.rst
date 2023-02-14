@@ -299,7 +299,7 @@ from scratch. The following schedulers make use of checkpointing:
 
 * Promotion-based asynchronous Hyperband:
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
-  ``type="promotion"``, as well as other asynchronous multi-fidelity schedulers.
+  ``type="promotion"`` or ``type="dyhpo"``, as well as other asynchronous multi-fidelity schedulers.
   The code runs without checkpointing, but in this case, any trial which is
   resumed is started from scratch. For example, if a trial was paused after 9
   epochs of training and is resumed later, training starts from scratch
@@ -427,8 +427,8 @@ Remote launching of experiments has a number of advantages:
 * The machine you are working on is not blocked
 * You can launch many experiments in parallel
 * You can launch experiments with any instance type you like, without having to
-  provision them yourselves. For GPU instances, you do not have to worry to
-  setup CUDA, etc.
+  provision them yourselves. For GPU instances, you do not have to worry about
+  setting up CUDA, etc.
 
 You can use the remote launcher to launch an experiment on a remote machine.
 The remote launcher supports both :class:`~syne_tune.backend.LocalBackend` and
@@ -512,6 +512,9 @@ What different schedulers do you support? What are the main differences between 
 A succinct overview of supported schedulers is provided
 `here <getting_started.html#supported-hpo-methods>`_.
 
+Most methods can be accessed with short names by from
+:mod:`syne_tune.optimizer.baselines`, which is the best place to start.
+
 We refer to HPO algorithms as *schedulers*. A scheduler decides which
 configurations to assign to new trials, but also when to stop a running
 or resume a paused trial. Some schedulers delegate the first decision to
@@ -527,8 +530,9 @@ single-objective case are:
 * Does the searcher suggest new configurations by uniform random
   sampling (``searcher="random"``) or by sequential model-based
   decision-making (``searcher="bayesopt"``, ``searcher="kde"``,
-  ``searcher="hypertune"``, ``searcher="botorch"``). The latter can be more
-  expensive if a lot of trials are run, but can also be more sample-efficient.
+  ``searcher="hypertune"``, ``searcher="botorch"``, ``searcher="dyhpo"``).
+  The latter can be more expensive if a lot of trials are run, but can also
+  be more sample-efficient.
 
 An overview of this landscape is given `here <schedulers.html>`_.
 
@@ -547,11 +551,9 @@ Further schedulers provided by Syne Tune include:
 * `Synchronous Hyperband <tutorials/multifidelity/mf_syncsh.html>`_
 * `Differential Evolution Hyperband (DEHB) <tutorials/multifidelity/mf_sync_model.html#differential-evolution-hyperband>`_
 * `Hyper-Tune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`_
+* `DyHPO <tutorials/multifidelity/mf_async_model.html#dyhpo>`_
 * `Transfer learning schedulers <examples.html#transfer-tuning-on-nasbench-201>`_
 * `Wrappers for Ray Tune schedulers <examples.html#launch-hpo-experiment-with-ray-tune-scheduler>`_
-
-Most of those methods can be accessed with short names by from
-:mod:`syne_tune.optimizer.baselines`.
 
 How do I define the search space?
 =================================
@@ -600,7 +602,7 @@ example, the number of epochs already trained).
   the attribute in the configuration space which contains the maximum
   resource value. For example, if your script should train for a maximum of
   100 epochs (the scheduler may stop or pause it before, though), you could
-  use ``config_space = dict(..., epochs=100)`, in which case
+  use ``config_space = dict(..., epochs=100)``, in which case
   ``max_resource_attr = "epochs"``.
 * Finally, you can also use ``max_t`` instead of ``max_resource_attr``,
   even though this is not recommended. If you don't want to include the

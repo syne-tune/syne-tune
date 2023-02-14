@@ -34,6 +34,9 @@ from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa:
 __all__ = [
     "BaseSearcher",
     "impute_points_to_evaluate",
+    "SearcherWithRandomSeed",
+    "SearcherWithRandomSeedAndFilterDuplicates",
+    "extract_random_seed",
     "RandomSearcher",
     "GridSearcher",
     "searcher_factory",

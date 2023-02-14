@@ -83,11 +83,11 @@ def parse_args(
             dict(
                 name="warm_pool",
                 type=int,
-                default=1,
+                default=0,
                 help=(
                     "If 1, the SageMaker managed warm pools feature is used. "
-                    "This can be more expensive, but also reduces startup "
-                    "delays, leading to an experiment finishing in less time"
+                    "This reduces startup delays, leading to an experiment "
+                    "finishing in less time."
                 ),
             ),
             dict(

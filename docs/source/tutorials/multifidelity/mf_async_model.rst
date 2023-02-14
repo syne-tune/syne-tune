@@ -195,7 +195,7 @@ number of observations. The amount of computation spent by MOBSTER can be contro
   all data.
 
   The default value for ``max_size_data_for_model`` is
-  :const:`~syne_tune.syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+  :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
   It can be changed by passing
   :code:`search_options = {"max_size_data_for_model": XYZ}` when creating the
   MOBSTER scheduler. You can switch off the limit mechanism by passing ``None``

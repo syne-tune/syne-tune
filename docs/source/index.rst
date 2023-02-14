@@ -21,7 +21,7 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 * Wide coverage (>20) of different HPO methods, including:
 
   * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
-  * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
+  * Multi-fidelity methods supporting model-based decisions (BOHB, MOBSTER, Hyper-Tune, DyHPO, BORE);
   * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
   * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
 
@@ -47,13 +47,10 @@ What's New?
   You'd like to run many experiments in parallel, or launch training jobs on
   different instances, all by modifying some simple scripts to your needs? Then
   our benchmarking mechanism is for you.
-* You can now
-  `do paired comparisons and manage seed choices <tutorials/benchmarking/bm_local.html#random-seeds-and-paired-comparisons>`_
-  in order to control randomness in your comparisons.
-* The `YAHPO benchmarking <tutorials/benchmarking/bm_simulator.html#the-yahpo-family>`_
-  suite is integrated in our blackbox repository
-* New benchmark: Transformer on WikiText-2
-  (:func:`~benchmarking.commons.benchmark_definitions.transformer_wikitext2_benchmark`)
+* New tutorial: `Progressive ASHA <tutorials/pasha/pasha.html>`_. PASHA is a
+  variant of ASHA where the maximum number of resources (e.g., maximum number
+  of training epochs) is not fixed up front, but is adapted. This can lead to
+  savings when training on large datasets.
 
 
 .. toctree::
