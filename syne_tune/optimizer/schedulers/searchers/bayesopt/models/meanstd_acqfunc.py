@@ -84,7 +84,7 @@ class ActiveMetricCurrentBestProvider(CurrentBestProvider):
 
 
 class MeanStdAcquisitionFunction(AcquisitionFunction):
-    """
+    r"""
     Base class for standard acquisition functions which depend on predictive
     mean and stddev. Subclasses have to implement the head and its derivatives
     w.r.t. mean and std:

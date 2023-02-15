@@ -290,10 +290,10 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
         self.likelihood.data_precomputations(data)
         self._states = [self.likelihood.get_posterior_state(data)]
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return self.likelihood.get_params()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         self.likelihood.set_params(param_dict)
 
     def reset_params(self):

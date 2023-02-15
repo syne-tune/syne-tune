@@ -13,7 +13,6 @@
 from typing import Dict, Any
 from benchmarking.commons.baselines import (
     search_options,
-    convert_categorical_to_ordinal_numeric,
     default_arguments,
 )
 from benchmarking.commons.default_baselines import (
@@ -23,6 +22,7 @@ from benchmarking.commons.default_baselines import (
     MOBSTER,
     BOHB,
     KDE,
+    convert_categorical_to_ordinal_numeric,
 )
 from syne_tune.optimizer.schedulers.neuralbands.neuralband import NeuralbandScheduler
 from syne_tune.optimizer.schedulers.neuralbands.neuralband_supplement import (
@@ -53,30 +53,12 @@ def conv_numeric_only(margs) -> Dict[str, Any]:
 
 
 methods = {
-    Methods.RS: lambda method_arguments: RandomSearch(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
-    Methods.ASHA: lambda method_arguments: ASHA(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
-    Methods.BOHB: lambda method_arguments: BOHB(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
-    Methods.TPE: lambda method_arguments: KDE(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
-    Methods.GP: lambda method_arguments: BayesianOptimization(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
-    Methods.MOBSTER: lambda method_arguments: MOBSTER(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
+    Methods.RS: lambda method_arguments: RandomSearch(method_arguments),
+    Methods.ASHA: lambda method_arguments: ASHA(method_arguments),
+    Methods.BOHB: lambda method_arguments: BOHB(method_arguments),
+    Methods.TPE: lambda method_arguments: KDE(method_arguments),
+    Methods.GP: lambda method_arguments: BayesianOptimization(method_arguments),
+    Methods.MOBSTER: lambda method_arguments: MOBSTER(method_arguments),
     Methods.NeuralBandSH: lambda method_arguments: NeuralbandScheduler(
         **default_arguments(
             method_arguments,

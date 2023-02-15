@@ -161,7 +161,7 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
 
 
 class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
-    """
+    r"""
     Lower confidence bound (LCB) acquisition function:
 
     .. math::
@@ -205,7 +205,7 @@ class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
 
 
 class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
-    """
+    r"""
     Minus cost-aware expected improvement acquisition function.
 
     This is defined as

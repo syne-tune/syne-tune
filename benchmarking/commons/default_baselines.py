@@ -16,6 +16,7 @@ from benchmarking.commons.baselines import (
     search_options,
     default_arguments,
     MethodArguments,
+    convert_categorical_to_ordinal_numeric,
 )
 from syne_tune.optimizer.baselines import (
     RandomSearch as _RandomSearch,
@@ -45,8 +46,11 @@ def _baseline_kwargs(
     kwargs: Dict[str, Any],
     is_multifid: bool = False,
 ) -> Dict[str, Any]:
+    config_space = convert_categorical_to_ordinal_numeric(
+        method_arguments.config_space, kind=method_arguments.fcnet_ordinal
+    )
     da_input = dict(
-        config_space=method_arguments.config_space,
+        config_space=config_space,
         search_options=search_options(method_arguments),
     )
     if is_multifid:

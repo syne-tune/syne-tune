@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 import autograd.numpy as anp
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
@@ -116,12 +117,12 @@ class FabolasKernelFunction(KernelFunction):
             (self.u3_internal, self.encoding_u3),
         ]
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         values = list(self._get_pars(None))
         keys = ["u1", "u2", "u3"]
         return {k: anp.reshape(v, (1,))[0] for k, v in zip(keys, values)}
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         self.encoding_u12.set(self.u1_internal, param_dict["u1"])
         self.encoding_u12.set(self.u2_internal, param_dict["u2"])
         self.encoding_u3.set(self.u3_internal, param_dict["u3"])
