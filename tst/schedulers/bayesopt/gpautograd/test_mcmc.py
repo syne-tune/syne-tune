@@ -161,16 +161,19 @@ def test_slice_step_in():
         slice_sampler_step_in(2.0, 10.0, log_pivot, sliced_log_density, random_state)
 
 
+def build_kernel():
+    kernel = Matern52(dimension=1)
+    warping = Warping(dimension=1)
+    return WarpedKernel(kernel=kernel, warpings=[warping])
+
+
 def test_get_gp_hps():
     mean = ScalarMeanFunction()
-    kernel = Matern52(dimension=1)
-    warping = Warping(dimension=1, index_to_range={0: (-4.0, 4.0)})
-    warped_kernel = WarpedKernel(kernel=kernel, warping=warping)
+    warped_kernel = build_kernel()
     likelihood = GaussianProcessMarginalLikelihood(
         kernel=warped_kernel, mean=mean, initial_noise_variance=1e-6
     )
     likelihood.initialize(force_reinit=True)
-    likelihood.hybridize()
     hp_values = _get_gp_hps(likelihood)
     # the oder of hps are noise, mean, covariance scale, bandwidth, warping a, warping b
     numpy.testing.assert_array_almost_equal(
@@ -180,25 +183,17 @@ def test_get_gp_hps():
 
 def test_set_gp_hps():
     mean = ScalarMeanFunction()
-    kernel = Matern52(dimension=1)
-    warping = Warping(dimension=1, index_to_range={0: (-4.0, 4.0)})
-    warped_kernel = WarpedKernel(kernel=kernel, warping=warping)
+    warped_kernel = build_kernel()
     likelihood = GaussianProcessMarginalLikelihood(
         kernel=warped_kernel, mean=mean, initial_noise_variance=1e-6
     )
     likelihood.initialize(force_reinit=True)
-    likelihood.hybridize()
     hp_values = anp.array([1e-2, 1.0, 0.5, 0.3, 0.2, 1.1])
     _set_gp_hps(hp_values, likelihood)
     numpy.testing.assert_array_almost_equal(hp_values, _get_gp_hps(likelihood))
 
 
 def test_create_likelihood():
-    def build_kernel():
-        kernel = Matern52(dimension=1)
-        warping = Warping(dimension=1, index_to_range={0: (-4.0, 4.0)})
-        return WarpedKernel(kernel=kernel, warping=warping)
-
     random_state = anp.random.RandomState(0)
     likelihood1 = _create_likelihood(build_kernel, random_state=random_state)
     likelihood2 = _create_likelihood(build_kernel, random_state=random_state)
@@ -221,20 +216,14 @@ def test_mcmc():
         return 0.1 * anp.power(x, 3)
 
     x_train = anp.concatenate(
-        (anp.random.uniform(-4.0, -1.0, 40), anp.random.uniform(1.0, 4.0, 40))
+        (anp.random.uniform(0, 3 / 8, 40), anp.random.uniform(5 / 8, 1, 40))
     )
     y_train = f_n(x_train)
-    x_test = anp.sort(anp.random.uniform(-4.0, 4.0, 200))
+    x_test = anp.sort(anp.random.uniform(0, 1, 200))
 
     y_train_np_nd = anp.array(y_train, dtype=anp.float64)
     x_train_np_nd = anp.array(x_train, dtype=anp.float64)
     x_test_np_nd = anp.array(x_test, dtype=anp.float64)
-
-    def build_kernel():
-        return WarpedKernel(
-            kernel=Matern52(dimension=1),
-            warping=Warping(dimension=1, index_to_range={0: (-4.0, 4.0)}),
-        )
 
     model_mcmc = GPRegressionMCMC(build_kernel=build_kernel, random_seed=1)
     data = {"features": x_train_np_nd, "targets": y_train_np_nd}

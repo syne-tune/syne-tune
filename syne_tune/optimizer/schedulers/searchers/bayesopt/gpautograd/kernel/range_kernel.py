@@ -22,7 +22,7 @@ class RangeKernelFunction(KernelFunction):
 
     .. math::
 
-       (x, y) -\mapsto K(x_R, y_R)
+       (x, y) \mapsto K(x_R, y_R)
 
     """
 
