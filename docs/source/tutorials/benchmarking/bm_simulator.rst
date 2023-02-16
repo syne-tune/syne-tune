@@ -159,6 +159,16 @@ This call runs a number of experiments sequentially on the local machine:
   where ``A = n_workers``, ``B = benchmark.n_workers``. This means we run for
   longer if ``n_workers < benchmark.n_workers``, but keep
   ``benchmark.max_wallclock_time`` the same otherwise.
+* ``restrict_configurations``: See
+  `below <#restricting-scheduler-to-configurations-of-tabulated-blackbox>`_.
+* ``fcnet_ordinal``: Applies to FCNet benchmarks only. The hyperparameter
+  ``hp_init_lr`` has domain ``choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``.
+  Since the parameter is really ordinal, this is
+  `not a good choice <../../search_space.html#recommendations>`_. With this
+  option, the domain can be switched to different variants of ``ordinal``.
+  The default is ``nn-log``, which is the domain
+  ``logordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``. In order to keep
+  the original categorical domain, use ``--fcnet_ordinal none``.
 
 If you defined additional arguments via ``extra_args``, you can use them
 here as well. For example, ``--num_brackets 3`` would run all

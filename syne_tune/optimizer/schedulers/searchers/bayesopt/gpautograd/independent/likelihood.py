@@ -54,7 +54,7 @@ from syne_tune.optimizer.schedulers.utils.simple_profiler import (
 
 
 class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
-    """
+    r"""
     Marginal likelihood for GP multi-fidelity model over :math:`f(x, r)`,
     where for each :math:`r`, :math:`f(x, r)` is represented by an independent
     GP. The different processes share the same kernel, but have their own mean
@@ -112,6 +112,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             prior=LogNormal(0.0, 1.0),
         )
         self.mean = mean.copy()
+        # Note: Child blocks in lists or dicts are not registered automatically
         for v in self.mean.values():
             self.register_child(v)
         self.kernel = kernel

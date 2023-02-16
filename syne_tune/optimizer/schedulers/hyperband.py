@@ -143,7 +143,7 @@ class TrialInformation:
 
 
 class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
-    """Implements different variants of asynchronous Hyperband
+    r"""Implements different variants of asynchronous Hyperband
 
     See ``type`` for the different variants. One implementation detail is
     when using multiple brackets, task allocation to bracket is done randomly,

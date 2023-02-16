@@ -161,8 +161,8 @@ def parse_args(
                 name="fcnet_ordinal",
                 type=str,
                 choices=("none", "equal", "nn", "nn-log"),
-                default="none",
-                help="Ordinal encoding for fcnet categorical HPs",
+                default="nn-log",
+                help="Ordinal encoding for fcnet categorical HPs with numeric values. Use 'none' for categorical encoding",
             ),
             dict(
                 name="restrict_configurations",

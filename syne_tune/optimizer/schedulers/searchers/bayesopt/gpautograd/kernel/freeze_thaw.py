@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 import autograd.numpy as anp
 from autograd.builtins import isinstance
 from autograd.tracer import getval
@@ -214,7 +215,7 @@ class FreezeThawKernelFunction(KernelFunction):
         cfg, res, kappa, mean = self._compute_terms(X, alpha, mean_lam, ret_mean=True)
         return anp.add(mean, anp.multiply(kappa, gamma))
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         """
         Parameter keys are alpha, mean_lam, gamma, delta (only if not fixed
         to delta_fixed_value), as well as those of self.kernel_x (prefix
@@ -227,7 +228,7 @@ class FreezeThawKernelFunction(KernelFunction):
             result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
             len_pref = len(pref)
             stripped_dict = {
@@ -251,8 +252,8 @@ class FreezeThawMeanFunction(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         pass

@@ -189,7 +189,7 @@ class RungSystem:
 
 
 class StoppingRungSystem(RungSystem):
-    """
+    r"""
     The decision on whether a trial :math:`\mathbf{x}` continues or is stopped
     at a rung level :math:`r`, is taken in :meth:`on_task_report`. To this end,
     the metric value :math:`f(\mathbf{x}, r)` is inserted into :math:`r.data`.
@@ -215,7 +215,7 @@ class StoppingRungSystem(RungSystem):
         trial_id: str,
         resource: int,
     ) -> bool:
-        """
+        r"""
         :param metric_value: :math:`f(\mathbf{x}, r)` for trial
             :math:`\mathbf{x}` at rung :math:`r`
         :param recorded: Data for rung :math:`r` (including

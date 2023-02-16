@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 class GPMultiFidelitySearcher(GPFIFOSearcher):
-    """
+    r"""
     Gaussian process Bayesian optimization for asynchronous Hyperband scheduler.
 
     This searcher must be used with a scheduler of type

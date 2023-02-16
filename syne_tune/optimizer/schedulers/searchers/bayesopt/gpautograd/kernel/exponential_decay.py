@@ -77,7 +77,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
         max_metric_value: float = 1.0,
         **kwargs
     ):
-        """
+        r"""
         :param kernel_x: Kernel :math:`k_x(x, x')` over configs
         :param mean_x: Mean function :math:`\mu_x(x)` over configs
         :param encoding_type: Encoding used for ``alpha``, ``mean_lam``, ``gamma``
@@ -292,7 +292,7 @@ class ExponentialDecayResourcesKernelFunction(KernelFunction):
 
         return result
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         for pref, func in [("kernelx_", self.kernel_x), ("meanx_", self.mean_x)]:
             len_pref = len(pref)
             stripped_dict = {
@@ -318,8 +318,8 @@ class ExponentialDecayResourcesMeanFunction(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         pass
