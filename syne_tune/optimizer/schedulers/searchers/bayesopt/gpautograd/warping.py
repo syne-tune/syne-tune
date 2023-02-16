@@ -124,13 +124,13 @@ class Warping(MeanFunction):
 
         :param x: Input data, shape ``(n, d)``
         """
-        warping_a, warping_b = self._warping()
+        power_a, power_b = self._warping()
         if not self._is_full_range:
             x_part = x[:, self.lower : self.upper]
         else:
             x_part = x
         result = 1.0 - anp.power(
-            1.0 - anp.power(self._rescale(x_part), warping_a), warping_b
+            1.0 - anp.power(self._rescale(x_part), power_a), power_b
         )
         if not self._is_full_range:
             args = []
@@ -248,8 +248,8 @@ class WarpedKernel(KernelFunction):
     coordinates can be warped.
 
     It is custom to warp hyperparameters which are not categorical. You can
-    use :func:`warpings_for_hyperparameters` to create appropriate warpings
-    for your configuration space.
+    use :func:`kernel_with_warping` to furnish a kernel with warping for all
+    non-categorical hyperparameters.
 
     :param kernel: Kernel :math:`k(x, x')`
     :param warpings: List of warping transforms, which are applied sequentially.
@@ -282,14 +282,12 @@ class WarpedKernel(KernelFunction):
         return warped_X
 
     def forward(self, X1, X2):
-        args = []
-        for i, X in enumerate([X1, X2]):
-            if i == 1 and X is X1:
-                warped_X = args[0]
-            else:
-                warped_X = self._apply_warpings(X)
-            args.append(warped_X)
-        return self.kernel(*args)
+        warped_X1 = self._apply_warpings(X1)
+        if X2 is X1:
+            warped_X2 = warped_X1
+        else:
+            warped_X2 = self._apply_warpings(X2)
+        return self.kernel(warped_X1, warped_X2)
 
     def diagonal(self, X):
         # If kernel.diagonal does not depend on content of X (but just its
