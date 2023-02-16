@@ -48,6 +48,11 @@ def resource_kernel_factory(
     create kernel and mean functions over ``(x, r)``, where ``r`` is the resource
     attribute (nonnegative scalar, usually in ``[0, 1]``).
 
+    Note: For ``name in ["matern52", "matern52-res-warp"]``, if ``kernel_x`` is
+    of type
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping.WarpedKernel`,
+    the resulting kernel inherits this warping.
+
     :param name: Selects resource kernel type
     :param kernel_x: Kernel function over configs ``x``
     :param mean_x: Mean function over configs ``x``
@@ -57,13 +62,19 @@ def resource_kernel_factory(
     dim_x = kernel_x.dimension
     if name == "matern52":
         res_kernel = Matern52(dimension=dim_x + 1, ARD=True)
+        if isinstance(kernel_x, WarpedKernel):
+            res_kernel = WarpedKernel(kernel=res_kernel, warpings=kernel_x.warpings)
         res_mean = mean_x
     elif name == "matern52-res-warp":
         # Warping on resource dimension (last one)
         res_warping = Warping(dimension=dim_x + 1, coordinate_range=(dim_x, dim_x + 1))
+        if isinstance(kernel_x, WarpedKernel):
+            warpings = kernel_x.warpings + [res_warping]
+        else:
+            warpings = [res_warping]
         res_kernel = WarpedKernel(
             kernel=Matern52(dimension=dim_x + 1, ARD=True),
-            warpings=[res_warping],
+            warpings=warpings,
         )
         res_mean = mean_x
     elif name == "freeze-thaw":
