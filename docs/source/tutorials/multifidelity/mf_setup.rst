@@ -123,30 +123,20 @@ script.
        # [2]
        # Select configuration space for the benchmark. Here, we use the default
        # for the blackbox
-       resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
-       max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
+       blackbox = trial_backend.blackbox
        # Common scheduler kwargs
        method_kwargs = dict(
            metric=benchmark.metric,
            mode=benchmark.mode,
-           resource_attr=resource_attr,
+           resource_attr=blackbox.fidelity_name(),
            random_seed=args.random_seed,
+           max_resource_attr=max_resource_attr,
        )
-       if max_resource_attr is not None:
-           # Insert maximum resource level into configuration space. Doing so is
-           # best practice and has advantages for pause-and-resume schedulers
-           config_space = dict(
-               trial_backend.blackbox.configuration_space,
-               **{max_resource_attr: max_resource_level},
-           )
-           method_kwargs["max_resource_attr"] = max_resource_attr
-       else:
-           config_space = trial_backend.blackbox.configuration_space
-           if args.method in {"BOHB", "DEHB", "SYNCSH", "SYNCHB", "SYNCMOBSTER"}:
-               max_resource_level_name = "max_resource_level"
-           else:
-               max_resource_level_name = "max_t"
-           method_kwargs[max_resource_level_name] = max_resource_level
+       # Insert maximum resource level into configuration space. Doing so is
+       # best practice and has advantages for pause-and-resume schedulers
+       config_space = blackbox.configuration_space_with_max_resource_attr(
+           max_resource_attr
+       )
 
        scheduler = None
        if args.method in {"ASHA-STOP", "ASHA-PROM", "ASHA6-STOP"}:
@@ -290,10 +280,11 @@ Let us have a walk through this script, assuming it is called with the default
   tutorial. However, choosing a suitable configuration space and specifying a
   surrogate can be important for model-based HPO methods. Some more informations
   are given `here <../../search_space.html>`_.
-* [2] We can determine ``resource_attr`` (name of resource attribute) and
-  ``max_resource_level`` (largest value of resource attribute) from the
-  blackbox. Next, if ``max_resource_attr`` is specified, we attach the
-  information about the largest resource level to the configuration space.
+* [2] We can determine ``resource_attr`` (name of resource attribute) from the
+  blackbox as ``blackbox.fidelity_name()``. Next, if ``max_resource_attr`` is
+  specified, we attach the information about the largest resource level to the
+  configuration space, via
+  ``blackbox.configuration_space_with_max_resource_attr(max_resource_attr)``.
   Doing so is *best practice* in general. In the end, the training script needs
   to know how long to train for at most (i.e., the maximum number of epochs in
   our example), this should not be hardcoded. Another advantage of attaching
@@ -305,7 +296,7 @@ Let us have a walk through this script, assuming it is called with the default
   schedulers with it.
 * [2] If ``max_resource_attr`` is not to be used, the scheduler needs to be
   passed the maximum resource value explicitly. For ``ASHA-STOP`, this is the
-  ``max_t`` attribute.
+  ``max_t`` attribute. This is not recommended, and not shown here.
 * [3] At this point, we create the multi-fidelity scheduler, which is ASHA in
   the default case. Most supported schedulers can easily be imported from
   :mod:`syne_tune.optimizer.baselines`, using common names.

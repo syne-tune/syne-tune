@@ -13,7 +13,7 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Callable, Any, List
 
-from syne_tune.config_space import ordinal, Categorical
+from syne_tune.config_space import ordinal, Categorical, Domain, Ordinal
 from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
     CONFIGURATION_SPACE,
 )
@@ -117,6 +117,14 @@ def _is_fcnet(config_space: Dict[str, Any]) -> bool:
     return fcnet_keys.issubset(set(config_space.keys()))
 
 
+def _to_be_converted(domain: Domain) -> bool:
+    return (
+        isinstance(domain, Categorical)
+        and not isinstance(domain, Ordinal)
+        and domain.value_type != str
+    )
+
+
 def convert_categorical_to_ordinal_numeric(
     config_space: Dict[str, Any],
     kind: Optional[str],
@@ -140,7 +148,7 @@ def convert_categorical_to_ordinal_numeric(
         return {
             name: (
                 ordinal(domain.categories, kind=kind)
-                if isinstance(domain, Categorical)
+                if _to_be_converted(domain)
                 else domain
             )
             for name, domain in config_space.items()

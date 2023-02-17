@@ -37,12 +37,6 @@ class Methods:
     SYNCMOBSTER = "SYNCMOBSTER"
 
 
-def conv_numeric_only(margs) -> Dict[str, Any]:
-    return convert_categorical_to_ordinal_numeric(
-        margs.config_space, kind=margs.fcnet_ordinal
-    )
-
-
 def conv_numeric_then_rest(margs) -> Dict[str, Any]:
     return convert_categorical_to_ordinal(
         convert_categorical_to_ordinal_numeric(
@@ -54,21 +48,11 @@ def conv_numeric_then_rest(margs) -> Dict[str, Any]:
 methods = {
     Methods.ASHA: lambda method_arguments: ASHA(
         method_arguments,
-        config_space=conv_numeric_only(method_arguments),
         type="promotion",
     ),
-    Methods.SYNCHB: lambda method_arguments: SyncHyperband(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
-    Methods.DEHB: lambda method_arguments: DEHB(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
-    Methods.BOHB: lambda method_arguments: SyncBOHB(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
+    Methods.SYNCHB: lambda method_arguments: SyncHyperband(method_arguments),
+    Methods.DEHB: lambda method_arguments: DEHB(method_arguments),
+    Methods.BOHB: lambda method_arguments: SyncBOHB(method_arguments),
     Methods.ASHA_ORD: lambda method_arguments: ASHA(
         method_arguments,
         config_space=conv_numeric_then_rest(method_arguments),
@@ -88,11 +72,7 @@ methods = {
     ),
     Methods.ASHA_STOP: lambda method_arguments: ASHA(
         method_arguments,
-        config_space=conv_numeric_only(method_arguments),
         type="stopping",
     ),
-    Methods.SYNCMOBSTER: lambda method_arguments: SyncMOBSTER(
-        method_arguments,
-        config_space=conv_numeric_only(method_arguments),
-    ),
+    Methods.SYNCMOBSTER: lambda method_arguments: SyncMOBSTER(method_arguments),
 }

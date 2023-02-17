@@ -129,7 +129,7 @@ def parse_args(
         to be passed. Must contain ``name`` for argument name (without leading
         ``"--"``), and other kwargs to ``parser.add_argument``. Optional
     :return: ``(args, method_names, benchmark_names, seeds)``, where ``args`` is
-        result of ``parser.parse_known_args()``, ``method_names`` see ``methods``,
+        result of ``parser.parse_args()``, ``method_names`` see ``methods``,
         'benchmark_names`` see ``benchmark_definitions``, and ``seeds`` are list of
         seeds specified by ``--num_seeds`` and ``--start_seed``
     """
@@ -161,8 +161,8 @@ def parse_args(
                 name="fcnet_ordinal",
                 type=str,
                 choices=("none", "equal", "nn", "nn-log"),
-                default="none",
-                help="Ordinal encoding for fcnet categorical HPs",
+                default="nn-log",
+                help="Ordinal encoding for fcnet categorical HPs with numeric values. Use 'none' for categorical encoding",
             ),
             dict(
                 name="restrict_configurations",
@@ -243,19 +243,35 @@ def main(
 
     combinations = list(itertools.product(method_names, seeds, benchmark_names))
     print(combinations)
+    do_scale = (
+        args.scale_max_wallclock_time
+        and args.n_workers is not None
+        and args.max_wallclock_time is None
+    )
     for method, seed, benchmark_name in tqdm(combinations):
         random_seed = effective_random_seed(master_random_seed, seed)
         np.random.seed(random_seed)
         benchmark = benchmark_definitions[benchmark_name]
+        default_n_workers = benchmark.n_workers
         if args.n_workers is not None:
             benchmark.n_workers = args.n_workers
         if args.max_wallclock_time is not None:
             benchmark.max_wallclock_time = args.max_wallclock_time
+        elif do_scale and args.n_workers < default_n_workers:
+            # Scale ``max_wallclock_time``
+            factor = default_n_workers / args.n_workers
+            bm_mwt = benchmark.max_wallclock_time
+            benchmark.max_wallclock_time = int(bm_mwt * factor)
+            print(
+                f"Scaling max_wallclock_time: {benchmark.max_wallclock_time} (from {bm_mwt})"
+            )
         print(
             f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
         )
 
         max_resource_attr = benchmark.max_resource_attr
+        if max_resource_attr is None:
+            max_resource_attr = "my_max_resource_attr"
         if args.restrict_configurations:
             # Don't need surrogate in this case
             kwargs = dict()
@@ -277,18 +293,13 @@ def main(
         method_kwargs = dict(
             fcnet_ordinal=args.fcnet_ordinal,
             use_surrogates="lcbench" in benchmark_name,
+            max_resource_attr=max_resource_attr,
         )
-        resource_attr = next(iter(trial_backend.blackbox.fidelity_space.keys()))
-        max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
-        if max_resource_attr is not None:
-            config_space = dict(
-                trial_backend.blackbox.configuration_space,
-                **{max_resource_attr: max_resource_level},
-            )
-            method_kwargs["max_resource_attr"] = max_resource_attr
-        else:
-            config_space = trial_backend.blackbox.configuration_space
-            method_kwargs["max_t"] = max_resource_level
+        blackbox = trial_backend.blackbox
+        resource_attr = blackbox.fidelity_name()
+        config_space = blackbox.configuration_space_with_max_resource_attr(
+            max_resource_attr
+        )
         if use_transfer_learning:
             method_kwargs["transfer_learning_evaluations"] = (
                 get_transfer_learning_evaluations(

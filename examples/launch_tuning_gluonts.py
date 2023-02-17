@@ -40,18 +40,19 @@ if __name__ == "__main__":
     np.random.seed(0)
     epochs = 50
     n_workers = 4
+    mode = "min"
+    metric = "mean_wQuantileLoss"
+    max_resource_attr = "epochs"
 
     config_space = {
         "lr": loguniform(1e-4, 1e-1),
-        "epochs": epochs,
         "num_cells": lograndint(lower=1, upper=80),
         "num_layers": lograndint(lower=1, upper=10),
+        max_resource_attr: epochs,
         "dataset": "electricity"
         # "dataset": "m4_hourly"
     }
 
-    mode = "min"
-    metric = "mean_wQuantileLoss"
     entry_point = (
         Path(__file__).parent / "training_scripts" / "gluonts" / "train_gluonts.py"
     )
@@ -85,7 +86,10 @@ if __name__ == "__main__":
 
     # Use asynchronous successive halving (ASHA)
     scheduler = ASHA(
-        config_space, max_t=epochs, resource_attr="epoch_no", mode="min", metric=metric
+        config_space,
+        metric=metric,
+        max_resource_attr=max_resource_attr,
+        resource_attr="epoch_no",
     )
 
     max_wallclock_time = (

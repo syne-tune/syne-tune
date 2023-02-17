@@ -43,18 +43,16 @@ if __name__ == "__main__":
         dataset=dataset_name,
     )
 
-    max_resource_level = int(max(trial_backend.blackbox.fidelity_values))
-    config_space = dict(
-        trial_backend.blackbox.configuration_space,
-        **{max_resource_attr: max_resource_level},
-    )
     # GP-based Bayesian optimization
     # Using ``restrict_configurations``, we restrict the scheduler to only
     # suggest configurations which have observations in the tabulated
     # blackbox
-    restrict_configurations = trial_backend.blackbox.all_configurations()
+    blackbox = trial_backend.blackbox
+    restrict_configurations = blackbox.all_configurations()
     scheduler = BayesianOptimization(
-        config_space,
+        config_space=blackbox.configuration_space_with_max_resource_attr(
+            max_resource_attr
+        ),
         max_resource_attr=max_resource_attr,
         mode=benchmark.mode,
         metric=benchmark.metric,

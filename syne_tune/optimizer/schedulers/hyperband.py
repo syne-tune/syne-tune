@@ -31,6 +31,10 @@ from syne_tune.optimizer.schedulers.hyperband_rush import (
     RUSHStoppingRungSystem,
 )
 from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
+from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
+    DyHPORungSystem,
+    DEFAULT_SH_PROBABILITY,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
     Integer,
@@ -48,10 +52,22 @@ from syne_tune.optimizer.schedulers.searchers.bracket_distribution import (
 logger = logging.getLogger(__name__)
 
 
+RUNG_SYSTEMS = {
+    "stopping": StoppingRungSystem,
+    "promotion": PromotionRungSystem,
+    "pasha": PASHARungSystem,
+    "rush_promotion": RUSHPromotionRungSystem,
+    "rush_stopping": RUSHStoppingRungSystem,
+    "cost_promotion": CostPromotionRungSystem,
+    "dyhpo": DyHPORungSystem,
+}
+
+
 _ARGUMENT_KEYS = {
     "resource_attr",
     "grace_period",
     "reduction_factor",
+    "rung_increment",
     "brackets",
     "type",
     "searcher_data",
@@ -66,31 +82,25 @@ _ARGUMENT_KEYS = {
 _DEFAULT_OPTIONS = {
     "resource_attr": "epoch",
     "grace_period": 1,
-    "reduction_factor": 3,
     "brackets": 1,
     "type": "stopping",
     "searcher_data": "rungs",
     "register_pending_myopic": False,
     "do_snapshots": False,
     "rung_system_per_bracket": False,
-    "rung_system_kwargs": {},
+    "rung_system_kwargs": {
+        "num_threshold_candidates": 0,
+        "probability_sh": DEFAULT_SH_PROBABILITY,
+    },
 }
 
 _CONSTRAINTS = {
     "resource_attr": String(),
     "grace_period": Integer(1, None),
     "reduction_factor": Float(2, None),
+    "rung_increment": Integer(1, None),
     "brackets": Integer(1, None),
-    "type": Categorical(
-        (
-            "stopping",
-            "promotion",
-            "cost_promotion",
-            "pasha",
-            "rush_promotion",
-            "rush_stopping",
-        )
-    ),
+    "type": Categorical(tuple(RUNG_SYSTEMS.keys())),
     "searcher_data": Categorical(("rungs", "all", "rungs_and_last")),
     "cost_attr": String(),
     "register_pending_myopic": Boolean(),
@@ -133,7 +143,7 @@ class TrialInformation:
 
 
 class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
-    """Implements different variants of asynchronous Hyperband
+    r"""Implements different variants of asynchronous Hyperband
 
     See ``type`` for the different variants. One implementation detail is
     when using multiple brackets, task allocation to bracket is done randomly,
@@ -164,12 +174,18 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     These rung levels (positive, strictly increasing) can be specified via
     ``rung_levels``, the largest must be ``<= max_t``.
     If ``rung_levels`` is not given, they are specified by ``grace_period``
-    and ``reduction_factor``. If :math:`r_{min}` is ``grace_period``,
-    :math:`\eta` is ``reduction_factor``, then rung levels are
-    :math:`\mathrm{round}(r_{min} \eta^j), j=0, 1, \dots`.
-    This is the default choice for successive halving (Hyperband).
-    Note: If ``rung_levels`` is given, then ``grace_period``, ``reduction_factor``
-    are ignored. If they are given, a warning is logged.
+    and ``reduction_factor`` or ``rung_increment``:
+
+    * If :math:`r_{min}` is ``grace_period``, :math:`\eta` is
+      ``reduction_factor``, then rung levels are
+      :math:`\mathrm{round}(r_{min} \eta^j), j=0, 1, \dots`. This is the default
+      choice for successive halving (Hyperband).
+    * If ``rung_increment`` is given, but not ``reduction_factor``, then rung
+      levels are :math:`r_{min} + j \nu, j=0, 1, \dots`, where :math:`\nu` is
+      ``rung_increment``.
+
+    If ``rung_levels`` is given, then ``grace_period``, ``reduction_factor``,
+    ``rung_increment`` are ignored. If they are given, a warning is logged.
 
     The rung levels determine the quantiles to be used in the stop/go
     decisions. If rung levels are :math:`r_j`, define
@@ -239,11 +255,15 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     :param reduction_factor: Parameter to determine rung levels. Ignored
         if ``rung_levels`` is given. Must be :math:`\ge 2`, defaults to 3
     :type reduction_factor: float, optional
+    :param rung_increment: Parameter to determine rung levels. Ignored
+        if ``rung_levels`` or ``reduction_factor`` are given. Must be
+        postive
+    :type rung_increment: int, optional
     :param rung_levels: If given, prescribes the set of rung levels to
         be used. Must contain positive integers, strictly increasing.
-        This information overrides ``grace_period`` and ``reduction_factor``.
-        Note that the stop/promote rule in the successive halving scheduler
-        is set based on the ratio of successive rung levels.
+        This information overrides ``grace_period``, ``reduction_factor``,
+        ``rung_increment``. Note that the stop/promote rule in the successive
+        halving scheduler is set based on the ratio of successive rung levels.
     :type rung_levels: ``List[int]``, optional
     :param brackets: Number of brackets to be used in Hyperband. Each
         bracket has a different grace period, all share ``max_t``
@@ -329,7 +349,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         is ``True``.
     :type rung_system_per_bracket: bool, optional
     :param do_snapshots: Support snapshots? If ``True``, a snapshot of all running
-        tasks and rung levels is returned by :meth:`_promote_config`. This
+        tasks and rung levels is returned by :meth:`_promote_trial`. This
         snapshot is passed to ``searcher.get_config``. Defaults to ``False``.
         Note: Currently, only the stopping variant supports snapshots.
     :type do_snapshots: bool, optional
@@ -339,6 +359,14 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
           ``points_to_evaluate`` enforce stricter requirements to the
           continuation of training tasks. See
           :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
+        * probability_sh: Used if ``type == "dyhpo"``. In DyHPO, we typically
+          all paused trials against a number of new configurations, and the
+          winner is either resumed or started (new trial). However, with the
+          probability given here, we instead try to promote a trial as if
+          ``type == "promotion"``. If no trial can be promoted, we fall back to
+          the DyHPO logic. Use this to make DyHPO robust against starting too
+          many new trials, because all paused ones score poorly (this happens
+          especially at the beginning).
 
     :type rung_system_kwargs: Dict[str, Any], optional
     """
@@ -351,6 +379,11 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         kwargs = check_and_merge_defaults(
             kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
         )
+        if (
+            kwargs.get("reduction_factor") is None
+            and kwargs.get("rung_increment") is None
+        ):
+            kwargs["reduction_factor"] = 3
         scheduler_type = kwargs["type"]
         self.scheduler_type = scheduler_type
         self._resource_attr = kwargs["resource_attr"]
@@ -367,10 +400,19 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
                 "num_brackets": kwargs["brackets"],
                 "rung_levels": kwargs.get("rung_levels"),
                 "grace_period": kwargs["grace_period"],
-                "reduction_factor": kwargs["reduction_factor"],
+                "reduction_factor": kwargs.get("reduction_factor"),
+                "rung_increment": kwargs.get("rung_increment"),
             }
         else:
             self._num_brackets_info = None
+        if self.does_pause_resume() and "max_resource_attr" not in kwargs:
+            logger.warning(
+                "You do not specify max_resource_attr, but use max_t instead. "
+                "This is not recommended best practice and may lead to a loss "
+                "of efficiency. Consider using max_resource_attr instead.\n"
+                "See https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/mf_setup.html#the-launcher-script "
+                "for details."
+            )
 
         # Superclass constructor
         super().__init__(config_space, **filter_by_key(kwargs, _ARGUMENT_KEYS))
@@ -384,16 +426,22 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         rung_levels = kwargs.get("rung_levels")
         if rung_levels is not None:
             assert isinstance(rung_levels, list)
-            if ("grace_period" in kwargs) or ("reduction_factor" in kwargs):
+            if (
+                ("grace_period" in kwargs)
+                or ("reduction_factor" in kwargs)
+                or ("rung_increment" in kwargs)
+            ):
                 logger.warning(
                     "Since rung_levels is given, the values grace_period = "
-                    f"{kwargs.get('grace_period')} and reduction_factor = "
-                    f"{kwargs.get('reduction_factor')} are ignored!"
+                    f"{kwargs.get('grace_period')}, reduction_factor = "
+                    f"{kwargs.get('reduction_factor')} and rung_increment = "
+                    f"{kwargs.get('rung_increment')} are ignored!"
                 )
         rung_levels = hyperband_rung_levels(
             rung_levels,
             grace_period=kwargs["grace_period"],
-            reduction_factor=kwargs["reduction_factor"],
+            reduction_factor=kwargs.get("reduction_factor"),
+            rung_increment=kwargs.get("rung_increment"),
             max_t=self.max_t,
         )
         do_snapshots = kwargs["do_snapshots"]
@@ -493,6 +541,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
                 self._num_brackets_info["rung_levels"],
                 grace_period=self._num_brackets_info["grace_period"],
                 reduction_factor=self._num_brackets_info["reduction_factor"],
+                rung_increment=self._num_brackets_info["rung_increment"],
                 max_t=self.max_t,
             )
             num_brackets = min(
@@ -577,7 +626,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         return config
 
     # Snapshot (in extra_kwargs['snapshot']):
-    def _promote_trial(self) -> (Optional[str], Optional[dict]):
+    def _promote_trial(self, new_trial_id: str) -> (Optional[str], Optional[dict]):
         """
         If ``self.do_snapshots``, a snapshot is written to
         ``extra_kwargs["snapshot"]``:
@@ -598,7 +647,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
 
         :return: ``(trial_id, extra_kwargs)``
         """
-        trial_id, extra_kwargs = self.terminator.on_task_schedule()
+        trial_id, extra_kwargs = self.terminator.on_task_schedule(new_trial_id)
         if trial_id is None:
             # No trial to be promoted
             if self.do_snapshots:
@@ -927,7 +976,8 @@ def _is_positive_int(x):
 def hyperband_rung_levels(
     rung_levels: Optional[List[int]],
     grace_period: int,
-    reduction_factor: int,
+    reduction_factor: Optional[float],
+    rung_increment: Optional[int],
     max_t: int,
 ) -> List[int]:
     """Creates ``rung_levels`` from ``grace_period``, ``reduction_factor``
@@ -938,6 +988,7 @@ def hyperband_rung_levels(
     :param rung_levels: If given, this is returned (but see above)
     :param grace_period: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     :param reduction_factor: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+    :param rung_increment: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     :param max_t: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
     :return: List of rung levels
     """
@@ -958,31 +1009,34 @@ def hyperband_rung_levels(
     else:
         # Rung levels given by grace_period, reduction_factor, max_t
         assert _is_positive_int(grace_period)
-        assert reduction_factor >= 2
         assert _is_positive_int(max_t)
         assert (
             max_t > grace_period
         ), f"max_t ({max_t}) must be greater than grace_period ({grace_period})"
-        rf = reduction_factor
-        min_t = grace_period
-        max_rungs = 0
-        while min_t * np.power(rf, max_rungs) < max_t:
-            max_rungs += 1
-        rung_levels = [int(round(min_t * np.power(rf, k))) for k in range(max_rungs)]
-        assert rung_levels[-1] <= max_t  # Sanity check
+        if reduction_factor is not None:
+            assert reduction_factor >= 2
+            rf = reduction_factor
+            min_t = grace_period
+            max_rungs = 0
+            while min_t * np.power(rf, max_rungs) < max_t:
+                max_rungs += 1
+            rung_levels = [
+                int(round(min_t * np.power(rf, k))) for k in range(max_rungs)
+            ]
+            assert rung_levels[-1] <= max_t  # Sanity check
+            if rung_increment is not None:
+                logger.warning(
+                    f"You specified both reduction_factor = {reduction_factor} "
+                    f"and rung_increment = {rung_increment}. The former takes "
+                    "precedence, the latter will be ignored"
+                )
+        else:
+            assert rung_increment is not None
+            assert _is_positive_int(rung_increment)
+            rung_levels = list(range(grace_period, max_t, rung_increment))
     if rung_levels[-1] == max_t:
         rung_levels = rung_levels[:-1]
     return rung_levels
-
-
-RUNG_SYSTEMS = {
-    "stopping": StoppingRungSystem,
-    "promotion": PromotionRungSystem,
-    "pasha": PASHARungSystem,
-    "rush_promotion": RUSHPromotionRungSystem,
-    "rush_stopping": RUSHStoppingRungSystem,
-    "cost_promotion": CostPromotionRungSystem,
-}
 
 
 class HyperbandBracketManager:
@@ -1002,7 +1056,8 @@ class HyperbandBracketManager:
     :param cost_attr: Overrides entry in ``rung_system_kwargs``
     :param random_seed: Random seed for bracket sampling
     :param rung_system_kwargs: Arguments passed to the rung system
-    :param scheduler: The scheduler is needed in order to sample a bracket
+    :param scheduler: The scheduler is needed in order to sample a bracket, and
+        also some rung level systems need more information from the scheduler
     """
 
     def __init__(
@@ -1029,6 +1084,7 @@ class HyperbandBracketManager:
         self.rung_levels = copy.copy(rung_levels)
         self._rung_system_per_bracket = rung_system_per_bracket
         self._scheduler = scheduler
+        self.random_state = np.random.RandomState(random_seed)
         # Maps trial_id -> bracket_id
         self._task_info = dict()
         max_num_brackets = len(rung_levels) + 1
@@ -1043,24 +1099,17 @@ class HyperbandBracketManager:
             resource_attr=resource_attr,
             max_t=max_t,
         )
-        if scheduler_type == "stopping":
-            rs_type = StoppingRungSystem
-        elif scheduler_type == "pasha":
-            rs_type = PASHARungSystem
-        elif scheduler_type in ["rush_promotion", "rush_stopping"]:
+        if scheduler_type in ["rush_promotion", "rush_stopping"]:
             kwargs["num_threshold_candidates"] = rung_system_kwargs.get(
                 "num_threshold_candidates", 0
             )
-            rs_type = (
-                RUSHStoppingRungSystem
-                if scheduler_type == "rush_stopping"
-                else RUSHPromotionRungSystem
-            )
-        elif scheduler_type == "promotion":
-            rs_type = PromotionRungSystem
-        else:
+        elif scheduler_type == "cost_promotion":
             kwargs["cost_attr"] = cost_attr
-            rs_type = CostPromotionRungSystem
+        elif scheduler_type == "dyhpo":
+            kwargs["searcher"] = scheduler.searcher
+            kwargs["probability_sh"] = rung_system_kwargs["probability_sh"]
+            kwargs["random_state"] = self.random_state
+        rs_type = RUNG_SYSTEMS[scheduler_type]
         self._rung_systems = [
             rs_type(
                 rung_levels=rung_levels[s:],
@@ -1069,7 +1118,6 @@ class HyperbandBracketManager:
             )
             for s in range(num_systems)
         ]
-        self.random_state = np.random.RandomState(random_seed)
 
     @staticmethod
     def does_pause_resume(scheduler_type: str) -> bool:
@@ -1178,12 +1226,18 @@ class HyperbandBracketManager:
         distribution = self._scheduler.bracket_distribution()
         return self.random_state.choice(a=distribution.size, p=distribution)
 
-    def on_task_schedule(self) -> (Optional[str], dict):
+    def on_task_schedule(self, new_trial_id: str) -> (Optional[str], dict):
         """
         Samples bracket for task to be scheduled. Check whether any paused
         trial in that bracket can be promoted. If so, its ``trial_id`` is
         returned. We also return ``extra_kwargs`` to be used in ``_promote_trial``.
+        This contains the bracket which was sampled (key "bracket").
 
+        Note: ``extra_kwargs`` can return information also if ``trial_id = None``
+        is returned. This information is passed to ``get_config`` of the
+        searcher.
+
+        :param new_trial_id: ID for new trial as passed to :meth:`_suggest`
         :return: ``(trial_id, extra_kwargs)``
         """
         # Sample bracket for task to be scheduled
@@ -1191,14 +1245,14 @@ class HyperbandBracketManager:
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
         extra_kwargs = {"bracket": bracket_id}
         # Check whether config can be promoted
-        ret_dict = rung_sys.on_task_schedule()
+        ret_dict = rung_sys.on_task_schedule(new_trial_id)
         trial_id = ret_dict.get("trial_id")
         if trial_id is not None:
-            for k in ("milestone", "resume_from"):
-                extra_kwargs[k] = ret_dict[k]
-        else:
-            # First milestone the new config will get to
-            extra_kwargs["milestone"] = rung_sys.get_first_milestone(skip_rungs)
+            del ret_dict["trial_id"]
+        extra_kwargs.update(ret_dict)
+        k = "milestone"
+        if k not in extra_kwargs:
+            extra_kwargs[k] = rung_sys.get_first_milestone(skip_rungs)
         return trial_id, extra_kwargs
 
     def snapshot_rungs(self, bracket_id):

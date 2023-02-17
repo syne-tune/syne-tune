@@ -331,11 +331,6 @@ class init_Constant:
 def create_encoding(
     encoding_name, init_val, constr_lower, constr_upper, dimension, prior
 ):
-    assert encoding_name in [
-        "logarithm",
-        "positive",
-    ], "encoding name can only be 'logarithm' or 'positive'"
-
     if encoding_name == "logarithm":
         return LogarithmScalarEncoding(
             init_val=init_val,
@@ -345,6 +340,9 @@ def create_encoding(
             regularizer=prior,
         )
     else:
+        assert (
+            encoding_name == "positive"
+        ), "encoding name can only be 'logarithm' or 'positive'"
         return PositiveScalarEncoding(
             lower=constr_lower,
             init_val=init_val,

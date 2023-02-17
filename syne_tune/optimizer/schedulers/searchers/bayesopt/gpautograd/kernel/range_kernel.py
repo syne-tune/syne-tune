@@ -10,16 +10,19 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
     KernelFunction,
 )
 
 
 class RangeKernelFunction(KernelFunction):
-    """
-    Given kernel function K and range R, this class represents
+    r"""
+    Given kernel function ``K`` and range ``R``, this class represents
 
-        (x, y) -> K(x[R], y[R])
+    .. math::
+
+       (x, y) \mapsto K(x_R, y_R)
 
     """
 
@@ -64,8 +67,8 @@ class RangeKernelFunction(KernelFunction):
         """
         return self.kernel.param_encoding_pairs()
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return self.kernel.get_params()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         self.kernel.set_params(param_dict)

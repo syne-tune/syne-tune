@@ -163,11 +163,12 @@ class GaussProcSurrogateModel(BaseSurrogateModel):
         candidates = super()._current_best_filter_candidates(candidates)
         hp_ranges = self.state.hp_ranges
         candidates = hp_ranges.filter_for_last_pos_value(candidates)
-        assert candidates, (
-            "state.hp_ranges does not contain any candidates "
-            + "(labeled or pending) with resource attribute "
-            + "'{}' = {}".format(hp_ranges.name_last_pos, hp_ranges.value_for_last_pos)
+        error_msg = (
+            "state.hp_ranges does not contain any candidates (labeled or pending)"
         )
+        if hp_ranges.is_attribute_fixed():
+            error_msg += f" with resource attribute '{hp_ranges.name_last_pos}' == {hp_ranges.value_for_last_pos}"
+        assert candidates, error_msg
         return candidates
 
 

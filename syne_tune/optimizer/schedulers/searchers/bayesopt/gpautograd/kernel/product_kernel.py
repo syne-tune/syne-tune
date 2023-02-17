@@ -10,17 +10,20 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
     KernelFunction,
 )
 
 
 class ProductKernelFunction(KernelFunction):
-    """
+    r"""
     Given two kernel functions K1, K2, this class represents the product kernel
     function given by
 
-        ((x1, x2), (y1, y2)) -> K(x1, y1) * K(x2, y2)
+    .. math::
+
+        ((x_1, x_2), (y_1, y_2)) \mapsto K(x_1, y_1) \cdot K(x_2, y_2)
 
     We assume that parameters of K1 and K2 are disjoint.
     """
@@ -78,15 +81,14 @@ class ProductKernelFunction(KernelFunction):
         """
         return self.kernel1.param_encoding_pairs() + self.kernel2.param_encoding_pairs()
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         result = dict()
         prefs = [k + "_" for k in self.name_prefixes]
         for pref, kernel in zip(prefs, [self.kernel1, self.kernel2]):
             result.update({(pref + k): v for k, v in kernel.get_params().items()})
-
         return result
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         prefs = [k + "_" for k in self.name_prefixes]
         for pref, kernel in zip(prefs, [self.kernel1, self.kernel2]):
             len_pref = len(pref)

@@ -64,12 +64,14 @@ def example_blackbox():
 
 
 def simulate_benchmark(blackbox, trial_backend, metric):
-    # Random search without stopping
+    # Asynchronous successive halving
+    max_resource_attr = "epochs"
     scheduler = ASHA(
-        blackbox.configuration_space,
-        max_t=max(blackbox.fidelity_values),
-        resource_attr=next(iter(blackbox.fidelity_space.keys())),
-        mode="min",
+        config_space=blackbox.configuration_space_with_max_resource_attr(
+            max_resource_attr
+        ),
+        max_resource_attr=max_resource_attr,
+        resource_attr=blackbox.fidelity_name(),
         metric=metric,
         random_seed=31415927,
     )

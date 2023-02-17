@@ -334,3 +334,55 @@ and MOBSTER by :math:`P_0(r)`. Let
 :math:`\theta_r / r` for rung levels supported by data, and the default
 :math:`P_0(r)` elsewhere. Once more, this slightly generalizes
 `Hyper-Tune <https://arxiv.org/abs/2201.06834>`_.
+
+
+DyHPO
+-----
+
+`DyHPO <https://arxiv.org/abs/2202.09774>`_ is another recent model-based
+multi-fidelity method. It is a promotion-based scheduler like the ones below
+with ``type="promotion"``, but differs from MOBSTER and Hyper-Tune in that
+promotion decisions are done based on the surrogate model, not on the
+quantile-based rule of successive halving. In a nutshell:
+
+* Rung levels are equi-spaced:
+  :math:`\mathcal{R} = \{ r_{min}, r_{min} + \nu, r_{min} + 2 \nu, \dots \}`.
+  If :math:`r_{min} = \nu`, this means that a trial which is promoted or
+  started from scratch, always runs for :math:`\nu` resources, independent
+  of its current rung level.
+* Once a worker is free, we can either promote a paused trial or start a new
+  one. In DyHPO, all paused trials compete with a number of new configurations
+  for the next :math:`\nu` resources to be spent. The scoring criterion is a
+  special version of expected improvement, so depends on the surrogate model.
+* Different to MOBSTER, the surrogate model is used more frequently. Namely,
+  in MOBSTER, if any trial can be promoted, the surrogate model is not
+  accessed. This means that DyHPO comes with higher decision-making costs,
+  which need to be controlled.
+* Since scoring trials paused at the highest rung populated so far requires
+  extrapolation in terms of resource :math:`r`, it cannot be used with
+  ``search_options["model"] = "gp_independent"``. The other surrogate models
+  are supported.
+
+Our implementation of DyHPO differs from the published work in a number of
+important points:
+
+* `DyHPO <https://arxiv.org/abs/2202.09774>`_ uses an advanced surrogate model
+  based on a neural network covariance kernel which is fitted to the current
+  data. Our implementation supports DyHPO with the GP surrogate models
+  detailed above, except for ``"gp_independent"``.
+* Our decision rule is different from DyHPO as published, and can be seen as
+  a hybrid between DyHPO and ASHA. Namely, we throw a coin :math:`\{0, 1\}`
+  with probability :math:`P_1` being configurable as ``probability_sh``. If this
+  gives 1, we try to promote a trial using the ASHA rule based on quantiles.
+  Here, the quantile thresholds are adjusted to the linear spacing of rung
+  levels. If no trial can be promoted this way, we fall back to the DyHPO rule.
+  If the coin comes up 0, we use the DyHPO rule. The algorithm as published is
+  obtained for :math:`P_1 = 0`. However, we find that a non-zero
+  ``probability_sh`` is crucial for obtaining robust behaviour, since the
+  original DyHPO rule on its own tends to start too many trials at the beginning
+  before promoting any paused ones.
+* Since in DyHPO, the surrogate model is used more frequently than in MOBSTER,
+  it is important to control surrogate model computations, as detailed
+  `above <#controlling-mobster-computations>`_. Apart from the default for
+  ``max_size_data_for_model``, we also use ``opt_skip_period = 3`` as default
+  for DyHPO.

@@ -16,7 +16,7 @@ import numpy as np
 import statsmodels.api as sm
 import scipy.stats as sps
 
-from syne_tune.optimizer.schedulers.searchers.searcher import (
+from syne_tune.optimizer.schedulers.searchers import (
     SearcherWithRandomSeedAndFilterDuplicates,
 )
 import syne_tune.config_space as sp

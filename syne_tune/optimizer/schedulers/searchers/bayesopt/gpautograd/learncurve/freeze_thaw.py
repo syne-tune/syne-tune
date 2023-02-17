@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import numpy as np
 import autograd.numpy as anp
@@ -64,10 +64,10 @@ class ZeroKernel(KernelFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         pass
 
 
@@ -81,10 +81,10 @@ class ZeroMean(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         pass
 
 
@@ -137,10 +137,10 @@ class ExponentialDecayBaseKernelFunction(KernelFunction):
     def param_encoding_pairs(self):
         return self.kernel.param_encoding_pairs()
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return self.kernel.get_params()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         self.kernel.set_params(param_dict)
 
     def mean_function(self, X):

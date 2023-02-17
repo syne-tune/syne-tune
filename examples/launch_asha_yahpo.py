@@ -115,9 +115,14 @@ if __name__ == "__main__":
             metric_col=benchmark_info.metric,
         )
 
+        max_resource_attr = "epochs"
+        config_space = dict(
+            trial_backend.blackbox.configuration_space,
+            **{max_resource_attr: benchmark_info.max_t},
+        )
         scheduler = ASHA(
-            config_space=trial_backend.blackbox.configuration_space,
-            max_t=benchmark_info.max_t,
+            config_space=config_space,
+            max_resource_attr=max_resource_attr,
             resource_attr=benchmark_info.resource_attr,
             mode=benchmark_info.mode,
             metric=benchmark_info.metric,
@@ -125,6 +130,8 @@ if __name__ == "__main__":
 
         stop_criterion = StoppingCriterion(max_num_trials_started=100)
 
+        # It is important to set ``sleep_time`` to 0 here (mandatory for simulator
+        # backend)
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,
@@ -132,6 +139,10 @@ if __name__ == "__main__":
             n_workers=4,
             sleep_time=0,
             print_update_interval=10,
+            # This callback is required in order to make things work with the
+            # simulator callback. It makes sure that results are stored with
+            # simulated time (rather than real time), and that the time_keeper
+            # is advanced properly whenever the tuner loop sleeps
             callbacks=[SimulatorCallback()],
             tuner_name=f"ASHA-Yahpo-{benchmark}",
         )

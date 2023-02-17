@@ -18,7 +18,7 @@ import xgboost
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.config_space import Domain
-from syne_tune.optimizer.schedulers.searchers.searcher import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
     TransferLearningMixin,

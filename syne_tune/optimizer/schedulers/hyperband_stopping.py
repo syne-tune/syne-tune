@@ -83,16 +83,23 @@ class RungSystem:
             for x, y in reversed(list(zip(rung_levels, promote_quantiles)))
         ]
 
-    def on_task_schedule(self) -> Dict[str, Any]:
+    def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
         """Called when new task is to be scheduled.
 
         For a promotion-based rung system, check whether any trial can be
-        promoted. If so, return dict with keys ``trial_id``, ``resume_from``
-        (rung level where trial is paused), ``milestone`` (next rung level
+        promoted. If so, return dict with keys "trial_id", "resume_from"
+        (rung level where trial is paused), "milestone" (next rung level
         the trial will reach, or None).
-        If no trial can be promoted, or if the rung system is not
-        promotion-based, an empty dict is returned.
 
+        If no trial can be promoted, or if the rung system is not
+        promotion-based, the returned dictionary must not contain the
+        "trial_id" key. It is nevertheless passed back via ``extra_kwargs`` in
+        :meth:`~syne_tune.optimizer.schedulers.hyperband.HyperbandBracketManager.on_task_schedule`.
+        The default is to return an empty dictionary, but some special subclasses
+        can use this to return information in case a trial is not promoted.
+
+        :param new_trial_id: ID for new trial as passed to :meth:`_suggest`.
+            Only needed by specific subclasses
         :return: See above
         """
         raise NotImplementedError
@@ -182,7 +189,7 @@ class RungSystem:
 
 
 class StoppingRungSystem(RungSystem):
-    """
+    r"""
     The decision on whether a trial :math:`\mathbf{x}` continues or is stopped
     at a rung level :math:`r`, is taken in :meth:`on_task_report`. To this end,
     the metric value :math:`f(\mathbf{x}, r)` is inserted into :math:`r.data`.
@@ -208,7 +215,7 @@ class StoppingRungSystem(RungSystem):
         trial_id: str,
         resource: int,
     ) -> bool:
-        """
+        r"""
         :param metric_value: :math:`f(\mathbf{x}, r)` for trial
             :math:`\mathbf{x}` at rung :math:`r`
         :param recorded: Data for rung :math:`r` (including
@@ -223,7 +230,7 @@ class StoppingRungSystem(RungSystem):
             return True
         return metric_value <= cutoff if self._mode == "min" else metric_value >= cutoff
 
-    def on_task_schedule(self) -> Dict[str, Any]:
+    def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
         return dict()
 
     def on_task_report(

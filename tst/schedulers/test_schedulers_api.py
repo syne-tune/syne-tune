@@ -31,6 +31,8 @@ from syne_tune.optimizer.baselines import (
     ASHA,
     MOBSTER,
     HyperTune,
+    DyHPO,
+    PASHA,
     REA,
     SyncHyperband,
     SyncBOHB,
@@ -241,8 +243,20 @@ list_schedulers_to_test = [
         max_t=max_t,
         mode=mode,
     ),
-    # TODO fix me, assert is thrown refusing to take PASHA arguments as valid
-    # PASHA(config_space=config_space, metric=metric1, resource_attr=resource_attr, max_t=max_t),
+    DyHPO(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+    ),
+    PASHA(
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        max_t=max_t,
+        mode=mode,
+    ),
     MOASHA(
         config_space=config_space,
         time_attr=resource_attr,

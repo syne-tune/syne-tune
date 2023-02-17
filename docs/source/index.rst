@@ -31,6 +31,15 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* New scheduler: :class:`~syne_tune.optimizer.baselines.DyHPO`.
+  This is a recent multi-fidelity method, which can be seen as alternative to
+  `ASHA <tutorials/multifidelity/mf_sync_model.html>`_,
+  `MOBSTER <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`_
+  or `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`_.
+  Different to these, decisions on whether to promote paused trials are done
+  based on the surrogate model. Our implementation differs from the published
+  work by using a Gaussian process surrogate model, and by a promotion rule which
+  is a hybrid between DyHPO and ASHA.
 * New tutorial: `How to Contribute a New Scheduler <tutorials/developer/README.html>`_.
   Learn how to implement your own scheduler, wrap external code, or modify
   one of the existing templates in order to get your job done.

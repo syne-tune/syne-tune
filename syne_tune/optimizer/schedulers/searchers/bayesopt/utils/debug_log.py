@@ -56,7 +56,9 @@ class DebugLogPrinter:
 
     def start_get_config(self, gc_type, trial_id: str):
         assert gc_type in {"random", "BO", "grid"}
-        assert trial_id is not None
+        assert (
+            trial_id is not None
+        ), "trial_id is missing. Please pass trial_id when calling get_config"
         assert (
             self.get_config_type is None
         ), "Block for get_config of type '{}' is currently open".format(

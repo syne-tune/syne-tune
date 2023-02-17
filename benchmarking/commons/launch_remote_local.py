@@ -64,6 +64,7 @@ def get_hyperparameters(
         "num_seeds": seed + 1,
         "start_seed": seed,
         "random_seed": random_seed,
+        "scale_max_wallclock_time": int(args.scale_max_wallclock_time),
     }
     for k in (
         "n_workers",
