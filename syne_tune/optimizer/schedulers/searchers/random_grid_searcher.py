@@ -27,7 +27,7 @@ from syne_tune.config_space import (
 )
 from syne_tune.optimizer.schedulers.searchers import (
     StochasticSearcher,
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticAndFilterDuplicatesSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     ExclusionList,
@@ -40,11 +40,11 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 logger = logging.getLogger(__name__)
 
 
-class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
+class RandomSearcher(StochasticAndFilterDuplicatesSearcher):
     """
     Searcher which randomly samples configurations to try next.
 
-    Additional arguments on top of parent class :class:`SearcherWithRandomSeedAndFilterDuplicates`:
+    Additional arguments on top of parent class :class:`StochasticAndFilterDuplicatesSearcher`:
 
     :param debug_log: If ``True``, debug log printing is activated.
         Logs which configs are chosen when, and which metric values are

@@ -284,7 +284,7 @@ class BlackboxTabular(Blackbox):
     def all_configurations(self) -> List[Dict[str, Any]]:
         """
         This method is useful in order to set ``restrict_configurations`` in
-        :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+        :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
         or
         :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`,
         which restricts the searcher to only return configurations in this set.

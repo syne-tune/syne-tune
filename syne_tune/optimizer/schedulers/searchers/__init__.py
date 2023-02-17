@@ -20,7 +20,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_base import (  # noqa: F401
     StochasticSearcher,
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticAndFilterDuplicatesSearcher,
     extract_random_seed,
 )
 from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # noqa: F401

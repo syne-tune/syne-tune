@@ -21,7 +21,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
 from syne_tune.optimizer.schedulers.searchers import (
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticAndFilterDuplicatesSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bore.de import (
     DifferentialevolutionOptimizer,
@@ -30,7 +30,7 @@ from syne_tune.optimizer.schedulers.searchers.bore.de import (
 logger = logging.getLogger(__name__)
 
 
-class Bore(SearcherWithRandomSeedAndFilterDuplicates):
+class Bore(StochasticAndFilterDuplicatesSearcher):
     """
     Implements "Bayesian optimization by Density Ratio Estimation" as described
     in the following paper:
@@ -41,7 +41,7 @@ class Bore(SearcherWithRandomSeedAndFilterDuplicates):
         | https://arxiv.org/abs/2102.09009
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
 
     :param mode: Can be "min" (default) or "max".
     :param gamma: Defines the percentile, i.e how many percent of configurations

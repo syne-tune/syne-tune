@@ -174,7 +174,7 @@ class StochasticSearcher(BaseSearcher):
         return restrict_configurations
 
 
-class SearcherWithRandomSeedAndFilterDuplicates(StochasticSearcher):
+class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
     """
     Base class for searchers with the following properties:
 
