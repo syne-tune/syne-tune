@@ -87,13 +87,16 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
 Specifying Extra Arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As noted above, you can define extra command line arguments for your experiment
-via ``extra_args`` and ``map_extra_args``. This is typically used in order to be
-able to configure scheduler arguments for certain methods. But in principle, any
-argument of :class:`~benchmarking.commons.baselines.MethodArguments` can be
-modified. Here, ``extra_args`` is simply extending arguments to the command
-line parser, where the ``name`` field contains the name of the option without
-any leading "-". ``map_extra_args`` has the signature
+In many cases, you will want to run different methods using their default
+arguments, or only change them as part of the definition in ``baselines.py``.
+But sometimes, it can be useful to be able to set options via extra command line
+arguments. This can be done via ``extra_args`` and ``map_extra_args``, which are
+typically used in order to be able to configure scheduler arguments for certain
+methods. But in principle, any argument of
+:class:`~benchmarking.commons.baselines.MethodArguments` can be modified. Here,
+``extra_args`` is simply extending arguments to the command line parser, where the
+``name`` field contains the name of the option without any leading "-".
+``map_extra_args`` has the signature
 
 .. code-block:: python
 
