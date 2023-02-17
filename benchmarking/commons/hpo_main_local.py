@@ -40,7 +40,9 @@ RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
 
 
 def get_benchmark(
-    configuration: ConfigDict, benchmark_definitions: RealBenchmarkDefinitions, **benchmark_kwargs
+    configuration: ConfigDict,
+    benchmark_definitions: RealBenchmarkDefinitions,
+    **benchmark_kwargs,
 ) -> RealBenchmarkDefinition:
     do_scale = (
         configuration.scale_max_wallclock_time
@@ -48,7 +50,9 @@ def get_benchmark(
         and configuration.max_wallclock_time is None
     )
     if do_scale:
-        benchmark_default = benchmark_definitions(**benchmark_kwargs)[configuration.benchmark]
+        benchmark_default = benchmark_definitions(**benchmark_kwargs)[
+            configuration.benchmark
+        ]
         default_n_workers = benchmark_default.n_workers
     else:
         default_n_workers = None
@@ -64,7 +68,9 @@ def get_benchmark(
         factor = default_n_workers / configuration.n_workers
         bm_mwt = benchmark.max_wallclock_time
         benchmark.max_wallclock_time = int(bm_mwt * factor)
-        print(f"Scaling max_wallclock_time: {benchmark.max_wallclock_time} (from {bm_mwt})")
+        print(
+            f"Scaling max_wallclock_time: {benchmark.max_wallclock_time} (from {bm_mwt})"
+        )
     return benchmark
 
 
@@ -83,7 +89,9 @@ def create_objects_for_tuner(
     method_kwargs = {"max_resource_attr": benchmark.max_resource_attr}
     if configuration.max_size_data_for_model is not None:
         method_kwargs["scheduler_kwargs"] = {
-            "search_options": {"max_size_data_for_model": configuration.max_size_data_for_model},
+            "search_options": {
+                "max_size_data_for_model": configuration.max_size_data_for_model
+            },
         }
 
     if map_extra_args is not None:
@@ -167,7 +175,9 @@ def start_local_benchmark(
     for method, seed in tqdm(combinations):
         random_seed = effective_random_seed(master_random_seed, seed)
         np.random.seed(random_seed)
-        print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
+        print(
+            f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
+        )
         trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
         tuner_kwargs = create_objects_for_tuner(
@@ -245,7 +255,9 @@ def main(
         ],
     )
     method_names = (
-        [configuration.method] if configuration.method is not None else list(methods.keys())
+        [configuration.method]
+        if configuration.method is not None
+        else list(methods.keys())
     )
     methods = {mname: methods[mname] for mname in method_names}
     start_local_benchmark(

@@ -41,12 +41,13 @@ PostProcessingType = Callable[[Tuner], Any]
 def str2bool(v):
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+    if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+    elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise ArgumentTypeError('Boolean value expected.')
+        raise ArgumentTypeError("Boolean value expected.")
+
 
 @dataclass
 class Parameter:
@@ -62,12 +63,13 @@ class ConfigDict(dict):
     Dictinary with arguments for benchmarking
     Expected params as Parameter(name, type, default value)
     """
+
     __base_parameters: List[Parameter] = [
         Parameter(
             name="experiment_tag",
             type=str,
             default=None,
-            help="Tag for Syne-Tune experiments"
+            help="Tag for Syne-Tune experiments",
         ),
         Parameter(
             name="num_seeds",
@@ -120,7 +122,7 @@ class ConfigDict(dict):
                 "If 1, benchmark.max_wallclock_time is multiplied by B / min(A, B),"
                 "where A = n_workers and B = benchmark.n_workers"
             ),
-        )
+        ),
     ]
 
     def __init__(self, *args, **parameters):
@@ -133,19 +135,15 @@ class ConfigDict(dict):
 
         self.seeds = list(range(self.start_seed, self.num_seeds))
 
-
-
-
     def __getattr__(self, attr):
         return self[attr]
 
     def __setattr__(self, attr, value):
         self[attr] = value
 
-
     @staticmethod
     def from_argparse(
-    extra_args: Optional[ExtraArgsType] = None,
+        extra_args: Optional[ExtraArgsType] = None,
     ) -> "ConfigDict":
         """
         Build the configuration dict from command line arguments
@@ -169,20 +167,42 @@ class ConfigDict(dict):
         )
 
         for param in ConfigDict.__base_parameters:
-            parser.add_argument(f"--{param.name}", type=param.type, default=param.default, required=param.required)
+            parser.add_argument(
+                f"--{param.name}",
+                type=param.type,
+                default=param.default,
+                required=param.required,
+            )
 
         if extra_args is not None:
             extra_args = copy.deepcopy(extra_args)
             for kwargs in extra_args:
                 name = kwargs.pop("name")
                 assert (
-                        name[0] != "-"
+                    name[0] != "-"
                 ), f"Name entry '{name}' in extra_args invalid: No leading '-'"
                 parser.add_argument("--" + name, **kwargs)
 
         known_args, extra_args = parser.parse_known_args()
-        config =  ConfigDict(**vars(known_args))
+        config = ConfigDict(**vars(known_args))
         return config
+
+    @staticmethod
+    def from_dict(loaded_config: Dict = None) -> "ConfigDict":
+        """
+        Read the config from a dictionary
+        """
+        required_params = [item for item in ConfigDict.__base_parameters if item.required]
+        for required_param in required_params:
+            assert required_param.name in loaded_config, f"{required_param} must be provided as part of configuration"
+
+        final_config = {
+            item.name: item.default for item in ConfigDict.__base_parameters
+        }
+        for key in loaded_config:
+            final_config[key] = loaded_config[key]
+
+        return ConfigDict(**final_config)
 
 
 def parse_args(
