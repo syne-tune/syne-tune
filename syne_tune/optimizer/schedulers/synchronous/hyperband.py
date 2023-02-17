@@ -93,6 +93,14 @@ class SynchronousHyperbandCommon(
         self.mode = kwargs["mode"]
         self.max_resource_attr = kwargs.get("max_resource_attr")
         self._resource_attr = kwargs["resource_attr"]
+        if self.max_resource_attr is None:
+            logger.warning(
+                "You do not specify max_resource_attr, but use max_resource_level "
+                "instead. This is not recommended best practice and may lead to a "
+                "loss of efficiency. Consider using max_resource_attr instead.\n"
+                "See https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/mf_setup.html#the-launcher-script "
+                "for details."
+            )
         self._max_resource_level = self._infer_max_resource_level(
             max_resource_level=kwargs.get("max_resource_level"),
             max_resource_attr=self.max_resource_attr,

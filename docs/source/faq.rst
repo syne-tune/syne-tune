@@ -282,7 +282,6 @@ Finally, the scheduler provides additional information about checkpointing in
 this: ``add_checkpointing_to_argparse(parser)`` adds corresponding arguments to
 the parser.
 
-
 How can I retrieve the best checkpoint obtained after tuning?
 =============================================================
 
@@ -527,9 +526,9 @@ single-objective case are:
   after every epoch), but can outperform the latter by a large margin.
 * Does the searcher suggest new configurations by uniform random
   sampling (``searcher="random"``) or by sequential model-based
-  decision-making (``searcher="bayesopt"``, ``searcher="kde"``). The
-  latter can be more expensive if a lot of trials are run, but can also
-  be more sample-efficient.
+  decision-making (``searcher="bayesopt"``, ``searcher="kde"``,
+  ``searcher="hypertune"``, ``searcher="botorch"``). The latter can be more
+  expensive if a lot of trials are run, but can also be more sample-efficient.
 
 An overview of this landscape is given `here <schedulers.html>`_.
 
@@ -570,6 +569,50 @@ HPO experiments in parallel, where in each of them the search space is
 over B only, while the parameters in A are fixed. Syne Tune supports
 massively parallel experimentation, see
 `this tutorial <tutorials/benchmarking/README.html>`_.
+
+How do I set arguments of multi-fidelity schedulers?
+====================================================
+
+When running schedulers like :class:`~syne_tune.optimizer.baselines.ASHA`,
+:class:`~syne_tune.optimizer.baselines.MOBSTER`,
+:class:`~syne_tune.optimizer.baselines.HyperTune`,
+:class:`~syne_tune.optimizer.baselines.SyncHyperband`,
+or :class:`~syne_tune.optimizer.baselines.DEHB`, there are mandatory parameters
+``resource_attr``, ``max_resource_attr``, ``max_t``, ``max_resource_value``.
+What are they for?
+
+Full details are given in this
+`tutorial <tutorials/multifidelity/README.html>`_. Multi-fidelity HPO needs
+metric values to be reported at regular intervals during training, for example
+after every epoch, or for successively larger training datasets. These
+reports are indexed by a *resource value*, which is a positive integer (for
+example, the number of epochs already trained).
+
+* ``resource_attr`` is the name of the resource attribute in the dictionary
+  reported by the training script. For example, the script may report
+  :code:`report(epoch=5, mean_loss=0.125)` at the end of the 5-th epoch, in
+  which case ``resource_attr = "epoch"``.
+* The training script needs to know how many resources to spend overall. For
+  example, a neural network training script needs to know how many epochs
+  to maximally train for. It is best practice to pass this maximum resource value
+  as parameter into the script, which is done by making it part of the
+  configuration space. In this case, ``max_resource_attr`` is the name of
+  the attribute in the configuration space which contains the maximum
+  resource value. For example, if your script should train for a maximum of
+  100 epochs (the scheduler may stop or pause it before, though), you could
+  use ``config_space = dict(..., epochs=100)`, in which case
+  ``max_resource_attr = "epochs"``.
+* Finally, you can also use ``max_t`` instead of ``max_resource_attr``,
+  even though this is not recommended. If you don't want to include the
+  maximum resource value in your configuration space, you can pass the
+  value directly as ``max_t``. However, this can lead to avoidable errors,
+  and may be
+  `inefficient for some schedulers <tutorials/multifidelity/mf_setup.html#the-launcher-script>`_.
+
+.. note::
+   When creating a multi-fidelity scheduler, we recommend to use
+   ``max_resource_attr`` in favour of ``max_t`` or ``max_resource_value``, as
+   the latter is error-prone and may be less efficient for some schedulers.
 
 How can I visualize the progress of my tuning experiment with Tensorboard?
 ==========================================================================

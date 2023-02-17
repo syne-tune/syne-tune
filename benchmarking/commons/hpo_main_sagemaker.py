@@ -56,7 +56,7 @@ def parse_args(
         to be passed. Must contain ``name`` for argument name (without leading
         ``"--"``), and other kwargs to ``parser.add_argument``. Optional
     :return: ``(args, method_names, seeds)``, where ``args`` is result of
-        ``parser.parse_known_args()``, ``method_names`` see ``methods``, and
+        ``parser.parse_args()``, ``method_names`` see ``methods``, and
         ``seeds`` are list of seeds specified by ``--num_seeds`` and ``--start_seed``
     """
     if extra_args is None:
@@ -83,7 +83,7 @@ def parse_args(
             dict(
                 name="warm_pool",
                 type=int,
-                default=0,
+                default=1,
                 help=(
                     "If 1, the SageMaker managed warm pools feature is used. "
                     "This can be more expensive, but also reduces startup "

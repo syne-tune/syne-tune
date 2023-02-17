@@ -165,13 +165,13 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
     def _set_noise_variance(self, val):
         self.encoding.set(self.noise_variance_internal, val)
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         result = {"noise_variance": self.get_noise_variance()}
         for pref, func in self._components:
             result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         for pref, func in self._components:
             len_pref = len(pref)
             stripped_dict = {

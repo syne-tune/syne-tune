@@ -158,6 +158,37 @@ class Blackbox:
         """
         return None
 
+    def fidelity_name(self) -> str:
+        """
+        Can only be used for blackboxes with a single fidelity attribute.
+
+        :return: Name of fidelity attribute (must be single one)
+        """
+        assert len(self.fidelity_space) == 1, "Only supported for single fidelity"
+        return next(iter(self.fidelity_space.keys()))
+
+    def configuration_space_with_max_resource_attr(
+        self, max_resource_attr: str
+    ) -> Dict[str, Any]:
+        """
+        It is best practice to have one attribute in the configuration space to
+        represent the maximum fidelity value used for evaluation (e.g., the
+        maximum number of epochs).
+
+        :param max_resource_attr: Name of new attribute for maximum resource
+        :return: Configuration space augmented by the new attribute
+        """
+        assert len(self.fidelity_space) == 1, "Only supported for single fidelity"
+        max_resource_value = int(max(self.fidelity_values))
+        assert max_resource_attr not in self.configuration_space, (
+            f"max_resource_attr = '{max_resource_attr}' must not be a key in "
+            f"configuration_space ({list(self.configuration_space.keys())})"
+        )
+        return dict(
+            self.configuration_space,
+            **{max_resource_attr: max_resource_value},
+        )
+
 
 def from_function(
     configuration_space: Dict[str, Any],

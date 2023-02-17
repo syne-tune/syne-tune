@@ -28,11 +28,14 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
-    max_steps = 100
+    max_epochs = 100
     n_workers = 4
+    mode = "min"
+    metric = "mean_loss"
+    max_resource_attr = "epochs"
 
     config_space = {
-        "steps": max_steps,
+        max_resource_attr: max_epochs,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -42,16 +45,14 @@ if __name__ == "__main__":
         / "height_example"
         / "train_height.py"
     )
-    mode = "min"
-    metric = "mean_loss"
 
     schedulers = [
         RandomSearch(config_space, metric=metric, mode=mode),
         ASHA(
             config_space,
             metric=metric,
+            max_resource_attr=max_resource_attr,
             resource_attr="epoch",
-            max_t=max_steps,
             mode=mode,
         ),
     ]
@@ -73,8 +74,8 @@ if __name__ == "__main__":
             MOBSTER(
                 config_space,
                 metric=metric,
+                max_resource_attr=max_resource_attr,
                 resource_attr="epoch",
-                max_t=max_steps,
                 mode=mode,
             )
         )

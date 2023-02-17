@@ -155,10 +155,10 @@ class MeanFunctionClampedResource(MeanFunction, ExtendFeaturesByResourceMixin):
     def param_encoding_pairs(self):
         return self._mean_extended.param_encoding_pairs()
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return self._mean_extended.get_params()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         self._mean_extended.set_params(param_dict)
 
     def forward(self, X):
@@ -180,10 +180,10 @@ class KernelFunctionClampedResource(KernelFunction, ExtendFeaturesByResourceMixi
     def param_encoding_pairs(self):
         return self._kernel_extended.param_encoding_pairs()
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return self._kernel_extended.get_params()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         self._kernel_extended.set_params(param_dict)
 
     def diagonal(self, X):

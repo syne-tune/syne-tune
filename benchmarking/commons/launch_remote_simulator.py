@@ -58,6 +58,7 @@ def get_hyperparameters(
         "method": method,
         "save_tuner": int(args.save_tuner),
         "random_seed": random_seed,
+        "scale_max_wallclock_time": int(args.scale_max_wallclock_time),
     }
     if seed is not None:
         hyperparameters["num_seeds"] = seed + 1
@@ -67,7 +68,12 @@ def get_hyperparameters(
         hyperparameters["start_seed"] = args.start_seed
     if args.benchmark is not None:
         hyperparameters["benchmark"] = args.benchmark
-    for k in ("n_workers", "max_wallclock_time", "max_size_data_for_model"):
+    for k in (
+        "n_workers",
+        "max_wallclock_time",
+        "max_size_data_for_model",
+        "fcnet_ordinal",
+    ):
         v = getattr(args, k)
         if v is not None:
             hyperparameters[k] = v
@@ -153,8 +159,8 @@ def launch_remote(
             args=args,
             extra_args=extra_args,
         )
-        hyperparameters["support_checkpointing"] = int(args.support_checkpointing)
         hyperparameters["verbose"] = int(args.verbose)
+        hyperparameters["support_checkpointing"] = int(args.support_checkpointing)
         hyperparameters["restrict_configurations"] = int(args.restrict_configurations)
         if benchmark_key is not None:
             hyperparameters["benchmark_key"] = benchmark_key

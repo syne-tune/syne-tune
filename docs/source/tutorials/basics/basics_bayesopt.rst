@@ -178,3 +178,15 @@ refitting is essential for good performance with a small number of
 observations, it can be thinned out or even stopped when the dataset
 gets large. You can use ``opt_skip_init_length``, ``opt_skip_period`` to
 this end.
+
+Warping of Inputs
+~~~~~~~~~~~~~~~~~
+
+If you use ``input_warping=True`` in ``search_options``, inputs are warped
+before being fed into the covariance function, the effective kernel becomes
+:math:`k(w(x), w(x'))`, where :math:`w(x)` is a warping transform with two
+non-negative parameters per component. These parameters are learned along with
+other parameters of the surrogate model. Input warping allows the surrogate
+model to represent non-stationary functions, while still keeping the numbers
+of parameters small. Note that only such components of :math:`x` are warped
+which belong to non-categorical hyperparameters.

@@ -32,6 +32,8 @@ class TensorboardCallback(TunerCallback):
         well as the optimal hyperparameters we have found so far.
     :param mode: Determined whether we maximize ("max") or minimize ("min")
         the target metric.
+    :param log_hyperparameters: If set to True, we also log all hyperparameters
+        specified in the configurations space.
     """
 
     def __init__(
@@ -39,6 +41,7 @@ class TensorboardCallback(TunerCallback):
         ignore_metrics: Optional[List[str]] = None,
         target_metric: Optional[str] = None,
         mode: Optional[str] = None,
+        log_hyperparameters: bool = True,
     ):
         if mode is None:
             mode = "min"
@@ -61,6 +64,7 @@ class TensorboardCallback(TunerCallback):
         self.trial_ids = set()
         self.metric_sign = -1 if mode == "max" else 1
         self.output_path = None
+        self.log_hyperparameters = log_hyperparameters
 
     def _set_time_fields(self, result: Dict[str, Any]):
         """
@@ -106,11 +110,12 @@ class TensorboardCallback(TunerCallback):
             if metric not in self.ignore_metrics:
                 self.writer.add_scalar(metric, result[metric], self.iter, walltime)
 
-        for key, value in trial.config.items():
-            if isinstance(value, numbers.Number):
-                self.writer.add_scalar(key, value, self.iter, walltime)
-            else:
-                self.writer.add_text(key, str(value), self.iter, walltime)
+        if self.log_hyperparameters:
+            for key, value in trial.config.items():
+                if isinstance(value, numbers.Number):
+                    self.writer.add_scalar(key, value, self.iter, walltime)
+                else:
+                    self.writer.add_text(key, str(value), self.iter, walltime)
 
         self.writer.add_scalar("runtime", result[ST_TUNER_TIME], self.iter, walltime)
 

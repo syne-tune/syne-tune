@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 import autograd.numpy as anp
 from autograd.builtins import isinstance
+from typing import Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel.base import (
     KernelFunction,
@@ -36,7 +37,7 @@ def decode_resource_values(res_encoded, num_folds):
 
 
 class CrossValidationKernelFunction(KernelFunction):
-    """
+    r"""
     Kernel function suitable for :math:`f(x, r)` being the average of ``r``
     validation metrics evaluated on different (train, validation) splits.
 
@@ -139,7 +140,7 @@ class CrossValidationKernelFunction(KernelFunction):
         cfg, _ = self._compute_terms(X)
         return self.mean_main(cfg)
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         result = dict()
         for pref, func in [
             ("kernelm_", self.kernel_main),
@@ -149,7 +150,7 @@ class CrossValidationKernelFunction(KernelFunction):
             result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         for pref, func in [
             ("kernelm_", self.kernel_main),
             ("meanm_", self.mean_main),
@@ -174,8 +175,8 @@ class CrossValidationMeanFunction(MeanFunction):
     def param_encoding_pairs(self):
         return []
 
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
         return dict()
 
-    def set_params(self, param_dict):
+    def set_params(self, param_dict: Dict[str, Any]):
         pass

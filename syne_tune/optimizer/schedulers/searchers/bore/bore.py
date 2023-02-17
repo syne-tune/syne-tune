@@ -20,7 +20,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
-from syne_tune.optimizer.schedulers.searchers.searcher import (
+from syne_tune.optimizer.schedulers.searchers import (
     SearcherWithRandomSeedAndFilterDuplicates,
 )
 from syne_tune.optimizer.schedulers.searchers.bore.de import (

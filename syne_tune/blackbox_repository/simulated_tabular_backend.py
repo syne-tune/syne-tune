@@ -64,7 +64,7 @@ class _BlackboxSimulatorBackend(SimulatorBackend):
 
     @property
     def resource_attr(self):
-        return next(iter(self.blackbox.fidelity_space.keys()))
+        return self.blackbox.fidelity_name()
 
     def _pause_trial(self, trial_id: int, result: Optional[dict]):
         """

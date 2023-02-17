@@ -49,6 +49,7 @@ SUPPORTED_SEARCHERS_HYPERBAND = {
     "bayesopt",
     "bayesopt_cost",
     "hypertune",
+    "dyhpo",
 }
 
 
@@ -129,6 +130,7 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
             "bayesopt_constrained",
             "bayesopt_cost",
             "hypertune",
+            "dyhpo",
         }
         assert (
             searcher_name in gp_searchers
@@ -147,6 +149,9 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
             )
             from syne_tune.optimizer.schedulers.searchers.hypertune import (
                 HyperTuneSearcher,
+            )
+            from syne_tune.optimizer.schedulers.searchers.dyhpo import (
+                DynamicHPOSearcher,
             )
         except ImportError:
             logger.info(try_import_gpsearchers_message())
@@ -175,6 +180,9 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
         elif searcher_name == "bayesopt_constrained":
             supported_schedulers = {"fifo"}
             searcher_cls = ConstrainedGPFIFOSearcher
+        elif searcher_name == "dyhpo":
+            supported_schedulers = {"hyperband_dyhpo"}
+            searcher_cls = DynamicHPOSearcher
         else:  # bayesopt_cost
             if scheduler == "fifo":
                 searcher_cls = CostAwareGPFIFOSearcher
