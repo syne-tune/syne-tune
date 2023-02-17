@@ -12,7 +12,9 @@
 # permissions and limitations under the License.
 import copy
 import logging
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
+from collections import namedtuple
+from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Callable
 
 from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
@@ -34,6 +36,153 @@ ExtraArgsType = List[DictStrKey]
 
 
 PostProcessingType = Callable[[Tuner], Any]
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise ArgumentTypeError('Boolean value expected.')
+
+@dataclass
+class Parameter:
+    name: str
+    type: Any
+    help: str
+    default: Any
+    required: bool = False
+
+
+class ConfigDict(dict):
+    """
+    Dictinary with arguments for benchmarking
+    Expected params as Parameter(name, type, default value)
+    """
+    __base_parameters: List[Parameter] = [
+        Parameter(
+            name="experiment_tag",
+            type=str,
+            default=None,
+            help="Tag for Syne-Tune experiments"
+        ),
+        Parameter(
+            name="num_seeds",
+            type=int,
+            default=1,
+            help="Number of seeds to run",
+        ),
+        Parameter(
+            name="start_seed",
+            type=int,
+            default=0,
+            help="First seed to run",
+        ),
+        Parameter(name="method", type=str, default=None, help="HPO method to run"),
+        Parameter(
+            name="save_tuner",
+            type=str2bool,
+            default=0,
+            help="Serialize Tuner object at the end of tuning?",
+        ),
+        Parameter(
+            name="n_workers",
+            type=int,
+            default=None,
+            help="Number of workers (overwrites default of benchmark)",
+        ),
+        Parameter(
+            name="max_wallclock_time",
+            type=int,
+            default=None,
+            help="Maximum runtime for experiment (overwrites default of benchmark)",
+        ),
+        Parameter(
+            name="random_seed",
+            type=int,
+            default=None,
+            help="Master random seed (drawn at random if not given)",
+        ),
+        Parameter(
+            name="max_size_data_for_model",
+            type=int,
+            default=None,
+            help=f"Limits number of datapoints for surrogate model of MOBSTER or HyperTune",
+        ),
+        Parameter(
+            name="scale_max_wallclock_time",
+            type=str2bool,
+            default=0,
+            help=(
+                "If 1, benchmark.max_wallclock_time is multiplied by B / min(A, B),"
+                "where A = n_workers and B = benchmark.n_workers"
+            ),
+        )
+    ]
+
+    def __init__(self, *args, **parameters):
+        super().__init__(*args, **parameters)
+        if self.experiment_tag is None:
+            try:
+                self.experiment_tag = generate_slug(2)
+            except Exception:
+                self.experiment_tag = "syne-tune-experiment"
+
+        self.seeds = list(range(self.start_seed, self.num_seeds))
+
+
+
+
+    def __getattr__(self, attr):
+        return self[attr]
+
+    def __setattr__(self, attr, value):
+        self[attr] = value
+
+
+    @staticmethod
+    def from_argparse(
+    extra_args: Optional[ExtraArgsType] = None,
+    ) -> "ConfigDict":
+        """
+        Build the configuration dict from command line arguments
+
+        ``map_extra_args`` can be used to modify ``method_kwargs`` for constructing
+        :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
+        ``args`` returned by :func:`parse_args` and the method. Its signature is
+        :code:`method_kwargs = map_extra_args(args, method, method_kwargs)`, where
+        ``method`` is the name of the baseline.
+
+        :param extra_args: Extra arguments for command line parser. Optional
+        :param map_extra_args: See above, optional
+        """
+        parser = ArgumentParser(
+            description=(
+                "Run Syne Tune experiments for several HPO methods, benchmarks, "
+                "and seeds (repetitions). Use hpo_main.py to launch experiments "
+                "locally, or launch_remote.py to launch experiments remotely on AWS"
+            ),
+            epilog="For more information, please visit:\nhttps://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html",
+        )
+
+        for param in ConfigDict.__base_parameters:
+            parser.add_argument(f"--{param.name}", type=param.type, default=param.default, required=param.required)
+
+        if extra_args is not None:
+            extra_args = copy.deepcopy(extra_args)
+            for kwargs in extra_args:
+                name = kwargs.pop("name")
+                assert (
+                        name[0] != "-"
+                ), f"Name entry '{name}' in extra_args invalid: No leading '-'"
+                parser.add_argument("--" + name, **kwargs)
+
+        known_args, extra_args = parser.parse_known_args()
+        config =  ConfigDict(**vars(known_args))
+        return config
 
 
 def parse_args(
@@ -131,7 +280,7 @@ def parse_args(
     return args, method_names, seeds
 
 
-def set_logging_level(args):
+def set_logging_level(args: ConfigDict):
     if args.verbose:
         logging.getLogger().setLevel(logging.INFO)
     else:
@@ -150,7 +299,7 @@ def get_metadata(
     random_seed: int,
     max_size_data_for_model: Optional[int] = None,
     benchmark: Optional[BenchmarkDefinition] = None,
-    extra_args: Optional[DictStrKey] = None,
+    extra_metadata: Optional[DictStrKey] = None,
 ) -> Dict[str, Any]:
     """Returns default value for ``metadata`` passed to :class:`~syne_tune.Tuner`.
 
@@ -163,7 +312,7 @@ def get_metadata(
         model of MOBSTER or HyperTune
     :param benchmark: Optional. Take ``n_workers``, ``max_wallclock_time``
         from there
-    :param extra_args: ``metadata`` updated by these at the end. Optional
+    :param extra_metadata: ``metadata`` updated by these at the end. Optional
     :return: Default ``metadata`` dictionary
     """
     metadata = {
@@ -182,8 +331,8 @@ def get_metadata(
                 "max_wallclock_time": benchmark.max_wallclock_time,
             }
         )
-    if extra_args is not None:
-        metadata.update(extra_args)
+    if extra_metadata is not None:
+        metadata.update(extra_metadata)
     return metadata
 
 
