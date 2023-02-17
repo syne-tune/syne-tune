@@ -13,7 +13,6 @@
 import copy
 import logging
 from argparse import ArgumentParser, ArgumentTypeError
-from collections import namedtuple
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Callable
 
