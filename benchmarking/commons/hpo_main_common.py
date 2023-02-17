@@ -192,9 +192,13 @@ class ConfigDict(dict):
         """
         Read the config from a dictionary
         """
-        required_params = [item for item in ConfigDict.__base_parameters if item.required]
+        required_params = [
+            item for item in ConfigDict.__base_parameters if item.required
+        ]
         for required_param in required_params:
-            assert required_param.name in loaded_config, f"{required_param} must be provided as part of configuration"
+            assert (
+                required_param.name in loaded_config
+            ), f"{required_param} must be provided as part of configuration"
 
         final_config = {
             item.name: item.default for item in ConfigDict.__base_parameters
