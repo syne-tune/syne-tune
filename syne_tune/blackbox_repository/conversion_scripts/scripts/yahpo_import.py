@@ -251,6 +251,12 @@ class BlackBoxYAHPO(Blackbox):
             num_objectives = len(self.objectives_names)
             result = np.empty((num_fidelities, num_objectives))
             multiplier = 0.05 if self._is_iaml or self._is_rbv2 else 1
+            example_configuration = {
+                **configuration,
+                self._fidelity_name: self.fidelity_values[0] * multiplier,
+            }
+            active_hps = self._active_hyperparameters(example_configuration)
+            configuration = {k: v for k, v in configuration.items() if k in active_hps}
             configs = [
                 {**configuration, self._fidelity_name: fidelity * multiplier}
                 for fidelity in self.fidelity_values
