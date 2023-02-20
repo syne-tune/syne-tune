@@ -21,6 +21,12 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import RayTuneScheduler
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
+from examples.training_scripts.height_example.train_height import (
+    RESOURCE_ATTR,
+    METRIC_ATTR,
+    METRIC_MODE,
+    MAX_RESOURCE_ATTR,
+)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
@@ -30,7 +36,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     config_space = {
-        "steps": max_steps,
+        MAX_RESOURCE_ATTR: max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -40,8 +46,6 @@ if __name__ == "__main__":
         / "height_example"
         / "train_height.py"
     )
-    mode = "min"
-    metric = "mean_loss"
 
     # Local backend
     trial_backend = LocalBackend(entry_point=entry_point)
@@ -50,13 +54,16 @@ if __name__ == "__main__":
     np.random.seed(random_seed)
     ray_searcher = SkOptSearch()
     ray_searcher.set_search_properties(
-        mode=mode,
-        metric=metric,
+        mode=METRIC_MODE,
+        metric=METRIC_ATTR,
         config=RayTuneScheduler.convert_config_space(config_space),
     )
 
     ray_scheduler = AsyncHyperBandScheduler(
-        max_t=max_steps, time_attr="step", mode=mode, metric=metric
+        max_t=max_steps,
+        time_attr=RESOURCE_ATTR,
+        mode=METRIC_MODE,
+        metric=METRIC_ATTR,
     )
 
     scheduler = RayTuneScheduler(

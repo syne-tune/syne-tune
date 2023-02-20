@@ -187,3 +187,26 @@ def test_grid_config():
         # These should get new config
         config = searcher.get_config(trial_id=trial_id)
         assert config in all_candidates_on_grid
+
+
+def test_initial_configs_complete_grid():
+    config_space = {
+        "a": randint(0, 1),
+        "b": choice(["a", "b"]),
+    }
+    all_configs = [
+        {"a": 0, "b": "a"},
+        {"a": 0, "b": "b"},
+        {"a": 1, "b": "a"},
+        {"a": 1, "b": "b"},
+    ]
+    searcher = GridSearcher(
+        config_space, metric="accuracy", points_to_evaluate=all_configs
+    )
+    num_configs = len(all_configs)
+    for trial_id in range(num_configs + 1):
+        config = searcher.get_config(trial_id=trial_id)
+        print(config)
+        assert (trial_id < num_configs and config is not None) or (
+            trial_id == num_configs and config is None
+        )

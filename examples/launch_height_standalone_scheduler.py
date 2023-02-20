@@ -28,6 +28,11 @@ from syne_tune.optimizer.scheduler import (
 )
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
+from examples.training_scripts.height_example.train_height import (
+    METRIC_ATTR,
+    METRIC_MODE,
+    MAX_RESOURCE_ATTR,
+)
 
 
 class SimpleScheduler(TrialScheduler):
@@ -84,7 +89,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     config_space = {
-        "steps": max_steps,
+        MAX_RESOURCE_ATTR: max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -94,13 +99,14 @@ if __name__ == "__main__":
         / "height_example"
         / "train_height.py"
     )
-    metric = "mean_loss"
 
     # Local backend
     trial_backend = LocalBackend(entry_point=entry_point)
 
     np.random.seed(random_seed)
-    scheduler = SimpleScheduler(config_space=config_space, metric=metric)
+    scheduler = SimpleScheduler(
+        config_space=config_space, metric=METRIC_ATTR, mode=METRIC_MODE
+    )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=20)
     tuner = Tuner(

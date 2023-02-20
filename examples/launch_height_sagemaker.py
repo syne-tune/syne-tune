@@ -26,6 +26,11 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     default_sagemaker_session,
 )
 from syne_tune.config_space import randint
+from examples.training_scripts.height_example.train_height import (
+    METRIC_ATTR,
+    METRIC_MODE,
+    MAX_RESOURCE_ATTR,
+)
 from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune.remote.estimators import (
     PYTORCH_LATEST_FRAMEWORK,
@@ -41,11 +46,8 @@ if __name__ == "__main__":
     n_workers = 4
     max_wallclock_time = 5 * 60
 
-    mode = "min"
-    metric = "mean_loss"
-    max_resource_attr = "steps"
     config_space = {
-        max_resource_attr: max_steps,
+        MAX_RESOURCE_ATTR: max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -58,7 +60,7 @@ if __name__ == "__main__":
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space, mode=mode, metric=metric, random_seed=random_seed
+        config_space, mode=METRIC_MODE, metric=METRIC_ATTR, random_seed=random_seed
     )
     if "AWS_DEFAULT_REGION" not in os.environ:
         os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
@@ -79,7 +81,7 @@ if __name__ == "__main__":
         ),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example
-        metrics_names=[metric],
+        metrics_names=[METRIC_ATTR],
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
