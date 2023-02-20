@@ -329,22 +329,21 @@ class GridSearcher(SearcherWithRandomSeed):
         """
 
         num_combinations = len(self.hp_values_combinations)
-        if self._next_index < num_combinations:
-            is_not_done = True
-            while is_not_done and self._next_index < num_combinations:
-                candidate = dict(
-                    zip(self.hp_keys, self.hp_values_combinations[self._next_index])
-                )
-                self._next_index += 1
-                is_not_done = self._all_initial_configs.contains(candidate)
+        candidate = None
+        while candidate is None and self._next_index < num_combinations:
+            candidate = dict(
+                zip(self.hp_keys, self.hp_values_combinations[self._next_index])
+            )
+            self._next_index += 1
+            if self._all_initial_configs.contains(candidate):
+                candidate = None
             if self._allow_duplicates and self._next_index == num_combinations:
-                # Another round through the grid
+                # Another round through the grid. It is important to reset
+                # ``_all_initial_configs`` to empty, so the initial configs can be
+                # suggested again in the second round
                 self._next_index = 0
                 self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
-            return candidate
-        else:
-            # No more candidates
-            return None
+        return candidate
 
     def get_state(self) -> Dict[str, Any]:
         state = dict(

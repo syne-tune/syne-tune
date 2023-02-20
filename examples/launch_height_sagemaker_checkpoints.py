@@ -22,6 +22,12 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     default_sagemaker_session,
 )
 from syne_tune.config_space import randint
+from examples.training_scripts.height_example.train_height import (
+    METRIC_ATTR,
+    METRIC_MODE,
+    MAX_RESOURCE_ATTR,
+    RESOURCE_ATTR,
+)
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune.remote.estimators import (
     PYTORCH_LATEST_FRAMEWORK,
@@ -38,12 +44,8 @@ if __name__ == "__main__":
     delete_checkpoints = True
     max_wallclock_time = 5 * 60
 
-    mode = "min"
-    metric = "mean_loss"
-    resource_attr = "epoch"
-    max_resource_attr = "steps"
     config_space = {
-        max_resource_attr: max_steps,
+        MAX_RESOURCE_ATTR: max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -57,10 +59,10 @@ if __name__ == "__main__":
     # ASHA promotion
     scheduler = ASHA(
         config_space,
-        metric=metric,
-        mode=mode,
-        max_resource_attr=max_resource_attr,
-        resource_attr=resource_attr,
+        metric=METRIC_ATTR,
+        mode=METRIC_MODE,
+        max_resource_attr=MAX_RESOURCE_ATTR,
+        resource_attr=RESOURCE_ATTR,
         type="promotion",
         search_options={"debug_log": True},
     )
@@ -79,7 +81,7 @@ if __name__ == "__main__":
             debugger_hook_config=False,
             keep_alive_period_in_seconds=300,  # warm pool feature
         ),
-        metrics_names=[metric],
+        metrics_names=[METRIC_ATTR],
         delete_checkpoints=delete_checkpoints,
     )
 

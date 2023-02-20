@@ -21,6 +21,12 @@ from syne_tune.optimizer.baselines import (
 
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
+from examples.training_scripts.height_example.train_height import (
+    RESOURCE_ATTR,
+    METRIC_ATTR,
+    METRIC_MODE,
+    MAX_RESOURCE_ATTR,
+)
 from syne_tune.try_import import try_import_gpsearchers_message
 
 
@@ -30,12 +36,9 @@ if __name__ == "__main__":
     random_seed = 31415927
     max_epochs = 100
     n_workers = 4
-    mode = "min"
-    metric = "mean_loss"
-    max_resource_attr = "epochs"
 
     config_space = {
-        max_resource_attr: max_epochs,
+        MAX_RESOURCE_ATTR: max_epochs,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -46,15 +49,15 @@ if __name__ == "__main__":
         / "train_height.py"
     )
 
+    scheduler_kwargs = {
+        "config_space": config_space,
+        "metric": METRIC_ATTR,
+        "mode": METRIC_MODE,
+        "max_resource_attr": MAX_RESOURCE_ATTR,
+    }
     schedulers = [
-        RandomSearch(config_space, metric=metric, mode=mode),
-        ASHA(
-            config_space,
-            metric=metric,
-            max_resource_attr=max_resource_attr,
-            resource_attr="epoch",
-            mode=mode,
-        ),
+        RandomSearch(**scheduler_kwargs),
+        ASHA(**scheduler_kwargs, resource_attr=RESOURCE_ATTR),
     ]
     try:
         from syne_tune.optimizer.baselines import BayesianOptimization
@@ -62,23 +65,13 @@ if __name__ == "__main__":
         # example of setting additional kwargs arguments
         schedulers.append(
             BayesianOptimization(
-                config_space,
-                metric=metric,
-                mode=mode,
+                **scheduler_kwargs,
                 search_options={"num_init_random": n_workers + 2},
             )
         )
         from syne_tune.optimizer.baselines import MOBSTER
 
-        schedulers.append(
-            MOBSTER(
-                config_space,
-                metric=metric,
-                max_resource_attr=max_resource_attr,
-                resource_attr="epoch",
-                mode=mode,
-            )
-        )
+        schedulers.append(MOBSTER(*scheduler_kwargs, resource_attr=RESOURCE_ATTR))
     except Exception:
         logging.info(try_import_gpsearchers_message())
 
@@ -88,7 +81,7 @@ if __name__ == "__main__":
         trial_backend = LocalBackend(entry_point=str(entry_point))
 
         stop_criterion = StoppingCriterion(
-            max_wallclock_time=5, min_metric_value={metric: -6.0}
+            max_wallclock_time=20, min_metric_value={METRIC_ATTR: -6.0}
         )
         tuner = Tuner(
             trial_backend=trial_backend,
