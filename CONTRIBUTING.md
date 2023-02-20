@@ -34,12 +34,31 @@ Contributions via pull requests are much appreciated. Before sending us a pull r
 
 To send us a pull request, please:
 
-1. Fork the repository.
+1. Fork the repository. (Note, core members can directly push to a branch on the repository)
 2. Modify the source; please focus on the specific change you are contributing. If you also reformat all the code, it will be hard for us to focus on your change.
 3. Ensure local tests pass.
-4. Commit to your fork using clear commit messages.
-5. Send us a pull request, answering any default questions in the pull request interface.
-6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+4. Pull request title and message must adhere to [Conventional Commits](https://www.conventionalcommits.org). This means that the title must begin with `feat(scope): title`, `fix(scope): title`, `docs(scope): title`, `refactor(scope): title` or `chore(scope): title`. Including `(scope)` is optional.
+    * `feat`: indicates a feature added. For example, `feat(benchmarking): benchmark ASHA` 
+    * `fix`: indicates a bug fixes. Be sure to describe the problem in the PR description.
+    * `docs`: indicates updated documentation (docstrings or Markdown files)
+    * `refactor`: indicates a feature-preserving refactoring
+    * `chore`: something without directly visible user benefit. Typically used for build scripts, config.
+5. For bugs, describe the bug, root cause, solution, potential alternatives considered but discarded.
+6. For features, describe use case, most salient design aspects (especially if new), potential alternatives.
+7. Pull request message should indicate which issues are fixed: `fixes #<issue>` or `closes #<issue>`.
+8. If not obvious (i.e. from unit tests), describe how you verified that your change works.
+9. If this PR includes breaking changes, they must be listed at the end in the following format
+  (notice how multiple breaking changes should be formatted):
+
+  ```
+  BREAKING CHANGE: Description of what broke and how to achieve this behavior now
+  * **scope-name:** Another breaking change
+  * **scope-name:** Yet another breaking change
+  ```
+10. Send us a pull request, answering any default questions in the pull request interface.
+11. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+12. Make sure to update the PR title/description if things change. The PR title/description are going to be used as the commit title/message and will appear in the CHANGELOG, so maintain them all the way throughout the process.
+
 
 GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and
 [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
