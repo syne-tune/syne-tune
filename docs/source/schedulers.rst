@@ -343,11 +343,16 @@ range of arguments. Here, we list the most important ones:
   Note that instead of ``max_resource_attr``, you can also use ``max_t``,
   as detailed
   `here <tutorials/multifidelity/mf_setup.html#the-launcher-script>`_.
+* ``rung_increment``: This parameter can be used instead of ``reduction_factor``
+  (the latter takes precedence). In this case, rung levels are spaced linearly:
+  :math:`r_{min} + j \nu, j = 0, 1, 2, \dots`, where :math:`\nu` is
+  ``rung_increment``. The stop/go rule in the successive halving scheduler is
+  set based on the ratio of successive rung levels.
 * ``rung_levels``: Alternatively, the user can specify the list of rung levels
   directly (positive integers, strictly increasing). The stop/go rule in the
   successive halving scheduler is set based on the ratio of successive rung
   levels.
-* ``type``: The most imporant values are ``"stopping", "promotion"`` (see
+* ``type``: The most important values are ``"stopping", "promotion"`` (see
   above).
 * ``brackets``: Number of brackets to be used in Hyperband. More details are
   found
@@ -366,6 +371,7 @@ Depending on the searcher, this scheduler supports:
   [``searcher="hypertune"``]
 * Cost-aware Bayesian optimization [``searcher="bayesopt_cost"``]
 * Bore [``searcher="bore"``]
+* DyHPO [``searcher="dyhpo", type="dyhpo"``]
 
 We will only consider the first two searchers in this tutorial.
 

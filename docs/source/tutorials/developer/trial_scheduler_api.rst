@@ -71,7 +71,7 @@ already been covered `here <first_example.html#first-example>`_:
   started with configuration ``config``. Typically, this trial starts training
   from scratch. However, some specific schedulers allow the trial to warm-start
   from a checkpoint written for a different trial (an example is
-  class:`syne_tune.optimizer.schedulers.PopulationBasedTraining`).
+  :class:`~syne_tune.optimizer.schedulers.PopulationBasedTraining`).
   A pause-and-resume scheduler may also return
   :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`,
   where ``spawn_new_trial_id=False`` and ``checkpoint_trial_id`` is mandatory.
