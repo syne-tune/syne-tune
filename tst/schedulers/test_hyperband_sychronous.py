@@ -13,6 +13,7 @@
 from typing import List, Tuple
 import numpy as np
 from collections import Counter
+import pytest
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import (
     SynchronousHyperbandBracket,
@@ -154,6 +155,7 @@ def _send_result(
 
 # Runs Hyperband for some number of iterations, checking that no assertions
 # are raised
+@pytest.mark.timeout(10)
 def test_hyperband_bracket_manager_running():
     random_seed = 31415927
     random_state = np.random.RandomState(random_seed)
