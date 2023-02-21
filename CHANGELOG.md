@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [0.4.0] - 2023-02-17
+## [0.4.0] - 2023-02-21
 
 We release version 0.4.0 which you can install with `pip install syne-tune[extra]`.
 
