@@ -40,10 +40,13 @@ ST_WORKER_COST = "st_worker_cost"
 """Estimate of dollar cost spent so far"""  # pylint: disable=W0105
 
 ST_INSTANCE_TYPE = "st_instance_type"
-"""Instance type to be used for job execution (SageMaker backend)"""
+"""Instance type to be used for job execution (SageMaker backend)"""  # pylint: disable=W0105
 
 ST_INSTANCE_COUNT = "st_instance_count"
 """Number of instances o be used for job execution (SageMaker backend)"""  # pylint: disable=W0105
+
+ST_SAGEMAKER_METRIC_TAG = "tune-metric"
+"""Tag for log lines used in :class:`~syne_tune.Reporter`"""  # pylint: disable=W0105
 
 # constants for tuner results
 
