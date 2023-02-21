@@ -166,7 +166,7 @@ It takes only a few seconds to run, but it needs ``nasbench201`` blackbox
 to be downloaded and preprocessed, which can take a while when done
 for the first time.
 
-PASHA typically uses ``max_num_trials_started`` as the stopping criterion.
+PASHA typically uses ``max_num_trials_completed`` as the stopping criterion.
 After finding a strong configuration using PASHA, 
 the next step is to fully train a model with the configuration.
 
