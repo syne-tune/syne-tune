@@ -133,6 +133,7 @@ class BlackBoxYAHPO(Blackbox):
         # Has to be called after ``_initialize_for_scenario``, in order to
         # transform fidelity space for some of the YAHPO scenarios
         self._adjust_fidelity_space(fidelities)
+        self.multiplier = 0.05 if self._is_iaml or self._is_rbv2 else 1
 
     def _initialize_for_scenario(self):
         if self._is_iaml or self._is_rbv2:
@@ -206,11 +207,18 @@ class BlackBoxYAHPO(Blackbox):
         else:
             return config
 
-    def _active_hyperparameters(self, configuration: Dict[str, Any]) -> List[str]:
+    def _get_active_hyperparameters(self, configuration: Dict[str, Any]) -> List[str]:
+        # Some of the hyperparameters are only active for certain values of other hyperparameters
+
+        config_with_fidelity = {
+            **configuration,
+            self._fidelity_name: self.fidelity_values[0] * self.multiplier,
+        }
+
         return self.benchmark.config_space.get_active_hyperparameters(
             ConfigSpace.Configuration(
                 self.benchmark.config_space,
-                values=configuration,
+                values=config_with_fidelity,
                 allow_inactive_with_values=True,
             )
         )
@@ -222,6 +230,10 @@ class BlackBoxYAHPO(Blackbox):
         seed: Optional[int] = None,
     ) -> Dict[str, Any]:
         configuration = self._map_configuration(configuration.copy())
+        active_hyperparameters = self._get_active_hyperparameters(configuration)
+        configuration = {
+            k: v for k, v in configuration.items() if k in active_hyperparameters
+        }
 
         if fidelity is not None:
             if self._is_iaml or self._is_rbv2:
@@ -233,10 +245,8 @@ class BlackBoxYAHPO(Blackbox):
                 assert (
                     fidelity_value in self.fidelity_values
                 ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
-                fidelity = {k: fidelity_value / 20}
+                fidelity = {k: fidelity_value * self.multiplier}
             configuration.update(fidelity)
-            active_hps = self._active_hyperparameters(configuration)
-            configuration = {k: v for k, v in configuration.items() if k in active_hps}
             return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
             """
@@ -250,15 +260,8 @@ class BlackBoxYAHPO(Blackbox):
             num_fidelities = self.fidelity_values.size
             num_objectives = len(self.objectives_names)
             result = np.empty((num_fidelities, num_objectives))
-            multiplier = 0.05 if self._is_iaml or self._is_rbv2 else 1
-            example_configuration = {
-                **configuration,
-                self._fidelity_name: self.fidelity_values[0] * multiplier,
-            }
-            active_hps = self._active_hyperparameters(example_configuration)
-            configuration = {k: v for k, v in configuration.items() if k in active_hps}
             configs = [
-                {**configuration, self._fidelity_name: fidelity * multiplier}
+                {**configuration, self._fidelity_name: fidelity * self.multiplier}
                 for fidelity in self.fidelity_values
             ]
             result_dicts = self.benchmark.objective_function(configs, seed=seed)
