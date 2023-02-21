@@ -91,7 +91,7 @@ def test_gp_regression_no_noise():
     #              yerr=var_test)
     # plt.show()
 
-
+@pytest.mark.timeout(5)
 def test_gp_regression_with_noise():
     def f(x):
         return anp.sin(x) / x
