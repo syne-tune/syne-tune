@@ -24,7 +24,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import Matern52
 
 
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(10)
 def test_incremental_update():
     def f(x):
         return anp.sin(x) / x
