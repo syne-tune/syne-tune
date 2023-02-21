@@ -33,9 +33,9 @@ jobs:
         python -m pip install .[extra] --upgrade pip
     - name: Test with pytest
       run: |
-        pytest
-  code-coverage:
-    runs-on: ubuntu-latest
-    steps:
+        pytest -vvv --cov=./ --cov-report=xml
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        env_vars: PYTHON
