@@ -25,9 +25,10 @@ def test_report_logger():
     report(train_nll=1.45, time=1.0, step=2)
     report(train_nll=1.2, time=2.0, step=3)
 
+    prefix = "[" + ST_SAGEMAKER_METRIC_TAG + "]: "
     lines = [
-        f'[{ST_SAGEMAKER_METRIC_TAG}]: {"train_nll": 1.45, "time": 1.0, "step": 2}\n',
-        f'[{ST_SAGEMAKER_METRIC_TAG}]: {"train_nll": 1.2, "time": 2.0, "step": 3}\n',
+        prefix + '{"train_nll": 1.45, "time": 1.0, "step": 2}\n',
+        prefix + '{"train_nll": 1.2, "time": 2.0, "step": 3}\n',
     ]
     metrics = retrieve(log_lines=lines)
     print(metrics)
