@@ -133,7 +133,7 @@ class BlackBoxYAHPO(Blackbox):
         # Has to be called after ``_initialize_for_scenario``, in order to
         # transform fidelity space for some of the YAHPO scenarios
         self._adjust_fidelity_space(fidelities)
-        self.multiplier = 0.05 if self._is_iaml or self._is_rbv2 else 1
+        self._fidelity_multiplier = 0.05 if self._is_iaml or self._is_rbv2 else 1
 
     def _initialize_for_scenario(self):
         if self._is_iaml or self._is_rbv2:
@@ -212,7 +212,7 @@ class BlackBoxYAHPO(Blackbox):
 
         config_with_fidelity = {
             **configuration,
-            self._fidelity_name: self.fidelity_values[0] * self.multiplier,
+            self._fidelity_name: self.fidelity_values[0] * self._fidelity_multiplier,
         }
 
         return self.benchmark.config_space.get_active_hyperparameters(
@@ -245,7 +245,7 @@ class BlackBoxYAHPO(Blackbox):
                 assert (
                     fidelity_value in self.fidelity_values
                 ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
-                fidelity = {k: fidelity_value * self.multiplier}
+                fidelity = {k: fidelity_value * self._fidelity_multiplier}
             configuration.update(fidelity)
             return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
@@ -261,7 +261,10 @@ class BlackBoxYAHPO(Blackbox):
             num_objectives = len(self.objectives_names)
             result = np.empty((num_fidelities, num_objectives))
             configs = [
-                {**configuration, self._fidelity_name: fidelity * self.multiplier}
+                {
+                    **configuration,
+                    self._fidelity_name: fidelity * self._fidelity_multiplier,
+                }
                 for fidelity in self.fidelity_values
             ]
             result_dicts = self.benchmark.objective_function(configs, seed=seed)
