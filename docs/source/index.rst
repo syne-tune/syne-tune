@@ -50,7 +50,8 @@ What's New?
 * New tutorial: `Progressive ASHA <tutorials/pasha/pasha.html>`_. PASHA is a
   variant of ASHA where the maximum number of resources (e.g., maximum number
   of training epochs) is not fixed up front, but is adapted. This can lead to
-  savings when training on large datasets.
+  savings when training on large datasets. Thanks to
+  `Ondre <https://github.com/ondrejbohdal>`_ for this contribution.
 
 
 .. toctree::

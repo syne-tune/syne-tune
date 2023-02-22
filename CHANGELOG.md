@@ -8,7 +8,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 We release version 0.4.0 which you can install with `pip install syne-tune[extra]`.
 
-Thanks to all contributors!
+Thanks to all contributors:
+@mseeger, @wesk, @sighellan, @ondrejbohdal, @aaronkl, @wistuba, @jacekgo, @geoalgo
+
 
 ### Added
 * New HPO algorithm: DyHPO
