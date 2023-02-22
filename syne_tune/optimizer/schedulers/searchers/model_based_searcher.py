@@ -15,7 +15,7 @@ from typing import Optional, Type, Dict, Any, List
 import logging
 
 from syne_tune.optimizer.schedulers.searchers import (
-    SearcherWithRandomSeed,
+    StochasticSearcher,
     RandomSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
@@ -80,7 +80,7 @@ def check_initial_candidates_scorer(initial_scoring: Optional[str]) -> str:
         return initial_scoring
 
 
-class ModelBasedSearcher(SearcherWithRandomSeed):
+class ModelBasedSearcher(StochasticSearcher):
     """Common code for surrogate model based searchers
 
     If ``num_initial_random_choices > 0``, initial configurations are drawn using

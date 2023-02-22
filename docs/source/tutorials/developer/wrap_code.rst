@@ -56,12 +56,12 @@ as we demonstrate here. Here is
   (:code:`self._get_random_config()`), otherwise one suggested by BoTorch
   (:code:`self._sample_next_candidate()`).
 * Here, :code:`self._get_random_config()` is implemented in the base class
-  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+  :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
   and calls the same code as all other schedulers employing random suggestions
   in Syne Tune. In particular, this function allows to pass an exclusion list
   of configurations to avoid.
 * The exclusion list :code:`self._excl_list` is maintained in the base class
-  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`.
+  :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`.
   If ``allow_duplicates == False``, it contains all configurations suggested
   previously. Otherwise, it contains configurations of failed or pending trials,
   which we want to avoid in any case. The exclusion list is implemented as
@@ -72,7 +72,7 @@ as we demonstrate here. Here is
   happen that all configurations have already been suggested, in which case
   ``get_config`` returns ``None``.
 * Finally, ``_get_config`` is called in
-  :meth:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates.get_config`,
+  :meth:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher.get_config`,
   where if ``allow_duplicates == False``, the new configuration is added to the
   exclusion list.
 * In :meth:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher._sample_next_candidate`,
@@ -120,7 +120,7 @@ encoded as vectors with values in :math:`[0, 1]`, which is done using the
 .. note::
    When implementing a new searcher, whether from scratch or wrapping external
    code, we recommend you use the base class
-   :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+   :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
    and implement the ``allow_duplicates`` argument. This will also give you
    proper random seed management and ``points_to_evaluate``. Instead of
    ``get_config``, you implement the internal method ``_get_config``. If you need

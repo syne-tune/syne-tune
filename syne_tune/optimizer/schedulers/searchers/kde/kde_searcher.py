@@ -17,7 +17,7 @@ import statsmodels.api as sm
 import scipy.stats as sps
 
 from syne_tune.optimizer.schedulers.searchers import (
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticAndFilterDuplicatesSearcher,
 )
 import syne_tune.config_space as sp
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
@@ -27,7 +27,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
 logger = logging.getLogger(__name__)
 
 
-class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
+class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
     """
     Fits two kernel density estimators (KDE) to model the density of the top N
     configurations as well as the density of the configurations that are not
@@ -55,7 +55,7 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
     reimplementing the selection of configs in :meth:`_get_config`.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
 
     :param mode: Mode to use for the metric given, can be "min" or "max". Is
         obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"
