@@ -207,21 +207,36 @@ class BlackBoxYAHPO(Blackbox):
         else:
             return config
 
-    def _get_active_hyperparameters(self, configuration: Dict[str, Any]) -> List[str]:
-        # Some of the hyperparameters are only active for certain values of other hyperparameters
+    def _prepare_yahpo_configuration(
+        self, configuration: Dict[str, Any], fidelity: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Some of the hyperparameters are only active for certain values of other
+        hyperparameters. We filter out the inactive ones, and add the fidelity to the
+        configuration in order to interface with YAHPO.
+        """
+        configuration.update(fidelity)
 
-        config_with_fidelity = {
-            **configuration,
-            self._fidelity_name: self.fidelity_values[0] * self._fidelity_multiplier,
-        }
-
-        return self.benchmark.config_space.get_active_hyperparameters(
+        active_hyperparameters = self.benchmark.config_space.get_active_hyperparameters(
             ConfigSpace.Configuration(
                 self.benchmark.config_space,
-                values=config_with_fidelity,
+                values=configuration,
                 allow_inactive_with_values=True,
             )
         )
+        return {k: v for k, v in configuration.items() if k in active_hyperparameters}
+
+    def _parse_fidelity(self, fidelity: Dict[str, Any]) -> Dict[str, Any]:
+        if self._is_iaml or self._is_rbv2:
+            k = "trainsize"
+            fidelity_value = fidelity.get(k)
+            assert (
+                fidelity_value is not None
+            ), f"fidelity = {fidelity} must contain key '{k}'"
+            assert (
+                fidelity_value in self.fidelity_values
+            ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
+            fidelity = {k: fidelity_value * self._fidelity_multiplier}
+        return fidelity
 
     def _objective_function(
         self,
@@ -230,23 +245,11 @@ class BlackBoxYAHPO(Blackbox):
         seed: Optional[int] = None,
     ) -> Dict[str, Any]:
         configuration = self._map_configuration(configuration.copy())
-        active_hyperparameters = self._get_active_hyperparameters(configuration)
-        configuration = {
-            k: v for k, v in configuration.items() if k in active_hyperparameters
-        }
 
         if fidelity is not None:
-            if self._is_iaml or self._is_rbv2:
-                k = "trainsize"
-                fidelity_value = fidelity.get(k)
-                assert (
-                    fidelity_value is not None
-                ), f"fidelity = {fidelity} must contain key '{k}'"
-                assert (
-                    fidelity_value in self.fidelity_values
-                ), f"fidelity = {fidelity_value} not contained in {self.fidelity_values}"
-                fidelity = {k: fidelity_value * self._fidelity_multiplier}
-            configuration.update(fidelity)
+            configuration = self._prepare_yahpo_configuration(
+                configuration, self._parse_fidelity(fidelity)
+            )
             return self.benchmark.objective_function(configuration, seed=seed)[0]
         else:
             """
@@ -261,10 +264,10 @@ class BlackBoxYAHPO(Blackbox):
             num_objectives = len(self.objectives_names)
             result = np.empty((num_fidelities, num_objectives))
             configs = [
-                {
-                    **configuration,
-                    self._fidelity_name: fidelity * self._fidelity_multiplier,
-                }
+                self._prepare_yahpo_configuration(
+                    configuration,
+                    {self._fidelity_name: fidelity * self._fidelity_multiplier},
+                )
                 for fidelity in self.fidelity_values
             ]
             result_dicts = self.benchmark.objective_function(configs, seed=seed)
