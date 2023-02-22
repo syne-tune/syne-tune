@@ -1,5 +1,7 @@
 .DS_Store
 .coverage
+.coverage.*
+coverage.xml
 .pytest_cache/
 *__pycache__
 *.egg-info
