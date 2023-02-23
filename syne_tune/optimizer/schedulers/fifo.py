@@ -17,7 +17,6 @@ from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
-    Categorical,
     String,
     assert_no_invalid_options,
     Integer,
@@ -53,8 +52,6 @@ _DEFAULT_OPTIONS = {
 }
 
 _CONSTRAINTS = {
-    "metric": String(),
-    "mode": Categorical(choices=("min", "max")),
     "random_seed": Integer(0, 2**32 - 1),
     "max_resource_attr": String(),
     "max_t": Integer(1, None),
@@ -71,8 +68,8 @@ def _to_list(x) -> list:
 class FIFOScheduler(TrialSchedulerWithSearcher):
     """Scheduler which executes trials in submission order.
 
-    This is the most basic scheduler template. It can be configured to
-    many use cases by choosing ``searcher`` along with ``search_options``.
+    This is the most basic scheduler template. It can be configured to many use
+    cases by choosing ``searcher`` along with ``search_options``.
 
     :param config_space: Configuration space for evaluation function
     :type config_space: Dict[str, Any]
