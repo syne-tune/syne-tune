@@ -14,11 +14,15 @@ import pytest
 import numpy as np
 
 from yahpo_gym import BenchmarkSet
+from yahpo_gym.configuration import list_scenarios
 
-from syne_tune.blackbox_repository import load_blackbox
+from syne_tune.blackbox_repository import BlackboxRepositoryBackend, load_blackbox
 from syne_tune.blackbox_repository.utils import metrics_for_configuration
 from benchmarking.commons.benchmark_definitions.lcbench import (
     lcbench_selected_datasets,
+)
+from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
+    NB301_ATTRIBUTE_NAME_PREFIX,
 )
 from benchmarking.commons.benchmark_definitions import (
     yahpo_lcbench_benchmark_definitions,
@@ -178,3 +182,73 @@ def test_comparison_yahpo_ours(benchmark_yahpo, benchmark_ours):
         assert np.allclose(elapsed_times["ours"], elapsed_times["yahpo"]), (
             "elapsed_times: " + case + errmsg
         )
+
+
+@pytest.mark.skip("Needs blackbox data files locally or on S3.")
+@pytest.mark.timeout(10)
+@pytest.mark.parametrize("scenario", list_scenarios())
+def test_objective_function(scenario):
+    """
+    Iterate over YAHPO scenarios and test three fidelities, cheching that the different ways of
+    getting the results in syne-tune both match the result given directly from YAHPO.
+    """
+    for fidelity in [1, 15, 20]:
+
+        # YAHPO set-up
+        bb = BenchmarkSet(scenario=scenario)
+        yahpo_dataset = bb.instances[0]
+        bb.set_instance(yahpo_dataset)
+
+        # syne-tune set-up
+        backend = BlackboxRepositoryBackend(
+            blackbox_name="yahpo-" + scenario,
+            elapsed_time_attr="timetrain",
+            dataset=yahpo_dataset,
+            surrogate_kwargs={"fidelities": [fidelity]},
+        )
+
+        # Example config to compare
+        raw_config = bb.config_space.get_default_configuration().get_dictionary()
+        # Set the fidelity
+        raw_config[backend.blackbox.fidelity_name()] = (
+            fidelity * backend.blackbox._fidelity_multiplier
+        )
+
+        if backend.blackbox._is_nb301:
+            # Syne Tune uses different hyperparameter names for this scenario
+            shorter_keys = [
+                k[len(NB301_ATTRIBUTE_NAME_PREFIX) :]
+                if k[: len(NB301_ATTRIBUTE_NAME_PREFIX)] == NB301_ATTRIBUTE_NAME_PREFIX
+                else k
+                for k in raw_config
+            ]
+            raw_config_parsed = {
+                short_key: raw_config[NB301_ATTRIBUTE_NAME_PREFIX + short_key]
+                if short_key != "epoch"
+                else raw_config[short_key]
+                for short_key in shorter_keys
+            }
+
+        else:
+            raw_config_parsed = raw_config
+
+        conf_syne_tune = {
+            hp: raw_config_parsed[hp]
+            for hp in raw_config_parsed
+            if hp != backend.blackbox.fidelity_name()
+        }
+        conf_yahpo = {
+            hp: raw_config[hp] for hp in raw_config if hp not in ["degree", "gamma"]
+        }
+
+        res_no_fidelity = backend.blackbox(conf_syne_tune)
+
+        res_yahpo = bb.objective_function(conf_yahpo)
+        res_yahpo_vals = np.array(list(res_yahpo[0].values()), ndmin=2)
+        assert (res_yahpo_vals == res_no_fidelity).all()
+
+        res_give_fidelity = backend.blackbox(
+            conf_syne_tune, {backend.blackbox.fidelity_name(): fidelity}
+        )
+        res_give_fidelity_vals = np.array(list(res_give_fidelity.values()), ndmin=2)
+        assert (res_give_fidelity_vals == res_no_fidelity).all()
