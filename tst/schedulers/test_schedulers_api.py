@@ -218,7 +218,7 @@ list_schedulers_to_test = [
     MOREA(
         config_space=config_space,
         metric=[metric1, metric2],
-        mode=mode,
+        mode=[mode, mode],
         population_size=1,
         sample_size=2,
     ),
