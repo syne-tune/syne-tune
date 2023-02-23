@@ -27,6 +27,7 @@ from syne_tune.constants import (
     ST_WORKER_COST,
     ST_WORKER_TIMESTAMP,
     ST_WORKER_ITER,
+    ST_SAGEMAKER_METRIC_TAG,
 )
 from syne_tune.util import dump_json_with_numpy
 
@@ -127,7 +128,7 @@ class Reporter:
 
 
 def _report_logger(**kwargs):
-    print(f"[tune-metric]: {_serialize_report_dict(kwargs)}")
+    print(f"[{ST_SAGEMAKER_METRIC_TAG}]: {_serialize_report_dict(kwargs)}")
     sys.stdout.flush()
 
 
@@ -158,7 +159,7 @@ def retrieve(log_lines: List[str]) -> List[Dict[str, float]]:
     :return: list of metrics retrieved from the log lines.
     """
     metrics = []
-    regex = r"\[tune-metric\]: (\{.*\})"
+    regex = r"\[" + ST_SAGEMAKER_METRIC_TAG + r"\]: (\{.*\})"
     for metric_values in re.findall(regex, "\n".join(log_lines)):
         metrics.append(json.loads(metric_values))
     return metrics

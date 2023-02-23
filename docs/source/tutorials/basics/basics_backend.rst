@@ -63,7 +63,9 @@ with a SageMaker estimator, which executes the training script. In our example,
 we use the ``PyTorch`` SageMaker framework as a pre-built container for the
 dependencies our training scripts requires. However, any other type of
 `SageMaker estimator <https://sagemaker.readthedocs.io/en/stable/api/training/estimators.html>`_
-can be used here just as well.
+can be used here just as well. Finally, if you include any of the metrics reported
+by your training script in ``metrics_names``, their values are visualized in the
+dashboard for the SageMaker training job.
 
 If your training script requires additional dependencies not contained in the
 chosen SageMaker framework, you can specify those in a ``requirements.txt``
