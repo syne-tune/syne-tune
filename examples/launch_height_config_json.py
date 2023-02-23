@@ -13,6 +13,7 @@
 import os
 import logging
 from pathlib import Path
+from argparse import ArgumentParser
 
 from syne_tune.backend import LocalBackend, SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
@@ -41,13 +42,15 @@ from examples.training_scripts.height_example.train_height_config_json import (
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
+    parser = ArgumentParser()
+    parser.add_argument("--use_sagemaker_backend", type=int, default=0)
+    args = parser.parse_args()
+    use_sagemaker_backend = bool(args.use_sagemaker_backend)
+
     random_seed = 31415927
     max_epochs = 100
     n_workers = 4
-    max_wallclock_time = 10
-    use_sagemaker_backend = False
-    # max_wallclock_time = 5 * 60
-    # use_sagemaker_backend = True
+    max_wallclock_time = 5 * 60 if use_sagemaker_backend else 10
 
     config_space = height_config_space(max_epochs)
     entry_point = (
