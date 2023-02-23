@@ -47,7 +47,7 @@ from syne_tune.optimizer.schedulers import (
     MedianStoppingRule,
     HyperbandScheduler,
     PopulationBasedTraining,
-    # RayTuneScheduler,
+    RayTuneScheduler,
 )
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.transfer_learning import (
