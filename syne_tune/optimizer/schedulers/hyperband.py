@@ -811,9 +811,10 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
 
     def _check_result(self, result: Dict[str, Any]):
         super()._check_result(result)
-        self._check_key_of_result(result, self._resource_attr)
+        keys = [self._resource_attr]
         if self.scheduler_type == "cost_promotion":
-            self._check_key_of_result(result, self._cost_attr)
+            keys.append(self._cost_attr)
+        self._check_keys_of_result(result, keys)
         resource = result[self._resource_attr]
         assert 1 <= resource == round(resource), (
             "Your training evaluation function needs to report positive "
