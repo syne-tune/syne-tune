@@ -68,8 +68,8 @@ def _to_list(x) -> list:
 class FIFOScheduler(TrialSchedulerWithSearcher):
     """Scheduler which executes trials in submission order.
 
-    This is the most basic scheduler template. It can be configured to
-    many use cases by choosing ``searcher`` along with ``search_options``.
+    This is the most basic scheduler template. It can be configured to many use
+    cases by choosing ``searcher`` along with ``search_options``.
 
     :param config_space: Configuration space for evaluation function
     :type config_space: Dict[str, Any]
