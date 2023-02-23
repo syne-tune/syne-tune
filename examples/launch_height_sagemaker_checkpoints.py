@@ -79,7 +79,7 @@ if __name__ == "__main__":
             sagemaker_session=default_sagemaker_session(),
             disable_profiler=True,
             debugger_hook_config=False,
-            keep_alive_period_in_seconds=300,  # warm pool feature
+            keep_alive_period_in_seconds=60,  # warm pool feature
         ),
         metrics_names=[METRIC_ATTR],
         delete_checkpoints=delete_checkpoints,

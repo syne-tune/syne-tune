@@ -223,6 +223,13 @@ This script differs by a vanilla training script only by two lines, which
 create ``reporter`` and call it at the end of training. Namely, we report
 the validation accuracy after training as ``report(accuracy=accuracy)``.
 
+.. note::
+   By default, the configuration is passed to the training script as command
+   line arguments. This precludes passing arguments of complex type, such as
+   lists or dictionaries, as there is also a length limit to arguments. In
+   order to get around these restrictions, you can also pass
+   `arguments via a JSON file <../../faq.html#how-can-i-pass-lists-or-dictionaries-to-the-training-script>`_.
+
 Defining the Configuration Space
 --------------------------------
 

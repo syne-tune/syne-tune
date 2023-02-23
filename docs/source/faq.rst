@@ -694,3 +694,31 @@ as is detailed in
 `this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_
 or `this example <examples.html#sagemaker-backend-and-checkpointing>`_. We
 strongly recommend to use managed warm pools with the SageMaker backend.
+
+How can I pass lists or dictionaries to the training script?
+============================================================
+
+By default, the hyperparameter configuration is passed to the training script
+as command line arguments. This precludes parameters from having complex types,
+such as lists or dictionaries. The configuration can also be passed as JSON
+file, in which case its entries can have any type which is JSON-serializable.
+This mode is activated with ``pass_args_as_json=True`` when creating the trial
+backend:
+
+.. literalinclude:: ../../examples/launch_height_config_json.py
+   :caption: examples/launch_height_config_json.py
+   :lines: 69-72
+
+The trial backend stores the configuration as JSON file and passes its filename
+as command line argument. In the training script, the configuration is loaded
+as follows:
+
+.. literalinclude:: ../../examples/training_scripts/height_example/train_height_config_json.py
+   :caption: examples/training_scripts/height_example/train_height_config_json.py
+   :lines: 74-79
+
+The complete example is
+`here <examples.html#pass-configuration-as-json-file-to-training-script>`_.
+Note that entries automatically appended to the configuration by Syne Tune, such
+as :const:`~syne_tune.constants.ST_CHECKPOINT_DIR`, are passed as command line
+arguments in any case.

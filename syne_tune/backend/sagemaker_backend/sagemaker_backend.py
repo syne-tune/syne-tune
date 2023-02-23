@@ -23,7 +23,12 @@ from sagemaker import LocalSession
 from sagemaker.estimator import Framework
 
 from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
-from syne_tune.constants import ST_INSTANCE_TYPE, ST_INSTANCE_COUNT, ST_CHECKPOINT_DIR
+from syne_tune.constants import (
+    ST_INSTANCE_TYPE,
+    ST_INSTANCE_COUNT,
+    ST_CHECKPOINT_DIR,
+    ST_CONFIG_JSON_FNAME_ARG,
+)
 from syne_tune.util import s3_experiment_path, dump_json_with_numpy
 from syne_tune.backend.trial_status import TrialResult, Status
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
@@ -41,6 +46,9 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 
 
 logger = logging.getLogger(__name__)
+
+
+CONFIG_JSON_FILENAME = "syne_tune_sm_backend_config_31415927"
 
 
 class SageMakerBackend(TrialBackend):
@@ -63,17 +71,15 @@ class SageMakerBackend(TrialBackend):
     for tuning instance type and count along with the hyperparameter
     configuration.
 
+    Additional arguments on top of parent class
+    :class:`~syne_tune.backend.trial_backend.TrialBackend`:
+
     :param sm_estimator: SageMaker estimator for trial evaluations.
     :param metrics_names: Names of metrics passed to ``report``, used to plot
         live curve in SageMaker (optional, only used for visualization)
     :param s3_path: S3 base path used for checkpointing. The full path
         also involves the tuner name and the ``trial_id``. The default base
         path is the S3 bucket associated with the SageMaker account
-    :param delete_checkpoints: If ``True``, the checkpoints written by a trial
-        are deleted once the trial is stopped or is registered as
-        completed. Also, as part of :meth:`stop_all` called at the end of the
-        tuning loop, all remaining checkpoints are deleted. Defaults to
-        ``False``.
     :param sagemaker_fit_kwargs: Extra arguments that passed to
         :class:`sagemaker.estimator.Framework` when fitting the job, for instance
         :code:`{'train': 's3://my-data-bucket/path/to/my/training/data'}`
@@ -85,9 +91,12 @@ class SageMakerBackend(TrialBackend):
         metrics_names: Optional[List[str]] = None,
         s3_path: Optional[str] = None,
         delete_checkpoints: bool = False,
+        pass_args_as_json: bool = False,
         **sagemaker_fit_kwargs,
     ):
-        super(SageMakerBackend, self).__init__(delete_checkpoints)
+        super(SageMakerBackend, self).__init__(
+            delete_checkpoints=delete_checkpoints, pass_args_as_json=pass_args_as_json
+        )
         self.sm_estimator = sm_estimator
 
         # edit the sagemaker estimator so that metrics of the user can be plotted over time by sagemaker and so that
@@ -194,9 +203,61 @@ class SageMakerBackend(TrialBackend):
             res_path = f"{res_path}/{self.tuner_name}"
         return f"{res_path}/{str(trial_id)}/checkpoints/"
 
+    def _config_json_filename(self, trial_id: int, with_path: bool) -> str:
+        fname = CONFIG_JSON_FILENAME + f"_{trial_id}.json"
+        if with_path and self.source_dir is not None:
+            return str(Path(self.source_dir) / fname)
+        else:
+            return fname
+
+    def _hyperparameters_from_config(
+        self, trial_id: int, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Prepares hyperparameters, to be sent to the entry point script as
+        command line arguments, given the configuration ``config``. If
+        ``pass_args_as_json == False``, this is just a copy of ``config``.
+        But otherwise, the configuration is written to a JSON file, whose
+        name becomes a hyperparameter.
+
+        :param config: Configuration
+        :return: Hyperparameters to be passed to estimator entry point
+        """
+        config_copy = config.copy()
+        if not self.pass_args_as_json:
+            return config_copy
+        else:
+            # Make sure that ``source_dir`` attribute is set
+            if self.source_dir is None:
+                entrypoint_path = self.entrypoint_path()
+                source_dir = str(entrypoint_path.parent)
+                entrypoint_name = entrypoint_path.name
+                logger.warning(
+                    "sm_estimator.source_dir is not set, but is needed for "
+                    "pass_args_as_json == True. Setting them to:\n"
+                    f"source_dir = {source_dir}, entry_point = {entrypoint_name}"
+                )
+                self.sm_estimator.source_dir = source_dir
+                self.sm_estimator.entry_point = entrypoint_name
+            # The filename depends on the trial ID. Otherwise, there would be
+            # clashes between trials which run at overlapping times
+            result = {
+                ST_CONFIG_JSON_FNAME_ARG: "./"
+                + self._config_json_filename(trial_id, with_path=False)
+            }
+            # These arguments remain command line parameters
+            if ST_INSTANCE_TYPE in config_copy:
+                result[ST_INSTANCE_TYPE] = config_copy.pop(ST_INSTANCE_TYPE)
+            if ST_INSTANCE_COUNT in config_copy:
+                result[ST_INSTANCE_COUNT] = config_copy.pop(ST_INSTANCE_COUNT)
+            dump_json_with_numpy(
+                config_copy, self._config_json_filename(trial_id, with_path=True)
+            )
+            return result
+
     def _schedule(self, trial_id: int, config: Dict[str, Any]):
-        config[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
-        hyperparameters = config.copy()
+        hyperparameters = self._hyperparameters_from_config(trial_id, config)
+        hyperparameters[ST_CHECKPOINT_DIR] = "/opt/ml/checkpoints"
 
         # This passes the instance type and instance count to the training function in Sagemaker as hyperparameters
         # with reserved names ``st_instance_type`` and ``st_instance_count``.
@@ -205,14 +266,14 @@ class SageMakerBackend(TrialBackend):
         # This allows to: 1) measure cost in the worker 2) tune instance_type and instance_count by having
         # ``st_instance_type`` or ``st_instance_count`` in the config space.
         # TODO once we have a multiobjective scheduler, we should add an example on how to tune instance-type/count.
-        if ST_INSTANCE_TYPE not in hyperparameters:
+        if ST_INSTANCE_TYPE not in config:
             hyperparameters[ST_INSTANCE_TYPE] = self.sm_estimator.instance_type
         else:
-            self.sm_estimator.instance_type = hyperparameters[ST_INSTANCE_TYPE]
-        if ST_INSTANCE_COUNT not in hyperparameters:
+            self.sm_estimator.instance_type = config[ST_INSTANCE_TYPE]
+        if ST_INSTANCE_COUNT not in config:
             hyperparameters[ST_INSTANCE_COUNT] = self.sm_estimator.instance_count
         else:
-            self.sm_estimator.instance_count = hyperparameters[ST_INSTANCE_COUNT]
+            self.sm_estimator.instance_count = config[ST_INSTANCE_COUNT]
 
         if self.sm_estimator.instance_type != "local":
             checkpoint_s3_uri = self._checkpoint_s3_uri_for_trial(trial_id)
@@ -369,7 +430,10 @@ class SageMakerBackend(TrialBackend):
         self.sm_estimator.entry_point = entry_point
 
     def entrypoint_path(self) -> Path:
-        return Path(self.sm_estimator.entry_point)
+        if self.source_dir is None:
+            return Path(self.sm_estimator.entry_point)
+        else:
+            return Path(self.source_dir) / self.sm_estimator.entry_point
 
     def __getstate__(self):
         # dont store sagemaker client that cannot be serialized, we could remove it by changing our interface
@@ -464,3 +528,8 @@ class SageMakerBackend(TrialBackend):
     def on_tuner_save(self):
         # Re-initialize the session after :class:`~syne_tune.Tuner` is serialized
         self.initialize_sagemaker_session()
+
+    def _cleanup_after_trial(self, trial_id: int):
+        if self.pass_args_as_json:
+            filename = self._config_json_filename(trial_id, with_path=True)
+            Path(filename).unlink(missing_ok=True)

@@ -44,9 +44,9 @@ given all previous data), but has robust and easy to use solutions in Syne Tune,
 as we demonstrate here. Here is
 :meth:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher._get_config`:
 
-.. literalinclude:: ../../examples/syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
-   :caption: examples/syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
-   :lines: 112-125
+.. literalinclude:: ../../../../syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
+   :caption: syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
+   :lines: 119-132
 
 * First, :code:`self._next_initial_config()` is called, which returns a
   configuration from ``points_to_evaluate`` if there is still one not yet

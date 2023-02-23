@@ -100,3 +100,8 @@ jobs:
     with:
       additional-command: pip install matplotlib
       script-path: examples/launch_asha_yahpo.py
+
+  launch_height_config_json:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_config_json.py
