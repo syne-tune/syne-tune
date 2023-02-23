@@ -23,10 +23,11 @@ from benchmarking.commons.hpo_main_common import (
     set_logging_level,
     get_metadata,
     ExtraArgsType,
-    MapExtraArgsType,
+    MapMethodArgsType,
     PostProcessingType,
     ConfigDict,
     DictStrKey,
+    extra_metadata,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend import LocalBackend
@@ -75,7 +76,7 @@ def get_benchmark(
 
 
 def create_objects_for_tuner(
-    configuration,
+    configuration: ConfigDict,
     methods: MethodDefinitions,
     method: str,
     benchmark: RealBenchmarkDefinition,
@@ -83,7 +84,7 @@ def create_objects_for_tuner(
     seed: int,
     verbose: bool,
     extra_job_metadata: Optional[DictStrKey] = None,
-    map_extra_args: Optional[MapExtraArgsType] = None,
+    map_method_args: Optional[MapMethodArgsType] = None,
 ) -> Dict[str, Any]:
 
     method_kwargs = {"max_resource_attr": benchmark.max_resource_attr}
@@ -94,8 +95,8 @@ def create_objects_for_tuner(
             },
         }
 
-    if map_extra_args is not None:
-        method_kwargs = map_extra_args(configuration, method, method_kwargs)
+    if map_method_args is not None:
+        method_kwargs = map_method_args(configuration, method, method_kwargs)
 
     method_kwargs.update(
         dict(
@@ -138,19 +139,18 @@ def start_local_benchmark(
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
     post_processing: Optional[PostProcessingType] = None,
-    map_extra_args: Optional[MapExtraArgsType] = None,
+    map_method_args: Optional[MapMethodArgsType] = None,
     tuning_job_metadata: Optional[DictStrKey] = None,
 ):
     """
-    Runs sequence of experiments with local backend sequentially. The loop runs
-    over methods selected from ``methods`` and repetitions, both controlled by
-    command line arguments.
+    Runs sequence of experiments with local backend sequentially.
+    The loop runs over methods selected from ``methods`` and repetitions,
 
-    ``map_extra_args`` can be used to modify ``method_kwargs`` for constructing
+    ``map_method_args`` can be used to modify ``method_kwargs`` for constructing
     :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
-    ``configuration`` returned by :func:`parse_args` and the method. Its signature is
-    :code:`method_kwargs = map_extra_args(configuration, method, method_kwargs)`, where
-    ``method`` is the name of the baseline.
+    ``configuration`` and the method. This allows for extra flexibility to specify specific arguments for chosen methods
+    Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
+    where ``method`` is the name of the baseline.
 
     :param configuration: ConfigDict with parameters of the benchmark
     :param methods: Dictionary with method constructors.
@@ -159,7 +159,7 @@ def start_local_benchmark(
     :param post_processing: Called after tuning has finished, passing the tuner
         as argument. Can be used for postprocessing, such as output or storage
         of extra information
-    :param map_extra_args: See above, optional
+    :param map_method_args: See above, optional
     :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
 
@@ -189,7 +189,7 @@ def start_local_benchmark(
             seed=seed,
             verbose=configuration.verbose,
             extra_job_metadata=tuning_job_metadata,
-            map_extra_args=map_extra_args,
+            map_method_args=map_method_args,
         )
         tuner = Tuner(
             trial_backend=trial_backend,
@@ -204,7 +204,7 @@ def main(
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[ExtraArgsType] = None,
-    map_extra_args: Optional[MapExtraArgsType] = None,
+    map_extra_args: Optional[MapMethodArgsType] = None,
     post_processing: Optional[PostProcessingType] = None,
 ):
     """
@@ -260,10 +260,18 @@ def main(
         else list(methods.keys())
     )
     methods = {mname: methods[mname] for mname in method_names}
+    if extra_args is not None:
+        assert (
+            map_extra_args is not None
+        ), "map_extra_args must be specified if extra_args is used"
+
     start_local_benchmark(
         configuration,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
-        map_extra_args=map_extra_args,
+        map_method_args=map_extra_args,
         post_processing=post_processing,
+        tuning_job_metadata=None
+        if extra_args is None
+        else extra_metadata(configuration, extra_args),
     )

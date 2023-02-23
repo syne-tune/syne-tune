@@ -28,7 +28,7 @@ except ImportError:
 DictStrKey = Dict[str, Any]
 
 
-MapExtraArgsType = Callable[[Any, str, DictStrKey], DictStrKey]
+MapMethodArgsType = Callable[["ConfigDict", str, DictStrKey], DictStrKey]
 
 
 ExtraArgsType = List[DictStrKey]
@@ -57,12 +57,13 @@ class Parameter:
     required: bool = False
 
 
-class ConfigDict(dict):
+class ConfigDict:
     """
     Dictinary with arguments for benchmarking
     Expected params as Parameter(name, type, default value)
     """
 
+    _config: dict = {}
     __base_parameters: List[Parameter] = [
         Parameter(
             name="experiment_tag",
@@ -124,8 +125,8 @@ class ConfigDict(dict):
         ),
     ]
 
-    def __init__(self, *args, **parameters):
-        super().__init__(*args, **parameters)
+    def __init__(self, **kwargs):
+        self._config.update(**kwargs)
         if self.experiment_tag is None:
             try:
                 self.experiment_tag = generate_slug(2)
@@ -135,10 +136,10 @@ class ConfigDict(dict):
         self.seeds = list(range(self.start_seed, self.num_seeds))
 
     def __getattr__(self, attr):
-        return self[attr]
+        return self._config[attr]
 
     def __setattr__(self, attr, value):
-        self[attr] = value
+        self._config[attr] = value
 
     @staticmethod
     def from_argparse(
@@ -206,101 +207,6 @@ class ConfigDict(dict):
             final_config[key] = loaded_config[key]
 
         return ConfigDict(**final_config)
-
-
-def parse_args(
-    methods: DictStrKey, extra_args: Optional[ExtraArgsType] = None
-) -> (Any, List[str], List[int]):
-    """Default implementation for parsing command line arguments.
-
-    :param methods: If ``--method`` is not given, then ``method_names`` are the
-        keys of this dictionary
-    :param extra_args: List of dictionaries, containing additional arguments
-        to be passed. Must contain ``name`` for argument name (without leading
-        ``"--"``), and other kwargs to ``parser.add_argument``. Optional
-    :return: ``(args, method_names, seeds)``, where ``args`` is result of
-        ``parser.parse_args()``, ``method_names`` see ``methods``, and
-        ``seeds`` are list of seeds specified by ``--num_seeds`` and ``--start_seed``
-    """
-    try:
-        default_experiment_tag = generate_slug(2)
-    except Exception:
-        default_experiment_tag = "syne-tune-experiment"
-    parser = ArgumentParser(
-        description=(
-            "Run Syne Tune experiments for several HPO methods, benchmarks, "
-            "and seeds (repetitions). Use hpo_main.py to launch experiments "
-            "locally, or launch_remote.py to launch experiments remotely on AWS"
-        ),
-        epilog="For more information, please visit:\nhttps://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html",
-    )
-    parser.add_argument(
-        "--experiment_tag",
-        type=str,
-        default=default_experiment_tag,
-    )
-    parser.add_argument(
-        "--num_seeds",
-        type=int,
-        default=1,
-        help="Number of seeds to run",
-    )
-    parser.add_argument(
-        "--start_seed",
-        type=int,
-        default=0,
-        help="First seed to run",
-    )
-    parser.add_argument("--method", type=str, help="HPO method to run")
-    parser.add_argument(
-        "--save_tuner",
-        type=int,
-        default=0,
-        help="Serialize Tuner object at the end of tuning?",
-    )
-    parser.add_argument(
-        "--n_workers",
-        type=int,
-        help="Number of workers (overwrites default of benchmark)",
-    )
-    parser.add_argument(
-        "--max_wallclock_time",
-        type=int,
-        help="Maximum runtime for experiment (overwrites default of benchmark)",
-    )
-    parser.add_argument(
-        "--random_seed",
-        type=int,
-        help="Master random seed (drawn at random if not given)",
-    )
-    parser.add_argument(
-        "--max_size_data_for_model",
-        type=int,
-        help=f"Limits number of datapoints for surrogate model of MOBSTER or HyperTune",
-    )
-    parser.add_argument(
-        "--scale_max_wallclock_time",
-        type=int,
-        default=0,
-        help=(
-            "If 1, benchmark.max_wallclock_time is multiplied by B / min(A, B),"
-            "where A = n_workers and B = benchmark.n_workers"
-        ),
-    )
-    if extra_args is not None:
-        extra_args = copy.deepcopy(extra_args)
-        for kwargs in extra_args:
-            name = kwargs.pop("name")
-            assert (
-                name[0] != "-"
-            ), f"Name entry '{name}' in extra_args invalid: No leading '-'"
-            parser.add_argument("--" + name, **kwargs)
-    args = parser.parse_args()
-    args.save_tuner = bool(args.save_tuner)
-    args.scale_max_wallclock_time = bool(args.scale_max_wallclock_time)
-    seeds = list(range(args.start_seed, args.num_seeds))
-    method_names = [args.method] if args.method is not None else list(methods.keys())
-    return args, method_names, seeds
 
 
 def set_logging_level(args: ConfigDict):
