@@ -53,8 +53,6 @@ _DEFAULT_OPTIONS = {
 }
 
 _CONSTRAINTS = {
-    "metric": String(),
-    "mode": Categorical(choices=("min", "max")),
     "random_seed": Integer(0, 2**32 - 1),
     "max_resource_attr": String(),
     "max_t": Integer(1, None),
