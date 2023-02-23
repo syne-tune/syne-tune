@@ -220,6 +220,7 @@ class SageMakerBackend(TrialBackend):
         But otherwise, the configuration is written to a JSON file, whose
         name becomes a hyperparameter.
 
+        :param trial_id: ID of trial
         :param config: Configuration
         :return: Hyperparameters to be passed to estimator entry point
         """
