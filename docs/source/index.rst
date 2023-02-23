@@ -18,6 +18,8 @@ Syne Tune: Large-Scale and Reproducible Hyperparameter Optimization
 
 This package provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
 
+Testing 123 123 123
+
 * Wide coverage (>20) of different HPO methods, including:
 
   * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
