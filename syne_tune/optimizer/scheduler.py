@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 import logging
 
 from syne_tune.backend.trial_status import Trial
@@ -251,14 +251,16 @@ class TrialScheduler:
     def metric_names(self) -> List[str]:
         """
         :return: List of metric names. The first one is the target
-            metric optimized over
+            metric optimized over, unless the scheduler is a genuine
+            multi-objective metric (for example, for sampling the Pareto front)
         """
         raise NotImplementedError()
 
-    def metric_mode(self) -> str:
+    def metric_mode(self) -> Union[str, List[str]]:
         """
         :return: "min" if target metric is minimized, otherwise "max".
-            Here, "min" should be the default.
+            Here, "min" should be the default. For a genuine multi-objective
+            scheduler, a list of modes is returned
         """
         if hasattr(self, "mode"):
             return self.mode
