@@ -6,6 +6,7 @@ categories:
   - title: "New Features"
     labels:
       - "feature"
+      - "enhancement"
   - title: "Documentation Updates"
     labels:
       - "documentation"
@@ -34,9 +35,9 @@ version-resolver:
   default: patch
 tag-template: 'v$RESOLVED_VERSION'
 template: |
-  ## Summary
+  ## What's New
 
-  **[Executive summary of changes]**
+  **[Insert summary of changes in this release here]**
 
   ## Changes
 
