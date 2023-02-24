@@ -72,6 +72,29 @@ projects, by default, use the default GitHub issue labels
 'help wanted' issues is a great place to start.
 
 
+## Contributing to the Documentation
+
+We also greatly value contributions to our [documentation](https://github.com/awslabs/syne-tune/tree/main/docs/source).
+In fact, some of our tutorials have been developed by external contributors. You
+can build the docs locally (assuming you have installed Syne Tune as `dev` or
+`extra`):
+
+```bash
+cd docs
+rm -rf source/_apidoc
+make clean
+make html
+```
+
+Then, load `docs/build/html/index.html` in your browser. Here are some further
+hints:
+
+* When looking at a pull request on GitHub, you can also explore the documentation
+  that this PR implies. Locate the check **docs/readthedocs.org:syne-tune**, click
+  on `Details`, then on the small `View docs` link just under `Build took X seconds`
+  (not the tall `View docs` link in the upper right).
+
+
 ## Code of Conduct
 
 This project has adopted the [Amazon Open Source Code of Conduct](https://aws.github.io/code-of-conduct).
