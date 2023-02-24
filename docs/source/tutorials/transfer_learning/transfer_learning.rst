@@ -20,14 +20,23 @@ look at three of them:
 We compare them to standard
 :class:`~syne_tune.optimizer.baselines.BayesianOptimization` (BO).
 
-We construct a set of tasks based on the height example. We first collect
-evaluations of five tasks, and then compare results on the sixth. We consider
-the single-fidelity case. The code is available
+We construct a set of tasks based on the
+:ref:`height example <train_height_script>`. We first collect
+evaluations on five tasks, and then compare results on the sixth. We consider
+the single-fidelity case. For each task we assume a budget of 10 (`max_trials`)
+evaluations.
+We use BO on the preliminary tasks, and for the transfer task we compare BO,
+ZeroShot, BoundingBox and Quantiles. The set of tasks is made by adjusting the
+`max_steps` parameter in the height example, but could correspond to adjusting
+the training data instead.
+
+The code is available
 `here <../../examples.html#transfer-learning-example>`_.
 Make sure to run it as
 `python launch_transfer_learning_example.py --generate_plots`
 if you want to generate the plots locally.
-The schedulers vary slightly between runs, so your plots might look different.
+The optimisations vary between runs, so your plots might look
+different.
 
 In order to run our transfer learning schedulers we need to parse the output of
 the tuner into a dict of
@@ -38,9 +47,11 @@ We do this in the `extract_transferable_evaluations` function.
    :caption: Code to prepare evaluations from previous tasks for transfer learning.
    :lines: 76-96
 
-We start by collecting evaluations by running `BayesianOptimization` on five
+We start by collecting evaluations by running `BayesianOptimization` on
+the five preliminary
 tasks. We generate the different tasks by setting `max_steps=1..5` in the
-backend in `init_scheduler`. Once we have run BO on the task we store the
+backend in `init_scheduler`, giving five very similar tasks.
+Once we have run BO on the task we store the
 evaluations as `TransferLearningTaskEvaluations`.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
@@ -58,7 +69,9 @@ not have evaluations of the same configurations on all previous tasks.
 
 We plot the results on the transfer task. We see that the early performance of
 the transfer schedulers is much better than standard BO. We only plot the first
-`max_trials` results.
+`max_trials` results. The transfer task is very similar to the preliminary
+tasks, so we expect the transfer schedulers to do well. And that is what we see
+in the plot below.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Plotting helper code.

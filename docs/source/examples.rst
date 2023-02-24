@@ -398,12 +398,15 @@ Transfer Learning Example
 
 **Requirements**:
 
-* Needs ``matplotlib`` to be installed: ``pip install matplotlib``
+* Needs ``matplotlib`` to be installed if the plotting flag is given:
+  ``pip install matplotlib``
 
 An example of how to use evaluations collected in Syne Tune to run a transfer
 learning scheduler. Makes use of :ref:`train_height.py <train_height_script>`.
 Used in the
 `transfer learning tutorial <tutorials/transfer_learning/transfer_learning.html>`_.
+To plot the figures, run as
+`python launch_transfer_learning_example.py --generate_plots`.
 
 
 Plot Results of Tuning Experiment
