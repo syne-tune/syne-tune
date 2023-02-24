@@ -1,0 +1,47 @@
+change-template: "* $TITLE (#$NUMBER) by @$AUTHOR"
+categories:
+  - title: "Breaking Changes"
+    labels:
+      - "breaking-change"
+  - title: "New Features"
+    labels:
+      - "feature"
+  - title: "Documentation Updates"
+    labels:
+      - "documentation"
+  - title: "Bugfixes"
+    labels:
+      - "bug"
+      - "fix"
+  - title: "Maintenance"
+    labels:
+      - "chore"
+      - "internal"
+      - "dependencies"
+version-resolver:
+  # major: # do not automatically bump major versions, only do this manually
+  #   labels:
+  #     - 'major'
+  #     - "breaking-change"
+  minor:
+    labels:
+      - 'minor'
+      - 'feature'
+  patch:
+    labels:
+      - 'patch'
+      - 'fix'
+  default: patch
+tag-template: 'v$RESOLVED_VERSION'
+template: |
+  ## Summary
+
+  **[Executive summary of changes]**
+
+  ## Changes
+
+  $CHANGES
+
+  ## This release was made possible by the following contributors:
+
+  $CONTRIBUTORS
