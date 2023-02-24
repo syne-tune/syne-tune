@@ -33,7 +33,7 @@ look at three of them:
     | *David Salinas, Huibin Shen, Valerio Perrone.*
     | *ICML 2020.*
     |
-    | We map the hyperparameter evaluations to quantiles for each task. Then we learn a distribution of quantiles given hyperparameters. Finally we sample from the distribution and evaluate the best sample. The idea is to speed up optimisation by searching areas with high-ranking configurations but without enforcing hard limits on the search space.
+    | We map the hyperparameter evaluations to quantiles for each task. Then we learn a distribution of quantiles given hyperparameters. Finally, we sample from the distribution and evaluate the best sample. The idea is to speed up optimisation by searching areas with high-ranking configurations but without enforcing hard limits on the search space.
 
 We compare them to standard
 :class:`~syne_tune.optimizer.baselines.BayesianOptimization` (BO).
