@@ -7,6 +7,9 @@ smaller to a larger model. We already have a collection of hyperparameter
 evaluations for the smaller model. Then we can use these to guide our
 hyperparameter optimisation of the larger model, for instance by starting with
 the configuration that performed best.
+Or imagine that we keep the same model, but add more training data or add
+another data feature. Then we expect good hyperparameter configurations on the
+previous training data to work well on the augmented data set as well.
 
 Syne Tune includes implementations of several transfer learning schedulers; a
 list of available schedulers is given
