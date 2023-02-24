@@ -374,7 +374,6 @@ def test_schedulers_api(scheduler):
     else:
         assert scheduler.metric_names() == [metric1]
 
-    print(scheduler, mode)
     if isinstance(scheduler, MOREA):
         assert scheduler.metric_mode() == [mode, mode]
 
