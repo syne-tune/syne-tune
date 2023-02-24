@@ -23,46 +23,46 @@ We compare them to standard
 We construct a set of tasks based on the height example. We first collect
 evaluations of five tasks, and then compare results on the sixth. We consider
 the single-fidelity case. The code is available
-`here <transfer_learning_example.py>`_.
+`here <../../examples.html#transfer-learning-example>`_.
 
 In order to run our transfer learning schedulers we need to parse the output of
 the tuner into a dict of
 :class:`~syne_tune.optimizer.schedulers.transfer_learning.TransferLearningTaskEvaluations`.
 We do this in the `extract_transferable_evaluations` function.
 
-.. literalinclude:: transfer_learning_example.py
+.. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to prepare evaluations from previous tasks for transfer learning.
-   :lines: 76-96
+   :lines: 75-95
 
 We start by collecting evaluations by running `BayesianOptimization` on five
 tasks. We generate the different tasks by setting `max_steps=1..5` in the
 backend in `init_scheduler`. Once we have run BO on the task we store the
 evaluations as `TransferLearningTaskEvaluations`.
 
-.. literalinclude:: transfer_learning_example.py
+.. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to initialise schedulers, use it to optimise a task and collect evaluations on preliminary tasks.
-   :lines: 99-185
+   :lines: 98-189
 
 Then we run different schedulers to compare on our transfer task with
 `max_steps=6`. For `ZeroShotTransfer` we set `use_surrogates=True`, meaning
 that it uses an XGBoost model to estimate the rank of configurations, as we do
 not have evaluations of the same configurations on all previous tasks.
 
-.. literalinclude:: transfer_learning_example.py
+.. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to run schedulers on transfer task.
-   :lines: 187-203
+   :lines: 191-207
 
 We plot the results on the transfer task. We see that the early performance of
 the transfer schedulers is much better than standard BO. We only plot the first
 `max_trials` results.
 
-.. literalinclude:: transfer_learning_example.py
+.. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Plotting helper code.
-   :lines: 43-73
+   :lines: 42-72
 
-.. literalinclude:: transfer_learning_example.py
+.. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot results on transfer task.
-   :lines: 205-218
+   :lines: 209-222
 
 .. image:: Transfer_task.png
    :width: 768 px
@@ -70,9 +70,9 @@ the transfer schedulers is much better than standard BO. We only plot the first
 We also look at the parts of the search space explored. First by looking at the
 preliminary tasks.
 
-.. literalinclude:: transfer_learning_example.py
+.. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot the configurations tried for the preliminary tasks.
-   :lines: 220-234
+   :lines: 224-238
 
 .. image:: Configs_explored_preliminary.png
    :width: 768 px
@@ -82,9 +82,9 @@ transfer methods the first tested point (marked as a square) is closer to the
 previously explored optima (in black crosses), than for BO which starts by
 checking the middle of the search space.
 
-.. literalinclude:: transfer_learning_example.py
+.. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot the configurations tried for the transfer task.
-   :lines: 236-
+   :lines: 240-
 
 .. image:: Configs_explored_transfer.png
    :width: 768 px

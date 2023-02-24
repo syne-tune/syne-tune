@@ -21,7 +21,6 @@ from examples.training_scripts.height_example.train_height import (
 
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
-from pathlib import Path
 from syne_tune.optimizer.baselines import BayesianOptimization, ZeroShotTransfer
 from syne_tune.optimizer.schedulers import FIFOScheduler
 
@@ -34,10 +33,10 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
     QuantileBasedSurrogateSearcher,
 )
 
-import numpy as np
-import matplotlib.pyplot as plt
 import copy
-import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from pathlib import Path
 
 
 def add_labels(ax, conf_space, title):
@@ -162,7 +161,12 @@ if __name__ == "__main__":
     max_trials = 10
     np.random.seed(1)
     # Use train_height backend for our tests
-    entry_point = "../../../../examples/training_scripts/height_example/train_height.py"
+    entry_point = str(
+        Path(__file__).parent
+        / "training_scripts"
+        / "height_example"
+        / "train_height.py"
+    )
 
     # Collect evaluations on preliminary tasks
     transfer_learning_evaluations = {}
