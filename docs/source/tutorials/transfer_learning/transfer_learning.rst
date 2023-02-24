@@ -13,9 +13,24 @@ list of available schedulers is given
 `here <../../getting_started.html#supported-hpo-methods>`_. In this tutorial we
 look at three of them:
 
-* :class:`~syne_tune.optimizer.baselines.ZeroShotTransfer`: First we calculate the rank of each hyperparameter configuration on each previous task. Then we choose configurations in order to minimise the sum of the ranks across the previous tasks. The idea is to speed up optimisation by picking configurations with high ranks on previous tasks.
-* :class:`~syne_tune.optimizer.schedulers.transfer_learning.BoundingBox`: We construct a smaller hyperparameter search space by taking the minimum box which contains the optimal configurations for the previous tasks. The idea is to speed up optimisation by not searching areas which have been suboptimal for all previous tasks.
-* Quantiles (:class:`~syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher`): We map the hyperparameter evaluations to quantiles for each task. Then we learn a distribution of quantiles given hyperparameters. Finally we sample from the distribution and evaluate the best sample. The idea is to speed up optimisation by searching areas with high-ranking configurations but without enforcing hard limits on the search space.
+* :class:`~syne_tune.optimizer.baselines.ZeroShotTransfer`
+    | *Sequential Model-Free Hyperparameter Tuning.*
+    | *Martin Wistuba, Nicolas Schilling, Lars Schmidt-Thieme.*
+    | *IEEE International Conference on Data Mining (ICDM) 2015.*
+    |
+    | First we calculate the rank of each hyperparameter configuration on each previous task. Then we choose configurations in order to minimise the sum of the ranks across the previous tasks. The idea is to speed up optimisation by picking configurations with high ranks on previous tasks.
+* :class:`~syne_tune.optimizer.schedulers.transfer_learning.BoundingBox`
+    | *Learning search spaces for Bayesian optimization: Another view of hyperparameter transfer learning.*
+    | *Valerio Perrone, Huibin Shen, Matthias Seeger, Cédric Archambeau, Rodolphe Jenatton.*
+    | *NeurIPS 2019.*
+    |
+    | We construct a smaller hyperparameter search space by taking the minimum box which contains the optimal configurations for the previous tasks. The idea is to speed up optimisation by not searching areas which have been suboptimal for all previous tasks.
+* Quantiles (:class:`~syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher`)
+    | *A Quantile-based Approach for Hyperparameter Transfer Learning.*
+    | *David Salinas, Huibin Shen, Valerio Perrone.*
+    | *ICML 2020.*
+    |
+    | We map the hyperparameter evaluations to quantiles for each task. Then we learn a distribution of quantiles given hyperparameters. Finally we sample from the distribution and evaluate the best sample. The idea is to speed up optimisation by searching areas with high-ranking configurations but without enforcing hard limits on the search space.
 
 We compare them to standard
 :class:`~syne_tune.optimizer.baselines.BayesianOptimization` (BO).
