@@ -1,3 +1,19 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+"""
+Example collecting evaluations and using them for transfer learning on a
+related task.
+"""
 from examples.training_scripts.height_example.train_height import (
     height_config_space,
     METRIC_ATTR,
@@ -57,20 +73,24 @@ def plot_last_task(max_trials, df, label, metric, color):
     plt.plot([np.min(df[metric][:ii]) for ii in range(1, max_trials + 1)], color=color)
 
 
+def filter_completed(df):
+    # Filter out runs that didn't finish
+    return df[df["status"] == "Completed"].reset_index()
+
+
 def extract_transferable_evaluations(df, metric, config_space):
     """
     Take a dataframe from a tuner run, filter it and generate
     TransferLearningTaskEvaluations from it
     """
-
-    # Filter out nan values, i.e. make sure we only use completed runs
-    filter_df = df[~pd.isna(df[metric])].reset_index()
+    filter_df = filter_completed(df)
 
     return TransferLearningTaskEvaluations(
         configuration_space=config_space,
         hyperparameters=filter_df[config_space.keys()],
         objectives_names=[metric],
-        # objectives_evaluations need to be of shape (num_evals, num_seeds, num_fidelities, num_objectives)
+        # objectives_evaluations need to be of shape
+        # (num_evals, num_seeds, num_fidelities, num_objectives)
         # We only have one seed, fidelity and objective
         objectives_evaluations=np.array(filter_df[metric], ndmin=4).T,
     )
@@ -156,6 +176,7 @@ if __name__ == "__main__":
             transfer_learning_evaluations=None,
         )
 
+        print("Optimising preliminary task %s" % max_steps)
         prev_task = run_scheduler_on_task(entry_point, scheduler, max_trials)
 
         # Generate TransferLearningTaskEvaluations from previous task
@@ -176,6 +197,7 @@ if __name__ == "__main__":
             metric=METRIC_ATTR,
             transfer_learning_evaluations=transfer_learning_evaluations,
         )
+        print("Optimising transfer task using %s" % scheduler_str)
         transfer_task_results[scheduler_str] = run_scheduler_on_task(
             entry_point, scheduler, max_trials
         )
@@ -207,7 +229,7 @@ if __name__ == "__main__":
     add_labels(
         ax,
         scheduler.config_space,
-        "Explored locations of BO for different preliminary tasks",
+        "Explored locations of BO for preliminary tasks",
     )
     plt.savefig("Configs_explored_preliminary.png", bbox_inches="tight")
 
@@ -216,14 +238,15 @@ if __name__ == "__main__":
 
     # Plot the configs tried by the different schedulers on the transfer task
     for label in labels:
+        finished_trials = filter_completed(transfer_task_results[label])
         scatter_space_exploration(
-            ax, transfer_task_results[label], max_trials, label, color=colours[label]
+            ax, finished_trials, max_trials, label, color=colours[label]
         )
 
         # Plot the first config tested as a big square
         ax.scatter(
-            transfer_task_results[label]["width"][0],
-            transfer_task_results[label]["height"][0],
+            finished_trials["width"][0],
+            finished_trials["height"][0],
             marker="s",
             color=colours[label],
             s=100,
@@ -233,7 +256,9 @@ if __name__ == "__main__":
     past_label = "Preliminary optima"
     for key in transfer_learning_evaluations:
         argmin = np.argmin(
-            transfer_learning_evaluations[key].objective_values(METRIC_ATTR)[:, 0, 0]
+            transfer_learning_evaluations[key].objective_values(METRIC_ATTR)[
+                :max_trials, 0, 0
+            ]
         )
         ax.scatter(
             transfer_learning_evaluations[key].hyperparameters["width"][argmin],
