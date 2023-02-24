@@ -29,7 +29,7 @@ from syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority impor
 class MultiObjectiveRegularizedEvolution(RegularizedEvolution):
     """
     Adapts regularized evolution algorithm by Real et al. to the multi-objective setting. Elements in the
-    populations are scored via non-dominated sorting. Parents are sampled from the population based on
+    populations are scored via a multi-objective priority that is set to non-dominated sort by default. Parents are sampled from the population based on
     this score.
 
     Additional arguments on top of parent class
