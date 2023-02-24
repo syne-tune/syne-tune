@@ -24,6 +24,10 @@ We construct a set of tasks based on the height example. We first collect
 evaluations of five tasks, and then compare results on the sixth. We consider
 the single-fidelity case. The code is available
 `here <../../examples.html#transfer-learning-example>`_.
+Make sure to run it as
+`python launch_transfer_learning_example.py --generate_plots`
+if you want to generate the plots locally.
+The schedulers vary slightly between runs, so your plots might look different.
 
 In order to run our transfer learning schedulers we need to parse the output of
 the tuner into a dict of
@@ -32,7 +36,7 @@ We do this in the `extract_transferable_evaluations` function.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to prepare evaluations from previous tasks for transfer learning.
-   :lines: 75-95
+   :lines: 76-96
 
 We start by collecting evaluations by running `BayesianOptimization` on five
 tasks. We generate the different tasks by setting `max_steps=1..5` in the
@@ -41,7 +45,7 @@ evaluations as `TransferLearningTaskEvaluations`.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to initialise schedulers, use it to optimise a task and collect evaluations on preliminary tasks.
-   :lines: 98-189
+   :lines: 99-186
 
 Then we run different schedulers to compare on our transfer task with
 `max_steps=6`. For `ZeroShotTransfer` we set `use_surrogates=True`, meaning
@@ -50,7 +54,7 @@ not have evaluations of the same configurations on all previous tasks.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to run schedulers on transfer task.
-   :lines: 191-207
+   :lines: 188-204
 
 We plot the results on the transfer task. We see that the early performance of
 the transfer schedulers is much better than standard BO. We only plot the first
@@ -58,11 +62,11 @@ the transfer schedulers is much better than standard BO. We only plot the first
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Plotting helper code.
-   :lines: 42-72
+   :lines: 43-73
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot results on transfer task.
-   :lines: 209-222
+   :lines: 206-230
 
 .. image:: Transfer_task.png
    :width: 768 px
@@ -72,7 +76,7 @@ preliminary tasks.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot the configurations tried for the preliminary tasks.
-   :lines: 224-238
+   :lines: 232-246
 
 .. image:: Configs_explored_preliminary.png
    :width: 768 px
@@ -84,7 +88,7 @@ checking the middle of the search space.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot the configurations tried for the transfer task.
-   :lines: 240-
+   :lines: 248-
 
 .. image:: Configs_explored_transfer.png
    :width: 768 px

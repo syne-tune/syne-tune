@@ -17,6 +17,7 @@ related task.
 from examples.training_scripts.height_example.train_height import (
     height_config_space,
     METRIC_ATTR,
+    METRIC_MODE,
 )
 
 from syne_tune import Tuner, StoppingCriterion
@@ -33,8 +34,8 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
     QuantileBasedSurrogateSearcher,
 )
 
+import argparse
 import copy
-import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 
@@ -135,7 +136,6 @@ def init_scheduler(
 
     if scheduler_str == "Quantiles":
         return FIFOScheduler(
-            points_to_evaluate=[],
             searcher=QuantileBasedSurrogateSearcher(**kwargs_w_trans),
             **kwargs,
         )
@@ -144,10 +144,8 @@ def init_scheduler(
         kwargs_sched_fun = {key: kwargs[key] for key in kwargs if key != "config_space"}
         kwargs_w_trans[
             "scheduler_fun"
-        ] = lambda new_config_space, mode, metric: FIFOScheduler(
+        ] = lambda new_config_space, mode, metric: BayesianOptimization(
             new_config_space,
-            points_to_evaluate=[],
-            searcher="bayesopt",
             **kwargs_sched_fun,
         )
         del kwargs_w_trans["random_seed"]
@@ -157,7 +155,6 @@ def init_scheduler(
 
 if __name__ == "__main__":
 
-    mode = "min"
     max_trials = 10
     np.random.seed(1)
     # Use train_height backend for our tests
@@ -175,7 +172,7 @@ if __name__ == "__main__":
             "BayesianOptimization",
             max_steps=max_steps,
             seed=np.random.randint(100),
-            mode=mode,
+            mode=METRIC_MODE,
             metric=METRIC_ATTR,
             transfer_learning_evaluations=None,
         )
@@ -197,7 +194,7 @@ if __name__ == "__main__":
             scheduler_str,
             max_steps=max_steps,
             seed=max_steps,
-            mode=mode,
+            mode=METRIC_MODE,
             metric=METRIC_ATTR,
             transfer_learning_evaluations=transfer_learning_evaluations,
         )
@@ -206,71 +203,82 @@ if __name__ == "__main__":
             entry_point, scheduler, max_trials
         )
 
-    """ Plot the results on the transfer task """
-    for label in labels:
-        plot_last_task(
-            max_trials,
-            transfer_task_results[label],
-            label=label,
-            metric=METRIC_ATTR,
-            color=colours[label],
-        )
-    plt.legend()
-    plt.ylabel(METRIC_ATTR)
-    plt.xlabel("Iteration")
-    plt.title("Transfer task (max_steps=6)")
-    plt.savefig("Transfer_task.png", bbox_inches="tight")
-
-    """ Plot the configs tried for the preliminary tasks """
-    fig, ax = plt.subplots()
-    for key in transfer_learning_evaluations:
-        scatter_space_exploration(
-            ax,
-            transfer_learning_evaluations[key].hyperparameters,
-            max_trials,
-            "Task %s" % key,
-        )
-    add_labels(
-        ax,
-        scheduler.config_space,
-        "Explored locations of BO for preliminary tasks",
+    # Optionally generate plots. Defaults to False
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--generate_plots", action="store_true", help="generate optimisation plots."
     )
-    plt.savefig("Configs_explored_preliminary.png", bbox_inches="tight")
+    args = parser.parse_args()
 
-    """ Plot the configs tried for the transfer task """
-    fig, ax = plt.subplots()
+    if args.generate_plots:
+        print("Generating optimisation plots.")
+        import matplotlib.pyplot as plt
 
-    # Plot the configs tried by the different schedulers on the transfer task
-    for label in labels:
-        finished_trials = filter_completed(transfer_task_results[label])
-        scatter_space_exploration(
-            ax, finished_trials, max_trials, label, color=colours[label]
-        )
+        """ Plot the results on the transfer task """
+        for label in labels:
+            plot_last_task(
+                max_trials,
+                transfer_task_results[label],
+                label=label,
+                metric=METRIC_ATTR,
+                color=colours[label],
+            )
+        plt.legend()
+        plt.ylabel(METRIC_ATTR)
+        plt.xlabel("Iteration")
+        plt.title("Transfer task (max_steps=6)")
+        plt.savefig("Transfer_task.png", bbox_inches="tight")
 
-        # Plot the first config tested as a big square
-        ax.scatter(
-            finished_trials["width"][0],
-            finished_trials["height"][0],
-            marker="s",
-            color=colours[label],
-            s=100,
+        """ Plot the configs tried for the preliminary tasks """
+        fig, ax = plt.subplots()
+        for key in transfer_learning_evaluations:
+            scatter_space_exploration(
+                ax,
+                transfer_learning_evaluations[key].hyperparameters,
+                max_trials,
+                "Task %s" % key,
+            )
+        add_labels(
+            ax,
+            scheduler.config_space,
+            "Explored locations of BO for preliminary tasks",
         )
+        plt.savefig("Configs_explored_preliminary.png", bbox_inches="tight")
 
-    # Plot the optima from the preliminary tasks as black crosses
-    past_label = "Preliminary optima"
-    for key in transfer_learning_evaluations:
-        argmin = np.argmin(
-            transfer_learning_evaluations[key].objective_values(METRIC_ATTR)[
-                :max_trials, 0, 0
-            ]
-        )
-        ax.scatter(
-            transfer_learning_evaluations[key].hyperparameters["width"][argmin],
-            transfer_learning_evaluations[key].hyperparameters["height"][argmin],
-            color="k",
-            marker="x",
-            label=past_label,
-        )
-        past_label = None
-    add_labels(ax, scheduler.config_space, "Explored locations for transfer task")
-    plt.savefig("Configs_explored_transfer.png", bbox_inches="tight")
+        """ Plot the configs tried for the transfer task """
+        fig, ax = plt.subplots()
+
+        # Plot the configs tried by the different schedulers on the transfer task
+        for label in labels:
+            finished_trials = filter_completed(transfer_task_results[label])
+            scatter_space_exploration(
+                ax, finished_trials, max_trials, label, color=colours[label]
+            )
+
+            # Plot the first config tested as a big square
+            ax.scatter(
+                finished_trials["width"][0],
+                finished_trials["height"][0],
+                marker="s",
+                color=colours[label],
+                s=100,
+            )
+
+        # Plot the optima from the preliminary tasks as black crosses
+        past_label = "Preliminary optima"
+        for key in transfer_learning_evaluations:
+            argmin = np.argmin(
+                transfer_learning_evaluations[key].objective_values(METRIC_ATTR)[
+                    :max_trials, 0, 0
+                ]
+            )
+            ax.scatter(
+                transfer_learning_evaluations[key].hyperparameters["width"][argmin],
+                transfer_learning_evaluations[key].hyperparameters["height"][argmin],
+                color="k",
+                marker="x",
+                label=past_label,
+            )
+            past_label = None
+        add_labels(ax, scheduler.config_space, "Explored locations for transfer task")
+        plt.savefig("Configs_explored_transfer.png", bbox_inches="tight")

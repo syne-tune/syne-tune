@@ -103,12 +103,6 @@ jobs:
       requires-aws-credentials: true
     secrets: inherit
 
-  launch_transfer_learning_example:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      additional-command: pip install matplotlib
-      script-path: examples/launch_transfer_learning_example.py
-
   launch_nasbench201_simulated:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
