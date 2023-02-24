@@ -1,64 +1,90 @@
 Using Syne Tune for Transfer Learning
 ======================================
 
-Transfer learning allows us to speed up our current optimisation by learning from related optimisation runs. For instance, imagine we want to change from a smaller to a larger model. We already have a collection of hyperparameter evaluations for the smaller model. Then we can use these to guide our hyperparameter optimisation of the larger model, for instance by starting with the configuration that performed best. 
+Transfer learning allows us to speed up our current optimisation by learning
+from related optimisation runs. For instance, imagine we want to change from a
+smaller to a larger model. We already have a collection of hyperparameter
+evaluations for the smaller model. Then we can use these to guide our
+hyperparameter optimisation of the larger model, for instance by starting with
+the configuration that performed best.
 
-Syne Tune includes implementations of several transfer learning schedulers; a list of available schedulers is given  `here <../../getting_started.html#supported-hpo-methods>`_. In this tutorial we look at three of them: 
+Syne Tune includes implementations of several transfer learning schedulers; a
+list of available schedulers is given
+`here <../../getting_started.html#supported-hpo-methods>`_. In this tutorial we
+look at three of them:
 
 * :class:`~syne_tune.optimizer.baselines.ZeroShotTransfer`: First we calculate the rank of each hyperparameter configuration on each previous task. Then we choose configurations in order to minimise the sum of the ranks across the previous tasks. The idea is to speed up optimisation by picking configurations with high ranks on previous tasks.
 * :class:`~syne_tune.optimizer.schedulers.transfer_learning.BoundingBox`: We construct a smaller hyperparameter search space by taking the minimum box which contains the optimal configurations for the previous tasks. The idea is to speed up optimisation by not searching areas which have been suboptimal for all previous tasks.
 * Quantiles (:class:`~syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher`): We map the hyperparameter evaluations to quantiles for each task. Then we learn a distribution of quantiles given hyperparameters. Finally we sample from the distribution and evaluate the best sample. The idea is to speed up optimisation by searching areas with high-ranking configurations but without enforcing hard limits on the search space.
 
-We compare them to standard :class:`~syne_tune.optimizer.baselines.BayesianOptimization` (BO).
+We compare them to standard
+:class:`~syne_tune.optimizer.baselines.BayesianOptimization` (BO).
 
-We construct a set of tasks based on the height example. We first collect evaluations of five tasks, and then compare results on the sixth. We consider the single-fidelity case. The code is available `here <transfer_learning_example.py>`_.
+We construct a set of tasks based on the height example. We first collect
+evaluations of five tasks, and then compare results on the sixth. We consider
+the single-fidelity case. The code is available
+`here <transfer_learning_example.py>`_.
 
-In order to run our transfer learning schedulers we need to parse the output of the tuner into a dict of :class:`~syne_tune.optimizer.schedulers.transfer_learning.TransferLearningTaskEvaluations`. We do this in the `extract_transferable_evaluations` function.
+In order to run our transfer learning schedulers we need to parse the output of
+the tuner into a dict of
+:class:`~syne_tune.optimizer.schedulers.transfer_learning.TransferLearningTaskEvaluations`.
+We do this in the `extract_transferable_evaluations` function.
 
 .. literalinclude:: transfer_learning_example.py
    :caption: Code to prepare evaluations from previous tasks for transfer learning.
    :lines: 76-96
 
-We start by collecting evaluations by running `BayesianOptimization` on five tasks. We generate the different tasks by setting `max_steps=1..5` in the backend in `init_scheduler`. Once we have run BO on the task we store the evaluations as `TransferLearningTaskEvaluations`. 
+We start by collecting evaluations by running `BayesianOptimization` on five
+tasks. We generate the different tasks by setting `max_steps=1..5` in the
+backend in `init_scheduler`. Once we have run BO on the task we store the
+evaluations as `TransferLearningTaskEvaluations`.
 
 .. literalinclude:: transfer_learning_example.py
    :caption: Code to initialise schedulers, use it to optimise a task and collect evaluations on preliminary tasks.
    :lines: 99-185
 
-
-Then we run different schedulers to compare on our transfer task with `max_steps=6`. For `ZeroShotTransfer` we set `use_surrogates=True`, meaning that it uses an XGBoost model to estimate the rank of configurations, as we do not have evaluations of the same configurations on all previous tasks.  
+Then we run different schedulers to compare on our transfer task with
+`max_steps=6`. For `ZeroShotTransfer` we set `use_surrogates=True`, meaning
+that it uses an XGBoost model to estimate the rank of configurations, as we do
+not have evaluations of the same configurations on all previous tasks.
 
 .. literalinclude:: transfer_learning_example.py
    :caption: Code to run schedulers on transfer task.
    :lines: 187-203
 
-We plot the results on the transfer task. We see that the early performance of the transfer schedulers is much better than standard BO. We only plot the first `max_trials` results.
+We plot the results on the transfer task. We see that the early performance of
+the transfer schedulers is much better than standard BO. We only plot the first
+`max_trials` results.
 
 .. literalinclude:: transfer_learning_example.py
    :caption: Plotting helper code.
    :lines: 43-73
-   
+
 .. literalinclude:: transfer_learning_example.py
    :caption: Code to plot results on transfer task.
    :lines: 205-218
-   
+
 .. image:: Transfer_task.png
    :width: 768 px
 
-We also look at the parts of the search space explored. First by looking at the preliminary tasks.
+We also look at the parts of the search space explored. First by looking at the
+preliminary tasks.
 
 .. literalinclude:: transfer_learning_example.py
    :caption: Code to plot the configurations tried for the preliminary tasks.
    :lines: 220-234
-   
+
 .. image:: Configs_explored_preliminary.png
    :width: 768 px
 
-Then we look at the explored search space for the transfer task. For all the transfer methods the first tested point (marked as a square) is closer to the previously explored optima (in black crosses), than for BO which starts by checking the middle of the search space.
+Then we look at the explored search space for the transfer task. For all the
+transfer methods the first tested point (marked as a square) is closer to the
+previously explored optima (in black crosses), than for BO which starts by
+checking the middle of the search space.
 
 .. literalinclude:: transfer_learning_example.py
    :caption: Code to plot the configurations tried for the transfer task.
    :lines: 236-
-   
+
 .. image:: Configs_explored_transfer.png
    :width: 768 px
