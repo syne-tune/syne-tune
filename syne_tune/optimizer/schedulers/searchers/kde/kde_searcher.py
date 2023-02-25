@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import logging
 import numpy as np
 import statsmodels.api as sm
@@ -269,10 +269,13 @@ class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
-    def _get_config(self, **kwargs) -> Optional[dict]:
+    def _get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
         suggestion = self._next_initial_config()
         if suggestion is None:
-            models = self._train_kde(np.array(self.X), np.array(self.y))
+            if self.y:
+                models = self._train_kde(np.array(self.X), np.array(self.y))
+            else:
+                models = None
 
             if models is None or self.random_state.rand() < self.random_fraction:
                 # return random candidate because a) we don't have enough data points or
@@ -287,7 +290,6 @@ class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
                 def acquisition_function(x):
                     return max(1e-32, g(x)) / max(l(x), 1e-32)
 
-                current_best = None
                 val_current_best = None
                 for i in range(self.num_candidates):
                     idx = self.random_state.randint(0, len(self.good_kde.data))
@@ -340,10 +342,9 @@ class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
                     if (
                         val_current_best is None or val_current_best > val
                     ) and not self.should_not_suggest(config):
-                        current_best = config
+                        suggestion = config
                         val_current_best = val
 
-                suggestion = current_best
                 if suggestion is None:
                     # This can happen if the configuration space is almost exhausted
                     logger.warning(
@@ -353,30 +354,27 @@ class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
 
         return suggestion
 
-    def _train_kde(self, train_data, train_targets):
-        if train_data.shape[0] < self.num_min_data_points:
+    def _good_data_size(self, data_shape: Tuple[int, int]) -> Optional[int]:
+        num_data, num_features = data_shape
+        n_good = max(self.num_min_data_points, (self.top_n_percent * num_data) // 100)
+        if min(n_good, num_data - n_good) <= num_features:
             return None
+        else:
+            return n_good
 
-        n_good = max(
-            self.num_min_data_points, (self.top_n_percent * train_data.shape[0]) // 100
-        )
-        n_bad = max(
-            self.num_min_data_points,
-            ((100 - self.top_n_percent) * train_data.shape[0]) // 100,
-        )
+    def _train_kde(
+        self, train_data: np.ndarray, train_targets: np.ndarray
+    ) -> Optional[Tuple[Any, Any]]:
+        train_data = train_data.reshape((train_targets.size, -1))
+        n_good = self._good_data_size(train_data.shape)
+        if n_good is None:
+            return None
 
         idx = np.argsort(train_targets)
-
         train_data_good = train_data[idx[:n_good]]
-        train_data_bad = train_data[idx[n_good : n_good + n_bad]]
-
-        if train_data_good.shape[0] <= train_data_good.shape[1]:
-            return None
-        if train_data_bad.shape[0] <= train_data_bad.shape[1]:
-            return None
+        train_data_bad = train_data[idx[n_good:]]
 
         types = [t[0] for t in self.vartypes]
-
         bad_kde = sm.nonparametric.KDEMultivariate(
             data=train_data_bad, var_type=types, bw="normal_reference"
         )
