@@ -158,11 +158,14 @@ def create_objects_for_tuner(
         benchmark=benchmark,
         extra_args=None if extra_args is None else extra_metadata(args, extra_args),
     )
+    tuner_name = args.experiment_tag
+    if args.use_long_tuner_name_prefix:
+        tuner_name += f"-{args.benchmark}-{seed}"
     return dict(
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=benchmark.n_workers,
-        tuner_name=args.experiment_tag,
+        tuner_name=tuner_name,
         metadata=metadata,
         save_tuner=args.save_tuner,
     )

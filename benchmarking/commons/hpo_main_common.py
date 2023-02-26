@@ -115,6 +115,12 @@ def parse_args(
             "where A = n_workers and B = benchmark.n_workers"
         ),
     )
+    parser.add_argument(
+        "--use_long_tuner_name_prefix",
+        type=int,
+        default=1,
+        help="Use descriptive tuner name prefix for storing results?",
+    )
     if extra_args is not None:
         extra_args = copy.deepcopy(extra_args)
         for kwargs in extra_args:
@@ -126,6 +132,7 @@ def parse_args(
     args = parser.parse_args()
     args.save_tuner = bool(args.save_tuner)
     args.scale_max_wallclock_time = bool(args.scale_max_wallclock_time)
+    args.use_long_tuner_name_prefix = bool(args.use_long_tuner_name_prefix)
     seeds = list(range(args.start_seed, args.num_seeds))
     method_names = [args.method] if args.method is not None else list(methods.keys())
     return args, method_names, seeds
