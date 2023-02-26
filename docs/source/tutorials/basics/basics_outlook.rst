@@ -46,3 +46,4 @@ experimental. Here is an incomplete overview:
   More details on multi-objective HPO and methodology adopted in Syne Tune can
   be found `here <https://arxiv.org/abs/2106.12639>`_, see also
   :class:`~syne_tune.optimizer.schedulers.multiobjective.MOASHA`.
+* **Transfer-learning Schedulers**: Syne Tune provides several transfer-learning schedulers. To get started check out `this tutorial <../transfer_learning/transfer_learning.html>`_.
