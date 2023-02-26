@@ -1,5 +1,5 @@
 Using Syne Tune for Transfer Learning
-======================================
+=====================================
 
 Transfer learning allows us to speed up our current optimisation by learning
 from related optimisation runs. For instance, imagine we want to change from a
