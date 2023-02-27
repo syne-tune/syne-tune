@@ -64,12 +64,10 @@ class MultiObjectiveRegularizedEvolution(RegularizedEvolution):
             metric=metric,
             mode=modes,
             points_to_evaluate=points_to_evaluate,
+            population_size=population_size,
+            sample_size=sample_size,
             **kwargs,
         )
-        self.population_size = population_size
-        self.sample_size = sample_size
-        self.population = deque()
-        self.num_sample_try = 1000  # number of times allowed to sample a mutation
 
         if multiobjective_priority is None:
             self._multiobjective_priority = NonDominatedPriority()
