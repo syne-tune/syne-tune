@@ -31,6 +31,12 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* New tutorial:
+  `Using Syne Tune for Transfer Learning <tutorials/transfer_learning/transfer_learning.html>`_.
+  Transfer learning allows us to speed up our current optimisation by learning
+  from related optimisation runs. Syne Tune provides a number of transfer HPO
+  methods and makes it easy to implement new ones. Thanks to
+  `Sigrid <https://github.com/sighellan>`_ for this contribution.
 * New scheduler: :class:`~syne_tune.optimizer.baselines.DyHPO`.
   This is a recent multi-fidelity method, which can be seen as alternative to
   `ASHA <tutorials/multifidelity/mf_sync_model.html>`_,
