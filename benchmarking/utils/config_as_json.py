@@ -26,14 +26,14 @@ def add_config_json_to_argparse(parser: argparse.ArgumentParser):
     parser.add_argument(f"--{ST_CONFIG_JSON_FNAME_ARG}", type=str)
 
 
-def load_config_json(args) -> Dict[str, Any]:
+def load_config_json(args: Dict[str, Any]) -> Dict[str, Any]:
     """
     Loads configuration from JSON file and returns the union with ``args``.
 
-    :param args: Arguments returned by ``ArgumentParser``
+    :param args: Arguments returned by ``ArgumentParser``, as dictionary
     :return: Combined configuration dictionary
     """
-    with open(getattr(args, ST_CONFIG_JSON_FNAME_ARG), "r") as f:
+    with open(args[ST_CONFIG_JSON_FNAME_ARG], "r") as f:
         config = json.load(f)
-    config.update(vars(args))
+    config.update(args)
     return config

@@ -76,7 +76,7 @@ if __name__ == "__main__":
     add_config_json_to_argparse(parser)
     args, _ = parser.parse_known_args()
     # Loads config JSON and merges with ``args``
-    config = load_config_json(args)
+    config = load_config_json(vars(args))
 
     # Check that args with complex types have been received correctly
     _check_extra_args(config)

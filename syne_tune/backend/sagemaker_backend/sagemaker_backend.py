@@ -217,8 +217,13 @@ class SageMakerBackend(TrialBackend):
         Prepares hyperparameters, to be sent to the entry point script as
         command line arguments, given the configuration ``config``. If
         ``pass_args_as_json == False``, this is just a copy of ``config``.
+
         But otherwise, the configuration is written to a JSON file, whose
-        name becomes a hyperparameter.
+        name becomes a hyperparameter, but entries of the config are not
+        hyperparameters. Note that some default entries attached to the
+        config by Syne Tune are always passed as command line arguments, so if
+        ``pass_args_as_json == True``, they are removed from the config before
+        this is written as JSON file.
 
         :param trial_id: ID of trial
         :param config: Configuration
@@ -228,33 +233,43 @@ class SageMakerBackend(TrialBackend):
         if not self.pass_args_as_json:
             return config_copy
         else:
-            # Make sure that ``source_dir`` attribute is set
-            if self.source_dir is None:
-                entrypoint_path = self.entrypoint_path()
-                source_dir = str(entrypoint_path.parent)
-                entrypoint_name = entrypoint_path.name
-                logger.warning(
-                    "sm_estimator.source_dir is not set, but is needed for "
-                    "pass_args_as_json == True. Setting them to:\n"
-                    f"source_dir = {source_dir}, entry_point = {entrypoint_name}"
-                )
-                self.sm_estimator.source_dir = source_dir
-                self.sm_estimator.entry_point = entrypoint_name
-            # The filename depends on the trial ID. Otherwise, there would be
-            # clashes between trials which run at overlapping times
-            result = {
-                ST_CONFIG_JSON_FNAME_ARG: "./"
-                + self._config_json_filename(trial_id, with_path=False)
-            }
-            # These arguments remain command line parameters
-            if ST_INSTANCE_TYPE in config_copy:
-                result[ST_INSTANCE_TYPE] = config_copy.pop(ST_INSTANCE_TYPE)
-            if ST_INSTANCE_COUNT in config_copy:
-                result[ST_INSTANCE_COUNT] = config_copy.pop(ST_INSTANCE_COUNT)
+            self._set_source_dir()  # Make sure that ``source_dir`` attribute is set
+            result = self._prepare_hyperparameters_if_args_as_json(
+                trial_id, config_copy
+            )
             dump_json_with_numpy(
                 config_copy, self._config_json_filename(trial_id, with_path=True)
             )
             return result
+
+    def _set_source_dir(self):
+        if self.source_dir is None:
+            entrypoint_path = self.entrypoint_path()
+            source_dir = str(entrypoint_path.parent)
+            entrypoint_name = entrypoint_path.name
+            logger.warning(
+                "sm_estimator.source_dir is not set, but is needed for "
+                "pass_args_as_json == True. Setting them to:\n"
+                f"source_dir = {source_dir}, entry_point = {entrypoint_name}"
+            )
+            self.sm_estimator.source_dir = source_dir
+            self.sm_estimator.entry_point = entrypoint_name
+
+    def _prepare_hyperparameters_if_args_as_json(
+        self, trial_id: int, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        # The filename depends on the trial ID. Otherwise, there would be
+        # clashes between trials which run at overlapping times
+        result = {
+            ST_CONFIG_JSON_FNAME_ARG: "./"
+            + self._config_json_filename(trial_id, with_path=False)
+        }
+        # These arguments remain command line parameters
+        if ST_INSTANCE_TYPE in config:
+            result[ST_INSTANCE_TYPE] = config.pop(ST_INSTANCE_TYPE)
+        if ST_INSTANCE_COUNT in config:
+            result[ST_INSTANCE_COUNT] = config.pop(ST_INSTANCE_COUNT)
+        return result
 
     def _schedule(self, trial_id: int, config: Dict[str, Any]):
         hyperparameters = self._hyperparameters_from_config(trial_id, config)
