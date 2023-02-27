@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from collections import deque
 from typing import Optional, List, Union
 
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
