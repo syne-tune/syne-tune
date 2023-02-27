@@ -63,6 +63,9 @@ ST_STATUS = "st_status"
 ST_CHECKPOINT_DIR = "st_checkpoint_dir"
 """Name of config key for checkpoint directory"""  # pylint: disable=W0105
 
+ST_CONFIG_JSON_FNAME_ARG = "st_config_json_filename"
+"""Name of config key for config JSON file"""  # pylint: disable=W0105
+
 # Name for ``upload_dir`` in ``RemoteTuner``
 ST_REMOTE_UPLOAD_DIR_NAME = "tuner"
 """Name for ``upload_dir`` in ``RemoteTuner``"""  # pylint: disable=W0105

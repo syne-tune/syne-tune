@@ -24,7 +24,7 @@ from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.num_gpu import get_num_gpus
 from syne_tune.report import retrieve
 from syne_tune.backend.trial_status import TrialResult, Status
-from syne_tune.constants import ST_CHECKPOINT_DIR
+from syne_tune.constants import ST_CHECKPOINT_DIR, ST_CONFIG_JSON_FNAME_ARG
 from syne_tune.util import experiment_path, random_string, dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
@@ -45,9 +45,10 @@ class LocalBackend(TrialBackend):
     no resource management is done so the concurrent number of trials should
     be adjusted to the machine capacity.
 
+    Additional arguments on top of parent class
+    :class:`~syne_tune.backend.trial_backend.TrialBackend`:
+
     :param entry_point: Path to Python main file to be tuned
-    :param delete_checkpoints: If ``True``, checkpoints of stopped or completed
-        trials are deleted. Defaults to ``False``
     :param rotate_gpus: In case several GPUs are present, each trial is
         scheduled on a different GPU. A new trial is preferentially
         scheduled on a free GPU, and otherwise the GPU with least prior
@@ -59,9 +60,12 @@ class LocalBackend(TrialBackend):
         self,
         entry_point: str,
         delete_checkpoints: bool = False,
+        pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
     ):
-        super(LocalBackend, self).__init__(delete_checkpoints)
+        super(LocalBackend, self).__init__(
+            delete_checkpoints=delete_checkpoints, pass_args_as_json=pass_args_as_json
+        )
 
         assert Path(
             entry_point
@@ -86,7 +90,7 @@ class LocalBackend(TrialBackend):
     def trial_path(self, trial_id: int) -> Path:
         return self.local_path / str(trial_id)
 
-    def checkpoint_trial_path(self, trial_id: int):
+    def checkpoint_trial_path(self, trial_id: int) -> Path:
         return self.trial_path(trial_id) / "checkpoints"
 
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):
@@ -154,13 +158,19 @@ class LocalBackend(TrialBackend):
                 logger.debug(
                     f"scheduling {trial_id}, {self.entry_point}, {config}, logging into {trial_path}"
                 )
-                config_copy = config.copy()
-                config_copy[ST_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
+                config_json_fname = str(trial_path / "config.json")
+                if self.pass_args_as_json:
+                    config_for_args = {ST_CONFIG_JSON_FNAME_ARG: config_json_fname}
+                else:
+                    config_for_args = config.copy()
+                config_for_args[ST_CHECKPOINT_DIR] = str(
+                    self.checkpoint_trial_path(trial_id)
+                )
                 config_str = " ".join(
-                    [f"--{key} {value}" for key, value in config_copy.items()]
+                    [f"--{key} {value}" for key, value in config_for_args.items()]
                 )
 
-                dump_json_with_numpy(config, trial_path / "config.json")
+                dump_json_with_numpy(config, config_json_fname)
                 cmd = f"{sys.executable} {self.entry_point} {config_str}"
                 env = dict(os.environ)
                 self._allocate_gpu(trial_id, env)

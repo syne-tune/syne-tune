@@ -423,6 +423,28 @@ Plot Results of Tuning Experiment
 Makes use of :ref:`train_height.py <train_height_script>`.
 
 
+Pass Configuration as JSON File to Training Script
+==================================================
+
+.. literalinclude:: ../../examples/launch_height_config_json.py
+   :caption: examples/launch_height_config_json.py
+   :lines: 13-
+
+**Requirements**:
+
+* If ``use_sagemaker_backend = True``, needs
+  `access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+
+Makes use of the following
+:ref:`train_height_config_json.py <train_height_config_json_script>` training
+script:
+
+.. literalinclude:: ../../examples/training_scripts/height_example/train_height_config_json.py
+   :name: train_height_config_json_script
+   :caption: examples/training_scripts/height_example/train_height_config_json.py
+   :lines: 13-
+
+
 Launch HPO Experiment with Ray Tune Scheduler
 =============================================
 

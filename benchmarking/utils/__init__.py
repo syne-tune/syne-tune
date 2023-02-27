@@ -20,6 +20,10 @@ from benchmarking.utils.parse_bool import parse_bool  # noqa: F401
 from benchmarking.utils.get_cost_model import (  # noqa: F401
     get_cost_model_for_batch_size,
 )
+from benchmarking.utils.config_as_json import (  # noqa: F401
+    add_config_json_to_argparse,
+    load_config_json,
+)
 
 __all__ = [
     "add_checkpointing_to_argparse",
@@ -28,4 +32,6 @@ __all__ = [
     "pytorch_load_save_functions",
     "parse_bool",
     "get_cost_model_for_batch_size",
+    "add_config_json_to_argparse",
+    "load_config_json",
 ]
