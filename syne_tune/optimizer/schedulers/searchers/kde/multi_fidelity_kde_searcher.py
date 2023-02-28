@@ -91,7 +91,7 @@ class MultiFidelityKernelDensityEstimator(KernelDensityEstimator):
             self.resource_levels, return_counts=True
         )
         for resource, count in reversed(list(zip(unique_resource_levels, counts))):
-            if self._good_data_size((count, num_features)) is not None:
+            if self._check_data_shape_and_good_size((count, num_features)) is not None:
                 return resource
         return None
 

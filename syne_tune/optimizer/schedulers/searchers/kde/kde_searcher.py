@@ -354,7 +354,18 @@ class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
 
         return suggestion
 
-    def _good_data_size(self, data_shape: Tuple[int, int]) -> Optional[int]:
+    def _check_data_shape_and_good_size(
+        self, data_shape: Tuple[int, int]
+    ) -> Optional[int]:
+        """
+        Determine size of data for "good" model (the rest of the data is for the
+        "bad" model). Both sizes must be larger than the number of features,
+        otherwise ``None`` is returned.
+
+        :param data_shape: Shape of ``train_data``
+        :return: Size of data for "good" model, or ``None`` (models cannot be
+            fit, too little data)
+        """
         num_data, num_features = data_shape
         n_good = max(self.num_min_data_points, (self.top_n_percent * num_data) // 100)
         if min(n_good, num_data - n_good) <= num_features:
@@ -366,7 +377,7 @@ class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
         self, train_data: np.ndarray, train_targets: np.ndarray
     ) -> Optional[Tuple[Any, Any]]:
         train_data = train_data.reshape((train_targets.size, -1))
-        n_good = self._good_data_size(train_data.shape)
+        n_good = self._check_data_shape_and_good_size(train_data.shape)
         if n_good is None:
             return None
 
