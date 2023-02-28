@@ -38,6 +38,7 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     SyncMOBSTER,
     ZeroShotTransfer,
+    MOREA,
     # ASHACTS,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
@@ -214,6 +215,13 @@ list_schedulers_to_test = [
         sample_size=2,
         mode=mode,
     ),
+    MOREA(
+        config_space=config_space,
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+        population_size=1,
+        sample_size=2,
+    ),
     ASHA(
         config_space=config_space,
         metric=metric1,
@@ -361,11 +369,13 @@ if sys.version_info >= (3, 8):
 def test_schedulers_api(scheduler):
     trial_ids = range(4)
 
-    if isinstance(scheduler, MOASHA):
+    if isinstance(scheduler, MOASHA) or isinstance(scheduler, MOREA):
         assert scheduler.metric_names() == [metric1, metric2]
     else:
         assert scheduler.metric_names() == [metric1]
-    assert scheduler.metric_mode() == mode
+
+    if isinstance(scheduler, MOREA):
+        assert scheduler.metric_mode() == [mode, mode]
 
     # checks suggestions are properly formatted
     trials = []

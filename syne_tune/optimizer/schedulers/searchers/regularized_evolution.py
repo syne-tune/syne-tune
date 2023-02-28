@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PopulationElement:
+    result: Dict[str, Any] = None
     score: int = 0
     config: Dict[str, Any] = None
 
@@ -141,7 +142,7 @@ class RegularizedEvolution(StochasticSearcher):
             score *= -1
 
         # Add element to the population
-        element = PopulationElement(score=score, config=config)
+        element = PopulationElement(result=result, score=score, config=config)
         self.population.append(element)
 
         # Remove the oldest element of the population.
