@@ -20,10 +20,16 @@ from tqdm import tqdm
 
 from benchmarking.commons.baselines import MethodDefinitions
 from benchmarking.commons.benchmark_definitions import RealBenchmarkDefinition
-from benchmarking.commons.hpo_main_common import extra_metadata, ExtraArgsType, ConfigDict, DictStrKey
+from benchmarking.commons.hpo_main_common import (
+    extra_metadata,
+    ExtraArgsType,
+    ConfigDict,
+    DictStrKey,
+)
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
-    get_benchmark, LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
+    get_benchmark,
+    LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -74,7 +80,9 @@ def get_hyperparameters(
         v = getattr(configuration, k)
         if v is not None:
             hyperparameters[k] = v
-    hyperparameters.update(filter_none(extra_metadata(configuration, configuration.extra_parameters())))
+    hyperparameters.update(
+        filter_none(extra_metadata(configuration, configuration.extra_parameters()))
+    )
     return hyperparameters
 
 
@@ -120,10 +128,11 @@ def launch_remote(
 
 
 def launch_remote_banchmark(
-        configuration: ConfigDict,
-        entry_point: Path,
-        methods: MethodDefinitions,
-        benchmark_definitions: RealBenchmarkDefinitions):
+    configuration: ConfigDict,
+    entry_point: Path,
+    methods: MethodDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
+):
     """
     Launches sequence of SageMaker training jobs, each running an experiment
     with the local backend. The loop runs over methods selected from ``methods``
@@ -151,7 +160,9 @@ def launch_remote_banchmark(
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
     """
-    configuration.check_if_all_paremeters_present(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.check_if_all_paremeters_present(
+        LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
+    )
     configuration.expand_base_arguments(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
 
     method_names = (
@@ -165,9 +176,7 @@ def launch_remote_banchmark(
         entry_point, requirements_fname="requirements-synetune.txt"
     )
     combine_requirements_txt(synetune_requirements_file, benchmark.script)
-    extra_sagemaker_hyperparameters = {
-        "verbose": int(configuration.verbose)
-    }
+    extra_sagemaker_hyperparameters = {"verbose": int(configuration.verbose)}
     experiment_tag = _launch_benchmark_remotely(
         configuration=configuration,
         entry_point=entry_point,
@@ -177,22 +186,23 @@ def launch_remote_banchmark(
         sagemaker_estimator_base_class=sagemaker_estimator[benchmark.framework],
         environment=None,
         extra_sagemaker_hyperparameters=extra_sagemaker_hyperparameters,
-    use_sagemaker_backend=False
+        use_sagemaker_backend=False,
     )
 
     print("\n" + message_sync_from_s3(experiment_tag))
 
 
 def _launch_benchmark_remotely(
-        configuration: ConfigDict,
-        entry_point: Path,
-        method_names: List[str],
-        benchmark: RealBenchmarkDefinition,
-        master_random_seed: int,
-        sagemaker_estimator_base_class: Callable[[Any], EstimatorBase],
-        environment: DictStrKey,
-        extra_sagemaker_hyperparameters: DictStrKey,
-        use_sagemaker_backend: bool):
+    configuration: ConfigDict,
+    entry_point: Path,
+    method_names: List[str],
+    benchmark: RealBenchmarkDefinition,
+    master_random_seed: int,
+    sagemaker_estimator_base_class: Callable[[Any], EstimatorBase],
+    environment: DictStrKey,
+    extra_sagemaker_hyperparameters: DictStrKey,
+    use_sagemaker_backend: bool,
+):
     experiment_tag = configuration.experiment_tag
     suffix = random_string(4)
     combinations = list(itertools.product(method_names, configuration.seeds))

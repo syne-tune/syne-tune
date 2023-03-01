@@ -121,13 +121,13 @@ class ConfigDict:
             help=(
                 "If 1, benchmark.max_wallclock_time is multiplied by B / min(A, B),"
                 "where A = n_workers and B = benchmark.n_workers"
-            )
+            ),
         ),
         Parameter(
             name="seeds",
             type=list,
             default=None,
-            help="Seeds for this experiment, will be filled automatically based on start_seed and num_seeds"
+            help="Seeds for this experiment, will be filled automatically based on start_seed and num_seeds",
         ),
     ]
     __base_parameters_set = {item.name for item in __base_parameters}
@@ -148,12 +148,16 @@ class ConfigDict:
     def __setattr__(self, attr, value):
         self._config[attr] = value
 
-    def check_if_all_paremeters_present(self, desired_parameters: List[DictStrKey]) -> bool:
+    def check_if_all_paremeters_present(
+        self, desired_parameters: List[DictStrKey]
+    ) -> bool:
         """
         Verify that all the parameers present in desired_parameters can be found in this ConfigDict
         """
         for dparam in desired_parameters:
-            assert dparam["name"] in self._config, f"{dparam['name']} must be specified in the configuration for this experiment"
+            assert (
+                dparam["name"] in self._config
+            ), f"{dparam['name']} must be specified in the configuration for this experiment"
 
     def extra_parameters(self) -> List[DictStrKey]:
         """
@@ -161,7 +165,8 @@ class ConfigDict:
         Required are the defauls and those requested in argparse
         """
         return [
-            {"name": name, "value": value} for name, value in self._config.items()
+            {"name": name, "value": value}
+            for name, value in self._config.items()
             if name not in self.__base_parameters_set
         ]
 
@@ -182,7 +187,6 @@ class ConfigDict:
                 )
             )
             self.__base_parameters_set.add(extra_param["name"])
-
 
     @staticmethod
     def from_argparse(

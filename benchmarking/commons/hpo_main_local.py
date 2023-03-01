@@ -27,7 +27,9 @@ from benchmarking.commons.hpo_main_common import (
     PostProcessingType,
     ConfigDict,
     DictStrKey,
-    extra_metadata, Parameter, str2bool,
+    extra_metadata,
+    Parameter,
+    str2bool,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend import LocalBackend
@@ -38,26 +40,27 @@ logger = logging.getLogger(__name__)
 
 
 RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
-LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS =  [
-            dict(
-                name="benchmark",
-                type=str,
-                default="resnet_cifar10",
-                help="Benchmark to run",
-            ),
-            dict(
-                name="verbose",
-                type=str2bool,
-                default=False,
-                help="Verbose log output?",
-            ),
-            dict(
-                name="instance_type",
-                type=str,
-                default=None,
-                help="AWS SageMaker instance type",
-            ),
-        ]
+LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS = [
+    dict(
+        name="benchmark",
+        type=str,
+        default="resnet_cifar10",
+        help="Benchmark to run",
+    ),
+    dict(
+        name="verbose",
+        type=str2bool,
+        default=False,
+        help="Verbose log output?",
+    ),
+    dict(
+        name="instance_type",
+        type=str,
+        default=None,
+        help="AWS SageMaker instance type",
+    ),
+]
+
 
 def get_benchmark(
     configuration: ConfigDict,
@@ -182,7 +185,9 @@ def start_local_benchmark(
     :param map_method_args: See above, optional
     :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
-    configuration.check_if_all_paremeters_present(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.check_if_all_paremeters_present(
+        LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
+    )
     configuration.expand_base_arguments(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
 
     experiment_tag = configuration.experiment_tag

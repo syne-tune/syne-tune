@@ -14,7 +14,9 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from benchmarking.commons.hpo_main_sagemaker import LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+from benchmarking.commons.hpo_main_sagemaker import (
+    LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS,
+)
 from syne_tune.try_import import try_import_aws_message
 
 try:
@@ -63,16 +65,19 @@ def launch_remote(
         extra_args = extra_args.copy()
 
     configuration = ConfigDict.from_argparse(
-        extra_args=extra_args
-                   + LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+        extra_args=extra_args + LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
     )
-    launch_remote_banchmark_sagemaker(configuration, entry_point, methods, benchmark_definitions)
+    launch_remote_banchmark_sagemaker(
+        configuration, entry_point, methods, benchmark_definitions
+    )
+
 
 def launch_remote_banchmark_sagemaker(
-            configuration: ConfigDict,
-            entry_point: Path,
-            methods: MethodDefinitions,
-            benchmark_definitions: RealBenchmarkDefinitions):
+    configuration: ConfigDict,
+    entry_point: Path,
+    methods: MethodDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
+):
     """
     Launches sequence of SageMaker training jobs, each running an experiment
     with the SageMaker backend. The loop runs over methods selected from
@@ -87,7 +92,9 @@ def launch_remote_banchmark_sagemaker(
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
     """
-    configuration.check_if_all_paremeters_present(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.check_if_all_paremeters_present(
+        LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+    )
     configuration.expand_base_arguments(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
 
     method_names = (
@@ -99,14 +106,16 @@ def launch_remote_banchmark_sagemaker(
         os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
     environment = {"AWS_DEFAULT_REGION": boto3.Session().region_name}
 
-    benchmark = get_benchmark(configuration, benchmark_definitions, sagemaker_backend=True)
+    benchmark = get_benchmark(
+        configuration, benchmark_definitions, sagemaker_backend=True
+    )
     master_random_seed = get_master_random_seed(configuration.random_seed)
     find_or_create_requirements_txt(entry_point)
 
     extra_sagemaker_hyperparameters = {
         "max_failures": configuration.max_failures,
         "warm_pool": int(configuration.warm_pool),
-        "delete_checkpoints": int(configuration.delete_checkpoints)
+        "delete_checkpoints": int(configuration.delete_checkpoints),
     }
     experiment_tag = _launch_benchmark_remotely(
         configuration=configuration,
@@ -117,9 +126,7 @@ def launch_remote_banchmark_sagemaker(
         sagemaker_estimator_base_class=basic_cpu_instance_sagemaker_estimator,
         environment=environment,
         extra_sagemaker_hyperparameters=extra_sagemaker_hyperparameters,
-    use_sagemaker_backend=True
+        use_sagemaker_backend=True,
     )
 
     print("\n" + message_sync_from_s3(experiment_tag))
-
-

@@ -21,12 +21,15 @@ from benchmarking.commons.hpo_main_common import (
     PostProcessingType,
     ConfigDict,
     extra_metadata,
-    DictStrKey, Parameter, str2bool,
+    DictStrKey,
+    Parameter,
+    str2bool,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
-    create_objects_for_tuner, LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
+    create_objects_for_tuner,
+    LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -55,18 +58,15 @@ LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS = [
         name="max_failures",
         type=int,
         default=3,
-        help=(
-            "Number of trials which can fail without experiment being " \
-            "terminated"
-        ),
+        help=("Number of trials which can fail without experiment being " "terminated"),
     ),
     dict(
         name="warm_pool",
         type=str2bool,
         default=1,
         help=(
-            "If 1, the SageMaker managed warm pools feature is used. " \
-            "This can be more expensive, but also reduces startup " \
+            "If 1, the SageMaker managed warm pools feature is used. "
+            "This can be more expensive, but also reduces startup "
             "delays, leading to an experiment finishing in less time"
         ),
     ),
@@ -80,10 +80,10 @@ LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS = [
         type=str2bool,
         default=0,
         help=(
-            "If 1, the tuner starts new trials immediately after " \
-            "sending existing ones a stop signal. This leads to more " \
-            "than n_workers instances being used during certain times, " \
-            "which can lead to quotas being exceeded, or the warm pool " \
+            "If 1, the tuner starts new trials immediately after "
+            "sending existing ones a stop signal. This leads to more "
+            "than n_workers instances being used during certain times, "
+            "which can lead to quotas being exceeded, or the warm pool "
             "feature not working optimal."
         ),
     ),
@@ -92,8 +92,7 @@ LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS = [
         type=str2bool,
         default=1,
         help=(
-            "If 1, checkpoints files on S3 are removed at the end " \
-            "of the experiment."
+            "If 1, checkpoints files on S3 are removed at the end " "of the experiment."
         ),
     ),
 ]
@@ -129,7 +128,9 @@ def start_sagemaker_benchmark(
     :param map_method_args: See above, optional
     :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
-    configuration.check_if_all_paremeters_present(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.check_if_all_paremeters_present(
+        LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+    )
     configuration.expand_base_arguments(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
 
     experiment_tag = configuration.experiment_tag
@@ -231,8 +232,7 @@ def main(
         extra_args = extra_args.copy()
 
     configuration = ConfigDict.from_argparse(
-        extra_args=extra_args
-                   + LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+        extra_args=extra_args + LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
     )
 
     method_names = (

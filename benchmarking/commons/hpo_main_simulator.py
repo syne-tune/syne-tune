@@ -27,9 +27,14 @@ from benchmarking.commons.hpo_main_common import (
     PostProcessingType,
     extra_metadata,
     ConfigDict,
-    DictStrKey, Parameter, str2bool,
+    DictStrKey,
+    Parameter,
+    str2bool,
 )
-from benchmarking.commons.hpo_main_local import RealBenchmarkDefinitions, LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
+from benchmarking.commons.hpo_main_local import (
+    RealBenchmarkDefinitions,
+    LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
+)
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
@@ -48,7 +53,7 @@ LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS = [
         type=str,
         help="Benchmark to run from benchmark_definitions",
         default=None,
-        required=True
+        required=True,
     ),
     dict(
         name="verbose",
@@ -181,8 +186,12 @@ def start_simulated_benchmark(
     :param use_transfer_learning: If True, we use transfer tuning. Defaults to
         False
     """
-    configuration.check_if_all_paremeters_present(LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS)
-    configuration.expand_base_arguments(LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.check_if_all_paremeters_present(
+        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+    )
+    configuration.expand_base_arguments(
+        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+    )
 
     nested_dict = is_dict_of_dict(benchmark_definitions)
     if configuration.benchmark is not None:
@@ -381,8 +390,7 @@ def main(
         extra_args = extra_args.copy()
 
     configuration = ConfigDict.from_argparse(
-        extra_args=extra_args
-                   + LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+        extra_args=extra_args + LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
     )
 
     configuration.verbose = bool(configuration.verbose)
@@ -408,5 +416,5 @@ def main(
         tuning_job_metadata=None
         if extra_args is None
         else extra_metadata(configuration, extra_args),
-    use_transfer_learning = use_transfer_learning,
+        use_transfer_learning=use_transfer_learning,
     )

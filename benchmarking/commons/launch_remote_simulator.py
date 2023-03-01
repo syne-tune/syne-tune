@@ -17,10 +17,15 @@ from typing import Optional, Callable, Dict, Any
 from tqdm import tqdm
 
 from benchmarking.commons.baselines import MethodDefinitions
-from benchmarking.commons.hpo_main_common import extra_metadata, ExtraArgsType, ConfigDict
+from benchmarking.commons.hpo_main_common import (
+    extra_metadata,
+    ExtraArgsType,
+    ConfigDict,
+)
 from benchmarking.commons.hpo_main_simulator import (
     SurrogateBenchmarkDefinitions,
-    is_dict_of_dict, LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS,
+    is_dict_of_dict,
+    LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -75,7 +80,9 @@ def get_hyperparameters(
         v = getattr(configuration, k)
         if v is not None:
             hyperparameters[k] = v
-    hyperparameters.update(filter_none(extra_metadata(configuration, configuration.extra_parameters())))
+    hyperparameters.update(
+        filter_none(extra_metadata(configuration, configuration.extra_parameters()))
+    )
     return hyperparameters
 
 
@@ -119,18 +126,20 @@ def launch_remote(
         extra_args = extra_args.copy()
 
     configuration = ConfigDict.from_argparse(
-        extra_args=extra_args
-                   + LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+        extra_args=extra_args + LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
     )
 
-    launch_remote_banchmark_simuator(configuration, entry_point, methods, benchmark_definitions, is_expensive_method)
+    launch_remote_banchmark_simuator(
+        configuration, entry_point, methods, benchmark_definitions, is_expensive_method
+    )
+
 
 def launch_remote_banchmark_simuator(
-            configuration: ConfigDict,
-            entry_point: Path,
-            methods: MethodDefinitions,
-            benchmark_definitions: SurrogateBenchmarkDefinitions,
-        is_expensive_method: Optional[Callable[[str], bool]] = None,
+    configuration: ConfigDict,
+    entry_point: Path,
+    methods: MethodDefinitions,
+    benchmark_definitions: SurrogateBenchmarkDefinitions,
+    is_expensive_method: Optional[Callable[[str], bool]] = None,
 ):
     """
     Launches sequence of SageMaker training jobs, each running an experiment
@@ -166,8 +175,12 @@ def launch_remote_banchmark_simuator(
         def is_expensive_method(method):
             return False
 
-    configuration.check_if_all_paremeters_present(LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS)
-    configuration.expand_base_arguments(LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.check_if_all_paremeters_present(
+        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+    )
+    configuration.expand_base_arguments(
+        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+    )
 
     method_names = (
         [configuration.method]
@@ -210,8 +223,12 @@ def launch_remote_banchmark_simuator(
             configuration=configuration,
         )
         hyperparameters["verbose"] = int(configuration.verbose)
-        hyperparameters["support_checkpointing"] = int(configuration.support_checkpointing)
-        hyperparameters["restrict_configurations"] = int(configuration.restrict_configurations)
+        hyperparameters["support_checkpointing"] = int(
+            configuration.support_checkpointing
+        )
+        hyperparameters["restrict_configurations"] = int(
+            configuration.restrict_configurations
+        )
         if benchmark_key is not None:
             hyperparameters["benchmark_key"] = benchmark_key
         sm_args["hyperparameters"] = hyperparameters
