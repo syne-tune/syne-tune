@@ -53,7 +53,7 @@ def instance_sagemaker_estimator(**kwargs):
     )
 
 
-def basic_cpu_instance_sagemaker_estimator(**kwargs):
+def basic_cpu_instance_sagemaker_estimator(**kwargs) -> PyTorch:
     """
     Returns SageMaker estimator to be used for simulator back-end experiments
     and for remote launching of SageMaker back-end experiments.

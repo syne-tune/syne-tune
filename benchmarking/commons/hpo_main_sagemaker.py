@@ -21,12 +21,12 @@ from benchmarking.commons.hpo_main_common import (
     PostProcessingType,
     ConfigDict,
     extra_metadata,
-    DictStrKey,
+    DictStrKey, Parameter, str2bool,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
-    create_objects_for_tuner,
+    create_objects_for_tuner, LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -44,6 +44,60 @@ from syne_tune.tuner import Tuner
 # https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html#train-warm-pools-resource-limits
 # Maximum time a warm pool instance is kept alive, waiting to be associated with
 # a new job. Setting this too large may lead to extra costs.
+LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS = [
+    dict(
+        name="benchmark",
+        type=str,
+        default="resnet_cifar10",
+        help="Benchmark to run",
+    ),
+    dict(
+        name="max_failures",
+        type=int,
+        default=3,
+        help=(
+            "Number of trials which can fail without experiment being " \
+            "terminated"
+        ),
+    ),
+    dict(
+        name="warm_pool",
+        type=str2bool,
+        default=1,
+        help=(
+            "If 1, the SageMaker managed warm pools feature is used. " \
+            "This can be more expensive, but also reduces startup " \
+            "delays, leading to an experiment finishing in less time"
+        ),
+    ),
+    dict(
+        name="instance_type",
+        type=str,
+        help="AWS SageMaker instance type (overwrites default of benchmark)",
+    ),
+    dict(
+        name="start_jobs_without_delay",
+        type=str2bool,
+        default=0,
+        help=(
+            "If 1, the tuner starts new trials immediately after " \
+            "sending existing ones a stop signal. This leads to more " \
+            "than n_workers instances being used during certain times, " \
+            "which can lead to quotas being exceeded, or the warm pool " \
+            "feature not working optimal."
+        ),
+    ),
+    dict(
+        name="delete_checkpoints",
+        type=str2bool,
+        default=1,
+        help=(
+            "If 1, checkpoints files on S3 are removed at the end " \
+            "of the experiment."
+        ),
+    ),
+]
+
 WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS = 10 * 60
 
 
@@ -65,6 +119,7 @@ def start_sagemaker_benchmark(
     where ``method`` is the name of the baseline.
 
     :param configuration: ConfigDict with parameters of the benchmark
+        Must contain all parameters from LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
     :param methods: Dictionary with method constructors.
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
@@ -74,6 +129,9 @@ def start_sagemaker_benchmark(
     :param map_method_args: See above, optional
     :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
+    configuration.check_if_all_paremeters_present(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.expand_base_arguments(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
+
     experiment_tag = configuration.experiment_tag
     benchmark_name = configuration.benchmark
     master_random_seed = get_master_random_seed(configuration.random_seed)
@@ -174,59 +232,7 @@ def main(
 
     configuration = ConfigDict.from_argparse(
         extra_args=extra_args
-        + [
-            dict(
-                name="benchmark",
-                type=str,
-                default="resnet_cifar10",
-                help="Benchmark to run",
-            ),
-            dict(
-                name="max_failures",
-                type=int,
-                default=3,
-                help=(
-                    "Number of trials which can fail without experiment being "
-                    "terminated"
-                ),
-            ),
-            dict(
-                name="warm_pool",
-                type=int,
-                default=1,
-                help=(
-                    "If 1, the SageMaker managed warm pools feature is used. "
-                    "This can be more expensive, but also reduces startup "
-                    "delays, leading to an experiment finishing in less time"
-                ),
-            ),
-            dict(
-                name="instance_type",
-                type=str,
-                help="AWS SageMaker instance type (overwrites default of benchmark)",
-            ),
-            dict(
-                name="start_jobs_without_delay",
-                type=int,
-                default=0,
-                help=(
-                    "If 1, the tuner starts new trials immediately after "
-                    "sending existing ones a stop signal. This leads to more "
-                    "than n_workers instances being used during certain times, "
-                    "which can lead to quotas being exceeded, or the warm pool "
-                    "feature not working optimal."
-                ),
-            ),
-            dict(
-                name="delete_checkpoints",
-                type=int,
-                default=1,
-                help=(
-                    "If 1, checkpoints files on S3 are removed at the end "
-                    "of the experiment."
-                ),
-            ),
-        ],
+                   + LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
     )
 
     method_names = (

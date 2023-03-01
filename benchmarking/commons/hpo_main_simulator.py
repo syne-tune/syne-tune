@@ -27,9 +27,9 @@ from benchmarking.commons.hpo_main_common import (
     PostProcessingType,
     extra_metadata,
     ConfigDict,
-    DictStrKey,
+    DictStrKey, Parameter, str2bool,
 )
-from benchmarking.commons.hpo_main_local import RealBenchmarkDefinitions
+from benchmarking.commons.hpo_main_local import RealBenchmarkDefinitions, LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
@@ -42,6 +42,40 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
+LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS = [
+    dict(
+        name="benchmark",
+        type=str,
+        help="Benchmark to run from benchmark_definitions",
+        default=None,
+        required=True
+    ),
+    dict(
+        name="verbose",
+        type=str2bool,
+        default=0,
+        help="Verbose log output?",
+    ),
+    dict(
+        name="support_checkpointing",
+        type=str2bool,
+        default=1,
+        help="If 0, trials are started from scratch when resumed",
+    ),
+    dict(
+        name="fcnet_ordinal",
+        type=str,
+        choices=["none", "equal", "nn", "nn-log"],
+        default="nn-log",
+        help="Ordinal encoding for fcnet categorical HPs with numeric values. Use 'none' for categorical encoding",
+    ),
+    dict(
+        name="restrict_configurations",
+        type=str2bool,
+        default=0,
+        help="If 1, scheduler only suggests configs contained in tabulated benchmark",
+    ),
+]
 
 SurrogateBenchmarkDefinitions = Union[
     Dict[str, SurrogateBenchmarkDefinition],
@@ -123,6 +157,32 @@ def start_simulated_benchmark(
     tuning_job_metadata: Optional[DictStrKey] = None,
     use_transfer_learning: bool = False,
 ):
+    """
+    Runs sequence of experiments with simulator backend sequentially. The loop
+    runs over methods selected from ``methods``, repetitions and benchmarks
+    selected from ``benchmark_definitions``
+
+    ``map_method_args`` can be used to modify ``method_kwargs`` for constructing
+    :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
+    ``configuration`` and the method. This allows for extra flexibility to specify specific arguments for chosen methods
+    Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
+    where ``method`` is the name of the baseline.
+
+    :param configuration: ConfigDict with parameters of the benchmark
+        Must contain all parameters from LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+    :param methods: Dictionary with method constructors.
+    :param benchmark_definitions: Definitions of benchmarks; one is selected from
+        command line arguments
+    :param post_processing: Called after tuning has finished, passing the tuner
+        as argument. Can be used for postprocessing, such as output or storage
+        of extra information
+    :param map_method_args: See above, optional
+    :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
+    :param use_transfer_learning: If True, we use transfer tuning. Defaults to
+        False
+    """
+    configuration.check_if_all_paremeters_present(LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.expand_base_arguments(LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS)
 
     nested_dict = is_dict_of_dict(benchmark_definitions)
     if configuration.benchmark is not None:
@@ -322,38 +382,7 @@ def main(
 
     configuration = ConfigDict.from_argparse(
         extra_args=extra_args
-        + [
-            dict(
-                name="benchmark",
-                type=str,
-                help="Benchmark to run from benchmark_definitions",
-            ),
-            dict(
-                name="verbose",
-                type=int,
-                default=0,
-                help="Verbose log output?",
-            ),
-            dict(
-                name="support_checkpointing",
-                type=int,
-                default=1,
-                help="If 0, trials are started from scratch when resumed",
-            ),
-            dict(
-                name="fcnet_ordinal",
-                type=str,
-                choices=("none", "equal", "nn", "nn-log"),
-                default="nn-log",
-                help="Ordinal encoding for fcnet categorical HPs with numeric values. Use 'none' for categorical encoding",
-            ),
-            dict(
-                name="restrict_configurations",
-                type=int,
-                default=0,
-                help="If 1, scheduler only suggests configs contained in tabulated benchmark",
-            ),
-        ]
+                   + LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
     )
 
     configuration.verbose = bool(configuration.verbose)
@@ -379,4 +408,5 @@ def main(
         tuning_job_metadata=None
         if extra_args is None
         else extra_metadata(configuration, extra_args),
+    use_transfer_learning = use_transfer_learning,
     )

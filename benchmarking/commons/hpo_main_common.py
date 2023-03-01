@@ -63,7 +63,7 @@ class ConfigDict:
     Expected params as Parameter(name, type, default value)
     """
 
-    _config: dict = {}
+    _config: DictStrKey = {}
     __base_parameters: List[Parameter] = [
         Parameter(
             name="experiment_tag",
@@ -121,9 +121,16 @@ class ConfigDict:
             help=(
                 "If 1, benchmark.max_wallclock_time is multiplied by B / min(A, B),"
                 "where A = n_workers and B = benchmark.n_workers"
-            ),
+            )
+        ),
+        Parameter(
+            name="seeds",
+            type=list,
+            default=None,
+            help="Seeds for this experiment, will be filled automatically based on start_seed and num_seeds"
         ),
     ]
+    __base_parameters_set = {item.name for item in __base_parameters}
 
     def __init__(self, **kwargs):
         self._config.update(**kwargs)
@@ -140,6 +147,42 @@ class ConfigDict:
 
     def __setattr__(self, attr, value):
         self._config[attr] = value
+
+    def check_if_all_paremeters_present(self, desired_parameters: List[DictStrKey]) -> bool:
+        """
+        Verify that all the parameers present in desired_parameters can be found in this ConfigDict
+        """
+        for dparam in desired_parameters:
+            assert dparam["name"] in self._config, f"{dparam['name']} must be specified in the configuration for this experiment"
+
+    def extra_parameters(self) -> List[DictStrKey]:
+        """
+        Return all parameters beyond those required
+        Required are the defauls and those requested in argparse
+        """
+        return [
+            {"name": name, "value": value} for name, value in self._config.items()
+            if name not in self.__base_parameters_set
+        ]
+
+    def expand_base_arguments(self, extra_base_arguments: ExtraArgsType):
+        """
+        Expand the list of base argument for this experiment with those in extra_base_arguments
+        """
+        for extra_param in extra_base_arguments:
+            if extra_param["name"] in self.__base_parameters:
+                continue
+
+            self.__base_parameters.append(
+                Parameter(
+                    name=extra_param["name"],
+                    type=extra_param["type"],
+                    default=extra_param.get("default", None),
+                    help=extra_param.get("help", None),
+                )
+            )
+            self.__base_parameters_set.add(extra_param["name"])
+
 
     @staticmethod
     def from_argparse(
@@ -175,15 +218,15 @@ class ConfigDict:
             )
 
         if extra_args is not None:
-            extra_args = copy.deepcopy(extra_args)
-            for kwargs in extra_args:
+            local_extra_args = copy.deepcopy(extra_args)
+            for kwargs in local_extra_args:
                 name = kwargs.pop("name")
                 assert (
                     name[0] != "-"
                 ), f"Name entry '{name}' in extra_args invalid: No leading '-'"
                 parser.add_argument("--" + name, **kwargs)
 
-        known_args, extra_args = parser.parse_known_args()
+        known_args = parser.parse_args()
         config = ConfigDict(**vars(known_args))
         return config
 

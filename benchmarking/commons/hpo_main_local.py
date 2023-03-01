@@ -27,7 +27,7 @@ from benchmarking.commons.hpo_main_common import (
     PostProcessingType,
     ConfigDict,
     DictStrKey,
-    extra_metadata,
+    extra_metadata, Parameter, str2bool,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend import LocalBackend
@@ -38,7 +38,26 @@ logger = logging.getLogger(__name__)
 
 
 RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
-
+LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS =  [
+            dict(
+                name="benchmark",
+                type=str,
+                default="resnet_cifar10",
+                help="Benchmark to run",
+            ),
+            dict(
+                name="verbose",
+                type=str2bool,
+                default=False,
+                help="Verbose log output?",
+            ),
+            dict(
+                name="instance_type",
+                type=str,
+                default=None,
+                help="AWS SageMaker instance type",
+            ),
+        ]
 
 def get_benchmark(
     configuration: ConfigDict,
@@ -152,7 +171,8 @@ def start_local_benchmark(
     Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
     where ``method`` is the name of the baseline.
 
-    :param configuration: ConfigDict with parameters of the benchmark
+    :param configuration: ConfigDict with parameters of the benchmark.
+        Must contain all parameters from LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
     :param methods: Dictionary with method constructors.
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
@@ -162,6 +182,8 @@ def start_local_benchmark(
     :param map_method_args: See above, optional
     :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
+    configuration.check_if_all_paremeters_present(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.expand_base_arguments(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
 
     experiment_tag = configuration.experiment_tag
     benchmark_name = configuration.benchmark
@@ -233,26 +255,7 @@ def main(
         extra_args = extra_args.copy()
 
     configuration = ConfigDict.from_argparse(
-        extra_args=extra_args
-        + [
-            dict(
-                name="benchmark",
-                type=str,
-                default="resnet_cifar10",
-                help="Benchmark to run",
-            ),
-            dict(
-                name="verbose",
-                type=int,
-                default=0,
-                help="Verbose log output?",
-            ),
-            dict(
-                name="instance_type",
-                type=str,
-                help="AWS SageMaker instance type",
-            ),
-        ],
+        extra_args=extra_args + LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
     )
     method_names = (
         [configuration.method]
