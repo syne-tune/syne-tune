@@ -14,12 +14,12 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 import benchmarking
-from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
 import syne_tune
-from syne_tune.util import s3_experiment_path
+from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )
+from syne_tune.util import s3_experiment_path
 
 
 def sagemaker_estimator_args(

@@ -28,7 +28,6 @@ from benchmarking.commons.hpo_main_common import (
     ConfigDict,
     DictStrKey,
     extra_metadata,
-    Parameter,
     str2bool,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed

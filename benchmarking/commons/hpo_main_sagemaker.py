@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
 import benchmarking
 from benchmarking.commons.baselines import MethodDefinitions
@@ -22,26 +22,23 @@ from benchmarking.commons.hpo_main_common import (
     ConfigDict,
     extra_metadata,
     DictStrKey,
-    Parameter,
     str2bool,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
     create_objects_for_tuner,
-    LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
     get_master_random_seed,
 )
 from syne_tune.backend import SageMakerBackend
-from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     default_sagemaker_session,
 )
+from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.tuner import Tuner
-
 
 # SageMaker managed warm pools:
 # https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html#train-warm-pools-resource-limits

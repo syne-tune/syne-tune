@@ -10,9 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Union, Dict, Any
-import numpy as np
 import itertools
+from typing import Optional, List, Union, Dict, Any
+
+import numpy as np
 from tqdm import tqdm
 
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
@@ -28,19 +29,14 @@ from benchmarking.commons.hpo_main_common import (
     extra_metadata,
     ConfigDict,
     DictStrKey,
-    Parameter,
     str2bool,
 )
-from benchmarking.commons.hpo_main_local import (
-    RealBenchmarkDefinitions,
-    LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
-)
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
