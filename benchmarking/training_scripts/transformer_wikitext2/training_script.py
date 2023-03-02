@@ -166,19 +166,7 @@ def setprec(t, precision):
         raise ValueError(f"invalid precision string {precision}")
 
 
-def objective(config):
-    eval_batch_size = 10
-
-    # Set the random seed manually for reproducibility.
-    torch.manual_seed(config["seed"])
-    use_cuda = config["use_cuda"]
-    if torch.cuda.is_available() and not use_cuda:
-        print("WARNING: You have a CUDA device, so you should run with --use-cuda 1")
-    device = torch.device("cuda" if use_cuda else "cpu")
-
-    #######################################################################
-    # Load data
-    #######################################################################
+def _download_data(config):
     path = config["input_data_dir"]
     os.makedirs(path, exist_ok=True)
     # Lock protection is needed for backends which run multiple worker
@@ -198,14 +186,30 @@ def objective(config):
         # Make sure files are present locally
         download_data(path)
         corpus = Corpus(os.path.join(path, "wikitext-2"))
+    return corpus
+
+
+def objective(config):
+    eval_batch_size = 10
+
+    # Set the random seed manually for reproducibility.
+    torch.manual_seed(config["seed"])
+    use_cuda = config["use_cuda"]
+    if torch.cuda.is_available() and not use_cuda:
+        print("WARNING: You have a CUDA device, so you should run with --use-cuda 1")
+    device = torch.device("cuda" if use_cuda else "cpu")
+
+    #######################################################################
+    # Load data
+    #######################################################################
+    corpus = _download_data(config)
+    train_data = batchify(corpus.train, config["batch_size"], device)
+    val_data = batchify(corpus.valid, eval_batch_size, device)
 
     # Do not want to count the time to download the dataset, which can be
     # substantial the first time
     ts_start = time.time()
     report = Reporter()
-
-    train_data = batchify(corpus.train, config["batch_size"], device)
-    val_data = batchify(corpus.valid, eval_batch_size, device)
 
     #######################################################################
     # Build the model

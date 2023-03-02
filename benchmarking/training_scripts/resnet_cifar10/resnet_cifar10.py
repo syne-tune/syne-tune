@@ -35,6 +35,8 @@ METRIC_NAME = "objective"
 
 RESOURCE_ATTR = "epoch"
 
+MAX_RESOURCE_ATTR = "epochs"
+
 ELAPSED_TIME_ATTR = "elapsed_time"
 
 
@@ -121,20 +123,7 @@ def valid(model, valid_loader):
     return loss, percentage_correct / 100
 
 
-def objective(config):
-    torch.manual_seed(np.random.randint(10000))
-    batch_size = config["batch_size"]
-    lr = config["lr"]
-    momentum = config["momentum"]
-    weight_decay = config["weight_decay"]
-    num_gpus = config.get("num_gpus")
-    if num_gpus is None:
-        num_gpus = 1
-    trial_id = config.get("trial_id")
-    debug_log = trial_id is not None
-    if debug_log:
-        print("Trial {}: Starting evaluation".format(trial_id), flush=True)
-
+def _download_data(config):
     path = config["dataset_path"]
     os.makedirs(path, exist_ok=True)
     # Lock protection is needed for backends which run multiple worker
@@ -152,19 +141,17 @@ def objective(config):
             flush=True,
         )
         input_size, num_classes, train_dataset, valid_dataset = get_CIFAR10(root=path)
+    return input_size, num_classes, train_dataset, valid_dataset
 
-    # Do not want to count the time to download the dataset, which can be
-    # substantial the first time
-    ts_start = time.time()
-    report = Reporter()
 
+def _create_data_loaders(config, train_dataset, valid_dataset):
     indices = list(range(train_dataset.data.shape[0]))
     train_idx, valid_idx = indices[:40000], indices[40000:]
     train_sampler = SubsetRandomSampler(train_idx)
     valid_sampler = SubsetRandomSampler(valid_idx)
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=batch_size,
+        batch_size=config[BATCH_SIZE_KEY],
         # shuffle=True,
         num_workers=0,
         sampler=train_sampler,
@@ -178,7 +165,13 @@ def objective(config):
         sampler=valid_sampler,
         pin_memory=True,
     )
+    return train_loader, valid_loader
 
+
+def _create_training_objects(config):
+    num_gpus = config.get("num_gpus")
+    if num_gpus is None:
+        num_gpus = 1
     model = Model()
     if torch.cuda.is_available():
         model = model.cuda()
@@ -189,33 +182,52 @@ def objective(config):
         ).to(device)
     milestones = [25, 40]
     optimizer = torch.optim.SGD(
-        model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay
+        model.parameters(),
+        lr=config["lr"],
+        momentum=config["momentum"],
+        weight_decay=config["weight_decay"],
     )
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=milestones, gamma=0.1
     )
+    return model, optimizer, scheduler
 
-    # Checkpointing
+
+def objective(config):
+    torch.manual_seed(np.random.randint(10000))
+    trial_id = config.get("trial_id")
+    debug_log = trial_id is not None
+    if debug_log:
+        print("Trial {}: Starting evaluation".format(trial_id), flush=True)
+    # Download data, setup data loaders
+    input_size, num_classes, train_dataset, valid_dataset = _download_data(config)
+    train_loader, valid_loader = _create_data_loaders(
+        config, train_dataset, valid_dataset
+    )
+    # Do not want to count the time to download the dataset, which can be
+    # substantial the first time
+    ts_start = time.time()
+    report = Reporter()
+    # Create model, optimizer, LR scheduler
+    model, optimizer, scheduler = _create_training_objects(config)
+    # Checkpointing for PyTorch model
     load_model_fn, save_model_fn = pytorch_load_save_functions(
         {"model": model, "optimizer": optimizer, "lr_scheduler": scheduler}
     )
     # Resume from checkpoint (optional)
     resume_from = resume_from_checkpointed_model(config, load_model_fn)
 
-    for epoch in range(resume_from + 1, config["epochs"] + 1):
+    for epoch in range(resume_from + 1, config[MAX_RESOURCE_ATTR] + 1):
         train(model, train_loader, optimizer)
         loss, y = valid(model, valid_loader)
         scheduler.step()
         elapsed_time = time.time() - ts_start
-
         # Write checkpoint (optional)
         checkpoint_model_at_rung_level(config, save_model_fn, epoch)
-
-        # Feed the score back to Tune.
+        # Feed the score back to Syne Tune
         report(
             **{RESOURCE_ATTR: epoch, METRIC_NAME: y, ELAPSED_TIME_ATTR: elapsed_time}
         )
-
         if debug_log:
             print(
                 "Trial {}: epoch = {}, objective = {:.3f}, elapsed_time = {:.2f}".format(
@@ -257,7 +269,7 @@ if __name__ == "__main__":
     root.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, required=True)
+    parser.add_argument(f"--{MAX_RESOURCE_ATTR}", type=int, required=True)
     parser.add_argument("--dataset_path", type=str, required=True)
     parser.add_argument("--num_gpus", type=int)
     parser.add_argument("--trial_id", type=str)
