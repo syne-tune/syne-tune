@@ -162,6 +162,11 @@ This call runs a number of experiments sequentially on the local machine:
   where ``A = n_workers``, ``B = benchmark.n_workers``. This means we run for
   longer if ``n_workers < benchmark.n_workers``, but keep
   ``benchmark.max_wallclock_time`` the same otherwise.
+* ``use_long_tuner_name_prefix``: If 1, results for an experiment are written
+  to a directory whose prefix is
+  :code:`f"{experiment_tag}-{benchmark_name}-{seed}"`, followed by a postfix
+  containing date-time and a 3-digit hash. If 0, the prefix is
+  :code:`experiment_tag` only. The default is 1 (long prefix).
 * ``restrict_configurations``: See
   `below <#restricting-scheduler-to-configurations-of-tabulated-blackbox>`_.
 * ``fcnet_ordinal``: Applies to FCNet benchmarks only. The hyperparameter

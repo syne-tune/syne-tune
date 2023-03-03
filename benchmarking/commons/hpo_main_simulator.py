@@ -350,6 +350,9 @@ def main(
             metadata["predict_curves"] = int(
                 benchmark.add_surrogate_kwargs["predict_curves"]
             )
+        tuner_name = experiment_tag
+        if args.use_long_tuner_name_prefix:
+            tuner_name += f"-{benchmark_name}-{seed}"
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,
@@ -359,7 +362,7 @@ def main(
             callbacks=[SimulatorCallback()],
             results_update_interval=600,
             print_update_interval=600,
-            tuner_name=experiment_tag,
+            tuner_name=tuner_name,
             metadata=metadata,
             save_tuner=args.save_tuner,
         )
