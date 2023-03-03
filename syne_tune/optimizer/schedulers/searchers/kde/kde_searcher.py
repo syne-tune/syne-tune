@@ -368,6 +368,8 @@ class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
         """
         num_data, num_features = data_shape
         n_good = max(self.num_min_data_points, (self.top_n_percent * num_data) // 100)
+        # Number of data points have to be larger than the number of features to meet
+        # the input constraints of ``statsmodels.KDEMultivariate``
         if min(n_good, num_data - n_good) <= num_features:
             return None
         else:
