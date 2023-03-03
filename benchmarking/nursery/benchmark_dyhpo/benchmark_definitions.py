@@ -11,8 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from benchmarking.commons.benchmark_definitions import (
+    nas201_benchmark_definitions,
     lcbench_selected_benchmark_definitions,
 )
 
 
-benchmark_definitions = lcbench_selected_benchmark_definitions.copy()
+benchmark_definitions = {
+    **lcbench_selected_benchmark_definitions,
+    **nas201_benchmark_definitions,
+}
