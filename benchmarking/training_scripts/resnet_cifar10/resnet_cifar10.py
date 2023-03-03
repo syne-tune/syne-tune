@@ -169,16 +169,13 @@ def _create_data_loaders(config, train_dataset, valid_dataset):
 
 
 def _create_training_objects(config):
-    num_gpus = config.get("num_gpus")
-    if num_gpus is None:
-        num_gpus = 1
     model = Model()
     if torch.cuda.is_available():
         model = model.cuda()
         device = torch.device("cuda")
         # print(device)
         model = torch.nn.DataParallel(
-            model, device_ids=[i for i in range(num_gpus)]
+            model, device_ids=[i for i in range(config["num_gpus"])]
         ).to(device)
     milestones = [25, 40]
     optimizer = torch.optim.SGD(
@@ -271,7 +268,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(f"--{MAX_RESOURCE_ATTR}", type=int, required=True)
     parser.add_argument("--dataset_path", type=str, required=True)
-    parser.add_argument("--num_gpus", type=int)
+    parser.add_argument("--num_gpus", type=int, default=1)
     parser.add_argument("--trial_id", type=str)
     add_to_argparse(parser, _config_space)
     add_checkpointing_to_argparse(parser)
