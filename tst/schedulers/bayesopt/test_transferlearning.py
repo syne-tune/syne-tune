@@ -46,7 +46,9 @@ def test_create_transfer_learning():
         "transfer_learning_active_config_space": active_config_space,
     }
     kwargs = check_and_merge_defaults(
-        search_options, *gp_fifo_searcher_defaults(), dict_name="search_options"
+        search_options,
+        *gp_fifo_searcher_defaults(search_options),
+        dict_name="search_options"
     )
     kwargs_int = gp_fifo_searcher_factory(**kwargs)
 

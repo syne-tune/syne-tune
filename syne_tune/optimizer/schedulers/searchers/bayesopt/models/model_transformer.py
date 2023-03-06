@@ -13,6 +13,7 @@
 from typing import Dict, Optional, Callable, Union
 import logging
 import copy
+
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
@@ -117,10 +118,11 @@ SkipOptimizationOutputPredicate = Union[
 
 class StateForModelConverter:
     """
-    Interface for state converters (optionally) used in :class:`ModelStateTransformer`.
+    Interface for state converters (optionally) used in
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer.ModelStateTransformer`.
     These are applied to a state before being passed to the model for fitting and
     predictions. The main use case is to filter down data if fitting the model scales
-    superlinearly.
+    super-linearly.
     """
 
     def __call__(self, state: TuningJobState) -> TuningJobState:

@@ -35,7 +35,6 @@ extra_args = [
     dict(
         name="rung_increment",
         type=int,
-        default=1,
         help="Increment between rung levels",
     ),
     dict(
@@ -47,16 +46,16 @@ extra_args = [
 
 
 def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    scheduler_kwargs = dict()
     if method.startswith("DYHPO"):
-        scheduler_kwargs = {"rung_increment": args.rung_increment}
+        if args.rung_increment is not None:
+            scheduler_kwargs["rung_increment"] = args.rung_increment
         if args.probability_sh is not None:
             scheduler_kwargs["probability_sh"] = args.probability_sh
         if args.opt_skip_period is not None:
             scheduler_kwargs["search_options"] = {
                 "opt_skip_period": args.opt_skip_period,
             }
-    else:
-        scheduler_kwargs = dict()
     if args.num_brackets is not None:
         scheduler_kwargs["brackets"] = args.num_brackets
     if scheduler_kwargs:
