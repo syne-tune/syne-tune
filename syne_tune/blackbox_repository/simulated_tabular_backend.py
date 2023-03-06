@@ -363,8 +363,9 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             "elapsed_time_attr": self.elapsed_time_attr,
             "max_resource_attr": self._max_resource_attr,
             "seed": self._seed,
-            "seed_for_trial": self._seed_for_trial,
             "simulatorbackend_kwargs": self.simulatorbackend_kwargs,
+            "support_checkpointing": self._support_checkpointing,
+            "seed_for_trial": self._seed_for_trial,
             "blackbox_name": self.blackbox_name,
             "dataset": self.dataset,
             "surrogate": self._surrogate,
@@ -381,6 +382,7 @@ class BlackboxRepositoryBackend(_BlackboxSimulatorBackend):
             elapsed_time_attr=state["elapsed_time_attr"],
             max_resource_attr=state["max_resource_attr"],
             seed=state["seed"],
+            support_checkpointing=state["support_checkpointing"],
             **state["simulatorbackend_kwargs"],
         )
         self._seed_for_trial = state["seed_for_trial"]
