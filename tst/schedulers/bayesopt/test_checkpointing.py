@@ -40,7 +40,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy impo
 def test_pickle_gp_fifo_searcher():
     random_seed = 894623209
     # This data is used below
-    _, searcher_options, _ = gp_fifo_searcher_defaults()
+    _, searcher_options, _ = gp_fifo_searcher_defaults(dict())
     num_data = searcher_options["num_init_random"] + 2
     num_pending = 2
     data = sample_data(Ackley, num_train=num_data + num_pending, num_grid=5)
@@ -106,7 +106,7 @@ def test_pickle_gp_fifo_searcher():
 def test_pickle_constrained_gp_fifo_searcher():
     random_seed = 894623209
     # This data is used below
-    _, searcher_options, _ = constrained_gp_fifo_searcher_defaults()
+    _, searcher_options, _ = constrained_gp_fifo_searcher_defaults(dict())
     num_data = searcher_options["num_init_random"] + 2
     num_pending = 2
     data = sample_data(Ackley, num_train=num_data + num_pending, num_grid=5)
@@ -178,7 +178,7 @@ def test_pickle_constrained_gp_fifo_searcher():
 def test_pickle_cost_aware_gp_fifo_searcher():
     random_seed = 894623209
     # This data is used below
-    _, searcher_options, _ = cost_aware_gp_fifo_searcher_defaults()
+    _, searcher_options, _ = cost_aware_gp_fifo_searcher_defaults(dict())
     num_data = searcher_options["num_init_random"] + 2
     num_pending = 2
     data = sample_data(Ackley, num_train=num_data + num_pending, num_grid=5)
