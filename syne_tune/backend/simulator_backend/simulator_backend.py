@@ -483,7 +483,7 @@ class SimulatorBackend(LocalBackend):
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
         config_copy = config.copy()
-        config_copy[ST_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
+        config_copy[ST_CHECKPOINT_DIR] = str(self.checkpoint_trial_path(trial_id))
         config_str = " ".join(
             [f"--{key} {value}" for key, value in config_copy.items()]
         )

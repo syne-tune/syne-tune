@@ -88,9 +88,18 @@ class LocalBackend(TrialBackend):
         self._busy_trial_id_candidates = set()
 
     def trial_path(self, trial_id: int) -> Path:
+        """
+        :param trial_id: ID of trial
+        :return: Directory where files related to trial are written to
+        """
         return self.local_path / str(trial_id)
 
     def checkpoint_trial_path(self, trial_id: int) -> Path:
+        """
+        :param trial_id: ID of trial
+        :return: Directory where checkpoints for trial are written to and
+            read from
+        """
         return self.trial_path(trial_id) / "checkpoints"
 
     def copy_checkpoint(self, src_trial_id: int, tgt_trial_id: int):

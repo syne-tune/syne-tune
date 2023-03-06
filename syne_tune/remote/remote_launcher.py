@@ -53,9 +53,10 @@ class RemoteLauncher:
         dependencies for the backend script to run
     :param estimator_kwargs: Extra arguments for creating the SageMaker
         estimator for the tuning code.
-    :param store_logs_localbackend: Whether to store logs of trials when
-        using the local backend. When using SageMaker backend, logs are
-        persisted by SageMaker. Defauls to ``False``
+    :param store_logs_localbackend: Whether to sync logs and checkpoints to S3
+        when using the local backend. When using SageMaker backend, logs are
+        persisted by SageMaker. Using ``True`` can lead to failure with large
+        checkpoints. Defauls to ``False``
     :param log_level: Logging level. Default is ``logging.INFO``, while
         ``logging.DEBUG`` gives more messages
     :param s3_path: S3 base path used for checkpointing, outputs of tuning
