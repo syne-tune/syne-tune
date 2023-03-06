@@ -117,6 +117,12 @@ def check_valid_sagemaker_name(name: str):
     ), f"{name} should consists in alpha-digits possibly separated by character -"
 
 
+def sanitize_sagemaker_name(name: str) -> str:
+    new_name = name.replace("_", "-")
+    check_valid_sagemaker_name(new_name)
+    return new_name
+
+
 def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:
     """Append a timestamp to the provided string.
 

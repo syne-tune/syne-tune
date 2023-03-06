@@ -39,6 +39,7 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 )
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
+from syne_tune.util import sanitize_sagemaker_name
 
 
 SurrogateBenchmarkDefinitions = Union[
@@ -352,7 +353,7 @@ def main(
             )
         tuner_name = experiment_tag
         if args.use_long_tuner_name_prefix:
-            tuner_name += f"-{benchmark_name}-{seed}"
+            tuner_name += f"-{sanitize_sagemaker_name(args.benchmark)}-{seed}"
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,

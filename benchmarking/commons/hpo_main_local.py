@@ -19,6 +19,7 @@ import logging
 from syne_tune.backend import LocalBackend
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
+from syne_tune.util import sanitize_sagemaker_name
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
 from benchmarking.commons.hpo_main_common import (
@@ -160,7 +161,7 @@ def create_objects_for_tuner(
     )
     tuner_name = args.experiment_tag
     if args.use_long_tuner_name_prefix:
-        tuner_name += f"-{args.benchmark}-{seed}"
+        tuner_name += f"-{sanitize_sagemaker_name(args.benchmark)}-{seed}"
     return dict(
         scheduler=scheduler,
         stop_criterion=stop_criterion,
