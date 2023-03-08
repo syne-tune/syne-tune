@@ -52,7 +52,7 @@ locally:
 .. code-block:: bash
 
    python benchmarking/nursery/launch_sagemaker/hpo_main.py \
-     --experiment_tag tutorial_sagemaker --benchmark resnet_cifar10 \
+     --experiment_tag tutorial-sagemaker --benchmark resnet_cifar10 \
      --method ASHA --num_seeds 1
 
 This call launches a single experiment on the local machine (however, each
@@ -94,6 +94,11 @@ type, within which trials are executed as SageMaker training jobs as well. The
 usage is the same as in the
 `local backend case <bm_local.html#launching-experiments-remotely>`_.
 
+When experiments are launched remotely with the SageMaker backend, a number of
+metrics are published to the SageMaker training job console (this feature can
+be switched off with ``--remote_tuning_metrics 0``). This is detailed
+`here <bm_local.html#visualizing-tuning-metrics-in-the-sagemaker-training-job-console>`_.
+
 Using SageMaker Managed Warm Pools
 ----------------------------------
 
@@ -110,7 +115,7 @@ used with ``hpo_main.py``. For the example above:
 .. code-block:: bash
 
    python benchmarking/nursery/launch_sagemaker/hpo_main.py \
-     --experiment_tag tutorial_sagemaker --benchmark resnet_cifar10 \
+     --experiment_tag tutorial-sagemaker --benchmark resnet_cifar10 \
      --method ASHA --num_seeds 1 --warm_pool 1
 
 The warm pool feature is most useful with multi-fidelity HPO methods (such as

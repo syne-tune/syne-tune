@@ -24,10 +24,14 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from sagemaker import Session
-from sagemaker.estimator import Framework
+from sagemaker.estimator import Framework, EstimatorBase
 
 import syne_tune
 from syne_tune.backend.trial_status import TrialResult
+from syne_tune.constants import (
+    ST_SAGEMAKER_METRIC_TAG,
+    MAX_METRICS_SUPPORTED_BY_SAGEMAKER,
+)
 from syne_tune.report import retrieve
 from syne_tune.util import experiment_path, random_string, s3_experiment_path
 
@@ -180,7 +184,7 @@ def sagemaker_search(
     return sorted_res
 
 
-def metric_definitions_from_names(metrics_names):
+def metric_definitions_from_names(metrics_names: List[str]):
     """
     :param metrics_names: names of the metrics present in the log.
     Metrics must be written in the log as [metric-name]: value, for instance [accuracy]: 0.23
@@ -193,10 +197,43 @@ def metric_definitions_from_names(metrics_names):
         :param metric_name:
         :return: a sagemaker metric definition to enable Sagemaker to interpret metrics from logs
         """
-        regex = rf".*[tune-metric].*\"{re.escape(metric_name)}\": ([-+]?\d\.?\d*)"
+        regex = rf".*[{ST_SAGEMAKER_METRIC_TAG}].*\"{re.escape(metric_name)}\": ([-+]?\d\.?\d*)"
         return {"Name": metric_name, "Regex": regex}
 
     return [metric_dict(m) for m in metrics_names]
+
+
+def add_metric_definitions_to_sagemaker_estimator(
+    estimator: EstimatorBase, metrics_names: List[str]
+):
+    """
+    Adds metric definitions according to :func:`metric_definitions_from_names`
+    to ``estimator`` for each name in ``metrics_names``. The regexp for each
+    name is compatible with how :class:`~syne_tune.Reporter` outputs metric
+    values.
+
+    :param estimator: SageMaker estimator
+    :param metrics_names: Names of metrics to be appended
+    """
+    if metrics_names:
+        current_metric_definitions = estimator.metric_definitions
+        if current_metric_definitions is None:
+            current_metric_definitions = []
+        new_names = set(metrics_names)
+        current_metric_definitions = [
+            x for x in current_metric_definitions if x["Name"] not in new_names
+        ]
+        current_metric_definitions += metric_definitions_from_names(metrics_names)
+        if len(current_metric_definitions) > MAX_METRICS_SUPPORTED_BY_SAGEMAKER:
+            current_metric_definitions = current_metric_definitions[
+                :MAX_METRICS_SUPPORTED_BY_SAGEMAKER
+            ]
+            logger.warning(
+                f"Sagemaker only supports {MAX_METRICS_SUPPORTED_BY_SAGEMAKER} "
+                "metrics for learning curve visualization, keeping only these:\n"
+                + str([x["Name"] for x in current_metric_definitions])
+            )
+        estimator.metric_definitions = current_metric_definitions
 
 
 def add_syne_tune_dependency(sm_estimator):

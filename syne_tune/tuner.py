@@ -651,7 +651,8 @@ class Tuner:
 
         return done_trials
 
-    def _default_callback(self):
+    @staticmethod
+    def _default_callback():
         """
         :return: Default callback to store results
         """

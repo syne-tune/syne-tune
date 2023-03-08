@@ -35,13 +35,13 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     sagemaker_search,
     get_log,
     sagemaker_fit,
-    metric_definitions_from_names,
     add_syne_tune_dependency,
     map_identifier_limited_length,
     s3_copy_files_recursively,
     s3_delete_files_recursively,
     default_config,
     default_sagemaker_session,
+    add_metric_definitions_to_sagemaker_estimator,
 )
 
 
@@ -103,7 +103,6 @@ class SageMakerBackend(TrialBackend):
         # the report.py code is available
         if metrics_names is None:
             metrics_names = []
-        self.metrics_names = metrics_names
         self.add_metric_definitions_to_sagemaker_estimator(metrics_names)
 
         st_prefix = "st-"
@@ -153,22 +152,7 @@ class SageMakerBackend(TrialBackend):
         # this allows to plot live learning curves of metrics in Sagemaker console.
         # The reason why we ask to the user metric names is that they are required to be known before hand so that live
         # plotting works.
-        if self.sm_estimator.metric_definitions is None:
-            self.sm_estimator.metric_definitions = metric_definitions_from_names(
-                metrics_names
-            )
-        else:
-            self.sm_estimator.metric_definitions = (
-                self.sm_estimator.metric_definitions
-                + metric_definitions_from_names(self.metrics_names)
-            )
-        if len(self.sm_estimator.metric_definitions) > 40:
-            logger.warning(
-                "Sagemaker only supports 40 metrics for learning curve visualization, keeping only the first 40"
-            )
-            self.sm_estimator.metric_definitions = self.sm_estimator.metric_definitions[
-                :40
-            ]
+        add_metric_definitions_to_sagemaker_estimator(self.sm_estimator, metrics_names)
 
     def _all_trial_results(self, trial_ids: List[int]) -> List[TrialResult]:
         trial_ids_and_names = []

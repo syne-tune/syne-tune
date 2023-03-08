@@ -62,7 +62,7 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="warm_pool",
         type=str2bool,
-        default=1,
+        default=True,
         help=(
             "If 1, the SageMaker managed warm pools feature is used. "
             "This can be more expensive, but also reduces startup "
@@ -77,7 +77,7 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="start_jobs_without_delay",
         type=str2bool,
-        default=0,
+        default=False,
         help=(
             "If 1, the tuner starts new trials immediately after "
             "sending existing ones a stop signal. This leads to more "
@@ -89,10 +89,16 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="delete_checkpoints",
         type=str2bool,
-        default=1,
+        default=True,
         help=(
             "If 1, checkpoints files on S3 are removed at the end " "of the experiment."
         ),
+    ),
+    dict(
+        name="remote_tuning_metrics",
+        type=str2bool,
+        default=True,
+        help="Remote tuning publishes metrics to Sagemaker console?",
     ),
 ]
 

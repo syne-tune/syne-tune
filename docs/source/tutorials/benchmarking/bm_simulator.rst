@@ -131,7 +131,7 @@ Here is an example of how simulated experiments are launched locally:
 .. code-block:: bash
 
    python benchmarking/nursery/benchmark_hypertune/hpo_main.py \
-     --experiment_tag tutorial_simulated --benchmark nas201-cifar100 \
+     --experiment_tag tutorial-simulated --benchmark nas201-cifar100 \
      --method ASHA --num_seeds 10
 
 This call runs a number of experiments sequentially on the local machine:
@@ -194,7 +194,7 @@ using a number of SageMaker training jobs. Here is an example:
 .. code-block:: bash
 
    python benchmarking/nursery/benchmark_hypertune/launch_remote.py \
-     --experiment_tag tutorial_simulated --benchmark nas201-cifar100 \
+     --experiment_tag tutorial-simulated --benchmark nas201-cifar100 \
      --num_seeds 10
 
 Since ``--method`` is not used, we run experiments for all methods. Also, we

@@ -13,7 +13,6 @@
 from typing import Dict, Any
 from time import perf_counter
 import copy
-import logging
 import pandas as pd
 
 from syne_tune.backend.trial_status import Trial
@@ -23,8 +22,6 @@ from syne_tune.backend.trial_backend import (
 )
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TIME
 from syne_tune.util import RegularCallback
-
-logger = logging.getLogger(__name__)
 
 
 class TunerCallback:

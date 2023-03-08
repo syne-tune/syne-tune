@@ -111,6 +111,7 @@ def launch_remote_experiments_sagemaker(
         "max_failures": configuration.max_failures,
         "warm_pool": int(configuration.warm_pool),
         "delete_checkpoints": int(configuration.delete_checkpoints),
+        "remote_tuning_metrics": int(configuration.remote_tuning_metrics),
     }
     experiment_tag = _launch_experiment_remotely(
         configuration=configuration,

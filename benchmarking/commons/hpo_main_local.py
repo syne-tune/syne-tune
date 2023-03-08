@@ -20,6 +20,11 @@ import logging
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     backend_path_not_synced_to_s3,
 )
+from syne_tune.backend import LocalBackend
+from syne_tune.remote.remote_metrics_callback import RemoteTuningMetricsCallback
+from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.tuner import Tuner
+from syne_tune.tuner_callback import StoreResultsCallback
 from syne_tune.util import sanitize_sagemaker_name
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
@@ -62,6 +67,12 @@ LOCAL_BACKEND_EXTRA_PARAMETERS = [
         type=str,
         default=None,
         help="AWS SageMaker instance type",
+    ),
+    dict(
+        name="remote_tuning_metrics",
+        type=str2bool,
+        default=True,
+        help="Remote tuning publishes metrics to Sagemaker console?",
     ),
 ]
 
@@ -153,7 +164,7 @@ def create_objects_for_tuner(
     tuner_name = configuration.experiment_tag
     if configuration.use_long_tuner_name_prefix:
         tuner_name += f"-{sanitize_sagemaker_name(configuration.benchmark)}-{seed}"
-    return dict(
+    tuner_kwargs = dict(
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=benchmark.n_workers,
@@ -161,6 +172,18 @@ def create_objects_for_tuner(
         metadata=metadata,
         save_tuner=configuration.save_tuner,
     )
+    if configuration.remote_tuning_metrics:
+        # Use callback to report tuning metrics
+        tuner_kwargs["callbacks"] = [
+            StoreResultsCallback(),
+            RemoteTuningMetricsCallback(
+                metric=benchmark.metric,
+                mode=benchmark.mode,
+                config_space=benchmark.config_space,
+                resource_attr=benchmark.resource_attr,
+            ),
+        ]
+    return tuner_kwargs
 
 
 def start_benchmark_local_backend(

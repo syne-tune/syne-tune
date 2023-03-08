@@ -14,10 +14,13 @@ import numbers
 import os
 from time import perf_counter
 from typing import Optional, List, Dict, Any
+import logging
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.tuner_callback import TunerCallback, logger
+from syne_tune.tuner_callback import TunerCallback
+
+logger = logging.getLogger(__name__)
 
 
 class TensorboardCallback(TunerCallback):
