@@ -250,7 +250,7 @@ If you use Syne Tune in a scientific publication, please cite the following pape
   author={David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
   booktitle={International Conference on Automated Machine Learning, AutoML 2022},
   year={2022},
-  url={https://openreview.net/forum?id=BVeGJ-THIg9}
+  url={https://proceedings.mlr.press/v188/salinas22a.html}
 }
 ```
 
