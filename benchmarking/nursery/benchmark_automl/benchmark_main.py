@@ -62,7 +62,7 @@ def parse_args(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
         "--benchmark",
         type=str,
         required=False,
-        help="a benchmark to run from synthetic_benchmark.py",
+        help="a benchmark to run from benchmark_definitions.py",
     )
     args, _ = parser.parse_known_args()
     args.run_all_seeds = bool(args.run_all_seeds)
