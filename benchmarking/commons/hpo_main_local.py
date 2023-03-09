@@ -28,7 +28,7 @@ from benchmarking.commons.hpo_main_common import (
     ConfigDict,
     DictStrKey,
     extra_metadata,
-    str2bool,
+    str2bool, config_from_argparse,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend import LocalBackend
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
-LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS = [
+LOCAL_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="benchmark",
         type=str,
@@ -155,13 +155,13 @@ def create_objects_for_tuner(
     )
 
 
-def start_local_benchmark(
+def start_benchmark_local_backend(
     configuration: ConfigDict,
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
     post_processing: Optional[PostProcessingType] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
-    tuning_job_metadata: Optional[DictStrKey] = None,
+    extra_tuning_job_metadata: Optional[DictStrKey] = None,
 ):
     """
     Runs sequence of experiments with local backend sequentially.
@@ -182,12 +182,12 @@ def start_local_benchmark(
         as argument. Can be used for postprocessing, such as output or storage
         of extra information
     :param map_method_args: See above, optional
-    :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
+    :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
     configuration.check_if_all_paremeters_present(
-        LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
+        LOCAL_BACKEND_EXTRA_PARAMETERS
     )
-    configuration.expand_base_arguments(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.expand_base_arguments(LOCAL_BACKEND_EXTRA_PARAMETERS)
 
     experiment_tag = configuration.experiment_tag
     benchmark_name = configuration.benchmark
@@ -195,8 +195,7 @@ def start_local_benchmark(
     set_logging_level(configuration)
     benchmark = get_benchmark(configuration, benchmark_definitions)
 
-    method_names = [item for item in methods.keys()]
-    combinations = list(itertools.product(method_names, configuration.seeds))
+    combinations = list(itertools.product(list(methods.keys()), configuration.seeds))
     print(combinations)
     for method, seed in tqdm(combinations):
         random_seed = effective_random_seed(master_random_seed, seed)
@@ -214,7 +213,7 @@ def start_local_benchmark(
             master_random_seed=master_random_seed,
             seed=seed,
             verbose=configuration.verbose,
-            extra_job_metadata=tuning_job_metadata,
+            extra_job_metadata=extra_tuning_job_metadata,
             map_method_args=map_method_args,
         )
         tuner = Tuner(
@@ -253,14 +252,7 @@ def main(
         as argument. Can be used for postprocessing, such as output or storage
         of extra information
     """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
-
-    configuration = ConfigDict.from_argparse(
-        extra_args=extra_args + LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
-    )
+    configuration = config_from_argparse(extra_args, LOCAL_BACKEND_EXTRA_PARAMETERS)
     method_names = (
         [configuration.method]
         if configuration.method is not None
@@ -272,13 +264,13 @@ def main(
             map_extra_args is not None
         ), "map_extra_args must be specified if extra_args is used"
 
-    start_local_benchmark(
+    start_benchmark_local_backend(
         configuration,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
         map_method_args=map_extra_args,
         post_processing=post_processing,
-        tuning_job_metadata=None
+        extra_tuning_job_metadata=None
         if extra_args is None
         else extra_metadata(configuration, extra_args),
     )

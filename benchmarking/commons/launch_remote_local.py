@@ -24,12 +24,12 @@ from benchmarking.commons.hpo_main_common import (
     extra_metadata,
     ExtraArgsType,
     ConfigDict,
-    DictStrKey,
+    DictStrKey, config_from_argparse,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
-    LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS,
+    LOCAL_BACKEND_EXTRA_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -116,18 +116,11 @@ def launch_remote(
         command line arguments
     :param extra_args: Extra arguments for command line parser, optional
     """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
-
-    configuration = ConfigDict.from_argparse(
-        extra_args=extra_args + LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
-    )
-    launch_remote_banchmark(configuration, entry_point, methods, benchmark_definitions)
+    configuration = config_from_argparse(extra_args, LOCAL_BACKEND_EXTRA_PARAMETERS)
+    launch_remote_experiments(configuration, entry_point, methods, benchmark_definitions)
 
 
-def launch_remote_banchmark(
+def launch_remote_experiments(
     configuration: ConfigDict,
     entry_point: Path,
     methods: MethodDefinitions,
@@ -161,9 +154,9 @@ def launch_remote_banchmark(
         command line arguments
     """
     configuration.check_if_all_paremeters_present(
-        LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
+        LOCAL_BACKEND_EXTRA_PARAMETERS
     )
-    configuration.expand_base_arguments(LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.expand_base_arguments(LOCAL_BACKEND_EXTRA_PARAMETERS)
 
     method_names = (
         [configuration.method]

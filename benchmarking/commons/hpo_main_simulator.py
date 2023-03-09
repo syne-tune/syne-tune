@@ -29,7 +29,7 @@ from benchmarking.commons.hpo_main_common import (
     extra_metadata,
     ConfigDict,
     DictStrKey,
-    str2bool,
+    str2bool, config_from_argparse,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
@@ -43,7 +43,7 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
-LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS = [
+SIMULATED_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="benchmark",
         type=str,
@@ -77,7 +77,13 @@ LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS = [
         help="If 1, scheduler only suggests configs contained in tabulated benchmark",
     ),
 ]
-
+BENCHMARK_KEY_EXTRA_PARAMETER = dict(
+    name="benchmark_key",
+    type=str,
+    help="Key for benchmarks, needs to bespecified if benchmarks definitions are nested.",
+    default=None,
+    required=True,
+)
 SurrogateBenchmarkDefinitions = Union[
     Dict[str, SurrogateBenchmarkDefinition],
     Dict[str, Dict[str, SurrogateBenchmarkDefinition]],
@@ -149,13 +155,13 @@ def get_transfer_learning_evaluations(
     return transfer_learning_evaluations
 
 
-def start_simulated_benchmark(
+def start_benchmark_simulated_backend(
     configuration: ConfigDict,
     methods: MethodDefinitions,
     benchmark_definitions: SurrogateBenchmarkDefinitions,
     post_processing: Optional[PostProcessingType] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
-    tuning_job_metadata: Optional[DictStrKey] = None,
+    extra_tuning_job_metadata: Optional[DictStrKey] = None,
     use_transfer_learning: bool = False,
 ):
     """
@@ -178,15 +184,18 @@ def start_simulated_benchmark(
         as argument. Can be used for postprocessing, such as output or storage
         of extra information
     :param map_method_args: See above, optional
-    :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
+    :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     :param use_transfer_learning: If True, we use transfer tuning. Defaults to
         False
     """
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
+    if is_dict_of_dict(benchmark_definitions):
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
     configuration.check_if_all_paremeters_present(
-        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+        simulated_backend_extra_parameters
     )
     configuration.expand_base_arguments(
-        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+        simulated_backend_extra_parameters
     )
 
     nested_dict = is_dict_of_dict(benchmark_definitions)
@@ -324,7 +333,7 @@ def start_simulated_benchmark(
             benchmark_name=benchmark_name,
             random_seed=master_random_seed,
             max_size_data_for_model=configuration.max_size_data_for_model,
-            extra_metadata=tuning_job_metadata,
+            extra_metadata=extra_tuning_job_metadata,
         )
         metadata["fcnet_ordinal"] = configuration.fcnet_ordinal
         if benchmark.add_surrogate_kwargs is not None:
@@ -380,14 +389,10 @@ def main(
     :param use_transfer_learning: If True, we use transfer tuning. Defaults to
         False
     """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
-
-    configuration = ConfigDict.from_argparse(
-        extra_args=extra_args + LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
-    )
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
+    if is_dict_of_dict(benchmark_definitions):
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
+    configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
 
     configuration.verbose = bool(configuration.verbose)
     configuration.support_checkpointing = bool(configuration.support_checkpointing)
@@ -403,14 +408,14 @@ def main(
             map_extra_args is not None
         ), "map_extra_args must be specified if extra_args is used"
 
-    start_simulated_benchmark(
+    start_benchmark_simulated_backend(
         configuration,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
         map_method_args=map_extra_args,
         post_processing=post_processing,
-        tuning_job_metadata=None
-        if extra_args is None
+        extra_tuning_job_metadata=None
+        if len(extra_args) == 0
         else extra_metadata(configuration, extra_args),
         use_transfer_learning=use_transfer_learning,
     )

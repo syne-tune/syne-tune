@@ -22,7 +22,7 @@ from benchmarking.commons.hpo_main_common import (
     ConfigDict,
     extra_metadata,
     DictStrKey,
-    str2bool,
+    str2bool, config_from_argparse,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
@@ -44,7 +44,8 @@ from syne_tune.tuner import Tuner
 # https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html#train-warm-pools-resource-limits
 # Maximum time a warm pool instance is kept alive, waiting to be associated with
 # a new job. Setting this too large may lead to extra costs.
-LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS = [
+WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS = 10 * 60
+SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="benchmark",
         type=str,
@@ -94,16 +95,15 @@ LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS = [
     ),
 ]
 
-WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS = 10 * 60
 
 
-def start_sagemaker_benchmark(
+def start_benchmark_sagemaker_backend(
     configuration: ConfigDict,
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
     post_processing: Optional[PostProcessingType] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
-    tuning_job_metadata: Optional[DictStrKey] = None,
+    extra_tuning_job_metadata: Optional[DictStrKey] = None,
 ):
     """
     Runs experiment with SageMaker backend.
@@ -123,17 +123,17 @@ def start_sagemaker_benchmark(
         as argument. Can be used for postprocessing, such as output or storage
         of extra information
     :param map_method_args: See above, optional
-    :param tuning_job_metadata: Metadata added to the tuner, can be used to manage results
+    :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
     configuration.check_if_all_paremeters_present(
-        LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+        SAGEMAKER_BACKEND_EXTRA_PARAMETERS
     )
-    configuration.expand_base_arguments(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.expand_base_arguments(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
 
     experiment_tag = configuration.experiment_tag
     benchmark_name = configuration.benchmark
     master_random_seed = get_master_random_seed(configuration.random_seed)
-    method_names = [item for item in methods.keys()]
+    method_names = list(methods.keys())
 
     assert (
         len(method_names) == 1 and len(configuration.seeds) == 1
@@ -183,7 +183,7 @@ def start_sagemaker_benchmark(
         master_random_seed=master_random_seed,
         seed=seed,
         verbose=True,
-        extra_job_metadata=tuning_job_metadata,
+        extra_job_metadata=extra_tuning_job_metadata,
         map_method_args=map_method_args,
     )
     tuner = Tuner(
@@ -223,15 +223,7 @@ def main(
         as argument. Can be used for postprocessing, such as output or storage
         of extra information
     """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
-
-    configuration = ConfigDict.from_argparse(
-        extra_args=extra_args + LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
-    )
-
+    configuration = config_from_argparse(extra_args, SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
     method_names = (
         [configuration.method]
         if configuration.method is not None
@@ -243,13 +235,13 @@ def main(
             map_extra_args is not None
         ), "map_extra_args must be specified if extra_args is used"
 
-    start_sagemaker_benchmark(
+    start_benchmark_sagemaker_backend(
         configuration,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
         map_method_args=map_extra_args,
         post_processing=post_processing,
-        tuning_job_metadata=None
+        extra_tuning_job_metadata=None
         if extra_args is None
         else extra_metadata(configuration, extra_args),
     )

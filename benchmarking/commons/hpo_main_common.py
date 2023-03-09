@@ -64,7 +64,7 @@ class ConfigDict:
     """
 
     _config: DictStrKey = {}
-    __base_parameters: List[Parameter] = [
+    __base_cl_parameters: List[Parameter] = [
         Parameter(
             name="experiment_tag",
             type=str,
@@ -123,12 +123,14 @@ class ConfigDict:
                 "where A = n_workers and B = benchmark.n_workers"
             ),
         ),
+    ]
+    __base_parameters = __base_cl_parameters + [
         Parameter(
             name="seeds",
             type=list,
             default=None,
             help="Seeds for this experiment, will be filled automatically based on start_seed and num_seeds",
-        ),
+        )
     ]
     __base_parameters_set = {item.name for item in __base_parameters}
 
@@ -213,7 +215,7 @@ class ConfigDict:
             epilog="For more information, please visit:\nhttps://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html",
         )
 
-        for param in ConfigDict.__base_parameters:
+        for param in ConfigDict.__base_cl_parameters:
             parser.add_argument(
                 f"--{param.name}",
                 type=param.type,
@@ -320,3 +322,17 @@ def extra_metadata(args, extra_args: ExtraArgsType) -> DictStrKey:
         if value is not None:
             result[name] = value
     return result
+
+
+def config_from_argparse(extra_args: Optional[ExtraArgsType], benchmark_specific_args: ExtraArgsType) -> ConfigDict:
+    """
+    Define the configuration directory based on extra arguments
+    """
+    if extra_args is None:
+        extra_args = []
+    else:
+        extra_args = extra_args.copy()
+    configuration = ConfigDict.from_argparse(
+        extra_args=extra_args + benchmark_specific_args
+    )
+    return configuration

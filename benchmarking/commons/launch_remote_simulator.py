@@ -20,12 +20,12 @@ from benchmarking.commons.baselines import MethodDefinitions
 from benchmarking.commons.hpo_main_common import (
     extra_metadata,
     ExtraArgsType,
-    ConfigDict,
+    ConfigDict, config_from_argparse,
 )
 from benchmarking.commons.hpo_main_simulator import (
     SurrogateBenchmarkDefinitions,
     is_dict_of_dict,
-    LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS,
+    SIMULATED_BACKEND_EXTRA_PARAMETERS, BENCHMARK_KEY_EXTRA_PARAMETER,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -120,21 +120,16 @@ def launch_remote(
     :param is_expensive_method: See above. The default is a predicative always
         returning False (no method is expensive)
     """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
-
-    configuration = ConfigDict.from_argparse(
-        extra_args=extra_args + LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
-    )
-
-    launch_remote_banchmark_simuator(
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
+    if is_dict_of_dict(benchmark_definitions):
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
+    configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
+    launch_remote_experiments_simuator(
         configuration, entry_point, methods, benchmark_definitions, is_expensive_method
     )
 
 
-def launch_remote_banchmark_simuator(
+def launch_remote_experiments_simuator(
     configuration: ConfigDict,
     entry_point: Path,
     methods: MethodDefinitions,
@@ -175,12 +170,11 @@ def launch_remote_banchmark_simuator(
         def is_expensive_method(method):
             return False
 
-    configuration.check_if_all_paremeters_present(
-        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
-    )
-    configuration.expand_base_arguments(
-        LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
-    )
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
+    if is_dict_of_dict(benchmark_definitions):
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
+    configuration.check_if_all_paremeters_present(simulated_backend_extra_parameters)
+    configuration.expand_base_arguments(simulated_backend_extra_parameters)
 
     method_names = (
         [configuration.method]

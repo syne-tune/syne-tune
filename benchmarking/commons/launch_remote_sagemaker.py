@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from benchmarking.commons.hpo_main_sagemaker import (
-    LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS,
+    SAGEMAKER_BACKEND_EXTRA_PARAMETERS,
 )
 from syne_tune.try_import import try_import_aws_message
 
@@ -24,7 +24,7 @@ try:
 except ImportError:
     print(try_import_aws_message())
 
-from benchmarking.commons.hpo_main_common import ExtraArgsType, ConfigDict
+from benchmarking.commons.hpo_main_common import ExtraArgsType, ConfigDict, config_from_argparse
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
@@ -59,20 +59,13 @@ def launch_remote(
         command line arguments
     :param extra_args: Extra arguments for command line parser, optional
     """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
-
-    configuration = ConfigDict.from_argparse(
-        extra_args=extra_args + LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
-    )
-    launch_remote_banchmark_sagemaker(
+    configuration = config_from_argparse(extra_args, SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
+    launch_remote_experiments_sagemaker(
         configuration, entry_point, methods, benchmark_definitions
     )
 
 
-def launch_remote_banchmark_sagemaker(
+def launch_remote_experiments_sagemaker(
     configuration: ConfigDict,
     entry_point: Path,
     methods: MethodDefinitions,
@@ -93,9 +86,9 @@ def launch_remote_banchmark_sagemaker(
         command line arguments
     """
     configuration.check_if_all_paremeters_present(
-        LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+        SAGEMAKER_BACKEND_EXTRA_PARAMETERS
     )
-    configuration.expand_base_arguments(LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS)
+    configuration.expand_base_arguments(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
 
     method_names = (
         [configuration.method]
