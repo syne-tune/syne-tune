@@ -214,7 +214,7 @@ def start_benchmark_simulated_backend(
             bm_dict = benchmark_definitions
         benchmark_names = list(bm_dict.keys())
 
-    method_names = [item for item in methods.keys()]
+    method_names = list(methods.keys())
     experiment_tag = configuration.experiment_tag
     master_random_seed = get_master_random_seed(configuration.random_seed)
     if is_dict_of_dict(benchmark_definitions):
