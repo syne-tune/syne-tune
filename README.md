@@ -248,7 +248,7 @@ If you use Syne Tune in a scientific publication, please cite the following pape
   salinas2022syne,
   title={Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research},
   author={David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
-  booktitle={First Conference on Automated Machine Learning (Main Track)},
+  booktitle={International Conference on Automated Machine Learning, AutoML 2022},
   year={2022},
   url={https://openreview.net/forum?id=BVeGJ-THIg9}
 }
