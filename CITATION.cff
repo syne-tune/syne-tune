@@ -22,6 +22,5 @@ preferred-citation:
   title: "Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"
   type: conference-paper
   year: 2022
-  conference:
-    - name: "International Conference on Automated Machine Learning, AutoML 2022"
+  collection-title: "International Conference on Automated Machine Learning, AutoML 2022"
   url: "https://proceedings.mlr.press/v188/salinas22a.html"
