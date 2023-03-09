@@ -29,7 +29,8 @@ from benchmarking.commons.hpo_main_common import (
     extra_metadata,
     ConfigDict,
     DictStrKey,
-    str2bool, config_from_argparse,
+    str2bool,
+    config_from_argparse,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
@@ -191,12 +192,8 @@ def start_benchmark_simulated_backend(
     simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
     if is_dict_of_dict(benchmark_definitions):
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
-    configuration.check_if_all_paremeters_present(
-        simulated_backend_extra_parameters
-    )
-    configuration.expand_base_arguments(
-        simulated_backend_extra_parameters
-    )
+    configuration.check_if_all_paremeters_present(simulated_backend_extra_parameters)
+    configuration.expand_base_arguments(simulated_backend_extra_parameters)
 
     nested_dict = is_dict_of_dict(benchmark_definitions)
     if configuration.benchmark is not None:

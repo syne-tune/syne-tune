@@ -22,7 +22,8 @@ from benchmarking.commons.hpo_main_common import (
     ConfigDict,
     extra_metadata,
     DictStrKey,
-    str2bool, config_from_argparse,
+    str2bool,
+    config_from_argparse,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
@@ -96,7 +97,6 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
 ]
 
 
-
 def start_benchmark_sagemaker_backend(
     configuration: ConfigDict,
     methods: MethodDefinitions,
@@ -125,9 +125,7 @@ def start_benchmark_sagemaker_backend(
     :param map_method_args: See above, optional
     :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
-    configuration.check_if_all_paremeters_present(
-        SAGEMAKER_BACKEND_EXTRA_PARAMETERS
-    )
+    configuration.check_if_all_paremeters_present(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
     configuration.expand_base_arguments(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
 
     experiment_tag = configuration.experiment_tag

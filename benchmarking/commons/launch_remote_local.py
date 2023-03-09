@@ -24,7 +24,8 @@ from benchmarking.commons.hpo_main_common import (
     extra_metadata,
     ExtraArgsType,
     ConfigDict,
-    DictStrKey, config_from_argparse,
+    DictStrKey,
+    config_from_argparse,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
@@ -117,7 +118,9 @@ def launch_remote(
     :param extra_args: Extra arguments for command line parser, optional
     """
     configuration = config_from_argparse(extra_args, LOCAL_BACKEND_EXTRA_PARAMETERS)
-    launch_remote_experiments(configuration, entry_point, methods, benchmark_definitions)
+    launch_remote_experiments(
+        configuration, entry_point, methods, benchmark_definitions
+    )
 
 
 def launch_remote_experiments(
@@ -153,9 +156,7 @@ def launch_remote_experiments(
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
     """
-    configuration.check_if_all_paremeters_present(
-        LOCAL_BACKEND_EXTRA_PARAMETERS
-    )
+    configuration.check_if_all_paremeters_present(LOCAL_BACKEND_EXTRA_PARAMETERS)
     configuration.expand_base_arguments(LOCAL_BACKEND_EXTRA_PARAMETERS)
 
     method_names = (

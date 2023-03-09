@@ -24,7 +24,11 @@ try:
 except ImportError:
     print(try_import_aws_message())
 
-from benchmarking.commons.hpo_main_common import ExtraArgsType, ConfigDict, config_from_argparse
+from benchmarking.commons.hpo_main_common import (
+    ExtraArgsType,
+    ConfigDict,
+    config_from_argparse,
+)
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
@@ -85,9 +89,7 @@ def launch_remote_experiments_sagemaker(
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
     """
-    configuration.check_if_all_paremeters_present(
-        SAGEMAKER_BACKEND_EXTRA_PARAMETERS
-    )
+    configuration.check_if_all_paremeters_present(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
     configuration.expand_base_arguments(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
 
     method_names = (

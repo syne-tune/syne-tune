@@ -13,10 +13,10 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Callable, Any, List
 
-from syne_tune.config_space import ordinal, Categorical, Domain, Ordinal
 from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
     CONFIGURATION_SPACE,
 )
+from syne_tune.config_space import ordinal, Categorical, Domain, Ordinal
 from syne_tune.optimizer.scheduler import TrialScheduler
 
 

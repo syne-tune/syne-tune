@@ -20,12 +20,14 @@ from benchmarking.commons.baselines import MethodDefinitions
 from benchmarking.commons.hpo_main_common import (
     extra_metadata,
     ExtraArgsType,
-    ConfigDict, config_from_argparse,
+    ConfigDict,
+    config_from_argparse,
 )
 from benchmarking.commons.hpo_main_simulator import (
     SurrogateBenchmarkDefinitions,
     is_dict_of_dict,
-    SIMULATED_BACKEND_EXTRA_PARAMETERS, BENCHMARK_KEY_EXTRA_PARAMETER,
+    SIMULATED_BACKEND_EXTRA_PARAMETERS,
+    BENCHMARK_KEY_EXTRA_PARAMETER,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (

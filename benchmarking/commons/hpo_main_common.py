@@ -324,7 +324,9 @@ def extra_metadata(args, extra_args: ExtraArgsType) -> DictStrKey:
     return result
 
 
-def config_from_argparse(extra_args: Optional[ExtraArgsType], benchmark_specific_args: ExtraArgsType) -> ConfigDict:
+def config_from_argparse(
+    extra_args: Optional[ExtraArgsType], benchmark_specific_args: ExtraArgsType
+) -> ConfigDict:
     """
     Define the configuration directory based on extra arguments
     """

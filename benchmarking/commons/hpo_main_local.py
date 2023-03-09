@@ -28,7 +28,8 @@ from benchmarking.commons.hpo_main_common import (
     ConfigDict,
     DictStrKey,
     extra_metadata,
-    str2bool, config_from_argparse,
+    str2bool,
+    config_from_argparse,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend import LocalBackend
@@ -184,9 +185,7 @@ def start_benchmark_local_backend(
     :param map_method_args: See above, optional
     :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
-    configuration.check_if_all_paremeters_present(
-        LOCAL_BACKEND_EXTRA_PARAMETERS
-    )
+    configuration.check_if_all_paremeters_present(LOCAL_BACKEND_EXTRA_PARAMETERS)
     configuration.expand_base_arguments(LOCAL_BACKEND_EXTRA_PARAMETERS)
 
     experiment_tag = configuration.experiment_tag
