@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: "Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"
+message: "If you use Syne Tune in your project, please cite our paper."
+authors:
+  - name: The Syne Tune Team
+repository-code: "https://github.com/awslabs/syne-tune"
+license: Apache-2.0
+preferred-citation:
+  authors:
+      - given-names: David
+        family-names: Salinas
+      - family-names: Seeger
+        given-names: Matthias
+      - given-names: Aaron
+        family-names: Klein
+      - family-names: Perrone
+        given-names: Valerio
+      - given-names: Martin
+        family-names: Wistuba
+      - given-names: Cedric
+        family-names: Archambeau
+  title: "Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research"
+  type: conference-paper
+  year: 2022
+  collection-title: "International Conference on Automated Machine Learning, AutoML 2022"
+  url: "https://proceedings.mlr.press/v188/salinas22a.html"
