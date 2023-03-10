@@ -10,9 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Union, Dict, Any
-import numpy as np
 import itertools
+from typing import Optional, List, Union, Dict, Any
+
+import numpy as np
 from tqdm import tqdm
 
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
@@ -20,20 +21,23 @@ from benchmarking.commons.benchmark_definitions.common import (
     SurrogateBenchmarkDefinition,
 )
 from benchmarking.commons.hpo_main_common import (
-    parse_args as _parse_args,
     set_logging_level,
     get_metadata,
     ExtraArgsType,
-    MapExtraArgsType,
+    MapMethodArgsType,
     PostProcessingType,
     extra_metadata,
+    ConfigDict,
+    DictStrKey,
+    str2bool,
+    config_from_argparse,
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
+from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.blackbox_repository import load_blackbox
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
@@ -41,7 +45,47 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from syne_tune.util import sanitize_sagemaker_name
 
-
+SIMULATED_BACKEND_EXTRA_PARAMETERS = [
+    dict(
+        name="benchmark",
+        type=str,
+        help="Benchmark to run from benchmark_definitions",
+        default=None,
+        required=True,
+    ),
+    dict(
+        name="verbose",
+        type=str2bool,
+        default=0,
+        help="Verbose log output?",
+    ),
+    dict(
+        name="support_checkpointing",
+        type=str2bool,
+        default=1,
+        help="If 0, trials are started from scratch when resumed",
+    ),
+    dict(
+        name="fcnet_ordinal",
+        type=str,
+        choices=["none", "equal", "nn", "nn-log"],
+        default="nn-log",
+        help="Ordinal encoding for fcnet categorical HPs with numeric values. Use 'none' for categorical encoding",
+    ),
+    dict(
+        name="restrict_configurations",
+        type=str2bool,
+        default=0,
+        help="If 1, scheduler only suggests configs contained in tabulated benchmark",
+    ),
+]
+BENCHMARK_KEY_EXTRA_PARAMETER = dict(
+    name="benchmark_key",
+    type=str,
+    help="Key for benchmarks, needs to bespecified if benchmarks definitions are nested.",
+    default=None,
+    required=True,
+)
 SurrogateBenchmarkDefinitions = Union[
     Dict[str, SurrogateBenchmarkDefinition],
     Dict[str, Dict[str, SurrogateBenchmarkDefinition]],
@@ -113,85 +157,53 @@ def get_transfer_learning_evaluations(
     return transfer_learning_evaluations
 
 
-def parse_args(
-    methods: Dict[str, Any],
+def start_benchmark_simulated_backend(
+    configuration: ConfigDict,
+    methods: MethodDefinitions,
     benchmark_definitions: SurrogateBenchmarkDefinitions,
-    extra_args: Optional[ExtraArgsType] = None,
-) -> (Any, List[str], List[str], List[int]):
-    """Parse command line arguments for simulator backend experiments.
-
-    :param methods: If ``--method`` is not given, then ``method_names`` are the
-        keys of this dictionary
-    :param benchmark_definitions: Dictionary with tabulated or surrogate
-        benchmarks. If ``--benchmark`` is not given, then ``benchmark_names`` are
-        keys of this dictionary.
-        Can be nested (only for internal use).
-    :param extra_args: List of dictionaries, containing additional arguments
-        to be passed. Must contain ``name`` for argument name (without leading
-        ``"--"``), and other kwargs to ``parser.add_argument``. Optional
-    :return: ``(args, method_names, benchmark_names, seeds)``, where ``args`` is
-        result of ``parser.parse_args()``, ``method_names`` see ``methods``,
-        'benchmark_names`` see ``benchmark_definitions``, and ``seeds`` are list of
-        seeds specified by ``--num_seeds`` and ``--start_seed``
+    post_processing: Optional[PostProcessingType] = None,
+    map_method_args: Optional[MapMethodArgsType] = None,
+    extra_tuning_job_metadata: Optional[DictStrKey] = None,
+    use_transfer_learning: bool = False,
+):
     """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
+    Runs sequence of experiments with simulator backend sequentially. The loop
+    runs over methods selected from ``methods``, repetitions and benchmarks
+    selected from ``benchmark_definitions``
+
+    ``map_method_args`` can be used to modify ``method_kwargs`` for constructing
+    :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
+    ``configuration`` and the method. This allows for extra flexibility to specify specific arguments for chosen methods
+    Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
+    where ``method`` is the name of the baseline.
+
+    :param configuration: ConfigDict with parameters of the benchmark
+        Must contain all parameters from LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+    :param methods: Dictionary with method constructors.
+    :param benchmark_definitions: Definitions of benchmarks; one is selected from
+        command line arguments
+    :param post_processing: Called after tuning has finished, passing the tuner
+        as argument. Can be used for postprocessing, such as output or storage
+        of extra information
+    :param map_method_args: See above, optional
+    :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
+    :param use_transfer_learning: If True, we use transfer tuning. Defaults to
+        False
+    """
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
     nested_dict = is_dict_of_dict(benchmark_definitions)
-    extra_args.extend(
-        [
-            dict(
-                name="benchmark",
-                type=str,
-                help="Benchmark to run from benchmark_definitions",
-            ),
-            dict(
-                name="verbose",
-                type=int,
-                default=0,
-                help="Verbose log output?",
-            ),
-            dict(
-                name="support_checkpointing",
-                type=int,
-                default=1,
-                help="If 0, trials are started from scratch when resumed",
-            ),
-            dict(
-                name="fcnet_ordinal",
-                type=str,
-                choices=("none", "equal", "nn", "nn-log"),
-                default="nn-log",
-                help="Ordinal encoding for fcnet categorical HPs with numeric values. Use 'none' for categorical encoding",
-            ),
-            dict(
-                name="restrict_configurations",
-                type=int,
-                default=0,
-                help="If 1, scheduler only suggests configs contained in tabulated benchmark",
-            ),
-        ]
-    )
     if nested_dict:
-        extra_args.append(
-            dict(
-                name="benchmark_key",
-                type=str,
-                required=True,
-            )
-        )
-    args, method_names, seeds = _parse_args(methods, extra_args)
-    args.verbose = bool(args.verbose)
-    args.support_checkpointing = bool(args.support_checkpointing)
-    args.restrict_configurations = bool(args.restrict_configurations)
-    if args.benchmark is not None:
-        benchmark_names = [args.benchmark]
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
+    configuration.check_if_all_paremeters_present(simulated_backend_extra_parameters)
+    configuration.expand_base_arguments(simulated_backend_extra_parameters)
+
+    if configuration.benchmark is not None:
+        benchmark_names = [configuration.benchmark]
     else:
         if nested_dict:
             # If ``parse_args`` is called from ``launch_remote``, ``benchmark_key`` is
             # not set. In this case, ``benchmark_names`` is not needed
-            k = args.benchmark_key
+            k = configuration.benchmark_key
             if k is None:
                 bm_dict = dict()
             else:
@@ -202,65 +214,38 @@ def parse_args(
         else:
             bm_dict = benchmark_definitions
         benchmark_names = list(bm_dict.keys())
-    return args, method_names, benchmark_names, seeds
 
-
-def main(
-    methods: MethodDefinitions,
-    benchmark_definitions: SurrogateBenchmarkDefinitions,
-    extra_args: Optional[ExtraArgsType] = None,
-    map_extra_args: Optional[MapExtraArgsType] = None,
-    post_processing: Optional[PostProcessingType] = None,
-    use_transfer_learning: bool = False,
-):
-    """
-    Runs sequence of experiments with simulator backend sequentially. The loop
-    runs over methods selected from ``methods``, repetitions and benchmarks
-    selected from ``benchmark_definitions``, with the range being controlled by
-    command line arguments.
-
-    :param methods: Dictionary with method constructors
-    :param benchmark_definitions: Definitions of benchmarks
-    :param extra_args: Extra arguments for command line parser. Optional
-    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
-        for extra argument values. Needed if ``extra_args`` given
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
-    :param use_transfer_learning: If True, we use transfer tuning. Defaults to
-        False
-    """
-    args, method_names, benchmark_names, seeds = parse_args(
-        methods, benchmark_definitions, extra_args
-    )
-    experiment_tag = args.experiment_tag
-    master_random_seed = get_master_random_seed(args.random_seed)
+    method_names = list(methods.keys())
+    experiment_tag = configuration.experiment_tag
+    master_random_seed = get_master_random_seed(configuration.random_seed)
     if is_dict_of_dict(benchmark_definitions):
         assert (
-            args.benchmark_key is not None
+            configuration.benchmark_key is not None
         ), "Use --benchmark_key if benchmark_definitions is a nested dictionary"
-        benchmark_definitions = benchmark_definitions[args.benchmark_key]
-    set_logging_level(args)
+        benchmark_definitions = benchmark_definitions[configuration.benchmark_key]
+    set_logging_level(configuration)
 
-    combinations = list(itertools.product(method_names, seeds, benchmark_names))
+    combinations = list(
+        itertools.product(method_names, configuration.seeds, benchmark_names)
+    )
     print(combinations)
     do_scale = (
-        args.scale_max_wallclock_time
-        and args.n_workers is not None
-        and args.max_wallclock_time is None
+        configuration.scale_max_wallclock_time
+        and configuration.n_workers is not None
+        and configuration.max_wallclock_time is None
     )
     for method, seed, benchmark_name in tqdm(combinations):
         random_seed = effective_random_seed(master_random_seed, seed)
         np.random.seed(random_seed)
         benchmark = benchmark_definitions[benchmark_name]
         default_n_workers = benchmark.n_workers
-        if args.n_workers is not None:
-            benchmark.n_workers = args.n_workers
-        if args.max_wallclock_time is not None:
-            benchmark.max_wallclock_time = args.max_wallclock_time
-        elif do_scale and args.n_workers < default_n_workers:
+        if configuration.n_workers is not None:
+            benchmark.n_workers = configuration.n_workers
+        if configuration.max_wallclock_time is not None:
+            benchmark.max_wallclock_time = configuration.max_wallclock_time
+        elif do_scale and configuration.n_workers < default_n_workers:
             # Scale ``max_wallclock_time``
-            factor = default_n_workers / args.n_workers
+            factor = default_n_workers / configuration.n_workers
             bm_mwt = benchmark.max_wallclock_time
             benchmark.max_wallclock_time = int(bm_mwt * factor)
             print(
@@ -273,7 +258,7 @@ def main(
         max_resource_attr = benchmark.max_resource_attr
         if max_resource_attr is None:
             max_resource_attr = "my_max_resource_attr"
-        if args.restrict_configurations:
+        if configuration.restrict_configurations:
             # Don't need surrogate in this case
             kwargs = dict()
         else:
@@ -286,13 +271,13 @@ def main(
             blackbox_name=benchmark.blackbox_name,
             elapsed_time_attr=benchmark.elapsed_time_attr,
             max_resource_attr=max_resource_attr,
-            support_checkpointing=args.support_checkpointing,
+            support_checkpointing=configuration.support_checkpointing,
             dataset=benchmark.dataset_name,
             **kwargs,
         )
 
         method_kwargs = dict(
-            fcnet_ordinal=args.fcnet_ordinal,
+            fcnet_ordinal=configuration.fcnet_ordinal,
             use_surrogates="lcbench" in benchmark_name,
             max_resource_attr=max_resource_attr,
         )
@@ -310,17 +295,19 @@ def main(
                 ),
             )
         search_options = dict()
-        if args.restrict_configurations:
+        if configuration.restrict_configurations:
             search_options[
                 "restrict_configurations"
             ] = trial_backend.blackbox.all_configurations()
-        if args.max_size_data_for_model is not None:
-            search_options["max_size_data_for_model"] = args.max_size_data_for_model
+        if configuration.max_size_data_for_model is not None:
+            search_options[
+                "max_size_data_for_model"
+            ] = configuration.max_size_data_for_model
         if search_options:
             method_kwargs["scheduler_kwargs"] = {"search_options": search_options}
-        if extra_args is not None:
-            assert map_extra_args is not None
-            method_kwargs = map_extra_args(args, method, method_kwargs)
+
+        if map_method_args is not None:
+            method_kwargs = map_method_args(configuration, method, method_kwargs)
         method_kwargs.update(
             dict(
                 config_space=config_space,
@@ -328,7 +315,7 @@ def main(
                 mode=benchmark.mode,
                 random_seed=random_seed,
                 resource_attr=resource_attr,
-                verbose=args.verbose,
+                verbose=configuration.verbose,
             )
         )
         scheduler = methods[method](MethodArguments(**method_kwargs))
@@ -343,17 +330,17 @@ def main(
             experiment_tag=experiment_tag,
             benchmark_name=benchmark_name,
             random_seed=master_random_seed,
-            max_size_data_for_model=args.max_size_data_for_model,
-            extra_args=None if extra_args is None else extra_metadata(args, extra_args),
+            max_size_data_for_model=configuration.max_size_data_for_model,
+            extra_metadata=extra_tuning_job_metadata,
         )
-        metadata["fcnet_ordinal"] = args.fcnet_ordinal
+        metadata["fcnet_ordinal"] = configuration.fcnet_ordinal
         if benchmark.add_surrogate_kwargs is not None:
             metadata["predict_curves"] = int(
                 benchmark.add_surrogate_kwargs["predict_curves"]
             )
         tuner_name = experiment_tag
-        if args.use_long_tuner_name_prefix:
-            tuner_name += f"-{sanitize_sagemaker_name(args.benchmark)}-{seed}"
+        if configuration.use_long_tuner_name_prefix:
+            tuner_name += f"-{sanitize_sagemaker_name(configuration.benchmark)}-{seed}"
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,
@@ -365,8 +352,68 @@ def main(
             print_update_interval=600,
             tuner_name=tuner_name,
             metadata=metadata,
-            save_tuner=args.save_tuner,
+            save_tuner=configuration.save_tuner,
         )
         tuner.run()
         if post_processing is not None:
             post_processing(tuner)
+
+
+def main(
+    methods: MethodDefinitions,
+    benchmark_definitions: SurrogateBenchmarkDefinitions,
+    extra_args: Optional[ExtraArgsType] = None,
+    map_extra_args: Optional[MapMethodArgsType] = None,
+    post_processing: Optional[PostProcessingType] = None,
+    use_transfer_learning: bool = False,
+):
+    """
+    Runs sequence of experiments with simulator backend sequentially. The loop
+    runs over methods selected from ``methods``, repetitions and benchmarks
+    selected from ``benchmark_definitions``, with the range being controlled by
+    command line arguments.
+
+    ``map_method_args`` can be used to modify ``method_kwargs`` for constructing
+    :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
+    ``configuration`` and the method. This allows for extra flexibility to specify specific arguments for chosen methods
+    Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
+    where ``method`` is the name of the baseline.
+
+    :param methods: Dictionary with method constructors
+    :param benchmark_definitions: Definitions of benchmarks
+    :param extra_args: Extra arguments for command line parser. Optional
+    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
+        for extra argument values. Needed if ``extra_args`` given
+    :param post_processing: Called after tuning has finished, passing the tuner
+        as argument. Can be used for postprocessing, such as output or storage
+        of extra information
+    :param use_transfer_learning: If True, we use transfer tuning. Defaults to
+        False
+    """
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
+    if is_dict_of_dict(benchmark_definitions):
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
+    configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
+
+    method_names = (
+        [configuration.method]
+        if configuration.method is not None
+        else list(methods.keys())
+    )
+    methods = {mname: methods[mname] for mname in method_names}
+    if extra_args is not None:
+        assert (
+            map_extra_args is not None
+        ), "map_extra_args must be specified if extra_args is used"
+
+    start_benchmark_simulated_backend(
+        configuration,
+        methods=methods,
+        benchmark_definitions=benchmark_definitions,
+        map_method_args=map_extra_args,
+        post_processing=post_processing,
+        extra_tuning_job_metadata=None
+        if len(extra_args) == 0
+        else extra_metadata(configuration, extra_args),
+        use_transfer_learning=use_transfer_learning,
+    )
