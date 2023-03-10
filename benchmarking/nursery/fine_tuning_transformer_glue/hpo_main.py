@@ -12,10 +12,12 @@
 # permissions and limitations under the License.
 import logging
 import argparse
-from pathlib import Path
 
 from syne_tune.config_space import uniform, loguniform, choice, randint
 from syne_tune.backend import LocalBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    set_backend_path_not_synced_to_s3,
+)
 from syne_tune.optimizer.baselines import (
     ASHA,
     MOBSTER,
@@ -186,12 +188,8 @@ if __name__ == "__main__":
         tuner_name=args.experiment_name,
     )
 
-    # Set path for logs and checkpoints
-    if args.store_logs_checkpoints_to_s3:
-        backend.set_path(results_root=tuner.tuner_path)
-    else:
-        backend.set_path(
-            results_root=str(Path("~/").expanduser()), tuner_name=tuner.name
-        )
+    if not args.store_logs_checkpoints_to_s3:
+        # Logs and checkpoints are not synced to S3. This is recommended
+        set_backend_path_not_synced_to_s3(backend)
 
     tuner.run()  # off we go!

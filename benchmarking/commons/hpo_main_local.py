@@ -14,10 +14,12 @@ from typing import Optional, List, Callable, Dict, Any
 import numpy as np
 import itertools
 from tqdm import tqdm
-from pathlib import Path
 import logging
 
 from syne_tune.backend import LocalBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    set_backend_path_not_synced_to_s3,
+)
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from syne_tune.util import sanitize_sagemaker_name
@@ -247,12 +249,7 @@ def main(
         # Note: This has to be done after ``tuner`` is created, because this calls
         # ``trial_backend.set_path`` as well.
         if args.launched_remotely:
-            # We use /opt/ml/input/data/, which is mounted on a partition with
-            # sufficient space. Different to /opt/ml/checkpoints, this directory is
-            # not synced to S3
-            path = Path("/opt/ml/input/data/")
-            path.mkdir(parents=True, exist_ok=True)
-            trial_backend.set_path(results_root=str(path))
+            set_backend_path_not_synced_to_s3(trial_backend)
 
         tuner.run()  # Run the experiment
         if post_processing is not None:
