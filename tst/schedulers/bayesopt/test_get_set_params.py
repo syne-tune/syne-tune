@@ -27,7 +27,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.comparison_gpy impo
 
 def test_params_gp_multifidelity():
     # Create GP multifidelity searcher, including a GP surrogate model
-    _, searcher_options, _ = gp_multifidelity_searcher_defaults()
+    _, searcher_options, _ = gp_multifidelity_searcher_defaults(dict())
     searcher_options["gp_resource_kernel"] = "exp-decay-combined"
     # Note: We are lazy here, we just need the config_space
     data = sample_data(Ackley, num_train=5, num_grid=5)

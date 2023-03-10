@@ -1,10 +1,11 @@
 # Syne Tune: Large-Scale and Reproducible Hyperparameter Optimization
 
-[![Release](https://img.shields.io/badge/release-0.3-brightgreen.svg)](https://pypi.org/project/syne-tune/)
-[![Python Version](https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9-brightgreen.svg)](https://pypi.org/project/syne-tune/)
+[![release](https://img.shields.io/github/v/release/awslabs/syne-tune)](https://pypi.org/project/syne-tune/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Downloads](https://pepy.tech/badge/syne-tune/month)](https://pepy.tech/project/syne-tune)
 [![Documentation](https://readthedocs.org/projects/syne-tune/badge/?version=latest)](https://syne-tune.readthedocs.io)
+[![Python Version](https://img.shields.io/static/v1?label=python&message=3.7%20%7C%203.8%20%7C%203.9&color=blue?style=flat-square&logo=python)](https://pypi.org/project/syne-tune/)
+[![codecov.io](https://codecov.io/github/awslabs/syne-tune/branch/main/graphs/badge.svg)](https://app.codecov.io/gh/awslabs/syne-tune)
 
 ![Alt Text](docs/source/synetune.gif)
 
@@ -133,6 +134,7 @@ PBT | Jaderberg, et al. (2017) | evolutionary | no | yes | no
 ZeroShotTransfer | Wistuba, et al. (2015) | deterministic | yes | no | yes 
 ASHA-CTS | Salinas, et al. (2021)| random | yes | yes | yes 
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes 
+BoundingBox | Perrone, et al. (2019) | any | yes | yes | yes
 
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 
@@ -246,9 +248,9 @@ If you use Syne Tune in a scientific publication, please cite the following pape
   salinas2022syne,
   title={Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research},
   author={David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
-  booktitle={First Conference on Automated Machine Learning (Main Track)},
+  booktitle={International Conference on Automated Machine Learning, AutoML 2022},
   year={2022},
-  url={https://openreview.net/forum?id=BVeGJ-THIg9}
+  url={https://proceedings.mlr.press/v188/salinas22a.html}
 }
 ```
 

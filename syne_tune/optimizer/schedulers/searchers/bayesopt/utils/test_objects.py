@@ -26,7 +26,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Hyperparameter,
     Configuration,
 )
-from syne_tune.config_space import Categorical, loguniform, randint, choice, uniform
+from syne_tune.config_space import loguniform, randint, choice, uniform
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
@@ -55,8 +55,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import 
     KernelFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import (
-    WarpedKernel,
-    Warping,
+    kernel_with_warping,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     ExclusionList,
@@ -65,12 +64,12 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
 
 
 def build_kernel(state: TuningJobState, do_warping: bool = False) -> KernelFunction:
-    dims, warping_ranges = dimensionality_and_warping_ranges(state.hp_ranges)
+    hp_ranges = state.hp_ranges
+    dims = hp_ranges.ndarray_size
     kernel = Matern52(dims, ARD=True)
     if do_warping:
-        return WarpedKernel(kernel=kernel, warping=Warping(dims, warping_ranges))
-    else:
-        return kernel
+        kernel = kernel_with_warping(kernel, hp_ranges)
+    return kernel
 
 
 def default_gpmodel(
@@ -91,41 +90,6 @@ def default_gpmodel_mcmc(
         mcmc_config=mcmc_config,
         random_seed=random_seed,
     )
-
-
-def dimensionality_and_warping_ranges(
-    hp_ranges: HyperparameterRanges,
-) -> Tuple[int, Dict[int, Tuple[float, float]]]:
-    lower_config = dict()
-    upper_config = dict()
-    for name, hp_range in hp_ranges.config_space.items():
-        if not isinstance(hp_range, Categorical):
-            lower_config[name] = hp_range.lower
-            upper_config[name] = hp_range.upper
-        else:
-            lower_config[name] = hp_range.categories[0]
-            upper_config[name] = hp_range.categories[0]
-    lower_internal = hp_ranges.to_ndarray(lower_config)
-    upper_internal = hp_ranges.to_ndarray(upper_config)
-    dims = 0
-    warping_ranges = dict()
-    for name in hp_ranges.internal_keys:
-        hp_range = hp_ranges.config_space[name]
-        if not isinstance(hp_range, Categorical):
-            _lower = lower_internal[dims]
-            _upper = upper_internal[dims]
-            if _upper > _lower:  # exclude cases where max equal to min
-                warping_ranges[dims] = (_lower, _upper)
-            else:
-                assert _lower == _upper
-            dims += 1
-        else:
-            # For binary, we use a single dimension, not 2
-            sz = len(hp_range.categories)
-            if sz == 2:
-                sz = 1
-            dims += sz
-    return dims, warping_ranges
 
 
 class RepeatedCandidateGenerator(CandidateGenerator):

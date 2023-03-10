@@ -21,7 +21,7 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 * Wide coverage (>20) of different HPO methods, including:
 
   * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
-  * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
+  * Multi-fidelity methods supporting model-based decisions (BOHB, MOBSTER, Hyper-Tune, DyHPO, BORE);
   * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
   * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
 
@@ -31,6 +31,12 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* New tutorial:
+  `Using Syne Tune for Transfer Learning <tutorials/transfer_learning/transfer_learning.html>`_.
+  Transfer learning allows us to speed up our current optimisation by learning
+  from related optimisation runs. Syne Tune provides a number of transfer HPO
+  methods and makes it easy to implement new ones. Thanks to
+  `Sigrid <https://github.com/sighellan>`_ for this contribution.
 * New scheduler: :class:`~syne_tune.optimizer.baselines.DyHPO`.
   This is a recent multi-fidelity method, which can be seen as alternative to
   `ASHA <tutorials/multifidelity/mf_sync_model.html>`_,
@@ -47,13 +53,11 @@ What's New?
   You'd like to run many experiments in parallel, or launch training jobs on
   different instances, all by modifying some simple scripts to your needs? Then
   our benchmarking mechanism is for you.
-* You can now
-  `do paired comparisons and manage seed choices <tutorials/benchmarking/bm_local.html#random-seeds-and-paired-comparisons>`_
-  in order to control randomness in your comparisons.
-* The `YAHPO benchmarking <tutorials/benchmarking/bm_simulator.html#the-yahpo-family>`_
-  suite is integrated in our blackbox repository
-* New benchmark: Transformer on WikiText-2
-  (:func:`~benchmarking.commons.benchmark_definitions.transformer_wikitext2_benchmark`)
+* New tutorial: `Progressive ASHA <tutorials/pasha/pasha.html>`_. PASHA is a
+  variant of ASHA where the maximum number of resources (e.g., maximum number
+  of training epochs) is not fixed up front, but is adapted. This can lead to
+  savings when training on large datasets. Thanks to
+  `Ondre <https://github.com/ondrejbohdal>`_ for this contribution.
 
 
 .. toctree::
@@ -83,6 +87,7 @@ What's New?
    tutorials/benchmarking/README
    tutorials/developer/README
    tutorials/pasha/pasha
+   tutorials/transfer_learning/transfer_learning
 
 .. toctree::
    :name: API docs

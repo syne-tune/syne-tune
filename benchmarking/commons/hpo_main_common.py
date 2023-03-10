@@ -123,6 +123,18 @@ class ConfigDict:
                 "where A = n_workers and B = benchmark.n_workers"
             ),
         ),
+        Parameter(
+            name="use_long_tuner_name_prefix",
+            type=str2bool,
+            default=True,
+            help=f"Use descriptive tuner name prefix for storing results",
+        ),
+        Parameter(
+            name="launched_remotely",
+            type=str2bool,
+            default=False,
+            help=f"Internal argument, do not use",
+        ),
     ]
     __base_parameters = __base_cl_parameters + [
         Parameter(

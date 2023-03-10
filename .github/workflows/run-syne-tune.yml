@@ -40,7 +40,7 @@ jobs:
           role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
           role-session-name: integtestsession
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:

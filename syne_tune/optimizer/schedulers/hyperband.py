@@ -48,6 +48,9 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
 from syne_tune.optimizer.schedulers.searchers.bracket_distribution import (
     DefaultHyperbandBracketDistribution,
 )
+from syne_tune.optimizer.schedulers.utils.successive_halving import (
+    successive_halving_rung_levels,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +306,9 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
           :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
         * rush_promotion: Same as ``rush_stopping`` but for promotion, see
           :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHPromotionRungSystem`
+        * dyhpo: A model-based scheduler, which can be seen as extension of
+          "promotion" with ``rung_increment`` rather than ``reduction_factor``, see
+          :class:`~syne_tune.optimizer.schedulers.searchers.dyhpo.DynamicHPOSearcher`
 
     :type type: str, optional
     :param cost_attr: Required if the scheduler itself uses a cost metric
@@ -389,6 +395,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         self._resource_attr = kwargs["resource_attr"]
         self._rung_system_kwargs = kwargs["rung_system_kwargs"]
         self._cost_attr = kwargs.get("cost_attr")
+        self._searcher_data = kwargs["searcher_data"]
         assert not (
             scheduler_type == "cost_promotion" and self._cost_attr is None
         ), "cost_attr must be given if type='cost_promotion'"
@@ -437,7 +444,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
                     f"{kwargs.get('reduction_factor')} and rung_increment = "
                     f"{kwargs.get('rung_increment')} are ignored!"
                 )
-        rung_levels = hyperband_rung_levels(
+        rung_levels = successive_halving_rung_levels(
             rung_levels,
             grace_period=kwargs["grace_period"],
             reduction_factor=kwargs.get("reduction_factor"),
@@ -465,7 +472,6 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             scheduler=self,
         )
         self.do_snapshots = do_snapshots
-        self._searcher_data = kwargs["searcher_data"]
         self._register_pending_myopic = kwargs["register_pending_myopic"]
         # _active_trials:
         # Maintains information for all tasks (running, paused, or stopped).
@@ -523,7 +529,10 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         # Note: Needs ``self.scheduler_type`` to be set
         scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
-            search_options, scheduler=scheduler, resource_attr=self._resource_attr
+            search_options,
+            scheduler=scheduler,
+            resource_attr=self._resource_attr,
+            searcher_data=self._searcher_data,
         )
         # Cost attribute: For promotion-based, cost needs to be accumulated
         # for each trial
@@ -537,7 +546,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             # by the number of rung levels, which in turn requires ``max_t``
             # to have been determined. This is why we need some extra effort
             # here
-            rung_levels = hyperband_rung_levels(
+            rung_levels = successive_halving_rung_levels(
                 self._num_brackets_info["rung_levels"],
                 grace_period=self._num_brackets_info["grace_period"],
                 reduction_factor=self._num_brackets_info["reduction_factor"],
@@ -811,9 +820,10 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
 
     def _check_result(self, result: Dict[str, Any]):
         super()._check_result(result)
-        self._check_key_of_result(result, self._resource_attr)
+        keys = [self._resource_attr]
         if self.scheduler_type == "cost_promotion":
-            self._check_key_of_result(result, self._cost_attr)
+            keys.append(self._cost_attr)
+        self._check_keys_of_result(result, keys)
         resource = result[self._resource_attr]
         assert 1 <= resource == round(resource), (
             "Your training evaluation function needs to report positive "
@@ -967,76 +977,6 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         # Remove pending evaluations, in case there are still some
         self.searcher.cleanup_pending(trial_id)
         self._cleanup_trial(trial_id, trial_decision=SchedulerDecision.STOP)
-
-
-def _is_positive_int(x):
-    return int(x) == x and x >= 1
-
-
-def hyperband_rung_levels(
-    rung_levels: Optional[List[int]],
-    grace_period: int,
-    reduction_factor: Optional[float],
-    rung_increment: Optional[int],
-    max_t: int,
-) -> List[int]:
-    """Creates ``rung_levels`` from ``grace_period``, ``reduction_factor``
-
-    Note: If ``rung_levels`` is given and ``rung_levels[-1] == max_t``, we strip
-    off this final entry, so that all rung levels are ``< max_t``.
-
-    :param rung_levels: If given, this is returned (but see above)
-    :param grace_period: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param reduction_factor: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param rung_increment: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param max_t: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :return: List of rung levels
-    """
-    if rung_levels is not None:
-        assert (
-            isinstance(rung_levels, list) and len(rung_levels) > 1
-        ), "rung_levels must be list of size >= 2"
-        assert all(
-            _is_positive_int(x) for x in rung_levels
-        ), "rung_levels must be list of positive integers"
-        rung_levels = [int(x) for x in rung_levels]
-        assert all(
-            x < y for x, y in zip(rung_levels, rung_levels[1:])
-        ), "rung_levels must be strictly increasing sequence"
-        assert (
-            rung_levels[-1] <= max_t
-        ), f"Last entry of rung_levels ({rung_levels[-1]}) must be <= max_t ({max_t})"
-    else:
-        # Rung levels given by grace_period, reduction_factor, max_t
-        assert _is_positive_int(grace_period)
-        assert _is_positive_int(max_t)
-        assert (
-            max_t > grace_period
-        ), f"max_t ({max_t}) must be greater than grace_period ({grace_period})"
-        if reduction_factor is not None:
-            assert reduction_factor >= 2
-            rf = reduction_factor
-            min_t = grace_period
-            max_rungs = 0
-            while min_t * np.power(rf, max_rungs) < max_t:
-                max_rungs += 1
-            rung_levels = [
-                int(round(min_t * np.power(rf, k))) for k in range(max_rungs)
-            ]
-            assert rung_levels[-1] <= max_t  # Sanity check
-            if rung_increment is not None:
-                logger.warning(
-                    f"You specified both reduction_factor = {reduction_factor} "
-                    f"and rung_increment = {rung_increment}. The former takes "
-                    "precedence, the latter will be ignored"
-                )
-        else:
-            assert rung_increment is not None
-            assert _is_positive_int(rung_increment)
-            rung_levels = list(range(grace_period, max_t, rung_increment))
-    if rung_levels[-1] == max_t:
-        rung_levels = rung_levels[:-1]
-    return rung_levels
 
 
 class HyperbandBracketManager:

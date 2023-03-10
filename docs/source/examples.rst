@@ -166,7 +166,7 @@ It takes only a few seconds to run, but it needs ``nasbench201`` blackbox
 to be downloaded and preprocessed, which can take a while when done
 for the first time.
 
-PASHA typically uses ``max_num_trials_started`` as the stopping criterion.
+PASHA typically uses ``max_num_trials_completed`` as the stopping criterion.
 After finding a strong configuration using PASHA, 
 the next step is to fully train a model with the configuration.
 
@@ -389,6 +389,26 @@ blackbox. It serves as a simple demonstration how evaluations from
 related tasks can be used to speed up HPO.
 
 
+Transfer Learning Example
+===============================
+
+.. literalinclude:: ../../examples/launch_transfer_learning_example.py
+   :caption: examples/launch_transfer_learning_example.py
+   :lines: 13-
+
+**Requirements**:
+
+* Needs ``matplotlib`` to be installed if the plotting flag is given:
+  ``pip install matplotlib``
+
+An example of how to use evaluations collected in Syne Tune to run a transfer
+learning scheduler. Makes use of :ref:`train_height.py <train_height_script>`.
+Used in the
+`transfer learning tutorial <tutorials/transfer_learning/transfer_learning.html>`_.
+To plot the figures, run as
+`python launch_transfer_learning_example.py --generate_plots`.
+
+
 Plot Results of Tuning Experiment
 =================================
 
@@ -401,6 +421,28 @@ Plot Results of Tuning Experiment
 * Needs ``matplotlib`` to be installed: ``pip install matplotlib``
 
 Makes use of :ref:`train_height.py <train_height_script>`.
+
+
+Pass Configuration as JSON File to Training Script
+==================================================
+
+.. literalinclude:: ../../examples/launch_height_config_json.py
+   :caption: examples/launch_height_config_json.py
+   :lines: 13-
+
+**Requirements**:
+
+* If ``use_sagemaker_backend = True``, needs
+  `access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+
+Makes use of the following
+:ref:`train_height_config_json.py <train_height_config_json_script>` training
+script:
+
+.. literalinclude:: ../../examples/training_scripts/height_example/train_height_config_json.py
+   :name: train_height_config_json_script
+   :caption: examples/training_scripts/height_example/train_height_config_json.py
+   :lines: 13-
 
 
 Launch HPO Experiment with Ray Tune Scheduler

@@ -19,8 +19,8 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
     impute_points_to_evaluate,
 )
 from syne_tune.optimizer.schedulers.searchers.searcher_base import (  # noqa: F401
-    SearcherWithRandomSeed,
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticSearcher,
+    StochasticAndFilterDuplicatesSearcher,
     extract_random_seed,
 )
 from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # noqa: F401
@@ -34,6 +34,9 @@ from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa:
 __all__ = [
     "BaseSearcher",
     "impute_points_to_evaluate",
+    "StochasticSearcher",
+    "StochasticAndFilterDuplicatesSearcher",
+    "extract_random_seed",
     "RandomSearcher",
     "GridSearcher",
     "searcher_factory",

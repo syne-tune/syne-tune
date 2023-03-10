@@ -17,7 +17,7 @@ from collections import deque
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
-from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.config_space import Domain
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.searcher_base import (
@@ -29,11 +29,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PopulationElement:
+    result: Dict[str, Any] = None
     score: int = 0
     config: Dict[str, Any] = None
 
 
-class RegularizedEvolution(SearcherWithRandomSeed):
+class RegularizedEvolution(StochasticSearcher):
     """
     Implements the regularized evolution algorithm. The original implementation
     only considers categorical hyperparameters. For integer and float parameters
@@ -48,7 +49,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
     https://colab.research.google.com/github/google-research/google-research/blob/master/evolution/regularized_evolution_algorithm/regularized_evolution.ipynb
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
     :param mode: Mode to use for the metric given, can be "min" or "max",
         defaults to "min"
@@ -141,7 +142,7 @@ class RegularizedEvolution(SearcherWithRandomSeed):
             score *= -1
 
         # Add element to the population
-        element = PopulationElement(score=score, config=config)
+        element = PopulationElement(result=result, score=score, config=config)
         self.population.append(element)
 
         # Remove the oldest element of the population.

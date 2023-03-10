@@ -87,6 +87,7 @@ class PythonBackend(LocalBackend):
             entry_point=str(Path(__file__).parent / "python_entrypoint.py"),
             rotate_gpus=rotate_gpus,
             delete_checkpoints=delete_checkpoints,
+            pass_args_as_json=False,
         )
         self.config_space = config_space
         # save function without reference to global variables or modules

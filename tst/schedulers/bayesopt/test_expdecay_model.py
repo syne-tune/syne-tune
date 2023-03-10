@@ -51,7 +51,7 @@ def build_gp_model_factory(config_space: Dict, model_params: Dict) -> Dict:
         gp_resource_kernel="freeze-thaw",
     )
     _kwargs = check_and_merge_defaults(
-        kwargs, *gp_multifidelity_searcher_defaults(), dict_name="search_options"
+        kwargs, *gp_multifidelity_searcher_defaults(kwargs), dict_name="search_options"
     )
     kwargs_int = gp_multifidelity_searcher_factory(**_kwargs)
     kwargs_int["model_factory"].set_params(model_params)
@@ -89,7 +89,7 @@ def build_gped_model_factory(config_space: Dict, model_params: Dict, **kwargs):
         **kwargs
     )
     _kwargs = check_and_merge_defaults(
-        kwargs, *gp_multifidelity_searcher_defaults(), dict_name="search_options"
+        kwargs, *gp_multifidelity_searcher_defaults(kwargs), dict_name="search_options"
     )
     kwargs_int = gp_multifidelity_searcher_factory(**_kwargs)
     # Need to convert ``model_params``

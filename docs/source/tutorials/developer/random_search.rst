@@ -96,12 +96,12 @@ searchers is :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
   ``FIFOScheduler`` and the Syne Tune searchers.
 
 Below ``BaseSearcher``, there is
-:class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`, which
+:class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`, which
 should be used by all searchers which make random decisions. It maintains a PRN
 generator and provides methods to serialize and de-serialize its state.
 
-:class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
-extends ``SearcherWithRandomSeed``. It supports a number of features which are
+:class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
+extends ``StochasticSearcher``. It supports a number of features which are
 desirable for most searchers:
 
 * Seed management for random decisions.
@@ -114,7 +114,7 @@ desirable for most searchers:
   `using tabulated blackboxes <../benchmarking/bm_simulator.html#restricting-scheduler-to-configurations-of-tabulated-blackbox>`_.
   It does not make sense for every scheduler though, as some rely on a
   continuous search over the configuration space. You can inherit from
-  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+  :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
   and still not support this feature, by insisting on
   ``restrict_configurations == None``.
 
@@ -129,7 +129,7 @@ duplicate suggestions in a different way. Finally, let us walk through
   for random sampling and comparing configurations (to spot duplicates). This
   is a useful helper class, also for encoding configurations as vectors. The
   logic of detecting duplicates is implemented in the base class
-  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`.
+  :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`.
   Finally, ``debug_log`` is used for diagnostic logs.
 * ``get_config`` first asks for another entry from ``points_to_evaluate`` by
   way of ``_next_initial_config``. It then samples a new configuration at

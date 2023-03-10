@@ -137,7 +137,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     for default values.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
     :param clone_from_state: Internal argument, do not use
     :type clone_from_state: bool
@@ -166,8 +166,16 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :type num_fantasy_samples: int, optional
     :param no_fantasizing: If True, fantasizing is not done and pending
         evaluations are ignored. This may lead to loss of diversity in
-        decisions
-    :type no_fantasizing: Defaults to False
+        decisions. Defaults to ``False``
+    :type no_fantasizing: bool, optional
+    :param input_warping: If ``True``, we use a warping transform, so the kernel
+        function becomes :math:`k(w(x), w(x'))`, where :math:`w(x)` is a warping
+        transform parameterized by two non-negative numbers per component, which
+        are learned as hyperparameters. See also
+        :class:`~syne_tune.optimizer.schedulers.searcher.bayesopt.gpautograd.warping.Warping`.
+        Coordinates which belong to categorical hyperparameters, are not warped.
+        Defaults to ``False``.
+    :type input_warping: bool, optional
     :param initial_scoring: Scoring function to rank initial candidates
         (local optimization of EI is started from top scorer):
 

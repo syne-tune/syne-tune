@@ -43,6 +43,7 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
 )
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
+from syne_tune.util import sanitize_sagemaker_name
 
 SIMULATED_BACKEND_EXTRA_PARAMETERS = [
     dict(
@@ -337,6 +338,9 @@ def start_benchmark_simulated_backend(
             metadata["predict_curves"] = int(
                 benchmark.add_surrogate_kwargs["predict_curves"]
             )
+        tuner_name = experiment_tag
+        if args.use_long_tuner_name_prefix:
+            tuner_name += f"-{sanitize_sagemaker_name(args.benchmark)}-{seed}"
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,
@@ -346,7 +350,7 @@ def start_benchmark_simulated_backend(
             callbacks=[SimulatorCallback()],
             results_update_interval=600,
             print_update_interval=600,
-            tuner_name=experiment_tag,
+            tuner_name=tuner_name,
             metadata=metadata,
             save_tuner=configuration.save_tuner,
         )

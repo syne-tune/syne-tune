@@ -71,6 +71,7 @@ def get_hyperparameters(
         "start_seed": seed,
         "random_seed": random_seed,
         "scale_max_wallclock_time": int(configuration.scale_max_wallclock_time),
+        "launched_remotely": 1,
     }
     for k in (
         "n_workers",

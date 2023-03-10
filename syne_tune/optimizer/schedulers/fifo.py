@@ -10,14 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
-    Categorical,
     String,
     assert_no_invalid_options,
     Integer,
@@ -53,19 +52,24 @@ _DEFAULT_OPTIONS = {
 }
 
 _CONSTRAINTS = {
-    "metric": String(),
-    "mode": Categorical(choices=("min", "max")),
     "random_seed": Integer(0, 2**32 - 1),
     "max_resource_attr": String(),
     "max_t": Integer(1, None),
 }
 
 
+MetricModeType = Union[str, List[str]]
+
+
+def _to_list(x) -> list:
+    return x if isinstance(x, list) else [x]
+
+
 class FIFOScheduler(TrialSchedulerWithSearcher):
     """Scheduler which executes trials in submission order.
 
-    This is the most basic scheduler template. It can be configured to
-    many use cases by choosing ``searcher`` along with ``search_options``.
+    This is the most basic scheduler template. It can be configured to many use
+    cases by choosing ``searcher`` along with ``search_options``.
 
     :param config_space: Configuration space for evaluation function
     :type config_space: Dict[str, Any]
@@ -82,11 +86,13 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         :func:`~syne_tune.optimizer.schedulers.searchers.searcher_factory`
     :type search_options: Dict[str, Any], optional
     :param metric: Name of metric to optimize, key in results obtained via
-        ``on_trial_result``
-    :type metric: str
+        ``on_trial_result``. For multi-objective schedulers, this can also be a
+        list
+    :type metric: str or List[str]
     :param mode: "min" if ``metric`` is minimized, "max" if ``metric`` is
-        maximized, defaults to "min"
-    :type mode: str, optional
+        maximized, defaults to "min". This can also be a list if ``metric`` is
+        a list
+    :type mode: str or List[str], optional
     :param points_to_evaluate: List of configurations to be evaluated
         initially (in that order). Each config in the list
         can be partially specified, or even be an empty dict. For each
@@ -138,14 +144,9 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         kwargs = check_and_merge_defaults(
             kwargs, set(), _DEFAULT_OPTIONS, _CONSTRAINTS, dict_name="scheduler_options"
         )
-        self.metric = kwargs.get("metric")
-        assert self.metric is not None, (
-            "Argument 'metric' is mandatory. Pass the name of the metric "
-            + "reported by your training script, which you'd like to "
-            + "optimize, and use 'mode' to specify whether it should "
-            + "be minimized or maximized"
+        self.metric, self.mode = self._check_metric_mode(
+            kwargs.get("metric"), kwargs["mode"]
         )
-        self.mode = kwargs["mode"]
         self.max_resource_attr = kwargs.get("max_resource_attr")
         # Setting max_t (if not provided as argument -> self.max_t)
         # This value can often be obtained from config_space. We check these
@@ -210,6 +211,45 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
             time_keeper, TimeKeeper
         ), "Argument must be of type TimeKeeper"
         self.time_keeper = time_keeper
+
+    @staticmethod
+    def _check_metric_mode(
+        metric: MetricModeType, mode: MetricModeType
+    ) -> (MetricModeType, MetricModeType):
+        assert metric is not None, (
+            "Argument `metric` is mandatory. Pass the name of the metric "
+            + "reported by your training script, which you'd like to "
+            + "optimize, and use `mode` to specify whether it should "
+            + "be minimized or maximized"
+        )
+        if isinstance(metric, list):
+            num_objectives = len(metric)
+        else:
+            num_objectives = 1
+            metric = [metric]
+        assert all(
+            isinstance(x, str) for x in metric
+        ), "Argument `metric` must be string or list of strings"
+        if isinstance(mode, list):
+            len_mode = len(mode)
+            if len_mode == 1:
+                mode = mode[0]
+            else:
+                assert (
+                    len_mode == num_objectives
+                ), "If arguments `metric`, `mode` are lists, they must have the same length"
+        else:
+            len_mode = 1
+        if len_mode == 1:
+            mode = [mode * num_objectives]
+        allowed_values = {"min", "max"}
+        assert all(
+            x in allowed_values for x in mode
+        ), "Value(s) of `mode` must be 'min' or 'max'"
+        if num_objectives == 1:
+            metric = metric[0]
+            mode = mode[0]
+        return metric, mode
 
     def _extend_search_options(self, search_options: Dict[str, Any]) -> Dict[str, Any]:
         """Allows child classes to extend ``search_options``.
@@ -304,14 +344,17 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         assert self.time_keeper is not None, "Experiment has not been started yet"
         return self.time_keeper.time()
 
-    def _check_key_of_result(self, result: Dict[str, Any], key: str):
-        assert key in result, (
-            "Your training evaluation function needs to report values "
-            + f"for the key {key}:\n   report({key}=..., ...)"
+    @staticmethod
+    def _check_keys_of_result(result: Dict[str, Any], keys: List[str]):
+        assert all(key in result for key in keys), (
+            "Your training evaluation function needs to report values for the "
+            + f"keys {keys}:\n   report("
+            + ", ".join([f"{key}=..." for key in keys])
+            + ", ...)"
         )
 
     def _check_result(self, result: Dict[str, Any]):
-        self._check_key_of_result(result, self.metric)
+        self._check_keys_of_result(result, self.metric_names())
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         """
@@ -324,7 +367,12 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         config = self._preprocess_config(trial.config)
         self.searcher.on_trial_result(trial_id, config, result=result, update=False)
         # Extra info in debug mode
-        log_msg = f"trial_id {trial_id} (metric = {result[self.metric]:.3f}"
+        log_msg = f"trial_id {trial_id} ("
+        if self.is_multiobjective_scheduler():
+            metrics = {k: result[k] for k in self.metric}
+        else:
+            metrics = {"metric": result[self.metric]}
+        log_msg += ", ".join([f"{k} = {v:.3f}" for k, v in metrics.items()])
         for k, is_float in (("epoch", False), ("elapsed_time", True)):
             if k in result:
                 if is_float:
@@ -336,7 +384,10 @@ class FIFOScheduler(TrialSchedulerWithSearcher):
         return trial_decision
 
     def metric_names(self) -> List[str]:
-        return [self.metric]
+        return _to_list(self.metric)
 
-    def metric_mode(self) -> str:
+    def metric_mode(self) -> Union[str, List[str]]:
         return self.mode
+
+    def is_multiobjective_scheduler(self) -> bool:
+        return isinstance(self.metric, list)

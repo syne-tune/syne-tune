@@ -32,7 +32,7 @@ except ImportError:
     print(try_import_botorch_message())
 
 from syne_tune.optimizer.schedulers.searchers import (
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticAndFilterDuplicatesSearcher,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 NOISE_LEVEL = 1e-3
 
 
-class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
+class BoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
     """
     A searcher that suggest configurations using BOTORCH to build GP surrogate
     and optimize acquisition function.
@@ -50,7 +50,7 @@ class BoTorchSearcher(SearcherWithRandomSeedAndFilterDuplicates):
     supports pending evaluations.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
 
     :param mode: "min" (default) or "max"
     :param num_init_random: :meth:`get_config` returns randomly drawn

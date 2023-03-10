@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.4.0] - 2023-02-21
+
+We release version 0.4.0 which you can install with `pip install syne-tune[extra]`.
+
+Thanks to all contributors:
+@mseeger, @wesk, @sighellan, @ondrejbohdal, @aaronkl, @wistuba, @jacekgo, @geoalgo
+
+
+### Added
+* New HPO algorithm: DyHPO
+* New tutorial: Progressive ASHA
+* Extended developer tutorial: Wrapping external scheduler code
+* Schedulers can be restricted to set of configurations as subset of the
+  full configuration space (option `restrict_configurations`)
+* Data filtering for model-based multi-fidelity schedulers to avoid slowdown
+  (option `max_size_data_for_model`)
+* Input warping for Gaussian process covariance kernels
+* Allow searchers to return the same configuration more than once (option 
+  `allow_duplicates`). Unify duplicate filtering across all searchers
+* Support `Ordinal` and `OrdinalNearestNeighbor` in `active_config_space` and
+  warmstarting
+
+### Changed
+* Major simplifications in `benchmarking`
+* Examples and documentation are encouraging to use `max_resource_attr`
+  instead of `max_t`
+* Major refactoring and extensions in testing and CI pipeline
+* `RemoteLauncher` does not require custom container anymore
+
+### Fixed
+* `TensorboardCallback`: Logging of hyperparameters made optional, and updated
+  example
+* Refactoring of `BoTorchSearcher`
+* Default value for DEHB baseline fixed
+* Number of GPUs is now determined correctly
+
+
 ## [0.3.4] - 2023-01-11
 
 We release version 0.3.4 which you can install with `pip install syne-tune[extra]`.

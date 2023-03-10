@@ -1,5 +1,5 @@
 
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# This workflow installs Python dependencies, runs unit tests and tracks code coverage statistics
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: Unit Tests
@@ -13,7 +13,7 @@ on:
 jobs:
   test:
 
-    runs-on: ubuntu-latest
+    runs-on: syne-tune_ubuntu-latest_16-core
 
     strategy:
       matrix:
@@ -33,4 +33,9 @@ jobs:
         python -m pip install .[extra] --upgrade pip
     - name: Test with pytest
       run: |
-        pytest
+        pytest -vvv --cov=./ --cov-report=xml
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        env_vars: PYTHON

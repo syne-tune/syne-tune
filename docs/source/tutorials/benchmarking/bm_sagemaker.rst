@@ -70,6 +70,17 @@ arguments are:
   `below <bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_.
 * ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
   `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
+* ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
+  argument, but not ``max_wallclock_time``, the benchmark default
+  ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,
+  where ``A = n_workers``, ``B = benchmark.n_workers``. This means we run for
+  longer if ``n_workers < benchmark.n_workers``, but keep
+  ``benchmark.max_wallclock_time`` the same otherwise.
+* ``use_long_tuner_name_prefix``: If 1, results for an experiment are written
+  to a directory whose prefix is
+  :code:`f"{experiment_tag}-{benchmark_name}-{seed}"`, followed by a postfix
+  containing date-time and a 3-digit hash. If 0, the prefix is
+  :code:`experiment_tag` only. The default is 1 (long prefix).
 
 If you defined additional arguments via ``extra_args``, you can use them here
 as well.
@@ -108,10 +119,12 @@ The warm pool feature is most useful with multi-fidelity HPO methods (such as
 * When using SageMaker managed warm pools with the SageMaker backend, it is
   important to use ``start_jobs_without_delay=False`` when creating the
   :class:`~syne_tune.Tuner`.
-* Warm pools are a billable resource, and you may incur extra costs. You have
-  to request warm pool quota increases for instance types you would like to
-  use. For our example, you need to have quotas for (at least) four
-  ``ml.g4dn.xlarge`` instances, **both** for training and warm pool usage.
+* Warm pools are a billable resource, and you may incur extra costs arising
+  from the fact that up to ``n_workers`` instances are kept running for about
+  10 minutes at the end of your experiment. You have to request warm pool quota
+  increases for instance types you would like to use. For our example, you need
+  to have quotas for (at least) four ``ml.g4dn.xlarge`` instances, **both** for
+  training and warm pool usage.
 * As a sanity check, you can watch the training jobs in the console. You
   should see ``InUse`` and ``Reused`` in the *Warm pool status* column.
   Running the example above, the first 4 jobs should complete in about 7 to 8

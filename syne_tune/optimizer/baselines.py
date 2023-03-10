@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List, Union
 import logging
 import copy
 
@@ -22,6 +22,9 @@ from syne_tune.optimizer.schedulers import (
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
+)
+from syne_tune.optimizer.schedulers.searchers.multi_objective_regularized_evolution import (
+    MultiObjectiveRegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
@@ -723,6 +726,52 @@ class REA(FIFOScheduler):
             config_space=config_space,
             metric=metric,
             searcher=RegularizedEvolution(**searcher_kwargs),
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class MOREA(FIFOScheduler):
+    """
+
+    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param population_size: See
+        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        Defaults to 100
+    :param sample_size: See
+        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        Defaults to 10
+    :param random_seed: Random seed, optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: List[str],
+        mode: Union[List[str], str] = "min",
+        population_size: int = 100,
+        sample_size: int = 10,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        super(MOREA, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            searcher=MultiObjectiveRegularizedEvolution(
+                config_space=config_space,
+                metric=metric,
+                mode=mode,
+                population_size=population_size,
+                sample_size=sample_size,
+                random_seed=random_seed,
+            ),
             random_seed=random_seed,
             **kwargs,
         )

@@ -12,11 +12,18 @@
 # permissions and limitations under the License.
 import itertools
 import logging
+from pathlib import Path
 from typing import Optional, Callable, Dict, Any
 
 import numpy as np
 from tqdm import tqdm
+from pathlib import Path
+import logging
 
+from syne_tune.backend import LocalBackend
+from syne_tune.stopping_criterion import StoppingCriterion
+from syne_tune.tuner import Tuner
+from syne_tune.util import sanitize_sagemaker_name
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
 from benchmarking.commons.hpo_main_common import (
@@ -146,11 +153,14 @@ def create_objects_for_tuner(
         benchmark=benchmark,
         extra_metadata=extra_tuning_job_metadata,
     )
+    tuner_name = configuration.experiment_tag
+    if configuration.use_long_tuner_name_prefix:
+        tuner_name += f"-{sanitize_sagemaker_name(configuration.benchmark)}-{seed}"
     return dict(
         scheduler=scheduler,
         stop_criterion=stop_criterion,
         n_workers=benchmark.n_workers,
-        tuner_name=configuration.experiment_tag,
+        tuner_name=tuner_name,
         metadata=metadata,
         save_tuner=configuration.save_tuner,
     )
@@ -173,6 +183,15 @@ def start_benchmark_local_backend(
     ``configuration`` and the method. This allows for extra flexibility to specify specific arguments for chosen methods
     Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
     where ``method`` is the name of the baseline.
+
+    .. note::
+       When this is launched remotely as entry point of a SageMaker training
+       job (command line ``--launched_remotely 1``), the backend is configured
+       to write logs and checkpoints to a directory which is not synced to S3.
+       This is different to the tuner path, which is "/opt/ml/checkpoints", so
+       that tuning results are synced to S3. Syncing checkpoints to S3 is not
+       recommended (it is slow and can lead to failures, since several worker
+       processes write to the same synced directory).
 
     :param configuration: ConfigDict with parameters of the benchmark.
         Must contain all parameters from LOCAL_BACKEND_EXTRA_PARAMETERS
@@ -219,7 +238,20 @@ def start_benchmark_local_backend(
             trial_backend=trial_backend,
             **tuner_kwargs,
         )
-        tuner.run()
+        # If this experiments runs remotely as a SageMaker training job, logs and
+        # checkpoints are written to a different directory than tuning results, so
+        # the former are not synced to S3.
+        # Note: This has to be done after ``tuner`` is created, because this calls
+        # ``trial_backend.set_path`` as well.
+        if configuration.launched_remotely:
+            # We use /opt/ml/input/data/, which is mounted on a partition with
+            # sufficient space. Different to /opt/ml/checkpoints, this directory is
+            # not synced to S3
+            path = Path("/opt/ml/input/data/")
+            path.mkdir(parents=True, exist_ok=True)
+            trial_backend.set_path(results_root=str(path))
+
+        tuner.run()  # Run the experiment
         if post_processing is not None:
             post_processing(tuner)
 

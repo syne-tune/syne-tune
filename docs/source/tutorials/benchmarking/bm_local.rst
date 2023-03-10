@@ -73,6 +73,17 @@ GPU with PyTorch being installed):
   for the selected benchmark by these command line arguments.
 * ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
   `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
+* ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
+  argument, but not ``max_wallclock_time``, the benchmark default
+  ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,
+  where ``A = n_workers``, ``B = benchmark.n_workers``. This means we run for
+  longer if ``n_workers < benchmark.n_workers``, but keep
+  ``benchmark.max_wallclock_time`` the same otherwise.
+* ``use_long_tuner_name_prefix``: If 1, results for an experiment are written
+  to a directory whose prefix is
+  :code:`f"{experiment_tag}-{benchmark_name}-{seed}"`, followed by a postfix
+  containing date-time and a 3-digit hash. If 0, the prefix is
+  :code:`experiment_tag` only. The default is 1 (long prefix).
 
 If you defined additional arguments via ``extra_args``, you can use them here
 as well.
@@ -186,7 +197,7 @@ the initial configurations (which in BO are either taken from
 The scheduler random seed used in a benchmark experiment is a combination of
 a *master random seed* and the seed number introduced above (the latter has
 values :math:`0, 1, 2, \dots`). The master random seed is passed to
-``launch_remote.py`` or ``hpo_main.py`` as ``--random_seed`. If no master
+``launch_remote.py`` or ``hpo_main.py`` as ``--random_seed``. If no master
 random seed is passed, it is drawn at random and output. The master random
 seed is also written into ``metadata.json`` as part of experimental results.
 Importantly, the scheduler random seed is the same across different methods
