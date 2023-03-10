@@ -41,7 +41,7 @@ from benchmarking.commons.utils import (
 from syne_tune.remote.estimators import (
     basic_cpu_instance_sagemaker_estimator,
 )
-from benchmarking.commons.launch_remote_local import _launch_benchmark_remotely
+from benchmarking.commons.launch_remote_local import _launch_experiment_remotely
 from benchmarking.commons.baselines import MethodDefinitions
 
 
@@ -112,7 +112,7 @@ def launch_remote_experiments_sagemaker(
         "warm_pool": int(configuration.warm_pool),
         "delete_checkpoints": int(configuration.delete_checkpoints),
     }
-    experiment_tag = _launch_benchmark_remotely(
+    experiment_tag = _launch_experiment_remotely(
         configuration=configuration,
         entry_point=entry_point,
         method_names=method_names,

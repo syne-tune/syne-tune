@@ -97,17 +97,10 @@ def get_benchmark(
     return benchmark
 
 
-def create_objects_for_tuner(
-    configuration: ConfigDict,
-    methods: MethodDefinitions,
-    method: str,
-    benchmark: RealBenchmarkDefinition,
-    master_random_seed: int,
-    seed: int,
-    verbose: bool,
-    extra_job_metadata: Optional[DictStrKey] = None,
-    map_method_args: Optional[MapMethodArgsType] = None,
-) -> Dict[str, Any]:
+def create_objects_for_tuner(configuration: ConfigDict, methods: MethodDefinitions, method: str,
+                             benchmark: RealBenchmarkDefinition, master_random_seed: int, seed: int, verbose: bool,
+                             extra_tuning_job_metadata: Optional[DictStrKey] = None,
+                             map_method_args: Optional[MapMethodArgsType] = None) -> Dict[str, Any]:
 
     method_kwargs = {"max_resource_attr": benchmark.max_resource_attr}
     if configuration.max_size_data_for_model is not None:
@@ -144,7 +137,7 @@ def create_objects_for_tuner(
         random_seed=master_random_seed,
         max_size_data_for_model=configuration.max_size_data_for_model,
         benchmark=benchmark,
-        extra_metadata=extra_job_metadata,
+        extra_metadata=extra_tuning_job_metadata,
     )
     return dict(
         scheduler=scheduler,
@@ -175,7 +168,7 @@ def start_benchmark_local_backend(
     where ``method`` is the name of the baseline.
 
     :param configuration: ConfigDict with parameters of the benchmark.
-        Must contain all parameters from LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS
+        Must contain all parameters from LOCAL_BACKEND_EXTRA_PARAMETERS
     :param methods: Dictionary with method constructors.
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
@@ -204,17 +197,11 @@ def start_benchmark_local_backend(
         )
         trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
-        tuner_kwargs = create_objects_for_tuner(
-            configuration,
-            methods=methods,
-            method=method,
-            benchmark=benchmark,
-            master_random_seed=master_random_seed,
-            seed=seed,
-            verbose=configuration.verbose,
-            extra_job_metadata=extra_tuning_job_metadata,
-            map_method_args=map_method_args,
-        )
+        tuner_kwargs = create_objects_for_tuner(configuration, methods=methods, method=method, benchmark=benchmark,
+                                                master_random_seed=master_random_seed, seed=seed,
+                                                verbose=configuration.verbose,
+                                                extra_tuning_job_metadata=extra_tuning_job_metadata,
+                                                map_method_args=map_method_args)
         tuner = Tuner(
             trial_backend=trial_backend,
             **tuner_kwargs,

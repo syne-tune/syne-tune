@@ -190,12 +190,12 @@ def start_benchmark_simulated_backend(
         False
     """
     simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
-    if is_dict_of_dict(benchmark_definitions):
+    nested_dict = is_dict_of_dict(benchmark_definitions)
+    if nested_dict:
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
     configuration.check_if_all_paremeters_present(simulated_backend_extra_parameters)
     configuration.expand_base_arguments(simulated_backend_extra_parameters)
 
-    nested_dict = is_dict_of_dict(benchmark_definitions)
     if configuration.benchmark is not None:
         benchmark_names = [configuration.benchmark]
     else:
@@ -391,7 +391,6 @@ def main(
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
     configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
 
-    configuration.verbose = bool(configuration.verbose)
     configuration.support_checkpointing = bool(configuration.support_checkpointing)
     configuration.restrict_configurations = bool(configuration.restrict_configurations)
     method_names = (

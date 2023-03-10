@@ -126,12 +126,12 @@ def launch_remote(
     if is_dict_of_dict(benchmark_definitions):
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
     configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
-    launch_remote_experiments_simuator(
+    launch_remote_experiments_simulator(
         configuration, entry_point, methods, benchmark_definitions, is_expensive_method
     )
 
 
-def launch_remote_experiments_simuator(
+def launch_remote_experiments_simulator(
     configuration: ConfigDict,
     entry_point: Path,
     methods: MethodDefinitions,

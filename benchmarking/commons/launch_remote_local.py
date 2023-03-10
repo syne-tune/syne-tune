@@ -171,7 +171,7 @@ def launch_remote_experiments(
     )
     combine_requirements_txt(synetune_requirements_file, benchmark.script)
     extra_sagemaker_hyperparameters = {"verbose": int(configuration.verbose)}
-    experiment_tag = _launch_benchmark_remotely(
+    experiment_tag = _launch_experiment_remotely(
         configuration=configuration,
         entry_point=entry_point,
         method_names=method_names,
@@ -186,7 +186,7 @@ def launch_remote_experiments(
     print("\n" + message_sync_from_s3(experiment_tag))
 
 
-def _launch_benchmark_remotely(
+def _launch_experiment_remotely(
     configuration: ConfigDict,
     entry_point: Path,
     method_names: List[str],

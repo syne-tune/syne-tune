@@ -115,7 +115,7 @@ def start_benchmark_sagemaker_backend(
     where ``method`` is the name of the baseline.
 
     :param configuration: ConfigDict with parameters of the benchmark
-        Must contain all parameters from LOCAL_SAGEMAKER_BENCHMARK_REQUIRED_PARAMETERS
+        Must contain all parameters from SAGEMAKER_BACKEND_EXTRA_PARAMETERS
     :param methods: Dictionary with method constructors.
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
@@ -173,17 +173,10 @@ def start_benchmark_sagemaker_backend(
         metrics_names=[benchmark.metric],
     )
 
-    tuner_kwargs = create_objects_for_tuner(
-        configuration,
-        methods=methods,
-        method=method,
-        benchmark=benchmark,
-        master_random_seed=master_random_seed,
-        seed=seed,
-        verbose=True,
-        extra_job_metadata=extra_tuning_job_metadata,
-        map_method_args=map_method_args,
-    )
+    tuner_kwargs = create_objects_for_tuner(configuration, methods=methods, method=method, benchmark=benchmark,
+                                            master_random_seed=master_random_seed, seed=seed, verbose=True,
+                                            extra_tuning_job_metadata=extra_tuning_job_metadata,
+                                            map_method_args=map_method_args)
     tuner = Tuner(
         trial_backend=trial_backend,
         **tuner_kwargs,
