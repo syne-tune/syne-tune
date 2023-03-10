@@ -27,71 +27,9 @@ training job has to be checkpointed (i.e., stored into a file). The
 `training script <basics_asha.html#scripts-for-asynchronous-successive-halving>`__
 has to be modified once more, by replacing ``objective`` with this code:
 
-.. code-block:: python
-
-   # traincode_report_withcheckpointing.py (relevant part)
-   from benchmarking.utils import (
-       resume_from_checkpointed_model,
-       checkpoint_model_at_rung_level,
-       add_checkpointing_to_argparse,
-       pytorch_load_save_functions,
-   )
-
-   # ...
-
-   def objective(config):
-       # Download data
-       data_train = download_data(config)
-       # Report results to Syne Tune
-       report = Reporter()
-       # Split into training and validation set
-       train_loader, valid_loader = split_data(config, data_train)
-       # Create model and optimizer
-       state = model_and_optimizer(config)
-       # Checkpointing
-       load_model_fn, save_model_fn = pytorch_load_save_functions(
-           {"model": state["model"], "optimizer": state["optimizer"]}
-       # Resume from checkpoint (optional)  [2]
-       resume_from = resume_from_checkpointed_model(config, load_model_fn)
-       # Training loop
-       for epoch in range(resume_from + 1, config["epochs"] + 1):
-           train_model(config, state, train_loader)
-           # Write checkpoint (optional)  [1]
-           checkpoint_model_at_rung_level(config, save_model_fn, epoch)
-           # Report validation accuracy to Syne Tune
-           accuracy = validate_model(config, state, valid_loader)
-           report(epoch=epoch, accuracy=accuracy)
-
-
-   if __name__ == "__main__":
-       # Benchmark-specific imports are done here, in order to avoid import
-       # errors if the dependencies are not installed (such errors should happen
-       # only when the code is really called)
-       from filelock import SoftFileLock, Timeout
-       import torch
-       import torch.nn as nn
-       from torch.utils.data.sampler import SubsetRandomSampler
-       from torchvision import datasets
-       from torchvision import transforms
-
-       root = logging.getLogger()
-       root.setLevel(logging.INFO)
-       parser = argparse.ArgumentParser()
-       parser.add_argument("--epochs", type=int, required=True)
-       parser.add_argument("--dataset_path", type=str, required=True)
-       # Hyperparameters
-       parser.add_argument("--n_units_1", type=int, required=True)
-       parser.add_argument("--n_units_2", type=int, required=True)
-       parser.add_argument("--batch_size", type=int, required=True)
-       parser.add_argument("--dropout_1", type=float, required=True)
-       parser.add_argument("--dropout_2", type=float, required=True)
-       parser.add_argument("--learning_rate", type=float, required=True)
-       parser.add_argument("--weight_decay", type=float, required=True)
-       # [3]
-       add_checkpointing_to_argparse(parser)
-       args, _ = parser.parse_known_args()
-       # Evaluate objective and report results to Syne Tune
-       objective(config=vars(args))
+.. literalinclude:: code/traincode_report_withcheckpointing.py
+   :caption: traincode_report_withcheckpointing.py
+   :lines: 13-
 
 Checkpointing requires you to implement the following:
 

@@ -200,7 +200,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
 
     **Cost-aware schedulers or searchers**
 
-    Some schedulers (e.g., ``type == 'cost_promotion'``) or searchers may depend
+    Some schedulers (e.g., ``type == "cost_promotion"``) or searchers may depend
     on cost values (with key ``cost_attr``) reported alongside the target metric.
     For promotion-based scheduling, a trial may pause and resume several times.
     The cost received in ``on_trial_result`` only counts the cost since the last
@@ -230,7 +230,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     ``searcher.register_pending`` is called for :math:`r_{next}` only, while for
     other ``searcher_data`` values, pending evaluations are registered for
     :math:`r + 1, r + 2, \dots, r_{next}`.
-    However, if in this case, ``register_pending_myopic`` is True, we instead
+    However, if in this case, ``register_pending_myopic`` is ``True``, we instead
     call ``searcher.register_pending`` for :math:`r + 1` when each observation is
     obtained (not just at a rung level). This leads to less pending
     evaluations at any one time. On the other hand, when a trial is continued
@@ -377,7 +377,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     :type rung_system_kwargs: Dict[str, Any], optional
     """
 
-    def __init__(self, config_space, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], **kwargs):
         # Before we can call the superclass constructor, we need to set a few
         # members (see also ``_extend_search_options``).
         # To do this properly, we first check values and impute defaults for

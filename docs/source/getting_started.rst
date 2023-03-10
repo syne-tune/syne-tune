@@ -38,68 +38,22 @@ To enable tuning, you have to report metrics from a training script so that they
 can be communicated later to Syne Tune, this can be accomplished by just
 calling :code:`report(epoch=epoch, loss=loss)`, as shown in this example:
 
-.. code-block:: python
-
-   # train_height.py
-   import logging
-   import time
-
-   from syne_tune import Reporter
-   from argparse import ArgumentParser
-
-   if __name__ == '__main__':
-       root = logging.getLogger()
-       root.setLevel(logging.INFO)
-       parser = ArgumentParser()
-       parser.add_argument('--epochs', type=int)
-       parser.add_argument('--width', type=float)
-       parser.add_argument('--height', type=float)
-       args, _ = parser.parse_known_args()
-       report = Reporter()
-
-       for epoch in range(1, args.epochs + 1):
-           time.sleep(0.1)
-           dummy_score = 1.0 / (0.1 + args.width * step / 100) + args.height * 0.1
-           # Feed the score back to Syne Tune
-           report(epoch=epoch, mean_loss=dummy_score)
+.. literalinclude:: ../../examples/training_scripts/height_example/train_height_simple.py
+   :caption: train_height_simple.py
+   :lines: 13-
 
 Once you have annotated your training script in this way, you can launch a
 tuning experiment as follows:
 
-.. code-block:: python
+.. literalinclude:: ../../examples/launch_height_simple.py
+   :caption: launch_height_simple.py
+   :lines: 13-
 
-   from syne_tune.config_space import randint
-   from syne_tune.optimizer.baselines import ASHA
-   from syne_tune.backend import LocalBackend
-   from syne_tune import Tuner, StoppingCriterion
-
-   # Hyperparameter configuration space
-   config_space = {
-       "width": randint(1, 20),
-       "height": randint(1, 20),
-       "epochs": 100,
-   }
-   # Scheduler (i.e., HPO algorithm)
-   scheduler = ASHA(
-       config_space,
-       metric="mean_loss",
-       resource_attr="epoch",
-       max_resource_attr="epochs",
-       search_options={"debug_log": False},
-   )
-
-   tuner = Tuner(
-       trial_backend=LocalBackend(entry_point="train_height.py"),
-       scheduler=scheduler,
-       stop_criterion=StoppingCriterion(max_wallclock_time=15),
-       n_workers=4,  # how many trials are evaluated in parallel
-   )
-   tuner.run()
 
 This example runs `ASHA <tutorials/multifidelity/mf_asha.html>`__ with
-``n_workers=4`` asynchronously parallel workers for ``max_wallclock_time=15``
+``n_workers=4`` asynchronously parallel workers for ``max_wallclock_time=30``
 seconds on the local machine it is called on
-(:code:`trial_backend=LocalBackend(entry_point="train_height.py")`).
+(:code:`trial_backend=LocalBackend(entry_point=entry_point)`).
 
 Supported HPO Methods
 =====================
@@ -196,9 +150,9 @@ If you use Syne Tune in a scientific publication, please cite the following pape
        salinas2022syne,
        title = {{Syne Tune}: A Library for Large Scale Hyperparameter Tuning and Reproducible Research},
        author = {David Salinas and Matthias Seeger and Aaron Klein and Valerio Perrone and Martin Wistuba and Cedric Archambeau},
-       booktitle = {First Conference on Automated Machine Learning (Main Track)},
+       booktitle = {International Conference on Automated Machine Learning, AutoML 2022},
        year = {2022},
-       url = {https://openreview.net/forum?id=BVeGJ-THIg9}
+       url = {https://proceedings.mlr.press/v188/salinas22a.html}
    }
 
 License

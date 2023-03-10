@@ -12,3 +12,11 @@ Transformer Trained on WikiText-2
 .. literalinclude:: ../../benchmarking/training_scripts/transformer_wikitext2/training_script.py
    :caption: benchmarking/training_scripts/transformer_wikitext2/training_script.py
    :lines: 13-
+
+
+Multi-layer Perceptron Trained on Fashion MNIST
+===============================================
+
+.. literalinclude:: ../../benchmarking/training_scripts/mlp_on_fashion_mnist/mlp_on_fashion_mnist.py
+   :caption: benchmarking/training_scripts/mlp_on_fashion_mnist/mlp_on_fashion_mnist.py
+   :lines: 13-

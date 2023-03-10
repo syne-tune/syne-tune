@@ -37,7 +37,9 @@ jobs:
             aws sagemaker stop-training-job --training-job-name $jobName
             sleep 5
           done
-  
+
+# Longer-running code in examples/, may need BB repository
+
   launch_tuning_gluonts:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
@@ -124,5 +126,161 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_config_json.py --use_sagemaker_backend 1
+      requires-aws-credentials: true
+    secrets: inherit
+
+# Code in docs/source/tutorials/basics/code
+
+  launch_basics_tutorial_rs:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method RS
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_basics_tutorial_bo:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method BO
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_basics_tutorial_asha_stop:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method ASHA-STOP
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_basics_tutorial_asha_prom:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method ASHA-PROM
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_basics_tutorial_mobster_stop:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method MOBSTER-STOP
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_basics_tutorial_mobster_prom:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method MOBSTER-PROM
+      requires-aws-credentials: true
+    secrets: inherit
+
+# Code in docs/source/tutorials/multifidelity/code
+
+  launch_mf_tutorial_asha_stop:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method ASHA-STOP
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_asha_prom:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method ASHA-PROM
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_asha6_stop:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method ASHA6-STOP
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_mobster_joint:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method MOBSTER-JOINT
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_mobster_indep:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method MOBSTER-INDEP
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_hypertune_indep:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method HYPERTUNE-INDEP
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_hypertune4_indep:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method HYPERTUNE4-INDEP
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_hypertune_joint:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method HYPERTUNE-JOINT
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_synchb:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method SYNCHB
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_syncsh:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method SYNCSH
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_syncmobster:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method SYNCMOBSTER
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_bohb:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method BOHB
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_mf_tutorial_dehb:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method DEHB
       requires-aws-credentials: true
     secrets: inherit

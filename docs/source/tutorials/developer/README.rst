@@ -33,3 +33,4 @@ We hope this information inspires you to give it a try. Please do consider
    extend_async_hb
    extend_sync_hb
    new_searcher
+   documentation

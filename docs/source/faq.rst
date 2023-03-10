@@ -722,7 +722,7 @@ backend:
 
 .. literalinclude:: ../../examples/launch_height_config_json.py
    :caption: examples/launch_height_config_json.py
-   :lines: 69-72
+   :lines: 72-75
 
 The trial backend stores the configuration as JSON file and passes its filename
 as command line argument. In the training script, the configuration is loaded
