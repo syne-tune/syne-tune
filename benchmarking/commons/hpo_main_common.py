@@ -121,6 +121,12 @@ def parse_args(
         default=1,
         help="Use descriptive tuner name prefix for storing results?",
     )
+    parser.add_argument(
+        "--launched_remotely",
+        type=int,
+        default=0,
+        help="Internal argument, do not use",
+    )
     if extra_args is not None:
         extra_args = copy.deepcopy(extra_args)
         for kwargs in extra_args:
@@ -133,6 +139,7 @@ def parse_args(
     args.save_tuner = bool(args.save_tuner)
     args.scale_max_wallclock_time = bool(args.scale_max_wallclock_time)
     args.use_long_tuner_name_prefix = bool(args.use_long_tuner_name_prefix)
+    args.launched_remotely = bool(args.launched_remotely)
     seeds = list(range(args.start_seed, args.num_seeds))
     method_names = [args.method] if args.method is not None else list(methods.keys())
     return args, method_names, seeds

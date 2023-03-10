@@ -14,6 +14,7 @@ from typing import Optional, List, Callable, Dict, Any
 import numpy as np
 import itertools
 from tqdm import tqdm
+from pathlib import Path
 import logging
 
 from syne_tune.backend import LocalBackend
@@ -190,6 +191,15 @@ def main(
     :code:`method_kwargs = map_extra_args(args, method, method_kwargs)`, where
     ``method`` is the name of the baseline.
 
+    .. note::
+       When this is launched remotely as entry point of a SageMaker training
+       job (command line ``--launched_remotely 1``), the backend is configured
+       to write logs and checkpoints to a directory which is not synced to S3.
+       This is different to the tuner path, which is "/opt/ml/checkpoints", so
+       that tuning results are synced to S3. Syncing checkpoints to S3 is not
+       recommended (it is slow and can lead to failures, since several worker
+       processes write to the same synced directory).
+
     :param methods: Dictionary with method constructors
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
@@ -231,6 +241,19 @@ def main(
             trial_backend=trial_backend,
             **tuner_kwargs,
         )
-        tuner.run()
+        # If this experiments runs remotely as a SageMaker training job, logs and
+        # checkpoints are written to a different directory than tuning results, so
+        # the former are not synced to S3.
+        # Note: This has to be done after ``tuner`` is created, because this calls
+        # ``trial_backend.set_path`` as well.
+        if args.launched_remotely:
+            # We use /opt/ml/input/data/, which is mounted on a partition with
+            # sufficient space. Different to /opt/ml/checkpoints, this directory is
+            # not synced to S3
+            path = Path("/opt/ml/input/data/")
+            path.mkdir(parents=True, exist_ok=True)
+            trial_backend.set_path(results_root=str(path))
+
+        tuner.run()  # Run the experiment
         if post_processing is not None:
             post_processing(tuner)

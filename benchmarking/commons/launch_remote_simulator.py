@@ -59,6 +59,7 @@ def get_hyperparameters(
         "save_tuner": int(args.save_tuner),
         "random_seed": random_seed,
         "scale_max_wallclock_time": int(args.scale_max_wallclock_time),
+        "launched_remotely": 1,
     }
     if seed is not None:
         hyperparameters["num_seeds"] = seed + 1
