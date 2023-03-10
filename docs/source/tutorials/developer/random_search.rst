@@ -31,10 +31,10 @@ consider the arguments of ``FIFOScheduler``:
 * ``searcher``, ``search_options``: These are used to configure the scheduler
   with a searcher. For ease of use, ``searcher`` can be a name, and additional
   arguments can be passed via ``search_options``. In this case, the searcher is
-  created by a factory, as detailed `below <new_searcher.html>`_. Alternatively,
+  created by a factory, as detailed `below <new_searcher.html>`__. Alternatively,
   ``searcher`` can also be a
   :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher` object.
-* ``metric``, ``mode``: As discussed `above <first_example.html#first-example>`_
+* ``metric``, ``mode``: As discussed `above <first_example.html#first-example>`__
   in ``SimpleScheduler``.
 * ``random_seed``: Several pseudo-random number generators may be used in
   scheduler and searcher. Seeds for these are drawn from a random seed generator
@@ -50,7 +50,7 @@ consider the arguments of ``FIFOScheduler``:
 * ``max_resource_attr``, ``max_t``: These arguments are relevant for
   multi-fidelity schedulers. Only one of them needs to be given. We recommend
   to use ``max_resource_attr``. More details are given
-  `below <extend_async_hb.html#hyperbandscheduler>`_.
+  `below <extend_async_hb.html#hyperbandscheduler>`__.
 
 The most important use case is to configure ``FIFOScheduler`` with a new
 searcher, and we will concentrate on this one. First, the base class of all
@@ -77,7 +77,7 @@ searchers is :class:`~syne_tune.optimizer.schedulers.searchers.BaseSearcher`:
   ``on_trial_result``, also passing the configuration of the current trial. If
   the searcher maintains a surrogate model (for example, based on a Gaussian
   process), it should update its model with ``result`` data iff ``update=True``.
-  This is discussed in more detail `below <extend_async_hb.html>`_. Note that
+  This is discussed in more detail `below <extend_async_hb.html>`__. Note that
   ``on_trial_result`` does not return anything: decisions on how to proceed
   with the trial are not done in the searcher.
 * ``register_pending``: Registers one (or more) pending evaluations, which are
@@ -111,7 +111,7 @@ desirable for most searchers:
   finite size.
 * Restrict configurations which can be suggested to a finite set. This can be
   very useful when
-  `using tabulated blackboxes <../benchmarking/bm_simulator.html#restricting-scheduler-to-configurations-of-tabulated-blackbox>`_.
+  `using tabulated blackboxes <../benchmarking/bm_simulator.html#restricting-scheduler-to-configurations-of-tabulated-blackbox>`__.
   It does not make sense for every scheduler though, as some rely on a
   continuous search over the configuration space. You can inherit from
   :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`

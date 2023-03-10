@@ -228,7 +228,7 @@ the validation accuracy after training as ``report(accuracy=accuracy)``.
    line arguments. This precludes passing arguments of complex type, such as
    lists or dictionaries, as there is also a length limit to arguments. In
    order to get around these restrictions, you can also pass
-   `arguments via a JSON file <../../faq.html#how-can-i-pass-lists-or-dictionaries-to-the-training-script>`_.
+   `arguments via a JSON file <../../faq.html#how-can-i-pass-lists-or-dictionaries-to-the-training-script>`__.
 
 Defining the Configuration Space
 --------------------------------
@@ -275,7 +275,7 @@ exploration than for model-based HPO methods. On the other hand, we should
 avoid to encode finite-sized numerical ranges as categorical for model-based
 HPO, instead using one of the more specialized types in Syne Tune. More details
 on choosing the configuration space are provided
-`here <../../search_space.html>`_, where you will also learn about more types:
+`here <../../search_space.html>`__, where you will also learn about more types:
 categorical, finite range, and ordinal.
 
 Finally, you can also tune only a subset of the hyperparameters of your

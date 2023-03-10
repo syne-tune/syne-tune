@@ -3,9 +3,9 @@ Using the Built-in Schedulers
 
 In this tutorial, you will learn how to use and configure the most important
 built-in HPO algorithms. Alternatively, you can also use most algorithms from
-`Ray Tune <https://docs.ray.io/en/master/tune/index.html>`_.
+`Ray Tune <https://docs.ray.io/en/master/tune/index.html>`__.
 
-`This tutorial <tutorials/basics/README.html>`_ provides a walkthrough of
+`This tutorial <tutorials/basics/README.html>`__ provides a walkthrough of
 some of the topics addressed here.
 
 Schedulers and Searchers
@@ -159,7 +159,7 @@ The simplest HPO baseline is **random search**, which you obtain with
 ``FIFOScheduler``. Search decisions are not based on past data, a new
 configuration is chosen by sampling attribute values at random, from
 distributions specified in ``config_space``. These distributions are detailed
-`here <search_space.html#domains>`_.
+`here <search_space.html#domains>`__.
 
 If ``points_to_evaluate`` is specified, configurations are first taken from
 this list before any are drawn at random. Options for configuring the searcher
@@ -177,7 +177,7 @@ Bayesian Optimization
 **Bayesian optimization** is obtained by ``searcher='bayesopt'``, or by using
 :class:`~syne_tune.optimizer.baselines.BayesianOptimization` instead of
 ``FIFOScheduler``. More information about Bayesian optimization is provided
-`here <tutorials/basics/basics_bayesopt.html>`_.
+`here <tutorials/basics/basics_bayesopt.html>`__.
 
 Options for configuring the searcher are given in ``search_options``. These
 include options for the random searcher.
@@ -221,7 +221,7 @@ much better than ``FIFOScheduler``. You may have read about successive halving
 and Hyperband before. Chances are you read about **synchronous scheduling** of
 parallel evaluations, while both ``HyperbandScheduler`` and ``FIFOScheduler``
 implement **asynchronous scheduling**, which can be substantially more
-efficient. `This tutorial <tutorials/multifidelity/README.html>`_ provides
+efficient. `This tutorial <tutorials/multifidelity/README.html>`__ provides
 details about synchronous and asynchronous variants of successive halving and
 Hyperband.
 
@@ -287,7 +287,7 @@ of extra arguments we will explain in the sequel (``type``,
 ``max_resource_attr``, ``grace_period``, ``reduction_factor``,
 ``resource_attr``). The ``mlp_fashionmnist`` benchmark trains a two-layer MLP
 on ``FashionMNIST`` (more details are
-`here <tutorials/basics/basics_setup.html>`_). The accuracy is computed and
+`here <tutorials/basics/basics_setup.html>`__). The accuracy is computed and
 reported at the end of each epoch:
 
 .. code-block:: python
@@ -333,7 +333,7 @@ no better than the best 1/3 of previous values (the list includes the current
 ``accuracy`` value), otherwise it is stopped.
 
 Further details about ``HyperbandScheduler`` and multi-fidelity HPO methods
-are given in `this tutorial <tutorials/multifidelity/README.html>`_.
+are given in `this tutorial <tutorials/multifidelity/README.html>`__.
 :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` provides the full
 range of arguments. Here, we list the most important ones:
 
@@ -342,7 +342,7 @@ range of arguments. Here, we list the most important ones:
   resource attribute is a positive integer. We need ``reduction_factor >= 2``.
   Note that instead of ``max_resource_attr``, you can also use ``max_t``,
   as detailed
-  `here <tutorials/multifidelity/mf_setup.html#the-launcher-script>`_.
+  `here <tutorials/multifidelity/mf_setup.html#the-launcher-script>`__.
 * ``rung_increment``: This parameter can be used instead of ``reduction_factor``
   (the latter takes precedence). In this case, rung levels are spaced linearly:
   :math:`r_{min} + j \nu, j = 0, 1, 2, \dots`, where :math:`\nu` is
@@ -356,18 +356,18 @@ range of arguments. Here, we list the most important ones:
   above).
 * ``brackets``: Number of brackets to be used in Hyperband. More details are
   found
-  `here <tutorials/multifidelity/mf_asha.html#asynchronous-hyperband>`_.
+  `here <tutorials/multifidelity/mf_asha.html#asynchronous-hyperband>`__.
   The default is 1 (successive halving).
 
 Depending on the searcher, this scheduler supports:
 
-* `Asynchronous successive halving (ASHA) <../multifidelity/mf_asha.html>`_
+* `Asynchronous successive halving (ASHA) <../multifidelity/mf_asha.html>`__
   [``searcher="random"``]
-* `MOBSTER <../multifidelity/mf_async_model.html#asynchronous-mobster>`_
+* `MOBSTER <../multifidelity/mf_async_model.html#asynchronous-mobster>`__
   [``searcher="bayesopt"``]
-* `Asynchronous BOHB <../multifidelity/mf_async_model.html#asynchronous-mobster>`_
+* `Asynchronous BOHB <../multifidelity/mf_async_model.html#asynchronous-mobster>`__
   [``searcher="kde"``]
-* `Hyper-Tune <../multifidelity/mf_async_model.html#hyper-tune>`_
+* `Hyper-Tune <../multifidelity/mf_async_model.html#hyper-tune>`__
   [``searcher="hypertune"``]
 * Cost-aware Bayesian optimization [``searcher="bayesopt_cost"``]
 * Bore [``searcher="bore"``]
@@ -380,8 +380,8 @@ Asynchronous Hyperband (ASHA)
 
 If :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` is configured
 with a random searcher, we obtain ASHA, as proposed in
-`A System for Massively Parallel Hyperparameter Tuning <https://arxiv.org/abs/1810.05934>`_.
-More details are provided `here <tutorials/multifidelity/mf_asha.html>`_.
+`A System for Massively Parallel Hyperparameter Tuning <https://arxiv.org/abs/1810.05934>`__.
+More details are provided `here <tutorials/multifidelity/mf_asha.html>`__.
 Nothing much can be configured via ``search_options`` in this case. The
 arguments are the same as for random search with ``FIFOScheduler``.
 
@@ -390,10 +390,10 @@ Model-based Asynchronous Hyperband (MOBSTER)
 
 If :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` is configured with
 a Bayesian optimization searcher, we obtain MOBSTER, as proposed in
-`Model-based Asynchronous Hyperparameter and Neural Architecture Search <https://openreview.net/forum?id=a2rFihIU7i>`_.
+`Model-based Asynchronous Hyperparameter and Neural Architecture Search <https://openreview.net/forum?id=a2rFihIU7i>`__.
 By default, MOBSTER uses a multi-task Gaussian process surrogate model for
 metrics data observed at all resource levels. More details are provided
-`here <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`_.
+`here <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`__.
 
 Recommendations
 ---------------
@@ -407,7 +407,7 @@ schedulers.
   (:class:`~syne_tune.optimizer.baselines.ASHA`) instead. The default for ASHA
   is ``type="stopping"``, but you should consider ``type="promotion"`` as well
   (more details on this choice are given
-  `here <tutorials/multifidelity/mf_asha.html#asynchronous-successive-halving-promotion-variant>`_.
+  `here <tutorials/multifidelity/mf_asha.html#asynchronous-successive-halving-promotion-variant>`__.
 * Use these baseline runs to get an idea how long your experiment needs to run.
   It is recommended to use a stopping criterion of the form
   ``stop_criterion=StoppingCriterion(max_wallclock_time=X)``, so that the
@@ -437,6 +437,6 @@ schedulers.
   evaluations, the searchers based on GP surrogate models may end up expensive.
   In fact, once the number of evaluations surpassed a certain threshold, the
   data is filtered down before fitting the surrogate model (see
-  `here <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`_).
+  `here <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`__).
   You can adjust this threshold or change ``opt_skip_period`` in order to speed
   up MOBSTER.

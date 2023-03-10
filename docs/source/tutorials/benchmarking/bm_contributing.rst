@@ -17,7 +17,7 @@ requirements:
 * The benchmark should not be excessively expensive to run
 * If your benchmark involves training a machine learning model, the code should
   work with the dependencies of a
-  `SageMaker framework <https://sagemaker.readthedocs.io/en/stable/frameworks/index.html>`_.
+  `SageMaker framework <https://sagemaker.readthedocs.io/en/stable/frameworks/index.html>`__.
   You can specify extra dependencies, but they should be small. While Syne
   Tune (and SageMaker) supports Docker containers, Syne Tune is not hosting
   them. At present, we also do not accept ``Dockerfile`` script contributions,
@@ -31,12 +31,12 @@ requirements:
 Let us have a look at the ``resnet_cifar10`` benchmark as example of what needs
 to be done:
 
-* `resnet_cifar10.py <training_scripts.html#resnet-18-trained-on-cifar-10>`_:
+* `resnet_cifar10.py <training_scripts.html#resnet-18-trained-on-cifar-10>`__:
   The training script for your benchmark should be in a subdirectory of
   ``benchmarking/training_scripts/``. The same directory can contain a file
   ``requirements.txt`` with dependencies beyond the SageMaker framework you
   specify for your code. You are invited to study the code
-  `resnet_cifar10.py <training_scripts.html#resnet-18-trained-on-cifar-10>`_
+  `resnet_cifar10.py <training_scripts.html#resnet-18-trained-on-cifar-10>`__
   in detail. Important points are:
 
   * Your script needs to report relevant metrics back to Syne Tune at the end
@@ -59,12 +59,12 @@ to be done:
   overwriting values in ``RealBenchmarkDefinition``. Hints:
 
   * ``framework`` should be one of the
-    `SageMaker frameworks <https://sagemaker.readthedocs.io/en/stable/frameworks/index.html>`_.
+    `SageMaker frameworks <https://sagemaker.readthedocs.io/en/stable/frameworks/index.html>`__.
     You should also specify ``framework_version`` and ``py_version`` in the
     ``estimator_kwargs`` dict.
   * ``config_space`` is the configuration space for your benchmark. Please
     make sure to
-    `choose hyperparameter domains wisely <../../search_space.html>`_.
+    `choose hyperparameter domains wisely <../../search_space.html>`__.
   * ``instance_type``, ``n_workers``: You need to specify a default instance
     type and number of workers for experiments running your benchmark. If in
     doubt, choose instances with the lowest costs. Currently, most of our GPU
@@ -98,7 +98,7 @@ find it useful, it can be graduated into :mod:`benchmarking.commons` and
 :mod:`benchmarking.training_scripts`.
 
 We are looking forward to your
-`pull request <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`_.
+`pull request <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__.
 
 Contributing a Tabulated Benchmark
 ----------------------------------
@@ -111,10 +111,10 @@ used with any Syne Tune scheduler, and experiment runs are very close to what
 would be obtained by running training for real. Since time is simulated as well,
 not only are experiments very cheap to run (on basic CPU hardware), they also
 finish many times faster than real time. An overview is given
-`here <../multifidelity/mf_setup.html>`_.
+`here <../multifidelity/mf_setup.html>`__.
 
 If you have the data for a tabulated benchmark, we strongly encourage you to
-`contribute an import script to Syne Tune <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`_.
+`contribute an import script to Syne Tune <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__.
 Examples for such scripts are
 :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import`,
 :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.nasbench201_import`,
@@ -122,4 +122,4 @@ Examples for such scripts are
 :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import`,
 :mod:`syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.lcbench`.
 See also
-`FAQ <../../faq.html#how-can-i-add-a-new-tabular-or-surrogate-benchmark>`_.
+`FAQ <../../faq.html#how-can-i-add-a-new-tabular-or-surrogate-benchmark>`__.

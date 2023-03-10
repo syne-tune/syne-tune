@@ -42,11 +42,11 @@ One of the oldest and most widely used instantiations of sequential model-based
 search is *Bayesian optimization*. There are a number of great tutorials and
 review articles on Bayesian optimization, and we won’t repeat them here:
 
-* `Slides by Ryan Adams <https://www.cs.toronto.edu/~rgrosse/courses/csc411_f18/tutorials/tut8_adams_slides.pdf>`_
-* `Review by Peter Frazier <https://arxiv.org/abs/1807.02811>`_
-* `Video by Peter Frazier <https://www.youtube.com/watch?v=c4KKvyWW_Xk>`_
-* `Video by Nando de Freitas <https://www.youtube.com/watch?v=vz3D36VXefI>`_
-* `Video by Matthew Hoffman <https://www.youtube.com/watch?v=C5nqEHpdyoE>`_
+* `Slides by Ryan Adams <https://www.cs.toronto.edu/~rgrosse/courses/csc411_f18/tutorials/tut8_adams_slides.pdf>`__
+* `Review by Peter Frazier <https://arxiv.org/abs/1807.02811>`__
+* `Video by Peter Frazier <https://www.youtube.com/watch?v=c4KKvyWW_Xk>`__
+* `Video by Nando de Freitas <https://www.youtube.com/watch?v=vz3D36VXefI>`__
+* `Video by Matthew Hoffman <https://www.youtube.com/watch?v=C5nqEHpdyoE>`__
 
 Most instances of Bayesian optimization work by modelling the objective as
 function :math:`f(\mathbf{x})`, where :math:`\mathbf{x}` is a configuration
@@ -80,7 +80,7 @@ The Bayesian optimization template requires us to make two choices:
   most popular choice in practice: expected improvement.
 
 GP-based Bayesian optimization is run by our
-`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_
+`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
 with the argument ``--method BO``. Many options can be specified via
 ``search_options``, but we use the defaults here. See
 :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher` for all
@@ -114,7 +114,7 @@ Recommendations
 ---------------
 
 Here, we collect some additional recommendations. Further details are
-found `here <../../schedulers.html#bayesian-optimization>`_.
+found `here <../../schedulers.html#bayesian-optimization>`__.
 
 Categorical Hyperparameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,7 +157,7 @@ lost. If you insist on a sparse “regular grid” value range, you can use
 ``logfinrange(4, 1024, 9)``, which has the same 9 values, but uses a
 latent ``int`` representation, which is encoded with a single number.
 More information can be found
-`here <../../search_space.html#recommendations>`_.
+`here <../../search_space.html#recommendations>`__.
 
 Speeding up Decision-Making
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
