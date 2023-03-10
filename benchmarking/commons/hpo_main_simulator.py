@@ -395,8 +395,6 @@ def main(
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
     configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
 
-    configuration.support_checkpointing = bool(configuration.support_checkpointing)
-    configuration.restrict_configurations = bool(configuration.restrict_configurations)
     method_names = (
         [configuration.method]
         if configuration.method is not None
