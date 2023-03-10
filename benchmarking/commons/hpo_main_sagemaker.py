@@ -173,10 +173,17 @@ def start_benchmark_sagemaker_backend(
         metrics_names=[benchmark.metric],
     )
 
-    tuner_kwargs = create_objects_for_tuner(configuration, methods=methods, method=method, benchmark=benchmark,
-                                            master_random_seed=master_random_seed, seed=seed, verbose=True,
-                                            extra_tuning_job_metadata=extra_tuning_job_metadata,
-                                            map_method_args=map_method_args)
+    tuner_kwargs = create_objects_for_tuner(
+        configuration,
+        methods=methods,
+        method=method,
+        benchmark=benchmark,
+        master_random_seed=master_random_seed,
+        seed=seed,
+        verbose=True,
+        extra_tuning_job_metadata=extra_tuning_job_metadata,
+        map_method_args=map_method_args,
+    )
     tuner = Tuner(
         trial_backend=trial_backend,
         **tuner_kwargs,

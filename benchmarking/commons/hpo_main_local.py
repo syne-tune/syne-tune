@@ -97,10 +97,17 @@ def get_benchmark(
     return benchmark
 
 
-def create_objects_for_tuner(configuration: ConfigDict, methods: MethodDefinitions, method: str,
-                             benchmark: RealBenchmarkDefinition, master_random_seed: int, seed: int, verbose: bool,
-                             extra_tuning_job_metadata: Optional[DictStrKey] = None,
-                             map_method_args: Optional[MapMethodArgsType] = None) -> Dict[str, Any]:
+def create_objects_for_tuner(
+    configuration: ConfigDict,
+    methods: MethodDefinitions,
+    method: str,
+    benchmark: RealBenchmarkDefinition,
+    master_random_seed: int,
+    seed: int,
+    verbose: bool,
+    extra_tuning_job_metadata: Optional[DictStrKey] = None,
+    map_method_args: Optional[MapMethodArgsType] = None,
+) -> Dict[str, Any]:
 
     method_kwargs = {"max_resource_attr": benchmark.max_resource_attr}
     if configuration.max_size_data_for_model is not None:
@@ -197,11 +204,17 @@ def start_benchmark_local_backend(
         )
         trial_backend = LocalBackend(entry_point=str(benchmark.script))
 
-        tuner_kwargs = create_objects_for_tuner(configuration, methods=methods, method=method, benchmark=benchmark,
-                                                master_random_seed=master_random_seed, seed=seed,
-                                                verbose=configuration.verbose,
-                                                extra_tuning_job_metadata=extra_tuning_job_metadata,
-                                                map_method_args=map_method_args)
+        tuner_kwargs = create_objects_for_tuner(
+            configuration,
+            methods=methods,
+            method=method,
+            benchmark=benchmark,
+            master_random_seed=master_random_seed,
+            seed=seed,
+            verbose=configuration.verbose,
+            extra_tuning_job_metadata=extra_tuning_job_metadata,
+            map_method_args=map_method_args,
+        )
         tuner = Tuner(
             trial_backend=trial_backend,
             **tuner_kwargs,
