@@ -11,20 +11,15 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import itertools
-import logging
-from pathlib import Path
 from typing import Optional, Callable, Dict, Any
 
 import numpy as np
 from tqdm import tqdm
 import logging
 
-from syne_tune.backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     set_backend_path_not_synced_to_s3,
 )
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
 from syne_tune.util import sanitize_sagemaker_name
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
