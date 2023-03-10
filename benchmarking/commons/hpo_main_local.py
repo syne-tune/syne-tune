@@ -18,7 +18,7 @@ from tqdm import tqdm
 import logging
 
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
-    set_backend_path_not_synced_to_s3,
+    backend_path_not_synced_to_s3,
 )
 from syne_tune.util import sanitize_sagemaker_name
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
@@ -231,17 +231,15 @@ def start_benchmark_local_backend(
             extra_tuning_job_metadata=extra_tuning_job_metadata,
             map_method_args=map_method_args,
         )
+        # If this experiments runs remotely as a SageMaker training job, logs and
+        # checkpoints are written to a different directory than tuning results, so
+        # the former are not synced to S3.
+        if configuration.launched_remotely:
+            tuner_kwargs["trial_backend_path"] = backend_path_not_synced_to_s3()
         tuner = Tuner(
             trial_backend=trial_backend,
             **tuner_kwargs,
         )
-        # If this experiments runs remotely as a SageMaker training job, logs and
-        # checkpoints are written to a different directory than tuning results, so
-        # the former are not synced to S3.
-        # Note: This has to be done after ``tuner`` is created, because this calls
-        # ``trial_backend.set_path`` as well.
-        if configuration.launched_remotely:
-            set_backend_path_not_synced_to_s3(trial_backend)
 
         tuner.run()  # Run the experiment
         if post_processing is not None:

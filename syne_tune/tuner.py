@@ -112,6 +112,15 @@ class Tuner:
         ``start_jobs_without_delay=False``, since otherwise more than ``n_workers``
         warm pools will be started, because existing ones are busy with
         stopping when they should be reassigned.
+    :param trial_backend_path: If this is given, the path of ``trial_backend``
+        (where logs and checkpoints of trials are stored) is set to this.
+        Otherwise, it is set to ``self.tuner_path``, so that per-trial
+        information is written to the same path as tuning results.
+
+        If the backend is :class:`~syne_tune.backend.LocalBackend` and the
+        experiment is ru remotely, we recommend to set this, since otherwise
+        checkpoints and logs are synced to S3, along with tuning results, which
+        is costly and error-prone.
     """
 
     def __init__(
@@ -132,6 +141,7 @@ class Tuner:
         suffix_tuner_name: bool = True,
         save_tuner: bool = True,
         start_jobs_without_delay: bool = True,
+        trial_backend_path: Optional[str] = None,
     ):
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -167,7 +177,10 @@ class Tuner:
         # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
         self.trial_backend.set_path(
-            results_root=str(self.tuner_path), tuner_name=self.name
+            results_root=str(self.tuner_path)
+            if trial_backend_path is None
+            else trial_backend_path,
+            tuner_name=self.name,
         )
         self.callbacks = (
             callbacks if callbacks is not None else [self._default_callback()]

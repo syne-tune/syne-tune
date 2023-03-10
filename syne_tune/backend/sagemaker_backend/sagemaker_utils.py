@@ -28,7 +28,6 @@ from sagemaker.estimator import Framework
 
 import syne_tune
 from syne_tune.backend.trial_status import TrialResult
-from syne_tune.backend.trial_backend import TrialBackend
 from syne_tune.report import retrieve
 from syne_tune.util import experiment_path, random_string, s3_experiment_path
 
@@ -449,23 +448,20 @@ def s3_delete_files_recursively(s3_path: str) -> Dict[str, Any]:
     )
 
 
-def set_backend_path_not_synced_to_s3(trial_backend: TrialBackend):
+def backend_path_not_synced_to_s3() -> Path:
     """
     When an experiment with the local backend is run remotely (as SageMaker
     training job), we do not want checkpoints to be synced to S3, since this
     is expensive and error-prone (since several trials may write checkpoints
-    at the same time).
+    at the same time). Pass the returned path to ``trial_backend_path`` when
+    constructing the :class`~syne_tune.Tuner`.
 
     Here, we direct checkpoint writing to /opt/ml/input/data/, which is mounted
     on a partition with sufficient space. Different to /opt/ml/checkpoints, this
     directory is not synced to S3.
 
-    .. note::
-       This has to be called *after* the :class:`~syne_tune.Tuner` object has
-       been created, because the latter sets the backend path as well.
-
-    :param trial_backend: Backend in question
+    :return: Path to set in local backend
     """
     path = Path("/opt/ml/input/data/")
     path.mkdir(parents=True, exist_ok=True)
-    trial_backend.set_path(results_root=str(path))
+    return path

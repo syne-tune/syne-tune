@@ -259,8 +259,8 @@ checkpoints to be synced to S3, since they are only required temporarily on the
 same instance. Syncing them to S3 would be costly and error-prone, because the
 SageMaker mechanism is not intended to work with different processes writing to
 and reading from the sync directory concurrently. In this case, we can switch
-off syncing checkpoints to S3 (but not tuning results!) by calling
-``set_backend_path_not_synced_to_s3(trial_backend)`` after creating the
+off syncing checkpoints to S3 (but not tuning results!) by setting
+``trial_backend_path=backend_path_not_synced_to_s3()`` when creating the
 :class:`~syne_tune.Tuner` object. An example is
 `fine_tuning_transformer_glue/hpo_main.py <benchmarking/fine_tuning_transformer_glue.html>`_.
 It is also supported by default in the

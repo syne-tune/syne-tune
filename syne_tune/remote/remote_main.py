@@ -21,7 +21,7 @@ from pathlib import Path
 from syne_tune import Tuner
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
-    set_backend_path_not_synced_to_s3,
+    backend_path_not_synced_to_s3,
 )
 
 
@@ -62,11 +62,12 @@ if __name__ == "__main__":
         # Logs and checkpoints are persisted. For the SageMaker backend, this
         # is crucial. For the local backend, it may lead to errors, because the
         # same trials can write checkpoints at the same time
-        trial_backend.set_path(results_root=tuner.tuner_path)
+        backend_path = tuner.tuner_path
     else:
         # For the local backend, logs and checkpoints are not persisted if
         # ``store_logs == False`` (default)
-        set_backend_path_not_synced_to_s3(trial_backend)
+        backend_path = str(backend_path_not_synced_to_s3())
+    trial_backend.set_path(results_root=backend_path)
 
     # Run the tuner on the sagemaker instance. If the simulation backend is
     # used, this needs a specific callback

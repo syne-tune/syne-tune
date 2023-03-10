@@ -16,7 +16,7 @@ import argparse
 from syne_tune.config_space import uniform, loguniform, choice, randint
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
-    set_backend_path_not_synced_to_s3,
+    backend_path_not_synced_to_s3,
 )
 from syne_tune.optimizer.baselines import (
     ASHA,
@@ -186,10 +186,9 @@ if __name__ == "__main__":
         n_workers=args.n_workers,
         metadata=vars(args),  # metadata is stored along with results
         tuner_name=args.experiment_name,
+        trial_backend_path=backend_path_not_synced_to_s3()
+        if not args.store_logs_checkpoints_to_s3
+        else None,
     )
-
-    if not args.store_logs_checkpoints_to_s3:
-        # Logs and checkpoints are not synced to S3. This is recommended
-        set_backend_path_not_synced_to_s3(backend)
 
     tuner.run()  # off we go!
