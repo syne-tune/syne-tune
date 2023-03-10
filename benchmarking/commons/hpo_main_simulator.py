@@ -339,8 +339,8 @@ def start_benchmark_simulated_backend(
                 benchmark.add_surrogate_kwargs["predict_curves"]
             )
         tuner_name = experiment_tag
-        if args.use_long_tuner_name_prefix:
-            tuner_name += f"-{sanitize_sagemaker_name(args.benchmark)}-{seed}"
+        if configuration.use_long_tuner_name_prefix:
+            tuner_name += f"-{sanitize_sagemaker_name(configuration.benchmark)}-{seed}"
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,
