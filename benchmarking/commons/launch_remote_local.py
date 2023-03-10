@@ -194,7 +194,7 @@ def _launch_experiment_remotely(
     benchmark: RealBenchmarkDefinition,
     master_random_seed: int,
     sagemaker_estimator_base_class: Callable[[Any], EstimatorBase],
-    environment: DictStrKey,
+    environment: Optional[DictStrKey],
     extra_sagemaker_hyperparameters: DictStrKey,
     use_sagemaker_backend: bool,
 ):
