@@ -2,6 +2,9 @@ ignore:
   - "docs/*"
   - "examples/*"
 
+github_checks:
+    annotations: false
+
 coverage:
   status:
     project:

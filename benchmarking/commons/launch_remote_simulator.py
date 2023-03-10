@@ -16,11 +16,18 @@ from typing import Optional, Callable, Dict, Any
 
 from tqdm import tqdm
 
-from benchmarking.commons.hpo_main_common import extra_metadata, ExtraArgsType
+from benchmarking.commons.baselines import MethodDefinitions
+from benchmarking.commons.hpo_main_common import (
+    extra_metadata,
+    ExtraArgsType,
+    ConfigDict,
+    config_from_argparse,
+)
 from benchmarking.commons.hpo_main_simulator import (
-    parse_args,
     SurrogateBenchmarkDefinitions,
     is_dict_of_dict,
+    SIMULATED_BACKEND_EXTRA_PARAMETERS,
+    BENCHMARK_KEY_EXTRA_PARAMETER,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -40,8 +47,7 @@ def get_hyperparameters(
     method: str,
     experiment_tag: str,
     random_seed: int,
-    args,
-    extra_args: Optional[ExtraArgsType],
+    configuration: ConfigDict,
 ) -> Dict[str, Any]:
     """Compose hyperparameters for SageMaker training job
 
@@ -49,37 +55,37 @@ def get_hyperparameters(
     :param method: Method name
     :param experiment_tag: Tag of experiment
     :param random_seed: Master random seed
-    :param args: Result from :func:`parse_args`
-    :param extra_args: Argument of ``launch_remote``
+    :param configuration: Configuration for the job
     :return: Dictionary of hyperparameters
     """
     hyperparameters = {
         "experiment_tag": experiment_tag,
         "method": method,
-        "save_tuner": int(args.save_tuner),
+        "save_tuner": int(configuration.save_tuner),
         "random_seed": random_seed,
-        "scale_max_wallclock_time": int(args.scale_max_wallclock_time),
+        "scale_max_wallclock_time": int(configuration.scale_max_wallclock_time),
         "launched_remotely": 1,
     }
     if seed is not None:
         hyperparameters["num_seeds"] = seed + 1
         hyperparameters["start_seed"] = seed
     else:
-        hyperparameters["num_seeds"] = args.num_seeds
-        hyperparameters["start_seed"] = args.start_seed
-    if args.benchmark is not None:
-        hyperparameters["benchmark"] = args.benchmark
+        hyperparameters["num_seeds"] = configuration.num_seeds
+        hyperparameters["start_seed"] = configuration.start_seed
+    if configuration.benchmark is not None:
+        hyperparameters["benchmark"] = configuration.benchmark
     for k in (
         "n_workers",
         "max_wallclock_time",
         "max_size_data_for_model",
         "fcnet_ordinal",
     ):
-        v = getattr(args, k)
+        v = getattr(configuration, k)
         if v is not None:
             hyperparameters[k] = v
-    if extra_args is not None:
-        hyperparameters.update(filter_none(extra_metadata(args, extra_args)))
+    hyperparameters.update(
+        filter_none(extra_metadata(configuration, configuration.extra_parameters()))
+    )
     return hyperparameters
 
 
@@ -117,23 +123,77 @@ def launch_remote(
     :param is_expensive_method: See above. The default is a predicative always
         returning False (no method is expensive)
     """
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
+    if is_dict_of_dict(benchmark_definitions):
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
+    configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
+    launch_remote_experiments_simulator(
+        configuration, entry_point, methods, benchmark_definitions, is_expensive_method
+    )
+
+
+def launch_remote_experiments_simulator(
+    configuration: ConfigDict,
+    entry_point: Path,
+    methods: MethodDefinitions,
+    benchmark_definitions: SurrogateBenchmarkDefinitions,
+    is_expensive_method: Optional[Callable[[str], bool]] = None,
+):
+    """
+    Launches sequence of SageMaker training jobs, each running an experiment
+    with the simulator backend.
+
+    The loop runs over methods selected from ``methods``. Different repetitions
+    (seeds) are run sequentially in the remote job. However, if
+    ``is_expensive_method(method_name)`` is true, we launch different remote
+    jobs for every seed for this particular method. This is to cater for
+    methods which are themselves expensive to run (e.g., involving Gaussian
+    process based Bayesian optimization).
+
+    If ``benchmark_definitions`` is a single-level dictionary and no benchmark
+    is selected on the command line, then all benchmarks are run sequentially
+    in the remote job. However, if ``benchmark_definitions`` is two-level nested,
+    we loop over the outer level and start separate remote jobs, each of which
+    iterates over its inner level of benchmarks. This is useful if the number
+    of benchmarks to iterate over is large.
+
+    :param configuration: ConfigDict with parameters of the benchmark.
+            Must contain all parameters from
+            hpo_main_simulator.LOCAL_LOCAL_SIMULATED_BENCHMARK_REQUIRED_PARAMETERS
+    :param entry_point: Script for running the experiment
+    :param methods: Dictionary with method constructors; one is selected from
+        command line arguments
+    :param benchmark_definitions: Definitions of benchmarks; one is selected from
+        command line arguments
+    :param is_expensive_method: See above. The default is a predicative always
+        returning False (no method is expensive)
+    """
     if is_expensive_method is None:
         # Nothing is expensive
         def is_expensive_method(method):
             return False
 
-    args, method_names, benchmark_names, seeds = parse_args(
-        methods, benchmark_definitions, extra_args
+    simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
+    if is_dict_of_dict(benchmark_definitions):
+        simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
+    configuration.check_if_all_paremeters_present(simulated_backend_extra_parameters)
+    configuration.expand_base_arguments(simulated_backend_extra_parameters)
+
+    method_names = (
+        [configuration.method]
+        if configuration.method is not None
+        else list(methods.keys())
     )
+
     nested_dict = is_dict_of_dict(benchmark_definitions)
-    experiment_tag = args.experiment_tag
-    master_random_seed = get_master_random_seed(args.random_seed)
+    experiment_tag = configuration.experiment_tag
+    master_random_seed = get_master_random_seed(configuration.random_seed)
     suffix = random_string(4)
     find_or_create_requirements_txt(entry_point)
 
     combinations = []
     for method in method_names:
-        seed_range = seeds if is_expensive_method(method) else [None]
+        seed_range = configuration.seeds if is_expensive_method(method) else [None]
         combinations.extend([(method, seed) for seed in seed_range])
     if nested_dict:
         benchmark_keys = list(benchmark_definitions.keys())
@@ -149,7 +209,7 @@ def launch_remote(
             tuner_name += f"-{benchmark_key}"
         sm_args = sagemaker_estimator_args(
             entry_point=entry_point,
-            experiment_tag=args.experiment_tag,
+            experiment_tag=configuration.experiment_tag,
             tuner_name=tuner_name,
         )
         hyperparameters = get_hyperparameters(
@@ -157,12 +217,15 @@ def launch_remote(
             method=method,
             experiment_tag=experiment_tag,
             random_seed=master_random_seed,
-            args=args,
-            extra_args=extra_args,
+            configuration=configuration,
         )
-        hyperparameters["verbose"] = int(args.verbose)
-        hyperparameters["support_checkpointing"] = int(args.support_checkpointing)
-        hyperparameters["restrict_configurations"] = int(args.restrict_configurations)
+        hyperparameters["verbose"] = int(configuration.verbose)
+        hyperparameters["support_checkpointing"] = int(
+            configuration.support_checkpointing
+        )
+        hyperparameters["restrict_configurations"] = int(
+            configuration.restrict_configurations
+        )
         if benchmark_key is not None:
             hyperparameters["benchmark_key"] = benchmark_key
         sm_args["hyperparameters"] = hyperparameters
