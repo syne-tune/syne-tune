@@ -244,13 +244,28 @@ checkpointing enabled:
    :caption: examples/training_scripts/checkpoint_example/checkpoint_example.py
    :lines: 13-
 
-When using SageMaker backend or tuning remotely, we use the
+When using the SageMaker backend, we use the
 `SageMaker checkpoint mechanism <https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html>`_
-under the hood to sync local checkpoints to s3. Checkpoints are synced to
+under the hood to sync local checkpoints to S3. Checkpoints are synced to
 ``s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/{trial-id}/``,
-where ``sagemaker-default-bucket`` is the default bucket for SageMaker. A
-complete example is given by
+where ``sagemaker-default-bucket`` is the default bucket for SageMaker. A complete
+example is given by
 `examples/launch_height_sagemaker_checkpoints.py <examples.html#sageMaker-backend-and-checkpointing>`_.
+
+The same mechanism is used to regularly write the
+`tuning results to S3 during remote tuning <#where-can-i-find-the-output-of-the-tuning>`_.
+However, during remote tuning with the *local backend*, we do not want
+checkpoints to be synced to S3, since they are only required temporarily on the
+same instance. Syncing them to S3 would be costly and error-prone, because the
+SageMaker mechanism is not intended to work with different processes writing to
+and reading from the sync directory concurrently. In this case, we can switch
+off syncing checkpoints to S3 (but not tuning results!) by setting
+``trial_backend_path=backend_path_not_synced_to_s3()`` when creating the
+:class:`~syne_tune.Tuner` object. An example is
+`fine_tuning_transformer_glue/hpo_main.py <benchmarking/fine_tuning_transformer_glue.html>`_.
+It is also supported by default in the
+`benchmarking framework <tutorials/benchmarking/README.html>`_ and in
+:class:`~syne_tune.remote.RemoteLauncher`.
 
 There are some convenience functions which help you to implement checkpointing
 for your training script. Have a look at
@@ -462,7 +477,7 @@ How can I access results after tuning remotely?
 
 You can either call :func:`~syne_tune.experiments.load_experiment`, which will
 download files from S3 if the experiment is not found locally. You can also
-sync directly files from s3 under ``~/syne-tune/`` folder in batch for instance
+sync directly files from S3 under ``~/syne-tune/`` folder in batch for instance
 by running:
 
 .. code:: bash

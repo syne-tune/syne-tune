@@ -446,3 +446,22 @@ def s3_delete_files_recursively(s3_path: str) -> Dict[str, Any]:
     return _s3_traverse_recursively(
         s3_client=s3, action=delete_action, bucket=bucket_name, prefix=prefix
     )
+
+
+def backend_path_not_synced_to_s3() -> Path:
+    """
+    When an experiment with the local backend is run remotely (as SageMaker
+    training job), we do not want checkpoints to be synced to S3, since this
+    is expensive and error-prone (since several trials may write checkpoints
+    at the same time). Pass the returned path to ``trial_backend_path`` when
+    constructing the :class`~syne_tune.Tuner`.
+
+    Here, we direct checkpoint writing to /opt/ml/input/data/, which is mounted
+    on a partition with sufficient space. Different to /opt/ml/checkpoints, this
+    directory is not synced to S3.
+
+    :return: Path to set in local backend
+    """
+    path = Path("/opt/ml/input/data/")
+    path.mkdir(parents=True, exist_ok=True)
+    return path

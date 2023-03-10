@@ -11,18 +11,15 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import itertools
-import logging
-from pathlib import Path
 from typing import Optional, Callable, Dict, Any
 
 import numpy as np
 from tqdm import tqdm
-from pathlib import Path
 import logging
 
-from syne_tune.backend import LocalBackend
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    backend_path_not_synced_to_s3,
+)
 from syne_tune.util import sanitize_sagemaker_name
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
@@ -234,22 +231,15 @@ def start_benchmark_local_backend(
             extra_tuning_job_metadata=extra_tuning_job_metadata,
             map_method_args=map_method_args,
         )
+        # If this experiments runs remotely as a SageMaker training job, logs and
+        # checkpoints are written to a different directory than tuning results, so
+        # the former are not synced to S3.
+        if configuration.launched_remotely:
+            tuner_kwargs["trial_backend_path"] = backend_path_not_synced_to_s3()
         tuner = Tuner(
             trial_backend=trial_backend,
             **tuner_kwargs,
         )
-        # If this experiments runs remotely as a SageMaker training job, logs and
-        # checkpoints are written to a different directory than tuning results, so
-        # the former are not synced to S3.
-        # Note: This has to be done after ``tuner`` is created, because this calls
-        # ``trial_backend.set_path`` as well.
-        if configuration.launched_remotely:
-            # We use /opt/ml/input/data/, which is mounted on a partition with
-            # sufficient space. Different to /opt/ml/checkpoints, this directory is
-            # not synced to S3
-            path = Path("/opt/ml/input/data/")
-            path.mkdir(parents=True, exist_ok=True)
-            trial_backend.set_path(results_root=str(path))
 
         tuner.run()  # Run the experiment
         if post_processing is not None:
