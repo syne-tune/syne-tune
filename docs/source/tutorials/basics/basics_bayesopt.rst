@@ -190,3 +190,25 @@ other parameters of the surrogate model. Input warping allows the surrogate
 model to represent non-stationary functions, while still keeping the numbers
 of parameters small. Note that only such components of :math:`x` are warped
 which belong to non-categorical hyperparameters.
+
+Box-Cox Transformation of Target Values
+---------------------------------------
+
+This option is available only for positive target values. If you use
+``boxcox_transform=True`` in ``search_options``, target values are transformed
+before being fitted with a Gaussian marginal likelihood. This is using the Box-Cox
+transform with a parameter :math:`\lambda`, which is learned alongside other
+parameters of the surrogate model. The transform is :math:`\log y` for
+:math:`\lambda = 0`, and :math:`y - 1` for :math:`\lambda = 1`.
+
+Both input warping and Box-Cox transform of target values are combined in this
+paper:
+
+    | Cowen-Rivers, A. et.al.
+    | HEBO: Pushing the Limits of Sample-efficient Hyper-parameter Optimisation
+    | Journal of Artificial Intelligence Research 74 (2022), 1269-1349
+    | `ArXiV <https://arxiv.org/abs/2012.03826>`__
+
+However, they fit :math:`\lambda` up front by maximizing the likelihood of the
+targets under a univariate Gaussian assumption for the latent :math:`z`, while
+we learn :math:`\lambda` jointly with all other parameters.

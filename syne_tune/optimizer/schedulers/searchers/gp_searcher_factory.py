@@ -67,6 +67,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_m
     HyperTuneJointGPModel,
     HyperTuneDistributionArguments,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    BoxCoxTargetTransform,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
     SkipNoMaxResourcePredicate,
     SkipPeriodicallyPredicate,
@@ -192,11 +195,16 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
         debug_log = DebugLogPrinter()
     else:
         debug_log = None
+    if kwargs.get("boxcox_transform", False):
+        target_transform = BoxCoxTargetTransform()
+    else:
+        target_transform = None
     filter_observed_data = create_filter_observed_data_for_warmstarting(**kwargs)
     return {
         "opt_warmstart": opt_warmstart,
         "kernel": kernel,
         "mean": mean,
+        "target_transform": target_transform,
         "optimization_config": optimization_config,
         "profiler": profiler,
         "debug_log": debug_log,
@@ -250,6 +258,7 @@ def _create_gp_standard_model(
     common_kwargs = dict(
         kernel=kernel,
         mean=mean,
+        target_transform=result["target_transform"],
         optimization_config=result["optimization_config"],
         random_seed=random_seed,
         fit_reset_params=not result["opt_warmstart"],
@@ -295,6 +304,7 @@ def _create_gp_independent_model(
         kernel=kernel,
         mean_factory=mean_factory,
         resource_attr_range=resource_attr_range,
+        target_transform=result["target_transform"],
         optimization_config=result["optimization_config"],
         random_seed=random_seed,
         fit_reset_params=not result["opt_warmstart"],
@@ -888,6 +898,7 @@ def _common_defaults(
         "no_fantasizing": False,
         "allow_duplicates": False,
         "input_warping": False,
+        "boxcox_transform": False,
     }
     if is_restrict_configs:
         default_options["initial_scoring"] = "acq_func"
@@ -936,6 +947,7 @@ def _common_defaults(
         "no_fantasizing": Boolean(),
         "allow_duplicates": Boolean(),
         "input_warping": Boolean(),
+        "boxcox_transform": Boolean(),
     }
 
     if is_hyperband:

@@ -176,6 +176,13 @@ class GPFIFOSearcher(ModelBasedSearcher):
         Coordinates which belong to categorical hyperparameters, are not warped.
         Defaults to ``False``.
     :type input_warping: bool, optional
+    :param boxcox_transform: If ``True``, target values are transformed before
+        being fitted with a Gaussian marginal likelihood. This is using the Box-Cox
+        transform with a parameter :math:`\lambda`, which is learned alongside
+        other parameters of the surrogate model. The transform is :math:`\log y`
+        for :math:`\lambda = 0`, and :math:`y - 1` for :math:`\lambda = 1`. This
+        option requires the targets to be positive. Defaults to ``False``.
+    :type boxcox_transform: bool, optional
     :param initial_scoring: Scoring function to rank initial candidates
         (local optimization of EI is started from top scorer):
 

@@ -210,6 +210,12 @@ full range of arguments. We list the most important ones:
   model to represent non-stationary functions, while still keeping the numbers
   of parameters small. Note that only such components of :math:`x` are warped
   which belong to non-categorical hyperparameters.
+* ``boxcox_transform``: If this is ``True``, target values are transformed before
+  being fitted with a Gaussian marginal likelihood. This is using the Box-Cox
+  transform with a parameter :math:`\lambda`, which is learned alongside other
+  parameters of the surrogate model. The transform is :math:`\log y` for
+  :math:`\lambda = 0`, and :math:`y - 1` for :math:`\lambda = 1`. This option
+  requires the targets to be positive.
 
 HyperbandScheduler
 ------------------

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Optional
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
     GaussianProcessMarginalLikelihood,
@@ -32,6 +32,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
     PosteriorState,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    ScalarTargetTransform,
+)
 
 
 class HyperTuneIndependentGPMarginalLikelihood(
@@ -51,6 +54,7 @@ class HyperTuneIndependentGPMarginalLikelihood(
         mean: Dict[int, MeanFunction],
         resource_attr_range: Tuple[int, int],
         ensemble_distribution: Dict[int, float],
+        target_transform: Optional[ScalarTargetTransform] = None,
         separate_noise_variances: bool = False,
         initial_noise_variance=None,
         initial_covariance_scale=None,
@@ -61,6 +65,7 @@ class HyperTuneIndependentGPMarginalLikelihood(
             kernel=kernel,
             mean=mean,
             resource_attr_range=resource_attr_range,
+            target_transform=target_transform,
             separate_noise_variances=separate_noise_variances,
             initial_noise_variance=initial_noise_variance,
             initial_covariance_scale=initial_covariance_scale,
@@ -80,9 +85,10 @@ class HyperTuneIndependentGPMarginalLikelihood(
 
     def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
+        targets = self.target_transform(data["targets"])
         return HyperTuneIndependentGPPosteriorState(
             features=data["features"],
-            targets=data["targets"],
+            targets=targets,
             kernel=self.kernel,
             mean=self.mean,
             covariance_scale=self._covariance_scale(),
@@ -107,6 +113,7 @@ class HyperTuneJointGPMarginalLikelihood(GaussianProcessMarginalLikelihood):
         mean: MeanFunction,
         resource_attr_range: Tuple[int, int],
         ensemble_distribution: Dict[int, float],
+        target_transform: Optional[ScalarTargetTransform] = None,
         initial_noise_variance=None,
         encoding_type=None,
         **kwargs,
@@ -114,6 +121,7 @@ class HyperTuneJointGPMarginalLikelihood(GaussianProcessMarginalLikelihood):
         super().__init__(
             kernel=kernel,
             mean=mean,
+            target_transform=target_transform,
             initial_noise_variance=initial_noise_variance,
             encoding_type=encoding_type,
             **kwargs,
@@ -131,9 +139,10 @@ class HyperTuneJointGPMarginalLikelihood(GaussianProcessMarginalLikelihood):
 
     def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
+        targets = self.target_transform(data["targets"])
         return HyperTuneJointGPPosteriorState(
             features=data["features"],
-            targets=data["targets"],
+            targets=targets,
             mean=self.mean,
             kernel=self.kernel,
             noise_variance=self._noise_variance(),
