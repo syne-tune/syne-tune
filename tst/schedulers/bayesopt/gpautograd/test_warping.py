@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import numpy
 import autograd.numpy as anp
 import numpy as np
 import pytest
@@ -48,12 +47,12 @@ def test_warping_default_parameters():
     warping.collect_params().initialize()
 
     warping_a = warping.encoding.get(warping.power_a_internal.data())
-    numpy.testing.assert_almost_equal(warping_a, anp.ones(3))
+    np.testing.assert_almost_equal(warping_a, anp.ones(3))
 
     expected = anp.array([NUMERICAL_JITTER, 0.5, 1.0 - NUMERICAL_JITTER]).reshape(
         (1, -1)
     )
-    numpy.testing.assert_almost_equal(warping(x), expected)
+    np.testing.assert_almost_equal(warping(x), expected)
 
 
 def test_warping_with_arbitrary_parameters():
@@ -63,7 +62,7 @@ def test_warping_with_arbitrary_parameters():
     warping.encoding.set(warping.power_a_internal, [2.0, 2.0, 2.0])
     warping.encoding.set(warping.power_b_internal, [0.5, 0.5, 0.5])
     warping_a = warping.encoding.get(warping.power_a_internal.data())
-    numpy.testing.assert_almost_equal(warping_a, [2.0, 2.0, 2.0])
+    np.testing.assert_almost_equal(warping_a, [2.0, 2.0, 2.0])
     # In that case (with parameters [2., 0.5]), the warping is given by x => 1. - sqrt(1. - x^2)
     def expected_warping(x):
         return 1.0 - anp.sqrt(1.0 - x * x)
@@ -71,7 +70,7 @@ def test_warping_with_arbitrary_parameters():
     expected = expected_warping(
         anp.array([NUMERICAL_JITTER, 0.5, 1.0 - NUMERICAL_JITTER]).reshape((1, -1))
     )
-    numpy.testing.assert_almost_equal(warping(x), expected)
+    np.testing.assert_almost_equal(warping(x), expected)
 
 
 def test_warping_with_multidimension_and_arbitrary_parameters():
@@ -89,7 +88,7 @@ def test_warping_with_multidimension_and_arbitrary_parameters():
 
     # The parameters of w2 should be the default ones (as there was no set operations)
     w2_params = warping2.get_params()
-    numpy.testing.assert_almost_equal(
+    np.testing.assert_almost_equal(
         [w2_params["power_a"], w2_params["power_b"]], [1.0, 1.0]
     )
 
@@ -105,7 +104,7 @@ def test_warping_with_multidimension_and_arbitrary_parameters():
         [NUMERICAL_JITTER, 0.5, 1.0 - NUMERICAL_JITTER]
     ).reshape((-1, 1))
 
-    numpy.testing.assert_almost_equal(
+    np.testing.assert_almost_equal(
         warping0(warping2(X)),
         anp.hstack([expected_column0, expected_column1, expected_column2]),
     )

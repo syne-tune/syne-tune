@@ -148,9 +148,9 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
     Variant of :class:`IndependentGPPerResourceModel` which implements additional
     features of the Hyper-Tune algorithm, see
 
-        Yang Li et al
-        Hyper-Tune: Towards Efficient Hyper-parameter Tuning at Scale
-        VLDB 2022
+        | Yang Li et al
+        | Hyper-Tune: Towards Efficient Hyper-parameter Tuning at Scale
+        | VLDB 2022
 
     Our implementation differs from the Hyper-Tune paper in a number of ways.
     Most importantly, their method requires a sufficient number of observed

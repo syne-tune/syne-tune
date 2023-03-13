@@ -45,13 +45,13 @@ from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from syne_tune.util import sanitize_sagemaker_name
 
+
 SIMULATED_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="benchmark",
         type=str,
         help="Benchmark to run from benchmark_definitions",
         default=None,
-        required=True,
     ),
     dict(
         name="verbose",
@@ -79,13 +79,17 @@ SIMULATED_BACKEND_EXTRA_PARAMETERS = [
         help="If 1, scheduler only suggests configs contained in tabulated benchmark",
     ),
 ]
+
+
 BENCHMARK_KEY_EXTRA_PARAMETER = dict(
     name="benchmark_key",
     type=str,
-    help="Key for benchmarks, needs to bespecified if benchmarks definitions are nested.",
+    help="Key for benchmarks, needs to be specified if benchmarks definitions are nested.",
     default=None,
     required=True,
 )
+
+
 SurrogateBenchmarkDefinitions = Union[
     Dict[str, SurrogateBenchmarkDefinition],
     Dict[str, Dict[str, SurrogateBenchmarkDefinition]],
@@ -340,7 +344,7 @@ def start_benchmark_simulated_backend(
             )
         tuner_name = experiment_tag
         if configuration.use_long_tuner_name_prefix:
-            tuner_name += f"-{sanitize_sagemaker_name(configuration.benchmark)}-{seed}"
+            tuner_name += f"-{sanitize_sagemaker_name(benchmark_name)}-{seed}"
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,
@@ -413,7 +417,7 @@ def main(
         map_method_args=map_extra_args,
         post_processing=post_processing,
         extra_tuning_job_metadata=None
-        if len(extra_args) == 0
+        if extra_args is None
         else extra_metadata(configuration, extra_args),
         use_transfer_learning=use_transfer_learning,
     )
