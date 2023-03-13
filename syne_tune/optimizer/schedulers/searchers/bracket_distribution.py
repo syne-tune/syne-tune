@@ -69,8 +69,8 @@ class DefaultHyperbandBracketDistribution(BracketDistribution):
 
     def _set_distribution(self):
         if self.num_brackets > 1:
-            smax_plus1 = len(self.rung_levels)
-            assert self.num_brackets <= smax_plus1
+            smax_plus1 = len(self.rung_levels) + 1
+            assert self.num_brackets <= smax_plus1  # Sanity check
             self._distribution = np.array(
                 [
                     smax_plus1 / ((smax_plus1 - s) * self.rung_levels[s])

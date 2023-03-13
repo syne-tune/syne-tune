@@ -135,6 +135,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method RS
       requires-aws-credentials: true
     secrets: inherit
@@ -143,6 +144,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method BO
       requires-aws-credentials: true
     secrets: inherit
@@ -151,6 +153,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method ASHA-STOP
       requires-aws-credentials: true
     secrets: inherit
@@ -159,6 +162,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method ASHA-PROM
       requires-aws-credentials: true
     secrets: inherit
@@ -167,6 +171,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method MOBSTER-STOP
       requires-aws-credentials: true
     secrets: inherit
@@ -175,6 +180,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method MOBSTER-PROM
       requires-aws-credentials: true
     secrets: inherit
