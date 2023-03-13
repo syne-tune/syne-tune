@@ -60,7 +60,7 @@ class DefaultHyperbandBracketDistribution(BracketDistribution):
             scheduler, HyperbandScheduler
         ), "Scheduler must be HyperbandScheduler"
         self.num_brackets = scheduler.terminator.num_brackets
-        self.rung_levels = scheduler.rung_levels
+        self.rung_levels = scheduler.rung_levels + [scheduler.max_t]
         self._set_distribution()
 
     def __call__(self) -> np.ndarray:
@@ -69,7 +69,7 @@ class DefaultHyperbandBracketDistribution(BracketDistribution):
 
     def _set_distribution(self):
         if self.num_brackets > 1:
-            smax_plus1 = len(self.rung_levels) + 1
+            smax_plus1 = len(self.rung_levels)
             assert self.num_brackets <= smax_plus1  # Sanity check
             self._distribution = np.array(
                 [

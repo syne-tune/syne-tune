@@ -41,16 +41,6 @@ def objective(config):
 
 
 if __name__ == "__main__":
-    # Benchmark-specific imports are done here, in order to avoid import
-    # errors if the dependencies are not installed (such errors should happen
-    # only when the code is really called)
-    from filelock import SoftFileLock, Timeout  # noqa: F401
-    import torch  # noqa: F401
-    import torch.nn as nn  # noqa: F401
-    from torch.utils.data.sampler import SubsetRandomSampler  # noqa: F401
-    from torchvision import datasets  # noqa: F401
-    from torchvision import transforms  # noqa: F401
-
     root = logging.getLogger()
     root.setLevel(logging.INFO)
     parser = argparse.ArgumentParser()

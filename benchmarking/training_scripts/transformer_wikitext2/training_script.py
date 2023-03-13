@@ -15,6 +15,25 @@ import os
 import time
 import logging
 import math
+from pathlib import Path
+
+try:
+    # Benchmark-specific imports are done here, in order to avoid import
+    # errors if the dependencies are not installed (such errors should happen
+    # only when the code is really called)
+    import numpy as np
+    from filelock import SoftFileLock, Timeout
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+except ImportError:
+    logging.info(
+        f"Please install benchmark-specific dependencies ({Path(__file__).parent / 'requirements.txt'})"
+    )
+try:
+    from apex import amp
+except ImportError:
+    print("Failed to import apex. You can still train with --precision {float|double}.")
 
 from syne_tune.report import Reporter
 from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
@@ -393,22 +412,6 @@ def objective(config):
 
 
 if __name__ == "__main__":
-    # Benchmark-specific imports are done here, in order to avoid import
-    # errors if the dependencies are not installed (such errors should happen
-    # only when the code is really called)
-    import numpy as np
-    from filelock import SoftFileLock, Timeout
-    import torch
-    import torch.nn as nn
-    import torch.nn.functional as F
-
-    try:
-        from apex import amp
-    except ImportError:
-        print(
-            "Failed to import apex. You can still train with --precision {float|double}."
-        )
-
     # Temporarily leave PositionalEncoding module here. Will be moved somewhere else.
     class PositionalEncoding(nn.Module):
         r"""Inject some information about the relative or absolute position of the tokens
