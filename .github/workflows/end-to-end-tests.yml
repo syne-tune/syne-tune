@@ -40,53 +40,53 @@ jobs:
 
 # Longer-running code in examples/, may need BB repository
 
-#  launch_tuning_gluonts:
-#    needs: stop_all_training_jobs
-#    uses: ./.github/workflows/run-syne-tune.yml
-#    with:
-#      script-path: examples/launch_tuning_gluonts.py
-#      requires-aws-credentials: true
-#    secrets: inherit
+  launch_tuning_gluonts:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_tuning_gluonts.py
+      requires-aws-credentials: true
+    secrets: inherit
 
-#  launch_moasha_instance_tuning:
-#    needs: stop_all_training_jobs
-#    uses: ./.github/workflows/run-syne-tune.yml
-#    with:
-#      script-path: examples/launch_moasha_instance_tuning.py
-#      requires-aws-credentials: true
-#    secrets: inherit
+  launch_moasha_instance_tuning:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_moasha_instance_tuning.py
+      requires-aws-credentials: true
+    secrets: inherit
 
-#  launch_height_sagemaker:
-#    needs: stop_all_training_jobs
-#    uses: ./.github/workflows/run-syne-tune.yml
-#    with:
-#      script-path: examples/launch_height_sagemaker.py
-#      requires-aws-credentials: true
-#    secrets: inherit
+  launch_height_sagemaker:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_sagemaker.py
+      requires-aws-credentials: true
+    secrets: inherit
 
-#  launch_huggingface_classification:
-#    needs: stop_all_training_jobs
-#    uses: ./.github/workflows/run-syne-tune.yml
-#    with:
-#      script-path: examples/launch_huggingface_classification.py
-#      requires-aws-credentials: true
-#    secrets: inherit
+  launch_huggingface_classification:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_huggingface_classification.py
+      requires-aws-credentials: true
+    secrets: inherit
 
-#  launch_height_sagemaker_remotely:
-#    needs: stop_all_training_jobs
-#    uses: ./.github/workflows/run-syne-tune.yml
-#    with:
-#      script-path: examples/launch_height_sagemaker_remotely.py
-#      requires-aws-credentials: true
-#    secrets: inherit
+  launch_height_sagemaker_remotely:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_sagemaker_remotely.py
+      requires-aws-credentials: true
+    secrets: inherit
 
-#  launch_height_sagemaker_checkpoints:
-#    needs: stop_all_training_jobs
-#    uses: ./.github/workflows/run-syne-tune.yml
-#    with:
-#      script-path: examples/launch_height_sagemaker_checkpoints.py
-#      requires-aws-credentials: true
-#    secrets: inherit
+  launch_height_sagemaker_checkpoints:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_sagemaker_checkpoints.py
+      requires-aws-credentials: true
+    secrets: inherit
 
   launch_simulated_benchmark:
     needs: stop_all_training_jobs
@@ -121,13 +121,13 @@ jobs:
       requires-aws-credentials: true
     secrets: inherit
 
-#  launch_height_config_json_sagemaker:
-#    needs: stop_all_training_jobs
-#    uses: ./.github/workflows/run-syne-tune.yml
-#    with:
-#      script-path: examples/launch_height_config_json.py --use_sagemaker_backend 1
-#      requires-aws-credentials: true
-#    secrets: inherit
+  launch_height_config_json_sagemaker:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_config_json.py --use_sagemaker_backend 1
+      requires-aws-credentials: true
+    secrets: inherit
 
 # Code in docs/source/tutorials/basics/code
 
