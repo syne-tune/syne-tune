@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Configure AWS Credentials (if required)
         if: ${{ inputs.requires-aws-credentials == true }}
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
           role-session-name: integtestsession
