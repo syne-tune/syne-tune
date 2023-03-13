@@ -4,7 +4,7 @@ A First Example
 In this section, we start with a simple example and clarify some basic concepts.
 
 If you have not done so, we recommend you have a look at `Basics of Syne Tune
-<../basics/README.html>`_ in order to get familiar with basic concepts of Syne
+<../basics/README.html>`__ in order to get familiar with basic concepts of Syne
 Tune.
 
 First Example
@@ -12,7 +12,7 @@ First Example
 
 A simple example for a new scheduler (called ``SimpleScheduler``) is given by
 the script
-`examples/launch_height_standalone_scheduler.py <../../examples.html#launch-hpo-experiment-with-home-made-scheduler>`_.
+`examples/launch_height_standalone_scheduler.py <../../examples.html#launch-hpo-experiment-with-home-made-scheduler>`__.
 All schedulers are subclasses of
 :class:`~syne_tune.optimizer.scheduler.TrialScheduler`. Important methods
 include:
@@ -55,15 +55,15 @@ include:
 
 There are further methods in
 :class:`~syne_tune.optimizer.scheduler.TrialScheduler`, which will be discussed
-in detail `below <trial_scheduler_api.html>`_. This simple scheduler is also
+in detail `below <trial_scheduler_api.html>`__. This simple scheduler is also
 missing the ``points_to_evaluate`` argument, which we recommend every new
 scheduler to support, and which is discussed in more detail
-`here <random_search.html#fifoscheduler-and-randomsearcher>`_.
+`here <random_search.html#fifoscheduler-and-randomsearcher>`__.
 
 Basic Concepts
 --------------
 
-Recall from `Basics of Syne Tune <../basics/README.html>`_ that an HPO
+Recall from `Basics of Syne Tune <../basics/README.html>`__ that an HPO
 experiment is run as interplay between a *backend* and a *scheduler*, which is
 orchestrated by the :class:`~syne_tune.Tuner`. The backend starts, stops,
 pauses, or resumes training jobs and relays their reports. A *trial* abstracts
@@ -74,7 +74,7 @@ schedulers which can be implemented in Syne Tune, some examples are:
   trials, but do not try to interact with running trials, even if the latter
   post intermediate results. A basic example is
   :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`, to be discussed
-  `below <random_search.html#fifoscheduler-and-randomsearcher>`_.
+  `below <random_search.html#fifoscheduler-and-randomsearcher>`__.
 * Early-stopping schedulers. These require trials to post intermediate results
   (e.g., validation errors after every epoch), and their ``on_trial_result``
   may stop underperforming trials early. An example is
@@ -102,7 +102,7 @@ synchronous job execution setup, often for conceptual simplicity (examples
 include successive halving and Hyperband, as well as batch suggestions for
 Bayesian optimization). In general, it just takes a little extra effort to
 implement non-blocking versions of these, and Syne Tune provides ample support
-code for doing so, as will be `demonstrated in detail <extend_sync_hb.html>`_.
+code for doing so, as will be `demonstrated in detail <extend_sync_hb.html>`__.
 
 Searchers and Schedulers
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -123,10 +123,10 @@ Once such internal structure is recognized, we can use it to expand the range
 of methods while maintaining simple, modular implementations. In Syne Tune,
 this is done by configuring generic schedulers with internal *searchers*. A
 basic example is given
-`below <random_search.html#fifoscheduler-and-randomsearcher>`_, more advanced
+`below <random_search.html#fifoscheduler-and-randomsearcher>`__, more advanced
 examples follow further below.
 
-If you are familiar with `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`_,
+If you are familiar with `Ray Tune <https://docs.ray.io/en/latest/tune/index.html>`__,
 please note a difference in terminology. In Ray Tune, searcher and scheduler
 are two independent concepts, mapping to different decisions to be made by an
 HPO algorithm. In Syne Tune, the HPO algorithm is represented by the scheduler,
@@ -140,8 +140,8 @@ Syne Tune is this: **be lazy!**
 
 * Can your idea be implemented as a new searcher, to be plugged into an
   existing generic scheduler? Detailed examples are given
-  `here <random_search.html#fifoscheduler-and-randomsearcher>`_,
-  `here <extend_async_hb.html>`_, and `here <extend_sync_hb.html>`_.
+  `here <random_search.html#fifoscheduler-and-randomsearcher>`__,
+  `here <extend_async_hb.html>`__, and `here <extend_sync_hb.html>`__.
 * Does your idea involve changing the stop/continue or pause/resume decisions
   in asynchronous successive halving or Hyperband? All you need to do is to
   implement a new

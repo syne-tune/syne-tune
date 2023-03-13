@@ -30,10 +30,10 @@ Launcher Script for SageMaker Backend
 Syne Tune offers the SageMaker backend
 :class:`~syne_tune.backend.SageMakerBackend` as alternative to the local one.
 Using it requires some preparation, as is detailed
-`here <../../faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+`here <../../faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
 
 Recall our
-`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_.
+`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__.
 In order to use the SageMaker backend, we need to create ``trial_backend``
 differently:
 
@@ -62,7 +62,7 @@ In essence, the :class:`~syne_tune.backend.SageMakerBackend` is parameterized
 with a SageMaker estimator, which executes the training script. In our example,
 we use the ``PyTorch`` SageMaker framework as a pre-built container for the
 dependencies our training scripts requires. However, any other type of
-`SageMaker estimator <https://sagemaker.readthedocs.io/en/stable/api/training/estimators.html>`_
+`SageMaker estimator <https://sagemaker.readthedocs.io/en/stable/api/training/estimators.html>`__
 can be used here just as well. Finally, if you include any of the metrics reported
 by your training script in ``metrics_names``, their values are visualized in the
 dashboard for the SageMaker training job.
@@ -77,4 +77,4 @@ of the SageMaker estimator). In our example, this file needs to contain the
    This simple example avoids complications about writing results to S3 in
    a unified manner, or using special features of SageMaker which can speed
    up tuning substantially. For more information about the SageMaker backend,
-   please consider `this tutorial <../benchmarking/bm_sagemaker.html>`_.
+   please consider `this tutorial <../benchmarking/bm_sagemaker.html>`__.

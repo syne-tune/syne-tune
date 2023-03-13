@@ -11,7 +11,7 @@ Defining the Experiment
 
 As usual in Syne Tune, the experiment is defined by a number of scripts.
 We will look at an example in
-`benchmarking/nursery/launch_local/ <../../benchmarking/launch_local.html>`_.
+`benchmarking/nursery/launch_local/ <../../benchmarking/launch_local.html>`__.
 Common code used in these benchmarks can be found in
 :mod:`benchmarking.commons`:
 
@@ -21,20 +21,20 @@ Common code used in these benchmarks can be found in
 
 Let us look at the scripts in order, and how you can adapt them to your needs:
 
-* `benchmarking/nursery/launch_local/baselines.py <../../benchmarking/launch_local.html#id1>`_:
+* `benchmarking/nursery/launch_local/baselines.py <../../benchmarking/launch_local.html#id1>`__:
   This is the same as in the
-  `simulator case <bm_simulator.html#defining-the-experiment>`_.
-* `benchmarking/nursery/launch_local/hpo_main.py <../../benchmarking/launch_local.html#id2>`_:
+  `simulator case <bm_simulator.html#defining-the-experiment>`__.
+* `benchmarking/nursery/launch_local/hpo_main.py <../../benchmarking/launch_local.html#id2>`__:
   This is the same as in the
-  `simulator case <bm_simulator.html#defining-the-experiment>`_, but based on
+  `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
   :mod:`benchmarking.commons.hpo_main_local`. We will see shortly how the
   launcher is called, and what happens inside.
-* `benchmarking/nursery/launch_local/launch_remote.py <../../benchmarking/launch_local.html#id3>`_:
+* `benchmarking/nursery/launch_local/launch_remote.py <../../benchmarking/launch_local.html#id3>`__:
   Much the same as in the
-  `simulator case <bm_simulator.html#defining-the-experiment>`_, but based on
+  `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
   :mod:`benchmarking.commons.launch_remote_local`. We will see shortly how the
   launcher is called, and what happens inside.
-* `benchmarking/nursery/launch_local/requirements-synetune.txt <../../benchmarking/launch_local.html#id4>`_:
+* `benchmarking/nursery/launch_local/requirements-synetune.txt <../../benchmarking/launch_local.html#id4>`__:
   This file is for defining the requirements of the SageMaker training job in
   remote launching, it mainly has to contain the Syne Tune dependencies. Your
   training script may have additional dependencies, and they are combined with
@@ -72,7 +72,7 @@ GPU with PyTorch being installed):
 * ``n_workers``, ``max_wallclock_time``: You can overwrite the default values
   for the selected benchmark by these command line arguments.
 * ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
-  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`__.
 * ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
   argument, but not ``max_wallclock_time``, the benchmark default
   ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,
@@ -97,7 +97,7 @@ as well.
    ``n_workers=1``: you need to launch on a machine with 1 GPU, and with
    PyTorch being installed and properly setup to run GPU computations. If you
    cannot be bothered with all of this, please consider
-   `remote launching <bm_local.html#launching-experiments-remotely>`_ as an
+   `remote launching <bm_local.html#launching-experiments-remotely>`__ as an
    alternative. On the other hand, you can launch experiments locally without
    using SageMaker (or AWS) at all.
 

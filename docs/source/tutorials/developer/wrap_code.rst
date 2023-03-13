@@ -12,7 +12,7 @@ on surrogate benchmarks, or distributed across several machines.
 
 In this chapter, we will walk through an example of how to wrap Gaussian
 process based Bayesian optimization from
-`BoTorch <https://botorch.org/docs/introduction>`_.
+`BoTorch <https://botorch.org/docs/introduction>`__.
 
 BoTorchSearcher
 ---------------
@@ -20,7 +20,7 @@ BoTorchSearcher
 While Syne Tune supports Gaussian process based Bayesian optimization natively
 via :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`, with
 ``searcher="bayesopt"`` in :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`,
-you can also use `BoTorch <https://botorch.org/docs/introduction>`_ via
+you can also use `BoTorch <https://botorch.org/docs/introduction>`__ via
 :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher`,
 with ``searcher="botorch"`` in
 :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
@@ -150,7 +150,7 @@ hyperparameter domains.
 
 With :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`,
 Syne Tune provides encoding and decoding for all domains in
-:mod:`syne_tune.config_space` (see `this tutorial <../search_space.html>`_ for
+:mod:`syne_tune.config_space` (see `this tutorial <../search_space.html>`__ for
 a summary). In fact, this API can be implemented in different ways, and the
 factory function
 :func:`~syne_tune.optimizer.schedulers.searchers.utils.make_hyperparameter_ranges`
@@ -189,11 +189,11 @@ External code can come with extra dependencies. For example, ``BoTorchSearcher``
 depends on ``torch``, ``botorch``, and ``gpytorch``. If you just use Syne Tune
 for your own experiments, you do not have to worry about this. However, we
 strongly encourage you to
-`contribute back your extension <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`_.
+`contribute back your extension <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__.
 
 Since some applications of Syne Tune require restricted dependencies, such are
 carefully managed. There are different
-`installation options <../../faq.html#what-are-the-different-installation-options-supported>`_,
+`installation options <../../faq.html#what-are-the-different-installation-options-supported>`__,
 each of which coming with a ``requirements.txt`` file (see ``setup.py`` for
 details).
 

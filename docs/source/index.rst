@@ -32,32 +32,32 @@ What's New?
 -----------
 
 * New tutorial:
-  `Using Syne Tune for Transfer Learning <tutorials/transfer_learning/transfer_learning.html>`_.
+  `Using Syne Tune for Transfer Learning <tutorials/transfer_learning/transfer_learning.html>`__.
   Transfer learning allows us to speed up our current optimisation by learning
   from related optimisation runs. Syne Tune provides a number of transfer HPO
   methods and makes it easy to implement new ones. Thanks to
-  `Sigrid <https://github.com/sighellan>`_ for this contribution.
+  `Sigrid <https://github.com/sighellan>`__ for this contribution.
 * New scheduler: :class:`~syne_tune.optimizer.baselines.DyHPO`.
   This is a recent multi-fidelity method, which can be seen as alternative to
-  `ASHA <tutorials/multifidelity/mf_sync_model.html>`_,
-  `MOBSTER <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`_
-  or `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`_.
+  `ASHA <tutorials/multifidelity/mf_sync_model.html>`__,
+  `MOBSTER <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`__
+  or `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__.
   Different to these, decisions on whether to promote paused trials are done
   based on the surrogate model. Our implementation differs from the published
   work by using a Gaussian process surrogate model, and by a promotion rule which
   is a hybrid between DyHPO and ASHA.
-* New tutorial: `How to Contribute a New Scheduler <tutorials/developer/README.html>`_.
+* New tutorial: `How to Contribute a New Scheduler <tutorials/developer/README.html>`__.
   Learn how to implement your own scheduler, wrap external code, or modify
   one of the existing templates in order to get your job done.
-* New tutorial: `Benchmarking in Syne Tune <tutorials/benchmarking/README.html>`_.
+* New tutorial: `Benchmarking in Syne Tune <tutorials/benchmarking/README.html>`__.
   You'd like to run many experiments in parallel, or launch training jobs on
   different instances, all by modifying some simple scripts to your needs? Then
   our benchmarking mechanism is for you.
-* New tutorial: `Progressive ASHA <tutorials/pasha/pasha.html>`_. PASHA is a
+* New tutorial: `Progressive ASHA <tutorials/pasha/pasha.html>`__. PASHA is a
   variant of ASHA where the maximum number of resources (e.g., maximum number
   of training epochs) is not fixed up front, but is adapted. This can lead to
   savings when training on large datasets. Thanks to
-  `Ondre <https://github.com/ondrejbohdal>`_ for this contribution.
+  `Ondre <https://github.com/ondrejbohdal>`__ for this contribution.
 
 
 .. toctree::

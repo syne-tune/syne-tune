@@ -13,7 +13,7 @@ previous training data to work well on the augmented data set as well.
 
 Syne Tune includes implementations of several transfer learning schedulers; a
 list of available schedulers is given
-`here <../../getting_started.html#supported-hpo-methods>`_. In this tutorial we
+`here <../../getting_started.html#supported-hpo-methods>`__. In this tutorial we
 look at three of them:
 
 * :class:`~syne_tune.optimizer.baselines.ZeroShotTransfer`
@@ -49,7 +49,7 @@ ZeroShot, BoundingBox and Quantiles. The set of tasks is made by adjusting the
 the training data instead.
 
 The code is available
-`here <../../examples.html#transfer-learning-example>`_.
+`here <../../examples.html#transfer-learning-example>`__.
 Make sure to run it as
 `python launch_transfer_learning_example.py --generate_plots`
 if you want to generate the plots locally.

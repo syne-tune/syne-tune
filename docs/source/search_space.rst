@@ -108,7 +108,7 @@ cases. Here, we provide some recommendations:
   parameter is numerical, therefore has a linear ordering. They cannot
   do that if you do not tell them, and search performance will normally
   suffer. A good example is
-  `Bayesian optimization <tutorials/basics/basics_bayesopt.html>`_.
+  `Bayesian optimization <tutorials/basics/basics_bayesopt.html>`__.
   Numerical parameters are encoded as themselves (the int domain is relaxed to
   the corresponding float interval), allowing the surrogate model (e.g.,
   Gaussian process covariance kernel) to exploit ordering and distance in these
@@ -143,5 +143,5 @@ cases. Here, we provide some recommendations:
   of magnitude. Examples are learning rates or regularization constants.
 * **Use points_to_evaluate**. On top of refining your configuration space, we
   strongly recommend to
-  `specify initial default configurations <schedulers.html#fifoscheduler>`_
+  `specify initial default configurations <schedulers.html#fifoscheduler>`__
   by ``points_to_evaluate``.

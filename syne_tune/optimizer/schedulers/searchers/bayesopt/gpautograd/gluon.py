@@ -802,7 +802,7 @@ class Block:
         Prefix acts like a name space. All children blocks created in parent block's
         :py:meth:`name_scope` will have parent block's prefix in their name.
         Please refer to
-        `naming tutorial </api/python/docs/tutorials/packages/gluon/blocks/naming.html>`_
+        `naming tutorial </api/python/docs/tutorials/packages/gluon/blocks/naming.html>`__
         for more info on prefix and naming.
     params : ParameterDict or None
         :py:class:`ParameterDict` for sharing weights with the new :py:class:`Block`. For example,
@@ -914,7 +914,7 @@ class Block:
             with self.name_scope():
                 self.dense = nn.Dense(20)
         Please refer to
-        `the naming tutorial </api/python/docs/tutorials/packages/gluon/blocks/naming.html>`_
+        `the naming tutorial </api/python/docs/tutorials/packages/gluon/blocks/naming.html>`__
         for more info on prefix and naming.
         """
         return self._scope

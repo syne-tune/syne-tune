@@ -2,7 +2,7 @@ Code in benchmarking/nursery/benchmark_hypertune
 ================================================
 
 Comparison of
-`Hyper-Tune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`_
+`Hyper-Tune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__
 against a number of baselines.
 
 .. literalinclude:: ../../../benchmarking/nursery/benchmark_hypertune/baselines.py

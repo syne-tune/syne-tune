@@ -23,7 +23,7 @@ Fine-Tuning Hugging Face Model for Sentiment Classification
 
 **Requirements**:
 
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
 * Runs on four ``ml.g4dn.xlarge`` instances
 
 In this example, we use the SageMaker backend together with the
@@ -31,10 +31,10 @@ SageMaker Hugging Face framework in order to fine-tune a DistilBERT
 model on the IMDB sentiment classification task. This task is one of
 our built-in benchmarks. For other ways to run this benchmark on
 different backends or remotely, consult
-`this tutorial <tutorials/benchmarking/README.html>`_.
+`this tutorial <tutorials/benchmarking/README.html>`__.
 
 A more advanced example for fine-tuning Hugging Face transformers is given
-`here <benchmarking/fine_tuning_transformer_glue.html>`_.
+`here <benchmarking/fine_tuning_transformer_glue.html>`__.
 
 
 Launch HPO Experiment with Python Backend
@@ -66,7 +66,7 @@ For this toy example, PBT is run with a population size of 2, so only
 two parallel workers are needed. In order to use PBT competitively,
 choose the SageMaker backend. Note that PBT requires your training
 script to
-`support checkpointing <faq.html#how-can-i-enable-trial-checkpointing>`_.
+`support checkpointing <faq.html#how-can-i-enable-trial-checkpointing>`__.
 
 
 Visualize Tuning Progress with Tensorboard
@@ -99,7 +99,7 @@ Launch HPO Experiment with Simulator Backend
 
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
-* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
   or an S3 bucket is accessible, the blackbox files are uploaded to your S3
   bucket
 
@@ -107,7 +107,7 @@ In this example, we use the simulator backend with the NASBench-201
 blackbox. Since time is simulated, we can use
 ``max_wallclock_time=3600`` (one hour), but the experiment finishes
 in mere seconds. More details about the simulator backend is found in
-`this tutorial <tutorials/benchmarking/bm_simulator.html>`_.
+`this tutorial <tutorials/benchmarking/bm_simulator.html>`__.
 
 
 Joint Tuning of Instance Type and Hyperparameters using MOASHA
@@ -119,7 +119,7 @@ Joint Tuning of Instance Type and Hyperparameters using MOASHA
 
 **Requirements**:
 
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
 * Runs training jobs on instances of type ``ml.g4dn.xlarge``, ``ml.g5.xlarge``,
   ``ml.g4dn.2xlarge``, ``ml.p2.xlarge``, ``ml.g5.2xlarge``, ``ml.g5.4xlarge``,
   ``ml.g4dn.4xlarge``, ``ml.g5.8xlarge``, ``ml.g4dn.8xlarge``,
@@ -198,12 +198,12 @@ Restrict Scheduler to Tabulated Configurations with Simulator Backend
 
 * Needs ``lcbench`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
-* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
   or an S3 bucket is accessible, the blackbox files are uploaded to your S3
   bucket
 
 This example is similar to the one
-`above <#launch-hpo-experiment-with-simulator-backend>`_, but here we use
+`above <#launch-hpo-experiment-with-simulator-backend>`__, but here we use
 the tabulated LCBench benchmark, whose configuration space is infinite, and
 whose objective values have not been evaluated on a grid. With such a
 benchmark, we can either use a surrogate to interpolate objective values, or
@@ -213,7 +213,7 @@ been observed in the benchmark. This example demonstrates the latter.
 Since time is simulated, we can use ``max_wallclock_time=3600`` (one hour),
 but the experiment finishes in mere seconds. More details about the simulator
 backend is found in
-`this tutorial <tutorials/benchmarking/bm_simulator.html>`_.
+`this tutorial <tutorials/benchmarking/bm_simulator.html>`__.
 
 
 Tuning Reinforcement Learning
@@ -247,11 +247,11 @@ Launch HPO Experiment with SageMaker Backend
 
 **Requirements**:
 
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
   More details are provided in
-  `this tutorial <tutorials/basics/basics_backend.html>`_.
+  `this tutorial <tutorials/basics/basics_backend.html>`__.
 * This example can be sped up by using SageMaker managed warm pools, as in
-  `this example <#sagemaker-backend-and-checkpointing>`_.
+  `this example <#sagemaker-backend-and-checkpointing>`__.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
@@ -265,7 +265,7 @@ SageMaker Backend and Checkpointing
 
 **Requirements**:
 
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
 
 This launcher script is using the following
 :ref:`train_height_checkpoint.py <train_height_checkpoint_script>` training script:
@@ -285,7 +285,7 @@ SageMaker managed warm pools:
 Managed warm pools reduce both start-up and stop delays substantially, they
 are strongly recommended for multi-fidelity HPO with the SageMaker backend.
 More details are found in
-`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`_.
+`this tutorial <tutorials/benchmarking/bm_sagemaker.html#using-sagemaker-managed-warm-pools>`__.
 
 
 Retrieving the Best Checkpoint
@@ -313,7 +313,7 @@ Launch with SageMaker Backend and Custom Docker Image
 
 **Requirements**:
 
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
 * This example is incomplete. If your training script has dependencies which
   you would to provide as a Docker image, you need to upload it to ECR,
   after which you can refer to it with ``image_uri``.
@@ -330,14 +330,14 @@ Launch Experiments Remotely on SageMaker
 
 **Requirements**:
 
-* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+* `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
 This launcher script starts the HPO experiment as SageMaker training job,
 which allows you to select any instance type you like, while not having
 your local machine being blocked.
-`This tutorial <tutorials/benchmarking/README.html>`_ explains how to
+`This tutorial <tutorials/benchmarking/README.html>`__ explains how to
 run many such remote experiments in parallel, so to speed up comparisons
 between alternatives.
 
@@ -353,7 +353,7 @@ Makes use of :ref:`train_height.py <train_height_script>`.
 
 For a more thorough introduction on how to develop new schedulers and
 searchers in Syne Tune, consider
-`this tutorial <tutorials/developer/README.html>`_.
+`this tutorial <tutorials/developer/README.html>`__.
 
 
 Launch HPO Experiment on mlp_fashionmnist Benchmark
@@ -366,7 +366,7 @@ Launch HPO Experiment on mlp_fashionmnist Benchmark
 In this example, we tune one of the built-in benchmark problems, which
 is useful in order to compare different HPO methods. More details on
 benchmarking is provided in
-`this tutorial <tutorials/benchmarking/README.html>`_.
+`this tutorial <tutorials/benchmarking/README.html>`__.
 
 
 Transfer Tuning on NASBench-201
@@ -380,7 +380,7 @@ Transfer Tuning on NASBench-201
 
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
-* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`_
+* If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
   or an S3 bucket is accessible, the blackbox files are uploaded to your S3
   bucket
 
@@ -404,7 +404,7 @@ Transfer Learning Example
 An example of how to use evaluations collected in Syne Tune to run a transfer
 learning scheduler. Makes use of :ref:`train_height.py <train_height_script>`.
 Used in the
-`transfer learning tutorial <tutorials/transfer_learning/transfer_learning.html>`_.
+`transfer learning tutorial <tutorials/transfer_learning/transfer_learning.html>`__.
 To plot the figures, run as
 `python launch_transfer_learning_example.py --generate_plots`.
 
@@ -433,7 +433,7 @@ Pass Configuration as JSON File to Training Script
 **Requirements**:
 
 * If ``use_sagemaker_backend = True``, needs
-  `access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`_.
+  `access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
 
 Makes use of the following
 :ref:`train_height_config_json.py <train_height_config_json_script>` training
