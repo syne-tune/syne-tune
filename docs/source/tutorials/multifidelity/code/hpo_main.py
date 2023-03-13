@@ -62,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--experiment_tag",
         type=str,
-        default="mf_tutorial",
+        default="mf-tutorial",
     )
     parser.add_argument(
         "--dataset",

@@ -72,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--experiment_tag",
         type=str,
-        default="basic_tutorial",
+        default="basic-tutorial",
     )
     args, _ = parser.parse_known_args()
 

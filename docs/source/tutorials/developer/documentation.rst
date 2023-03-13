@@ -25,7 +25,7 @@ Syne Tune comes with an extensive amount of documentation:
 Building the Documentation
 --------------------------
 
-You could build the documentation locally as follows. Make sure to have Syne
+You can build the documentation locally as follows. Make sure to have Syne
 Tune installed with ``dev`` (or ``extra``) dependencies:
 
 .. code-block:: bash
@@ -47,7 +47,7 @@ as part of a pull request:
 * Click on *View docs* just below *Build took X seconds* (do not click on the
   tall *View Docs* button upper right, this leads to the latest public docs)
 
-When extending the documentation, please make sure it works:
+When extending the documentation, please verify the following:
 
 * Check whether links work. They typically fail silently, possibly emitting
   a warning. Use proper links when referring to classes, modules, functions,
@@ -57,8 +57,8 @@ When extending the documentation, please make sure it works:
 Conventions
 -----------
 
-Keeping a documentation up-to-date and working is hard. We follow some
-conventions in order to make it easier:
+We use the following conventions to ensure that documentation stays
+up-to-date:
 
 * Use ``literalinclude`` for almost all code snippets. In general, the
   documentation is showing code which is part of a functional script,
