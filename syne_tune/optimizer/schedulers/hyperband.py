@@ -1102,8 +1102,10 @@ class HyperbandBracketManager:
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
         rung_sys.on_task_add(trial_id, skip_rungs=skip_rungs, **kwargs)
         milestones = rung_sys.get_milestones(skip_rungs)
-        if milestones[0] < self._max_t:
+        if milestones:
             milestones.insert(0, self._max_t)
+        else:
+            milestones = [self._max_t]
         return milestones
 
     def on_task_report(self, trial_id: str, result: Dict[str, Any]) -> Dict[str, Any]:

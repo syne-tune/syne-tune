@@ -70,7 +70,7 @@ if __name__ == "__main__":
         choices=("cifar10", "cifar100", "ImageNet16-120"),
         default="cifar100",
     )
-    args, _ = parser.parse_known_args()
+    args = parser.parse_args()
 
     # [1]
     # Setting up simulator backend for blackbox repository

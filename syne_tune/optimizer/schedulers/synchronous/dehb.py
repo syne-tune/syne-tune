@@ -325,8 +325,6 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
                     for bracket, rungs in enumerate(self.bracket_manager.bracket_rungs)
                 ]
                 logger.info("\n".join(parts))
-            if self.searcher is None:
-                self._debug_log.start_get_config("random", trial_id=trial_id)
         # Ask bracket manager for job
         bracket_id, slot_in_rung = self.bracket_manager.next_job()
         ext_slot = ExtendedSlotInRung(bracket_id, slot_in_rung)
@@ -502,6 +500,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         if not self._allow_duplicates:
             self._excl_list.add(config)  # Should not be suggested again
         if self._debug_log is not None and self.searcher is None:
+            self._debug_log.start_get_config("random", trial_id=trial_id)
             self._debug_log.set_final_config(config)
             self._debug_log.write_block()
         config = cast_config_values(config, self.config_space)
