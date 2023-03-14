@@ -17,7 +17,7 @@ from benchmarking.commons.benchmark_definitions.common import (
 
 def fcnet_benchmark(dataset_name):
     return SurrogateBenchmarkDefinition(
-        max_wallclock_time=1200,
+        max_wallclock_time=3600,
         n_workers=4,
         elapsed_time_attr="metric_elapsed_time",
         metric="metric_valid_loss",

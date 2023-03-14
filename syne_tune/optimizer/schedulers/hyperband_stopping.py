@@ -98,6 +98,13 @@ class RungSystem:
         The default is to return an empty dictionary, but some special subclasses
         can use this to return information in case a trial is not promoted.
 
+        If no trial can be promoted, or if the rung system is not
+        promotion-based, the returned dictionary must not contain the
+        "trial_id" key. It is nevertheless passed back via ``extra_kwargs`` in
+        :meth:`~syne_tune.optimizer.schedulers.hyperband.HyperbandBracketManager.on_task_schedule`.
+        The default is to return an empty dictionary, but some special subclasses
+        can use this to return information in case a trial is not promoted.
+
         :param new_trial_id: ID for new trial as passed to :meth:`_suggest`.
             Only needed by specific subclasses
         :return: See above

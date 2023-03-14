@@ -1179,6 +1179,10 @@ class HyperbandBracketManager:
         is returned. This information is passed to ``get_config`` of the
         searcher.
 
+        Note: ``extra_kwargs`` can return information also if ``trial_id = None``
+        is returned. This information is passed to ``get_config`` of the
+        searcher.
+
         :param new_trial_id: ID for new trial as passed to :meth:`_suggest`
         :return: ``(trial_id, extra_kwargs)``
         """
