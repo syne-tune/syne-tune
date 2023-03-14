@@ -6,11 +6,11 @@ fine-tuning it to GLUE task.
 
 .. literalinclude:: ../../../benchmarking/nursery/fine_tuning_transformer_glue/hpo_main.py
    :caption: benchmarking/nursery/fine_tuning_transformer_glue/hpo_main.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 .. literalinclude:: ../../../benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py
    :caption: benchmarking/nursery/fine_tuning_transformer_glue/launch_remote.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 .. literalinclude:: ../../../benchmarking/nursery/fine_tuning_transformer_glue/run_glue_modified.py
    :caption: benchmarking/nursery/fine_tuning_transformer_glue/run_glue_modified.py

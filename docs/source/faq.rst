@@ -242,7 +242,7 @@ checkpointing enabled:
 .. literalinclude:: ../../examples/training_scripts/checkpoint_example/checkpoint_example.py
    :name: checkpoint_example_script
    :caption: examples/training_scripts/checkpoint_example/checkpoint_example.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 When using the SageMaker backend, we use the
 `SageMaker checkpoint mechanism <https://docs.aws.amazon.com/sagemaker/latest/dg/model-checkpoints.html>`__
@@ -722,7 +722,8 @@ backend:
 
 .. literalinclude:: ../../examples/launch_height_config_json.py
    :caption: examples/launch_height_config_json.py
-   :lines: 72-75
+   :start-after: if not use_sagemaker_backend:
+   :end-before: else:
 
 The trial backend stores the configuration as JSON file and passes its filename
 as command line argument. In the training script, the configuration is loaded
@@ -730,7 +731,8 @@ as follows:
 
 .. literalinclude:: ../../examples/training_scripts/height_example/train_height_config_json.py
    :caption: examples/training_scripts/height_example/train_height_config_json.py
-   :lines: 74-79
+   :start-at: parser = ArgumentParser()
+   :end-at: config = load_config_json(vars(args))
 
 The complete example is
 `here <examples.html#pass-configuration-as-json-file-to-training-script>`__.

@@ -40,7 +40,8 @@ search space:
 
 .. literalinclude:: code/hpo_main.py
    :caption: hpo_main.py: Configuration space
-   :lines: 25-37
+   :start-at: from syne_tune.config_space import randint, uniform, loguniform
+   :end-before: if __name__ == "__main__":
 
 Here, ``n_units_1`` is sampled uniformly from ``4,...,1024``, while
 ``learning_rate`` is sampled log-uniformly from ``[1e-6, 1]`` (i.e., it is
@@ -56,7 +57,7 @@ run HPO experiments.
 
 .. literalinclude:: code/hpo_main.py
    :caption: hpo_main.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 Random search is obtained by calling this script with ``--method RS``.
 Let us walk through the script, keeping this special case in mind:

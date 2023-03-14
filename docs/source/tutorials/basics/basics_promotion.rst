@@ -29,7 +29,7 @@ has to be modified once more, by replacing ``objective`` with this code:
 
 .. literalinclude:: code/traincode_report_withcheckpointing.py
    :caption: traincode_report_withcheckpointing.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 Checkpointing requires you to implement the following:
 

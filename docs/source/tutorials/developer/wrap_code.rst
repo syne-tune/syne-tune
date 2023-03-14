@@ -46,7 +46,8 @@ as we demonstrate here. Here is
 
 .. literalinclude:: ../../../../syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
    :caption: syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
-   :lines: 119-132
+   :start-at: def _get_config(self, trial_id: str, **kwargs)
+   :end-before: def register_pending(
 
 * First, :code:`self._next_initial_config()` is called, which returns a
   configuration from ``points_to_evaluate`` if there is still one not yet

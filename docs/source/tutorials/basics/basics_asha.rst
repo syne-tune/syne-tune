@@ -137,7 +137,8 @@ used with random search and Bayesian optimization. We will replace
 
 .. literalinclude:: code/traincode_report_eachepoch.py
    :caption: traincode_report_eachepoch.py (relevant part)
-   :lines: 26-40
+   :start-at: def objective(config):
+   :end-before: if __name__ == "__main__":
 
 Instead of computing and reporting the validation error only after
 ``config['epochs']`` epochs, we do this at the end of each epoch. To

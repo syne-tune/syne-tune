@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
 """
 Example showing how to visualize the HPO process of Syne Tune with Tensorboard.
 Results will be stored in ~/syne-tune/{tuner_name}/tensoboard_output. To start
