@@ -14,6 +14,24 @@ import os
 import argparse
 import logging
 import time
+from pathlib import Path
+
+try:
+    # Benchmark-specific imports are done here, in order to avoid import
+    # errors if the dependencies are not installed (such errors should happen
+    # only when the code is really called)
+    from filelock import SoftFileLock, Timeout
+    import numpy as np
+    from tqdm import tqdm
+    import torch
+    import torch.nn.functional as F
+    from torch.utils.data.sampler import SubsetRandomSampler
+    from torchvision import datasets, transforms
+    from torchvision.models import resnet18
+except ImportError:
+    logging.info(
+        f"Please install benchmark-specific dependencies ({Path(__file__).parent / 'requirements.txt'})"
+    )
 
 from syne_tune import Reporter
 from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
@@ -235,18 +253,6 @@ def objective(config):
 
 
 if __name__ == "__main__":
-    # Benchmark-specific imports are done here, in order to avoid import
-    # errors if the dependencies are not installed (such errors should happen
-    # only when the code is really called)
-    from filelock import SoftFileLock, Timeout
-    import numpy as np
-    from tqdm import tqdm
-    import torch
-    import torch.nn.functional as F
-    from torch.utils.data.sampler import SubsetRandomSampler
-    from torchvision import datasets, transforms
-    from torchvision.models import resnet18
-
     # Superclass reference torch.nn.Module requires torch to be defined
     class Model(torch.nn.Module):
         def __init__(self):

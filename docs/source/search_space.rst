@@ -13,8 +13,9 @@ Here is an example for a configuration space:
 
 .. code-block:: python
 
-   from syne_tune.config_space import randint, uniform, loguniform, \
-       choice
+   from syne_tune.config_space import (
+       randint, uniform, loguniform, choice,
+   )
 
    config_space = {
        'n_units': randint(4, 1024),

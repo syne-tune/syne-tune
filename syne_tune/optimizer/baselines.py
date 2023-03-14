@@ -39,6 +39,7 @@ from syne_tune.try_import import (
     try_import_bore_message,
     try_import_botorch_message,
 )
+from syne_tune.util import dict_get
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +236,7 @@ class HyperTune(HyperbandScheduler):
         searcher_name = "hypertune"
         _assert_searcher_must_be(kwargs, searcher_name)
         kwargs = copy.deepcopy(kwargs)
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         k, v, supp = "model", "gp_independent", {"gp_independent", "gp_multitask"}
         model = search_options.get(k, v)
         assert model in supp, (
@@ -327,10 +328,10 @@ class DyHPO(HyperbandScheduler):
         ), "Must have type='dyhpo'"
         kwargs["type"] = "dyhpo"
         if probability_sh is not None:
-            rung_system_kwargs = kwargs.get("rung_system_kwargs", dict())
+            rung_system_kwargs = dict_get(kwargs, "rung_system_kwargs", dict())
             rung_system_kwargs["probability_sh"] = probability_sh
             kwargs["rung_system_kwargs"] = rung_system_kwargs
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         k = "opt_skip_period"
         if k not in search_options:
             search_options[k] = 3
@@ -539,7 +540,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
         _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         searcher_name = "bayesopt"
         _assert_searcher_must_be(kwargs, searcher_name)
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         if "model" not in search_options:
             search_options["model"] = "gp_independent"
         kwargs["search_options"] = search_options
@@ -563,7 +564,7 @@ def _create_searcher_kwargs(
         metric=metric,
         points_to_evaluate=kwargs.get("points_to_evaluate"),
     )
-    search_options = kwargs.get("search_options", dict())
+    search_options = dict_get(kwargs, "search_options", dict())
     searcher_kwargs.update(search_options)
     if random_seed is not None:
         searcher_kwargs["random_seed"] = _random_seed_from_generator(random_seed)
@@ -795,7 +796,7 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
     ):
         searcher_name = "bayesopt_constrained"
         _assert_searcher_must_be(kwargs, searcher_name)
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         kwargs["search_options"] = dict(search_options, constraint_attr=constraint_attr)
         super(ConstrainedBayesianOptimization, self).__init__(
             config_space=config_space,

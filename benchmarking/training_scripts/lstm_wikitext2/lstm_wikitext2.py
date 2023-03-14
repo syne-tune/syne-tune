@@ -18,6 +18,22 @@ import argparse
 import logging
 import time
 import math
+from pathlib import Path
+
+try:
+    # Benchmark-specific imports are done here, in order to avoid import
+    # errors if the dependencies are not installed (such errors should happen
+    # only when the code is really called)
+    from io import open
+    import numpy as np
+    from filelock import SoftFileLock, Timeout
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+except ImportError:
+    logging.info(
+        f"Please install benchmark-specific dependencies ({Path(__file__).parent / 'requirements.txt'})"
+    )
 
 from syne_tune import Reporter
 from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
@@ -328,18 +344,6 @@ def objective(config):
 
 
 if __name__ == "__main__":
-    # Benchmark-specific imports are done here, in order to avoid import
-    # errors if the dependencies are not installed (such errors should happen
-    # only when the code is really called)
-    from io import open
-    import numpy as np
-    from filelock import SoftFileLock, Timeout
-    import torch
-    import torch.nn as nn
-    import torch.nn.functional as F
-
-    # References to superclasses require torch and torch.nn to be defined here
-
     # Temporarily leave PositionalEncoding module here. Will be moved somewhere else.
     class PositionalEncoding(nn.Module):
         r"""Inject some information about the relative or absolute position of the tokens
