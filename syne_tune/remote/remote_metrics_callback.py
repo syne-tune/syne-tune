@@ -70,20 +70,23 @@ class RemoteTuningMetricsCallback(TunerCallback):
         self._reporter = None
         self._best_metric_value = None
         self._report_config = config_space is not None
-        self.metric_names = None
-        self._init_metric_names(config_space)
+        self.metric_names = self.get_metric_names(config_space, resource_attr)
 
-    def _init_metric_names(self, config_space: Optional[Dict[str, Any]]):
-        self.metric_names = [BEST_METRIC_VALUE, BEST_TRIAL_ID]
-        if self._resource_attr is not None:
-            self.metric_names.append(BEST_RESOURCE_VALUE)
+    @staticmethod
+    def get_metric_names(
+        config_space: Optional[Dict[str, Any]],
+        resource_attr: Optional[str] = None,
+    ):
+        metric_names = [BEST_METRIC_VALUE, BEST_TRIAL_ID]
+        if resource_attr is not None:
+            metric_names.append(BEST_RESOURCE_VALUE)
         if config_space is not None:
             for name, domain in config_space.items():
                 if isinstance(domain, Domain):
-                    self.metric_names.append(BEST_HP_PREFIX + name)
-        if len(self.metric_names) > MAX_METRICS_SUPPORTED_BY_SAGEMAKER:
-            self.metric_names = self.metric_names[:MAX_METRICS_SUPPORTED_BY_SAGEMAKER]
-        logger.info(f"Remote tuning metrics reported: {self.metric_names}")
+                    metric_names.append(BEST_HP_PREFIX + name)
+        if len(metric_names) > MAX_METRICS_SUPPORTED_BY_SAGEMAKER:
+            metric_names = metric_names[:MAX_METRICS_SUPPORTED_BY_SAGEMAKER]
+        return metric_names
 
     def register_metrics_with_estimator(self, estimator: EstimatorBase):
         """

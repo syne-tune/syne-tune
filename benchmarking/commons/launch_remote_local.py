@@ -40,6 +40,9 @@ from benchmarking.commons.utils import (
     combine_requirements_txt,
     get_master_random_seed,
 )
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    add_metric_definitions_to_sagemaker_estimator,
+)
 from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.remote.remote_metrics_callback import RemoteTuningMetricsCallback
 from syne_tune.util import random_string
@@ -92,13 +95,11 @@ def get_hyperparameters(
 def register_metrics_with_estimator(
     estimator: EstimatorBase, benchmark: RealBenchmarkDefinition
 ):
-    callback = RemoteTuningMetricsCallback(
-        metric=benchmark.metric,
-        mode=benchmark.mode,
+    metric_names = RemoteTuningMetricsCallback.get_metric_names(
         config_space=benchmark.config_space,
         resource_attr=benchmark.resource_attr,
     )
-    callback.register_metrics_with_estimator(estimator)
+    add_metric_definitions_to_sagemaker_estimator(estimator, metric_names)
 
 
 def launch_remote(
