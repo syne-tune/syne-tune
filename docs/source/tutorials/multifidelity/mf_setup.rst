@@ -43,7 +43,7 @@ script.
 
 .. literalinclude:: code/hpo_main.py
    :caption: hpo_main.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 Let us have a walk through this script, assuming it is called with the default
 ``--method ASHA-STOP``:

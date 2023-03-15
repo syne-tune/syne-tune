@@ -3,7 +3,7 @@ Launch HPO Experiment Locally
 
 .. literalinclude:: ../../examples/launch_height_baselines.py
    :caption: examples/launch_height_baselines.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 Along with several of the examples below, this launcher script is using the
 following :ref:`train_height.py <train_height_script>` training script:
@@ -11,7 +11,7 @@ following :ref:`train_height.py <train_height_script>` training script:
 .. literalinclude:: ../../examples/training_scripts/height_example/train_height.py
    :name: train_height_script
    :caption: examples/training_scripts/height_example/train_height.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 
 Fine-Tuning Hugging Face Model for Sentiment Classification
@@ -19,7 +19,7 @@ Fine-Tuning Hugging Face Model for Sentiment Classification
 
 .. literalinclude:: ../../examples/launch_huggingface_classification.py
    :caption: examples/launch_huggingface_classification.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -42,7 +42,7 @@ Launch HPO Experiment with Python Backend
 
 .. literalinclude:: ../../examples/launch_height_python_backend.py
    :caption: examples/launch_height_python_backend.py
-   :lines: 17-
+   :start-after: # permissions and limitations under the License.
 
 The Python backend does not need a separate training script.
 
@@ -52,7 +52,7 @@ Population-Based Training (PBT)
 
 .. literalinclude:: ../../examples/launch_pbt.py
    :caption: examples/launch_pbt.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 This launcher script is using the following :ref:`pbt_example.py <pbt_example_script>` training
 script:
@@ -60,7 +60,7 @@ script:
 .. literalinclude:: ../../examples/training_scripts/pbt_example/pbt_example.py
    :name: pbt_example_script
    :caption: examples/training_scripts/pbt_example/pbt_example.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 For this toy example, PBT is run with a population size of 2, so only
 two parallel workers are needed. In order to use PBT competitively,
@@ -74,7 +74,7 @@ Visualize Tuning Progress with Tensorboard
 
 .. literalinclude:: ../../examples/launch_tensorboard_example.py
    :caption: examples/launch_tensorboard_example.py
-   :lines: 14-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -93,7 +93,7 @@ Launch HPO Experiment with Simulator Backend
 
 .. literalinclude:: ../../examples/launch_nasbench201_simulated.py
    :caption: examples/launch_nasbench201_simulated.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -115,7 +115,7 @@ Joint Tuning of Instance Type and Hyperparameters using MOASHA
 
 .. literalinclude:: ../../examples/launch_moasha_instance_tuning.py
    :caption: examples/launch_moasha_instance_tuning.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -143,7 +143,7 @@ Multi-objective Asynchronous Successive Halving (MOASHA)
 
 .. literalinclude:: ../../examples/launch_height_moasha.py
    :caption: examples/launch_height_moasha.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 This launcher script is using the following :ref:`mo_artificial.py <mo_artificial_script>` training
 script:
@@ -151,7 +151,7 @@ script:
 .. literalinclude:: ../../examples/training_scripts/mo_artificial/mo_artificial.py
    :name: mo_artificial_script
    :caption: examples/training_scripts/mo_artificial/mo_artificial.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 
 PASHA: Efficient HPO and NAS with Progressive Resource Allocation
@@ -159,7 +159,7 @@ PASHA: Efficient HPO and NAS with Progressive Resource Allocation
 
 .. literalinclude:: ../../examples/launch_pasha_nasbench201.py
    :caption: examples/launch_pasha_nasbench201.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 This script uses the simulator backend to run an experiment on NASBench-201.
 It takes only a few seconds to run, but it needs ``nasbench201`` blackbox
@@ -176,7 +176,7 @@ Constrained Bayesian Optimization
 
 .. literalinclude:: ../../examples/launch_bayesopt_constrained.py
    :caption: examples/launch_bayesopt_constrained.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 This launcher script is using the following :ref:`train_constrained_example.py <train_constrained_script>` training
 script:
@@ -184,7 +184,7 @@ script:
 .. literalinclude:: ../../examples/training_scripts/constrained_hpo/train_constrained_example.py
    :name: train_constrained_script
    :caption: examples/training_scripts/constrained_hpo/train_constrained_example.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 
 Restrict Scheduler to Tabulated Configurations with Simulator Backend
@@ -192,7 +192,7 @@ Restrict Scheduler to Tabulated Configurations with Simulator Backend
 
 .. literalinclude:: ../../examples/launch_lcbench_simulated.py
    :caption: examples/launch_lcbench_simulated.py
-   :lines: 18-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -221,7 +221,7 @@ Tuning Reinforcement Learning
 
 .. literalinclude:: ../../examples/launch_rl_tuning.py
    :caption: examples/launch_rl_tuning.py
-   :lines: 17-
+   :start-after: # permissions and limitations under the License.
 
 This launcher script is using the following :ref:`train_cartpole.py <rl_cartpole_script>` training
 script:
@@ -229,7 +229,7 @@ script:
 .. literalinclude:: ../../examples/training_scripts/rl_cartpole/train_cartpole.py
    :name: rl_cartpole_script
    :caption: examples/training_scripts/rl_cartpole/train_cartpole.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 This training script requires the following dependencies to be
 installed:
@@ -243,7 +243,7 @@ Launch HPO Experiment with SageMaker Backend
 
 .. literalinclude:: ../../examples/launch_height_sagemaker.py
    :caption: examples/launch_height_sagemaker.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -261,7 +261,7 @@ SageMaker Backend and Checkpointing
 
 .. literalinclude:: ../../examples/launch_height_sagemaker_checkpoints.py
    :caption: examples/launch_height_sagemaker_checkpoints.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -273,7 +273,7 @@ This launcher script is using the following
 .. literalinclude:: ../../examples/training_scripts/checkpoint_example/train_height_checkpoint.py
    :name: train_height_checkpoint_script
    :caption: examples/training_scripts/checkpoint_example/train_height_checkpoint.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 Note that :class:`~syne_tune.backend.SageMakerBackend` is configured to use
 SageMaker managed warm pools:
@@ -293,7 +293,7 @@ Retrieving the Best Checkpoint
 
 .. literalinclude:: ../../examples/launch_checkpoint_example.py
    :caption: examples/launch_checkpoint_example.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 This launcher script is using the following
 :ref:`xgboost_checkpoint.py <xgboost_checkpoint.py>` training script:
@@ -301,7 +301,7 @@ This launcher script is using the following
 .. literalinclude:: ../../examples/training_scripts/xgboost/xgboost_checkpoint.py
    :name: xgboost_checkpoint.py
    :caption: examples/training_scripts/xgboost/xgboost_checkpoint.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 
 Launch with SageMaker Backend and Custom Docker Image
@@ -309,7 +309,7 @@ Launch with SageMaker Backend and Custom Docker Image
 
 .. literalinclude:: ../../examples/launch_height_sagemaker_custom_image.py
    :caption: examples/launch_height_sagemaker_custom_image.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -326,7 +326,7 @@ Launch Experiments Remotely on SageMaker
 
 .. literalinclude:: ../../examples/launch_height_sagemaker_remotely.py
    :caption: examples/launch_height_sagemaker_remotely.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -347,7 +347,7 @@ Launch HPO Experiment with Home-Made Scheduler
 
 .. literalinclude:: ../../examples/launch_height_standalone_scheduler.py
    :caption: examples/launch_height_standalone_scheduler.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
@@ -361,7 +361,7 @@ Launch HPO Experiment on mlp_fashionmnist Benchmark
 
 .. literalinclude:: ../../examples/launch_fashionmnist.py
    :caption: examples/launch_fashionmnist.py
-   :lines: 16-
+   :start-after: # permissions and limitations under the License.
 
 In this example, we tune one of the built-in benchmark problems, which
 is useful in order to compare different HPO methods. More details on
@@ -374,7 +374,7 @@ Transfer Tuning on NASBench-201
 
 .. literalinclude:: ../../examples/launch_nas201_transfer_learning.py
    :caption: examples/launch_nas201_transfer_learning.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -390,11 +390,11 @@ related tasks can be used to speed up HPO.
 
 
 Transfer Learning Example
-===============================
+=========================
 
 .. literalinclude:: ../../examples/launch_transfer_learning_example.py
    :caption: examples/launch_transfer_learning_example.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -414,7 +414,7 @@ Plot Results of Tuning Experiment
 
 .. literalinclude:: ../../examples/launch_plot_results.py
    :caption: examples/launch_plot_results.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -428,7 +428,7 @@ Pass Configuration as JSON File to Training Script
 
 .. literalinclude:: ../../examples/launch_height_config_json.py
    :caption: examples/launch_height_config_json.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 **Requirements**:
 
@@ -442,7 +442,7 @@ script:
 .. literalinclude:: ../../examples/training_scripts/height_example/train_height_config_json.py
    :name: train_height_config_json_script
    :caption: examples/training_scripts/height_example/train_height_config_json.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 
 Launch HPO Experiment with Ray Tune Scheduler
@@ -450,7 +450,7 @@ Launch HPO Experiment with Ray Tune Scheduler
 
 .. literalinclude:: ../../examples/launch_height_ray.py
    :caption: examples/launch_height_ray.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
@@ -460,7 +460,7 @@ Stand-Alone Bayesian Optimization
 
 .. literalinclude:: ../../examples/launch_standalone_bayesian_optimization.py
    :caption: examples/launch_standalone_bayesian_optimization.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 Syne Tune combines a scheduler (HPO algorithm) with a backend to provide a
 complete HPO solution. If you already have a system in place for job
@@ -475,7 +475,7 @@ Ask Tell Interface
 .. literalinclude:: ../../examples/launch_ask_tell_scheduler.py
    :name: launch_ask_tell_scheduler_script
    :caption: examples/launch_ask_tell_scheduler.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 This is an example on how to use syne-tune in the ask-tell mode.
 In this setup the tuning loop and experiments are disentangled. The AskTell Scheduler suggests new configurations
@@ -492,7 +492,7 @@ Ask Tell interface for Hyperband
 
 .. literalinclude:: ../../examples/launch_ask_tell_scheduler_hyperband.py
    :caption: examples/launch_ask_tell_scheduler_hyperband.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 This is an extension of
 :ref:`launch_ask_tell_scheduler.py <launch_ask_tell_scheduler_script>` to run

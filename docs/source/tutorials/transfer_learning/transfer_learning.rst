@@ -63,7 +63,8 @@ We do this in the `extract_transferable_evaluations` function.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to prepare evaluations from previous tasks for transfer learning.
-   :lines: 76-96
+   :start-at: def filter_completed(
+   :end-before: def run_scheduler_on_task(
 
 We start by collecting evaluations by running `BayesianOptimization` on
 the five preliminary
@@ -74,7 +75,8 @@ evaluations as `TransferLearningTaskEvaluations`.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to initialise schedulers, use it to optimise a task and collect evaluations on preliminary tasks.
-   :lines: 99-186
+   :start-at: def run_scheduler_on_task(
+   :end-before: # Collect evaluations on transfer task
 
 Then we run different schedulers to compare on our transfer task with
 `max_steps=6`. For `ZeroShotTransfer` we set `use_surrogates=True`, meaning
@@ -83,7 +85,8 @@ not have evaluations of the same configurations on all previous tasks.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to run schedulers on transfer task.
-   :lines: 188-204
+   :start-at: # Collect evaluations on transfer task
+   :end-before: # Optionally generate plots.
 
 We plot the results on the transfer task. We see that the early performance of
 the transfer schedulers is much better than standard BO. We only plot the first
@@ -93,11 +96,13 @@ in the plot below.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Plotting helper code.
-   :lines: 43-73
+   :start-at: def add_labels(
+   :end-before: def filter_completed(
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot results on transfer task.
-   :lines: 206-230
+   :start-at: # Optionally generate plots
+   :end-at: plt.savefig("Transfer_task.png"
 
 .. image:: Transfer_task.png
    :width: 768 px
@@ -107,7 +112,8 @@ preliminary tasks.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot the configurations tried for the preliminary tasks.
-   :lines: 232-246
+   :start-at: """ Plot the configs tried for the preliminary tasks """
+   :end-at: plt.savefig("Configs_explored_preliminary.png"
 
 .. image:: Configs_explored_preliminary.png
    :width: 768 px
@@ -119,7 +125,7 @@ checking the middle of the search space.
 
 .. literalinclude:: ../../../../examples/launch_transfer_learning_example.py
    :caption: Code to plot the configurations tried for the transfer task.
-   :lines: 248-
+   :start-at: """ Plot the configs tried for the transfer task """
 
 .. image:: Configs_explored_transfer.png
    :width: 768 px

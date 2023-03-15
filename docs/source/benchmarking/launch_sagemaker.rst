@@ -6,15 +6,15 @@ Comparison of baseline methods on real benchmark, using the
 
 .. literalinclude:: ../../../benchmarking/nursery/launch_sagemaker/baselines.py
    :caption: benchmarking/nursery/launch_sagemaker/baselines.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 .. literalinclude:: ../../../benchmarking/nursery/launch_sagemaker/hpo_main.py
    :caption: benchmarking/nursery/launch_sagemaker/hpo_main.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 .. literalinclude:: ../../../benchmarking/nursery/launch_sagemaker/launch_remote.py
    :caption: benchmarking/nursery/launch_sagemaker/launch_remote.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 .. literalinclude:: ../../../benchmarking/nursery/launch_sagemaker/requirements.txt
    :caption: benchmarking/nursery/launch_sagemaker/requirements.txt

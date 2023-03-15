@@ -39,7 +39,7 @@ instead (e.g., cross-validation). Here is an example:
 
 .. literalinclude:: code/traincode_report_end.py
    :caption: traincode_report_end.py
-   :lines: 13-
+   :start-after: # permissions and limitations under the License.
 
 This script imports boiler plate code from
 `mlp_on_fshionmnist.py <../../training_scripts.html#multi-layer-perceptron-trained-on-fashion-mnist>`__.
@@ -95,7 +95,8 @@ tutorial:
 
 .. literalinclude:: code/hpo_main.py
    :caption: hpo_main.py: Configuration space
-   :lines: 25-37
+   :start-at: from syne_tune.config_space import randint, uniform, loguniform
+   :end-before: if __name__ == "__main__":
 
 The configuration space is a dictionary with key names corresponding to command
 line input parameters of our training script. For each parameter you would like
