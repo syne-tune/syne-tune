@@ -49,7 +49,7 @@ locally:
 .. code-block:: bash
 
    python benchmarking/nursery/launch_local/hpo_main.py \
-     --experiment_tag tutorial_local --benchmark resnet_cifar10 \
+     --experiment_tag tutorial-local --benchmark resnet_cifar10 \
      --method ASHA --num_seeds 1 --n_workers 1
 
 This call runs a single experiment on the local machine (which needs to have a
@@ -147,7 +147,7 @@ launching. Here is an example:
 .. code-block:: bash
 
    python benchmarking/nursery/launch_local/launch_remote.py \
-     --experiment_tag tutorial_local --benchmark resnet_cifar10 \
+     --experiment_tag tutorial-local --benchmark resnet_cifar10 \
      --num_seeds 5
 
 Since ``--method`` is not used, we run experiments for all methods (``RS``,
@@ -167,6 +167,55 @@ and second, ``requirements.txt`` next to the training script. The remote
 launching script is creating a ``requirements.txt`` file with this union in
 ``benchmarking/nursery/launch_local/``, which should not become part of the
 repository.
+
+Visualizing Tuning Metrics in the SageMaker Training Job Console
+----------------------------------------------------------------
+
+When experiments are launched remotely with the local or SageMaker backend, a
+number of metrics are published to the SageMaker training job console (this
+feature can be switched off with ``--remote_tuning_metrics 0``):
+
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_METRIC_VALUE`: Best
+  metric value attained so far
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_TRIAL_ID`: ID of trial
+  for best metric value so far
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_RESOURCE_VALUE`:
+  Resource value for best metric value so far
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_HP_PREFIX`, followed
+  by hyperparameter name: Hyperparameter value for best metric value so far
+
+You can inspect these metrics in real time in AWS CloudWatch. To do so:
+
+* Locate the training job running your experiment in the AWS SageMaker console.
+  Click on ``Training``, then ``Training jobs``, then on the job in the list.
+  For the command above, the jobs are named like
+  ``tutorial-local-RS-0-XyK8`` (experiment tag, then method, then seed, then
+  4-character hash).
+* Under ``Metrics``, you will see a number of entries, starting with
+  ``best_metric_value`` and ``best_trial_id``.
+* Further below, under ``Monitor``, click on ``View algorithm metrics``. This
+  opens a CloudWatch dashboard
+* At this point, you need to change a few defaults, in that CloudWatch only
+  samples metrics (by grepping the logs) every 5 minutes and then displays
+  average values over the 5-minute window. Click on ``Browse`` and select the
+  metrics you want to display. For now, select ``best_metric_value``,
+  ``best_trial_id``, ``best_resource_value``.
+* Click on ``Graphed metrics``, and for every metric, select
+  ``Period -> 30 seconds``. Also, select ``Statistics -> Maximum`` for metrics
+  ``best_trial_id``, ``best_resource_value``. For ``best_metric_value``, select
+  ``Statistics -> Minimum`` if your objective metric is minimized (``mode="min"``),
+  and ``Statistics -> Maximum`` otherwise. In our ``resnet_cifar10`` example,
+  the objective is accuracy, to be maximized, so we select the latter.
+* Finally, select ```10s`` for auto-refresh (the circle with arrow in the
+  upper right corner), and change the temporal resolution by displaying ``1h``
+  (top row).
+
+This visualization shows you the best metric value attained so far, and which
+trial attained it for which resource value (e.g., number of epochs). It can be
+improved. For example, we could plot the curves in different axes. Also, we can
+visualize the best hyperparameter configuration found so far. In the
+``resnet_cifar10`` example, this is given by the metrics ``best_hp_lr``,
+``best_hp_batch_size``, ``best_hp_weight_decay``, ``best_hp_momentum``.
 
 Random Seeds and Paired Comparisons
 -----------------------------------

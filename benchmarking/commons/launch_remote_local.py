@@ -14,9 +14,9 @@ import itertools
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Callable
+from tqdm import tqdm
 
 from sagemaker.estimator import EstimatorBase
-from tqdm import tqdm
 
 from benchmarking.commons.baselines import MethodDefinitions
 from benchmarking.commons.benchmark_definitions import RealBenchmarkDefinition
@@ -40,7 +40,11 @@ from benchmarking.commons.utils import (
     combine_requirements_txt,
     get_master_random_seed,
 )
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    add_metric_definitions_to_sagemaker_estimator,
+)
 from syne_tune.remote.estimators import sagemaker_estimator
+from syne_tune.remote.remote_metrics_callback import RemoteTuningMetricsCallback
 from syne_tune.util import random_string
 
 logger = logging.getLogger(__name__)
@@ -86,6 +90,16 @@ def get_hyperparameters(
         filter_none(extra_metadata(configuration, configuration.extra_parameters()))
     )
     return hyperparameters
+
+
+def register_metrics_with_estimator(
+    estimator: EstimatorBase, benchmark: RealBenchmarkDefinition
+):
+    metric_names = RemoteTuningMetricsCallback.get_metric_names(
+        config_space=benchmark.config_space,
+        resource_attr=benchmark.resource_attr,
+    )
+    add_metric_definitions_to_sagemaker_estimator(estimator, metric_names)
 
 
 def launch_remote(
@@ -171,7 +185,10 @@ def launch_remote_experiments(
         entry_point, requirements_fname="requirements-synetune.txt"
     )
     combine_requirements_txt(synetune_requirements_file, benchmark.script)
-    extra_sagemaker_hyperparameters = {"verbose": int(configuration.verbose)}
+    extra_sagemaker_hyperparameters = {
+        "verbose": int(configuration.verbose),
+        "remote_tuning_metrics": int(configuration.remote_tuning_metrics),
+    }
     experiment_tag = _launch_experiment_remotely(
         configuration=configuration,
         entry_point=entry_point,
@@ -227,5 +244,7 @@ def _launch_experiment_remotely(
             f"Results written to {sm_args['checkpoint_s3_uri']}"
         )
         est = sagemaker_estimator_base_class(**sm_args)
+        if configuration.remote_tuning_metrics:
+            register_metrics_with_estimator(est, benchmark)
         est.fit(job_name=f"{experiment_tag}-{tuner_name}-{suffix}", wait=False)
     return experiment_tag

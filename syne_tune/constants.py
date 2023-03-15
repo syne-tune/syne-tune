@@ -25,7 +25,8 @@ ST_TUNER_CREATION_TIMESTAMP = "st_tuner_creation_timestamp"
 
 ST_TUNER_START_TIMESTAMP = "st_tuner_start_timestamp"
 
-# constants of keys that are written by ``report``
+
+# Constants of keys that are written by ``report``
 
 ST_WORKER_ITER = "st_worker_iter"
 """Number of times reporter was called"""  # pylint: disable=W0105
@@ -48,7 +49,8 @@ ST_INSTANCE_COUNT = "st_instance_count"
 ST_SAGEMAKER_METRIC_TAG = "tune-metric"
 """Tag for log lines used in :class:`~syne_tune.Reporter`"""  # pylint: disable=W0105
 
-# constants for tuner results
+
+# Constants for tuner results
 
 ST_TRIAL_ID = "trial_id"
 
@@ -66,6 +68,11 @@ ST_CHECKPOINT_DIR = "st_checkpoint_dir"
 ST_CONFIG_JSON_FNAME_ARG = "st_config_json_filename"
 """Name of config key for config JSON file"""  # pylint: disable=W0105
 
-# Name for ``upload_dir`` in ``RemoteTuner``
 ST_REMOTE_UPLOAD_DIR_NAME = "tuner"
 """Name for ``upload_dir`` in ``RemoteTuner``"""  # pylint: disable=W0105
+
+
+# Limits
+
+MAX_METRICS_SUPPORTED_BY_SAGEMAKER = 40
+"""Max number of metrics allowed for estimator"""  # pylint: disable=W0105
