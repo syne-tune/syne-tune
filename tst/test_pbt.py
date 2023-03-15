@@ -90,7 +90,7 @@ def test_ptb():
 
         if i > 1:
             # all trials after the first one should be stopped and resampled
-            assert s == "PAUSE"
+            assert s == "STOP"
 
     # add better config
     trial_id = update_state(suggest, state)
@@ -105,7 +105,7 @@ def test_ptb():
     t = state[0]["trial"]
     results = {metric: 100, resource_attr: state[trial_id]["step"] + 1}
     s = pbt.on_trial_result(t, results)
-    assert s == "PAUSE"
+    assert s == "STOP"
 
     # we should now continue with config 10
     suggest = pbt.suggest(total_steps)

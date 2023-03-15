@@ -21,7 +21,7 @@ from syne_tune.util import is_increasing, is_positive_integer
 @dataclass
 class SlotInRung:
     """
-    Used to communicate slot positions and content for them
+    Used to communicate slot positions and content for them.
     """
 
     rung_index: int  # 0 is lowest rung
@@ -40,7 +40,7 @@ class SynchronousBracket:
     the smaller the number of slots.
 
     A slot is occupied (by a metric value), free, or pending. A pending slot
-    has already been returned by ``next_free_slot``. Slots
+    has already been returned by :meth:`next_free_slot`. Slots
     in the lowest rung (smallest rung level, largest size) are filled first.
     At any point in time, only slots in the lowest not fully occupied rung
     can be filled. If there are no free slots in the current rung, but there
@@ -108,14 +108,21 @@ class SynchronousBracket:
             metric_val=None,
         )
 
-    def on_result(self, result: SlotInRung) -> bool:
+    def on_result(self, result: SlotInRung) -> Optional[List[int]]:
         """
         Provides result for slot previously requested by ``next_free_slot``.
         Here, ``result.metric`` is written to the slot in order to make it
         occupied. Also, ``result.trial_id`` is written there.
 
+        We normally return ``None``. But if the result passed completes the
+        current rung, this triggers the creation of a child run which consists
+        of promoted trials from the current rung. In this case, we return the
+        IDs of trials which have not been promoted. This is used in for early
+        removal of checkpoints, see
+        :meth:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler.trials_checkpoints_can_be_removed`.
+
         :param result: See above
-        :return: Has the rung been completely occupied with this result?
+        :return: See above
         """
         assert (
             result.rung_index == self.current_rung
@@ -140,17 +147,25 @@ class SynchronousBracket:
         is_complete = (
             self._first_free_pos >= len(rung) and self.num_pending_slots() == 0
         )
+        trials_not_promoted = None
         if is_complete:
             self.current_rung += 1
             self._first_free_pos = 0
             if not self.is_bracket_complete():
-                self._promote_trials_at_rung_complete()
-        return is_complete
+                trials_not_promoted = self._promote_trials_at_rung_complete()
+        return trials_not_promoted
 
     def _assert_on_result_trial_id(self, result: SlotInRung, trial_id: int):
         pass
 
-    def _promote_trials_at_rung_complete(self):
+    def _promote_trials_at_rung_complete(self) -> List[int]:
+        """
+        This is called when a rung has just been filled in :meth:`on_result`,
+        and this is not the final rung of the bracket. It opens a new rung
+        by promoting top performing trials from the current one.
+
+        :return: List of trials which are not promoted
+        """
         raise NotImplementedError
 
 
@@ -192,29 +207,49 @@ class SynchronousHyperbandBracket(SynchronousBracket):
         if trial_id is not None:
             assert result.trial_id == trial_id, (result, trial_id)
 
-    def _promote_trials_at_rung_complete(self):
+    def _promote_trials_at_rung_complete(self) -> List[int]:
         pos = self.current_rung
         new_len, milestone = self._rungs[pos]
         previous_rung, _ = self._rungs[pos - 1]
-        top_list = get_top_list(rung=previous_rung, new_len=new_len, mode=self._mode)
+        top_list, remaining_list = get_top_list(
+            rung=previous_rung, new_len=new_len, mode=self._mode
+        )
         # Set metric_val entries to None, since this distinguishes
         # between a pending and occupied slot
         top_list = [(trial_id, None) for trial_id in top_list]
         self._rungs[pos] = (top_list, milestone)
+        return remaining_list
 
 
-def get_top_list(rung: List[Tuple[int, float]], new_len: int, mode: str) -> List[int]:
+def get_top_list(
+    rung: List[Tuple[int, float]], new_len: int, mode: str
+) -> (List[int], List[int]):
+    """
+    Returns list of IDs of trials of len ``new_len`` which should be promoted,
+    because they performed best. We also return the list of IDs of the remaining
+    trials, which are not to be promoted.
+
+    :param rung: Current rung which has just been completed
+    :param new_len: Size of new rung
+    :param mode: "min" or "max"
+    :return: ``(top_list, remaining_list)``
+    """
     # Failed trials insert NaN's
     rung_valid = [x for x in rung if not np.isnan(x[1])]
     num_valid = len(rung_valid)
     if num_valid >= new_len:
-        top_list = sorted(rung_valid, key=itemgetter(1), reverse=mode == "max")[
-            :new_len
+        top_list = [
+            x[0]
+            for x in sorted(rung_valid, key=itemgetter(1), reverse=mode == "max")[
+                :new_len
+            ]
         ]
     else:
         # Not enough valid entries to fill the new rung (this is
         # very unlikely to happen). In this case, some failed trials
         # are still promoted to the next rung.
-        rung_invalid = [x for x in rung if np.isnan(x[1])]
-        top_list = rung_valid + rung_invalid[: (new_len - num_valid)]
-    return [x[0] for x in top_list]
+        invalid_list = [x[0] for x in rung if np.isnan(x[1])]
+        top_list = [x[0] for x in rung_valid] + invalid_list[: (new_len - num_valid)]
+    top_set = set(top_list)
+    remaining_list = [x[0] for x in rung if x[0] not in top_set]
+    return top_list, remaining_list

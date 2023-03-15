@@ -195,7 +195,7 @@ class PopulationBasedTraining(FIFOScheduler):
         if trial_id in lower_quantile:
             # sample random trial from upper quantile
             trial_id_to_clone = int(self._random_state.choice(upper_quantile))
-            assert trial_id is not trial_id_to_clone
+            assert trial_id != trial_id_to_clone
             logger.debug(
                 f"Trial {trial_id} is in lower quantile, replaced by {trial_id_to_clone}"
             )
@@ -204,25 +204,20 @@ class PopulationBasedTraining(FIFOScheduler):
             return trial_id
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
-        if self._resource_attr not in result:
-            time_missing_msg = (
-                f"Cannot find resource_attr {self._resource_attr} "
-                f"in trial result {result}. Make sure that this "
-                "attribute is returned in the "
-                "results of your Trainable."
-            )
-            raise RuntimeError(time_missing_msg)
-        if self.metric not in result:
-            metric_missing_msg = (
-                f"Cannot find metric {self.metric} in trial result {result}. "
-                "Make sure that this attribute is returned "
-                "in the "
-                "results of your Trainable."
-            )
-            raise RuntimeError(metric_missing_msg)
+        for name, value in [
+            ("resource_attr", self._resource_attr),
+            ("metric", self.metric),
+        ]:
+            if value not in result:
+                err_msg = (
+                    f"Cannot find {name} {value} in result {result}. Make sure "
+                    "this attribute is reported by your training function"
+                )
+                raise RuntimeError(err_msg)
 
+        trial_id = trial.trial_id
         cost = result[self._resource_attr]
-        state = self._trial_state[trial.trial_id]
+        state = self._trial_state[trial_id]
 
         # Stop if we reached the maximum budget of this configuration
         if cost >= self.max_t:
@@ -241,13 +236,17 @@ class PopulationBasedTraining(FIFOScheduler):
 
         # bookkeeping for debugging reasons
         self._checkpointing_history.append(
-            (trial.trial_id, trial_id_to_continue, self._elapsed_time())
+            (trial_id, trial_id_to_continue, self._elapsed_time())
         )
 
-        if trial_id_to_continue == trial.trial_id:
+        if trial_id_to_continue == trial_id:
             # continue current trial
             return SchedulerDecision.CONTINUE
         else:
+            # Note: At this point, the trial ``trial`` is marked as stopped, so it
+            # cannot be proposed anymore in :meth:`_get_trial_id_to_continue` as
+            # trial to continue from. This means we can just stop the trial, and
+            # its checkpoint can be removed
             state.stopped = True
             # exploit step
             trial_to_clone = self._trial_state[trial_id_to_continue].trial
@@ -255,7 +254,7 @@ class PopulationBasedTraining(FIFOScheduler):
             # explore step
             config = self._explore(trial_to_clone.config)
             self._trial_decisions_stack.append((trial_id_to_continue, config))
-            return SchedulerDecision.PAUSE
+            return SchedulerDecision.STOP
 
     def _save_trial_state(
         self, state: PBTTrialState, time: int, result: Dict[str, Any]
