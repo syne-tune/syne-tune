@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [0.4.1] - 2023-03-16
+
+We release version 0.4.1 which you can install with `pip install syne-tune[extra]`.
+
+Thanks to all contributors:
+@mseeger, @wesk, @sighellan, @aaronkl, @wistuba, @jgolebiowski, @610v4nn1, @geoalgo
+
+
+### Added
+* New tutorial: Using Syne Tune for Transfer Learning
+* Multi-objective regularized evolution (MO-REA)
+* Gaussian-process based methods support Box-Cox target transform and input
+  warping
+* Configuration can be passed as JSON file to evaluation script
+* Remote tuning: Metrics are published to CloudWatch console
+
+### Changed
+* Refactoring and cleanup of `benchmarking`
+* FIFOScheduler supports multi-objective schedulers
+* Remote tuning with local backend: Checkpoints are not synced to S3
+* Code in documentation is now tested automatically
+* Benchmarking: Use longer descriptive names for result directories
+
+### Fixed
+* Specific state converter for DyHPO (can work poorly with the state converter
+  for MOBSTER or Hyper-Tune)
+* Fix of BOHB and SyncBOHB
+* _objective_function parsing for YAHPO blackbox
+
+
 ## [0.4.0] - 2023-02-21
 
 We release version 0.4.0 which you can install with `pip install syne-tune[extra]`.
