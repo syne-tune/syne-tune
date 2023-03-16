@@ -11,3 +11,4 @@ sphinx-autodoc-typehints
 myst-parser
 sphinx_copybutton
 sphinxcontrib-bibtex
+sphinxcontrib.jquery
