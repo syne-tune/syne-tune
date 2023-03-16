@@ -21,6 +21,16 @@ logger = logging.getLogger(__name__)
 
 
 class SchedulerDecision:
+    """
+    Possible return values of :meth:`TrialScheduler.on_trial_result`, signals the
+    tuner how to proceed with the reporting trial.
+
+    The difference between :const:`PAUSE` and :const:`STOP` is important. If a
+    trial is stopped, it cannot be resumed afterwards. Its checkpoints may be
+    deleted. If a trial is paused, it may be resumed in the future, and its
+    most recent checkpoint should be retained.
+    """
+
     CONTINUE = "CONTINUE"  #: Status for continuing trial execution
     PAUSE = "PAUSE"  #: Status for pausing trial execution
     STOP = "STOP"  #: Status for stopping trial execution
@@ -28,7 +38,7 @@ class SchedulerDecision:
 
 @dataclass
 class TrialSuggestion:
-    """Suggestion returned by a scheduler.
+    """Suggestion returned by :meth:`TrialScheduler.suggest`
 
     :param spawn_new_trial_id: Whether a new ``trial_id`` should be used.
     :param checkpoint_trial_id: Checkpoint of this trial ID should
