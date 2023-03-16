@@ -87,6 +87,17 @@ schedulers which can be implemented in Syne Tune, some examples are:
   :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with
   ``type="promotion"``.
 
+.. note::
+   The method :meth:`~syne_tune.optimizer.scheduler.TrialScheduler.on_trial_result`
+   returns a :class:`~syne_tune.optimizer.scheduler.SchedulerDecision`,
+   signaling the tuner to *continue*, *stop*, or *pause* the reporting trial.
+   The difference between *pause* and *stop* is important. If a trial is stopped,
+   it cannot be resumed later on. In particular, its checkpoints are removed (by
+   default). On the other hand, if a trial is paused, it may be resumed in the
+   future, and its most recent checkpoint is retained (in the future, Syne Tune
+   may allow to remove checkpoints of paused trials pre-emptively in order to
+   save disk space).
+
 Asynchronous Job Execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
