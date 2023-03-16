@@ -43,6 +43,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     MeanFunction,
     ScalarMeanFunction,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    ScalarTargetTransform,
+)
 from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 
@@ -171,6 +174,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         mean_factory: Callable[[int], MeanFunction],
         resource_attr_range: Tuple[int, int],
         hypertune_distribution_args: HyperTuneDistributionArguments,
+        target_transform: Optional[ScalarTargetTransform] = None,
         separate_noise_variances: bool = False,
         initial_noise_variance: Optional[float] = None,
         initial_covariance_scale: Optional[float] = None,
@@ -183,6 +187,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
             kernel=kernel,
             mean_factory=mean_factory,
             resource_attr_range=resource_attr_range,
+            target_transform=target_transform,
             separate_noise_variances=separate_noise_variances,
             initial_noise_variance=initial_noise_variance,
             initial_covariance_scale=initial_covariance_scale,
@@ -208,9 +213,7 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         # Safe bet to start with:
         ensemble_distribution = {min(rung_levels): 1.0}
         self._likelihood = HyperTuneIndependentGPMarginalLikelihood(
-            kernel=self._kernel,
             mean=mean,
-            resource_attr_range=self._resource_attr_range,
             ensemble_distribution=ensemble_distribution,
             **self._likelihood_kwargs,
         )
@@ -257,6 +260,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         resource_attr_range: Tuple[int, int],
         hypertune_distribution_args: HyperTuneDistributionArguments,
         mean: Optional[MeanFunction] = None,
+        target_transform: Optional[ScalarTargetTransform] = None,
         initial_noise_variance: Optional[float] = None,
         optimization_config: Optional[OptimizationConfig] = None,
         random_seed=None,
@@ -268,6 +272,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
             self,
             kernel=kernel,
             mean=mean,
+            target_transform=target_transform,
             initial_noise_variance=initial_noise_variance,
             optimization_config=optimization_config,
             random_seed=random_seed,
@@ -279,6 +284,7 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         self._likelihood_kwargs = dict(
             kernel=kernel,
             mean=mean,
+            target_transform=target_transform,
             resource_attr_range=resource_attr_range,
             initial_noise_variance=initial_noise_variance,
         )

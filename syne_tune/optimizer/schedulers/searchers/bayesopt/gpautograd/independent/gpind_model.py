@@ -31,6 +31,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.independent.likelihood import (
     IndependentGPPerResourceMarginalLikelihood,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    ScalarTargetTransform,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +52,9 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
         for all resources r
     :param mean_factory: Factory function for mean functions mu_r(x)
     :param resource_attr_range: (r_min, r_max)
+    :param target_transform: Invertible transform of target values y to
+        latent values z, which are then modelled as Gaussian. Shared across
+        different :math:`r`. Defaults to the identity
     :param separate_noise_variances: Separate noise variance for each r?
         Otherwise, noise variance is shared
     :param initial_noise_variance: Initial value for noise variance parameter
@@ -66,6 +72,7 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
         kernel: KernelFunction,
         mean_factory: Callable[[int], MeanFunction],
         resource_attr_range: Tuple[int, int],
+        target_transform: Optional[ScalarTargetTransform] = None,
         separate_noise_variances: bool = False,
         initial_noise_variance: Optional[float] = None,
         initial_covariance_scale: Optional[float] = None,
@@ -78,10 +85,12 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
             random_seed=random_seed,
             fit_reset_params=fit_reset_params,
         )
-        self._kernel = kernel
         self._mean_factory = mean_factory
         self._resource_attr_range = resource_attr_range
         self._likelihood_kwargs = {
+            "kernel": kernel,
+            "resource_attr_range": resource_attr_range,
+            "target_transform": target_transform,
             "separate_noise_variances": separate_noise_variances,
             "initial_noise_variance": initial_noise_variance,
             "initial_covariance_scale": initial_covariance_scale,
@@ -100,9 +109,7 @@ class IndependentGPPerResourceModel(GaussianProcessOptimizeModel):
         """
         mean = {resource: self._mean_factory(resource) for resource in rung_levels}
         self._likelihood = IndependentGPPerResourceMarginalLikelihood(
-            kernel=self._kernel,
             mean=mean,
-            resource_attr_range=self._resource_attr_range,
             **self._likelihood_kwargs,
         )
         self.reset_params()
