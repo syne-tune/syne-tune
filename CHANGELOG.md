@@ -4,12 +4,12 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [0.4.1] - 2023-03-??
+## [0.4.1] - 2023-03-16
 
 We release version 0.4.1 which you can install with `pip install syne-tune[extra]`.
 
 Thanks to all contributors:
-@mseeger, @wesk, @sighellan, @aaronkl, @wistuba, @jgolebiowski
+@mseeger, @wesk, @sighellan, @aaronkl, @wistuba, @jgolebiowski, @610v4nn1, @geoalgo
 
 
 ### Added
