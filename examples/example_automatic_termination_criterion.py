@@ -94,5 +94,4 @@ plt.tick_params(
 )
 plt.ylabel("validation error")
 plt.xlabel("wall-clock time (seconds)")
-plt.savefig("/Users/kleiaaro/auto.png")
 plt.show()
