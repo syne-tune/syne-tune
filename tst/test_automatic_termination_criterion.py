@@ -10,12 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.stopping_criterions.automatic_termination_criterion import (
-    AutomaticTerminationCriterion,
-)
-from syne_tune.backend.trial_status import Trial, Status
-from syne_tune.tuning_status import TuningStatus
-from syne_tune.config_space import uniform
+# from syne_tune.stopping_criterions.automatic_termination_criterion import (
+#     AutomaticTerminationCriterion,
+# )
+# from syne_tune.backend.trial_status import Trial, Status
+# from syne_tune.tuning_status import TuningStatus
+# from syne_tune.config_space import uniform
 
 #
 # def test_automatic_termination():
