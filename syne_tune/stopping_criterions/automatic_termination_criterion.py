@@ -55,21 +55,21 @@ class AutomaticTerminationCriterion(object):
     """
 
     def __init__(
-            self,
-            config_space: Dict[str, Any],
-            metric: str,
-            threshold: float,
-            mode: str = 'min',
-            beta: float = 1.0,
-            seed: int = None,
-            warm_up: int = 10,
-            topq: float = 0.5,
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        threshold: float,
+        mode: str = "min",
+        beta: float = 1.0,
+        seed: int = None,
+        warm_up: int = 10,
+        topq: float = 0.5,
     ):
         assert mode in ["min", "max"]
 
         self._mode = mode
         self._warm_up = warm_up
-        self._seed = np.random.randint(2 ** 32 - 1) if seed is None else seed
+        self._seed = np.random.randint(2**32 - 1) if seed is None else seed
         self._metric = metric
         self._topq = topq
         self._beta = beta
@@ -159,16 +159,15 @@ class AutomaticTerminationCriterion(object):
 
 if __name__ == "__main__":
 
-
     from syne_tune.backend.trial_status import Trial, Status
     from syne_tune.config_space import uniform
 
     metric = "loss"
     config_space = {"x": uniform(0, 1)}
 
-    stop_criterion = AutomaticTerminationCriterion(config_space, threshold=0.9,
-                                                   metric=metric, mode="min"
-                                                   )
+    stop_criterion = AutomaticTerminationCriterion(
+        config_space, threshold=0.9, metric=metric, mode="min"
+    )
 
     status = TuningStatus(metric_names=[metric])
 
@@ -178,7 +177,7 @@ if __name__ == "__main__":
         x = np.random.rand()
         trial = Trial(trial_id=i, config={"x": x}, creation_time=None)
         trial_status_dict[i] = (trial, Status.completed)
-        new_results.append((i, {metric: (x-0.5)**2}))
+        new_results.append((i, {metric: (x - 0.5) ** 2}))
     status.update(trial_status_dict, new_results)
     # status.update(
     #     trial_status_dict={
