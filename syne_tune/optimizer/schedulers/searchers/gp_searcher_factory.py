@@ -101,9 +101,12 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_multifid import (
     SubsampleMultiFidelityStateConverter,
     SubsampleMFDenseDataStateConverter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_singlefid import (
+    SubsampleSingleFidelityStateConverter,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
     StateForModelConverter,
@@ -379,8 +382,9 @@ def _create_gp_additive_model(
     }
 
 
-def _create_multifidelity_state_converter(
+def _create_state_converter(
     model: str,
+    is_hyperband: bool,
     **kwargs,
 ) -> Optional[StateForModelConverter]:
     """
@@ -398,27 +402,33 @@ def _create_multifidelity_state_converter(
     max_size = kwargs.get("max_size_data_for_model")
     if max_size is None:
         return None
-    # Note:
-    if model not in ("gp_multitask", "gp_independent"):
-        logger.warning(
-            f"Cannot use max_size_data_for_model together with model={model}"
-        )
-        return None
-    if kwargs.get("searcher_data") == "all":
-        logger.warning(
-            f"You are using max_size_data_for_model={max_size} together with "
-            f"model={model} and searcher_data='all'. This may lead to poor "
-            "results. Use searcher_data='rungs' to limit the size of the data, "
-            "which you can combine with max_size_data_for_model"
-        )
-    if kwargs["scheduler"] == "hyperband_dyhpo":
-        # In DyHPO, there is too much data for some trials, so we need to limit the
-        # data differently
-        # Note: We use the defaults for ``grace_period`` and ``reduction_factor``
-        # here, could make them configurable as well.
-        return SubsampleMFDenseDataStateConverter(max_size=max_size)
+    if is_hyperband:
+        if model not in ("gp_multitask", "gp_independent"):
+            logger.warning(
+                f"Cannot use max_size_data_for_model together with model={model}"
+            )
+            return None
+        if kwargs.get("searcher_data") == "all":
+            logger.warning(
+                f"You are using max_size_data_for_model={max_size} together with "
+                f"model={model} and searcher_data='all'. This may lead to poor "
+                "results. Use searcher_data='rungs' to limit the size of the data, "
+                "which you can combine with max_size_data_for_model"
+            )
+        if kwargs["scheduler"] == "hyperband_dyhpo":
+            # In DyHPO, there is too much data for some trials, so we need to limit the
+            # data differently
+            # Note: We use the defaults for ``grace_period`` and ``reduction_factor``
+            # here, could make them configurable as well.
+            return SubsampleMFDenseDataStateConverter(max_size=max_size)
+        else:
+            return SubsampleMultiFidelityStateConverter(max_size=max_size)
     else:
-        return SubsampleMultiFidelityStateConverter(max_size=max_size)
+        scheduler_mode = kwargs.get("mode", "min")
+        top_fraction = kwargs["max_size_top_fraction"]
+        return SubsampleSingleFidelityStateConverter(
+            max_size=max_size, mode=scheduler_mode, top_fraction=top_fraction
+        )
 
 
 def _create_common_objects(model=None, is_hypertune=False, **kwargs):
@@ -489,10 +499,10 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
             resource_attr_key=kwargs["resource_attr"],
             resource_attr_range=epoch_range,
         )
-        # State converter to down sample data
-        state_converter = _create_multifidelity_state_converter(model, **kwargs)
-        if state_converter is not None:
-            result["state_converter"] = state_converter
+    # State converter to down sample data
+    state_converter = _create_state_converter(model, is_hyperband, **kwargs)
+    if state_converter is not None:
+        result["state_converter"] = state_converter
 
     # Create model factory
     if model == "gp_multitask":
@@ -899,6 +909,7 @@ def _common_defaults(
         "allow_duplicates": False,
         "input_warping": False,
         "boxcox_transform": False,
+        "max_size_top_fraction": 0.25,
     }
     if is_restrict_configs:
         default_options["initial_scoring"] = "acq_func"
@@ -918,11 +929,11 @@ def _common_defaults(
         default_options["separate_noise_variances"] = False
         default_options["hypertune_distribution_num_samples"] = 50
         default_options["hypertune_distribution_num_brackets"] = 1
-        if (
-            kwargs.get("model") in (None, "gp_multitask", "gp_independent")
-            and kwargs.get("searcher_data") != "all"
-        ):
-            default_options["max_size_data_for_model"] = DEFAULT_MAX_SIZE_DATA_FOR_MODEL
+    if (not is_hyperband) or (
+        kwargs.get("model") in (None, "gp_multitask", "gp_independent")
+        and kwargs.get("searcher_data") != "all"
+    ):
+        default_options["max_size_data_for_model"] = DEFAULT_MAX_SIZE_DATA_FOR_MODEL
     if is_multi_output:
         default_options["initial_scoring"] = "acq_func"
         default_options["exponent_cost"] = 1.0
@@ -948,6 +959,8 @@ def _common_defaults(
         "allow_duplicates": Boolean(),
         "input_warping": Boolean(),
         "boxcox_transform": Boolean(),
+        "max_size_data_for_model": IntegerOrNone(1, None),
+        "max_size_top_fraction": Float(0.0, 1.0),
     }
 
     if is_hyperband:
@@ -967,7 +980,6 @@ def _common_defaults(
         constraints["separate_noise_variances"] = Boolean()
         constraints["hypertune_distribution_num_samples"] = Integer(1, None)
         constraints["hypertune_distribution_num_brackets"] = Integer(1, None)
-        constraints["max_size_data_for_model"] = IntegerOrNone(1, None)
     if is_multi_output:
         constraints["initial_scoring"] = Categorical(choices=tuple({"acq_func"}))
         constraints["exponent_cost"] = Float(0.0, 1.0)

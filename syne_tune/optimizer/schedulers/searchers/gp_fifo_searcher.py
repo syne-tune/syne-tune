@@ -214,6 +214,22 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :param opt_verbose: Parameter for surrogate model fitting. If ``True``,
         lots of output. Defaults to ``False``
     :type opt_verbose: bool, optional
+    :param max_size_data_for_model: If this is set, we limit the number of
+        observations the surrogate model is fitted on this value. If there are
+        more observations, they are down sampled, see
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state.SubsampleSingleFidelityStateConverter`
+        for details. This down sampling is repeated every time the model is
+        fit. The ``opt_skip_*`` predicates are evaluated before the state is
+        downsampled. Pass ``None`` not to apply such a threshold. The default is
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+    :type max_size_data_for_model: int, optional
+    :param max_size_top_fraction: Only used if ``max_size_data_for_model`` is
+        set. This fraction of the down sampled set is filled with the top entries
+        in the full set, the remaining ones are sampled at random from the full
+        set, see
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state.SubsampleSingleFidelityStateConverter`
+        for details. Defaults to 0.25.
+    :type max_size_top_fraction: float, optional
     :param opt_skip_init_length: Parameter for surrogate model fitting,
         skip predicate. Fitting is never skipped as long as number of
         observations below this threshold. Defaults to 150

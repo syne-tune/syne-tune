@@ -15,11 +15,16 @@ import pytest
 from operator import itemgetter
 from numpy.random import RandomState
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_multifid import (
     cap_size_tuning_job_state,
     _extract_observations,
     _create_trials_evaluations,
     sparsify_tuning_job_state,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_singlefid import (
+    _extract_observations as _extract_observations_singlefid,
+    _create_trials_evaluations as _create_trials_evaluations_singlefid,
+    cap_size_tuning_job_state as cap_size_tuning_job_state_singlefid,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
@@ -490,3 +495,149 @@ def test_sparsify_tuning_job_state_simple():
         assert set(result) == set(result_compare), _error_message_comparison(
             result, result_compare
         )
+
+
+def _state_from_data_singlefid(
+    data: List[Tuple[int, float]], hp_ranges: HyperparameterRanges
+) -> TuningJobState:
+    trial_ids = set(i for i, _ in data)
+    config_for_trial = {str(trial_id): dict() for trial_id in trial_ids}
+    return TuningJobState(
+        hp_ranges=hp_ranges,
+        config_for_trial=config_for_trial,
+        trials_evaluations=_create_trials_evaluations_singlefid(data),
+        failed_trials=[],
+        pending_evaluations=[],
+    )
+
+
+def _data_from_state_singlefid(state: TuningJobState) -> List[Tuple[int, float]]:
+    return _extract_observations_singlefid(state.trials_evaluations)
+
+
+test_cases_singlefid = [
+    (
+        [
+            (0, 4),
+            (1, 3),
+            (2, 2),
+            (3, 16),
+            (4, 10),
+            (5, 0),
+            (6, 1),
+            (7, 8),
+            (8, 2.5),
+        ],
+        [(5, 0), (6, 1)],
+        6,
+        1 / 3,
+        "min",
+    ),
+    (
+        [
+            (0, 4),
+            (1, 3),
+            (2, 2),
+            (3, 16),
+            (4, 10),
+            (5, 0),
+            (6, 1),
+            (7, 8),
+            (8, 2.5),
+        ],
+        [(3, 16), (4, 10)],
+        6,
+        1 / 3,
+        "max",
+    ),
+    (
+        [
+            (0, 4),
+            (1, 3),
+            (2, 2),
+            (3, 16),
+            (4, 10),
+            (5, 0),
+            (6, 1),
+            (7, 8),
+            (8, 2.5),
+        ],
+        [(5, 0)],
+        2,
+        1 / 2,
+        "min",
+    ),
+    (
+        [
+            (0, 4),
+            (1, 3),
+            (2, 2),
+            (3, 16),
+            (4, 10),
+            (5, 0),
+            (6, 1),
+            (7, 8),
+            (8, 2.5),
+        ],
+        [(5, 0), (6, 1), (2, 2), (8, 2.5)],
+        8,
+        1 / 2,
+        "min",
+    ),
+    (
+        [
+            (0, 4),
+            (1, 3),
+            (2, 2),
+            (3, 16),
+            (4, 10),
+            (5, 0),
+            (6, 1),
+            (7, 8),
+            (8, 2.5),
+        ],
+        [
+            (0, 4),
+            (1, 3),
+            (2, 2),
+            (3, 16),
+            (4, 10),
+            (5, 0),
+            (6, 1),
+            (7, 8),
+            (8, 2.5),
+        ],
+        9,
+        1 / 3,
+        "min",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "data, result_part, max_size, top_fraction, mode",
+    test_cases_singlefid,
+)
+def test_cap_size_tuning_job_state_singlefid(
+    data, result_part, max_size, top_fraction, mode
+):
+    random_seed = 31415123
+    random_state = RandomState(random_seed)
+    config_space = {"lr": uniform(0, 1)}
+    hp_ranges = make_hyperparameter_ranges(config_space)
+
+    new_state = cap_size_tuning_job_state_singlefid(
+        state=_state_from_data_singlefid(data, hp_ranges),
+        max_size=max_size,
+        mode=mode,
+        top_fraction=top_fraction,
+        random_state=random_state,
+    )
+    result = set(_data_from_state_singlefid(new_state))
+    assert len(result) <= max_size
+    assert set(result_part).issubset(
+        result
+    ), f"data = {data}\nresult_part = {result_part}\nmax_size = {max_size}\nresult = {result}"
+    assert result.issubset(
+        set(data)
+    ), f"data = {data}\nresult_part = {result_part}\nmax_size = {max_size}\nresult = {result}"

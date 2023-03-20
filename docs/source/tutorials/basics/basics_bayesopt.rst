@@ -165,19 +165,29 @@ Speeding up Decision-Making
 Gaussian process surrogate models have many crucial advantages over
 other probabilistic surrogate models typically used in machine learning.
 But they have one key disadvantage: inference computations scale
-cubically in the number of observations. For most HPO use cases, this is
+*cubically* in the number of observations. For most HPO use cases, this is
 not a problem, since no more than a few hundred evaluations can be
 afforded.
 
-If you find yourself in a situation where an experiment can run a
-thousand evaluations, there are some ``search_options`` arguments you
-can use in order to speed up Bayesian optimization. The most expensive
-part of making a decision consists in refitting the parameters of the GP
-surrogate model, such as the ARD parameters of the kernel. While this
-refitting is essential for good performance with a small number of
-observations, it can be thinned out or even stopped when the dataset
-gets large. You can use ``opt_skip_init_length``, ``opt_skip_period`` to
-this end.
+Syne Tune allows to control the number of observations the GP surrogate model
+is fit to, via ``max_size_data_for_model`` in ``search_options``. If the data
+is larger, it is downsampled to this size. Sampling is controlled by another
+argument ``max_size_top_fraction``. Namely, this fraction of entries in the
+downsampled set are filled by the best points in the full set, while the
+remaining entries are sampled (with replacement) from the rest of the full set.
+The default for ``max_size_data_for_model`` is
+:const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+The feature is switched off by setting this to ``None`` or a very large value,
+but this is not recommended. Subsampling is repeated every time the surrogate
+model is fit.
+
+Beyond, there are some ``search_options`` arguments you can use in order to
+speed up Bayesian optimization. The most expensive part of making a decision
+consists in refitting the parameters of the GP surrogate model, such as the ARD
+parameters of the kernel. While this refitting is essential for good performance
+with a small number of observations, it can be thinned out or even stopped when
+the dataset gets large. You can use ``opt_skip_init_length``,
+``opt_skip_period`` to this end.
 
 Warping of Inputs
 ~~~~~~~~~~~~~~~~~
