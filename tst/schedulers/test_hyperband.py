@@ -249,5 +249,5 @@ def test_quantile_hyperband_stopping():
         rung = Rung(level=1, prom_quant=prom_quant, mode=mode, data=data)
         quantile = rung.quantile()
         q = prom_quant if mode == "min" else 1 - prom_quant
-        quantile_test = np.quantile(metric_vals, q=q, method="linear")
+        quantile_test = np.quantile(metric_vals, q=q)
         np.testing.assert_almost_equal(quantile, quantile_test)
