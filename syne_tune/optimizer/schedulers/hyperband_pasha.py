@@ -81,7 +81,7 @@ class PASHARungSystem(PromotionRungSystem):
             self._rungs[-self.current_rung_idx],
             self._rungs[-self.current_rung_idx + 1],
         ]:
-            if len(rung) > 0:
+            if rung:
                 # Note that entries in ``rung.data`` are already sorted
                 trial_ids, values = zip(
                     *[(x.trial_id, x.metric_val) for x in rung.data]
@@ -228,13 +228,11 @@ class PASHARungSystem(PromotionRungSystem):
         resource = result[self._resource_attr]
         metric_val = result[self._metric]
         if trial_id not in self.per_epoch_results:
-            self.per_epoch_results[trial_id] = {resource: metric_val}
-        else:
-            self.per_epoch_results[trial_id][resource] = metric_val
+            self.per_epoch_results[trial_id] = dict()
+        self.per_epoch_results[trial_id][resource] = metric_val
         if resource not in self.epoch_to_trials:
-            self.epoch_to_trials[resource] = {trial_id}
-        else:
-            self.epoch_to_trials[resource].add(trial_id)
+            self.epoch_to_trials[resource] = set()
+        self.epoch_to_trials[resource].add(trial_id)
         self.current_max_epoch = max(self.current_max_epoch, resource)
 
     def _decide_resource_increase(self, rankings) -> bool:
