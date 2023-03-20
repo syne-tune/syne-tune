@@ -40,17 +40,19 @@ class AutomaticTerminationCriterion(object):
     of the objective.
 
     Automatic Termination for Hyperparameter Optimization
-    Anastasia Makarova and Huibin Shen and Valerio Perrone and Aaron Klein and Jean Baptiste Faddoul and Andreas Krause and Matthias Seeger and Cedric Archambeau
+    Anastasia Makarova and Huibin Shen and Valerio Perrone and Aaron Klein and Jean Baptiste Faddoul and Andreas Krause
+    and Matthias Seeger and Cedric Archambeau
     First Conference on Automated Machine Learning (Main Track)
     2022
 
     :param config_space: Configuration space for evaluation function
     :param metric: The metric to be monitored.
     :param mode: The mode to select the top results ("min" or "max")
-    :param threshold: The threshold on the regret. We stop the optimization process when it's unlikely that the expected decrease in regret compared to the global optimum is higher than this threshold.
+    :param threshold: The threshold on the regret. We stop the optimization process when it's unlikely that the
+    expected decrease in regret compared to the global optimum is higher than this threshold.
     :param beta: Multiplier on the standard devication to compute the upper and lower confidence bound.
     :param seed: Seed for the random numer generator.
-    :param warm_up: Number of iterations before we start fitting the GP. Especially, with little data, GP's are notoriously unreliable. Hence we only fit the GP once we collected some data points
+    :param warm_up: Defines the minimum umber of data points before we start fitting the GP.
     :param topq: We consider only the top q-% data points to fit the GP.
     """
 
