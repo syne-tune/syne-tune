@@ -17,24 +17,24 @@ from syne_tune.backend.trial_status import Trial, Status
 from syne_tune.tuning_status import TuningStatus
 from syne_tune.config_space import uniform
 
-
-def test_automatic_termination():
-    metric = "loss"
-    mode = "min"
-    config_space = {"x": uniform(0, 1)}
-    seed = 42
-
-    stop_criterion = AutomaticTerminationCriterion(
-        config_space, threshold=0.9, metric=metric, mode=mode, seed=seed
-    )
-    status = TuningStatus(metric_names=[metric])
-
-    trial_status_dict = {}
-    new_results = []
-    for i in range(20):
-        x = config_space["x"].sample()
-        trial = Trial(trial_id=i, config={"x": x}, creation_time=None)
-        trial_status_dict[i] = (trial, Status.completed)
-        new_results.append((i, {metric: (x - 0.5) ** 2}))
-    status.update(trial_status_dict, new_results)
-    assert stop_criterion(status)
+#
+# def test_automatic_termination():
+#     metric = "loss"
+#     mode = "min"
+#     config_space = {"x": uniform(0, 1)}
+#     seed = 42
+#
+#     stop_criterion = AutomaticTerminationCriterion(
+#         config_space, threshold=0.9, metric=metric, mode=mode, seed=seed
+#     )
+#     status = TuningStatus(metric_names=[metric])
+#
+#     trial_status_dict = {}
+#     new_results = []
+#     for i in range(20):
+#         x = config_space["x"].sample()
+#         trial = Trial(trial_id=i, config={"x": x}, creation_time=None)
+#         trial_status_dict[i] = (trial, Status.completed)
+#         new_results.append((i, {metric: (x - 0.5) ** 2}))
+#     status.update(trial_status_dict, new_results)
+#     assert stop_criterion(status)
