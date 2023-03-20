@@ -157,38 +157,3 @@ class AutomaticTerminationCriterion(object):
         stop = upper_bound < self._threshold
 
         return stop
-
-
-if __name__ == "__main__":
-
-    from syne_tune.backend.trial_status import Trial, Status
-    from syne_tune.config_space import uniform
-
-    metric = "loss"
-    config_space = {"x": uniform(0, 1)}
-
-    stop_criterion = AutomaticTerminationCriterion(
-        config_space, threshold=0.9, metric=metric, mode="min"
-    )
-
-    status = TuningStatus(metric_names=[metric])
-
-    trial_status_dict = {}
-    new_results = []
-    for i in range(20):
-        x = np.random.rand()
-        trial = Trial(trial_id=i, config={"x": x}, creation_time=None)
-        trial_status_dict[i] = (trial, Status.completed)
-        new_results.append((i, {metric: (x - 0.5) ** 2}))
-    status.update(trial_status_dict, new_results)
-    # status.update(
-    #     trial_status_dict={
-    #         0: (trial0, Status.completed),
-    #         1: (trial1, Status.completed),
-    #     },
-    #     new_results=[
-    #         (0, {metric: 4.0}),
-    #         (1, {metric: 3.0}),
-    #     ],
-    # )
-    assert not stop_criterion(status)
