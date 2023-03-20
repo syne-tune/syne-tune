@@ -52,7 +52,7 @@ class AutomaticTerminationCriterion(object):
     expected decrease in regret compared to the global optimum is higher than this threshold.
     :param beta: Multiplier on the standard deviation to compute the upper and lower confidence bound.
     :param seed: Seed for the random numer generator.
-    :param warm_up: Defines the minimum umber of data points before we start fitting the GP.
+    :param warm_up: Defines the minimum number of data points before we start fitting the GP.
     :param topq: We consider only the top q-% data points to fit the GP.
     """
 
