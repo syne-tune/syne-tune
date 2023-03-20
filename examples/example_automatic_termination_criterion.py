@@ -37,6 +37,13 @@ for i, criterion in enumerate(criterions):
     axis[i].set_title(criterion)
 
     for seed in range(num_seeds):
+        trial_backend = BlackboxRepositoryBackend(
+            elapsed_time_attr=benchmark.elapsed_time_attr,
+            blackbox_name=benchmark.blackbox_name,
+            dataset=dataset_name,
+            seed=seed % 3,
+        )
+
         blackbox = trial_backend.blackbox
 
         if criterion == "time":
@@ -50,12 +57,6 @@ for i, criterion in enumerate(criterions):
                 mode=benchmark.mode,
                 seed=seed,
             )
-        trial_backend = BlackboxRepositoryBackend(
-            elapsed_time_attr=benchmark.elapsed_time_attr,
-            blackbox_name=benchmark.blackbox_name,
-            dataset=dataset_name,
-            seed=seed % 3,
-        )
 
         scheduler = BORE(
             config_space=blackbox.configuration_space,
