@@ -37,6 +37,7 @@ for i, criterion in enumerate(criterions):
     axis[i].set_title(criterion)
 
     for seed in range(num_seeds):
+        blackbox = trial_backend.blackbox
 
         if criterion == "time":
             stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
@@ -55,7 +56,6 @@ for i, criterion in enumerate(criterions):
             dataset=dataset_name,
             seed=seed % 3,
         )
-        blackbox = trial_backend.blackbox
 
         scheduler = BORE(
             config_space=blackbox.configuration_space,
