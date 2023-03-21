@@ -9,7 +9,7 @@ To install Syne Tune from pip, you can simply do:
 
 For development, or for using the
 `benchmarking framework <tutorials/benchmarking/README.html>`__ to run many experiments in parallel, you need to
-install Syne Tune from sources:
+install Syne Tune from source:
 
 .. code-block:: bash
 

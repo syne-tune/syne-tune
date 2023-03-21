@@ -474,7 +474,7 @@ in parallel, as detailed in
 
 .. note::
    In order to use the *benchmarking* framework, you need to have
-   `installed Syne Tune from sources <getting_started.html#installation>`__.
+   `installed Syne Tune from source <getting_started.html#installation>`__.
 
 How can I access results after tuning remotely?
 ===============================================
@@ -526,7 +526,7 @@ in `this tutorial <tutorials/benchmarking/README.html>`__, see also these exampl
 
 .. note::
    In order to use the *benchmarking* framework, you need to have
-   `installed Syne Tune from sources <getting_started.html#installation>`__.
+   `installed Syne Tune from source <getting_started.html#installation>`__.
 
 What different schedulers do you support? What are the main differences between them?
 =====================================================================================
