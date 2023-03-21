@@ -9,6 +9,10 @@ allowing you to easily switch between local, SageMaker, and simulator backend.
 The tutorial also shows how any number of experiments can be run in parallel,
 in order to obtain desired results faster.
 
+.. note::
+   In order to use the *benchmarking* framework, you need to have
+   `installed Syne Tune from source <getting_started.html#installation>`__.
+
 .. toctree::
    :name: Benchmarking in Syne Tune Sections
    :maxdepth: 1

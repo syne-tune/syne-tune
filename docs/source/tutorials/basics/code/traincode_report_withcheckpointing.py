@@ -13,7 +13,6 @@
 import argparse
 import logging
 
-from syne_tune import Reporter
 from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import (
     download_data,
     split_data,
@@ -21,7 +20,8 @@ from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist imp
     train_model,
     validate_model,
 )
-from benchmarking.utils import (
+from syne_tune import Reporter
+from syne_tune.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
     add_checkpointing_to_argparse,

@@ -23,6 +23,8 @@ Fine-Tuning Hugging Face Model for Sentiment Classification
 
 **Requirements**:
 
+* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
+  `from source <getting_started.html#installation>`__.
 * `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
 * Runs on four ``ml.g4dn.xlarge`` instances
 
@@ -97,6 +99,8 @@ Launch HPO Experiment with Simulator Backend
 
 **Requirements**:
 
+* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
+  `from source <getting_started.html#installation>`__.
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 * If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
@@ -119,6 +123,8 @@ Joint Tuning of Instance Type and Hyperparameters using MOASHA
 
 **Requirements**:
 
+* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
+  `from source <getting_started.html#installation>`__.
 * `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
 * Runs training jobs on instances of type ``ml.g4dn.xlarge``, ``ml.g5.xlarge``,
   ``ml.g4dn.2xlarge``, ``ml.p2.xlarge``, ``ml.g5.2xlarge``, ``ml.g5.4xlarge``,
@@ -161,10 +167,12 @@ PASHA: Efficient HPO and NAS with Progressive Resource Allocation
    :caption: examples/launch_pasha_nasbench201.py
    :start-after: # permissions and limitations under the License.
 
-This script uses the simulator backend to run an experiment on NASBench-201.
-It takes only a few seconds to run, but it needs ``nasbench201`` blackbox
-to be downloaded and preprocessed, which can take a while when done
-for the first time.
+**Requirements**:
+
+* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
+  `from source <getting_started.html#installation>`__.
+* Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
+  take quite a while when done for the first time
 
 PASHA typically uses ``max_num_trials_completed`` as the stopping criterion.
 After finding a strong configuration using PASHA, 
@@ -196,6 +204,8 @@ Restrict Scheduler to Tabulated Configurations with Simulator Backend
 
 **Requirements**:
 
+* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
+  `from source <getting_started.html#installation>`__.
 * Needs ``lcbench`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 * If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
@@ -362,6 +372,11 @@ Launch HPO Experiment on mlp_fashionmnist Benchmark
 .. literalinclude:: ../../examples/launch_fashionmnist.py
    :caption: examples/launch_fashionmnist.py
    :start-after: # permissions and limitations under the License.
+
+**Requirements**:
+
+* Uses ``benchmarking`` framework, which requires Syne Tune to have been
+  installed `from source <getting_started.html#installation>`__.
 
 In this example, we tune one of the built-in benchmark problems, which
 is useful in order to compare different HPO methods. More details on

@@ -23,7 +23,7 @@ from syne_tune import Tuner
 from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
     mlp_fashionmnist_benchmark,
 )
-from benchmarking.utils.searcher_state_callback import StoreSearcherStatesCallback
+from benchmarking.utils import StoreSearcherStatesCallback
 
 
 if __name__ == "__main__":
