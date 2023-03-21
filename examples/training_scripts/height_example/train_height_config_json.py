@@ -17,7 +17,7 @@ from argparse import ArgumentParser
 
 from syne_tune import Reporter
 from syne_tune.config_space import randint
-from benchmarking.utils import add_config_json_to_argparse, load_config_json
+from syne_tune.utils import add_config_json_to_argparse, load_config_json
 
 
 report = Reporter()

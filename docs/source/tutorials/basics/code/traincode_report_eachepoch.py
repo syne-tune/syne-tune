@@ -13,7 +13,6 @@
 import argparse
 import logging
 
-from syne_tune import Reporter
 from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import (
     download_data,
     split_data,
@@ -21,6 +20,7 @@ from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist imp
     train_model,
     validate_model,
 )
+from syne_tune import Reporter
 
 
 def objective(config):

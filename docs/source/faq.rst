@@ -472,6 +472,10 @@ in parallel, as detailed in
 * SageMaker backend:
   `benchmarking/nursery/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
 
+.. note::
+   In order to use the *benchmarking* framework, you need to have
+   `installed Syne Tune from sources <getting_started.html#installation>`__.
+
 How can I access results after tuning remotely?
 ===============================================
 
@@ -506,9 +510,8 @@ When you run remote code, you often need to install packages
 How can I benchmark different methods?
 ======================================
 
-The most flexible way to do so is to write a custom launcher script, as
-detailed in `this tutorial <tutorials/benchmarking/README.html>`__, see
-also these examples:
+The most flexible way to do so is to write a custom launcher script, as detailed
+in `this tutorial <tutorials/benchmarking/README.html>`__, see also these examples:
 
 * Local backend:
   `benchmarking/nursery/launch_local/ <benchmarking/launch_local.html>`__
@@ -520,6 +523,10 @@ also these examples:
   `benchmarking/nursery/fine_tuning_transformer_glue/ <benchmarking/fine_tuning_transformer_glue.html>`__
 * Hyper-Tune:
   `benchmarking/nursery/benchmark_hypertune/ <benchmarking/benchmark_hypertune.html>`__
+
+.. note::
+   In order to use the *benchmarking* framework, you need to have
+   `installed Syne Tune from sources <getting_started.html#installation>`__.
 
 What different schedulers do you support? What are the main differences between them?
 =====================================================================================

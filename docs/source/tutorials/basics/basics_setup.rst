@@ -42,7 +42,7 @@ instead (e.g., cross-validation). Here is an example:
    :start-after: # permissions and limitations under the License.
 
 This script imports boiler plate code from
-`mlp_on_fshionmnist.py <../../training_scripts.html#multi-layer-perceptron-trained-on-fashion-mnist>`__.
+`mlp_on_fashionmnist.py <../../training_scripts.html#multi-layer-perceptron-trained-on-fashion-mnist>`__.
 It is a typical script to train a neural network, using *PyTorch*:
 
 * [1] ``objective`` is encoding the function we would like to optimize. It

@@ -7,8 +7,9 @@ To install Syne Tune from pip, you can simply do:
 
    pip install 'syne-tune[extra]'
 
-For development, you may want to get the latest version from
-`github <https://github.com/awslabs/syne-tune>`__:
+For development, or for using the
+`benchmarking framework <tutorials/benchmarking/README.html>`__ to run many experiments in parallel, you need to
+install Syne Tune from sources:
 
 .. code-block:: bash
 
