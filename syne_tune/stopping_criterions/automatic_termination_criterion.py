@@ -25,7 +25,10 @@ from botorch.fit import fit_gpytorch_mll
 from botorch.utils.transforms import normalize
 from botorch.acquisition import UpperConfidenceBound
 from botorch.optim import optimize_acqf
+from botorch.exceptions.errors import ModelFittingError
 from gpytorch.mlls import ExactMarginalLogLikelihood
+
+from linear_operator.utils.errors import NotPSDError
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +81,8 @@ class AutomaticTerminationCriterion(object):
         self._threshold = threshold
         self._config_space = config_space
         self._hp_ranges = make_hyperparameter_ranges(config_space)
+
+        assert 0 < topq < 1, 'topq has to be in ]0, 1['
 
         if self._mode == "max":
             self.multiplier = 1
@@ -132,28 +137,37 @@ class AutomaticTerminationCriterion(object):
         if len(evaluations.shape) == 1:
             evaluations = evaluations.reshape((-1, 1))
 
-        gp = SingleTaskGP(observations, evaluations)
-        mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
-        fit_gpytorch_mll(mll, max_attempts=1)
-        acq = UpperConfidenceBound(
-            model=gp,
-            beta=self._beta,
-        )
-        _, max_ucb = optimize_acqf(
-            acq,
-            bounds=Tensor(self._hp_ranges.get_ndarray_bounds()).T,
-            q=1,
-            num_restarts=3,
-            raw_samples=100,
-        )
-        posterior = gp.posterior(observations)
-        mean = posterior.mean
-        std = torch.sqrt(posterior.variance)
-        lcb = mean - self._beta * std
-        max_lcb = lcb.max()
+        try:
+            gp = SingleTaskGP(observations, evaluations)
+            mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
+            fit_gpytorch_mll(mll, max_attempts=1)
+            acq = UpperConfidenceBound(
+                model=gp,
+                beta=self._beta,
+            )
+            _, max_ucb = optimize_acqf(
+                acq,
+                bounds=Tensor(self._hp_ranges.get_ndarray_bounds()).T,
+                q=1,
+                num_restarts=3,
+                raw_samples=100,
+            )
+            posterior = gp.posterior(observations)
+            mean = posterior.mean
+            std = torch.sqrt(posterior.variance)
+            lcb = mean - self._beta * std
+            max_lcb = lcb.max()
 
-        upper_bound = max_ucb - max_lcb
+            upper_bound = max_ucb - max_lcb
 
-        stop = upper_bound < self._threshold
+            stop = upper_bound < self._threshold
 
-        return stop
+            return bool(stop)
+
+        except NotPSDError as _:
+            logging.warning("Chlolesky inversion failed, continue the tuning process.")
+            return False
+
+        except ModelFittingError as _:
+            logging.warning("Chlolesky inversion failed, continue the tuning process.")
+            return False
