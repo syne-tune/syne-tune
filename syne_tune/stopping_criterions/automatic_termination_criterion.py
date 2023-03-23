@@ -82,7 +82,7 @@ class AutomaticTerminationCriterion(object):
         self._config_space = config_space
         self._hp_ranges = make_hyperparameter_ranges(config_space)
 
-        assert 0 < topq < 1, 'topq has to be in ]0, 1['
+        assert 0 < topq < 1, "topq has to be in ]0, 1["
 
         if self._mode == "max":
             self.multiplier = 1
