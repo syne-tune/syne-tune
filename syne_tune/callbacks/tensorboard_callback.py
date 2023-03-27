@@ -166,10 +166,11 @@ class TensorboardCallback(TunerCallback):
         return state
 
     def __setstate__(self, state):
-        super().__init__(
+        self.__init__(
             ignore_metrics=state["ignore_metrics"],
             target_metric=state["target_metric"],
             mode="min" if state["metric_sign"] == 1 else "max",
+            log_hyperparameters=state["log_hyperparameters"],
         )
         self.results = state["results"]
         self.curr_best_value = state["curr_best_value"]
