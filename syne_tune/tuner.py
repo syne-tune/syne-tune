@@ -24,6 +24,7 @@ from syne_tune.backend.trial_backend import (
     TrialIdAndResultList,
 )
 from syne_tune.backend.trial_status import Status, Trial, TrialResult
+from syne_tune.callbacks.remove_checkpoints_callback import RemoveCheckpointsCallback
 from syne_tune.config_space import config_space_to_json_dict
 from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
@@ -121,6 +122,10 @@ class Tuner:
         experiment is ru remotely, we recommend to set this, since otherwise
         checkpoints and logs are synced to S3, along with tuning results, which
         is costly and error-prone.
+    :param early_removal_checkpoints: If ``True``, we remove checkpoints of
+        certain paused trials early, if this is supported by the scheduler, see
+        :meth:`syne_tune.optimizer.scheduler.TrialScheduler.trials_checkpoints_can_be_removed`.
+        Defaults to ``True``.
     """
 
     def __init__(
@@ -142,6 +147,7 @@ class Tuner:
         save_tuner: bool = True,
         start_jobs_without_delay: bool = True,
         trial_backend_path: Optional[str] = None,
+        early_removal_checkpoints: bool = True,
     ):
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -182,13 +188,27 @@ class Tuner:
             else trial_backend_path,
             tuner_name=self.name,
         )
-        self.callbacks = (
-            callbacks if callbacks is not None else [self._default_callback()]
-        )
-
+        self._init_callbacks(callbacks, early_removal_checkpoints)
         self.tuning_status = None
         self.tuner_saver = None
         self.status_printer = None
+
+    def _init_callbacks(
+        self, callbacks: Optional[List[TunerCallback]], early_removal_checkpoints: bool
+    ):
+        if callbacks is None:
+            callbacks = [self._default_callback()]
+        else:
+            if not any(
+                isinstance(callback, StoreResultsCallback) for callback in callbacks
+            ):
+                logger.warning(
+                    "None of the callbacks provided are of type StoreResultsCallback. "
+                    "This means no tuning results will be written."
+                )
+        if early_removal_checkpoints:
+            callbacks.append(RemoveCheckpointsCallback())
+        self.callbacks = callbacks
 
     def run(self):
         """Launches the tuning."""

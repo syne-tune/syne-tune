@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Tuple
+from typing import Tuple, Optional, List
 import copy
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import (
@@ -29,7 +29,7 @@ class SynchronousHyperbandBracketManager:
 
     Each bracket contains a number of rungs, the largest one ``max_num_rungs``.
     A bracket with k rungs has offset ``max_num_rungs - k``. Hyperband cycles
-    through brackets with offset 0, ..., ``num_brackets - 1``, where
+    through brackets with offset ``0, ..., num_brackets - 1``, where
     ``num_brackets <= max_num_rungs``.
 
     At any given time, one bracket is primary, all other active brackets are
@@ -37,10 +37,9 @@ class SynchronousHyperbandBracketManager:
     if its current rung has no free slots (all are pending), secondary
     brackets are considered.
 
-    Each bracket has a bracket_id (nonnegative int), which is used as key for
-    the dicts in ``next_jobs``, ``on_results``. The primary bracket always has
-    the lowest id of all active ones. For job assignment, we iterate over
-    active brackets starting from the primary, and assign the job to the
+    Each bracket has a ``bracket_id`` (nonnegative int). The primary bracket
+    always has the lowest id of all active ones. For job assignment, we iterate
+    over active brackets starting from the primary, and assign the job to the
     first bracket which has a free slot. If none of the active brackets have
     a free slot, a new bracket is created.
 
@@ -124,7 +123,7 @@ class SynchronousHyperbandBracketManager:
         lowest rung of its bracket, and the ``trial_id`` has to be set as well
         when returning the record in ``on_result``.
 
-        :return: Tuple (bracket_id, slot_in_rung)
+        :return: Tuple ``(bracket_id, slot_in_rung)``
         """
         # Try to assign job to active bracket. There must be at least one,
         # the primary one
@@ -139,12 +138,13 @@ class SynchronousHyperbandBracketManager:
         assert slot_in_rung is not None, "Newly created bracket has to have a free slot"
         return bracket_id, slot_in_rung
 
-    def on_result(self, result: Tuple[int, SlotInRung]):
+    def on_result(self, result: Tuple[int, SlotInRung]) -> Optional[List[int]]:
         """
         Called by scheduler to provide result for previously requested job.
-        See ``next_job``.
+        See :meth:`next_job`.
 
-        :param result: Tuple (bracket_id, slot_in_rung)
+        :param result: Tuple ``(bracket_id, slot_in_rung)``
+        :return: See :meth:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket.SynchronousBracket.on_result`
         """
         bracket_id, slot_in_rung = result
         assert self._primary_bracket_id <= bracket_id < self._next_bracket_id, (
@@ -152,7 +152,7 @@ class SynchronousHyperbandBracketManager:
             + f"[{self._primary_bracket_id}, {self._next_bracket_id})"
         )
         bracket = self._brackets[bracket_id]
-        bracket.on_result(slot_in_rung)
+        trials_not_promoted = bracket.on_result(slot_in_rung)
         for_primary = bracket_id == self._primary_bracket_id
         if for_primary:
             # Primary bracket is complete: Move to next one. While very
@@ -168,3 +168,4 @@ class SynchronousHyperbandBracketManager:
             # May have to create a new bracket
             if bracket.is_bracket_complete():
                 self._primary_bracket_id = self._create_new_bracket()
+        return trials_not_promoted
