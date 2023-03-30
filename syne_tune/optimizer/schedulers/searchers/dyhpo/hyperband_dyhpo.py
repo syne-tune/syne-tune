@@ -134,23 +134,25 @@ class DyHPORungSystem(PromotionRungSystem):
                     f"{rung_levels} is not recommended"
                 )
 
-    def _paused_trials_and_milestones(self) -> List[Tuple[str, int]]:
+    def _paused_trials_and_milestones(self) -> List[Tuple[str, int, int]]:
         """
         Return list of all trials which are paused. Entries are
-        ``(trial_id, resource)``, where ``resource`` is the next rung level the
-        trial reaches after being resumed.
+        ``(trial_id, pos, resource)``, where ``pos`` is the position of the trial
+        in its rung, and ``resource`` is the next rung level the trial reaches
+        after being resumed.
 
         :return: See above
         """
         paused_trials = []
         next_level = self._max_t
         for rung in self._rungs:
+            level = rung.level
             paused_trials.extend(
-                (trial_id, next_level)
-                for trial_id, (_, was_promoted) in rung.data.items()
-                if not was_promoted
+                (entry.trial_id, pos, next_level)
+                for pos, entry in enumerate(rung.data)
+                if self._is_promotable_trial(entry, level)
             )
-            next_level = rung.level
+            next_level = level
         return paused_trials
 
     def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
@@ -196,12 +198,11 @@ class DyHPORungSystem(PromotionRungSystem):
         trial_id = result.get("trial_id")
         if trial_id is not None:
             # Trial is to be promoted
-            milestone = next(r for i, r in paused_trials if i == trial_id)
+            pos = result["pos"]  # Position of trial in its rung
+            milestone = next(r for i, _, r in paused_trials if i == trial_id)
             resume_from = self._previous_rung_level[milestone]
-            recorded = next(
-                rung.data for rung in self._rungs if rung.level == resume_from
-            )
-            self._mark_as_promoted(recorded, trial_id)
+            rung = next(rung for rung in self._rungs if rung.level == resume_from)
+            self._mark_as_promoted(rung, pos, trial_id=trial_id)
             ret_dict = {
                 "trial_id": trial_id,
                 "resume_from": resume_from,

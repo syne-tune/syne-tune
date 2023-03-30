@@ -1,3 +1,4 @@
 syne-tune[gpsearchers,kde,blackbox-repository,aws]
 tqdm
 botorch
+sortedcontainers  # Remove in version > 0.4.1

@@ -10,12 +10,33 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any
 import logging
 
-from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
+from syne_tune.optimizer.schedulers.hyperband_stopping import Rung
+from syne_tune.optimizer.schedulers.hyperband_promotion import (
+    PromotionRungEntry,
+    PromotionRungSystem,
+)
 
 logger = logging.getLogger(__name__)
+
+
+class CostPromotionRungEntry(PromotionRungEntry):
+    """
+    Appends ``cost_val`` to the superclass. This is the cost value
+    :math:`c(x, r)` recorded for the trial at the resource level.
+    """
+
+    def __init__(
+        self,
+        trial_id: str,
+        metric_val: float,
+        cost_val: float,
+        was_promoted: bool = False,
+    ):
+        super().__init__(trial_id, metric_val, was_promoted)
+        self.cost_val = cost_val
 
 
 class CostPromotionRungSystem(PromotionRungSystem):
@@ -70,56 +91,34 @@ class CostPromotionRungSystem(PromotionRungSystem):
             rung_levels, promote_quantiles, metric, mode, resource_attr, max_t
         )
         self._cost_attr = cost_attr
-        # Note: The data entry in ``_rungs`` is now a dict mapping trial_id to
-        # ``(metric_value, cost_value, was_promoted)``, where metric_value is
-        # :math:`m(x, r)`, cost value is :math:`c(x, r)`.
 
-    def _find_promotable_trial(
-        self, recorded: Dict[str, Any], prom_quant: float, resource: int
-    ) -> Optional[str]:
+    def _find_promotable_trial(self, rung: Rung) -> Optional[Tuple[str, int]]:
         """
-        Check whether any not yet promoted entry in ``recorded`` is
-        promotable (see header comment). If there are several such, the one
-        with the best value is chosen.
-
-        :param recorded: Dict to scan
-        :param prom_quant: Quantile for promotion
-        :param resource: Amount of resources spent on the rung.
-        :return: ``trial_id`` if found, otherwise ``None``
+        The promotability condition depends on the cost values (see header
+        comment).
         """
-        ret_id = None
-        if len(recorded) > 1:
-            sign = 2 * (self._mode == "min") - 1
-            # Sort best-first
-            sorted_record = sorted(
-                ((k,) + v for k, v in recorded.items()), key=lambda x: x[1] * sign
-            )
-            cost_threshold = sum(x[2] for x in sorted_record) * prom_quant
+        result = None
+        if len(rung) > 1:
+            cost_threshold = sum(x.cost_val for x in rung.data) * rung.prom_quant
             sum_costs = 0
-            # DEBUG
-            log_msg = (
-                f"q = {prom_quant:.2f}, threshold = {cost_threshold:.2f}\n"
-                + ", ".join(
-                    [
-                        f"{x[0]}:{x[2]:.2f}({x[1]:.3f},{int(x[3])})"
-                        for x in sorted_record
-                    ]
-                )
-            )
-            for id, _, cost, was_promoted in sorted_record:
-                sum_costs += cost
+            # ``rung.data`` is ordered, with best metric value first
+            for pos, entry in enumerate(rung.data):
+                sum_costs += entry.cost_val
                 if sum_costs > cost_threshold:
-                    log_msg += "\nNothing to promote"
+                    break  # Nothing to promote
+                if self._is_promotable_trial(entry, rung.level):
+                    result = (entry.trial_id, pos)
                     break
-                if not was_promoted:
-                    log_msg += f"\nPromote {id}: sum_costs = {sum_costs:.2f}"
-                    ret_id = id
-                    break
-            logger.debug(log_msg)  # DEBUG
-        return ret_id
+        return result
 
-    def _register_metrics_at_rung_level(self, trial_id, result, recorded):
-        metric_value = result[self._metric]
-        cost_value = result[self._cost_attr]
-        assert trial_id not in recorded  # Sanity check
-        recorded[trial_id] = (metric_value, cost_value, False)
+    def _register_metrics_at_rung_level(
+        self, trial_id: str, result: Dict[str, Any], rung: Rung
+    ):
+        assert trial_id not in rung  # Sanity check
+        rung.add(
+            CostPromotionRungEntry(
+                trial_id=trial_id,
+                metric_val=result[self._metric],
+                cost_val=result[self._cost_attr],
+            )
+        )
