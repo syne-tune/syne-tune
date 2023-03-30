@@ -15,7 +15,7 @@ import numpy as np
 from syne_tune.try_import import try_import_moo_message
 
 try:
-    from botocore.exceptions import ClientError
+    from pymoo.indicators.hv import HV
 except ImportError:
     print(try_import_moo_message())
 
@@ -31,8 +31,6 @@ def hypervolume(results_array: np.ndarray, reference_points: np.ndarray = None):
     :param reference_points: Reference points for hypervolume calculations.
                              If None, the maximum values of each metric is used.
     """
-    from pymoo.indicators.hv import HV
-
     if reference_points is None:
         reference_points = results_array.max(axis=0) * (1 + EPSILON) + EPSILON
     indicator_fn = HV(ref_point=reference_points)
