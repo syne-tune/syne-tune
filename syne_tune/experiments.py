@@ -113,7 +113,9 @@ class ExperimentResult:
         import matplotlib.pyplot as plt
 
         if isinstance(metric_to_plot, str):
-            assert metric_to_plot in self.metric_names(), f"Attepted to plot {metric_to_plot} while available metrics are {self.metric_names()}"
+            assert (
+                metric_to_plot in self.metric_names()
+            ), f"Attepted to plot {metric_to_plot} while available metrics are {self.metric_names()}"
             metric_to_plot = self.metric_names().index(metric_to_plot)
 
         metric = self.metric_names()[metric_to_plot]
@@ -157,7 +159,9 @@ class ExperimentResult:
         :return: Configuration corresponding to best metric value
         """
         if isinstance(metric, str):
-            assert metric in self.metric_names(), f"Attepted to plot {metric} while available metrics are {self.metric_names()}"
+            assert (
+                metric in self.metric_names()
+            ), f"Attepted to plot {metric} while available metrics are {self.metric_names()}"
             metric_name = metric
             metric = self.metric_names().index(metric)
         elif isinstance(metric, int):
