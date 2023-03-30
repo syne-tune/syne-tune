@@ -38,6 +38,7 @@ required_yahpo = load_requirements(
 required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
 required_aws = load_requirements("requirements-aws.txt")
+required_moo = load_requirements("requirements-moo.txt")
 
 long_description = (Path(__file__).parent / "README.md").read_text()
 required_extra = (
@@ -49,6 +50,7 @@ required_extra = (
     + required_dev
     + required_aws
     + required_yahpo
+    + required_moo
 )
 
 # Botorch only supports python version >= 3.8
