@@ -87,7 +87,9 @@ class ExperimentResult:
 
             x = self.results.loc[:, ST_TUNER_TIME]
             results_array = results_df[self.metric_names()].values
-            hypervolume_indicator = hypervolume(results_array, reference_points)
+            hypervolume_indicator = hypervolume(
+                results_array, reference_points, return_progress=True
+            )
 
             fig, ax = plt.subplots()
             ax.plot(x, hypervolume_indicator, **plt_kwargs)
