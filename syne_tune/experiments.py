@@ -64,7 +64,9 @@ class ExperimentResult:
         """
         return datetime.fromtimestamp(self.metadata[ST_TUNER_CREATION_TIMESTAMP])
 
-    def plot_hypervolume(self, reference_points: np.ndarray= None, figure_path: str = None, **plt_kwargs):
+    def plot_hypervolume(
+        self, reference_points: np.ndarray = None, figure_path: str = None, **plt_kwargs
+    ):
         """Plot best hyervolume value as function of wallclock time
 
         :param reference_points: Reference points for hypervolume calculations.
@@ -76,7 +78,9 @@ class ExperimentResult:
         import matplotlib.pyplot as plt
 
         metric_names = self.metric_names()
-        assert len(metric_names) > 1, "Only one metric exists, cannot compute hypervolume"
+        assert (
+            len(metric_names) > 1
+        ), "Only one metric exists, cannot compute hypervolume"
 
         if self.results is not None and len(self.results) > 0:
             results_df = self.results.sort_values(ST_TUNER_TIME)
@@ -95,7 +99,9 @@ class ExperimentResult:
             else:
                 fig.show()
 
-    def plot(self, metric_to_plot: Union[str, int] = 0, figure_path: str = None, **plt_kwargs):
+    def plot(
+        self, metric_to_plot: Union[str, int] = 0, figure_path: str = None, **plt_kwargs
+    ):
         """Plot best metric value as function of wallclock time
 
         :param metric_to_plot: Indicates which metric to plot, can be the index or a name of the metric.
@@ -109,7 +115,7 @@ class ExperimentResult:
         if isinstance(metric_to_plot, str):
             assert (
                 metric_to_plot in self.metric_names(),
-                f"Attepted to plot {metric_to_plot} while available metrics are {self.metric_names()}"
+                f"Attepted to plot {metric_to_plot} while available metrics are {self.metric_names()}",
             )
             metric_to_plot = self.metric_names().index(metric_to_plot)
 
@@ -156,7 +162,7 @@ class ExperimentResult:
         if isinstance(metric, str):
             assert (
                 metric in self.metric_names(),
-                f"Attepted to plot {metric} while available metrics are {self.metric_names()}"
+                f"Attepted to plot {metric} while available metrics are {self.metric_names()}",
             )
             metric_name = metric
             metric = self.metric_names().index(metric)
@@ -164,12 +170,14 @@ class ExperimentResult:
             metric_names = self.metric_names()
             if len(metric_names) > 1:
                 logging.warning(
-                "Several metrics exists, this will "
-                f"return the best w.r.t. the metric={metric} out of {metric_names}."
-            )
+                    "Several metrics exists, this will "
+                    f"return the best w.r.t. the metric={metric} out of {metric_names}."
+                )
             metric_name = metric_names[metric]
         else:
-            raise AttributeError(f"metic must be <int> or <str> but {type(metric)} was provided")
+            raise AttributeError(
+                f"metic must be <int> or <str> but {type(metric)} was provided"
+            )
 
         metric_mode = self.metric_mode()
         if len(metric_mode) > 1:
