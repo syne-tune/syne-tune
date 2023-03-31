@@ -25,25 +25,38 @@ EPSILON = 1e-6
 
 def hypervolume(
     results_array: np.ndarray,
-    reference_points: np.ndarray = None,
-    return_progress: bool = False,
-):
+    reference_point: np.ndarray = None,
+) -> float:
     """
     Compute the hypervolume of all results based on reference points
 
     :param results_df: Array with experiment results ordered by time with shape (npoints, ndimensions)
-    :param reference_points: Reference points for hypervolume calculations.
-                             If None, the maximum values of each metric is used.
-    :param return_progress: If True, returns an array with hypervolumes given by an increasing range of points.
-                            ``return_array[idx] = hypervolume(results_array[0: idx])``
+    :param reference_point: Reference points for hypervolume calculations.
+        If None, the maximum values of each metric is used.
     """
-    if reference_points is None:
-        reference_points = results_array.max(axis=0) * (1 + EPSILON) + EPSILON
-    indicator_fn = HV(ref_point=reference_points)
+    if reference_point is None:
+        reference_point = results_array.max(axis=0) * (1 + EPSILON) + EPSILON
+    indicator_fn = HV(ref_point=reference_point)
+    return indicator_fn(results_array)
 
-    if not return_progress:
-        return indicator_fn(results_array)
 
+def hypervolume_cumulative(
+    results_array: np.ndarray,
+    reference_point: np.ndarray = None,
+) -> np.ndarray:
+    """
+    Compute the cumulative hypervolume of all results based on reference points
+    Returns an array with hypervolumes given by an increasing range of points.
+    ``return_array[idx] = hypervolume(results_array[0: idx])``
+
+    :param results_df: Array with experiment results ordered by time with shape (npoints, ndimensions).
+    :param reference_point: Reference points for hypervolume calculations.
+        If None, the maximum values of each metric is used.
+    :return: Cumulative hypervolume array with dimensions (npoints, )
+    """
+    if reference_point is None:
+        reference_point = results_array.max(axis=0) * (1 + EPSILON) + EPSILON
+    indicator_fn = HV(ref_point=reference_point)
     hypervolume_indicator = np.zeros(shape=len(results_array))
     for idx in range(len(results_array)):
         hypervolume_indicator[idx] = indicator_fn(results_array[0:idx])

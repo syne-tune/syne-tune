@@ -12,20 +12,21 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume
+from syne_tune.optimizer.schedulers.multiobjective.utils import (
+    hypervolume,
+    hypervolume_cumulative,
+)
 
 
 def test_hypervolume():
     ref_point = np.array([2, 2])
     points = np.array([[1, 0], [0.5, 0.5], [0, 1], [1.5, 0.75]])
-    hv = hypervolume(results_array=points, reference_points=ref_point)
+    hv = hypervolume(results_array=points, reference_point=ref_point)
     assert hv == 3.25
 
 
 def test_hypervolume_progress():
     ref_point = np.array([2, 2])
     points = np.array([[1, 0], [0.5, 0.5], [0, 1], [1.5, 0.75]])
-    hv = hypervolume(
-        results_array=points, reference_points=ref_point, return_progress=True
-    )
+    hv = hypervolume_cumulative(results_array=points, reference_point=ref_point)
     assert np.allclose(hv, np.array([0.0, 2.0, 2.75, 3.25]))
