@@ -14,7 +14,7 @@ from typing import Dict, Any
 import logging
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.tuner_callback import StoreResultsCallback
+from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.searchers import ModelBasedSearcher

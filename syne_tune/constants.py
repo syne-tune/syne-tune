@@ -72,6 +72,17 @@ ST_REMOTE_UPLOAD_DIR_NAME = "tuner"
 """Name for ``upload_dir`` in ``RemoteTuner``"""  # pylint: disable=W0105
 
 
+# File names
+
+ST_RESULTS_DATAFRAME_FILENAME = "results.csv.zip"
+"""Name for results dataframe stored in ``StoreResultsCallback``"""  # pylint: disable=W0105
+
+ST_METADATA_FILENAME = "metadata.json"
+"""Name for metadata file stored in ``Tuner``"""  # pylint: disable=W0105
+
+ST_TUNER_DILL_FILENAME = "tuner.dill"
+"""Name for final tuner object file stored in ``Tuner``"""  # pylint: disable=W0105
+
 # Limits
 
 MAX_METRICS_SUPPORTED_BY_SAGEMAKER = 40

@@ -438,6 +438,20 @@ Plot Results of Tuning Experiment
 Makes use of :ref:`train_height.py <train_height_script>`.
 
 
+Customize Results Written during an Experiment
+==============================================
+
+.. literalinclude:: ../../examples/launch_height_extra_results.py
+   :caption: examples/launch_height_extra_results.py
+   :start-after: # permissions and limitations under the License.
+
+Makes use of :ref:`train_height.py <train_height_script>`.
+
+An example for how to append extra results to those written by default to
+``results.csv.zip``. This is done by customizing the
+:class:`~syne_tune.results_callback.StoreResultsCallback`.
+
+
 Pass Configuration as JSON File to Training Script
 ==================================================
 

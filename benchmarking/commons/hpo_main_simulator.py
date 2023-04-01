@@ -25,7 +25,6 @@ from benchmarking.commons.hpo_main_common import (
     get_metadata,
     ExtraArgsType,
     MapMethodArgsType,
-    PostProcessingType,
     extra_metadata,
     ConfigDict,
     DictStrKey,
@@ -41,6 +40,7 @@ from syne_tune.blackbox_repository.simulated_tabular_backend import (
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
+from syne_tune.results_callback import ExtraResultsComposer
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 from syne_tune.util import sanitize_sagemaker_name
@@ -165,7 +165,7 @@ def start_benchmark_simulated_backend(
     configuration: ConfigDict,
     methods: MethodDefinitions,
     benchmark_definitions: SurrogateBenchmarkDefinitions,
-    post_processing: Optional[PostProcessingType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
     extra_tuning_job_metadata: Optional[DictStrKey] = None,
     use_transfer_learning: bool = False,
@@ -186,9 +186,8 @@ def start_benchmark_simulated_backend(
     :param methods: Dictionary with method constructors.
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
     :param map_method_args: See above, optional
     :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     :param use_transfer_learning: If True, we use transfer tuning. Defaults to
@@ -345,13 +344,14 @@ def start_benchmark_simulated_backend(
         tuner_name = experiment_tag
         if configuration.use_long_tuner_name_prefix:
             tuner_name += f"-{sanitize_sagemaker_name(benchmark_name)}-{seed}"
+        callbacks = [SimulatorCallback(extra_results_composer=extra_results)]
         tuner = Tuner(
             trial_backend=trial_backend,
             scheduler=scheduler,
             stop_criterion=stop_criterion,
             n_workers=benchmark.n_workers,
             sleep_time=0,
-            callbacks=[SimulatorCallback()],
+            callbacks=callbacks,
             results_update_interval=600,
             print_update_interval=600,
             tuner_name=tuner_name,
@@ -359,8 +359,6 @@ def start_benchmark_simulated_backend(
             save_tuner=configuration.save_tuner,
         )
         tuner.run()
-        if post_processing is not None:
-            post_processing(tuner)
 
 
 def main(
@@ -368,7 +366,7 @@ def main(
     benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[ExtraArgsType] = None,
     map_extra_args: Optional[MapMethodArgsType] = None,
-    post_processing: Optional[PostProcessingType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
     use_transfer_learning: bool = False,
 ):
     """
@@ -388,9 +386,8 @@ def main(
     :param extra_args: Extra arguments for command line parser. Optional
     :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
         for extra argument values. Needed if ``extra_args`` given
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
     :param use_transfer_learning: If True, we use transfer tuning. Defaults to
         False
     """
@@ -415,7 +412,7 @@ def main(
         methods=methods,
         benchmark_definitions=benchmark_definitions,
         map_method_args=map_extra_args,
-        post_processing=post_processing,
+        extra_results=extra_results,
         extra_tuning_job_metadata=None
         if extra_args is None
         else extra_metadata(configuration, extra_args),

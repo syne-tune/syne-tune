@@ -123,6 +123,24 @@ place. In the same way, extra arguments passed to baseline wrappers in
 :mod:`benchmarking.commons.default_baselines` are recursively merged into the
 arguments determined by the default logic.
 
+Writing Extra Results
+~~~~~~~~~~~~~~~~~~~~~
+
+By default, Syne Tune writes result files ``metadata.json``, ``results.csv.zip``,
+and ``tuner.dill`` for every experiment, see
+`here <../../faq.html#what-does-the-output-of-the-tuning-contain>`__. Here,
+``results.csv.zip`` contains all data reported by training jobs, along with
+time stamps. The contents of this dataframe can be customized, by adding extra
+columns to it. This is done by passing ``extra_results_composer`` of type
+:class:`~syne_tune.results_callback.ExtraResultsComposer` when creating the
+:class:`~syne_tune.results_callback.StoreResultsCallback` callback, which
+is passed in ``callbacks`` to :class:`~syne_tune.Tuner`. You can use this
+mechanism by passing a :class:`~syne_tune.results_callback.ExtraResultsComposer`
+object as ``extra_results`` to ``main``. This object extracts extra information
+and returns it as dictionary, which is appended to the results dataframe. A
+complete example is
+``benchmarking/nursery/benchmark_dyhpo <../../benchmarking/benchmark_dyhpo.html>`__.
+
 Launching Experiments Locally
 -----------------------------
 

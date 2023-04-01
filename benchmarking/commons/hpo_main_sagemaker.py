@@ -18,7 +18,6 @@ from benchmarking.commons.baselines import MethodDefinitions
 from benchmarking.commons.hpo_main_common import (
     ExtraArgsType,
     MapMethodArgsType,
-    PostProcessingType,
     ConfigDict,
     extra_metadata,
     DictStrKey,
@@ -39,6 +38,7 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     default_sagemaker_session,
 )
 from syne_tune.remote.estimators import sagemaker_estimator
+from syne_tune.results_callback import ExtraResultsComposer
 from syne_tune.tuner import Tuner
 
 # SageMaker managed warm pools:
@@ -107,7 +107,7 @@ def start_benchmark_sagemaker_backend(
     configuration: ConfigDict,
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
-    post_processing: Optional[PostProcessingType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
     extra_tuning_job_metadata: Optional[DictStrKey] = None,
 ):
@@ -125,9 +125,8 @@ def start_benchmark_sagemaker_backend(
     :param methods: Dictionary with method constructors.
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
     :param map_method_args: See above, optional
     :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
@@ -189,6 +188,7 @@ def start_benchmark_sagemaker_backend(
         verbose=True,
         extra_tuning_job_metadata=extra_tuning_job_metadata,
         map_method_args=map_method_args,
+        extra_results=extra_results,
     )
     tuner = Tuner(
         trial_backend=trial_backend,
@@ -198,8 +198,6 @@ def start_benchmark_sagemaker_backend(
         start_jobs_without_delay=configuration.start_jobs_without_delay,
     )
     tuner.run()
-    if post_processing is not None:
-        post_processing(tuner)
 
 
 def main(
@@ -207,7 +205,7 @@ def main(
     benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[ExtraArgsType] = None,
     map_extra_args: Optional[MapMethodArgsType] = None,
-    post_processing: Optional[PostProcessingType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
 ):
     """
     Runs experiment with SageMaker backend.
@@ -223,9 +221,8 @@ def main(
     :param extra_args: Extra arguments for command line parser. Optional
     :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
         for extra argument values. Needed if ``extra_args`` is given
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
     """
     configuration = config_from_argparse(extra_args, SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
     method_names = (
@@ -244,7 +241,7 @@ def main(
         methods=methods,
         benchmark_definitions=benchmark_definitions,
         map_method_args=map_extra_args,
-        post_processing=post_processing,
+        extra_results=extra_results,
         extra_tuning_job_metadata=None
         if extra_args is None
         else extra_metadata(configuration, extra_args),

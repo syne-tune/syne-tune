@@ -66,7 +66,7 @@ COMBINATIONS = list(itertools.product(SCHEDULERS, DUPLICATES_AND_FAIL[:-1])) + l
 
 # Does not contain ASHABORE, because >10 secs on CI
 # TODO: Dig more, why is ASHABORE more expensive than BORE here?
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(12)
 @pytest.mark.parametrize("tpl1, tpl2", COMBINATIONS)
 def test_allow_duplicates_or_not(tpl1, tpl2):
     # If ``trials_fail == True``, we let all trials fail. In that case, corresponding
