@@ -188,6 +188,7 @@ def launch_remote_experiments(
     extra_sagemaker_hyperparameters = {
         "verbose": int(configuration.verbose),
         "remote_tuning_metrics": int(configuration.remote_tuning_metrics),
+        "delete_checkpoints": int(configuration.delete_checkpoints),
     }
     experiment_tag = _launch_experiment_remotely(
         configuration=configuration,

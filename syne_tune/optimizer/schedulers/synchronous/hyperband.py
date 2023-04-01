@@ -433,3 +433,6 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
         result = self._trials_checkpoints_can_be_removed
         self._trials_checkpoints_can_be_removed = []
         return result
+
+    def params_early_checkpoint_removal(self) -> Optional[Dict[str, Any]]:
+        return dict()

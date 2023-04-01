@@ -21,6 +21,7 @@ from typing import List, Dict, Callable, Optional, Union, Any, Tuple
 import numpy as np
 import pandas as pd
 
+from syne_tune import Tuner
 from syne_tune.constants import (
     ST_TUNER_TIME,
     ST_TUNER_CREATION_TIMESTAMP,
@@ -28,8 +29,6 @@ from syne_tune.constants import (
     ST_RESULTS_DATAFRAME_FILENAME,
     ST_TUNER_DILL_FILENAME,
 )
-from syne_tune import Tuner
-from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
 from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumulative
 from syne_tune.try_import import try_import_aws_message
 from syne_tune.util import experiment_path, s3_experiment_path

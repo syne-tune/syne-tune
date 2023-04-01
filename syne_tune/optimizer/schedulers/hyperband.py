@@ -13,7 +13,7 @@
 import copy
 import logging
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 
 import numpy as np
 
@@ -30,7 +30,10 @@ from syne_tune.optimizer.schedulers.hyperband_rush import (
     RUSHPromotionRungSystem,
     RUSHStoppingRungSystem,
 )
-from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
+from syne_tune.optimizer.schedulers.hyperband_stopping import (
+    StoppingRungSystem,
+    PausedTrialsResult,
+)
 from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
     DyHPORungSystem,
     DEFAULT_SH_PROBABILITY,
@@ -80,6 +83,7 @@ _ARGUMENT_KEYS = {
     "rung_system_per_bracket",
     "rung_levels",
     "rung_system_kwargs",
+    "early_checkpoint_removal_kwargs",
 }
 
 _DEFAULT_OPTIONS = {
@@ -110,6 +114,7 @@ _CONSTRAINTS = {
     "do_snapshots": Boolean(),
     "rung_system_per_bracket": Boolean(),
     "rung_system_kwargs": Dictionary(),
+    "early_checkpoint_removal_kwargs": Dictionary(),
 }
 
 
@@ -375,6 +380,14 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
           especially at the beginning).
 
     :type rung_system_kwargs: Dict[str, Any], optional
+    :param early_checkpoint_removal_kwargs: If given, speculative early removal
+        of checkpoints is done, see
+        :class:`~syne_tune.callbacks.hyperband_remove_checkpoints_callback.HyperbandRemoveCheckpointsCallback`.
+        The constructor arguments for the ``HyperbandRemoveCheckpointsCallback``
+        must be given here, if they cannot be inferred (key ``max_num_checkpoints``
+        is mandatory). This feature is used only for scheduler types which pause
+        and resume trials.
+    :type early_checkpoint_removal_kwargs: Dict[str, Any], optional
     """
 
     def __init__(self, config_space: Dict[str, Any], **kwargs):
@@ -483,6 +496,25 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         # least once, this records the sum of costs for reaching its last
         # recent milestone.
         self._cost_offset = dict()
+        self._initialize_early_checkpoint_removal(
+            kwargs.get("early_checkpoint_removal_kwargs")
+        )
+
+    def _initialize_early_checkpoint_removal(
+        self, callback_kwargs: Optional[Dict[str, Any]]
+    ):
+        if callback_kwargs is not None:
+            for name in ["max_num_checkpoints"]:
+                assert (
+                    name in callback_kwargs
+                ), f"early_checkpoint_removal_kwargs must contain '{name}' entry"
+            callback_kwargs = dict(
+                callback_kwargs,
+                metric=self.metric,
+                resource_attr=self._resource_attr,
+                mode=self.mode,
+            )
+        self._early_checkpoint_removal_kwargs = callback_kwargs
 
     def does_pause_resume(self) -> bool:
         """
@@ -978,6 +1010,9 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         self.searcher.cleanup_pending(trial_id)
         self._cleanup_trial(trial_id, trial_decision=SchedulerDecision.STOP)
 
+    def params_early_checkpoint_removal(self) -> Optional[Dict[str, Any]]:
+        return self._early_checkpoint_removal_kwargs
+
 
 class HyperbandBracketManager:
     """
@@ -1204,3 +1239,32 @@ class HyperbandBracketManager:
     def snapshot_rungs(self, bracket_id):
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
         return rung_sys.snapshot_rungs(skip_rungs)
+
+    def paused_trials(self, resource: Optional[int] = None) -> PausedTrialsResult:
+        """
+        Only for pause and resume schedulers (:meth:`does_pause_resume` returns
+        ``True``), where trials can be paused at certain rung levels only.
+        If ``resource`` is not given, returns list of all paused trials
+        ``(trial_id, rank, metric_val, level)``, where ``level`` is
+        the rung level, and ``rank`` is the rank of the trial in the rung
+        (0 for the best metric value). If ``resource`` is given, only the
+        paused trials in the rung of this level are returned.
+
+        :param resource: If given, paused trials of only this rung level are
+            returned. Otherwise, all paused trials are returned
+        :return: See above
+        """
+        return [
+            entry for rs in self._rung_systems for entry in rs.paused_trials(resource)
+        ]
+
+    def information_for_rungs(self) -> List[Tuple[int, int, float]]:
+        """
+        :return: List of ``(resource, num_entries, prom_quant)``, where
+            ``resource`` is a rung level, ``num_entries`` the number of entries
+            in the rung, and ``prom_quant`` the promotion quantile
+        """
+        return self._rung_systems[0].information_for_rungs()
+
+    def support_early_checkpoint_removal(self) -> bool:
+        return self._rung_systems[0].support_early_checkpoint_removal()

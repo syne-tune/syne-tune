@@ -108,6 +108,9 @@ class Rung:
         return g * values[1] + (1 - g) * values[0]
 
 
+PausedTrialsResult = List[Tuple[str, int, float, int]]
+
+
 class RungSystem:
     """
     Terminology: Trials emit results at certain resource levels (e.g., epoch
@@ -258,6 +261,45 @@ class RungSystem:
             sense that trials can be paused and resumed later?
         """
         raise NotImplementedError
+
+    def support_early_checkpoint_removal(self) -> bool:
+        """
+        :return: Do we support early checkpoint removal via
+            :meth:`paused_trials`?
+        """
+        return False
+
+    def paused_trials(self, resource: Optional[int] = None) -> PausedTrialsResult:
+        """
+        Only for pause and resume schedulers (:meth:`does_pause_resume` returns
+        ``True``), where trials can be paused at certain rung levels only.
+        If ``resource`` is not given, returns list of all paused trials
+        ``(trial_id, rank, metric_val, level)``, where ``level`` is
+        the rung level, and ``rank`` is the rank of the trial in the rung
+        (0 for the best metric value). If ``resource`` is given, only the
+        paused trials in the rung of this level are returned. If ``resource``
+        is not a rung level, the returned list is empty.
+
+        :param resource: If given, paused trials of only this rung level are
+            returned. Otherwise, all paused trials are returned
+        :return: See above
+        """
+        return []
+
+    def information_for_rungs(self) -> List[Tuple[int, int, float]]:
+        """
+        :return: List of ``(resource, num_entries, prom_quant)``, where
+            ``resource`` is a rung level, ``num_entries`` the number of entries
+            in the rung, and ``prom_quant`` the promotion quantile
+        """
+        return [(rung.level, len(rung), rung.prom_quant) for rung in self._rungs]
+
+    def _rung_pos_for_level(self, level: int) -> Optional[int]:
+        try:
+            rung_pos = next(i for i, v in enumerate(self._rungs) if v.level == level)
+        except StopIteration:
+            rung_pos = None
+        return rung_pos
 
 
 class StoppingRungSystem(RungSystem):
