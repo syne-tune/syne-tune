@@ -103,6 +103,16 @@ promotion-based MOBSTER with ``--method MOBSTER-PROM``:
   reports in this case. However, it is strongly recommended to implement
   checkpointing if promotion-based scheduling is to be used.
 
+Early Removal of Checkpoints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, the checkpoints written by all trials are retained on disk (for a
+trial, later checkpoints overwrite earlier ones). When checkpoints are large
+and the local backend is used, this may result in a lot of disk space getting
+occupied, or even the disk filling up. Syne Tune supports checkpoints being
+removed once they are not needed anymore, or even speculatively, as is detailed
+`here <../../faq.html#checkpoints-are-filling-up-my-disk-what-can-i-do>`__.
+
 Results for promotion-based ASHA and MOBSTER
 --------------------------------------------
 

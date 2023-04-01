@@ -237,3 +237,9 @@ class DyHPORungSystem(PromotionRungSystem):
     def summary_schedule_records(self) -> Dict[str, Any]:
         histogram = Counter([x[1] for x in self._schedule_records])
         return {name: histogram[value] for name, value in _SUMMARY_SCHEDULE_RECORDS}
+
+    def support_early_checkpoint_removal(self) -> bool:
+        """
+        Early checkpoint removal currently not supported for DyHPO
+        """
+        return False

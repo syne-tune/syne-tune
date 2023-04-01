@@ -474,6 +474,18 @@ script:
    :start-after: # permissions and limitations under the License.
 
 
+Speculative Early Checkpoint Removal
+====================================
+
+.. literalinclude:: ../../examples/launch_fashionmnist_checkpoint_removal.py
+   :caption: examples/launch_fashionmnist_checkpoint_removal.py
+   :start-after: # permissions and limitations under the License.
+
+This example uses the ``mlp_fashionmnist`` benchmark. It runs for about 30
+minutes. It demonstrates speculative early checkpoint removal for MOBSTER
+with promotion scheduling (pause and resume).
+
+
 Launch HPO Experiment with Ray Tune Scheduler
 =============================================
 
