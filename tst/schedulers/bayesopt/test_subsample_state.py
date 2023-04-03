@@ -15,13 +15,13 @@ import pytest
 from operator import itemgetter
 from numpy.random import RandomState
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_multifid import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_multi_fidelity import (
     cap_size_tuning_job_state,
     _extract_observations,
     _create_trials_evaluations,
     sparsify_tuning_job_state,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_singlefid import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_single_fidelity import (
     _extract_observations as _extract_observations_singlefid,
     _create_trials_evaluations as _create_trials_evaluations_singlefid,
     cap_size_tuning_job_state as cap_size_tuning_job_state_singlefid,

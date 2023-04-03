@@ -173,9 +173,9 @@ Syne Tune allows to control the number of observations the GP surrogate model
 is fit to, via ``max_size_data_for_model`` in ``search_options``. If the data
 is larger, it is downsampled to this size. Sampling is controlled by another
 argument ``max_size_top_fraction``. Namely, this fraction of entries in the
-downsampled set are filled by the best points in the full set, while the
-remaining entries are sampled (with replacement) from the rest of the full set.
-The default for ``max_size_data_for_model`` is
+downsampled set are filled by those points in the full set with the best metric
+values, while the remaining entries are sampled (with replacement) from the
+rest of the full set. The default for ``max_size_data_for_model`` is
 :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
 The feature is switched off by setting this to ``None`` or a very large value,
 but this is not recommended. Subsampling is repeated every time the surrogate
@@ -187,7 +187,8 @@ consists in refitting the parameters of the GP surrogate model, such as the ARD
 parameters of the kernel. While this refitting is essential for good performance
 with a small number of observations, it can be thinned out or even stopped when
 the dataset gets large. You can use ``opt_skip_init_length``,
-``opt_skip_period`` to this end.
+``opt_skip_period`` to this end (details are
+`here <../../schedulers.html#bayesian-optimization>`__.
 
 Warping of Inputs
 ~~~~~~~~~~~~~~~~~

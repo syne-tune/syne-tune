@@ -101,11 +101,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_multifid import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_multi_fidelity import (
     SubsampleMultiFidelityStateConverter,
     SubsampleMFDenseDataStateConverter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_singlefid import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_single_fidelity import (
     SubsampleSingleFidelityStateConverter,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
