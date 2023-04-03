@@ -18,11 +18,18 @@ from syne_tune.optimizer.schedulers.multiobjective.utils import (
 )
 
 
+def test_hypervolume_simple():
+    ref_point = np.array([1, 1])
+    points = np.array([[1, 0], [0.5, 0.5], [0, 1]])
+    hv = hypervolume(results_array=points, reference_point=ref_point)
+    assert np.allclose(hv, 0.25)
+
+
 def test_hypervolume():
     ref_point = np.array([2, 2])
     points = np.array([[1, 0], [0.5, 0.5], [0, 1], [1.5, 0.75]])
     hv = hypervolume(results_array=points, reference_point=ref_point)
-    assert hv == 3.25
+    assert np.allclose(hv, 3.25)
 
 
 def test_hypervolume_progress():

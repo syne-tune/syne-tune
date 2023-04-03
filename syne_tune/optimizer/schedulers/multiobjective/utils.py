@@ -32,7 +32,7 @@ def hypervolume(
 
     :param results_df: Array with experiment results ordered by time with shape (npoints, ndimensions)
     :param reference_point: Reference points for hypervolume calculations.
-        If None, the maximum values of each metric is used.
+        If None, the maximum values of each dimension of results_array is used.
     """
     if reference_point is None:
         reference_point = results_array.max(axis=0) * (1 + EPSILON) + EPSILON
@@ -49,9 +49,9 @@ def hypervolume_cumulative(
     Returns an array with hypervolumes given by an increasing range of points.
     ``return_array[idx] = hypervolume(results_array[0: idx])``
 
-    :param results_df: Array with experiment results ordered by time with shape (npoints, ndimensions).
+    :param results_array: Array with experiment results ordered by time with shape (npoints, ndimensions).
     :param reference_point: Reference points for hypervolume calculations.
-        If None, the maximum values of each metric is used.
+        If None, the maximum values of each dimension of results_array is used.
     :return: Cumulative hypervolume array with dimensions (npoints, )
     """
     if reference_point is None:
