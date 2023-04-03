@@ -18,7 +18,6 @@ from syne_tune.util import s3_experiment_path
 from syne_tune.constants import (
     ST_METADATA_FILENAME,
     ST_RESULTS_DATAFRAME_FILENAME,
-    ST_FINAL_RESULTS_FILENAME,
 )
 
 
@@ -33,8 +32,7 @@ def message_sync_from_s3(experiment_tag: str) -> str:
         f"$ aws s3 sync {s3_experiment_path(experiment_name=experiment_tag)} "
         f'~/syne-tune/{experiment_tag}/ --exclude "*" '
         f'--include "*{ST_METADATA_FILENAME}" '
-        f'--include "*{ST_RESULTS_DATAFRAME_FILENAME}" '
-        f'--include "*{ST_FINAL_RESULTS_FILENAME}"'
+        f'--include "*{ST_RESULTS_DATAFRAME_FILENAME}"'
     )
 
 
