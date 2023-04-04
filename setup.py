@@ -80,6 +80,7 @@ setup(
         "aws": required_aws,
         "yahpo": required_yahpo,
         "dev": required_dev,
+        "moo": required_moo,
         "extra": required_extra,
     },
     install_requires=required_core,
