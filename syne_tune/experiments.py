@@ -21,6 +21,13 @@ from typing import List, Dict, Callable, Optional, Union, Any, Tuple
 import numpy as np
 import pandas as pd
 
+from syne_tune.constants import (
+    ST_TUNER_TIME,
+    ST_TUNER_CREATION_TIMESTAMP,
+    ST_METADATA_FILENAME,
+    ST_RESULTS_DATAFRAME_FILENAME,
+    ST_TUNER_DILL_FILENAME,
+)
 from syne_tune import Tuner
 from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
 from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumulative
@@ -236,7 +243,12 @@ def download_single_experiment(
     parts_path = s3_path.replace("s3://", "").split("/")
     s3_bucket = parts_path[0]
     s3_key = "/".join(parts_path[1:])
-    for file in ["metadata.json", "results.csv.zip", "tuner.dill"]:
+    result_files = [
+        ST_METADATA_FILENAME,
+        ST_RESULTS_DATAFRAME_FILENAME,
+        ST_TUNER_DILL_FILENAME,
+    ]
+    for file in result_files:
         try:
             logging.info(f"downloading {file} on {s3_path}")
             s3.download_file(s3_bucket, f"{s3_key}/{file}", str(tgt_dir / file))
@@ -262,7 +274,7 @@ def load_experiment(
     :return: Result object
     """
     path = experiment_path(tuner_name, local_path)
-    metadata_path = path / "metadata.json"
+    metadata_path = path / ST_METADATA_FILENAME
     if not (metadata_path.exists()) and download_if_not_found:
         logging.info(
             f"experiment {tuner_name} not found locally, trying to get it from s3."
@@ -276,10 +288,11 @@ def load_experiment(
     except FileNotFoundError:
         metadata = None
     try:
-        if (path / "results.csv.zip").exists():
-            results = pd.read_csv(path / "results.csv.zip")
+        results_fname = ST_RESULTS_DATAFRAME_FILENAME
+        if (path / results_fname).exists():
+            results = pd.read_csv(path / results_fname)
         else:
-            results = pd.read_csv(path / "results.csv")
+            results = pd.read_csv(path / results_fname[:-4])
     except Exception:
         results = None
     if load_tuner:
@@ -332,7 +345,7 @@ def get_metadata(
     """
     path_filter = _impute_filter(path_filter)
     res = dict()
-    for metadata_path in root.glob("**/metadata.json"):
+    for metadata_path in root.glob(f"**/{ST_METADATA_FILENAME}"):
         path = metadata_path.parent
         if path_filter(str(path)):
             try:
@@ -372,7 +385,7 @@ def list_experiments(
     path_filter = _impute_filter(path_filter)
     experiment_filter = _impute_filter(experiment_filter)
     res = []
-    for metadata_path in root.glob("**/metadata.json"):
+    for metadata_path in root.glob(f"**/{ST_METADATA_FILENAME}"):
         path = metadata_path.parent
         tuner_name = path.name
         if path_filter(str(metadata_path)):

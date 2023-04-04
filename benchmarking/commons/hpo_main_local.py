@@ -17,15 +17,6 @@ import numpy as np
 from tqdm import tqdm
 import logging
 
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
-    backend_path_not_synced_to_s3,
-)
-from syne_tune.backend import LocalBackend
-from syne_tune.remote.remote_metrics_callback import RemoteTuningMetricsCallback
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
-from syne_tune.tuner_callback import StoreResultsCallback
-from syne_tune.util import sanitize_sagemaker_name
 from benchmarking.commons.baselines import MethodArguments, MethodDefinitions
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
 from benchmarking.commons.hpo_main_common import (
@@ -33,7 +24,6 @@ from benchmarking.commons.hpo_main_common import (
     get_metadata,
     ExtraArgsType,
     MapMethodArgsType,
-    PostProcessingType,
     ConfigDict,
     DictStrKey,
     extra_metadata,
@@ -42,8 +32,14 @@ from benchmarking.commons.hpo_main_common import (
 )
 from benchmarking.commons.utils import get_master_random_seed, effective_random_seed
 from syne_tune.backend import LocalBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    backend_path_not_synced_to_s3,
+)
+from syne_tune.remote.remote_metrics_callback import RemoteTuningMetricsCallback
+from syne_tune.results_callback import StoreResultsCallback, ExtraResultsComposer
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
+from syne_tune.util import sanitize_sagemaker_name
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +118,7 @@ def create_objects_for_tuner(
     verbose: bool,
     extra_tuning_job_metadata: Optional[DictStrKey] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
 ) -> Dict[str, Any]:
 
     method_kwargs = {"max_resource_attr": benchmark.max_resource_attr}
@@ -172,17 +169,18 @@ def create_objects_for_tuner(
         metadata=metadata,
         save_tuner=configuration.save_tuner,
     )
+    callbacks = [StoreResultsCallback(extra_results_composer=extra_results)]
     if configuration.remote_tuning_metrics:
         # Use callback to report tuning metrics
-        tuner_kwargs["callbacks"] = [
-            StoreResultsCallback(),
+        callbacks.append(
             RemoteTuningMetricsCallback(
                 metric=benchmark.metric,
                 mode=benchmark.mode,
                 config_space=benchmark.config_space,
                 resource_attr=benchmark.resource_attr,
-            ),
-        ]
+            )
+        )
+    tuner_kwargs["callbacks"] = callbacks
     return tuner_kwargs
 
 
@@ -190,7 +188,7 @@ def start_benchmark_local_backend(
     configuration: ConfigDict,
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
-    post_processing: Optional[PostProcessingType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
     extra_tuning_job_metadata: Optional[DictStrKey] = None,
 ):
@@ -218,9 +216,8 @@ def start_benchmark_local_backend(
     :param methods: Dictionary with method constructors.
     :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
     :param map_method_args: See above, optional
     :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
@@ -253,6 +250,7 @@ def start_benchmark_local_backend(
             verbose=configuration.verbose,
             extra_tuning_job_metadata=extra_tuning_job_metadata,
             map_method_args=map_method_args,
+            extra_results=extra_results,
         )
         # If this experiments runs remotely as a SageMaker training job, logs and
         # checkpoints are written to a different directory than tuning results, so
@@ -265,8 +263,6 @@ def start_benchmark_local_backend(
         )
 
         tuner.run()  # Run the experiment
-        if post_processing is not None:
-            post_processing(tuner)
 
 
 def main(
@@ -274,7 +270,7 @@ def main(
     benchmark_definitions: RealBenchmarkDefinitions,
     extra_args: Optional[ExtraArgsType] = None,
     map_extra_args: Optional[MapMethodArgsType] = None,
-    post_processing: Optional[PostProcessingType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
 ):
     """
     Runs sequence of experiments with local backend sequentially. The loop runs
@@ -292,9 +288,8 @@ def main(
         command line arguments
     :param extra_args: Extra arguments for command line parser. Optional
     :param map_extra_args: See above, optional
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
     """
     configuration = config_from_argparse(extra_args, LOCAL_BACKEND_EXTRA_PARAMETERS)
     method_names = (
@@ -313,7 +308,7 @@ def main(
         methods=methods,
         benchmark_definitions=benchmark_definitions,
         map_method_args=map_extra_args,
-        post_processing=post_processing,
+        extra_results=extra_results,
         extra_tuning_job_metadata=None
         if extra_args is None
         else extra_metadata(configuration, extra_args),

@@ -11,17 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any
-from time import perf_counter
-import copy
-import pandas as pd
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.backend.trial_backend import (
     TrialAndStatusInformation,
     TrialIdAndResultList,
 )
-from syne_tune.constants import ST_DECISION, ST_TRIAL_ID, ST_STATUS, ST_TUNER_TIME
-from syne_tune.util import RegularCallback
 
 
 class TunerCallback:
@@ -106,83 +101,3 @@ class TunerCallback:
         :param sleep_time: Time (in secs) for which tuner has just slept
         """
         pass
-
-
-class StoreResultsCallback(TunerCallback):
-    """
-    Default implementation of :class:`~TunerCallback` which records all
-    reported results, and allows to store them as CSV file.
-
-    :param add_wallclock_time: If True, wallclock time since call of
-        ``on_tuning_start`` is stored as
-        :const:`~syne_tune.constants.ST_TUNER_TIME`.
-    """
-
-    def __init__(
-        self,
-        add_wallclock_time: bool = True,
-    ):
-        self.results = []
-        self.csv_file = None
-        self.save_results_at_frequency = None
-        self.add_wallclock_time = add_wallclock_time
-        self._start_time_stamp = None
-
-    def _set_time_fields(self, result: Dict[str, Any]):
-        """
-        Note that we only add wallclock time to the result if this has not
-        already been done (by the backend)
-        """
-        if self._start_time_stamp is not None and ST_TUNER_TIME not in result:
-            result[ST_TUNER_TIME] = perf_counter() - self._start_time_stamp
-
-    def on_trial_result(
-        self, trial: Trial, status: str, result: Dict[str, Any], decision: str
-    ):
-        assert (
-            self.save_results_at_frequency is not None
-        ), "on_tuning_start must always be called before on_trial_result."
-        result = copy.copy(result)
-        result[ST_DECISION] = decision
-        result[ST_STATUS] = status
-        result[ST_TRIAL_ID] = trial.trial_id
-
-        for key in trial.config:
-            result[f"config_{key}"] = trial.config[key]
-
-        self._set_time_fields(result)
-
-        self.results.append(result)
-
-        if self.csv_file is not None:
-            self.save_results_at_frequency()
-
-    def store_results(self):
-        """
-        Store current results into CSV file, of name
-        ``{tuner.tuner_path}/results.csv.zip``.
-        """
-        if self.csv_file is not None:
-            self.dataframe().to_csv(self.csv_file, index=False)
-
-    def dataframe(self) -> pd.DataFrame:
-        return pd.DataFrame(self.results)
-
-    def on_tuning_start(self, tuner):
-        # we set the path of the csv file once the tuner is created since the path may change when the tuner is stop
-        # and resumed again on a different machine.
-        self.csv_file = str(tuner.tuner_path / "results.csv.zip")
-
-        # we only save results every ``results_update_frequency`` seconds as this operation
-        # may be expensive on remote storage.
-        self.save_results_at_frequency = RegularCallback(
-            lambda: self.store_results(),
-            call_seconds_frequency=tuner.results_update_interval,
-        )
-        if self.add_wallclock_time:
-            self._start_time_stamp = perf_counter()
-
-    def on_tuning_end(self):
-        # store the results in case some results were not committed yet (since they are saved every
-        # ``results_update_interval`` seconds)
-        self.store_results()

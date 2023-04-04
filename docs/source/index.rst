@@ -31,6 +31,11 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* You can now customize writing out results during an experiment, as shown in
+  `examples/launch_height_extra_results.py <examples.html#customize-results-written-during-an-experiment>`__.
+* You can now warp inputs and apply a
+  `Box-Cox transform to your targets <tutorials/basics/basics_bayesopt.html#box-cox-transformation-of-target-values>`__
+  in Bayesian or MOBSTER, free parameters are adjusted automatically.
 * New tutorial:
   `Using Syne Tune for Transfer Learning <tutorials/transfer_learning/transfer_learning.html>`__.
   Transfer learning allows us to speed up our current optimisation by learning
@@ -46,13 +51,6 @@ What's New?
   based on the surrogate model. Our implementation differs from the published
   work by using a Gaussian process surrogate model, and by a promotion rule which
   is a hybrid between DyHPO and ASHA.
-* New tutorial: `How to Contribute a New Scheduler <tutorials/developer/README.html>`__.
-  Learn how to implement your own scheduler, wrap external code, or modify
-  one of the existing templates in order to get your job done.
-* New tutorial: `Benchmarking in Syne Tune <tutorials/benchmarking/README.html>`__.
-  You'd like to run many experiments in parallel, or launch training jobs on
-  different instances, all by modifying some simple scripts to your needs? Then
-  our benchmarking mechanism is for you.
 * New tutorial: `Progressive ASHA <tutorials/pasha/pasha.html>`__. PASHA is a
   variant of ASHA where the maximum number of resources (e.g., maximum number
   of training epochs) is not fixed up front, but is adapted. This can lead to

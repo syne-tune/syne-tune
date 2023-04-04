@@ -35,6 +35,13 @@ class ScheduleDecision:
     START_DYHPO = 2
 
 
+_SUMMARY_SCHEDULE_RECORDS = [
+    ("promoted_by_sh", ScheduleDecision.PROMOTE_SH),
+    ("promoted_by_dyhpo", ScheduleDecision.PROMOTE_DYHPO),
+    ("started_by_dyhpo", ScheduleDecision.START_DYHPO),
+]
+
+
 class DyHPORungSystem(PromotionRungSystem):
     """
     Implements the logic which decides which paused trial to promote to the
@@ -223,12 +230,10 @@ class DyHPORungSystem(PromotionRungSystem):
     def schedule_records(self) -> List[Tuple[str, int, int]]:
         return self._schedule_records
 
-    def summary_schedule_records(self) -> str:
+    @staticmethod
+    def summary_schedule_keys() -> List[str]:
+        return [key for key, _ in _SUMMARY_SCHEDULE_RECORDS]
+
+    def summary_schedule_records(self) -> Dict[str, Any]:
         histogram = Counter([x[1] for x in self._schedule_records])
-        msg_parts = [
-            "Summary of DyHPO on_task_schedule decisions:",
-            f"  Promoted by SH:    {histogram[ScheduleDecision.PROMOTE_SH]}",
-            f"  Promoted by DyHPO: {histogram[ScheduleDecision.PROMOTE_DYHPO]}",
-            f"  Started by DyHPO:  {histogram[ScheduleDecision.START_DYHPO]}",
-        ]
-        return "\n".join(msg_parts)
+        return {name: histogram[value] for name, value in _SUMMARY_SCHEDULE_RECORDS}

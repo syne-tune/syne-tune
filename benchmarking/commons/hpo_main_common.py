@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Callable
 
 from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
-from syne_tune import Tuner
 
 try:
     from coolname import generate_slug
@@ -32,9 +31,6 @@ MapMethodArgsType = Callable[["ConfigDict", str, DictStrKey], DictStrKey]
 
 
 ExtraArgsType = List[DictStrKey]
-
-
-PostProcessingType = Callable[[Tuner], Any]
 
 
 def str2bool(v):

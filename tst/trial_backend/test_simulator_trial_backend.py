@@ -26,7 +26,7 @@ from syne_tune.backend.simulator_backend.events import (
     OnTrialResultEvent,
 )
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.tuner_callback import StoreResultsCallback
+from syne_tune.results_callback import StoreResultsCallback
 from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 from syne_tune.constants import ST_DECISION, ST_TRIAL_ID

@@ -26,9 +26,15 @@ from syne_tune.backend.trial_backend import (
 from syne_tune.backend.trial_status import Status, Trial, TrialResult
 from syne_tune.callbacks.remove_checkpoints_callback import RemoveCheckpointsCallback
 from syne_tune.config_space import config_space_to_json_dict
-from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
+from syne_tune.constants import (
+    ST_TUNER_CREATION_TIMESTAMP,
+    ST_TUNER_START_TIMESTAMP,
+    ST_METADATA_FILENAME,
+    ST_TUNER_DILL_FILENAME,
+)
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
-from syne_tune.tuner_callback import StoreResultsCallback, TunerCallback
+from syne_tune.tuner_callback import TunerCallback
+from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 from syne_tune.util import (
     RegularCallback,
@@ -83,7 +89,7 @@ class Tuner:
         when a result is seen. The default callback stores results every
         ``results_update_interval``.
     :param metadata: Dictionary of user-metadata that will be persisted in
-        ``{tuner_path}/metadata.json``, in addition to metadata provided by
+        ``{tuner_path}/{ST_METADATA_FILENAME}``, in addition to metadata provided by
         the user. ``SMT_TUNER_CREATION_TIMESTAMP`` is always included which
         measures the time-stamp when the tuner started to run.
     :param suffix_tuner_name: If ``True``, a timestamp is appended to the
@@ -397,7 +403,7 @@ class Tuner:
         return res
 
     def _save_metadata(self):
-        dump_json_with_numpy(self.metadata, self.tuner_path / "metadata.json")
+        dump_json_with_numpy(self.metadata, self.tuner_path / ST_METADATA_FILENAME)
 
     def _stop_condition(self) -> bool:
         return (
@@ -541,9 +547,9 @@ class Tuner:
 
     def save(self, folder: Optional[str] = None):
         if folder is None:
-            tuner_serialized_path = self.tuner_path / "tuner.dill"
+            tuner_serialized_path = self.tuner_path / ST_TUNER_DILL_FILENAME
         else:
-            tuner_serialized_path = Path(folder) / "tuner.dill"
+            tuner_serialized_path = Path(folder) / ST_TUNER_DILL_FILENAME
         with open(tuner_serialized_path, "wb") as f:
             logger.debug(f"saving tuner in {tuner_serialized_path}")
             dill.dump(self, f)
@@ -551,7 +557,7 @@ class Tuner:
 
     @staticmethod
     def load(tuner_path: Optional[str]):
-        with open(Path(tuner_path) / "tuner.dill", "rb") as f:
+        with open(Path(tuner_path) / ST_TUNER_DILL_FILENAME, "rb") as f:
             tuner = dill.load(f)
             tuner.tuner_path = Path(experiment_path(tuner_name=tuner.name))
             return tuner

@@ -10,15 +10,20 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
+
 from benchmarking.commons.hpo_main_simulator import main
 from benchmarking.nursery.benchmark_dyhpo.baselines import methods
 from benchmarking.nursery.benchmark_dyhpo.benchmark_definitions import (
     benchmark_definitions,
 )
-from syne_tune.util import recursive_merge
 from syne_tune import Tuner
 from syne_tune.optimizer.schedulers import HyperbandScheduler
+from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
+    DyHPORungSystem,
+)
+from syne_tune.results_callback import ExtraResultsComposer
+from syne_tune.util import recursive_merge
 
 
 extra_args = [
@@ -65,15 +70,22 @@ def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str
     return method_kwargs
 
 
-def post_processing(tuner: Tuner):
-    # Only for DyHPO
-    scheduler = tuner.scheduler
-    if (
-        isinstance(scheduler, HyperbandScheduler)
-        and scheduler.scheduler_type == "dyhpo"
-    ):
-        print(scheduler.terminator._rung_systems[0].summary_schedule_records())
+class DyHPOExtraResults(ExtraResultsComposer):
+    def __call__(self, tuner: "Tuner") -> Optional[Dict[str, Any]]:
+        # Only for DyHPO
+        result = None
+        scheduler = tuner.scheduler
+        if (
+            isinstance(scheduler, HyperbandScheduler)
+            and scheduler.scheduler_type == "dyhpo"
+        ):
+            result = scheduler.terminator._rung_systems[0].summary_schedule_records()
+        return result
+
+    def keys(self) -> List[str]:
+        return DyHPORungSystem.summary_schedule_keys()
 
 
 if __name__ == "__main__":
-    main(methods, benchmark_definitions, extra_args, map_extra_args, post_processing)
+    extra_results = DyHPOExtraResults()
+    main(methods, benchmark_definitions, extra_args, map_extra_args, extra_results)

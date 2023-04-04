@@ -221,10 +221,11 @@ What does the output of the tuning contain?
 ===========================================
 
 Syne Tune stores the following files ``metadata.json``, ``results.csv.zip``,
-and ``tuner.dill`` which are respectively metadata of the tuning job, results
-obtained at each time-step and state of the tuner. If you create the
+and ``tuner.dill``, which are respectively metadata of the tuning job, results
+obtained at each time-step, and state of the tuner. If you create the
 :class:`~syne_tune.Tuner` with ``save_tuner=False``, the ``tuner.dill`` file is
-not written.
+not written. The content of ``results.csv.zip``
+`can be customized <#how-can-i-write-extra-results-for-an-experiment>`__.
 
 How can I enable trial checkpointing?
 =====================================
@@ -746,3 +747,13 @@ The complete example is
 Note that entries automatically appended to the configuration by Syne Tune, such
 as :const:`~syne_tune.constants.ST_CHECKPOINT_DIR`, are passed as command line
 arguments in any case.
+
+How can I write extra results for an experiment?
+================================================
+
+By default, Syne Tune is writing
+`these result files at the end of an experiment <#what-does-the-output-of-the-tuning-contain>`__.
+Here, ``results.csv.zip`` contains all data reported by training jobs, along
+with time stamps. The contents of this dataframe can be customized, by adding
+extra columns to it, as demonstrated in
+`examples/launch_height_extra_results.py <examples.html#customize-results-written-during-an-experiment>`__.

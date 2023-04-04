@@ -115,3 +115,8 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_simple.py
+
+  launch_height_extra_results:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_extra_results.py
