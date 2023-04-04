@@ -197,6 +197,15 @@ full range of arguments. We list the most important ones:
   each round. ``opt_maxiter`` is the maximum number of L-BFGS iterations. We
   run ``opt_nstarts`` such optimizations from random starting points and pick
   the best.
+* ``max_size_data_for_model``, ``max_size_top_fraction``: GP computations scale
+  cubically with the number of observations, and decision making can become
+  very slow for too many trials. Whenever there are more than
+  ``max_size_data_for_model`` observations, the dataset is downsampled to this
+  size. Here, ``max_size_data_for_model * max_size_top_fraction`` of the entries
+  correspond to the cases with the best metric values, while the remaining
+  entries are drawn at random (without replacement) from all other cases.
+  Defaults to
+  :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
 * ``opt_skip_init_length``, ``opt_skip_period``: Refitting the GP
   hyperparameters in each round can become expensive, especially when the
   number of observations grows large. If so, you can choose to do it only
