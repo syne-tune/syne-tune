@@ -14,9 +14,6 @@ from typing import List, Tuple, Dict, Any
 import numpy as np
 from scipy.special import betainc
 
-from syne_tune.callbacks.hyperband_remove_checkpoints_callback import (
-    HyperbandRemoveCheckpointsCallback,
-)
 from syne_tune.callbacks.hyperband_remove_checkpoints_score import (
     compute_probabilities_of_getting_resumed,
 )

@@ -88,14 +88,14 @@ if __name__ == "__main__":
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=max_wallclock_time)
-    # The tuner activates (early) checkpoint iff ``trial_backend.delete_checkpoints``.
-    # In this case, it requests details from the scheduler (which is
-    # ``early_checkpoint_removal_kwargs`` in our case).
-    # Early checkpoint removal is done by appending a callback to those normally used
-    # with the tuner.
+    # The tuner activates early checkpoint removal iff
+    # ``trial_backend.delete_checkpoints``. In this case, it requests details
+    # from the scheduler (which is ``early_checkpoint_removal_kwargs`` in our
+    # case). Early checkpoint removal is done by appending a callback to those
+    # normally used with the tuner.
     if monitor_cp_removal_in_results:
-        # We can monitor how well checkpoint removal is working by storing extra results
-        # (this is optional):
+        # We can monitor how well checkpoint removal is working by storing
+        # extra results (this is optional)
         extra_results_composer = CPRemovalExtraResults()
         callbacks = [
             StoreResultsCallback(extra_results_composer=extra_results_composer)

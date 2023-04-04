@@ -363,10 +363,8 @@ dictionary with the following arguments:
 * ``max_num_checkpoints``: This is mandatory. Maximum number of trials with
   checkpoints being retained. Once more than this number of trials with
   checkpoints are present, checkpoints are removed selectively. This number must
-  be significantly larger than the number of workers, since running trials will
-  always write checkpoints. Note that the true maximum number of trials with
-  checkpoints may be larger than ``max_num_checkpoints`` temporarily, because
-  trials are only counted once they report a result for the first time.
+  be larger than the number of workers, since running trials will always write
+  checkpoints.
 * ``approx_steps``: Positive integer. The computation of the ranking score is
   a step-wise approximation, which gets more accurate for larger ``approx_steps``.
   However, this computation scales cubically in ``approx_steps``. The default
