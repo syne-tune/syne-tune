@@ -10,18 +10,30 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 
 from syne_tune.optimizer.schedulers.hyperband_stopping import (
-    quantile_cutoff,
+    RungEntry,
+    Rung,
     RungSystem,
 )
 
 
+class PromotionRungEntry(RungEntry):
+    """
+    Appends ``was_promoted`` to the superclass. This is ``True`` iff the trial
+    has been promoted from this rung. Otherwise, the trial is paused at this rung.
+    """
+
+    def __init__(self, trial_id: str, metric_val: float, was_promoted: bool = False):
+        super().__init__(trial_id, metric_val)
+        self.was_promoted = was_promoted
+
+
 class PromotionRungSystem(RungSystem):
     """
-    Implements both the promotion and stopping logic for an asynchronous
-    variant of Hyperband, known as ASHA:
+    Implements the promotion logic for an asynchronous variant of Hyperband,
+    known as ASHA:
 
         | Li etal
         | A System for Massively Parallel Hyperparameter Tuning
@@ -70,65 +82,55 @@ class PromotionRungSystem(RungSystem):
         # is required for ``on_task_report`` to properly report ``ignore_data``.
         self._running = dict()
 
-    def _cutoff(self, recorded: Dict[str, Any], prom_quant: float):
-        values = [x[0] for x in recorded.values()]
-        return quantile_cutoff(values, prom_quant, self._mode)
-
-    def _find_promotable_trial(
-        self, recorded: Dict[str, Any], prom_quant: float, resource: int
-    ) -> Optional[str]:
+    def _find_promotable_trial(self, rung: Rung) -> Optional[Tuple[str, int]]:
         """
-        Check whether any not yet promoted entry in ``recorded`` is
-        promotable, i.e. its value is better or equal to the cutoff
-        based on ``prom_quant``. If there are several such, the one with the
-        best value is chosen.
+        Check whether any not yet promoted entry in ``rung`` is
+        promotable, i.e. it lies left of (or is equal to) the pivot.
 
-        :param recorded: Dict to scan
-        :param prom_quant: Quantile for promotion
-        :param resource: Resource level of rung (i.e., amount of resource
-            spent by trials at this rung)
-        :return: trial_id if found, otherwise None
+        :param rung: Rung to scan
+        :return: ``(trial_id, pos)`` if found, where ``pos`` is the position
+            in ``rung.data``, otherwise ``None``
         """
-        ret_id = None
-        # Code is written for 'max' mode. For 'min', we just negate all
-        # criterion values
+        cutoff = rung.quantile()
+        if cutoff is None:
+            return None
+        # Find best among paused trials (not yet promoted)
+        result, metric_val = None, None
+        resource = rung.level
+        for pos, entry in enumerate(rung.data):
+            if self._is_promotable_trial(entry, resource):
+                result = (entry.trial_id, pos)
+                metric_val = entry.metric_val
+                break
         sign = 1 - 2 * (self._mode == "min")
-        cutoff = self._cutoff(recorded, prom_quant)
-        if cutoff is not None:
-            # Best id among trials paused at this rung (i.e., not yet promoted)
-            trial_id, val = max(
-                (
-                    (k, v[0])
-                    for k, v in recorded.items()
-                    if self._is_promotable_trial(k, v[0], not v[1], resource)
-                ),
-                key=lambda x: sign * x[1],
-                default=(None, 0.0),
-            )
-            if trial_id is not None and sign * (val - cutoff) >= 0:
-                ret_id = trial_id
-        return ret_id
+        if result is not None and sign * (metric_val - cutoff) < 0:
+            # Best paused trial is not good enough to be promoted
+            result = None
+        return result
 
-    def _is_promotable_trial(
-        self, trial_id: str, metric_value: float, is_paused: bool, resource: int
-    ) -> bool:
+    def _is_promotable_trial(self, entry: PromotionRungEntry, resource: int) -> bool:
         """
         Checks whether trial in rung level is promotable in principle, used
-        as filter in ``_find_promotable_trial``. Can be used in subclasses to
-        sharpen the condition for promotion.
+        as filter in :meth:`_find_promotable_trial`. Can be used in subclasses
+        to sharpen the condition for promotion.
 
-        :param trial_id: ID of trial
-        :param metric_value: Value of target metric
-        :param is_paused: Is trial paused right now?
-        :param resource: Resource level the trial has just reported at
+        :param entry: Entry of rung in question
+        :param resource: Rung level
+        :return: Should this entry be promoted, given it fulfils the pivot
+            condition?
         """
-        return is_paused
+        return not entry.was_promoted
 
     @staticmethod
-    def _mark_as_promoted(recorded: Dict[str, Any], trial_id: str):
-        curr_val = recorded[trial_id]
-        assert not curr_val[-1]  # Sanity check
-        recorded[trial_id] = curr_val[:-1] + (True,)
+    def _mark_as_promoted(rung: Rung, pos: int, trial_id: Optional[int] = None):
+        entry = rung.pop(pos)
+        assert not entry.was_promoted
+        if trial_id is not None:
+            assert (
+                entry.trial_id == trial_id
+            ), f"Entry at position {pos} should have trial_id = {trial_id}, but has trial_id = {entry.trial_id}"
+        entry.was_promoted = True
+        rung.add(entry)
 
     def _effective_max_t(self):
         """
@@ -147,26 +149,23 @@ class PromotionRungSystem(RungSystem):
         milestone to be promoted to). We also mark the trial as being promoted
         at the rung level it sits right now.
         """
-        trial_id = None
+        trial_id, pos = None, None
         next_milestone = self._max_t
         milestone = None
-        recorded = None
-        for rung in self._rungs:
-            _milestone = rung.level
-            prom_quant = rung.prom_quant
-            _recorded = rung.data
+        rung = None
+        for _rung in self._rungs:
+            _milestone = _rung.level
             if _milestone < self._effective_max_t():
-                trial_id = self._find_promotable_trial(
-                    _recorded, prom_quant, rung.level
-                )
-                if trial_id is not None:
-                    recorded = _recorded
+                result = self._find_promotable_trial(_rung)
+                if result is not None:
+                    rung = _rung
                     milestone = _milestone
+                    trial_id, pos = result
                     break
             next_milestone = _milestone
         ret_dict = dict()
         if trial_id is not None:
-            self._mark_as_promoted(recorded, trial_id)
+            self._mark_as_promoted(rung, pos)
             ret_dict = {
                 "trial_id": trial_id,
                 "resume_from": milestone,
@@ -202,11 +201,10 @@ class PromotionRungSystem(RungSystem):
         self._running[trial_id] = {"milestone": milestone, "resume_from": resume_from}
 
     def _register_metrics_at_rung_level(
-        self, trial_id: str, result: Dict[str, Any], recorded: Dict[str, Any]
+        self, trial_id: str, result: Dict[str, Any], rung: Rung
     ):
-        metric_value = result[self._metric]
-        assert trial_id not in recorded  # Sanity check
-        recorded[trial_id] = (metric_value, False)
+        assert trial_id not in rung  # Sanity check
+        rung.add(PromotionRungEntry(trial_id=trial_id, metric_val=result[self._metric]))
 
     def on_task_report(
         self, trial_id: str, result: Dict[str, Any], skip_rungs: int
@@ -252,8 +250,8 @@ class PromotionRungSystem(RungSystem):
                     i for i, v in enumerate(self._rungs) if v.level == milestone
                 )
                 # Register metric_value at rung level (as not promoted)
-                recorded = self._rungs[rung_pos].data
-                self._register_metrics_at_rung_level(trial_id, result, recorded)
+                rung = self._rungs[rung_pos]
+                self._register_metrics_at_rung_level(trial_id, result, rung)
                 next_milestone = (
                     self._rungs[rung_pos - 1].level if rung_pos > 0 else self._max_t
                 )

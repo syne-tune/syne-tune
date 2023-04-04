@@ -13,13 +13,18 @@
 from datetime import datetime
 from typing import Optional, Dict, Tuple, Any
 import pytest
+import numpy as np
 
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.config_space import randint, uniform
 from syne_tune.backend.trial_status import Trial
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers.searchers import RandomSearcher
-from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
+from syne_tune.optimizer.schedulers.hyperband_stopping import (
+    RungEntry,
+    Rung,
+    StoppingRungSystem,
+)
 from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
 from syne_tune.optimizer.schedulers.hyperband_pasha import PASHARungSystem
 from syne_tune.optimizer.schedulers.hyperband_rush import (
@@ -226,3 +231,23 @@ def test_hyperband_scheduler_type(scheduler_type, terminator_cls, does_pause_res
     )
     assert isinstance(myscheduler.terminator._rung_systems[0], terminator_cls)
     assert myscheduler.does_pause_resume() == does_pause_resume
+
+
+def test_quantile_hyperband_stopping():
+    num_runs = 100
+    random_seed = 31415938
+    random_state = np.random.RandomState(random_seed)
+    for num_run in range(num_runs):
+        len_data = 2 if num_run == 0 else random_state.randint(low=2, high=200)
+        prom_quant = random_state.uniform(low=0.01, high=0.5)
+        mode = "min" if random_state.uniform() <= 0.5 else "max"
+        metric_vals = random_state.normal(loc=0, scale=1, size=len_data)
+        data = [
+            RungEntry(trial_id, metric_val)
+            for trial_id, metric_val in zip(range(len_data), metric_vals)
+        ]
+        rung = Rung(level=1, prom_quant=prom_quant, mode=mode, data=data)
+        quantile = rung.quantile()
+        q = prom_quant if mode == "min" else 1 - prom_quant
+        quantile_test = np.quantile(metric_vals, q=q)
+        np.testing.assert_almost_equal(quantile, quantile_test)

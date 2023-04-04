@@ -30,6 +30,15 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common 
 from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Configuration,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+    CandidateGenerator,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
+    BaseSurrogateModel,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
 
 # DEBUG:
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
@@ -92,9 +101,64 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         self._debug_log = None  # No more debug logging for rest of ``get_config``
         return {INTERNAL_KEY: "dummy"}
 
+    def _extended_configs_from_paused(
+        self, paused_trials: List[Tuple[str, int, int]], state: TuningJobState
+    ) -> List[Dict[str, Any]]:
+        return [
+            self.config_space_ext.get(state.config_for_trial[trial_id], resource)
+            for trial_id, _, resource in paused_trials
+        ]
+
+    def _extended_configs_new(
+        self,
+        num_new: int,
+        min_resource: int,
+        exclusion_candidates: ExclusionList,
+        random_generator: CandidateGenerator,
+    ) -> List[Dict[str, Any]]:
+        return [
+            self.config_space_ext.get(config, min_resource)
+            for config in random_generator.generate_candidates_en_bulk(
+                num_new, exclusion_list=exclusion_candidates
+            )
+        ]
+
+    def _scores_for_resource(
+        self,
+        resource: int,
+        start: int,
+        end: int,
+        model: BaseSurrogateModel,
+        sorted_ind: np.ndarray,
+        configs_all: List[Dict[str, Any]],
+    ) -> (List[float], np.ndarray):
+        def my_filter_observed_data(config: Configuration) -> bool:
+            return self.config_space_ext.get_resource(config) == resource
+
+        # If there is data at level ``resource``, the incumbent in EI
+        # should only be computed over this. If there is no data at level
+        # ``resource``, the incumbent is computed over all data
+        state = model.state
+        if state.num_observed_cases(resource=resource) > 0:
+            filter_observed_data = my_filter_observed_data
+        else:
+            filter_observed_data = None
+        model.set_filter_observed_data(filter_observed_data)
+        candidates_scorer = create_initial_candidates_scorer(
+            initial_scoring="acq_func",
+            model=model,
+            acquisition_class=self.acquisition_class,
+            random_state=self.random_state,
+        )
+        ind_for_resource = sorted_ind[start:end]
+        scores_for_resource = candidates_scorer.score(
+            [configs_all[pos] for pos in ind_for_resource]
+        )
+        return scores_for_resource, ind_for_resource
+
     def score_paused_trials_and_new_configs(
         self,
-        paused_trials: List[Tuple[str, int]],
+        paused_trials: List[Tuple[str, int, int]],
         min_resource: int,
         new_trial_id: str,
         skip_optimization: bool,
@@ -117,32 +181,24 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         self._debug_log_copy = None
         # Note that at this point, if debug logging is active, ``get_config``
         # has called ``debug_log.start_get_config("BO", new_trial_id)``
+        exclusion_candidates = self._get_exclusion_candidates(
+            skip_observed=self._allow_duplicates,
+        )
+        random_generator = self._create_random_generator()
 
         # Collect all extended configs to be scored
         state = self.state_transformer.state
         assert (
             not state.hp_ranges.is_attribute_fixed()
         ), "Internal error: state.hp_ranges.is_attribute_fixed() must not be True"
-        configs_paused = [
-            self.config_space_ext.get(state.config_for_trial[trial_id], resource)
-            for trial_id, resource in paused_trials
-        ]
-        resources_all = [x[1] for x in paused_trials]
+        configs_paused = self._extended_configs_from_paused(paused_trials, state)
         num_new = max(self.num_initial_candidates, len(paused_trials))
-        exclusion_candidates = self._get_exclusion_candidates(
-            skip_observed=self._allow_duplicates,
+        configs_new = self._extended_configs_new(
+            num_new, min_resource, exclusion_candidates, random_generator
         )
-        random_generator = self._create_random_generator()
-        # New configurations are scored at level ``min_resource``
-        configs_new = [
-            self.config_space_ext.get(config, min_resource)
-            for config in random_generator.generate_candidates_en_bulk(
-                num_new, exclusion_list=exclusion_candidates
-            )
-        ]
         num_new = len(configs_new)  # Can be less than before
         configs_all = configs_paused + configs_new
-        resources_all.extend([min_resource] * num_new)
+        resources_all = [x[2] for x in paused_trials] + ([min_resource] * num_new)
         num_all = len(resources_all)
         if num_all == 0:
             # Very unlikely, but can happen (if config space is exhausted)
@@ -166,7 +222,6 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         # Note: ``model.state`` can have fewer observations than
         # ``self.state_transformer.state`` used above, because the former can
         # be filtered down
-        state = model.state
         resources_all = np.array(resources_all)
         sorted_ind = np.argsort(resources_all)
         resources_all = resources_all[sorted_ind]
@@ -180,27 +235,13 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         for start, end in zip(change_pos[:-1], change_pos[1:]):
             resource = resources_all[start]
             assert resources_all[end - 1] == resource
-
-            def my_filter_observed_data(config: Configuration) -> bool:
-                return self.config_space_ext.get_resource(config) == resource
-
-            # If there is data at level ``resource``, the incumbent in EI
-            # should only be computed over this. If there is no data at level
-            # ``resource``, the incumbent is computed over all data
-            if state.num_observed_cases(resource=resource) > 0:
-                filter_observed_data = my_filter_observed_data
-            else:
-                filter_observed_data = None
-            model.set_filter_observed_data(filter_observed_data)
-            candidates_scorer = create_initial_candidates_scorer(
-                initial_scoring="acq_func",
+            scores_for_resource, ind_for_resource = self._scores_for_resource(
+                resource=resource,
+                start=start,
+                end=end,
                 model=model,
-                acquisition_class=self.acquisition_class,
-                random_state=self.random_state,
-            )
-            ind_for_resource = sorted_ind[start:end]
-            scores_for_resource = candidates_scorer.score(
-                [configs_all[pos] for pos in ind_for_resource]
+                sorted_ind=sorted_ind,
+                configs_all=configs_all,
             )
             scores[ind_for_resource] = scores_for_resource
             # DEBUG:
@@ -219,9 +260,9 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
             f"*** Scored {len(paused_trials)} paused and {num_new} new configurations. "
         )
         if best_ind < len(paused_trials):
-            trial_id = paused_trials[best_ind][0]
+            trial_id, pos, _ = paused_trials[best_ind]
             logger.debug(msg + f"Winner is paused, trial_id = {trial_id}")
-            return {"trial_id": paused_trials[best_ind][0]}
+            return {"trial_id": trial_id, "pos": pos}
         else:
             logger.debug(msg + f"Winner is new, trial_id = {new_trial_id}")
             return {"config": config}
@@ -348,7 +389,7 @@ class DynamicHPOSearcher(BaseSearcher):
 
     def score_paused_trials_and_new_configs(
         self,
-        paused_trials: List[Tuple[str, int]],
+        paused_trials: List[Tuple[str, int, int]],
         min_resource: int,
         new_trial_id: str,
     ) -> Dict[str, Any]:

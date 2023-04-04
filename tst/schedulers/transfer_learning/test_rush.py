@@ -213,7 +213,7 @@ def test_given_hyperband_indicates_to_discontinue_return_discontinue(
     assert not decider.task_continues(
         task_continues=False,
         trial_id=num_threshold_candidates - 1,
-        metric_value=-1,
+        metric_val=-1,
         resource=1,
     )
 
@@ -228,7 +228,7 @@ def test_given_metric_better_than_threshold_update_threshold_if_threshold_config
             decider.task_continues(
                 task_continues=True,
                 trial_id=trial_id,
-                metric_value=loss,
+                metric_val=loss,
                 resource=rung_level,
             )
             if trial_id == num_threshold_candidates:
@@ -247,7 +247,7 @@ def test_given_metric_worse_than_threshold_return_discontinue_if_standard_trial(
         assert not decider.task_continues(
             task_continues=True,
             trial_id=num_threshold_candidates,
-            metric_value=0.1,
+            metric_val=0.1,
             resource=rung_level,
         )
 
@@ -260,7 +260,7 @@ def test_given_metric_worse_than_threshold_return_hyperband_decision_if_init_tri
         decider.task_continues(
             task_continues=hyperband_decision,
             trial_id=num_threshold_candidates - 1,
-            metric_value=1,
+            metric_val=1,
             resource=1,
         )
         is hyperband_decision

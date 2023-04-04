@@ -3,3 +3,4 @@ dill>=0.3.6
 pandas
 # only needed for python version lower than 3.8
 typing_extensions
+sortedcontainers

@@ -1,3 +1,4 @@
 syne-tune[gpsearchers]
 datasets==1.8.0
 transformers
+sortedcontainers  # Remove in version > 0.4.1

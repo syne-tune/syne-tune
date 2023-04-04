@@ -11,10 +11,16 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
-from syne_tune.optimizer.schedulers.hyperband_promotion import PromotionRungSystem
-from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
+from syne_tune.optimizer.schedulers.hyperband_promotion import (
+    PromotionRungEntry,
+    PromotionRungSystem,
+)
+from syne_tune.optimizer.schedulers.hyperband_stopping import (
+    Rung,
+    StoppingRungSystem,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,16 +54,16 @@ class RUSHDecider:
         )  # thresholds at different resource levels that must be met
 
     def task_continues(
-        self, task_continues: bool, trial_id: str, metric_value: float, resource: int
+        self, task_continues: bool, trial_id: str, metric_val: float, resource: int
     ) -> bool:
         if not task_continues:
             return False
         if self._is_in_points_to_evaluate(trial_id):
             self._thresholds[resource] = self._return_better(
-                self._thresholds.get(resource), metric_value
+                self._thresholds.get(resource), metric_val
             )
             return True
-        return self._meets_threshold(metric_value, resource)
+        return self._meets_threshold(metric_val, resource)
 
     def _is_in_points_to_evaluate(self, trial_id: str) -> bool:
         return int(trial_id) < self._num_threshold_candidates
@@ -75,10 +81,10 @@ class RUSHDecider:
             )
         return better_val
 
-    def _meets_threshold(self, metric_value: float, resource: int) -> bool:
+    def _meets_threshold(self, metric_val: float, resource: int) -> bool:
         return (
-            self._return_better(self._thresholds.get(resource), metric_value)
-            == metric_value
+            self._return_better(self._thresholds.get(resource), metric_val)
+            == metric_val
         )
 
 
@@ -109,17 +115,13 @@ class RUSHStoppingRungSystem(StoppingRungSystem):
 
     def _task_continues(
         self,
-        metric_value: float,
-        recorded: Dict[str, Any],
-        prom_quant: float,
         trial_id: str,
-        resource: int,
+        metric_val: float,
+        rung: Rung,
     ) -> bool:
-        task_continues = super()._task_continues(
-            metric_value, recorded, prom_quant, trial_id, resource
-        )
+        task_continues = super()._task_continues(trial_id, metric_val, rung)
         return self._decider.task_continues(
-            task_continues, trial_id, metric_value, resource
+            task_continues, trial_id, metric_val, rung.level
         )
 
 
@@ -148,12 +150,8 @@ class RUSHPromotionRungSystem(PromotionRungSystem):
         )
         self._decider = RUSHDecider(num_threshold_candidates, mode)
 
-    def _is_promotable_trial(
-        self, trial_id: str, metric_value: float, is_paused: bool, resource: int
-    ) -> bool:
-        task_continues = super()._is_promotable_trial(
-            trial_id, metric_value, is_paused, resource
-        )
+    def _is_promotable_trial(self, entry: PromotionRungEntry, resource: int) -> bool:
+        task_continues = super()._is_promotable_trial(entry, resource)
         return self._decider.task_continues(
-            task_continues, trial_id, metric_value, resource
+            task_continues, entry.trial_id, entry.metric_val, resource
         )
