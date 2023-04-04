@@ -67,6 +67,12 @@ def try_import_backends_message() -> str:
     )
 
 
+def try_import_moo_message() -> str:
+    return _try_import_message(
+        "Multi Objective Optimization dependencies are not imported", tag="moo"
+    )
+
+
 def _try_import_message(message_text: str, tag: Optional[str]) -> str:
     if tag is None:
         insert = ""

@@ -10,14 +10,16 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict, Callable, Optional, Union, Any
 import json
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from json.decoder import JSONDecodeError
-import pandas as pd
-from dataclasses import dataclass
 from pathlib import Path
+from typing import List, Dict, Callable, Optional, Union, Any, Tuple
+
+import numpy as np
+import pandas as pd
 
 from syne_tune.constants import (
     ST_TUNER_TIME,
@@ -27,8 +29,10 @@ from syne_tune.constants import (
     ST_TUNER_DILL_FILENAME,
 )
 from syne_tune import Tuner
-from syne_tune.util import experiment_path, s3_experiment_path
+from syne_tune.constants import ST_TUNER_TIME, ST_TUNER_CREATION_TIMESTAMP
+from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumulative
 from syne_tune.try_import import try_import_aws_message
+from syne_tune.util import experiment_path, s3_experiment_path
 
 try:
     import boto3
@@ -67,30 +71,93 @@ class ExperimentResult:
         """
         return datetime.fromtimestamp(self.metadata[ST_TUNER_CREATION_TIMESTAMP])
 
-    def plot(self, **plt_kwargs):
-        """Plot best metric value as function of wallclock time
+    def plot_hypervolume(
+        self,
+        metrics_to_plot: Union[List[int], List[str]] = None,
+        reference_point: np.ndarray = None,
+        figure_path: str = None,
+        **plt_kwargs,
+    ):
+        """Plot best hyervolume value as function of wallclock time
 
+        :param reference_point: Reference point for hypervolume calculations.
+            If None, the maximum values of each metric is used.
+        :param figure_path: If specified, defines the path where the figure will be saved.
+            If None, the figure is shown
         :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
         """
         import matplotlib.pyplot as plt
 
-        metric = self.metric_names()[0]
+        if metrics_to_plot is None:
+            metrics_to_plot = self.metric_names()
+
+        assert (
+            len(metrics_to_plot) > 1
+        ), "Only one metric defined, cannot compute hypervolume"
+
+        metrics, metric_names, metric_modes = zip(
+            *[self._metric_name_mode(metric) for metric in metrics_to_plot]
+        )
+        assert np.all(
+            [metric_mode == "max" for metric_mode in metric_modes]
+        ), f"All metrics must be maximized but the following modes were selected: {metric_modes}"
+
+        if self.results is not None and len(self.results) > 0:
+            results_df = self.results.sort_values(ST_TUNER_TIME)
+
+            x = self.results.loc[:, ST_TUNER_TIME]
+            results_array = results_df[list(metric_names)].values
+            hypervolume_indicator = hypervolume_cumulative(
+                results_array, reference_point
+            )
+
+            fig, ax = plt.subplots()
+            ax.plot(x, hypervolume_indicator, **plt_kwargs)
+            ax.set_xlabel("wallclock time (secs)")
+            ax.set_ylabel("Hypervolume indicator")
+            ax.set_title(f"Hypervolume over time {self.name}")
+            if figure_path is not None:
+                fig.savefig(figure_path)
+            else:
+                fig.show()
+
+    def plot(
+        self, metric_to_plot: Union[str, int] = 0, figure_path: str = None, **plt_kwargs
+    ):
+        """Plot best metric value as function of wallclock time
+
+        :param metric_to_plot: Indicates which metric to plot, can be the index or a name of the metric.
+            default to 0 - first metric defined
+        :param figure_path: If specified, defines the path where the figure will be saved.
+            If None, the figure is shown
+        :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
+        """
+        import matplotlib.pyplot as plt
+
+        metric, metric_name, metric_mode = self._metric_name_mode(
+            metric_to_plot, verbose=True
+        )
+
         df = self.results
         if df is not None and len(df) > 0:
             df = df.sort_values(ST_TUNER_TIME)
             x = df.loc[:, ST_TUNER_TIME]
             y = (
-                df.loc[:, metric].cummax()
-                if self.metric_mode() == "max"
-                else df.loc[:, metric].cummin()
+                df.loc[:, metric_name].cummax()
+                if metric_mode == "max"
+                else df.loc[:, metric_name].cummin()
             )
-            plt.plot(x, y, **plt_kwargs)
-            plt.xlabel("wallclock time (secs)")
-            plt.ylabel(metric)
-            plt.title(f"Best result over time {self.name}")
-            plt.show()
+            fig, ax = plt.subplots()
+            ax.plot(x, y, **plt_kwargs)
+            ax.set_xlabel("wallclock time (secs)")
+            ax.set_ylabel(metric_name)
+            ax.set_title(f"Best result over time {self.name}")
+            if figure_path is not None:
+                fig.savefig(figure_path)
+            else:
+                fig.show()
 
-    def metric_mode(self) -> str:
+    def metric_mode(self) -> Union[str, List[str]]:
         return self.metadata["metric_mode"]
 
     def metric_names(self) -> List[str]:
@@ -99,20 +166,14 @@ class ExperimentResult:
     def entrypoint_name(self) -> str:
         return self.metadata["entrypoint"]
 
-    def best_config(self) -> Dict[str, Any]:
+    def best_config(self, metric: Union[str, int] = 0) -> Dict[str, Any]:
         """
-        Return the best config found for the first metric defined in the scheduler.
+        Return the best config found for the specified metric
+        :param metric: Indicates which metric to use, can be the index or a name of the metric.
+            default to 0 - first metric defined in the Scheduler
         :return: Configuration corresponding to best metric value
         """
-        metric_names = self.metric_names()
-        metric_mode = self.metric_mode()
-
-        if len(metric_names) > 1:
-            logging.warning(
-                "Several metrics exists so the best is not defined, this will "
-                f"return the best w.r.t. the first metric of {metric_names}."
-            )
-        metric_name = metric_names[0]
+        metric, metric_name, metric_mode = self._metric_name_mode(metric, verbose=True)
 
         # locate best result
         if metric_mode == "min":
@@ -123,6 +184,42 @@ class ExperimentResult:
 
         # Don't include internal fields
         return {k: v for k, v in res.items() if not k.startswith("st_")}
+
+    def _metric_name_mode(
+        self, metric: Union[str, int], verbose: bool = False
+    ) -> Tuple[int, str, str]:
+        """
+        Determine the metric, name and its mode given ambiguous input.
+        :param metric: Index or name of the selected metric
+        :param verbose: If True, prints a warning message when only one metric is selected from many
+        """
+        if isinstance(metric, str):
+            assert (
+                metric in self.metric_names()
+            ), f"Attepted to use {metric} while available metrics are {self.metric_names()}"
+            metric_name = metric
+            metric = self.metric_names().index(metric)
+        elif isinstance(metric, int):
+            assert metric < len(
+                self.metric_names()
+            ), f"Attepted to use metric index={metric} with {len(self.metric_names())} availale metrics"
+            metric_name = self.metric_names()[metric]
+        else:
+            raise AttributeError(
+                f"metic must be <int> or <str> but {type(metric)} was provided"
+            )
+
+        if len(self.metric_names()) > 1 and verbose:
+            logging.warning(
+                "Several metrics exists, this will "
+                f"use metric={metric_name} (index={metric}) out of {self.metric_names()}."
+            )
+
+        metric_mode = self.metric_mode()
+        if len(metric_mode) > 1:
+            metric_mode = metric_mode[metric]
+
+        return metric, metric_name, metric_mode
 
 
 def download_single_experiment(

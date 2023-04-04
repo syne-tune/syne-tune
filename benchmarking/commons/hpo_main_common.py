@@ -108,7 +108,7 @@ class ConfigDict:
             name="max_size_data_for_model",
             type=int,
             default=None,
-            help=f"Limits number of datapoints for surrogate model of MOBSTER or HyperTune",
+            help=f"Limits number of datapoints for surrogate model of BO, MOBSTER or HyperTune",
         ),
         Parameter(
             name="scale_max_wallclock_time",
@@ -295,7 +295,7 @@ def get_metadata(
     :param benchmark_name: Name of benchmark
     :param random_seed: Master random seed
     :param max_size_data_for_model: Limits number of datapoints for surrogate
-        model of MOBSTER or HyperTune
+        model of BO, MOBSTER or HyperTune
     :param benchmark: Optional. Take ``n_workers``, ``max_wallclock_time``
         from there
     :param extra_metadata: ``metadata`` updated by these at the end. Optional

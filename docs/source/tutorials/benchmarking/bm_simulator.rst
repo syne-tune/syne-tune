@@ -172,8 +172,11 @@ This call runs a number of experiments sequentially on the local machine:
   seed is detailed `below <bm_local.html#random-seeds-and-paired-comparisons>`__.
 * ``max_wallclock_time``, ``n_workers``: These arguments overwrite the defaults
   specified in the benchmark definitions.
-* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
-  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`__.
+* ``max_size_data_for_model``: Parameter for Bayesian optimization, MOBSTER or
+  Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`__
+  and
+  `here <../basics/basics_bayesopt.html#speeding-up-decision-making>`__.
 * ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
   argument, but not ``max_wallclock_time``, the benchmark default
   ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,
