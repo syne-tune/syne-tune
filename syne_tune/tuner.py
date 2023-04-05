@@ -25,16 +25,9 @@ from syne_tune.backend.trial_backend import (
 )
 from syne_tune.backend.trial_status import Status, Trial, TrialResult
 from syne_tune.callbacks.remove_checkpoints_callback import RemoveCheckpointsCallback
-from syne_tune.config_space import config_space_to_json_dict
-from syne_tune.constants import (
-    ST_TUNER_CREATION_TIMESTAMP,
-    ST_TUNER_START_TIMESTAMP,
-    ST_METADATA_FILENAME,
-    ST_TUNER_DILL_FILENAME,
-)
+from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
-from syne_tune.tuner_callback import TunerCallback
-from syne_tune.results_callback import StoreResultsCallback
+from syne_tune.tuner_callback import StoreResultsCallback, TunerCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 from syne_tune.util import (
     RegularCallback,
@@ -89,7 +82,7 @@ class Tuner:
         when a result is seen. The default callback stores results every
         ``results_update_interval``.
     :param metadata: Dictionary of user-metadata that will be persisted in
-        ``{tuner_path}/{ST_METADATA_FILENAME}``, in addition to metadata provided by
+        ``{tuner_path}/metadata.json``, in addition to metadata provided by
         the user. ``SMT_TUNER_CREATION_TIMESTAMP`` is always included which
         measures the time-stamp when the tuner started to run.
     :param suffix_tuner_name: If ``True``, a timestamp is appended to the
@@ -388,22 +381,14 @@ class Tuner:
         """
         res = metadata if metadata is not None else dict()
         self._set_metadata(res, ST_TUNER_CREATION_TIMESTAMP, time.time())
-        self._set_metadata(res, "metric_names", self.scheduler.metric_names())
-        self._set_metadata(res, "metric_mode", self.scheduler.metric_mode())
-        self._set_metadata(res, "entrypoint", self.trial_backend.entrypoint_path().stem)
         self._set_metadata(res, "backend", str(type(self.trial_backend).__name__))
-
-        self._set_metadata(
-            res, "scheduler_name", str(self.scheduler.__class__.__name__)
-        )
-        config_space_json = dump_json_with_numpy(
-            config_space_to_json_dict(self.scheduler.config_space)
-        )
-        self._set_metadata(res, "config_space", config_space_json)
+        self._set_metadata(res, "entrypoint", self.trial_backend.entrypoint_path().stem)
+        for key, value in self.scheduler.metadata().items():
+            self._set_metadata(res, key, value)
         return res
 
     def _save_metadata(self):
-        dump_json_with_numpy(self.metadata, self.tuner_path / ST_METADATA_FILENAME)
+        dump_json_with_numpy(self.metadata, self.tuner_path / "metadata.json")
 
     def _stop_condition(self) -> bool:
         return (
@@ -547,9 +532,9 @@ class Tuner:
 
     def save(self, folder: Optional[str] = None):
         if folder is None:
-            tuner_serialized_path = self.tuner_path / ST_TUNER_DILL_FILENAME
+            tuner_serialized_path = self.tuner_path / "tuner.dill"
         else:
-            tuner_serialized_path = Path(folder) / ST_TUNER_DILL_FILENAME
+            tuner_serialized_path = Path(folder) / "tuner.dill"
         with open(tuner_serialized_path, "wb") as f:
             logger.debug(f"saving tuner in {tuner_serialized_path}")
             dill.dump(self, f)
@@ -557,7 +542,7 @@ class Tuner:
 
     @staticmethod
     def load(tuner_path: Optional[str]):
-        with open(Path(tuner_path) / ST_TUNER_DILL_FILENAME, "rb") as f:
+        with open(Path(tuner_path) / "tuner.dill", "rb") as f:
             tuner = dill.load(f)
             tuner.tuner_path = Path(experiment_path(tuner_name=tuner.name))
             return tuner
