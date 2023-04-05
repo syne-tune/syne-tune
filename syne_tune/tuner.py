@@ -25,7 +25,6 @@ from syne_tune.backend.trial_backend import (
 )
 from syne_tune.backend.trial_status import Status, Trial, TrialResult
 from syne_tune.callbacks.remove_checkpoints_callback import RemoveCheckpointsCallback
-from syne_tune.config_space import config_space_to_json_dict
 from syne_tune.constants import (
     ST_TUNER_CREATION_TIMESTAMP,
     ST_TUNER_START_TIMESTAMP,
