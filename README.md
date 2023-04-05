@@ -52,7 +52,7 @@ To enable tuning, you have to report metrics from a training script so that they
 this can be accomplished by just calling `report(epoch=epoch, loss=loss)` as shown in the example below:
 
 ```python
-# train_height.py
+# train_height_simple.py
 import logging
 import time
 
@@ -62,25 +62,23 @@ from argparse import ArgumentParser
 if __name__ == '__main__':
     root = logging.getLogger()
     root.setLevel(logging.INFO)
-
     parser = ArgumentParser()
     parser.add_argument('--steps', type=int)
     parser.add_argument('--width', type=float)
     parser.add_argument('--height', type=float)
-
     args, _ = parser.parse_known_args()
     report = Reporter()
-
     for step in range(args.steps):
-        dummy_score = (0.1 + args.width * step / 100) ** (-1) + args.height * 0.1
-        # Feed the score back to Syne Tune.
-        report(step=step, mean_loss=dummy_score, epoch=step + 1)
         time.sleep(0.1)
+        dummy_score = 1.0 / (0.1 + args.width * step / 100) + args.height * 0.1
+        # Feed the score back to Syne Tune.
+        report(epoch=step + 1, mean_loss=dummy_score)
 ```
 
 Once you have a script reporting metric, you can launch a tuning as-follow:
 
 ```python
+# launch_height_simple.py
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
@@ -88,18 +86,21 @@ from syne_tune.optimizer.baselines import ASHA
 
 # hyperparameter search space to consider
 config_space = {
-    'steps': 100,
     'width': randint(1, 20),
     'height': randint(1, 20),
+    'epochs': 100,
 }
 
 tuner = Tuner(
     trial_backend=LocalBackend(entry_point='train_height.py'),
     scheduler=ASHA(
-        config_space, metric='mean_loss', resource_attr='epoch', max_t=100,
+        config_space,
+        metric='mean_loss',
+        resource_attr='epoch',
+        max_resource_attr="epochs",
         search_options={'debug_log': False},
     ),
-    stop_criterion=StoppingCriterion(max_wallclock_time=15),
+    stop_criterion=StoppingCriterion(max_wallclock_time=30),
     n_workers=4,  # how many trials are evaluated in parallel
 )
 tuner.run()
@@ -125,7 +126,8 @@ ASHA | Li, et al. (2019) | random | yes | yes | no
 BOHB | Falkner, et al. (2018) | model-based | yes | yes | no 
 MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no 
 DEHB | Awad, et al. (2021) | evolutionary | no | yes | no 
-HyperTune | Li, et al. (2022) | model-based | yes | yes | no 
+HyperTune | Li, et al. (2022) | model-based | yes | yes | no
+DyHPO | Wistuba, et al. (2022) | model-based | yes | yes | no
 ASHABORE | Tiao, et al. (2021) | model-based | yes | yes | no 
 PASHA | Bohdal, et al. (2022)| random or model-based | yes | yes | no 
 REA | Real, et al. (2019) | evolutionary | yes | no | no 
@@ -151,14 +153,11 @@ HPO methods listed can be used in a multi-objective setting by scalarization or 
 
 ## Examples
 
-You will find the following examples in [examples/](examples/) folder illustrating different functionalities provided
-by Syne Tune:
+You will find many examples in the [examples/](examples/) folder illustrating
+different functionalities provided by Syne Tune. For example:
 * [launch_height_baselines.py](examples/launch_height_baselines.py):
   launches HPO locally, tuning a simple script 
   [train_height_example.py](examples/training_scripts/height_example/train_height.py) for several baselines  
-* [launch_height_ray.py](examples/launch_height_ray.py):
-  launches HPO locally with [Ray Tune](https://docs.ray.io/en/master/tune/index.html)
-  scheduler
 * [launch_height_moasha.py](examples/launch_height_moasha.py):
   shows how to tune a script reporting multiple-objectives with multiobjective Asynchronous Hyperband (MOASHA)
 * [launch_height_standalone_scheduler.py](examples/launch_height_standalone_scheduler.py):
@@ -171,19 +170,28 @@ by Syne Tune:
   for remote launching with the help of RemoteTuner also discussed in one of the FAQs.
 * [launch_height_sagemaker.py](examples/launch_height_sagemaker.py):
   launches HPO on SageMaker to tune a SageMaker Pytorch estimator
+* [launch_bayesopt_constrained.py](examples/launch_bayesopt_constrained.py):
+  launches Bayesian contrained hyperparameter optimization
 * [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py):
   launches HPO on SageMaker to tune a entry point with a custom docker image
 * [launch_plot_results.py](examples/launch_plot_results.py): shows how to plot
   results of a HPO experiment
+* [launch_tensorboard_example.py](examples/launch_tensorboard_example.py):
+  shows how results can be visualized on the fly with TensorBoard
+* [launch_nasbench201_simulated.py](examples/launch_nasbench201_simulated.py):
+  demonstrates simulation of experiments on a tabulated benchmark
 * [launch_fashionmnist.py](examples/launch_fashionmnist.py):
-launches HPO locally tuning a multi-layer perceptron on Fashion MNIST. This
-employs an easy-to-use benchmark convention
+  launches HPO locally tuning a multi-layer perceptron on Fashion MNIST. This
+  employs an easy-to-use benchmark convention
 * [launch_huggingface_classification.py](examples/launch_huggingface_classification.py):
   launches HPO on SageMaker to tune a SageMaker Hugging Face estimator for sentiment classification
 * [launch_tuning_gluonts.py](examples/launch_tuning_gluonts.py):
   launches HPO locally to tune a gluon-ts time series forecasting algorithm
 * [launch_rl_tuning.py](examples/launch_rl_tuning.py):
   launches HPO locally to tune a RL algorithm on the cartpole environment
+* [launch_height_ray.py](examples/launch_height_ray.py):
+  launches HPO locally with [Ray Tune](https://docs.ray.io/en/master/tune/index.html)
+  scheduler
 
 ## FAQ and Tutorials
 
@@ -197,9 +205,11 @@ learn more about Syne Tune functionalities.
 * [How can I utilize multiple GPUs?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-utilize-multiple-gpus)
 * [What is the default mode when performing optimization?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-is-the-default-mode-when-performing-optimization)
 * [How are trials evaluated on a local machine?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-are-trials-evaluated-on-a-local-machine)
-* [What does the output of the tuning contain?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-does-the-output-of-the-tuning-contain)
 * [Where can I find the output of the tuning?](https://syne-tune.readthedocs.io/en/latest/faq.html#where-can-i-find-the-output-of-the-tuning)
+* [How can I change the default output folder where tuning results are stored?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-change-the-default-output-folder-where-tuning-results-are-stored)
+* [What does the output of the tuning contain?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-does-the-output-of-the-tuning-contain)
 * [How can I enable trial checkpointing?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-enable-trial-checkpointing)
+* [How can I retrieve the best checkpoint obtained after tuning?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-retrieve-the-best-checkpoint-obtained-after-tuning)
 * [Which schedulers make use of checkpointing?](https://syne-tune.readthedocs.io/en/latest/faq.html#which-schedulers-make-use-of-checkpointing)
 * [Is the tuner checkpointed?](https://syne-tune.readthedocs.io/en/latest/faq.html#is-the-tuner-checkpointed)
 * [Where can I find the output of my trials?](https://syne-tune.readthedocs.io/en/latest/faq.html#where-can-i-find-the-output-of-my-trials)
@@ -213,17 +223,23 @@ learn more about Syne Tune functionalities.
 * [How can I benchmark different methods?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-benchmark-different-methods)
 * [What different schedulers do you support? What are the main differences between them?](https://syne-tune.readthedocs.io/en/latest/faq.html#what-different-schedulers-do-you-support-what-are-the-main-differences-between-them)
 * [How do I define the search space?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-do-i-define-the-search-space) 
+* [How do I set arguments of multi-fidelity schedulers?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-do-i-set-arguments-of-multi-fidelity-schedulers)
 * [How can I visualize the progress of my tuning experiment with Tensorboard?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-visualize-the-progress-of-my-tuning-experiment-with-tensorboard)
 * [How can I add a new scheduler?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-add-a-new-scheduler)
 * [How can I add a new tabular or surrogate benchmark?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-add-a-new-tabular-or-surrogate-benchmark)
+* [How can I reduce delays in starting trials with the SageMaker backend?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-reduce-delays-in-starting-trials-with-the-sageMaker-backend)
+* [How can I pass lists or dictionaries to the training script?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-pass-lists-or-dictionaries-to-the-training-script)
+* [How can I write extra results for an experiment?](https://syne-tune.readthedocs.io/en/latest/faq.html#how-can-i-write-extra-results-for-an-experiment)
 
 Do you want to know more? Here are a number of tutorials.
 * [Basics of Syne Tune](https://syne-tune.readthedocs.io/en/latest/tutorials/basics/README.html)
-* [Multi-Fidelity Hyperparameter Optimization](https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/README.html)
-* [How to Contribute a New Scheduler](https://syne-tune.readthedocs.io/en/latest/tutorials/developer/README.html)
-* [Benchmarking in Syne Tune](https://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html)
 * [Choosing a Configuration Space](https://syne-tune.readthedocs.io/en/latest/search_space.html)
 * [Using the Built-in Schedulers](https://syne-tune.readthedocs.io/en/latest/schedulers.html)
+* [Multi-Fidelity Hyperparameter Optimization](https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/README.html)
+* [Benchmarking in Syne Tune](https://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html)
+* [How to Contribute a New Scheduler](https://syne-tune.readthedocs.io/en/latest/tutorials/developer/README.html)
+* [PASHA: Efficient HPO and NAS with Progressive Resource Allocation](https://syne-tune.readthedocs.io/en/latest/tutorials/pasha/pasha.html)
+* [Using Syne Tune for Transfer Learning](https://syne-tune.readthedocs.io/en/latest/tutorials/transfer_learning/transfer_learning.html)
 
 
 ## Blog Posts

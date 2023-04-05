@@ -12,10 +12,10 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
+from syne_tune import Tuner, StoppingCriterion
+from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
 from syne_tune.optimizer.baselines import ASHA
-from syne_tune.backend import LocalBackend
-from syne_tune import Tuner, StoppingCriterion
 
 # Hyperparameter configuration space
 config_space = {
