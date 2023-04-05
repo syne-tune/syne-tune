@@ -410,3 +410,10 @@ def test_schedulers_api(scheduler):
             dill.dump(scheduler, f)
         with open(Path(local_path) / "scheduler.dill", "rb") as f:
             dill.load(f)
+
+    # Check metadata, metric_names() and metric_mode() are tested above
+    meta = scheduler.metadata()
+    assert meta["metric_names"] == scheduler.metric_names()
+    assert meta["metric_mode"] == scheduler.metric_mode()
+    assert meta["scheduler_name"] == str(scheduler.__class__.__name__)
+    assert "config_space" in meta

@@ -15,7 +15,12 @@ from typing import Optional, List, Dict, Any, Union
 import logging
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.config_space import non_constant_hyperparameter_keys, cast_config_values
+from syne_tune.config_space import (
+    non_constant_hyperparameter_keys,
+    cast_config_values,
+    config_space_to_json_dict,
+)
+from syne_tune.util import dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
 
@@ -296,3 +301,17 @@ class TrialScheduler:
         :return: IDs of paused trials for which checkpoints can be removed
         """
         return []  # Default is not to participate in early checkpoint removal
+
+    def metadata(self) -> Dict[str, Any]:
+        """
+        :return: Metadata for the scheduler
+        """
+        config_space_json = dump_json_with_numpy(
+            config_space_to_json_dict(self.config_space)
+        )
+        return {
+            "metric_names": self.metric_names(),
+            "metric_mode": self.metric_mode(),
+            "scheduler_name": str(self.__class__.__name__),
+            "config_space": config_space_json,
+        }
