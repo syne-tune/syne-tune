@@ -13,17 +13,12 @@
 import datetime
 from typing import Callable
 
-import numpy as np
 import pytest
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import randint, uniform, choice
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedFIFOScheduler,
-)
-from syne_tune.optimizer.schedulers.multiobjective.utils import (
-    hypervolume,
-    hypervolume_cumulative,
 )
 
 

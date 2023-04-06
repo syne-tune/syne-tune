@@ -18,7 +18,6 @@ from typing import Dict, Any, List, Union
 import numpy as np
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.optimizer.baselines import _assert_searcher_must_be
 from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune.optimizer.schedulers.fifo import _to_list
 
