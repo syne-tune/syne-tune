@@ -369,7 +369,7 @@ if sys.version_info >= (3, 8):
 def test_schedulers_api(scheduler):
     trial_ids = range(4)
 
-    if isinstance(scheduler, MOASHA) or isinstance(scheduler, MOREA):
+    if scheduler.is_multiobjective_scheduler():
         assert scheduler.metric_names() == [metric1, metric2]
     else:
         assert scheduler.metric_names() == [metric1]

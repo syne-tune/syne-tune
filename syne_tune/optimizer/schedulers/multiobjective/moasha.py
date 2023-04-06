@@ -189,6 +189,12 @@ class MOASHA(TrialScheduler):
     def on_trial_remove(self, trial: Trial):
         del self._trial_info[trial.trial_id]
 
+    def is_multiobjective_scheduler(self) -> bool:
+        """
+        Return True if a scheduler is multi-objective.
+        """
+        return True
+
 
 class _Bracket:
     """Bookkeeping system to track recorded values.

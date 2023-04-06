@@ -23,7 +23,7 @@ from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
-from syne_tune.optimizer.schedulers.searchers.multi_objective_regularized_evolution import (
+from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
     MultiObjectiveRegularizedEvolution,
 )
 from syne_tune.optimizer.schedulers.synchronous import (

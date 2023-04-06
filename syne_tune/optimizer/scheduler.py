@@ -315,3 +315,10 @@ class TrialScheduler:
             "scheduler_name": str(self.__class__.__name__),
             "config_space": config_space_json,
         }
+
+    def is_multiobjective_scheduler(self) -> bool:
+        """
+        Return True if a scheduler is multi-objective.
+        """
+        # This is set to False as a default but should be overriden by any classes that implement MO Schedulers
+        return False
