@@ -25,7 +25,6 @@ from syne_tune.backend.trial_backend import (
 )
 from syne_tune.backend.trial_status import Status, Trial, TrialResult
 from syne_tune.callbacks.remove_checkpoints_callback import RemoveCheckpointsCallback
-from syne_tune.config_space import config_space_to_json_dict
 from syne_tune.constants import (
     ST_TUNER_CREATION_TIMESTAMP,
     ST_TUNER_START_TIMESTAMP,
@@ -388,18 +387,10 @@ class Tuner:
         """
         res = metadata if metadata is not None else dict()
         self._set_metadata(res, ST_TUNER_CREATION_TIMESTAMP, time.time())
-        self._set_metadata(res, "metric_names", self.scheduler.metric_names())
-        self._set_metadata(res, "metric_mode", self.scheduler.metric_mode())
         self._set_metadata(res, "entrypoint", self.trial_backend.entrypoint_path().stem)
         self._set_metadata(res, "backend", str(type(self.trial_backend).__name__))
-
-        self._set_metadata(
-            res, "scheduler_name", str(self.scheduler.__class__.__name__)
-        )
-        config_space_json = dump_json_with_numpy(
-            config_space_to_json_dict(self.scheduler.config_space)
-        )
-        self._set_metadata(res, "config_space", config_space_json)
+        for key, value in self.scheduler.metadata().items():
+            self._set_metadata(res, key, value)
         return res
 
     def _save_metadata(self):
