@@ -51,7 +51,7 @@ from syne_tune.optimizer.schedulers import (
 )
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
-    LinearScalarizedFIFOScheduler,
+    LinearScalarizedScheduler,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
@@ -354,17 +354,19 @@ list_schedulers_to_test = [
     #     max_t=max_t,
     #     resource_attr=resource_attr,
     # ),
-    LinearScalarizedFIFOScheduler(
+    LinearScalarizedScheduler(
         config_space=config_space,
         metric=[metric1, metric2],
         mode=[mode, mode],
         scalarization_weights=[1, 1],
+        base_scheduler=FIFOScheduler,
     ),
-    LinearScalarizedFIFOScheduler(
+    LinearScalarizedScheduler(
         config_space=config_space,
         metric=[metric1, metric2],
         mode=[mode, mode],
         scalarization_weights=[1, 1],
+        base_scheduler=FIFOScheduler,
         searcher="random",
     ),
 ]
@@ -387,8 +389,6 @@ def test_schedulers_api(scheduler):
 
     if scheduler.is_multiobjective_scheduler():
         assert scheduler.metric_names() == [metric1, metric2]
-    elif isinstance(scheduler, LinearScalarizedFIFOScheduler):
-        assert scheduler.metric_names() == [f"scalarized_{metric1}_{metric2}"]
     else:
         assert scheduler.metric_names() == [metric1]
 

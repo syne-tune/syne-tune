@@ -17,8 +17,9 @@ import pytest
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import randint, uniform, choice
+from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
-    LinearScalarizedFIFOScheduler,
+    LinearScalarizedScheduler,
 )
 
 
@@ -64,24 +65,23 @@ def make_metric(metric1, metric2):
 
 @pytest.fixture
 def scheduler(config_space, metric1, metric2, mode):
-    return LinearScalarizedFIFOScheduler(
+    return LinearScalarizedScheduler(
         config_space=config_space,
         metric=[metric1, metric2],
         mode=[mode, mode],
         scalarization_weights=[1, 1],
+        base_scheduler=FIFOScheduler,
         searcher="kde",
     )
 
 
-def test_scalarization(scheduler: LinearScalarizedFIFOScheduler, make_metric: Callable):
+def test_scalarization(scheduler: LinearScalarizedScheduler, make_metric: Callable):
     results = make_metric(321)
     scalarized = scheduler._scalarized_metric(results)
     assert scalarized == 321 - 321
 
 
-def test_resukls_gathering(
-    scheduler: LinearScalarizedFIFOScheduler, make_metric: Callable
-):
+def test_resukls_gathering(scheduler: LinearScalarizedScheduler, make_metric: Callable):
     trialid = 123
     trial = Trial(
         trial_id=trialid,
@@ -91,8 +91,10 @@ def test_resukls_gathering(
     results = make_metric(321)
     scheduler.on_trial_complete(trial, results)
 
-    observed_metric = scheduler.searcher.y[0]
+    observed_metric = scheduler.base_scheduler.searcher.y[0]
     assert observed_metric == 0.0
 
-    observed_trial = scheduler.searcher._from_feature(scheduler.searcher.X[0])
+    observed_trial = scheduler.base_scheduler.searcher._from_feature(
+        scheduler.base_scheduler.searcher.X[0]
+    )
     assert observed_trial == trial.config
