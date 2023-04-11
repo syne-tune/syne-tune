@@ -11,8 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
+import string
 from collections.abc import Iterable
 from itertools import groupby
+import random
 from typing import Dict, Any, List, Union, Callable, Optional
 
 import numpy as np
@@ -22,6 +24,8 @@ from syne_tune.optimizer.scheduler import TrialScheduler, TrialSuggestion
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 
 logger = logging.getLogger(__name__)
+MAX_NAME_LENGTH = 64
+RSTRING_LENGTH = 10
 
 
 def _all_equal(iterable: Iterable) -> bool:
@@ -39,13 +43,14 @@ class LinearScalarizedScheduler(TrialScheduler):
     The scalarized single objective is named: 'scalarized_<metric1>_<metric2>_..._<metricN>'
 
 
-    :param base_scheduler: Class for the single-objective scheduler to be used on the scalarized objective.
-        It will be initialized inside this Scheduler
+    :param base_scheduler_factory: Factory method for the single-objective scheduler
+        used on the scalarized objective. It will be initialized inside this Scheduler
+        If None, FIFOScheduler is used.
     :param config_space: Configuration space for evaluation function
     :param metric: Names of metrics to optimize
     :param mode: Modes of metrics to optimize (min or max). All must be matching.
     :param scalarization_weights: Weights used to scalarize objectives, if None an array of 1s is used
-    :param kwargs: Additional arguments to base_scheduler
+    :param base_scheduler_kwargs: Additional arguments to base_scheduler beyond config_space, metric and mode
     """
 
     scalarization_weights: np.ndarray
@@ -58,8 +63,8 @@ class LinearScalarizedScheduler(TrialScheduler):
         metric: List[str],
         mode: Union[List[str], str] = "min",
         scalarization_weights: Union[np.ndarray, List[float]] = None,
-        base_scheduler: Callable[[Any], TrialScheduler] = FIFOScheduler,
-        **kwargs,
+        base_scheduler_factory: Callable[[Any], TrialScheduler] = None,
+        **base_scheduler_kwargs,
     ):
         super(LinearScalarizedScheduler, self).__init__(config_space)
         if scalarization_weights is None:
@@ -69,19 +74,36 @@ class LinearScalarizedScheduler(TrialScheduler):
         self.metric = metric
         self.mode = mode
 
+        assert (
+            len(metric) > 1
+        ), "This Scheduler is inteded for multi-objective optimization but only one metric is provided"
         self.single_objective_metric = f"scalarized_{'_'.join(metric)}"
-        assert len(mode) >= 1, "At least one mode must be provided"
-        if isinstance(mode, Iterable):
+        if len(self.single_objective_metric) > MAX_NAME_LENGTH:
+            # In case of multiple objectives, the name can become too long and clutter logs/results
+            # If that is the case, we replace the objective names with a random string
+            # to make it short but avoid collision with other results
+            rstring = "".join(
+                random.SystemRandom().choice(string.ascii_uppercase + string.digits)
+                for _ in range(RSTRING_LENGTH)
+            )
+            self.single_objective_metric = f"scalarized_objective_{rstring}"
+
+        single_objective_mode = self.mode
+        if isinstance(single_objective_mode, Iterable):
+            assert len(mode) >= 1, "At least one mode must be provided"
             assert _all_equal(
                 mode
             ), "Modes must be the same, use positive/negative scalarization_weights to change relative signs"
             single_objective_mode = next(x for x in mode)
 
-        self.base_scheduler = base_scheduler(
+        if base_scheduler_factory is None:
+            base_scheduler_factory = FIFOScheduler
+
+        self.base_scheduler = base_scheduler_factory(
             config_space=config_space,
             metric=self.single_objective_metric,
             mode=single_objective_mode,
-            **kwargs,
+            **base_scheduler_kwargs,
         )
 
     def _scalarized_metric(self, result: Dict[str, Any]) -> float:
@@ -89,9 +111,6 @@ class LinearScalarizedScheduler(TrialScheduler):
             FIFOScheduler._check_keys_of_result(result, self.metric_names())
 
         mo_results = np.array([result[item] for item in self.metric_names()])
-        logger.debug(
-            f"Scalarizing {self.metric_names()} into {self.single_objective_metric} using linear combination"
-        )
         return np.sum(np.multiply(mo_results, self.scalarization_weights))
 
     def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
@@ -116,15 +135,21 @@ class LinearScalarizedScheduler(TrialScheduler):
         """Called on each intermediate result reported by a trial.
         See the docstring of the chosen base_scheduler for details
         """
-        result[self.single_objective_metric] = self._scalarized_metric(result)
-        return self.base_scheduler.on_trial_result(trial, result)
+        local_results = {
+            self.single_objective_metric: self._scalarized_metric(result),
+            **result,
+        }
+        return self.base_scheduler.on_trial_result(trial, local_results)
 
     def on_trial_complete(self, trial: Trial, result: Dict[str, Any]):
         """Notification for the completion of trial.
         See the docstring of the chosen base_scheduler for details
         """
-        result[self.single_objective_metric] = self._scalarized_metric(result)
-        return self.base_scheduler.on_trial_complete(trial, result)
+        local_results = {
+            self.single_objective_metric: self._scalarized_metric(result),
+            **result,
+        }
+        return self.base_scheduler.on_trial_complete(trial, local_results)
 
     def on_trial_remove(self, trial: Trial):
         """Called to remove trial.

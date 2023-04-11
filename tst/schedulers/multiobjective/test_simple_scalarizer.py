@@ -70,7 +70,7 @@ def scheduler(config_space, metric1, metric2, mode):
         metric=[metric1, metric2],
         mode=[mode, mode],
         scalarization_weights=[1, 1],
-        base_scheduler=FIFOScheduler,
+        base_scheduler_factory=FIFOScheduler,
         searcher="kde",
     )
 
