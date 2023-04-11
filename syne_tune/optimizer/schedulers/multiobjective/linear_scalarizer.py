@@ -132,6 +132,13 @@ class LinearScalarizedScheduler(TrialScheduler):
         """
         return self.base_scheduler.on_trial_remove(trial)
 
+    def trials_checkpoints_can_be_removed(self) -> List[int]:
+        """
+        See the docstring of the chosen base_scheduler for details
+        :return: IDs of paused trials for which checkpoints can be removed
+        """
+        return self.base_scheduler.trials_checkpoints_can_be_removed()
+
     def metric_names(self) -> List[str]:
         """
         :return: List of metric names.
