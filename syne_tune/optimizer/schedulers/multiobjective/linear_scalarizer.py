@@ -113,11 +113,11 @@ class LinearScalarizedScheduler(TrialScheduler):
         mo_results = np.array([result[item] for item in self.metric_names()])
         return np.sum(np.multiply(mo_results, self.scalarization_weights))
 
-    def suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
-        """Returns a suggestion for a new trial, or one to be resumed
+    def _suggest(self, trial_id: int) -> Optional[TrialSuggestion]:
+        """Implements ``suggest``, except for basic postprocessing of config.
         See the docstring of the chosen base_scheduler for details
         """
-        return self.base_scheduler.suggest(trial_id)
+        return self.base_scheduler._suggest(trial_id)
 
     def on_trial_add(self, trial: Trial):
         """Called when a new trial is added to the trial runner.
