@@ -58,7 +58,7 @@ class LinearScalarizedScheduler(TrialScheduler):
         metric: List[str],
         mode: Union[List[str], str] = "min",
         scalarization_weights: Union[np.ndarray, List[float]] = None,
-        base_scheduler: Callable[[...], TrialScheduler] = FIFOScheduler,
+        base_scheduler: Callable[[Any], TrialScheduler] = FIFOScheduler,
         **kwargs,
     ):
         super(LinearScalarizedScheduler, self).__init__(config_space)
