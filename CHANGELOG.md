@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+<a name="v0.5.0"></a>
+## [v0.5.0] - 2023-04-20
+
+### New Features
+
+- Speculative early checkpoint removal for async multi-fidelity ([#628](https://github.com/awslabs/syne-tune/issues/628))
+- Simple linear scalarization scheduler ([#619](https://github.com/awslabs/syne-tune/issues/619))
+- Automatic termination criterion ([#605](https://github.com/awslabs/syne-tune/issues/605))
+- All schedulers have a is_multiobjective_scheduler function ([#618](https://github.com/awslabs/syne-tune/issues/618))
+- Allow for customized extra results to be written to results.csv.zip ([#612](https://github.com/awslabs/syne-tune/issues/612))
+- Plotting functions to analyse multi-objective experiments. ([#611](https://github.com/awslabs/syne-tune/issues/611))
+- Downsampling of observed data for single-fidelity Bayesian optimization ([#607](https://github.com/awslabs/syne-tune/issues/607))
+
+### Bug Fixes
+- CI failing with `ModuleNotFoundError: No module named 'examples'` error ([#626](https://github.com/awslabs/syne-tune/issues/626))
+- Call init of class ([#584](https://github.com/awslabs/syne-tune/issues/584))
+- Random seed initialisation limited to int32 ([#608](https://github.com/awslabs/syne-tune/issues/608))
+- Make sure that checkpoints in PBT are removed once they are no longer needed ([#600](https://github.com/awslabs/syne-tune/pull/600))
+
+### Code Refactoring
+- Move early checkpoint removal into mixin ([#621](https://github.com/awslabs/syne-tune/issues/621))
+- Keep rung levels sorted in HyperbandScheduler ([#604](https://github.com/awslabs/syne-tune/issues/604))
+- Move utils from benchmarking to syne_tune ([#606](https://github.com/awslabs/syne-tune/pull/606))
+
+### Documentation Updates
+- Update instructions for how to install from source ([#629](https://github.com/awslabs/syne-tune/issues/629))
+- Update README.md ([#615](https://github.com/awslabs/syne-tune/pull/615))
+
+### Maintenance
+- Bump codecov/codecov-action from 3.1.1 to 3.1.2 ([#623](https://github.com/awslabs/syne-tune/issues/623))
+- Bump zgosalvez/github-actions-ensure-sha-pinned-actions from 2.1.0 to 2.1.2 ([#624](https://github.com/awslabs/syne-tune/issues/624))
+- Add release drafter automation ([#568](https://github.com/awslabs/syne-tune/issues/568))
+- Moved scheduler metadata generation ([#617](https://github.com/awslabs/syne-tune/issues/617))
+- Bump tensorflow from 2.11.0 to 2.11.1 in /examples/training_scripts/rl_cartpole ([#609](https://github.com/awslabs/syne-tune/issues/609))
+
+[v0.5.0]: https://github.com/awslabs/syne-tune/compare/v0.4.1...v0.5.0
+
 ## [0.4.1] - 2023-03-16
 
 We release version 0.4.1 which you can install with `pip install syne-tune[extra]`.
