@@ -24,6 +24,9 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system import (
 from syne_tune.optimizer.scheduler import TrialSuggestion, SchedulerDecision
 from syne_tune.optimizer.schedulers.scheduler_searcher import TrialSchedulerWithSearcher
 from syne_tune.optimizer.schedulers.multi_fidelity import MultiFidelitySchedulerMixin
+from syne_tune.optimizer.schedulers.remove_checkpoints import (
+    RemoveCheckpointsSchedulerMixin,
+)
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
@@ -156,7 +159,9 @@ class SynchronousHyperbandCommon(
         return self._searcher_data
 
 
-class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
+class SynchronousHyperbandScheduler(
+    SynchronousHyperbandCommon, RemoveCheckpointsSchedulerMixin
+):
     """
     Synchronous Hyperband. Compared to
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, this is also
@@ -433,3 +438,6 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
         result = self._trials_checkpoints_can_be_removed
         self._trials_checkpoints_can_be_removed = []
         return result
+
+    def params_early_checkpoint_removal(self) -> Optional[Dict[str, Any]]:
+        return dict()

@@ -24,12 +24,15 @@ from syne_tune.backend.trial_backend import (
     TrialIdAndResultList,
 )
 from syne_tune.backend.trial_status import Status, Trial, TrialResult
-from syne_tune.callbacks.remove_checkpoints_callback import RemoveCheckpointsCallback
+from syne_tune.callbacks.checkpoint_removal_factory import (
+    early_checkpoint_removal_factory,
+)
 from syne_tune.constants import (
     ST_TUNER_CREATION_TIMESTAMP,
     ST_TUNER_START_TIMESTAMP,
     ST_METADATA_FILENAME,
     ST_TUNER_DILL_FILENAME,
+    TUNER_DEFAULT_SLEEP_TIME,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.tuner_callback import TunerCallback
@@ -44,8 +47,6 @@ from syne_tune.util import (
 )
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_SLEEP_TIME = 5.0
 
 
 class Tuner:
@@ -64,7 +65,7 @@ class Tuner:
         needs to support (at least) this number of workers to be run
         in parallel
     :param sleep_time: Time to sleep when all workers are busy. Defaults to
-        :const:`DEFAULT_SLEEP_TIME`
+        :const:`~syne_tune.constants.DEFAULT_SLEEP_TIME`
     :param results_update_interval: Frequency at which results are updated and
         stored (in seconds). Defaults to 10.
     :param print_update_interval: Frequency at which result table is printed.
@@ -127,10 +128,6 @@ class Tuner:
         experiment is ru remotely, we recommend to set this, since otherwise
         checkpoints and logs are synced to S3, along with tuning results, which
         is costly and error-prone.
-    :param early_removal_checkpoints: If ``True``, we remove checkpoints of
-        certain paused trials early, if this is supported by the scheduler, see
-        :meth:`syne_tune.optimizer.scheduler.TrialScheduler.trials_checkpoints_can_be_removed`.
-        Defaults to ``True``.
     """
 
     def __init__(
@@ -139,7 +136,7 @@ class Tuner:
         scheduler: TrialScheduler,
         stop_criterion: Callable[[TuningStatus], bool],
         n_workers: int,
-        sleep_time: float = DEFAULT_SLEEP_TIME,
+        sleep_time: float = TUNER_DEFAULT_SLEEP_TIME,
         results_update_interval: float = 10.0,
         print_update_interval: float = 30.0,
         max_failures: int = 1,
@@ -152,7 +149,6 @@ class Tuner:
         save_tuner: bool = True,
         start_jobs_without_delay: bool = True,
         trial_backend_path: Optional[str] = None,
-        early_removal_checkpoints: bool = True,
     ):
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -193,14 +189,13 @@ class Tuner:
             else trial_backend_path,
             tuner_name=self.name,
         )
-        self._init_callbacks(callbacks, early_removal_checkpoints)
+        self._init_callbacks(callbacks)
         self.tuning_status = None
         self.tuner_saver = None
         self.status_printer = None
+        self._initialize_early_checkpoint_removal()
 
-    def _init_callbacks(
-        self, callbacks: Optional[List[TunerCallback]], early_removal_checkpoints: bool
-    ):
+    def _init_callbacks(self, callbacks: Optional[List[TunerCallback]]):
         if callbacks is None:
             callbacks = [self._default_callback()]
         else:
@@ -211,9 +206,19 @@ class Tuner:
                     "None of the callbacks provided are of type StoreResultsCallback. "
                     "This means no tuning results will be written."
                 )
-        if early_removal_checkpoints:
-            callbacks.append(RemoveCheckpointsCallback())
         self.callbacks = callbacks
+
+    def _initialize_early_checkpoint_removal(self):
+        """
+        If the scheduler supports early checkpoint removal, the specific callback
+        for this is created here and appended to ``self.callbacks``.
+        """
+        if self.trial_backend.delete_checkpoints:
+            callback = early_checkpoint_removal_factory(
+                scheduler=self.scheduler, stop_criterion=self.stop_criterion
+            )
+            if callback is not None:
+                self.callbacks.append(callback)
 
     def run(self):
         """Launches the tuning."""
@@ -436,7 +441,7 @@ class Tuner:
         # - scheduler decided to interrupt them.
         # Note: ``done_trials`` includes trials which are paused.
         done_trials_statuses = self._update_running_trials(
-            trial_status_dict, new_results, callbacks=self.callbacks
+            trial_status_dict, new_results
         )
         trial_status_dict.update(done_trials_statuses)
 
@@ -512,6 +517,8 @@ class Tuner:
                 checkpoint_trial_id=suggestion.checkpoint_trial_id,
             )
             self.scheduler.on_trial_add(trial=trial)
+            for callback in self.callbacks:
+                callback.on_start_trial(trial)
             logger.info(f"(trial {trial.trial_id}) - scheduled {suggestion}")
             return trial
         else:
@@ -523,6 +530,8 @@ class Tuner:
             trial = self.trial_backend.resume_trial(
                 trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config
             )
+            for callback in self.callbacks:
+                callback.on_resume_trial(trial)
             return trial
 
     def _handle_failure(self, done_trials_statuses: Dict[int, Tuple[Trial, str]]):
@@ -557,7 +566,6 @@ class Tuner:
         self,
         trial_status_dict: TrialAndStatusInformation,
         new_results: TrialIdAndResultList,
-        callbacks: List[TunerCallback],
     ) -> TrialAndStatusInformation:
         """
         Updates schedulers with new results and sends decision to stop/pause
@@ -572,7 +580,6 @@ class Tuner:
         :param trial_status_dict: Information on trials from
             ``trial_backend.fetch_status_results``
         :param new_results: New results from ``trial_backend.fetch_status_results``
-        :param callbacks: ``on_trial_result`` for these callbacks is called here
         :return: Dictionary mapping trial-ids that are finished to status
         """
         # gets the list of jobs from running_jobs that are done
@@ -586,7 +593,7 @@ class Tuner:
                 self.last_seen_result_per_trial[trial_id] = result
                 decision = self.scheduler.on_trial_result(trial=trial, result=result)
 
-                for callback in callbacks:
+                for callback in self.callbacks:
                     callback.on_trial_result(
                         trial=trial,
                         status=status,
@@ -645,7 +652,7 @@ class Tuner:
                 if trial_id not in done_trials:
                     self.scheduler.on_trial_complete(trial, last_result)
                 if status == Status.completed:
-                    for callback in callbacks:
+                    for callback in self.callbacks:
                         callback.on_trial_complete(trial, last_result)
                 done_trials[trial_id] = (trial, status)
 

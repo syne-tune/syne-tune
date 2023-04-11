@@ -87,3 +87,6 @@ ST_TUNER_DILL_FILENAME = "tuner.dill"
 
 MAX_METRICS_SUPPORTED_BY_SAGEMAKER = 40
 """Max number of metrics allowed for estimator"""  # pylint: disable=W0105
+
+TUNER_DEFAULT_SLEEP_TIME = 5.0
+"""Default value for ``sleep_time``"""  # pylint: disable=W0105

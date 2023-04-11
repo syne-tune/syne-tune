@@ -11,6 +11,9 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from syne_tune.tuner_callback import TunerCallback
+from syne_tune.optimizer.schedulers.remove_checkpoints import (
+    RemoveCheckpointsSchedulerMixin,
+)
 
 
 class RemoveCheckpointsCallback(TunerCallback):
@@ -24,6 +27,9 @@ class RemoveCheckpointsCallback(TunerCallback):
         self._tuner = None
 
     def on_tuning_start(self, tuner):
+        assert isinstance(
+            tuner.scheduler, RemoveCheckpointsSchedulerMixin
+        ), "tuner.scheduler must be of type RemoveCheckpointsSchedulerMixin"
         self._tuner = tuner
 
     def on_loop_end(self):

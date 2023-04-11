@@ -158,9 +158,7 @@ class ConfigDict:
     def __setattr__(self, attr, value):
         self._config[attr] = value
 
-    def check_if_all_paremeters_present(
-        self, desired_parameters: List[DictStrKey]
-    ) -> bool:
+    def check_if_all_paremeters_present(self, desired_parameters: List[DictStrKey]):
         """
         Verify that all the parameers present in desired_parameters can be found in this ConfigDict
         """
@@ -205,14 +203,7 @@ class ConfigDict:
         """
         Build the configuration dict from command line arguments
 
-        ``map_extra_args`` can be used to modify ``method_kwargs`` for constructing
-        :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
-        ``args`` returned by :func:`parse_args` and the method. Its signature is
-        :code:`method_kwargs = map_extra_args(args, method, method_kwargs)`, where
-        ``method`` is the name of the baseline.
-
         :param extra_args: Extra arguments for command line parser. Optional
-        :param map_extra_args: See above, optional
         """
         parser = ArgumentParser(
             description=(
@@ -220,7 +211,10 @@ class ConfigDict:
                 "and seeds (repetitions). Use hpo_main.py to launch experiments "
                 "locally, or launch_remote.py to launch experiments remotely on AWS"
             ),
-            epilog="For more information, please visit:\nhttps://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html",
+            epilog=(
+                "For more information, please visit:\n"
+                "https://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html"
+            ),
         )
 
         for param in ConfigDict.__base_cl_parameters:
