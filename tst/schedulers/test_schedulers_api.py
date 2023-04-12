@@ -50,6 +50,9 @@ from syne_tune.optimizer.schedulers import (
     RayTuneScheduler,
 )
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
+    LinearScalarizedScheduler,
+)
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
     BoundingBox,
@@ -351,6 +354,21 @@ list_schedulers_to_test = [
     #     max_t=max_t,
     #     resource_attr=resource_attr,
     # ),
+    LinearScalarizedScheduler(
+        config_space=config_space,
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+        scalarization_weights=[1, 1],
+        base_scheduler_factory=FIFOScheduler,
+    ),
+    LinearScalarizedScheduler(
+        config_space=config_space,
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+        scalarization_weights=[1, 1],
+        base_scheduler_factory=FIFOScheduler,
+        searcher="random",
+    ),
 ]
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
