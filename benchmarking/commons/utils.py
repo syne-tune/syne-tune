@@ -14,11 +14,7 @@ from pathlib import Path
 from typing import Optional
 import numpy as np
 
-from syne_tune.util import s3_experiment_path
-from syne_tune.constants import (
-    ST_METADATA_FILENAME,
-    ST_RESULTS_DATAFRAME_FILENAME,
-)
+from syne_tune.experiments.results_utils import sync_from_s3_command
 
 
 def filter_none(a: dict) -> dict:
@@ -29,10 +25,7 @@ def message_sync_from_s3(experiment_tag: str) -> str:
     return (
         "Launched all requested experiments. Once everything is done, use this "
         "command to sync result files from S3:\n"
-        f"$ aws s3 sync {s3_experiment_path(experiment_name=experiment_tag)} "
-        f'~/syne-tune/{experiment_tag}/ --exclude "*" '
-        f'--include "*{ST_METADATA_FILENAME}" '
-        f'--include "*{ST_RESULTS_DATAFRAME_FILENAME}"'
+        + sync_from_s3_command(experiment_name=experiment_tag)
     )
 
 

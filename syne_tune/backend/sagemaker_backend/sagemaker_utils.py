@@ -18,7 +18,7 @@ import subprocess
 import tarfile
 from ast import literal_eval
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional, Any
+from typing import List, Tuple, Dict, Optional, Any, Callable
 
 import boto3
 from botocore.config import Config
@@ -346,23 +346,29 @@ def map_identifier_limited_length(
 
 
 def _s3_traverse_recursively(
-    s3_client, action, bucket: str, prefix: str
+    s3_client,
+    action: Callable[[str], Optional[str]],
+    bucket: str,
+    prefix: str,
+    valid_postfixes: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Traverses directory from root ``prefix``. The function ``action`` is applied
-    to all objects encountered, the signature is
-
-        ``action(s3_client, bucket, object_key)``
-
-    'action' returns None if successful, otherwise an error message.
-    We return a dict with 'num_action_calls', 'num_successful_action_calls',
-    'first_error_message' (the error message for the first failed ``action`` call
+    to all objects encountered, the signature is ``action(object_key)``.
+    ``action`` returns ``None`` if successful, otherwise an error message.
+    We return a dict with "num_action_calls", "num_successful_action_calls",
+    "first_error_message" (the error message for the first failed ``action`` call
     encountered).
+
+    If ``valid_postfixes`` is given, ``action`` is only applied to such
+    ``object_key`` for which ``object_key.endswith(postfix)`` for some
+    ``postfix in valid_postfixes``.
 
     :param s3_client: S3 client
     :param action: See above
     :param bucket: S3 bucket name
-    :param prefix: Prefix from where to traverse, must end with '/'
+    :param prefix: Prefix from where to traverse, must end with "/"
+    :param valid_postfixes: See above, optional
     :return: See above
     """
     more_objects = True
@@ -381,7 +387,12 @@ def _s3_traverse_recursively(
             all_next_prefixes.append(next_prefix["Prefix"])
         # Objects
         for source in response.get("Contents", []):
-            ret_msg = action(s3_client, bucket, source["Key"])
+            object_key = source["Key"]
+            if valid_postfixes is not None and not any(
+                object_key.endswith(postfix) for postfix in valid_postfixes
+            ):
+                continue  # Skip this key
+            ret_msg = action(object_key)
             num_action_calls += 1
             if ret_msg is None:
                 num_successful_action_calls += 1
@@ -416,15 +427,19 @@ def _split_bucket_prefix(s3_path: str) -> (str, str):
     return bucket, prefix
 
 
-def s3_copy_files_recursively(
+def s3_copy_objects_recursively(
     s3_source_path: str, s3_target_path: str
 ) -> Dict[str, Any]:
     """
-    Recursively copies files from ``s3_source_path`` to ``s3_target_path``.
+    Recursively copies objects from ``s3_source_path`` to ``s3_target_path``.
 
     We return a dict with 'num_action_calls', 'num_successful_action_calls',
     'first_error_message' (the error message for the first failed ``action`` call
     encountered).
+
+    .. note::
+       This function should not be used to copy a large number of objects, as
+       it is rather slow (one API call for object)
 
     :param s3_source_path:
     :param s3_target_path:
@@ -432,56 +447,110 @@ def s3_copy_files_recursively(
     """
     src_bucket, src_prefix = _split_bucket_prefix(s3_source_path)
     trg_bucket, trg_prefix = _split_bucket_prefix(s3_target_path)
+    s3_client = boto3.client("s3")
 
-    def copy_action(s3_client, bucket: str, object_key: str) -> Optional[str]:
+    def copy_action(object_key: str) -> Optional[str]:
         assert object_key.startswith(
             src_prefix
         ), f"object_key = {object_key} must start with {src_prefix}"
         target_key = trg_prefix + object_key[len(src_prefix) :]
-        copy_source = dict(Bucket=bucket, Key=object_key)
+        copy_source = dict(Bucket=src_bucket, Key=object_key)
         ret_msg = None
         try:
             s3_client.copy_object(
                 CopySource=copy_source, Bucket=trg_bucket, Key=target_key
             )
-            logger.debug(
-                f"Copied s3://{bucket}/{object_key}   to   s3://{trg_bucket}/{target_key}"
-            )
         except ClientError as ex:
             ret_msg = str(ex)
         return ret_msg
 
-    s3 = boto3.client("s3")
     return _s3_traverse_recursively(
-        s3_client=s3, action=copy_action, bucket=src_bucket, prefix=src_prefix
+        s3_client=s3_client, action=copy_action, bucket=src_bucket, prefix=src_prefix
     )
 
 
-def s3_delete_files_recursively(s3_path: str) -> Dict[str, Any]:
+def s3_delete_objects_recursively(s3_path: str) -> Dict[str, Any]:
     """
-    Recursively deletes files from ``s3_path``.
+    Recursively deletes objects from ``s3_path``.
 
     We return a dict with 'num_action_calls', 'num_successful_action_calls',
     'first_error_message' (the error message for the first failed ``action`` call
     encountered).
 
+    .. note::
+       This function should not be used to delete a large number of objects, as
+       it is rather slow (one API call for object)
+
     :param s3_path:
     :return: See above
     """
     bucket_name, prefix = _split_bucket_prefix(s3_path)
+    s3_client = boto3.client("s3")
 
-    def delete_action(s3_client, bucket: str, object_key: str) -> Optional[str]:
+    def delete_action(object_key: str) -> Optional[str]:
         ret_msg = None
         try:
-            s3_client.delete_object(Bucket=bucket, Key=object_key)
-            logger.debug(f"Deleted s3://{bucket}/{object_key}")
+            s3_client.delete_object(Bucket=bucket_name, Key=object_key)
         except ClientError as ex:
             ret_msg = str(ex)
         return ret_msg
 
-    s3 = boto3.client("s3")
     return _s3_traverse_recursively(
-        s3_client=s3, action=delete_action, bucket=bucket_name, prefix=prefix
+        s3_client=s3_client, action=delete_action, bucket=bucket_name, prefix=prefix
+    )
+
+
+def s3_download_files_recursively(
+    s3_source_path: str,
+    target_path: str,
+    valid_postfixes: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Recursively downloads objects from ``s3_source_path`` and stores them locally
+    as files below ``target_path``
+
+    We return a dict with 'num_action_calls', 'num_successful_action_calls',
+    'first_error_message' (the error message for the first failed ``action`` call
+    encountered).
+
+    If ``valid_postfixes`` is given, only such objects are downloaded for which
+    ``object_key.endswith(postfix)`` for some ``postfix in valid_postfixes``.
+
+    .. note::
+       This function should not be used to download a large number of objects,
+       as it is rather slow (one API call for object). In this case, running
+       ``aws s3 sync`` can be much faster.
+
+    :param s3_source_path: See above
+    :param target_path: See above
+    :param valid_postfixes: See above, optional
+    :return: See above
+    """
+    src_bucket, src_prefix = _split_bucket_prefix(s3_source_path)
+    if target_path[-1] != "/":
+        target_path = target_path + "/"
+    s3_client = boto3.client("s3")
+
+    def download_action(object_key: str) -> Optional[str]:
+        assert object_key.startswith(
+            src_prefix
+        ), f"object_key = {object_key} must start with {src_prefix}"
+        target_file = target_path + object_key[len(src_prefix) :]
+        # Ensure that target directory exists
+        Path(target_file).parent.mkdir(exist_ok=True, parents=True)
+        ret_msg = None
+        try:
+            s3_client.download_file(src_bucket, object_key, target_file)
+        except ClientError as ex:
+            ret_msg = str(ex)
+        return ret_msg
+
+    return _s3_traverse_recursively(
+        s3_client=s3_client,
+        action=download_action,
+        bucket=src_bucket,
+        prefix=src_prefix,
+        valid_postfixes=valid_postfixes,
     )
 
 

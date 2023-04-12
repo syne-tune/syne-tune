@@ -80,7 +80,7 @@ Visualize Tuning Progress with Tensorboard
 
 **Requirements**:
 
-* Needs ``tensorboardX`` to be installed: ``pip install tensorboardX``
+* Needs ``tensorboardX`` to be installed: ``pip install tensorboardX``.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 
@@ -414,7 +414,8 @@ Transfer Learning Example
 **Requirements**:
 
 * Needs ``matplotlib`` to be installed if the plotting flag is given:
-  ``pip install matplotlib``
+  ``pip install matplotlib``. If you installed Syne Tune with ``visual`` or
+  ``extra``, this dependence is included.
 
 An example of how to use evaluations collected in Syne Tune to run a transfer
 learning scheduler. Makes use of :ref:`train_height.py <train_height_script>`.
@@ -433,7 +434,9 @@ Plot Results of Tuning Experiment
 
 **Requirements**:
 
-* Needs ``matplotlib`` to be installed: ``pip install matplotlib``
+* Needs ``matplotlib`` to be installed:
+  ``pip install matplotlib``. If you installed Syne Tune with ``visual`` or
+  ``extra``, this dependence is included.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 

@@ -251,6 +251,7 @@ class _Bracket:
                 break
         return action
 
+    # TODO: Merge with plotting tools in ``experiments``
     def _plot(self, milestone, metric_recorded, priorities):
         """
         Plots the multiobjective candidates and the rank given by the multiobjective priority.

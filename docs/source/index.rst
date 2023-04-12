@@ -31,6 +31,8 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* You can now create comparative plots, combining the results of many experiments,
+  as show `here <tutorials/benchmarking/bm_plotting.html>`__.
 * You can now customize writing out results during an experiment, as shown in
   `examples/launch_height_extra_results.py <examples.html#customize-results-written-during-an-experiment>`__.
 * You can now warp inputs and apply a

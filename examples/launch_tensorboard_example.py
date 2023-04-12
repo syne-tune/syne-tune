@@ -15,12 +15,18 @@ Example showing how to visualize the HPO process of Syne Tune with Tensorboard.
 Results will be stored in ~/syne-tune/{tuner_name}/tensoboard_output. To start
 tensorboard, execute in a separate shell:
 
->  tensorboard --logdir  /~/syne-tune/{tuner_name}/tensorboard_output
+.. code:: bash
+
+   tensorboard --logdir  /~/syne-tune/{tuner_name}/tensorboard_output
 
 Open the displayed URL in the browser.
 
-Note that, to use this functionality you need to install tensorboardX:
-pip install tensorboardX
+To use this functionality you need to install tensorboardX:
+
+.. code:: bash
+
+   pip install tensorboardX
+
 """
 
 import logging

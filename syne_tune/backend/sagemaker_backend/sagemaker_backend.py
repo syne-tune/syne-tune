@@ -37,8 +37,8 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     sagemaker_fit,
     add_syne_tune_dependency,
     map_identifier_limited_length,
-    s3_copy_files_recursively,
-    s3_delete_files_recursively,
+    s3_copy_objects_recursively,
+    s3_delete_objects_recursively,
     default_config,
     default_sagemaker_session,
     add_metric_definitions_to_sagemaker_estimator,
@@ -482,7 +482,7 @@ class SageMakerBackend(TrialBackend):
         logger.info(
             f"Copying checkpoint files from {s3_source_path} to " + s3_target_path
         )
-        result = s3_copy_files_recursively(s3_source_path, s3_target_path)
+        result = s3_copy_objects_recursively(s3_source_path, s3_target_path)
         num_action_calls = result["num_action_calls"]
         if num_action_calls == 0:
             logger.info(f"No checkpoint files found at {s3_source_path}")
@@ -499,7 +499,7 @@ class SageMakerBackend(TrialBackend):
         if trial_id in self._trial_ids_deleted_checkpoints:
             return
         s3_path = self._checkpoint_s3_uri_for_trial(trial_id)
-        result = s3_delete_files_recursively(s3_path)
+        result = s3_delete_objects_recursively(s3_path)
         self._trial_ids_deleted_checkpoints.add(trial_id)
         num_action_calls = result["num_action_calls"]
         if num_action_calls <= 0:

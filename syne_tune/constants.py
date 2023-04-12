@@ -83,6 +83,10 @@ ST_METADATA_FILENAME = "metadata.json"
 ST_TUNER_DILL_FILENAME = "tuner.dill"
 """Name for final tuner object file stored in ``Tuner``"""  # pylint: disable=W0105
 
+ST_DATETIME_FORMAT = "%Y-%m-%d-%H-%M-%S"
+"""Datetime format used in result path names"""  # pylint: disable=W0105
+
+
 # Limits
 
 MAX_METRICS_SUPPORTED_BY_SAGEMAKER = 40

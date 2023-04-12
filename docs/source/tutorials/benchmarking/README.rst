@@ -20,4 +20,5 @@ in order to obtain desired results faster.
    bm_simulator
    bm_local
    bm_sagemaker
+   bm_plotting
    bm_contributing
