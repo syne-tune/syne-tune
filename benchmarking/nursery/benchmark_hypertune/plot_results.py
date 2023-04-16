@@ -44,8 +44,8 @@ if __name__ == "__main__":
         grid=True,
     )
     # We would like two subplots (1 row, 2 columns), with MOBSTER and HYPERTUNE
-    # results on the left, and the remaining baselines on the right. Each column
-    # gets its own title, and legends are shown in both
+    # results on the left, and the remaining baselines on the right. Each
+    # column gets its own title, and legends are shown in both
     plot_params.subplots = SubplotParameters(
         kwargs=dict(nrows=1, ncols=2, sharex="all"),
         titles=["Model-based Methods", "Baselines"],
