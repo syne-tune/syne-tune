@@ -16,7 +16,7 @@ jobs:
       with:
         go-version: 1.20
     - name: install git-chlog
-      run: go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
+      run: go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
       env:
         GOPATH: $HOME/go
     - name: generate changelog
