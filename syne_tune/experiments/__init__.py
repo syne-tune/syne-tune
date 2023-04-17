@@ -17,6 +17,16 @@ from syne_tune.experiments.experiment_result import (
     list_experiments,
     load_experiments_df,
 )
+from syne_tune.experiments.plotting import (
+    ComparativeResults,
+    PlotParameters,
+    SubplotParameters,
+    ShowTrialParameters,
+)
+from syne_tune.experiments.plot_per_trial import (
+    TrialsOfExperimentResults,
+    MultiFidelityParameters,
+)
 
 __all__ = [
     "ExperimentResult",
@@ -24,4 +34,10 @@ __all__ = [
     "get_metadata",
     "list_experiments",
     "load_experiments_df",
+    "ComparativeResults",
+    "PlotParameters",
+    "SubplotParameters",
+    "ShowTrialParameters",
+    "TrialsOfExperimentResults",
+    "MultiFidelityParameters",
 ]

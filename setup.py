@@ -39,18 +39,20 @@ required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
 required_aws = load_requirements("requirements-aws.txt")
 required_moo = load_requirements("requirements-moo.txt")
+required_visual = load_requirements("requirements-visual.txt")
 
 long_description = (Path(__file__).parent / "README.md").read_text()
 required_extra = (
-    required_ray
-    + required_gpsearchers
-    + required_benchmarks
-    + required_blackbox_repository
+    required_gpsearchers
     + required_kde
     + required_dev
     + required_aws
-    + required_yahpo
     + required_moo
+    + required_visual
+    + required_blackbox_repository
+    + required_benchmarks
+    + required_yahpo
+    + required_ray
 )
 
 # Botorch only supports python version >= 3.8
@@ -71,16 +73,18 @@ setup(
         ]
     ),
     extras_require={
-        "raytune": required_ray,
-        "bore": required_bore,
-        "kde": required_kde,
         "gpsearchers": required_gpsearchers,
-        "benchmarks": required_benchmarks,
-        "blackbox-repository": required_blackbox_repository,
-        "aws": required_aws,
-        "yahpo": required_yahpo,
+        "kde": required_kde,
         "dev": required_dev,
+        "aws": required_aws,
         "moo": required_moo,
+        "visual": required_visual,
+        "blackbox-repository": required_blackbox_repository,
+        "benchmarks": required_benchmarks,
+        "yahpo": required_yahpo,
+        "raytune": required_ray,
+        "botorch": required_botorch,
+        "bore": required_bore,
         "extra": required_extra,
     },
     install_requires=required_core,
