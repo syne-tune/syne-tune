@@ -17,6 +17,7 @@ install Syne Tune from source:
    cd syne-tune
    python3 -m venv st_venv
    . st_venv/bin/activate
+   pip install wheel
    pip install --upgrade pip
    pip install -e '.[extra]'
 
