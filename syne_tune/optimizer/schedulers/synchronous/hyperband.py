@@ -198,7 +198,7 @@ class SynchronousHyperbandScheduler(
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to ``[dict()]``, a single default config
+        If ``None`` (default), this is mapped to ``[dict()]``, a single default config
         determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
     :type points_to_evaluate: ``List[dict]``, optional
@@ -259,7 +259,7 @@ class SynchronousHyperbandScheduler(
             bracket_rungs,
             mode=self.mode,
         )
-        # Maps trial_id to tuples (bracket_id, slot_in_rung), as returned
+        # Maps trial_id to tuples ``(bracket_id, slot_in_rung)``, as returned
         # by ``bracket_manager.next_job``, and required by
         # ``bracket_manager.on_result``. Entries are removed once passed to
         # ``on_result``. Note that a trial_id can be associated with different
@@ -331,7 +331,7 @@ class SynchronousHyperbandScheduler(
             )
             self._trial_to_pending_slot[trial_id] = (bracket_id, slot_in_rung)
         else:
-            # Searcher failed to return a config for a new trial_id. We report
+            # Searcher failed to return a config for a new ``trial_id``. We report
             # the corresponding job as failed, so that in case the experiment
             # is continued, the bracket is not blocked with a slot which remains
             # pending forever

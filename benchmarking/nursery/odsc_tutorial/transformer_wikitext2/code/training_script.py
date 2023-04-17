@@ -35,7 +35,7 @@ try:
 except ImportError:
     print("Failed to import apex. You can still train with --precision {float|double}.")
 
-from syne_tune.report import Reporter
+from syne_tune import Reporter
 from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
 from syne_tune.utils import (
     resume_from_checkpointed_model,
@@ -45,25 +45,17 @@ from syne_tune.utils import (
 )
 
 
-BATCH_SIZE_LOWER = 16
-
-BATCH_SIZE_UPPER = 48
-
-BATCH_SIZE_KEY = "batch_size"
-
 METRIC_NAME = "val_loss"
 
 RESOURCE_ATTR = "epoch"
 
 MAX_RESOURCE_ATTR = "epochs"
 
-ELAPSED_TIME_ATTR = "elapsed_time"
-
 
 _config_space = {
     "lr": loguniform(1e-6, 1e-3),
     "dropout": uniform(0, 0.99),
-    BATCH_SIZE_KEY: randint(BATCH_SIZE_LOWER, BATCH_SIZE_UPPER),
+    "batch_size": randint(16, 48),
     "momentum": uniform(0, 0.99),
     "clip": uniform(0, 1),
 }
@@ -327,13 +319,11 @@ def objective(config):
     ntokens = len(corpus.dictionary)
     train_data = batchify(corpus.train, bsz=config["batch_size"], device=device)
     valid_data = batchify(corpus.valid, bsz=10, device=device)
-    # Do not want to count the time to download the dataset, which can be
-    # substantial the first time
-    ts_start = time.time()
     # Used for reporting metrics to Syne Tune
     report = Reporter()
     # Create model and optimizer
     model, optimizer, criterion = create_training_objects(config, ntokens, device)
+    # [3]
     # Checkpointing
     state_dict_objects = {
         "model": model,
@@ -344,36 +334,24 @@ def objective(config):
     load_model_fn, save_model_fn = pytorch_load_save_functions(
         state_dict_objects=state_dict_objects,
     )
-    # Resume from checkpoint (optional)
+    # [2]
+    # Resume from checkpoint
     resume_from = resume_from_checkpointed_model(config, load_model_fn)
 
-    # At any point you can hit Ctrl + C to break out of training early.
-    try:
-        for epoch in range(resume_from + 1, config[MAX_RESOURCE_ATTR] + 1):
-            epoch_start_time = time.time()
-            train(model, train_data, optimizer, criterion, config, ntokens, epoch)
-            val_loss = evaluate(model, valid_data, criterion, config, ntokens)
-            curr_ts = time.time()
-            elapsed_time = curr_ts - ts_start
-            duration = curr_ts - epoch_start_time
-            print("-" * 89)
-            print(
-                "| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | "
-                "valid ppl {:8.2f}".format(epoch, duration, val_loss, np.exp(val_loss))
-            )
-            print("-" * 89)
-            # Write checkpoint (optional)
-            checkpoint_model_at_rung_level(config, save_model_fn, epoch)
-            # Report metrics back to Syne Tune
-            report_kwargs = {
-                RESOURCE_ATTR: epoch,
-                METRIC_NAME: val_loss,
-                ELAPSED_TIME_ATTR: elapsed_time,
-            }
-            report(**report_kwargs)
-    except KeyboardInterrupt:
+    for epoch in range(resume_from + 1, config[MAX_RESOURCE_ATTR] + 1):
+        train(model, train_data, optimizer, criterion, config, ntokens, epoch)
+        val_loss = evaluate(model, valid_data, criterion, config, ntokens)
         print("-" * 89)
-        print("Exiting from training early")
+        print(
+            f"| end of epoch {epoch:3d} | valid loss {val_loss:5.2f} | "
+            f"valid ppl {np.exp(val_loss):8.2f}"
+        )
+        print("-" * 89)
+        # [1]
+        # Write checkpoint
+        checkpoint_model_at_rung_level(config, save_model_fn, epoch)
+        # Report validation loss back to Syne Tune
+        report(**{RESOURCE_ATTR: epoch, METRIC_NAME: val_loss})
 
 
 if __name__ == "__main__":
@@ -507,7 +485,6 @@ if __name__ == "__main__":
         default=200,
         help="report interval",
     )
-    # These could become hyperparameters as well (more like NAS)
     parser.add_argument("--d_model", type=int, default=256, help="width of the model")
     parser.add_argument(
         "--ffn_ratio", type=int, default=1, help="the ratio of d_ffn to d_model"
