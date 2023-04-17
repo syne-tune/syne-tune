@@ -13,10 +13,10 @@
 from typing import Dict, Any, Optional
 
 from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
-from benchmarking.examples.benchmark_hypertune.baselines import methods
-from benchmarking.examples.benchmark_hypertune.benchmark_definitions import (
-    benchmark_definitions,
-)
+from benchmarking.examples.fine_tuning_transformer_glue.baselines import methods
+
+
+# TODO !!!
 
 
 def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
@@ -47,9 +47,7 @@ if __name__ == "__main__":
     # results on the left, and the remaining baselines on the right. Each
     # column gets its own title, and legends are shown in both
     plot_params.subplots = SubplotParameters(
-        nrows=1,
-        ncols=2,
-        kwargs=dict(sharey="all"),
+        kwargs=dict(nrows=1, ncols=2, sharey="all"),
         titles=["Model-based Methods", "Baselines"],
         legend_no=[0, 1],
     )

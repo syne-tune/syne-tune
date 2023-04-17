@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict
+from typing import Dict, Optional
 from pathlib import Path
 
 from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefinition
@@ -22,16 +22,21 @@ from syne_tune.remote.estimators import (
 
 
 # Different GLUE tasks and their metric names
+# TODO: Adjust default values of ``max_wallclock_time``
 TASK2METRICSMODE = {
-    "cola": {"metric": "matthews_correlation", "mode": "max"},
-    "mnli": {"metric": "accuracy", "mode": "max"},
-    "mrpc": {"metric": "f1", "mode": "max"},
-    "qnli": {"metric": "accuracy", "mode": "max"},
-    "qqp": {"metric": "f1", "mode": "max"},
-    "rte": {"metric": "accuracy", "mode": "max"},
-    "sst2": {"metric": "accuracy", "mode": "max"},
-    "stsb": {"metric": "spearmanr", "mode": "max"},
-    "wnli": {"metric": "accuracy", "mode": "max"},
+    "cola": {
+        "metric": "matthews_correlation",
+        "mode": "max",
+        "max_wallclock_time": 1800,
+    },
+    "mnli": {"metric": "accuracy", "mode": "max", "max_wallclock_time": 1800},
+    "mrpc": {"metric": "f1", "mode": "max", "max_wallclock_time": 1800},
+    "qnli": {"metric": "accuracy", "mode": "max", "max_wallclock_time": 1800},
+    "qqp": {"metric": "f1", "mode": "max", "max_wallclock_time": 1800},
+    "rte": {"metric": "accuracy", "mode": "max", "max_wallclock_time": 1800},
+    "sst2": {"metric": "accuracy", "mode": "max", "max_wallclock_time": 1800},
+    "stsb": {"metric": "spearmanr", "mode": "max", "max_wallclock_time": 1800},
+    "wnli": {"metric": "accuracy", "mode": "max", "max_wallclock_time": 1800},
 }
 
 
@@ -59,7 +64,7 @@ def finetune_transformer_glue_benchmark(
     choose_model: bool = False,
     dataset: str = "rte",
     model_type: str = "bert-base-cased",
-    max_wallclock_time: int = 1800,
+    max_wallclock_time: Optional[int] = None,
     n_workers: int = 4,
     num_train_epochs: int = 3,
     train_valid_fraction: float = 0.7,
@@ -99,8 +104,11 @@ def finetune_transformer_glue_benchmark(
         # need more memory
         instance_type = DEFAULT_GPU_INSTANCE_4GPU
 
-    metric = "eval_" + TASK2METRICSMODE[dataset]["metric"]
-    mode = TASK2METRICSMODE[dataset]["mode"]
+    task_defaults = TASK2METRICSMODE[dataset]
+    metric = "eval_" + task_defaults["metric"]
+    mode = task_defaults["mode"]
+    if max_wallclock_time is None:
+        max_wallclock_time = task_defaults["max_wallclock_time"]
 
     hyperparameter_space = {
         "learning_rate": loguniform(1e-6, 1e-4),
@@ -160,7 +168,7 @@ def finetune_transformer_glue_benchmark(
 def finetune_transformer_glue_all_benchmarks(
     sagemaker_backend: bool = False,
     model_type: str = "bert-base-cased",
-    max_wallclock_time: int = 1800,
+    max_wallclock_time: Optional[int] = None,
     n_workers: int = 4,
     num_train_epochs: int = 3,
     train_valid_fraction: float = 0.7,
