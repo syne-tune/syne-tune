@@ -50,7 +50,7 @@ extra_args = [
 ]
 
 
-def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
     scheduler_kwargs = dict()
     if method.startswith("DYHPO"):
         if args.rung_increment is not None:
@@ -88,4 +88,4 @@ class DyHPOExtraResults(ExtraResultsComposer):
 
 if __name__ == "__main__":
     extra_results = DyHPOExtraResults()
-    main(methods, benchmark_definitions, extra_args, map_extra_args, extra_results)
+    main(methods, benchmark_definitions, extra_args, map_method_args, extra_results)

@@ -34,7 +34,7 @@ extra_args = [
 ]
 
 
-def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
+def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
     if method.startswith("HYPERTUNE"):
         scheduler_kwargs = {
             "search_options": {"hypertune_distribution_num_samples": args.num_samples},
@@ -51,4 +51,4 @@ def map_extra_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str
 
 
 if __name__ == "__main__":
-    main(methods, benchmark_definitions, extra_args, map_extra_args)
+    main(methods, benchmark_definitions, extra_args, map_method_args)

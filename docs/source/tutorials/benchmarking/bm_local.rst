@@ -40,7 +40,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   training script may have additional dependencies, and they are combined with
   the ones here automatically, as detailed below.
 
-Extra arguments can be specified by ``extra_args``, ``map_extra_args``, and
+Extra arguments can be specified by ``extra_args``, ``map_method_args``, and
 extra results can be written using ``extra_results``, as is explained
 `here <bm_simulator.html#specifying-extra-arguments>`__.
 

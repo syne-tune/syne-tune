@@ -43,7 +43,7 @@ per instance). This is because for the local backend to support ``n_workers=4``,
 the instance needs to have at least 4 GPUs, but for the SageMaker backend, each
 worker uses its own instance, so a cheaper instance type can be used.
 
-Extra arguments can be specified by ``extra_args``, ``map_extra_args``, and
+Extra arguments can be specified by ``extra_args``, ``map_method_args``, and
 extra results can be written using ``extra_results``, as is explained
 `here <bm_simulator.html#specifying-extra-arguments>`__.
 

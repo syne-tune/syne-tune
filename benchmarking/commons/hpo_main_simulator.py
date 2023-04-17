@@ -309,8 +309,6 @@ def start_benchmark_simulated_backend(
         if search_options:
             method_kwargs["scheduler_kwargs"] = {"search_options": search_options}
 
-        if map_method_args is not None:
-            method_kwargs = map_method_args(configuration, method, method_kwargs)
         method_kwargs.update(
             dict(
                 config_space=config_space,
@@ -321,6 +319,8 @@ def start_benchmark_simulated_backend(
                 verbose=configuration.verbose,
             )
         )
+        if map_method_args is not None:
+            method_kwargs = map_method_args(configuration, method, method_kwargs)
         scheduler = methods[method](MethodArguments(**method_kwargs))
 
         stop_criterion = StoppingCriterion(
@@ -365,7 +365,7 @@ def main(
     methods: MethodDefinitions,
     benchmark_definitions: SurrogateBenchmarkDefinitions,
     extra_args: Optional[ExtraArgsType] = None,
-    map_extra_args: Optional[MapMethodArgsType] = None,
+    map_method_args: Optional[MapMethodArgsType] = None,
     extra_results: Optional[ExtraResultsComposer] = None,
     use_transfer_learning: bool = False,
 ):
@@ -377,15 +377,16 @@ def main(
 
     ``map_method_args`` can be used to modify ``method_kwargs`` for constructing
     :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
-    ``configuration`` and the method. This allows for extra flexibility to specify specific arguments for chosen methods
-    Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
-    where ``method`` is the name of the baseline.
+    ``configuration`` returned by :func:`parse_args` and the method. Its
+    signature is
+    :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
+    where ``method`` is the name of the baseline. It is called just before the
+    method is created.
 
     :param methods: Dictionary with method constructors
     :param benchmark_definitions: Definitions of benchmarks
     :param extra_args: Extra arguments for command line parser. Optional
-    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
-        for extra argument values. Needed if ``extra_args`` given
+    :param map_method_args: See above. Needed if ``extra_args`` given
     :param extra_results: If given, this is used to append extra information to the
         results dataframe
     :param use_transfer_learning: If True, we use transfer tuning. Defaults to
@@ -404,14 +405,14 @@ def main(
     methods = {mname: methods[mname] for mname in method_names}
     if extra_args is not None:
         assert (
-            map_extra_args is not None
-        ), "map_extra_args must be specified if extra_args is used"
+            map_method_args is not None
+        ), "map_method_args must be specified if extra_args is used"
 
     start_benchmark_simulated_backend(
         configuration,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
-        map_method_args=map_extra_args,
+        map_method_args=map_method_args,
         extra_results=extra_results,
         extra_tuning_job_metadata=None
         if extra_args is None
