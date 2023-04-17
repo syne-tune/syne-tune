@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import itertools
 from typing import Optional, Callable, Dict, Any
-
 import numpy as np
 from tqdm import tqdm
 import logging
@@ -69,6 +68,12 @@ LOCAL_BACKEND_EXTRA_PARAMETERS = [
         type=str2bool,
         default=True,
         help="Remote tuning publishes metrics to Sagemaker console?",
+    ),
+    dict(
+        name="delete_checkpoints",
+        type=str2bool,
+        default=False,
+        help="Remove checkpoints of trials once no longer needed?",
     ),
 ]
 
@@ -238,7 +243,10 @@ def start_benchmark_local_backend(
         print(
             f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
         )
-        trial_backend = LocalBackend(entry_point=str(benchmark.script))
+        trial_backend = LocalBackend(
+            entry_point=str(benchmark.script),
+            delete_checkpoints=configuration.delete_checkpoints,
+        )
 
         tuner_kwargs = create_objects_for_tuner(
             configuration,

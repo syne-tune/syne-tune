@@ -14,6 +14,9 @@ from typing import Optional, List, Set, Dict, Any, Tuple
 import logging
 import numpy as np
 
+from syne_tune.callbacks.remove_checkpoints_callback import (
+    DefaultRemoveCheckpointsSchedulerMixin,
+)
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager import (
     SynchronousHyperbandBracketManager,
 )
@@ -156,7 +159,9 @@ class SynchronousHyperbandCommon(
         return self._searcher_data
 
 
-class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
+class SynchronousHyperbandScheduler(
+    SynchronousHyperbandCommon, DefaultRemoveCheckpointsSchedulerMixin
+):
     """
     Synchronous Hyperband. Compared to
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, this is also

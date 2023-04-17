@@ -38,9 +38,11 @@ class TrialBackend:
 
     :param delete_checkpoints: If ``True``, the checkpoints written by a trial
         are deleted once the trial is stopped or is registered as
-        completed. Also, as part of :meth:`stop_all` called at the end of the
-        tuning loop, all remaining checkpoints are deleted. Defaults to
-        ``False``.
+        completed. Checkpoints of paused trials may also be removed, if the
+        scheduler supports early checkpoint removal. Also, as part of
+        :meth:`stop_all` called at the end of the tuning loop, all remaining
+        checkpoints are deleted. Defaults to ``False`` (no checkpoints are
+        removed).
     :param pass_args_as_json: Normally, the hyperparameter configuration is
         passed as command line arguments to the trial evaluation script. This
         works if all hyperparameters have elementary types. If

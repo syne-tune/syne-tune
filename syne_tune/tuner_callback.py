@@ -101,3 +101,17 @@ class TunerCallback:
         :param sleep_time: Time (in secs) for which tuner has just slept
         """
         pass
+
+    def on_start_trial(self, trial: Trial):
+        """Called just after a new trials is started
+
+        :param trial: Trial which has just been started
+        """
+        pass
+
+    def on_resume_trial(self, trial: Trial):
+        """Called just after a trial is resumed
+
+        :param trial: Trial which has just been resumed
+        """
+        pass
