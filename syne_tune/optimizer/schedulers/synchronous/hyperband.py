@@ -14,6 +14,9 @@ from typing import Optional, List, Set, Dict, Any, Tuple
 import logging
 import numpy as np
 
+from syne_tune.callbacks.remove_checkpoints_callback import (
+    DefaultRemoveCheckpointsSchedulerMixin,
+)
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager import (
     SynchronousHyperbandBracketManager,
 )
@@ -24,9 +27,6 @@ from syne_tune.optimizer.schedulers.synchronous.hyperband_rung_system import (
 from syne_tune.optimizer.scheduler import TrialSuggestion, SchedulerDecision
 from syne_tune.optimizer.schedulers.scheduler_searcher import TrialSchedulerWithSearcher
 from syne_tune.optimizer.schedulers.multi_fidelity import MultiFidelitySchedulerMixin
-from syne_tune.optimizer.schedulers.remove_checkpoints import (
-    RemoveCheckpointsSchedulerMixin,
-)
 from syne_tune.backend.trial_status import Trial
 from syne_tune.config_space import cast_config_values
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
@@ -160,7 +160,7 @@ class SynchronousHyperbandCommon(
 
 
 class SynchronousHyperbandScheduler(
-    SynchronousHyperbandCommon, RemoveCheckpointsSchedulerMixin
+    SynchronousHyperbandCommon, DefaultRemoveCheckpointsSchedulerMixin
 ):
     """
     Synchronous Hyperband. Compared to
@@ -438,6 +438,3 @@ class SynchronousHyperbandScheduler(
         result = self._trials_checkpoints_can_be_removed
         self._trials_checkpoints_can_be_removed = []
         return result
-
-    def params_early_checkpoint_removal(self) -> Optional[Dict[str, Any]]:
-        return dict()
