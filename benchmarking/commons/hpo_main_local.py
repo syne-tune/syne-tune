@@ -246,7 +246,9 @@ def start_benchmark_local_backend(
         random_seed = effective_random_seed(master_random_seed, seed)
         np.random.seed(random_seed)
         print(
-            f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
+            f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}\n"
+            f"  max_wallclock_time = {benchmark.max_wallclock_time}, "
+            f"  n_workers = {benchmark.n_workers}"
         )
         trial_backend = LocalBackend(
             entry_point=str(benchmark.script),

@@ -148,7 +148,11 @@ def start_benchmark_sagemaker_backend(
     benchmark = get_benchmark(
         configuration, benchmark_definitions, sagemaker_backend=True
     )
-    print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
+    print(
+        f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
+        f"  max_wallclock_time = {benchmark.max_wallclock_time}, "
+        f"  n_workers = {benchmark.n_workers}"
+    )
 
     sm_args = sagemaker_estimator_args(
         entry_point=benchmark.script,
