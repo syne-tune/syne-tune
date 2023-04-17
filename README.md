@@ -28,13 +28,14 @@ To install Syne Tune from pip, you can simply do:
 pip install 'syne-tune[extra]'
 ```
 
-or to get the latest version from git: 
+or to install the latest version from source (necessary to run the scripts in the [examples/](https://github.com/awslabs/syne-tune/tree/main/examples) folder): 
 
 ```bash
 git clone https://github.com/awslabs/syne-tune.git
 cd syne-tune
 python3 -m venv st_venv
 . st_venv/bin/activate
+pip install wheel
 pip install --upgrade pip
 pip install -e '.[extra]'
 ```
