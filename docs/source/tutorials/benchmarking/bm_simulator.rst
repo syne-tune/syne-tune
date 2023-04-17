@@ -1,5 +1,5 @@
 Benchmarking with Simulator Backend
-====================================
+===================================
 
 The fastest and cheapest way to compare a number of different HPO methods, or
 variants thereof, is benchmarking with the simulator backend. In this case,

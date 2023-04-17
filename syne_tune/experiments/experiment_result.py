@@ -23,14 +23,14 @@ import pandas as pd
 
 from syne_tune import Tuner
 from syne_tune.constants import (
-    ST_TUNER_TIME,
-    ST_TUNER_CREATION_TIMESTAMP,
     ST_METADATA_FILENAME,
     ST_RESULTS_DATAFRAME_FILENAME,
     ST_TUNER_DILL_FILENAME,
+    ST_TUNER_CREATION_TIMESTAMP,
+    ST_TUNER_TIME,
 )
 from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumulative
-from syne_tune.try_import import try_import_aws_message
+from syne_tune.try_import import try_import_aws_message, try_import_visual_message
 from syne_tune.util import experiment_path, s3_experiment_path
 
 try:
@@ -38,6 +38,11 @@ try:
     from botocore.exceptions import ClientError
 except ImportError:
     print(try_import_aws_message())
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    print(try_import_visual_message())
 
 
 @dataclass
@@ -85,8 +90,6 @@ class ExperimentResult:
             If None, the figure is shown
         :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
         """
-        import matplotlib.pyplot as plt
-
         if metrics_to_plot is None:
             metrics_to_plot = self.metric_names()
 
@@ -131,8 +134,6 @@ class ExperimentResult:
             If None, the figure is shown
         :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
         """
-        import matplotlib.pyplot as plt
-
         metric, metric_name, metric_mode = self._metric_name_mode(
             metric_to_plot, verbose=True
         )

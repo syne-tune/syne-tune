@@ -24,7 +24,11 @@ from contextlib import contextmanager
 
 import numpy as np
 
-from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER, SYNE_TUNE_ENV_FOLDER
+from syne_tune.constants import (
+    SYNE_TUNE_DEFAULT_FOLDER,
+    SYNE_TUNE_ENV_FOLDER,
+    ST_DATETIME_FORMAT,
+)
 from syne_tune.try_import import try_import_aws_message
 
 try:
@@ -143,9 +147,8 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]
-    timestamp = time.strftime(
-        "%Y-%m-%d-%H-%M-%S-{}".format(moment_ms), time.gmtime(moment)
-    )
+    format = ST_DATETIME_FORMAT + f"-{moment_ms}"
+    timestamp = time.strftime(format, time.gmtime(moment))
     trimmed_base = base[: max_length - len(timestamp) - 1]
     return "{}-{}".format(trimmed_base, timestamp)
 

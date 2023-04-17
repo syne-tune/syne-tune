@@ -176,11 +176,11 @@ Results for Asynchronous Successive Halving
 
 .. |Results for Asynchronous Successive Halving| image:: img/tutorial_rs_bo_shrs_stop.png
 
-+-----------------------------------------------------------------------+
-| |Results for Asynchronous Successive Halving|                         |
-+=======================================================================+
-| Results for Asynchronous Successive Halving                           |
-+-----------------------------------------------------------------------+
++-----------------------------------------------+
+| |Results for Asynchronous Successive Halving| |
++===============================================+
+| Results for Asynchronous Successive Halving   |
++-----------------------------------------------+
 
 Here are results for our running example (4 workers; 3 hours; median, 25/75
 percentiles over 50 repeats). ASHA stopping makes a big difference,

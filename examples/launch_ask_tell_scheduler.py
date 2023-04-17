@@ -113,7 +113,12 @@ def plot_objective():
     In this function, we will inspect the objective by plotting the target function
     :return:
     """
-    import matplotlib.pyplot as plt
+    from syne_tune.try_import import try_import_visual_message
+
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print(try_import_visual_message())
 
     metric, mode, config_space, max_iterations = get_objective()
 
