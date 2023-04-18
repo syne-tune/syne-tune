@@ -4,6 +4,10 @@ info:
   title: CHANGELOG
   repository_url: https://github.com/awslabs/syne-tune
 options:
+  tags:
+    exclude:
+      - ^paper-experiments$
+      - ^(?!v\\d+\\.\\d+\\.\\d+$) # This line excludes non-SemVer tags
   commits:
     # filters:
     #   Type:
@@ -12,12 +16,23 @@ options:
     #     - perf
     #     - refactor
   commit_groups:
+    sort_by: Custom
+    title_order:
+      - feat
+      - fix
+      - refactor
+      - docs
+      - chore
+      
     title_maps:
-      # feat: Features
-      # feature: Features
-      # fix: Bug Fixes
-      # perf: Performance Improvements
-      # refactor: Code Refactoring
+      feat: New Features
+      feature: New Features
+      fix: Bug Fixes
+      refactor: Code Refactoring
+      docs: Documentation Updates
+      chore: Maintenance
+      revert: Regression
+      
   header:
     pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
     pattern_maps:
