@@ -1,11 +1,11 @@
-name: Update Changelog
+name: Draft Changelog
 
 on:
   workflow_dispatch:
     inputs:
-      version_for_changelog:
-        description: "Version to draft the changelog for, e.g. v0.7.0 or v0.12.3"
-        required: true
+      next_release_tag_value:
+        description: "Tag for the new release, for example. v0.7.0 or v0.12.3"
+        required: false
   pull_request:
     branches:
       - main
@@ -20,7 +20,14 @@ jobs:
       with:
         fetch-depth: 0
       uses: actions/checkout@v3
-    - name: generate changelog
+    - name: fetch tags
       run: | 
         git fetch --tags origin
-        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4 ${{ inputs.version_for_changelog }}
+    - name: Draft Changelog with specified next release tag
+      if:  ${{ inputs.next_release_tag_value }}
+      run: | 
+        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4 --next-tag-value ${{ inputs.next_release_tag_value }}
+    - name: Draft Changelog
+      if:  ! ${{ inputs.next_release_tag_value }}
+      run: | 
+        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4
