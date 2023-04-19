@@ -351,7 +351,7 @@ class HyperbandRemoveCheckpointsCallback(HyperbandRemoveCheckpointsCommon):
         return estimator.posterior_mean()
 
     def _prepare_score_inputs(
-        self, trials_to_score: List[Tuple[str, int, float, int]]
+        self, trials_to_score: PausedTrialsResult
     ) -> (List[str], np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray):
         info_rungs = self._scheduler.terminator.information_for_rungs()
         lens_rung = {r: n for r, n, _ in info_rungs}
@@ -378,7 +378,7 @@ class HyperbandRemoveCheckpointsCallback(HyperbandRemoveCheckpointsCommon):
         return trial_ids, levels, ranks, rung_lens, prom_quants, p_vals
 
     def _compute_scores(
-        self, trials_to_score: List[Tuple[str, int, float, int]], time_ratio: float
+        self, trials_to_score: PausedTrialsResult, time_ratio: float
     ) -> List[TrialInformation]:
         r"""
         Computes scores for paused trials in ``trials_to_score``, with entries

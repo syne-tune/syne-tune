@@ -518,12 +518,6 @@ class HyperbandScheduler(
                 assert (
                     name in callback_kwargs
                 ), f"early_checkpoint_removal_kwargs must contain '{name}' entry"
-            callback_kwargs = dict(
-                callback_kwargs,
-                metric=self.metric,
-                resource_attr=self._resource_attr,
-                mode=self.mode,
-            )
         self._early_checkpoint_removal_kwargs = callback_kwargs
 
     def does_pause_resume(self) -> bool:
@@ -1029,8 +1023,14 @@ class HyperbandScheduler(
         ):
             return None
         else:
+            callback_kwargs = dict(
+                self._early_checkpoint_removal_kwargs,
+                metric=self.metric,
+                resource_attr=self._resource_attr,
+                mode=self.mode,
+            )
             return create_callback_for_checkpoint_removal(
-                self._early_checkpoint_removal_kwargs, stop_criterion=stop_criterion
+                callback_kwargs, stop_criterion=stop_criterion
             )
 
 
