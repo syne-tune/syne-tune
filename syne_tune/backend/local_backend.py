@@ -14,7 +14,7 @@ import logging
 import os
 import shutil
 import sys
-
+from operator import itemgetter
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +54,9 @@ class LocalBackend(TrialBackend):
         scheduled on a free GPU, and otherwise the GPU with least prior
         assignments is chosen. If ``False``, then all GPUs are used at the same
         time for all trials. Defaults to ``True``.
+    :param num_gpus_per_trial: Number of GPUs to be allocated to each trial.
+        Must be not larger than the total number of GPUs available.
+        Defaults to 1
     """
 
     def __init__(
@@ -62,6 +65,7 @@ class LocalBackend(TrialBackend):
         delete_checkpoints: bool = False,
         pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
+        num_gpus_per_trial: int = 1,
     ):
         super(LocalBackend, self).__init__(
             delete_checkpoints=delete_checkpoints, pass_args_as_json=pass_args_as_json
@@ -79,9 +83,11 @@ class LocalBackend(TrialBackend):
         # be sure it happens on the instance running the training evaluations
         self.rotate_gpus = rotate_gpus
         self.num_gpus = None
+        # Maps ``trial_id`` to list of GPUs currently assigned to this trial
         self.trial_gpu = None
         self.gpu_times_assigned = None
-        # sets the path where to write files, can be overidden later by Tuner.
+        self.num_gpus_per_trial = num_gpus_per_trial
+        # sets the path where to write files, can be overridden later by Tuner.
         self.set_path(str(Path(experiment_path(tuner_name=random_string(length=10)))))
         # Trials which may currently be busy (status in ``BUSY_STATUS``). The
         # corresponding jobs are polled for status in ``busy_trial_ids``.
@@ -124,6 +130,12 @@ class LocalBackend(TrialBackend):
             else:
                 self.num_gpus = num_gpus
             logger.info(f"Detected {self.num_gpus} GPUs")
+            if self.num_gpus_per_trial > self.num_gpus:
+                logger.warning(
+                    f"num_gpus_per_trial = {self.num_gpus_per_trial} is too "
+                    f"large, reducing to {self.num_gpus}"
+                )
+                self.num_gpus_per_trial = self.num_gpus
             if self.num_gpus > 1:
                 self.trial_gpu = dict()  # Maps running trials to GPUs
                 # To break ties among GPUs (free ones have precedence)
@@ -132,30 +144,36 @@ class LocalBackend(TrialBackend):
                 # Nothing to rotate over
                 self.rotate_gpus = False
 
-    def _gpu_for_new_trial(self) -> int:
+    def _gpus_for_new_trial(self) -> List[int]:
         """
-        Selects GPU for trial to be scheduled on. GPUs not assigned to other
-        running trials have precedence. Ties are resolved by selecting a GPU
-        with the least number of previous assignments.
-        The number of assignments is incremented for the GPU returned.
+        Selects ``num_gpus_per_trial`` GPUs for trial to be scheduled on. GPUs
+        not assigned to other running trials have precedence. Ties are resolved
+        by selecting GPUs with the least number of previous assignments.
+        The number of assignments is incremented for the GPUs returned.
         """
         assert self.rotate_gpus
-        free_gpus = set(range(self.num_gpus)).difference(self.trial_gpu.values())
-        if free_gpus:
-            eligible_gpus = free_gpus
-            logger.debug(f"Free GPUs: {free_gpus}")
+        assigned_gpus = list(gpu for gpus in self.trial_gpu.values() for gpu in gpus)
+        free_gpus = [x for x in range(self.num_gpus) if x not in assigned_gpus]
+        num_extra = self.num_gpus_per_trial - len(free_gpus)
+        if num_extra > 0:
+            candidate_gpus = assigned_gpus[:num_extra]
+            res_gpu = free_gpus  # Pick all free ones
         else:
-            eligible_gpus = range(self.num_gpus)
+            res_gpu = []
+            candidate_gpus = free_gpus
         # We select the GPU which has the least prior assignments. Selection
         # over all GPUs currently free. If all GPUs are currently assigned,
         # selection is over all GPUs. In this case, the assignment will go to
         # a GPU currently occupied (this happens if the number of GPUs is
         # smaller than the number of workers).
-        res_gpu, _ = min(
-            ((gpu, self.gpu_times_assigned[gpu]) for gpu in eligible_gpus),
-            key=lambda x: x[1],
-        )
-        self.gpu_times_assigned[res_gpu] += 1
+        num_extra = self.num_gpus_per_trial - len(res_gpu)
+        top_list = sorted(
+            ((gpu, self.gpu_times_assigned[gpu]) for gpu in candidate_gpus),
+            key=itemgetter(1),
+        )[:num_extra]
+        res_gpu = res_gpu + [gpu for gpu, _ in top_list]
+        for gpu in res_gpu:
+            self.gpu_times_assigned[gpu] += 1
         return res_gpu
 
     def _schedule(self, trial_id: int, config: Dict[str, Any]):
@@ -192,10 +210,12 @@ class LocalBackend(TrialBackend):
 
     def _allocate_gpu(self, trial_id: int, env: Dict[str, Any]):
         if self.rotate_gpus:
-            gpu = self._gpu_for_new_trial()
-            env["CUDA_VISIBLE_DEVICES"] = str(gpu)
-            self.trial_gpu[trial_id] = gpu
-            logger.debug(f"Assigned GPU {gpu} to trial_id {trial_id}")
+            gpus = self._gpus_for_new_trial()
+            env["CUDA_VISIBLE_DEVICES"] = ",".join(str(gpu) for gpu in gpus)
+            self.trial_gpu[trial_id] = gpus
+            part = f"GPU {gpus[0]}" if len(gpus) == 1 else f"GPUs {gpus}"
+            # logger.debug(f"Assigned {part} to trial_id {trial_id}")
+            logger.info(f"*** Assigned {part} to trial_id {trial_id}")  # DEBUG
 
     def _deallocate_gpu(self, trial_id: int):
         if self.rotate_gpus and trial_id in self.trial_gpu:

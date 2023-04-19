@@ -189,6 +189,7 @@ def launch_remote_experiments(
         "verbose": int(configuration.verbose),
         "remote_tuning_metrics": int(configuration.remote_tuning_metrics),
         "delete_checkpoints": int(configuration.delete_checkpoints),
+        "num_gpus_per_trial": int(configuration.num_gpus_per_trial),
     }
     experiment_tag = _launch_experiment_remotely(
         configuration=configuration,

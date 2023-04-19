@@ -80,6 +80,13 @@ GPU with PyTorch being installed):
   `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`__
   and
   `here <../basics/basics_bayesopt.html#speeding-up-decision-making>`__.
+* ``num_gpus_per_trial``: If you run on an instance with more than one GPU,
+  you can prescribe how many GPUs should be allocated to each trial. The default
+  is 1. Note that if the product of ``n_workers`` and ``num_gpus_per_trial`` is
+  larger than the number of GPUs on the instance, trials will be delayed.
+* ``delete_checkpoints``: If 1, checkpoints of trials are removed whenever they
+  are not needed anymore. The default is 0, in that all checkpoints are
+  retained.
 * ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
   argument, but not ``max_wallclock_time``, the benchmark default
   ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,

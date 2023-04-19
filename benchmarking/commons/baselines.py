@@ -51,6 +51,8 @@ class MethodArguments:
         arguments
     :param restrict_configurations: Only for simulator backend. If given, the
         scheduler is restricted to suggest configs from this list only
+    :param num_gpus_per_trial: Only for local backend and GPU training. Number
+        of GPUs assigned to a trial. Defaults to 1
     """
 
     config_space: Dict[str, Any]
@@ -66,6 +68,7 @@ class MethodArguments:
     fcnet_ordinal: Optional[str] = None
     restrict_configurations: Optional[List[Dict[str, Any]]] = None
     scheduler_kwargs: Optional[Dict[str, Any]] = None
+    num_gpus_per_trial: int = 1
 
 
 MethodDefinitions = Dict[str, Callable[[MethodArguments], TrialScheduler]]

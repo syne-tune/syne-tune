@@ -75,6 +75,12 @@ LOCAL_BACKEND_EXTRA_PARAMETERS = [
         default=False,
         help="Remove checkpoints of trials once no longer needed?",
     ),
+    dict(
+        name="num_gpus_per_trial",
+        type=int,
+        default=1,
+        help="Number of GPUs to allocate to each trial",
+    ),
 ]
 
 
@@ -145,6 +151,7 @@ def create_objects_for_tuner(
             random_seed=effective_random_seed(master_random_seed, seed),
             resource_attr=benchmark.resource_attr,
             verbose=verbose,
+            num_gpus_per_trial=configuration.num_gpus_per_trial,
         )
     )
     scheduler = methods[method](MethodArguments(**method_kwargs))
@@ -163,6 +170,8 @@ def create_objects_for_tuner(
         benchmark=benchmark,
         extra_metadata=extra_tuning_job_metadata,
     )
+    metadata["instance_type"] = benchmark.instance_type
+    metadata["num_gpus_per_trial"] = configuration.num_gpus_per_trial
     tuner_name = configuration.experiment_tag
     if configuration.use_long_tuner_name_prefix:
         tuner_name += f"-{sanitize_sagemaker_name(configuration.benchmark)}-{seed}"
@@ -246,6 +255,7 @@ def start_benchmark_local_backend(
         trial_backend = LocalBackend(
             entry_point=str(benchmark.script),
             delete_checkpoints=configuration.delete_checkpoints,
+            num_gpus_per_trial=configuration.num_gpus_per_trial,
         )
 
         tuner_kwargs = create_objects_for_tuner(
