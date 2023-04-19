@@ -4,10 +4,6 @@ info:
   title: CHANGELOG
   repository_url: https://github.com/awslabs/syne-tune
 options:
-  tags:
-    exclude:
-      - ^paper-experiments$
-      - ^(?!v\\d+\\.\\d+\\.\\d+$) # This line excludes non-SemVer tags
   commits:
     # filters:
     #   Type:
@@ -32,7 +28,7 @@ options:
       docs: Documentation Updates
       chore: Maintenance
       revert: Regression
-      
+
   header:
     pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
     pattern_maps:

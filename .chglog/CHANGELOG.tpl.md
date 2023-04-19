@@ -3,8 +3,6 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-{{ $cutOffVersion := "0.4.2" }}
-{{ $semverPattern := "^v\\d+\\.\\d+\\.\\d+$" }}
 
 {{ if .Versions -}}
 <a name="unreleased"></a>
@@ -21,7 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 {{ end -}}
 
 {{ range .Versions }}
-{{ if and (ne "paper-experiments" .Tag.Name) (semverCompare .Tag.Name $cutOffVersion) }}
+{{ if and ( and (ne "paper-experiments" .Tag.Name) (ne "v0.11" .Tag.Name) ) (semverCompare ">=0.4.0" .Tag.Name ) }}
 <a name="{{ .Tag.Name }}"></a>
 ## {{ if .Tag.Previous }}[{{ .Tag.Name }}]{{ else }}{{ .Tag.Name }}{{ end }} - {{ datetime "2006-01-02" .Tag.Date }}
 {{ range .CommitGroups -}}
