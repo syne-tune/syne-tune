@@ -10,9 +10,14 @@ on:
 
 jobs:
   update-changelog:
+    concurrency:
+      group: changelog-build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository 
+      with:
+        fetch-depth: 0
+      uses: actions/checkout@v3
     - name: generate changelog
       run: | 
         git fetch --tags origin
