@@ -1,9 +1,11 @@
 name: Update Changelog
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      version_for_changelog:
+        description: "Version to draft the changelog for, e.g. v0.7.0 or v0.12.3"
+        required: true
   pull_request:
     branches:
       - main
@@ -21,4 +23,4 @@ jobs:
     - name: generate changelog
       run: | 
         git fetch --tags origin
-        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4
+        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4 ${{ inputs.version_for_changelog }}
