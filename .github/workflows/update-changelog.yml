@@ -16,4 +16,4 @@ jobs:
     - name: generate changelog
       run: | 
         git fetch --tags origin
-        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.1
+        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4
