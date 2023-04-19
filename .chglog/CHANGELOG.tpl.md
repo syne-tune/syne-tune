@@ -1,7 +1,5 @@
 # Change Log
 All notable changes to this project will be documented in this file.
- 
-The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 
 {{ if .Versions -}}
@@ -19,7 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 {{ end -}}
 
 {{ range .Versions }}
-{{ if and ( and (ne "paper-experiments" .Tag.Name) (ne "v0.11" .Tag.Name) ) (semverCompare ">=0.4.0" .Tag.Name ) }}
+{{ if and (ne "paper-experiments" .Tag.Name) (semverCompare ">=0.4.0" .Tag.Name ) }}
 <a name="{{ .Tag.Name }}"></a>
 ## {{ if .Tag.Previous }}[{{ .Tag.Name }}]{{ else }}{{ .Tag.Name }}{{ end }} - {{ datetime "2006-01-02" .Tag.Date }}
 {{ range .CommitGroups -}}
