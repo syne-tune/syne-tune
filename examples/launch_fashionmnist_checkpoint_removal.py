@@ -24,6 +24,7 @@ from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import MOBSTER
 from syne_tune.results_callback import ExtraResultsComposer, StoreResultsCallback
+from syne_tune.util import find_first_of_type
 from syne_tune import Tuner, StoppingCriterion
 
 from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
@@ -35,11 +36,8 @@ from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
 # writing out results. This is optional, the mechanism works without this.
 class CPRemovalExtraResults(ExtraResultsComposer):
     def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
-        result = None
-        callback = tuner.callbacks[-1]
-        if isinstance(callback, HyperbandRemoveCheckpointsCommon):
-            result = callback.extra_results()
-        return result
+        callback = find_first_of_type(tuner.callbacks, HyperbandRemoveCheckpointsCommon)
+        return None if callback is None else callback.extra_results()
 
     def keys(self) -> List[str]:
         return HyperbandRemoveCheckpointsCommon.extra_results_keys()
@@ -125,11 +123,7 @@ if __name__ == "__main__":
 
     # We can obtain additional details from the callback, which is the last one
     # in ``tuner``
-    callback = tuner.callbacks[-1]
-    assert isinstance(callback, HyperbandRemoveCheckpointsCommon), (
-        "The final callback in tuner.callbacks should be "
-        f"HyperbandRemoveCheckpointsCommon, but is {type(callback)}"
-    )
+    callback = find_first_of_type(tuner.callbacks, HyperbandRemoveCheckpointsCommon)
     trials_resumed = callback.trials_resumed_without_checkpoint()
     if trials_resumed:
         logging.info(

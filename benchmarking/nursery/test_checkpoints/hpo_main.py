@@ -22,15 +22,13 @@ from syne_tune.callbacks.hyperband_remove_checkpoints_callback import (
     HyperbandRemoveCheckpointsCommon,
 )
 from syne_tune.results_callback import ExtraResultsComposer
+from syne_tune.util import find_first_of_type
 
 
 class CPRemovalExtraResults(ExtraResultsComposer):
     def __call__(self, tuner: Tuner) -> Optional[Dict[str, Any]]:
-        result = None
-        callback = tuner.callbacks[-1]
-        if isinstance(callback, HyperbandRemoveCheckpointsCommon):
-            result = callback.extra_results()
-        return result
+        callback = find_first_of_type(tuner.callbacks, HyperbandRemoveCheckpointsCommon)
+        return None if callback is None else callback.extra_results()
 
     def keys(self) -> List[str]:
         return HyperbandRemoveCheckpointsCommon.extra_results_keys()

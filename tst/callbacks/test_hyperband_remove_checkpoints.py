@@ -10,12 +10,16 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import random
 from typing import List, Tuple, Dict, Any
 import numpy as np
 from scipy.special import betainc
 
 from syne_tune.callbacks.hyperband_remove_checkpoints_score import (
     compute_probabilities_of_getting_resumed,
+)
+from syne_tune.callbacks.hyperband_remove_checkpoints_callback import (
+    BetaBinomialEstimator,
 )
 
 
@@ -146,3 +150,28 @@ def test_compute_probabilities_of_getting_resumed():
     #     print(f"[compare] m_vals[{i}]:\n{mmat}")
     # END DEBUG
     np.testing.assert_almost_equal(target_probs, target_props_compare, decimal=5)
+
+
+def test_beta_binomial_estimator():
+    random_seed = 31415991
+    random_state = np.random.RandomState(random_seed)
+    num_iters = 200
+    for _ in range(num_iters):
+        beta_mean = random_state.uniform(low=0.01, high=0.99)
+        beta_size = random_state.uniform(low=0.1, high=2)
+        num_data = random_state.randint(low=0, high=30)
+        p_true = random_state.uniform(low=0.1, high=0.9)
+        data = list(random_state.uniform(low=0, high=1, size=num_data) <= p_true)
+        num_one = sum(data)
+        estimator = BetaBinomialEstimator(beta_mean=beta_mean, beta_size=beta_size)
+        assert estimator.num_total == 0
+        assert estimator.num_one == 0
+        estimator.update(data)
+        assert estimator.num_total == num_data
+        assert estimator.num_one == num_one
+        # For the Beta, we have:
+        # mean = a / (a + b), size = a + b ==> a = mean * size
+        # poster_mean = (a + pos) / (size + total)
+        beta_a = beta_mean * beta_size
+        posterior_mean = (beta_a + num_one) / (beta_size + num_data)
+        np.testing.assert_almost_equal([posterior_mean], [estimator.posterior_mean()])
