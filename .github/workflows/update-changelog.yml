@@ -28,6 +28,6 @@ jobs:
       run: | 
         docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4 --next-tag-value ${{ inputs.next_release_tag_value }}
     - name: Draft Changelog
-      if:  ! ${{ inputs.next_release_tag_value }}
+      if:  ${{ !inputs.next_release_tag_value }}
       run: | 
         docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4
