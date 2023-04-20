@@ -332,6 +332,66 @@ from scratch. The following schedulers make use of checkpointing:
   without checkpointing, but wastes effort in the same sense as
   promotion-based asynchronous Hyperband
 
+Checkpoints are filling up my disk. What can I do?
+==================================================
+
+When tuning large models, checkpoints can be large, and with the local backend,
+these checkpoints are stored locally. With multi-fidelity methods, many trials
+may be started, and keeping all checkpoints (which is the default) may exceed
+the available disk space.
+
+If the trial backend :class:`~syne_tune.backend.trial_backend.TrialBackend` is
+created with ``delete_checkpoints=True``, Syne Tune removes the checkpoint of a
+trial once it is stopped or completes. All remaining checkpoints are removed at
+the end of the experiment. Moreover, a number of schedulers support early
+checkpoint removal for paused trials when they cannot be resumed anymore.
+
+For promotion-based asynchronous multi-fidelity schedulers (
+`ASHA <tutorials/multifidelity/mf_asha.html>`__,
+`MOBSTER <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`__,
+`HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__), any
+paused trial can in principle be resumed in the future, and
+`delete_checkpoints=True`` alone does not remove checkpoints. In this case,
+you can activate speculative early checkpoint removal, by passing
+``early_checkpoint_removal_kwargs`` when creating
+:class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` (or
+:class:`~syne_tune.optimizer.baselines.ASHA`,
+:class:`~syne_tune.optimizer.baselines.MOBSTER`,
+:class:`~syne_tune.optimizer.baselines.HyperTune`). This is a ``kwargs``
+dictionary with the following arguments:
+
+* ``max_num_checkpoints``: This is mandatory. Maximum number of trials with
+  checkpoints being retained. Once more than this number of trials with
+  checkpoints are present, checkpoints are removed selectively. This number must
+  be larger than the number of workers, since running trials will always write
+  checkpoints.
+* ``approx_steps``: Positive integer. The computation of the ranking score is
+  a step-wise approximation, which gets more accurate for larger ``approx_steps``.
+  However, this computation scales cubically in ``approx_steps``. The default
+  is 25, which may be sufficient in most cases, but if you need to keep the
+  number of checkpoints quite small, you may want to tune this parameter.
+* ``max_wallclock_time``: Maximum time in seconds the experiment is run for. This
+  is the same as passed to :class:`~syne_tune.StoppingCriterion`, and if you use
+  an instance of this as ``stop_criterion`` passed to :class:`~syne_tune.Tuner`,
+  the value is taken from there. Speculative checkpoint removal can only be used
+  if the stopping criterion includes ``max_wallclock_time``.
+* ``prior_beta_mean``: The method depends on the probability of the event
+  that a trial arriving at a rung ranks better than a random paused trial
+  with checkpoint at this rung. These probabilities are estimated for each
+  rung, but we need some initial guess. You are most likely fine with the
+  default. A value :math:`< 1/2` is recommended.
+* ``prior_beta_size``: See also ``prior_beta_mean``. The initial guess is
+  a Beta prior, defined in terms of mean and effective sample size (here).
+  The smaller this positive number, the weaker the effect of the initial
+  guess. You are most likely fine with the default.
+* ``min_data_at_rung``: Also related to the estimators mentioned with
+  ``prior_beta_mean``. You are most likely fine with the default.
+
+A complete example is
+`examples/launch_fashionmnist_checkpoint_removal.py <examples.html#speculative-early-checkpoint-removal>`__.
+For details on speculative checkpoint removal, look at
+:class:`~syne_tune.callbacks.hyperband_remove_checkpoints_callback.HyperbandRemoveCheckpointsCallback`.
+
 Is the tuner checkpointed?
 ==========================
 

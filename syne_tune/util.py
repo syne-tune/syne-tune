@@ -18,7 +18,7 @@ import random
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Union, Dict, Any
+from typing import Optional, List, Union, Dict, Any, Iterable
 from time import perf_counter
 from contextlib import contextmanager
 
@@ -301,3 +301,10 @@ def recursive_merge(
         return result
     else:
         return a
+
+
+def find_first_of_type(a: Iterable[Any], typ) -> Optional[Any]:
+    try:
+        return next(x for x in a if isinstance(x, typ))
+    except StopIteration:
+        return None
