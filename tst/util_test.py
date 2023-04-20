@@ -35,13 +35,13 @@ from examples.training_scripts.height_example.blackbox_height import (
 )
 
 
-def temporary_local_backend(entry_point: str):
+def temporary_local_backend(entry_point: str, **kwargs):
     """
     :param entry_point:
     :return: a backend whose files are deleted after finishing to avoid side-effects. This is used in unit-tests.
     """
     with tempfile.TemporaryDirectory() as local_path:
-        backend = LocalBackend(entry_point=entry_point)
+        backend = LocalBackend(entry_point=entry_point, **kwargs)
         backend.set_path(results_root=local_path)
         return backend
 
