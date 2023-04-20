@@ -1,3 +1,21 @@
+autolabeler:
+  - label: 'feature'
+    title:
+    - '/feat(\((.+)\))?(:.+)/'
+  - label: 'documentation'
+    title:
+    - '/(docs)(\((.+)\))?(:.+)/'
+  - label: 'chore'
+    title:
+    - '/(chore)(\((.+)\))?(:.+)/'
+    files:
+      - '*.py'
+  - label: 'bug'
+    title:
+      - '/(fix|bug)(\((.+)\))?(:.+)/'
+  - label: 'refactor'
+    title:
+      - '/(refactor)(\((.+)\))?(:.+)/'
 change-template: "* $TITLE (#$NUMBER) by @$AUTHOR"
 categories:
   - title: "⚡ Breaking Changes"
@@ -49,20 +67,3 @@ template: |
   ## This release was made possible by the following contributors:
 
   $CONTRIBUTORS
-
-autolabeler:
-  - label: 'feature'
-    title:
-    - '/feat(\((.+)\))?(:.+)/'
-  - label: 'documentation'
-    title:
-    - /(docs)(\((.+)\))?(:.+)/
-  - label: 'chore'
-    title:
-    - '/(chore)(\((.+)\))?(:.+)/'
-  - label: 'bug'
-    title:
-      - /(fix|bug)(\((.+)\))?(:.+)/
-  - label: 'refactor'
-    title:
-      - /(refactor)(\((.+)\))?(:.+)/
