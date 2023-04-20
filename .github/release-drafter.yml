@@ -63,3 +63,6 @@ autolabeler:
   - label: 'bug'
     title:
       - /(fix|bug)(\((.+)\))?(:.+)/
+  - label: 'refactor'
+    title:
+      - /(refactor)(\((.+)\))?(:.+)/
