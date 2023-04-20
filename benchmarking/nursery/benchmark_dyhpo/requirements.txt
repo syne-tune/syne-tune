@@ -1,3 +1,2 @@
 syne-tune[gpsearchers,blackbox-repository,aws]
 tqdm
-sortedcontainers  # Remove in version > 0.4.1

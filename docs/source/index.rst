@@ -31,6 +31,21 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* Speculative early checkpoint removal for asynchronous multi-fidelity optimization.
+  Retaining all checkpoints often exhausts all available disk space when training
+  large models. With this feature, Syne Tune automatically removes checkpoints
+  that are unlikely to be needed.
+  `Details <faq.html#checkpoints-are-filling-up-my-disk-what-can-i-do>`__.
+* New Multi-Objective Scheduler:
+  :class:`~syne_tune.optimizer.schedulers.multiobjective.LinearScalarizedScheduler`.
+  The method works by taking a multi-objective problem and turning it into a
+  single-objective task by optimizing for a linear combination of all objectives.
+  This wrapper works with all single-objective schedulers. 
+* Support for automatic termination criterion proposed by Makarova et al.
+  Instead of defining a fix number of iterations or wall-clock time limit, we
+  can set a threshold on how much worse we allow the final solution to be
+  compared to the global optima, such that we automatically stop the optimization
+  process once we find a solution that meets this criteria.
 * You can now customize writing out results during an experiment, as shown in
   `examples/launch_height_extra_results.py <examples.html#customize-results-written-during-an-experiment>`__.
 * You can now warp inputs and apply a
