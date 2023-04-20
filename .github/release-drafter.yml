@@ -8,8 +8,6 @@ autolabeler:
   - label: 'chore'
     title:
     - '/(chore)(\((.+)\))?(:.+)/'
-    files:
-      - '*.py'
   - label: 'bug'
     title:
       - '/(fix|bug)(\((.+)\))?(:.+)/'
