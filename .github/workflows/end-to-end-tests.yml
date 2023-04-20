@@ -50,6 +50,7 @@ jobs:
                   job_name = job['TrainingJobName']
                   print(f'Stopping training job: {job_name}')
                   sagemaker.stop_training_job(TrainingJobName=job_name)
+                  sleep(1)
           
           sagemaker = boto3.client('sagemaker')          
           in_progress_jobs = get_in_progress_training_jobs(sagemaker)
