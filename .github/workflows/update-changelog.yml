@@ -6,9 +6,6 @@ on:
       next_release_tag_value:
         description: "Tag for the new release, for example. v0.7.0 or v0.12.3"
         required: false
-  pull_request:
-    branches:
-      - main
 
 jobs:
   update-changelog:
