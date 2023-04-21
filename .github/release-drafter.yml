@@ -1,20 +1,39 @@
+autolabeler:
+  - label: 'feature'
+    title:
+    - '/feat(\((.+)\))?(:.+)/'
+  - label: 'documentation'
+    title:
+    - '/(docs)(\((.+)\))?(:.+)/'
+  - label: 'chore'
+    title:
+    - '/(chore)(\((.+)\))?(:.+)/'
+  - label: 'bug'
+    title:
+      - '/(fix|bug)(\((.+)\))?(:.+)/'
+  - label: 'refactor'
+    title:
+      - '/(refactor)(\((.+)\))?(:.+)/'
 change-template: "* $TITLE (#$NUMBER) by @$AUTHOR"
 categories:
-  - title: "Breaking Changes"
+  - title: "⚡ Breaking Changes"
     labels:
       - "breaking-change"
-  - title: "New Features"
+  - title: "🌟 New Features"
     labels:
       - "feature"
       - "enhancement"
-  - title: "Documentation Updates"
+  - title: "📜 Documentation Updates"
     labels:
       - "documentation"
-  - title: "Bugfixes"
+  - title: "🐛 Bug Fixes"
     labels:
       - "bug"
       - "fix"
-  - title: "Maintenance"
+  - title: "🏗️ Code Refactoring"
+    labels:
+      - "refactor"
+  - title: "🔧 Maintenance"
     labels:
       - "chore"
       - "internal"
