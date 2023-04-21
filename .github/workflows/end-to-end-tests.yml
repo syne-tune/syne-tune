@@ -28,15 +28,36 @@ jobs:
           role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
           role-session-name: integtestsession
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
+      - name: Install boto3
+        run: python -m pip install boto3
       - name: Stop all left-over training jobs
         run: |
-          aws sagemaker list-training-jobs --status-equals InProgress > running_jobs.json
-          jq -c '.[][]["TrainingJobName"]' running_jobs.json | while read i; do
-            jobName=`echo $i | cut -d "\"" -f 2`
-            echo "stopping training job $jobName"
-            aws sagemaker stop-training-job --training-job-name $jobName
-            sleep 5
-          done
+          import boto3
+          from time import sleep
+          
+          def get_in_progress_training_jobs(sagemaker):
+              in_progress_jobs = []
+              paginator = sagemaker.get_paginator('list_training_jobs')
+          
+              for page in paginator.paginate(StatusEquals='InProgress'):
+                  in_progress_jobs.extend(page['TrainingJobSummaries'])
+                  sleep(2)
+          
+              return in_progress_jobs
+          
+          def stop_training_jobs(sagemaker, in_progress_jobs):
+              for job in in_progress_jobs:
+                  job_name = job['TrainingJobName']
+                  print(f'Stopping training job: {job_name}')
+                  sagemaker.stop_training_job(TrainingJobName=job_name)
+                  sleep(1)
+          
+          sagemaker = boto3.client('sagemaker')          
+          in_progress_jobs = get_in_progress_training_jobs(sagemaker)
+          stop_training_jobs(sagemaker, in_progress_jobs)
+        
+        shell: python
+
 
 # Longer-running code in examples/, may need BB repository
 
