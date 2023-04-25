@@ -42,7 +42,7 @@ class TrialSchedulerWithSearcher(TrialScheduler):
         # Generator for random seeds
         random_seed = kwargs.get("random_seed")
         if random_seed is None:
-            random_seed = np.random.randint(0, 2**32)
+            random_seed = np.random.randint(0, 2**31 - 1)
         logger.info(f"Master random_seed = {random_seed}")
         self.random_seed_generator = RandomSeedGenerator(random_seed)
 
