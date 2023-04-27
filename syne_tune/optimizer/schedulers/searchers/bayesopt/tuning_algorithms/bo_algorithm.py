@@ -28,22 +28,17 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     ScoringFunction,
     LocalOptimizer,
     SurrogateModel,
+    CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     LBFGSOptimizeAcquisition,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     generate_unique_candidates,
-    ExclusionList,
-    CandidateGenerator,
+    DuplicateDetector,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector import (
-    DuplicateDetector,
-)
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +88,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         ``num_initial_candidates_for_batch`` in this case, which speeds up
         selecting large batches, but still select the first candidate
         thoroughly
-    :param profiler: If given, this is used for profiling parts in the code
     :param sample_unique_candidates: If ``True``, we check that initial candidates
         sampled at random are unique and disjoint from the exclusion list.
         This can be expensive. Defaults to ``False``
@@ -112,7 +106,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     greedy_batch_selection: bool
     duplicate_detector: DuplicateDetector
     num_initial_candidates_for_batch: Optional[int] = None
-    profiler: Optional[SimpleProfiler] = None
     sample_unique_candidates: bool = False
     debug_log: Optional[DebugLogPrinter] = None
 
@@ -223,10 +216,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             f"BayesOpt Algorithm: Generating {num_initial_candidates} "
             "initial candidates."
         )
-        if self.profiler is not None:
-            self.profiler.push_prefix("nextcand")
-            self.profiler.start("all")
-            self.profiler.start("genrandom")
         if self.sample_unique_candidates:
             # This can be expensive, depending on what type Candidate is
             initial_candidates = generate_unique_candidates(
@@ -242,9 +231,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                     num_initial_candidates, exclusion_list=self.exclusion_candidates
                 )
             )
-        if self.profiler is not None:
-            self.profiler.stop("genrandom")
-            self.profiler.start("scoring")
         logger.info("BayesOpt Algorithm: Scoring (and reordering) candidates.")
         if self.debug_log is not None:
             candidates_and_scores = _order_candidates(
@@ -261,9 +247,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             initial_candidates = _order_candidates(
                 initial_candidates, self.initial_candidates_scorer, model=model
             )
-        if self.profiler is not None:
-            self.profiler.stop("scoring")
-            self.profiler.start("localsearch")
         candidates_with_optimization = _lazily_locally_optimize(
             initial_candidates,
             self.local_optimizer,
@@ -288,10 +271,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             num_candidates,
             self.duplicate_detector,
         )
-        if self.profiler is not None:
-            self.profiler.stop("localsearch")
-            self.profiler.stop("all")
-            self.profiler.pop_prefix()  # nextcand
         return candidates
 
 
@@ -324,7 +303,7 @@ def _lazily_locally_optimize(
     of locally optimized candidates.
     Note that ``candidates`` may contain duplicates, but such are skipped here.
     """
-    considered_already = ExclusionList.empty_list(hp_ranges)
+    considered_already = ExclusionList(hp_ranges)
     for cand in candidates:
         if not considered_already.contains(cand):
             considered_already.add(cand)

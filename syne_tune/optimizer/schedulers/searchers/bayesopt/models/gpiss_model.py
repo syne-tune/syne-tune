@@ -46,7 +46,6 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import ConfigurationF
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +161,6 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         active_metric: str,
         config_space_ext: ExtendedConfiguration,
         normalize_targets: bool = False,
-        profiler: Optional[SimpleProfiler] = None,
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
     ):
@@ -178,17 +176,12 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         self.num_fantasy_samples = num_fantasy_samples
         self._config_space_ext = config_space_ext
         self._debug_log = debug_log
-        self._profiler = profiler
         self._filter_observed_data = filter_observed_data
         self.normalize_targets = normalize_targets
 
     @property
     def debug_log(self) -> Optional[DebugLogPrinter]:
         return self._debug_log
-
-    @property
-    def profiler(self) -> Optional[SimpleProfiler]:
-        return self._profiler
 
     def get_params(self):
         return self._gpmodel.get_params()
@@ -215,7 +208,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         )
         if fit_params:
             logger.info(f"Fitting surrogate model for {self.active_metric}")
-            self._gpmodel.fit(data, profiler=self._profiler)
+            self._gpmodel.fit(data)
         elif not do_fantasizing:
             # Only if part below is skipped
             logger.info("Recomputing posterior state")

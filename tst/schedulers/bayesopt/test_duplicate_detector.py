@@ -12,9 +12,9 @@
 # permissions and limitations under the License.
 import pytest
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector import (
-    DuplicateDetectorIdentical,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     DuplicateDetectorNoDetection,
+    DuplicateDetectorIdentical,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,

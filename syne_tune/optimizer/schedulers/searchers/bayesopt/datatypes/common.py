@@ -15,11 +15,11 @@ from dataclasses import dataclass
 import numpy as np
 
 
-INTERNAL_METRIC_NAME = "active_metric"
+INTERNAL_METRIC_NAME = "target"
 
-INTERNAL_CONSTRAINT_NAME = "constraint_metric"
+INTERNAL_CONSTRAINT_NAME = "constraint"
 
-INTERNAL_COST_NAME = "cost_metric"
+INTERNAL_COST_NAME = "cost"
 
 
 def dictionarize_objective(x):

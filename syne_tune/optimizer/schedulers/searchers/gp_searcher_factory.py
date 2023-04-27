@@ -111,7 +111,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_si
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
     StateForModelConverter,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Integer,
     Categorical,
@@ -190,10 +189,6 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
         verbose=kwargs["opt_verbose"],
         n_starts=kwargs["opt_nstarts"],
     )
-    if kwargs.get("profiler", False):
-        profiler = SimpleProfiler()
-    else:
-        profiler = None
     if kwargs.get("debug_log", False):
         debug_log = DebugLogPrinter()
     else:
@@ -209,7 +204,6 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
         "mean": mean,
         "target_transform": target_transform,
         "optimization_config": optimization_config,
-        "profiler": profiler,
         "debug_log": debug_log,
         "filter_observed_data": filter_observed_data,
     }
@@ -228,7 +222,6 @@ def _create_gp_model_factory(
         gpmodel=gpmodel,
         num_fantasy_samples=kwargs["num_fantasy_samples"],
         normalize_targets=kwargs.get("normalize_targets", True),
-        profiler=result["profiler"],
         debug_log=result["debug_log"],
         filter_observed_data=filter_observed_data,
         no_fantasizing=kwargs.get("no_fantasizing", False),
@@ -371,7 +364,6 @@ def _create_gp_additive_model(
         num_fantasy_samples=num_fantasy_samples,
         active_metric=active_metric,
         config_space_ext=config_space_ext,
-        profiler=result["profiler"],
         debug_log=result["debug_log"],
         filter_observed_data=filter_observed_data,
         normalize_targets=kwargs.get("normalize_targets", True),
@@ -890,7 +882,6 @@ def _common_defaults(
     default_options = {
         "opt_skip_init_length": 150,
         "opt_skip_period": 1,
-        "profiler": False,
         "opt_maxiter": 50,
         "opt_nstarts": 2,
         "opt_warmstart": False,
@@ -942,7 +933,6 @@ def _common_defaults(
         "random_seed": Integer(0, 2**32 - 1),
         "opt_skip_init_length": Integer(0, None),
         "opt_skip_period": Integer(1, None),
-        "profiler": Boolean(),
         "opt_maxiter": Integer(1, None),
         "opt_nstarts": Integer(1, None),
         "opt_warmstart": Boolean(),

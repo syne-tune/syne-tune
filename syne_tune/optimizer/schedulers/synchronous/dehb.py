@@ -42,9 +42,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
@@ -285,7 +283,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         )
         # Needed to convert encoded configs to configs
         self._hp_ranges = make_hyperparameter_ranges(self.config_space)
-        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
+        self._excl_list = ExclusionList(self._hp_ranges)
         # PRNG for mutation and crossover random draws
         self.random_state = np.random.RandomState(self.random_seed_generator())
         # How often is selection skipped because target still pending?

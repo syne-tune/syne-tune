@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Iterator
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 import logging
@@ -23,8 +23,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     SurrogateOutputModel,
     AcquisitionClassAndArgs,
     unwrap_acquisition_class_and_kwargs,
+    CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
@@ -139,3 +141,204 @@ class NoOptimization(LocalOptimizer):
         self, candidate: Configuration, model: Optional[SurrogateModel] = None
     ) -> Configuration:
         return candidate
+
+
+MAX_RETRIES_CANDIDATES_EN_BULK = 20
+MAX_RETRIES_ON_DUPLICATES = 10000
+
+
+class RandomStatefulCandidateGenerator(CandidateGenerator):
+    """
+    This generator maintains a random state, so if :meth:`generate_candidates`
+    is called several times, different sequences are returned.
+
+    :param hp_ranges: Feature generator for configurations
+    :param random_state: PRN generator
+    """
+
+    def __init__(
+        self, hp_ranges: HyperparameterRanges, random_state: np.random.RandomState
+    ):
+        self.hp_ranges = hp_ranges
+        self.random_state = random_state
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        while True:
+            yield self.hp_ranges.random_config(self.random_state)
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list=None
+    ) -> List[Configuration]:
+        if exclusion_list is None:
+            return self.hp_ranges.random_configs(self.random_state, num_cands)
+        else:
+            assert isinstance(
+                exclusion_list, ExclusionList
+            ), "exclusion_list must be of type ExclusionList"
+            configs = []
+            num_done = 0
+            for i in range(MAX_RETRIES_CANDIDATES_EN_BULK):
+                # From iteration 1, we request more than what is still
+                # needed, because the config space seems to not have
+                # enough configs left
+                num_requested = min(num_cands, (num_cands - num_done) * (i + 1))
+                new_configs = [
+                    config
+                    for config in self.hp_ranges.random_configs(
+                        self.random_state, num_requested
+                    )
+                    if not exclusion_list.contains(config)
+                ]
+                num_new = min(num_cands - num_done, len(new_configs))
+                configs += new_configs[:num_new]
+                num_done += num_new
+                if num_done == num_cands:
+                    break
+            if num_done < num_cands:
+                logger.warning(
+                    f"Could only sample {num_done} candidates where "
+                    f"{num_cands} were requested. len(exclusion_list) = "
+                    f"{len(exclusion_list)}"
+                )
+            return configs
+
+
+def generate_unique_candidates(
+    candidates_generator: CandidateGenerator,
+    num_candidates: int,
+    exclusion_candidates: ExclusionList,
+) -> List[Configuration]:
+    exclusion_candidates = exclusion_candidates.copy()  # Copy
+    result = []
+    num_results = 0
+    retries = 0
+    just_added = True
+    for i, cand in enumerate(candidates_generator.generate_candidates()):
+        if just_added:
+            if exclusion_candidates.config_space_exhausted():
+                logger.warning(
+                    "All entries of finite config space (size "
+                    + f"{exclusion_candidates.configspace_size}) have been selected. Returning "
+                    + f"{len(result)} configs instead of {num_candidates}"
+                )
+                break
+            just_added = False
+        if not exclusion_candidates.contains(cand):
+            result.append(cand)
+            num_results += 1
+            exclusion_candidates.add(cand)
+            retries = 0
+            just_added = True
+        else:
+            # found a duplicate; retry
+            retries += 1
+        # End loop if enough candidates where generated, or after too many retries
+        # (this latter can happen when most of them are duplicates, and must be done
+        # to avoid infinite loops in the purely discrete case)
+        if num_results == num_candidates or retries > MAX_RETRIES_ON_DUPLICATES:
+            if retries > MAX_RETRIES_ON_DUPLICATES:
+                logger.warning(
+                    f"Reached limit of {MAX_RETRIES_ON_DUPLICATES} retries "
+                    f"with i={i}. Returning {len(result)} candidates instead "
+                    f"of the requested {num_candidates}"
+                )
+            break
+    return result
+
+
+class RandomFromSetCandidateGenerator(CandidateGenerator):
+    """
+    In this generator, candidates are sampled from a given set.
+
+    :param base_set: Set of all configurations to sample from
+    :param random_state: PRN generator
+    :param ext_config: If given, each configuration is updated with this
+        dictionary before being returned
+    """
+
+    def __init__(
+        self,
+        base_set: List[Configuration],
+        random_state: np.random.RandomState,
+        ext_config: Optional[Configuration] = None,
+    ):
+        self.random_state = random_state
+        self.base_set = base_set
+        self.num_base = len(base_set)
+        self._ext_config = ext_config
+        # Maintains index of positions of entries returned
+        self.pos_returned = set()
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        while True:
+            pos = self.random_state.randint(low=0, high=self.num_base)
+            self.pos_returned.add(pos)
+            config = self._extend_configs([self.base_set[pos]])[0]
+            yield config
+
+    def _extend_configs(self, configs: List[Configuration]) -> List[Configuration]:
+        if self._ext_config is None:
+            return configs
+        else:
+            return [dict(config, **self._ext_config) for config in configs]
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list=None
+    ) -> List[Configuration]:
+        if num_cands >= self.num_base:
+            if exclusion_list is None:
+                configs = self.base_set.copy()
+                self.pos_returned = set(range(self.num_base))
+            else:
+                configs, new_pos = zip(
+                    *[
+                        (config, pos)
+                        for pos, config in enumerate(self.base_set)
+                        if not exclusion_list.contains(config)
+                    ]
+                )
+                configs = list(configs)
+                self.pos_returned = set(new_pos)
+        else:
+            if exclusion_list is None:
+                randset = self.random_state.choice(
+                    self.num_base, num_cands, replace=False
+                )
+                self.pos_returned.update(randset)
+                configs = [self.base_set[pos] for pos in randset]
+            else:
+                randperm = self.random_state.permutation(self.num_base)
+                configs = []
+                new_pos = []
+                len_configs = 0
+                for pos in randperm:
+                    if len_configs == num_cands:
+                        break
+                    config = self.base_set[pos]
+                    if not exclusion_list.contains(config):
+                        configs.append(config)
+                        new_pos.append(pos)
+                        len_configs += 1
+                self.pos_returned.update(new_pos)
+        return self._extend_configs(configs)
+
+
+class DuplicateDetector:
+    def contains(
+        self, existing_candidates: ExclusionList, new_candidate: Configuration
+    ) -> bool:
+        raise NotImplementedError
+
+
+class DuplicateDetectorNoDetection(DuplicateDetector):
+    def contains(
+        self, existing_candidates: ExclusionList, new_candidate: Configuration
+    ) -> bool:
+        return False  # no duplicate detection at all
+
+
+class DuplicateDetectorIdentical(DuplicateDetector):
+    def contains(
+        self, existing_candidates: ExclusionList, new_candidate: Configuration
+    ) -> bool:
+        return existing_candidates.contains(new_candidate)

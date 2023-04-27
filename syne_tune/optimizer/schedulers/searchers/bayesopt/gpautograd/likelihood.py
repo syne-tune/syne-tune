@@ -45,9 +45,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transfo
     ScalarTargetTransform,
     IdentityTargetTransform,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import (
-    SimpleProfiler,
-)
 
 
 class MarginalLikelihood(Block):
@@ -111,14 +108,11 @@ class MarginalLikelihood(Block):
         """
         pass
 
-    def on_fit_start(
-        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
-    ):
+    def on_fit_start(self, data: Dict[str, Any]):
         """
         Called at the beginning of ``fit``.
 
         :param data: Argument passed to ``fit``
-        :param profiler: Argument passed to ``fit``
 
         """
         raise NotImplementedError
@@ -246,9 +240,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             func.set_params(stripped_dict)
         self._set_noise_variance(param_dict["noise_variance"])
 
-    def on_fit_start(
-        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
-    ):
+    def on_fit_start(self, data: Dict[str, Any]):
         self.assert_data_entries(data)
         targets = data["targets"]
         assert (

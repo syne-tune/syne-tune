@@ -57,10 +57,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import (
     kernel_with_warping,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     CandidateGenerator,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 
 
 def build_kernel(state: TuningJobState, do_warping: bool = False) -> KernelFunction:
@@ -164,16 +164,7 @@ def create_exclusion_set(
     """
     if not is_dict:
         candidates_tpl = tuples_to_configs(candidates_tpl, hp_ranges)
-    config_for_trial = {
-        str(trial_id): config for trial_id, config in enumerate(candidates_tpl)
-    }
-    state = TuningJobState(
-        hp_ranges=hp_ranges,
-        config_for_trial=config_for_trial,
-        trials_evaluations=[],
-        failed_trials=[str(x) for x in range(len(candidates_tpl))],
-    )
-    return ExclusionList(state)
+    return ExclusionList(hp_ranges=hp_ranges, configurations=candidates_tpl)
 
 
 TupleOrDict = Union[tuple, dict]

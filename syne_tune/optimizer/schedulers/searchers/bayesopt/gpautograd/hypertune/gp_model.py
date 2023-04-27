@@ -46,7 +46,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
     ScalarTargetTransform,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 
 @dataclass
@@ -225,8 +224,8 @@ class HyperTuneIndependentGPModel(IndependentGPPerResourceModel, HyperTuneModelM
         else:
             return None
 
-    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
-        super().fit(data, profiler)
+    def fit(self, data: Dict[str, Any]):
+        super().fit(data)
         poster_state: IndependentGPPerResourcePosteriorState = self.states[0]
         ensemble_distribution = self.fit_distributions(
             poster_state=poster_state,
@@ -316,8 +315,8 @@ class HyperTuneJointGPModel(GaussianProcessRegression, HyperTuneModelMixin):
         else:
             return None
 
-    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
-        super().fit(data, profiler)
+    def fit(self, data: Dict[str, Any]):
+        super().fit(data)
         resource_attr_range = self._likelihood_kwargs["resource_attr_range"]
         poster_state = GaussProcPosteriorStateAndRungLevels(
             poster_state=self.states[0],

@@ -54,7 +54,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +250,6 @@ class GaussProcModelFactory(TransformerModelFactory):
         gpmodel: GPModel,
         active_metric: str,
         normalize_targets: bool = True,
-        profiler: Optional[SimpleProfiler] = None,
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
         no_fantasizing: bool = False,
@@ -261,7 +259,6 @@ class GaussProcModelFactory(TransformerModelFactory):
         self.active_metric = active_metric
         self.normalize_targets = normalize_targets
         self._debug_log = debug_log
-        self._profiler = profiler
         self._filter_observed_data = filter_observed_data
         self._no_fantasizing = no_fantasizing
         self._hp_ranges_for_prediction = hp_ranges_for_prediction
@@ -271,10 +268,6 @@ class GaussProcModelFactory(TransformerModelFactory):
     @property
     def debug_log(self) -> Optional[DebugLogPrinter]:
         return self._debug_log
-
-    @property
-    def profiler(self) -> Optional[SimpleProfiler]:
-        return self._profiler
 
     @property
     def gpmodel(self) -> GPModel:
@@ -303,18 +296,12 @@ class GaussProcModelFactory(TransformerModelFactory):
                 trials_evaluations=state.trials_evaluations,
                 failed_trials=state.failed_trials,
             )
-        self._posterior_for_state(
-            no_pending_state, fit_params=fit_params, profiler=self._profiler
-        )
+        self._posterior_for_state(no_pending_state, fit_params=fit_params)
         if state.pending_evaluations and not self._no_fantasizing:
             # Sample fantasy values for pending evaluations
             state_with_fantasies = self._draw_fantasy_values(state)
             # Compute posterior for state with pending evals
-            # Note: profiler is not passed here, this would overwrite the
-            # results from the first call
-            self._posterior_for_state(
-                state_with_fantasies, fit_params=False, profiler=None
-            )
+            self._posterior_for_state(state_with_fantasies, fit_params=False)
             fantasy_samples = state_with_fantasies.pending_evaluations
         else:
             fantasy_samples = []
@@ -336,7 +323,6 @@ class GaussProcModelFactory(TransformerModelFactory):
         self,
         state: TuningJobState,
         fit_params: bool,
-        profiler: Optional[SimpleProfiler] = None,
     ):
         """
         Computes posterior for state.
@@ -371,7 +357,7 @@ class GaussProcModelFactory(TransformerModelFactory):
         else:
             if self._debug_log is not None:
                 logger.info(f"Fitting surrogate model for {self.active_metric}")
-            self._gpmodel.fit(data, profiler=profiler)
+            self._gpmodel.fit(data)
         if self._debug_log is not None:
             self._debug_log.set_model_params(self.get_params())
             if not state.pending_evaluations:
@@ -475,7 +461,6 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
         num_fantasy_samples: int,
         active_metric: str = INTERNAL_METRIC_NAME,
         normalize_targets: bool = True,
-        profiler: Optional[SimpleProfiler] = None,
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
         no_fantasizing: bool = False,
@@ -486,7 +471,6 @@ class GaussProcEmpiricalBayesModelFactory(GaussProcModelFactory):
             gpmodel=gpmodel,
             active_metric=active_metric,
             normalize_targets=normalize_targets,
-            profiler=profiler,
             debug_log=debug_log,
             filter_observed_data=filter_observed_data,
             no_fantasizing=no_fantasizing,

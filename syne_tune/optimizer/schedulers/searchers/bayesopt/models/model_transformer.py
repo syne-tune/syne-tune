@@ -37,7 +37,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -88,10 +87,6 @@ class TransformerModelFactory:
 
     @property
     def debug_log(self) -> Optional[DebugLogPrinter]:
-        return None
-
-    @property
-    def profiler(self) -> Optional[SimpleProfiler]:
         return None
 
     def configure_scheduler(self, scheduler):

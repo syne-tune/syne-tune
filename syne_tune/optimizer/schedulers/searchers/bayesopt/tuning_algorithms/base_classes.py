@@ -20,18 +20,20 @@ from typing import (
     Dict,
     Union,
     Any,
+    Iterator,
 )
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
 )
-from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
-from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
-    HyperparameterRanges,
-)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
+from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
+    HyperparameterRanges,
 )
 
 
@@ -312,5 +314,27 @@ class LocalOptimizer:
         :param candidate: Starting point
         :param model: Overrides ``self.model``
         :return: Configuration found by local optimization
+        """
+        raise NotImplementedError
+
+
+class CandidateGenerator:
+    """
+    Class to generate candidates from which to start the local minimization,
+    typically random candidate or some form of more uniformly spaced variation,
+    such as latin hypercube or Sobol sequence.
+    """
+
+    def generate_candidates(self) -> Iterator[Configuration]:
+        raise NotImplementedError
+
+    def generate_candidates_en_bulk(
+        self, num_cands: int, exclusion_list: Optional[ExclusionList] = None
+    ) -> List[Configuration]:
+        """
+        :param num_cands: Number of candidates to generate
+        :param exclusion_list: If given, these candidates must not be returned
+        :return: List of ``num_cands`` candidates. If ``exclusion_list`` is given,
+            the number of candidates returned can be ``< num_cands``
         """
         raise NotImplementedError

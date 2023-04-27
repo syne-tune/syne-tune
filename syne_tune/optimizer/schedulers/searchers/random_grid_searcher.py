@@ -29,9 +29,7 @@ from syne_tune.optimizer.schedulers.searchers import (
     StochasticSearcher,
     StochasticAndFilterDuplicatesSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
@@ -203,7 +201,7 @@ class GridSearcher(StochasticSearcher):
         self._generate_all_candidates_on_grid()
         self._next_index = 0
         self._allow_duplicates = allow_duplicates
-        self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
+        self._all_initial_configs = ExclusionList(self._hp_ranges)
 
     def _validate_config_space(
         self, config_space: Dict[str, Any], num_samples: Optional[Dict[str, int]]
@@ -342,7 +340,7 @@ class GridSearcher(StochasticSearcher):
                 # ``_all_initial_configs`` to empty, so the initial configs can be
                 # suggested again in the second round
                 self._next_index = 0
-                self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
+                self._all_initial_configs = ExclusionList(self._hp_ranges)
         return candidate
 
     def get_state(self) -> Dict[str, Any]:
@@ -366,7 +364,7 @@ class GridSearcher(StochasticSearcher):
     def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
         self._next_index = state["next_index"]
-        self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
+        self._all_initial_configs = ExclusionList(self._hp_ranges)
         self._all_initial_configs.clone_from_state(state["all_initial_configs"])
 
     def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):

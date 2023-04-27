@@ -18,19 +18,17 @@ from syne_tune.optimizer.schedulers.searchers import (
     BaseSearcher,
     GPMultiFidelitySearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (
+from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
     create_initial_candidates_scorer,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.utils.common import (
     Configuration,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
