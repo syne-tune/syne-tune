@@ -23,9 +23,15 @@ from pymoo.algorithms.moo.nsga2 import NSGA2 as PYMOONSGA2
 from pymoo.core.problem import Problem
 from pymoo.core.evaluator import Evaluator
 from pymoo.problems.static import StaticProblem
-from pymoo.core.mixed import MixedVariableMating, MixedVariableGA, MixedVariableSampling, MixedVariableDuplicateElimination
+from pymoo.core.mixed import (
+    MixedVariableMating,
+    MixedVariableGA,
+    MixedVariableSampling,
+    MixedVariableDuplicateElimination,
+)
 from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.core.problem import ElementwiseProblem
+
 
 class NSGA2(StochasticSearcher):
     """
@@ -63,7 +69,7 @@ class NSGA2(StochasticSearcher):
             if isinstance(hp, Domain):
                 if isinstance(hp, Categorical):
                     sampler = MixedVariableSampling()
-                    raise Exception('NSGA2 does not support categorical parameters')
+                    raise Exception("NSGA2 does not support categorical parameters")
                 else:
                     xl.append(hp.lower)
                     xu.append(hp.upper)
@@ -76,7 +82,6 @@ class NSGA2(StochasticSearcher):
         self.current_population = self.algorithm.ask()
         self.current_individual = 0
         self.observed_values = []
-
 
     def _update(self, trial_id: str, config: dict, result: dict):
         results = {}
@@ -103,7 +108,7 @@ class NSGA2(StochasticSearcher):
             exhausted.
         """
         if self.current_individual >= len(self.current_population):
-            logging.info('Update population')
+            logging.info("Update population")
 
             static = StaticProblem(self.problem, F=np.array(self.observed_values))
             Evaluator().eval(static, self.current_population)
@@ -120,24 +125,29 @@ class NSGA2(StochasticSearcher):
         config = {hp: individual.x[i] for i, hp in enumerate(self.hp_names)}
         return config
 
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from syne_tune.config_space import uniform, randint, choice
-    config_space = {'x0': uniform(0, 1), 'x1': uniform(0, 1), 'x2': randint(1, 100)}
+
+    config_space = {"x0": uniform(0, 1), "x1": uniform(0, 1), "x2": randint(1, 100)}
     pop_size = 50
-    method = NSGA2(config_space, metric=['f0', 'f1'], mode=['min', 'min'], pop_size=pop_size)
+    method = NSGA2(
+        config_space, metric=["f0", "f1"], mode=["min", "min"], pop_size=pop_size
+    )
     f = plt.figure(dpi=200)
     color = 0
     for i in range(300):
         config = method.get_config()
-        f0 = (0.5 - config['x0']) ** 2
-        f1 = (0.5 - config['x1']) ** 2
+        f0 = (0.5 - config["x0"]) ** 2
+        f1 = (0.5 - config["x1"]) ** 2
         if i % pop_size == 0:
             x = [element.x[0] for element in method.current_population]
             y = [element.x[1] for element in method.current_population]
-            plt.scatter(x, y, color=f'C{color}')
+            plt.scatter(x, y, color=f"C{color}")
             color += 1
-        method.on_trial_result(trial_id=i, config=config, result={'f0': f0, 'f1': f1}, update=True)
+        method.on_trial_result(
+            trial_id=i, config=config, result={"f0": f0, "f1": f1}, update=True
+        )
         print(i, config, f0, f1)
     plt.show()
-
