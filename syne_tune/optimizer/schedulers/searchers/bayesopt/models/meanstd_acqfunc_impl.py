@@ -10,11 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import numpy as np
 from typing import Dict, Optional, Set, List, Tuple
 import logging
-from scipy.stats import norm
 import itertools
+
+import numpy as np
+from scipy.stats import norm
+from scipy.special import erfc
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc import (
     MeanStdAcquisitionFunction,
@@ -28,9 +30,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     SurrogateOutputModel,
     SurrogateModel,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.density import (
-    get_quantiles,
 )
 
 logger = logging.getLogger(__name__)
@@ -519,3 +518,25 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
             min_across_observations = np.nanmin(means_active, axis=0)
             current_best_list.append(min_across_observations)
         return ConstraintCurrentBestProvider(current_best_list, num_samples_active)
+
+
+def get_quantiles(acquisition_par, fmin, m, s):
+    """
+    Quantiles of the Gaussian distribution, useful to determine the acquisition
+    function values.
+
+    :param acquisition_par: parameter of the acquisition function
+    :param fmin: current minimum.
+    :param m: vector of means.
+    :param s: vector of standard deviations.
+    """
+    if isinstance(s, np.ndarray):
+        s[s < 1e-10] = 1e-10
+    elif s < 1e-10:
+        s = 1e-10
+    u = (fmin - m - acquisition_par) / s
+
+    phi = np.exp(-0.5 * u**2) / np.sqrt(2 * np.pi)
+    # vectorized version of erfc to not depend on scipy
+    Phi = 0.5 * erfc(-u / np.sqrt(2))
+    return phi, Phi, u

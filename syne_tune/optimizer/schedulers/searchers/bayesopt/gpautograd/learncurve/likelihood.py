@@ -50,7 +50,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
     ScalarMeanFunction,
     MeanFunction,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 
 LCModel = Union[ISSModelParameters, ExponentialDecayBaseKernelFunction]
@@ -123,21 +122,16 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
             ("mean_", self.mean),
             (tag, self.res_model),
         ]
-        self._profiler = None
         with self.name_scope():
             self.noise_variance_internal = register_parameter(
                 self.params, "noise_variance", self.encoding
             )
-
-    def set_profiler(self, profiler: Optional[SimpleProfiler]):
-        self._profiler = profiler
 
     def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         return self._type(
             data,
             **self._posterstate_kwargs,
             noise_variance=self.get_noise_variance(),
-            profiler=self._profiler
         )
 
     def forward(self, data: Dict[str, Any]):
@@ -184,13 +178,9 @@ class GaussAdditiveMarginalLikelihood(MarginalLikelihood):
         if overwrite or not self._type.has_precomputations(data):
             self._type.data_precomputations(data)
 
-    def on_fit_start(
-        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
-    ):
+    def on_fit_start(self, data: Dict[str, Any]):
         assert not data["do_fantasizing"], (
             "data must not be for fantasizing. Call prepare_data with "
             + "do_fantasizing=False"
         )
         self.data_precomputations(data)
-        if profiler is not None:
-            self.set_profiler(profiler)

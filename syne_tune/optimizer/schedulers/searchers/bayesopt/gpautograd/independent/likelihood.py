@@ -52,9 +52,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transfo
     ScalarTargetTransform,
     IdentityTargetTransform,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import (
-    SimpleProfiler,
-)
 
 
 class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
@@ -265,9 +262,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         else:
             self._set_noise_variance(1, param_dict["noise_variance"])
 
-    def on_fit_start(
-        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
-    ):
+    def on_fit_start(self, data: Dict[str, Any]):
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = data["targets"]
         assert (

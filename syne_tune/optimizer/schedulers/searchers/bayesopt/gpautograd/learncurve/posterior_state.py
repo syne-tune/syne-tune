@@ -452,7 +452,6 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
         return all(k in data for k in ("ydims", "num_configs", "deltay", "logr"))
 
     def _compute_posterior_state(self, data: Dict[str, Any], noise_variance, **kwargs):
-        profiler = kwargs.get("profiler")
         # Compute posterior state
         issm_params = self.iss_model.get_issm_params(data["features"])
         if self.has_precomputations(data):
@@ -461,7 +460,6 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
                 issm_params=issm_params,
                 r_min=self.r_min,
                 r_max=self.r_max,
-                profiler=profiler,
             )
         else:
             issm_likelihood = issm_likelihood_slow_computations(
@@ -469,10 +467,7 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
                 issm_params=issm_params,
                 r_min=self.r_min,
                 r_max=self.r_max,
-                profiler=profiler,
             )
-        if profiler is not None:
-            profiler.start("poster_comp")
         self.poster_state = posterior_computations(
             features=data["features"],
             mean=self.mean,
@@ -480,8 +475,6 @@ class GaussProcISSMPosteriorState(IncrementalUpdateGPAdditivePosteriorState):
             issm_likelihood=issm_likelihood,
             noise_variance=noise_variance,
         )
-        if profiler is not None:
-            profiler.stop("poster_comp")
 
     def predict(self, test_features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         resource_attr_range = (self.r_min, self.r_max)
@@ -610,10 +603,7 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
         return all(k in data for k in ("ydims", "num_configs", "yflat"))
 
     def _compute_posterior_state(self, data: Dict[str, Any], noise_variance, **kwargs):
-        profiler = kwargs.get("profiler")
         # Compute posterior state
-        if profiler is not None:
-            profiler.start("likelihood")
         if self.has_precomputations(data):
             issm_likelihood = resource_kernel_likelihood_computations(
                 precomputed=data,
@@ -626,9 +616,6 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
                 res_kernel=self.res_kernel,
                 noise_variance=noise_variance,
             )
-        if profiler is not None:
-            profiler.stop("likelihood")
-            profiler.start("poster_comp")
         self.poster_state = posterior_computations(
             features=data["features"],
             mean=self.mean,
@@ -636,8 +623,6 @@ class GaussProcExpDecayPosteriorState(IncrementalUpdateGPAdditivePosteriorState)
             issm_likelihood=issm_likelihood,
             noise_variance=noise_variance,
         )
-        if profiler is not None:
-            profiler.stop("poster_comp")
         # Add missing term to criterion value
         if "criterion" in self.poster_state:
             part3 = logdet_cholfact_cov_resource(issm_likelihood)

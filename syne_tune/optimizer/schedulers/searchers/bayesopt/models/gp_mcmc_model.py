@@ -25,7 +25,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
 )
@@ -54,7 +53,6 @@ class GaussProcMCMCModelFactory(GaussProcModelFactory):
         gpmodel: GPRegressionMCMC,
         active_metric: str = INTERNAL_METRIC_NAME,
         normalize_targets: bool = True,
-        profiler: Optional[SimpleProfiler] = None,
         debug_log: Optional[DebugLogPrinter] = None,
         filter_observed_data: Optional[ConfigurationFilter] = None,
         hp_ranges_for_prediction: Optional[HyperparameterRanges] = None,
@@ -63,7 +61,6 @@ class GaussProcMCMCModelFactory(GaussProcModelFactory):
             gpmodel=gpmodel,
             active_metric=active_metric,
             normalize_targets=normalize_targets,
-            profiler=profiler,
             debug_log=debug_log,
             filter_observed_data=filter_observed_data,
             hp_ranges_for_prediction=hp_ranges_for_prediction,

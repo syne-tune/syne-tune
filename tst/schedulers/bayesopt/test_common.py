@@ -20,9 +20,11 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     generate_unique_candidates,
+)
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import (
+    ExclusionListFromState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
     RepeatedCandidateGenerator,
@@ -80,7 +82,7 @@ def test_compute_blacklisted_candidates(
         pending_tuples=pending_tuples,
         failed_tuples=failed_tuples,
     )
-    actual = ExclusionList(state)
+    actual = ExclusionListFromState(state)
     assert set(expected) == actual.excl_set
 
 

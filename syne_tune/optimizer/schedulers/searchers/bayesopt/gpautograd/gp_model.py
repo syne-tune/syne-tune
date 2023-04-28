@@ -28,7 +28,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood import (
     MarginalLikelihood,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.optimization_utils import (
     apply_lbfgs_with_multiple_starts,
     create_lbfgs_arguments,
@@ -60,14 +59,13 @@ class GaussianProcessModel:
         """
         raise NotImplementedError
 
-    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
+    def fit(self, data: Dict[str, Any]):
         """
         Adjust model parameters based on training data ``data``. Can be done via
         optimization or MCMC sampling. The posterior states are computed at the
         end as well.
 
         :param data: Training data
-        :param profiler: Used for profiling
         """
         raise NotImplementedError
 
@@ -214,7 +212,7 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
     def likelihood(self) -> MarginalLikelihood:
         raise NotImplementedError
 
-    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
+    def fit(self, data: Dict[str, Any]):
         """
         Fit the model parameters by optimizing the marginal likelihood,
         and set posterior states.
@@ -224,9 +222,8 @@ class GaussianProcessOptimizeModel(GaussianProcessModel):
         parameters are not changed.
 
         :param data: Input data
-        :param profiler: Profiler, optional
         """
-        self.likelihood.on_fit_start(data, profiler)
+        self.likelihood.on_fit_start(data)
         if self.fit_reset_params:
             self.reset_params()
         n_starts = self.optimization_config.n_starts
