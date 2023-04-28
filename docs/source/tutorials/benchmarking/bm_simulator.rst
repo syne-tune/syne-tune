@@ -54,12 +54,12 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   experiment with. In our example here, we add two options, ``num_brackets``
   which configures Hyperband schedulers, and ``num_samples`` which configures
   the Hyper-Tune methods only. Apart from ``extra_args``, you also need to
-  define ``map_extra_args``, which modifies ``method_kwargs`` (the arguments of
+  define ``map_method_args``, which modifies ``method_kwargs`` (the arguments of
   :class:`~benchmarking.commons.baselines.MethodArguments`) based on the extra
-  arguments. Details for ``map_extra_kwargs`` are given just below. Finally,
+  arguments. Details for ``map_method_args`` are given just below. Finally,
   :func:`~benchmarking.commons.hpo_main_simulator.main` is called with your
   ``methods`` and ``benchmark_definitions`` dictionaries, and (optionally) with
-  ``extra_args`` and ``map_extra_args``. We will see shortly how the launcher
+  ``extra_args`` and ``map_method_args``. We will see shortly how the launcher
   is called, and what happens inside.
 * `benchmarking/nursery/benchmark_hypertune/launch_remote.py <../../benchmarking/benchmark_hypertune.html#id4>`__:
   Script for launching experiments remotely, in that each experiment runs as its
@@ -90,24 +90,25 @@ Specifying Extra Arguments
 In many cases, you will want to run different methods using their default
 arguments, or only change them as part of the definition in ``baselines.py``.
 But sometimes, it can be useful to be able to set options via extra command line
-arguments. This can be done via ``extra_args`` and ``map_extra_args``, which are
+arguments. This can be done via ``extra_args`` and ``map_method_args``, which are
 typically used in order to be able to configure scheduler arguments for certain
 methods. But in principle, any argument of
 :class:`~benchmarking.commons.baselines.MethodArguments` can be modified. Here,
 ``extra_args`` is simply extending arguments to the command line parser, where the
 ``name`` field contains the name of the option without any leading "-".
-``map_extra_args`` has the signature
+
+``map_method_args`` has the signature
 
 .. code-block:: python
 
-   method_kwargs = map_extra_args(args, method, method_kwargs)
+   method_kwargs = map_method_args(args, method, method_kwargs)
 
 Here, ``method_kwargs`` are arguments of
 :class:`~benchmarking.commons.baselines.MethodArguments`, which can be modified
-by ``map_extra_kwargs`` (the modified dictionary is returned). ``args`` is the
+by ``map_method_args`` (the modified dictionary is returned). ``args`` is the
 result of command line parsing, and ``method`` is the name of the method to
 be constructed based on these arguments. The latter argument allows
-``map_extra_kwargs`` to depend on the method. In our example
+``map_method_args`` to depend on the method. In our example
 `benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__,
 ``num_brackets`` applies to all methods, while ``num_samples`` only applies
 to the variants of Hyper-Tune. Both arguments modify the dictionary
@@ -115,13 +116,21 @@ to the variants of Hyper-Tune. Both arguments modify the dictionary
 which contains constructor arguments for the scheduler.
 
 Note the use of ``recursive_merge``. This means that the changes done in
-``map_extra_args`` are recursively merged into the prior ``method_kwargs``. In
+``map_method_args`` are recursively merged into the prior ``method_kwargs``. In
 our example, we may already have ``method_kwargs.scheduler_kwargs`` or even
 ``method_kwargs.scheduler_kwargs.search_options``. While the new settings here
 take precedence, prior content of ``method_kwargs`` not affected remains in
 place. In the same way, extra arguments passed to baseline wrappers in
 :mod:`benchmarking.commons.default_baselines` are recursively merged into the
 arguments determined by the default logic.
+
+.. note::
+   ``map_method_args`` is applied to rewrite ``method_kwargs`` just before the
+   method is created. This means that all entries of
+   :class:`~benchmarking.commons.baselines.MethodArguments` can be modified from
+   their default values. You can also use ``map_method_args`` independent of
+   ``extra_args`` (however, if ``extra_args`` is given, then ``map_method_args``
+   must be given as well).
 
 Writing Extra Results
 ~~~~~~~~~~~~~~~~~~~~~
