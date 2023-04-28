@@ -19,8 +19,16 @@ from typing import Optional, Union
 
 from datasets import load_dataset
 
-from transformers import AutoModelForMultipleChoice, TrainingArguments, Trainer, AutoTokenizer
-from transformers.tokenization_utils_base import PreTrainedTokenizerBase, PaddingStrategy
+from transformers import (
+    AutoModelForMultipleChoice,
+    TrainingArguments,
+    Trainer,
+    AutoTokenizer,
+)
+from transformers.tokenization_utils_base import (
+    PreTrainedTokenizerBase,
+    PaddingStrategy,
+)
 from transformers.trainer_callback import TrainerCallback
 
 from syne_tune.report import Reporter
@@ -67,8 +75,10 @@ class DataCollatorForMultipleChoice:
         labels = [feature.pop(label_name) for feature in features]
         batch_size = len(features)
         num_choices = len(features[0]["input_ids"])
-        flattened_features = [[{k: v[i] for k, v in feature.items()} for i in range(num_choices)] for feature in
-                              features]
+        flattened_features = [
+            [{k: v[i] for k, v in feature.items()} for i in range(num_choices)]
+            for feature in features
+        ]
         flattened_features = sum(flattened_features, [])
 
         batch = self.tokenizer.pad(
@@ -98,8 +108,10 @@ def preprocess_function(examples):
     # Grab all second sentences possible for each context.
     question_headers = examples["sent2"]
     ending_names = ["ending0", "ending1", "ending2", "ending3"]
-    second_sentences = [[f"{header} {examples[end][i]}" for end in ending_names] for i, header in
-                        enumerate(question_headers)]
+    second_sentences = [
+        [f"{header} {examples[end][i]}" for end in ending_names]
+        for i, header in enumerate(question_headers)
+    ]
 
     # Flatten everything
     first_sentences = sum(first_sentences, [])
@@ -108,7 +120,10 @@ def preprocess_function(examples):
     # Tokenize
     tokenized_examples = tokenizer(first_sentences, second_sentences, truncation=True)
     # Un-flatten
-    return {k: [v[i:i + 4] for i in range(0, len(v), 4)] for k, v in tokenized_examples.items()}
+    return {
+        k: [v[i : i + 4] for i in range(0, len(v), 4)]
+        for k, v in tokenized_examples.items()
+    }
 
 
 if __name__ == "__main__":
@@ -120,7 +135,7 @@ if __name__ == "__main__":
     parser.add_argument("--train_batch_size", type=int, default=8)
     parser.add_argument("--eval_batch_size", type=int, default=8)
     parser.add_argument("--warmup_ratio", type=float, default=0.0)
-    parser.add_argument("--lr_schedule", type=str, default='linear')
+    parser.add_argument("--lr_schedule", type=str, default="linear")
     parser.add_argument("--model_name", type=str)
     parser.add_argument("--learning_rate", type=float, default=5e-5)
     parser.add_argument("--weight_decay", type=float, default=0.0)
@@ -155,7 +170,7 @@ if __name__ == "__main__":
         lr_scheduler_type=args.lr_schedule,
         warmup_ratio=args.warmup_ratio,
         fp16=True,
-        save_strategy='no',
+        save_strategy="no",
     )
 
     trainer = Trainer(

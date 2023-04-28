@@ -31,40 +31,47 @@ config_space = {
     "learning_rate": loguniform(1e-6, 1e-4),
     "per_device_train_batch_size": 8,
     "warmup_ratio": uniform(0, 0.5),
-    'epochs': 3,
-    'weight_decay': uniform(0, 1e-1),
-    'adam_beta1': uniform(0.0, 0.9999),
-    'adam_beta2': uniform(0.0, 0.9999),
-    'adam_epsilon': loguniform(1e-10, 1e-6),
-    'max_grad_norm': uniform(0, 2)
+    "epochs": 3,
+    "weight_decay": uniform(0, 1e-1),
+    "adam_beta1": uniform(0.0, 0.9999),
+    "adam_beta2": uniform(0.0, 0.9999),
+    "adam_epsilon": loguniform(1e-10, 1e-6),
+    "max_grad_norm": uniform(0, 2),
 }
 
 # Default hyperparameter configuration from HuggingFace as specified in TrainingArguments
-default_config = {'learning_rate': 5e-5, 'warmup_ratio': 0.0, 'weight_decay': 0.0,
-                  'adam_beta1': 0.9, 'adam_beta2': 0.999, 'adam_epsilon': 1e-8, 'max_grad_norm': 1.0}
+default_config = {
+    "learning_rate": 5e-5,
+    "warmup_ratio": 0.0,
+    "weight_decay": 0.0,
+    "adam_beta1": 0.9,
+    "adam_beta2": 0.999,
+    "adam_epsilon": 1e-8,
+    "max_grad_norm": 1.0,
+}
 
-entry_point = 'multiple_choice_on_swag.py'
+entry_point = "multiple_choice_on_swag.py"
 run_locally = False
 
 if run_locally:
-    trial_backend=LocalBackend(entry_point=entry_point, rotate_gpus=False)
+    trial_backend = LocalBackend(entry_point=entry_point, rotate_gpus=False)
     n_workers = 1  # if we only have a single GPU, we can also only run a single worker
 else:
     trial_backend = SageMakerBackend(
         sm_estimator=HuggingFace(
-            instance_type='ml.g5.xlarge',
+            instance_type="ml.g5.xlarge",
             instance_count=1,
             entry_point=str(entry_point),
             role=get_execution_role(),
-            transformers_version='4.26',
-            pytorch_version='1.13',
-            py_version='py39',
+            transformers_version="4.26",
+            pytorch_version="1.13",
+            py_version="py39",
             max_run=10 * 600,
             sagemaker_session=default_sagemaker_session(),
             disable_profiler=True,
             debugger_hook_config=False,
         ),
-        metrics_names=['eval_accuracy'],
+        metrics_names=["eval_accuracy"],
     )
     n_workers = 4  # runs 4 SageMaker Training Jobs in parallel
 
@@ -73,9 +80,11 @@ tuner = Tuner(
     trial_backend=trial_backend,
     scheduler=BayesianOptimization(
         config_space,
-        metric='eval_accuracy',
-        mode='max',
-        points_to_evaluate=[default_config]  # let's start with the default configuration
+        metric="eval_accuracy",
+        mode="max",
+        points_to_evaluate=[
+            default_config
+        ],  # let's start with the default configuration
     ),
     stop_criterion=StoppingCriterion(max_wallclock_time=3600 * 5),
     n_workers=n_workers,  # how many trials are evaluated in parallel
@@ -85,24 +94,42 @@ tuner.run()
 
 experiment = load_experiment(tuner.name)
 results = experiment.results
-metric_name = experiment.metadata['metric_names'][0]
+metric_name = experiment.metadata["metric_names"][0]
 
 best_config = experiment.best_config()
 
-for trial_id, df_trial in results.groupby('trial_id'):
-    if trial_id == best_config['trial_id']:
-        plt.plot(df_trial[ST_TUNER_TIME], df_trial[metric_name], marker='o',
-                 color='red', label='best', linewidth=3)
+for trial_id, df_trial in results.groupby("trial_id"):
+    if trial_id == best_config["trial_id"]:
+        plt.plot(
+            df_trial[ST_TUNER_TIME],
+            df_trial[metric_name],
+            marker="o",
+            color="red",
+            label="best",
+            linewidth=3,
+        )
     elif trial_id == 0:
-        plt.plot(df_trial[ST_TUNER_TIME], df_trial[metric_name], marker='o',
-                 color='blue', label='default', linewidth=3)
+        plt.plot(
+            df_trial[ST_TUNER_TIME],
+            df_trial[metric_name],
+            marker="o",
+            color="blue",
+            label="default",
+            linewidth=3,
+        )
     else:
-        plt.plot(df_trial[ST_TUNER_TIME], df_trial[metric_name], marker='o',
-                 color='black', alpha=0.4, linewidth=1)
+        plt.plot(
+            df_trial[ST_TUNER_TIME],
+            df_trial[metric_name],
+            marker="o",
+            color="black",
+            alpha=0.4,
+            linewidth=1,
+        )
 
-plt.xlabel('wall-clock time (seconds)')
-plt.ylabel(metric_name.replace('_', '-'))
-plt.title('Fine-tuning on SWAG')
+plt.xlabel("wall-clock time (seconds)")
+plt.ylabel(metric_name.replace("_", "-"))
+plt.title("Fine-tuning on SWAG")
 plt.grid(alpha=0.4)
 plt.legend()
 plt.show()
