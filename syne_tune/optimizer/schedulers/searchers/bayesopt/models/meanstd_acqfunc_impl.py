@@ -10,13 +10,13 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from math import erfc
-
-import numpy as np
 from typing import Dict, Optional, Set, List, Tuple
 import logging
-from scipy.stats import norm
 import itertools
+
+import numpy as np
+from scipy.stats import norm
+from scipy.special import erfc
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc import (
     MeanStdAcquisitionFunction,
