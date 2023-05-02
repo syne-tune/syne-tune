@@ -173,21 +173,56 @@ def test_gpu_allocation(caplog):
         backend._allocate_gpu(trial_id=trial_id, env=env)
     for trial_id in range(4):
         gpu = trial_id
-        assert backend.trial_gpu[trial_id] == gpu
+        assert backend.trial_gpu[trial_id] == [gpu]
         assert backend.gpu_times_assigned[gpu] == 1
     backend._deallocate_gpu(trial_id=2)
     backend._allocate_gpu(trial_id=4, env=env)
     # GPU 2 is the only free one, so must be used:
-    assert backend.trial_gpu[4] == 2
+    assert backend.trial_gpu[4] == [2]
     assert backend.gpu_times_assigned[2] == 2
     backend._deallocate_gpu(trial_id=0)
     backend._deallocate_gpu(trial_id=2)
     backend._allocate_gpu(trial_id=5, env=env)
     # Both GPUs 0, 2 are free, but 0 has less prior assignments:
-    assert backend.trial_gpu[5] == 0
+    assert backend.trial_gpu[5] == [0]
     assert backend.gpu_times_assigned[0] == 2
     backend._allocate_gpu(trial_id=6, env=env)
     # All GPUs are allocated. 1, 3 have less prior assignments:
     gpu = backend.trial_gpu[6]
+    assert len(gpu) == 1
+    gpu = gpu[0]
     assert gpu in {1, 3}
     assert backend.gpu_times_assigned[gpu] == 2
+
+
+def test_multi_gpu_allocation(caplog):
+    caplog.set_level(logging.INFO)
+    path_script = Path(__file__).parent / "main_checkpoint.py"
+    backend = temporary_local_backend(entry_point=path_script, num_gpus_per_trial=2)
+
+    backend._prepare_for_schedule(num_gpus=8)
+    env = dict()
+    for trial_id in range(4):
+        backend._allocate_gpu(trial_id=trial_id, env=env)
+    for trial_id in range(4):
+        gpus = [2 * trial_id, 2 * trial_id + 1]
+        assert backend.trial_gpu[trial_id] == gpus
+        assert all(backend.gpu_times_assigned[gpu] == 1 for gpu in gpus)
+    backend._deallocate_gpu(trial_id=2)
+    backend._allocate_gpu(trial_id=4, env=env)
+    # GPU 2 only free one, must have been used
+    assert backend.trial_gpu[4] == [4, 5]
+    assert backend.gpu_times_assigned[4] == 2
+    assert backend.gpu_times_assigned[5] == 2
+    backend._deallocate_gpu(trial_id=0)
+    backend._deallocate_gpu(trial_id=2)
+    backend._allocate_gpu(trial_id=5, env=env)
+    # Both GPUs 0, 2 are free, but 0 has less prior assignments:
+    assert backend.trial_gpu[5] == [0, 1]
+    assert backend.gpu_times_assigned[0] == 2
+    assert backend.gpu_times_assigned[1] == 2
+    backend._allocate_gpu(trial_id=6, env=env)
+    # All GPUs are allocated. 1, 3 have less prior assignments:
+    gpus = backend.trial_gpu[6]
+    assert gpus == [2, 3] or gpus == [6, 7]
+    assert all(backend.gpu_times_assigned[gpu] == 2 for gpu in gpus)
