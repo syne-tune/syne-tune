@@ -16,7 +16,10 @@ import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.optimizer.scheduler import TrialSuggestion, TrialScheduler
-from syne_tune.optimizer.schedulers.random_seeds import RandomSeedGenerator
+from syne_tune.optimizer.schedulers.random_seeds import (
+    RandomSeedGenerator,
+    generate_random_seed,
+)
 from syne_tune.backend.trial_status import Trial
 
 logger = logging.getLogger(__name__)
@@ -42,7 +45,7 @@ class TrialSchedulerWithSearcher(TrialScheduler):
         # Generator for random seeds
         random_seed = kwargs.get("random_seed")
         if random_seed is None:
-            random_seed = np.random.randint(0, 2**32)
+            random_seed = generate_random_seed()
         logger.info(f"Master random_seed = {random_seed}")
         self.random_seed_generator = RandomSeedGenerator(random_seed)
 

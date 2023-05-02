@@ -13,6 +13,7 @@
 from typing import Optional, List, Dict, Any, Union
 import logging
 
+from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
 from syne_tune.optimizer.schedulers.searchers.searcher import BaseSearcher
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import searcher_factory
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
@@ -52,7 +53,7 @@ _DEFAULT_OPTIONS = {
 }
 
 _CONSTRAINTS = {
-    "random_seed": Integer(0, 2**32 - 1),
+    "random_seed": Integer(0, RANDOM_SEED_UPPER_BOUND),
     "max_resource_attr": String(),
     "max_t": Integer(1, None),
 }
