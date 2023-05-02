@@ -1,0 +1,10 @@
+# conventional commit types: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.json
+types:
+  - feat
+  - fix
+  - docs
+  - refactor
+  - chore
+  - revert
+
+titleOnly: true
