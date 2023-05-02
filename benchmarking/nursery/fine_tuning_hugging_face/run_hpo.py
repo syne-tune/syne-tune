@@ -11,12 +11,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
+import matplotlib.pyplot as plt
 
 from sagemaker.huggingface import HuggingFace
 
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend, SageMakerBackend
-from syne_tune.config_space import randint, loguniform, uniform
+from syne_tune.config_space import loguniform, uniform
 from syne_tune.optimizer.baselines import BayesianOptimization
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
@@ -26,6 +27,7 @@ from syne_tune.experiments import load_experiment
 from syne_tune.constants import ST_TUNER_TIME
 
 logging.getLogger().setLevel(logging.INFO)
+
 
 config_space = {
     "learning_rate": loguniform(1e-6, 1e-4),
