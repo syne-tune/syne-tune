@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from typing import Optional, Dict, Any
 import logging
-import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 from syne_tune.optimizer.scheduler import TrialSuggestion, TrialScheduler
