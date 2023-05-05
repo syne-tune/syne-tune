@@ -24,7 +24,9 @@ def try_import_kde_message() -> str:
 
 
 def try_import_bore_message() -> str:
-    return _try_import_message("BORE searchers are not imported", tag="bore")
+    return _try_import_message(
+        "BORE searchers are not imported (not contained in extra)", tag="bore"
+    )
 
 
 def try_import_raytune_message() -> str:
@@ -44,7 +46,10 @@ def try_import_aws_message() -> str:
 
 
 def try_import_botorch_message() -> str:
-    return _try_import_message("BoTorch dependencies are not imported", tag="botorch")
+    return _try_import_message(
+        "BoTorch dependencies are not imported (needs Python 3.8 or later)",
+        tag="botorch",
+    )
 
 
 def try_import_blackbox_repository_message() -> str:
@@ -61,15 +66,21 @@ def try_import_yahpo_message() -> str:
     )
 
 
-def try_import_backends_message() -> str:
-    return _try_import_message(
-        "LocalBackend / PythonBackend are not imported", tag=None
-    )
-
-
 def try_import_moo_message() -> str:
     return _try_import_message(
         "Multi Objective Optimization dependencies are not imported", tag="moo"
+    )
+
+
+def try_import_visual_message() -> str:
+    return _try_import_message(
+        "Dependencies for visualization are not imported", tag="visual"
+    )
+
+
+def try_import_backends_message() -> str:
+    return _try_import_message(
+        "LocalBackend / PythonBackend are not imported", tag=None
     )
 
 
