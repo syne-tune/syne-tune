@@ -124,6 +124,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.warmstarting import (
     create_base_gp_kernel_for_warmstarting,
 )
 from syne_tune.optimizer.schedulers.searchers import extract_random_seed
+from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
+
 
 __all__ = [
     "gp_fifo_searcher_factory",
@@ -930,7 +932,7 @@ def _common_defaults(
         default_options["exponent_cost"] = 1.0
 
     constraints = {
-        "random_seed": Integer(0, 2**32 - 1),
+        "random_seed": Integer(0, RANDOM_SEED_UPPER_BOUND),
         "opt_skip_init_length": Integer(0, None),
         "opt_skip_period": Integer(1, None),
         "opt_maxiter": Integer(1, None),

@@ -15,6 +15,7 @@ import logging
 import numpy as np
 from dataclasses import dataclass
 
+from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
 from syne_tune.optimizer.schedulers.synchronous.dehb_bracket_manager import (
     DifferentialEvolutionHyperbandBracketManager,
 )
@@ -79,7 +80,7 @@ _DEFAULT_OPTIONS = {
 _CONSTRAINTS = {
     "metric": String(),
     "mode": Categorical(choices=("min", "max")),
-    "random_seed": Integer(0, 2**32 - 1),
+    "random_seed": Integer(0, RANDOM_SEED_UPPER_BOUND),
     "max_resource_attr": String(),
     "max_resource_level": Integer(1, None),
     "resource_attr": String(),
