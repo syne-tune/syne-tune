@@ -94,8 +94,9 @@ number of baseline HPO methods, and submit results along with your pull
 request.
 
 Once your benchmark is in there, it may be used by the community. If others
-find it useful, it can be graduated into :mod:`benchmarking.commons` and
-:mod:`benchmarking.training_scripts`.
+find it useful, it can be graduated into
+:mod:`benchmarking.commons.benchmark_definitions`,
+:mod:`benchmarking.training_scripts`, and :mod:`benchmarking.examples`.
 
 We are looking forward to your
 `pull request <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__.

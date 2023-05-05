@@ -279,15 +279,23 @@ def start_benchmark_simulated_backend(
             **kwargs,
         )
 
-        method_kwargs = dict(
-            fcnet_ordinal=configuration.fcnet_ordinal,
-            use_surrogates="lcbench" in benchmark_name,
-            max_resource_attr=max_resource_attr,
-        )
         blackbox = trial_backend.blackbox
         resource_attr = blackbox.fidelity_name()
         config_space = blackbox.configuration_space_with_max_resource_attr(
             max_resource_attr
+        )
+        method_kwargs = dict(
+            config_space=config_space,
+            metric=benchmark.metric,
+            mode=benchmark.mode,
+            random_seed=random_seed,
+            resource_attr=resource_attr,
+            max_resource_attr=max_resource_attr,
+            use_surrogates="lcbench" in benchmark_name,
+            fcnet_ordinal=configuration.fcnet_ordinal,
+            scheduler_kwargs=dict(
+                points_to_evaluate=benchmark.points_to_evaluate,
+            ),
         )
         if use_transfer_learning:
             method_kwargs["transfer_learning_evaluations"] = (
@@ -297,28 +305,14 @@ def start_benchmark_simulated_backend(
                     datasets=benchmark.datasets,
                 ),
             )
-        search_options = dict()
+        search_options = dict(debug_log=configuration.verbose)
         if configuration.restrict_configurations:
-            search_options[
-                "restrict_configurations"
-            ] = trial_backend.blackbox.all_configurations()
+            search_options["restrict_configurations"] = blackbox.all_configurations()
         if configuration.max_size_data_for_model is not None:
             search_options[
                 "max_size_data_for_model"
             ] = configuration.max_size_data_for_model
-        if search_options:
-            method_kwargs["scheduler_kwargs"] = {"search_options": search_options}
-
-        method_kwargs.update(
-            dict(
-                config_space=config_space,
-                metric=benchmark.metric,
-                mode=benchmark.mode,
-                random_seed=random_seed,
-                resource_attr=resource_attr,
-                verbose=configuration.verbose,
-            )
-        )
+        method_kwargs["scheduler_kwargs"]["search_options"] = search_options
         if map_method_args is not None:
             method_kwargs = map_method_args(configuration, method, method_kwargs)
         scheduler = methods[method](MethodArguments(**method_kwargs))

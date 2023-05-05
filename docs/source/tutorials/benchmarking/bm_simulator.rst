@@ -14,7 +14,7 @@ Defining the Experiment
 
 As usual in Syne Tune, the experiment is defined by a number of scripts. We
 will look at an example in
-`benchmarking/nursery/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`__.
+`benchmarking/examples/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`__.
 Common code used in these benchmarks can be found in :mod:`benchmarking.commons`.
 
 * Local launcher: :mod:`benchmarking.commons.hpo_main_simulator`
@@ -23,7 +23,7 @@ Common code used in these benchmarks can be found in :mod:`benchmarking.commons`
 
 Let us look at the scripts in order, and how you can adapt them to your needs:
 
-* `benchmarking/nursery/benchmark_hypertune/baselines.py <../../benchmarking/benchmark_hypertune.html#id1>`__:
+* `benchmarking/examples/benchmark_hypertune/baselines.py <../../benchmarking/benchmark_hypertune.html#id1>`__:
   Defines the HPO methods to take part in the experiment, in the form of a
   dictionary ``methods`` which maps method names to factory functions, which in
   turn map :class:`~benchmarking.commons.baselines.MethodArguments` to scheduler
@@ -38,7 +38,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   need to create different entries in ``methods``, for example
   ``Methods.MOBSTER_JOINT`` and ``Methods.MOBSTER_INDEP`` are different variants
   of MOBSTER.
-* `benchmarking/nursery/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`__:
+* `benchmarking/examples/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`__:
   Defines the benchmarks to be considered in this experiment, in the form of a
   dictionary ``benchmark_definitions`` with values of type
   :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
@@ -47,7 +47,7 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   parameters, for example ``surrogate`` and ``surrogate_kwargs`` in order to
   select a different surrogate model, or you can change the defaults for
   ``n_workers`` or ``max_wallclock_time``.
-* `benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__:
+* `benchmarking/examples/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__:
   Script for launching experiments locally. All you typically need to do here
   is to import :mod:`benchmarking.commons.hpo_main_simulator` and (optionally)
   to add additional command line arguments you would like to parameterize your
@@ -61,18 +61,18 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   ``methods`` and ``benchmark_definitions`` dictionaries, and (optionally) with
   ``extra_args`` and ``map_method_args``. We will see shortly how the launcher
   is called, and what happens inside.
-* `benchmarking/nursery/benchmark_hypertune/launch_remote.py <../../benchmarking/benchmark_hypertune.html#id4>`__:
+* `benchmarking/examples/benchmark_hypertune/launch_remote.py <../../benchmarking/benchmark_hypertune.html#id4>`__:
   Script for launching experiments remotely, in that each experiment runs as its
   own SageMaker training job, in parallel with other experiments. You need to
   import :mod:`benchmarking.commons.launch_remote_simulator` and pass the same
   ``methods``, ``benchmark_definitions``, ``extra_args`` as
-  in :mod:`benchmarking.nursery.benchmark_hypertune.hpo_main`. On top of that,
+  in :mod:`benchmarking.examples.benchmark_hypertune.hpo_main`. On top of that,
   you can pass an indicator function ``is_expensive_method`` to tag the HPO
   methods which are themselves expensive to run. As detailed below, our script
   runs different seeds (repetitions) in parallel for expensive methods, but
   sequentially for cheap ones. We will see shortly how the launcher is called,
   and what happens inside.
-* `benchmarking/nursery/benchmark_hypertune/requirements.txt <../../benchmarking/benchmark_hypertune.html#id5>`__:
+* `benchmarking/examples/benchmark_hypertune/requirements.txt <../../benchmarking/benchmark_hypertune.html#id5>`__:
   Dependencies for ``hpo_main.py`` to be run remotely as SageMaker training job,
   in the context of launching experiments remotely. In particular, this needs
   the dependencies of Syne Tune itself. A safe bet here is ``syne-tune[extra]``
@@ -109,7 +109,7 @@ by ``map_method_args`` (the modified dictionary is returned). ``args`` is the
 result of command line parsing, and ``method`` is the name of the method to
 be constructed based on these arguments. The latter argument allows
 ``map_method_args`` to depend on the method. In our example
-`benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__,
+`benchmarking/examples/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__,
 ``num_brackets`` applies to all methods, while ``num_samples`` only applies
 to the variants of Hyper-Tune. Both arguments modify the dictionary
 ``scheduler_kwargs`` in :class:`~benchmarking.commons.baselines.MethodArguments`,
@@ -148,7 +148,7 @@ mechanism by passing a :class:`~syne_tune.results_callback.ExtraResultsComposer`
 object as ``extra_results`` to ``main``. This object extracts extra information
 and returns it as dictionary, which is appended to the results dataframe. A
 complete example is
-``benchmarking/nursery/benchmark_dyhpo <../../benchmarking/benchmark_dyhpo.html>`__.
+``benchmarking/examples/benchmark_dyhpo <../../benchmarking/benchmark_dyhpo.html>`__.
 
 Launching Experiments Locally
 -----------------------------
@@ -157,7 +157,7 @@ Here is an example of how simulated experiments are launched locally:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/benchmark_hypertune/hpo_main.py \
+   python benchmarking/examples/benchmark_hypertune/hpo_main.py \
      --experiment_tag tutorial-simulated --benchmark nas201-cifar100 \
      --method ASHA --num_seeds 10
 
@@ -223,7 +223,7 @@ using a number of SageMaker training jobs. Here is an example:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/benchmark_hypertune/launch_remote.py \
+   python benchmarking/examples/benchmark_hypertune/launch_remote.py \
      --experiment_tag tutorial-simulated --benchmark nas201-cifar100 \
      --num_seeds 10
 

@@ -28,17 +28,40 @@ from benchmarking.commons.benchmark_definitions.distilbert_on_imdb import (
 from benchmarking.commons.benchmark_definitions.transformer_wikitext2 import (
     transformer_wikitext2_benchmark,
 )
+from benchmarking.commons.benchmark_definitions.finetune_transformer_glue import (
+    finetune_transformer_glue_all_benchmarks,
+)
+from benchmarking.commons.benchmark_definitions.finetune_transformer_swag import (
+    finetune_transformer_swag_benchmark,
+)
 
 
 def real_benchmark_definitions(
     sagemaker_backend: bool = False, **kwargs
 ) -> Dict[str, RealBenchmarkDefinition]:
-    return {
-        "resnet_cifar10": resnet_cifar10_benchmark(sagemaker_backend, **kwargs),
-        "lstm_wikitext2": lstm_wikitext2_benchmark(sagemaker_backend, **kwargs),
-        "mlp_fashionmnist": mlp_fashionmnist_benchmark(sagemaker_backend, **kwargs),
-        "distilbert_imdb": distilbert_imdb_benchmark(sagemaker_backend, **kwargs),
+    result = {
+        "resnet_cifar10": resnet_cifar10_benchmark(
+            sagemaker_backend=sagemaker_backend, **kwargs
+        ),
+        "lstm_wikitext2": lstm_wikitext2_benchmark(
+            sagemaker_backend=sagemaker_backend, **kwargs
+        ),
+        "mlp_fashionmnist": mlp_fashionmnist_benchmark(
+            sagemaker_backend=sagemaker_backend, **kwargs
+        ),
+        "distilbert_imdb": distilbert_imdb_benchmark(
+            sagemaker_backend=sagemaker_backend, **kwargs
+        ),
         "transformer_wikitext2": transformer_wikitext2_benchmark(
-            sagemaker_backend, **kwargs
+            sagemaker_backend=sagemaker_backend, **kwargs
+        ),
+        "finetune_transformer_swag": finetune_transformer_swag_benchmark(
+            sagemaker_backend=sagemaker_backend, **kwargs
         ),
     }
+    result.update(
+        finetune_transformer_glue_all_benchmarks(
+            sagemaker_backend=sagemaker_backend, **kwargs
+        )
+    )
+    return result

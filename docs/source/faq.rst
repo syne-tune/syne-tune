@@ -530,11 +530,11 @@ in parallel, as detailed in
 `this tutorial <tutorials/benchmarking/README.html>`__, see also these examples:
 
 * Local backend:
-  `benchmarking/nursery/launch_local/ <benchmarking/launch_local.html>`__
+  `benchmarking/examples/launch_local/ <benchmarking/launch_local.html>`__
 * Simulator backend:
-  `benchmarking/nursery/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
+  `benchmarking/examples/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
 * SageMaker backend:
-  `benchmarking/nursery/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
+  `benchmarking/examples/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
 
 .. note::
    In order to use the *benchmarking* framework, you need to have
@@ -578,15 +578,15 @@ The most flexible way to do so is to write a custom launcher script, as detailed
 in `this tutorial <tutorials/benchmarking/README.html>`__, see also these examples:
 
 * Local backend:
-  `benchmarking/nursery/launch_local/ <benchmarking/launch_local.html>`__
+  `benchmarking/examples/launch_local/ <benchmarking/launch_local.html>`__
 * Simulator backend:
-  `benchmarking/nursery/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
+  `benchmarking/examples/benchmark_dehb/ <benchmarking/benchmark_dehb.html>`__
 * SageMaker backend:
-  `benchmarking/nursery/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
+  `benchmarking/examples/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
 * Fine-tuning transformers:
-  `benchmarking/nursery/fine_tuning_transformer_glue/ <benchmarking/fine_tuning_transformer_glue.html>`__
+  `benchmarking/examples/fine_tuning_transformer_glue/ <benchmarking/fine_tuning_transformer_glue.html>`__
 * Hyper-Tune:
-  `benchmarking/nursery/benchmark_hypertune/ <benchmarking/benchmark_hypertune.html>`__
+  `benchmarking/examples/benchmark_hypertune/ <benchmarking/benchmark_hypertune.html>`__
 
 .. note::
    In order to use the *benchmarking* framework, you need to have

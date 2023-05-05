@@ -13,23 +13,21 @@
 from pathlib import Path
 
 from benchmarking.commons.launch_remote_simulator import launch_remote
-from benchmarking.nursery.benchmark_dyhpo.benchmark_definitions import (
+from benchmarking.examples.benchmark_warping.benchmark_definitions import (
     benchmark_definitions,
 )
-from benchmarking.nursery.benchmark_dyhpo.baselines import methods
-from benchmarking.nursery.benchmark_dyhpo.hpo_main import extra_args
+from benchmarking.examples.benchmark_warping.baselines import methods
 
 
 if __name__ == "__main__":
 
     def _is_expensive_method(method: str) -> bool:
-        return method not in ["RS", "BO", "ASHA"]
+        return method.startswith("MOBSTER") or method.startswith("BO")
 
     entry_point = Path(__file__).parent / "hpo_main.py"
     launch_remote(
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
-        extra_args=extra_args,
         is_expensive_method=_is_expensive_method,
     )

@@ -13,7 +13,6 @@
 from typing import Dict, Any
 
 from benchmarking.commons.baselines import (
-    search_options,
     default_arguments,
     MethodArguments,
     convert_categorical_to_ordinal_numeric,
@@ -49,10 +48,7 @@ def _baseline_kwargs(
     config_space = convert_categorical_to_ordinal_numeric(
         method_arguments.config_space, kind=method_arguments.fcnet_ordinal
     )
-    da_input = dict(
-        config_space=config_space,
-        search_options=search_options(method_arguments),
-    )
+    da_input = dict(config_space=config_space)
     if is_multifid:
         da_input["resource_attr"] = method_arguments.resource_attr
     result = recursive_merge(

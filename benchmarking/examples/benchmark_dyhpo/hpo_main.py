@@ -13,8 +13,8 @@
 from typing import Dict, Any, Optional, List
 
 from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.nursery.benchmark_dyhpo.baselines import methods
-from benchmarking.nursery.benchmark_dyhpo.benchmark_definitions import (
+from benchmarking.examples.benchmark_dyhpo.baselines import methods
+from benchmarking.examples.benchmark_dyhpo.benchmark_definitions import (
     benchmark_definitions,
 )
 from syne_tune import Tuner

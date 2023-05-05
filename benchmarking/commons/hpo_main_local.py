@@ -131,26 +131,23 @@ def create_objects_for_tuner(
     map_method_args: Optional[MapMethodArgsType] = None,
     extra_results: Optional[ExtraResultsComposer] = None,
 ) -> Dict[str, Any]:
-
-    method_kwargs = {"max_resource_attr": benchmark.max_resource_attr}
-    if configuration.max_size_data_for_model is not None:
-        method_kwargs["scheduler_kwargs"] = {
-            "search_options": {
-                "max_size_data_for_model": configuration.max_size_data_for_model
-            },
-        }
-
-    method_kwargs.update(
-        dict(
-            config_space=benchmark.config_space,
-            metric=benchmark.metric,
-            mode=benchmark.mode,
-            random_seed=effective_random_seed(master_random_seed, seed),
-            resource_attr=benchmark.resource_attr,
-            verbose=verbose,
-            num_gpus_per_trial=configuration.num_gpus_per_trial,
-        )
+    method_kwargs = dict(
+        config_space=benchmark.config_space,
+        metric=benchmark.metric,
+        mode=benchmark.mode,
+        random_seed=effective_random_seed(master_random_seed, seed),
+        resource_attr=benchmark.resource_attr,
+        max_resource_attr=benchmark.max_resource_attr,
+        num_gpus_per_trial=configuration.num_gpus_per_trial,
+        scheduler_kwargs=dict(
+            points_to_evaluate=benchmark.points_to_evaluate,
+            search_options=dict(debug_log=verbose),
+        ),
     )
+    if configuration.max_size_data_for_model is not None:
+        method_kwargs["scheduler_kwargs"]["search_options"][
+            "max_size_data_for_model"
+        ] = configuration.max_size_data_for_model
     if map_method_args is not None:
         method_kwargs = map_method_args(configuration, method, method_kwargs)
     scheduler = methods[method](MethodArguments(**method_kwargs))
