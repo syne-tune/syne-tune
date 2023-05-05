@@ -31,6 +31,24 @@ from pymoo.core.mixed import (
 )
 from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.core.problem import ElementwiseProblem
+from pymoo.core.variable import Real, Choice, Binary
+from pymoo.core.variable import Integer as PyMOOInteger
+
+
+class MultiObjectiveMixedVariableProblem(ElementwiseProblem):
+
+    def __init__(self, n_obj, config_space, **kwargs):
+        vars = {}
+
+        for hp in config_space:
+            if isinstance(hp, Categorical):
+                vars[hp] = Choice(options=config_space[hp].categories)
+            elif isinstance(hp, Integer):
+                vars[hp] = PyMOOInteger(bounds=(config_space[hp].lower, config_space[hp].upper))
+            elif isinstance(hp, Float):
+                vars[hp] = Real(bounds=(config_space[hp].lower, config_space[hp].upper))
+
+        super().__init__(vars=vars, n_obj=n_obj, n_ieq_constr=0, **kwargs)
 
 
 class NSGA2(StochasticSearcher):
@@ -45,13 +63,13 @@ class NSGA2(StochasticSearcher):
     """
 
     def __init__(
-        self,
-        config_space,
-        metric: List[str],
-        mode: Union[List[str], str],
-        points_to_evaluate: Optional[List[dict]] = None,
-        pop_size: int = 100,
-        **kwargs,
+            self,
+            config_space,
+            metric: List[str],
+            mode: Union[List[str], str],
+            points_to_evaluate: Optional[List[dict]] = None,
+            pop_size: int = 100,
+            **kwargs,
     ):
         super(NSGA2, self).__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
@@ -64,20 +82,33 @@ class NSGA2(StochasticSearcher):
         xl = []
         xu = []
         self.hp_names = []
-        sampler = FloatRandomSampling()
+        is_mixed_variable = False
         for hp_name, hp in config_space.items():
             if isinstance(hp, Domain):
-                if isinstance(hp, Categorical):
-                    sampler = MixedVariableSampling()
-                    raise Exception("NSGA2 does not support categorical parameters")
-                else:
+                self.hp_names.append(hp_name)
+                if isinstance(hp, Categorical) or isinstance(hp, Integer):
+                    is_mixed_variable = True
+                elif isinstance(hp, Float):
                     xl.append(hp.lower)
                     xu.append(hp.upper)
-                    self.hp_names.append(hp_name)
 
-        self.problem = Problem(n_obj=len(metric), n_var=len(xl), xl=xl, xu=xu)
-        self.algorithm = PYMOONSGA2(pop_size=pop_size, sampling=F)
-        self.algorithm.setup(problem=self.problem)
+                else:
+                    raise Exception(f'Type {type(hp)} for hyperparameter {hp_name} '
+                                    f'is not support for NSGA-2.')
+
+        if is_mixed_variable:
+            self.problem = MultiObjectiveMixedVariableProblem(config_space=config_space,
+                                                              n_var=len(self.hp_names), n_obj=len(metric))
+            self.algorithm = PYMOONSGA2(pop_size=pop_size,
+                                        sampling=MixedVariableSampling(),
+                                        mating=MixedVariableMating(
+                                            eliminate_duplicates=MixedVariableDuplicateElimination()),
+                                        eliminate_duplicates=MixedVariableDuplicateElimination(),
+                                        )
+        else:
+            self.problem = Problem(n_obj=len(metric), n_var=len(xl), xl=xl, xu=xu)
+            self.algorithm = PYMOONSGA2(pop_size=pop_size)
+        self.algorithm.setup(problem=self.problem, verbose=True)
 
         self.current_population = self.algorithm.ask()
         self.current_individual = 0
@@ -130,7 +161,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from syne_tune.config_space import uniform, randint, choice
 
-    config_space = {"x0": uniform(0, 1), "x1": uniform(0, 1), "x2": randint(1, 100)}
+    # config_space = {"x0": uniform(0, 1), "x1": uniform(0, 1), "x2": randint(1, 100)}
+    config_space = {"x0": uniform(0, 1), "x1": uniform(0, 1)}
     pop_size = 50
     method = NSGA2(
         config_space, metric=["f0", "f1"], mode=["min", "min"], pop_size=pop_size
