@@ -36,7 +36,6 @@ from pymoo.core.variable import Integer as PyMOOInteger
 
 
 class MultiObjectiveMixedVariableProblem(ElementwiseProblem):
-
     def __init__(self, n_obj, config_space, **kwargs):
         vars = {}
 
@@ -44,7 +43,9 @@ class MultiObjectiveMixedVariableProblem(ElementwiseProblem):
             if isinstance(hp, Categorical):
                 vars[hp] = Choice(options=config_space[hp].categories)
             elif isinstance(hp, Integer):
-                vars[hp] = PyMOOInteger(bounds=(config_space[hp].lower, config_space[hp].upper))
+                vars[hp] = PyMOOInteger(
+                    bounds=(config_space[hp].lower, config_space[hp].upper)
+                )
             elif isinstance(hp, Float):
                 vars[hp] = Real(bounds=(config_space[hp].lower, config_space[hp].upper))
 
@@ -63,13 +64,13 @@ class NSGA2(StochasticSearcher):
     """
 
     def __init__(
-            self,
-            config_space,
-            metric: List[str],
-            mode: Union[List[str], str],
-            points_to_evaluate: Optional[List[dict]] = None,
-            pop_size: int = 100,
-            **kwargs,
+        self,
+        config_space,
+        metric: List[str],
+        mode: Union[List[str], str],
+        points_to_evaluate: Optional[List[dict]] = None,
+        pop_size: int = 100,
+        **kwargs,
     ):
         super(NSGA2, self).__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
@@ -93,18 +94,23 @@ class NSGA2(StochasticSearcher):
                     xu.append(hp.upper)
 
                 else:
-                    raise Exception(f'Type {type(hp)} for hyperparameter {hp_name} '
-                                    f'is not support for NSGA-2.')
+                    raise Exception(
+                        f"Type {type(hp)} for hyperparameter {hp_name} "
+                        f"is not support for NSGA-2."
+                    )
 
         if is_mixed_variable:
-            self.problem = MultiObjectiveMixedVariableProblem(config_space=config_space,
-                                                              n_var=len(self.hp_names), n_obj=len(metric))
-            self.algorithm = PYMOONSGA2(pop_size=pop_size,
-                                        sampling=MixedVariableSampling(),
-                                        mating=MixedVariableMating(
-                                            eliminate_duplicates=MixedVariableDuplicateElimination()),
-                                        eliminate_duplicates=MixedVariableDuplicateElimination(),
-                                        )
+            self.problem = MultiObjectiveMixedVariableProblem(
+                config_space=config_space, n_var=len(self.hp_names), n_obj=len(metric)
+            )
+            self.algorithm = PYMOONSGA2(
+                pop_size=pop_size,
+                sampling=MixedVariableSampling(),
+                mating=MixedVariableMating(
+                    eliminate_duplicates=MixedVariableDuplicateElimination()
+                ),
+                eliminate_duplicates=MixedVariableDuplicateElimination(),
+            )
         else:
             self.problem = Problem(n_obj=len(metric), n_var=len(xl), xl=xl, xu=xu)
             self.algorithm = PYMOONSGA2(pop_size=pop_size)
