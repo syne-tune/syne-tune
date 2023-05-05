@@ -120,3 +120,8 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       script-path: examples/launch_height_extra_results.py
+
+  example_automatic_termination_criterion:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/example_automatic_termination_criterion.py
