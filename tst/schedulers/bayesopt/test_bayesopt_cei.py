@@ -30,11 +30,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
     CEIAcquisitionFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    GaussProcSurrogateModel,
-    GaussProcEmpiricalBayesModelFactory,
+    GaussProcPredictor,
+    GaussProcEmpiricalBayesEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model import (
-    GaussProcMCMCModelFactory,
+    GaussProcMCMCEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     LBFGSOptimizeAcquisition,
@@ -58,24 +58,22 @@ def _construct_models(X, Y, metric, hp_ranges, do_mcmc, with_pending):
     gpmodel = default_gpmodel(
         state, random_seed=random_seed, optimization_config=DEFAULT_OPTIMIZATION_CONFIG
     )
-    model_factory = GaussProcEmpiricalBayesModelFactory(
+    estimator = GaussProcEmpiricalBayesEstimator(
         active_metric=metric, gpmodel=gpmodel, num_fantasy_samples=2
     )
-    result = [model_factory.model(state, fit_params=True)]
+    result = [estimator.fit_from_state(state, update_params=True)]
     if do_mcmc:
         gpmodel_mcmc = default_gpmodel_mcmc(
             state, random_seed=random_seed, mcmc_config=DEFAULT_MCMC_CONFIG
         )
-        model_factory = GaussProcMCMCModelFactory(
-            active_metric=metric, gpmodel=gpmodel_mcmc
-        )
-        result.append(model_factory.model(state, fit_params=True))
+        estimator = GaussProcMCMCEstimator(active_metric=metric, gpmodel=gpmodel_mcmc)
+        result.append(estimator.fit_from_state(state, update_params=True))
     return result
 
 
 def default_models(
     metric, do_mcmc=True, with_pending=False
-) -> List[GaussProcSurrogateModel]:
+) -> List[GaussProcPredictor]:
     config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
@@ -113,7 +111,7 @@ def _build_models_with_and_without_feasible_candidates(do_mcmc, with_pending):
 
 def default_models_all_infeasible(
     metric, do_mcmc=True, with_pending=False
-) -> List[GaussProcSurrogateModel]:
+) -> List[GaussProcPredictor]:
     config_space = {"x": uniform(0.0, 1.0), "y": uniform(0.0, 1.0)}
     hp_ranges = make_hyperparameter_ranges(config_space)
     X = [

@@ -29,11 +29,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants impo
     DEFAULT_OPTIMIZATION_CONFIG,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    GaussProcEmpiricalBayesModelFactory,
-    GaussProcSurrogateModel,
+    GaussProcEmpiricalBayesEstimator,
+    GaussProcPredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_mcmc_model import (
-    GaussProcMCMCModelFactory,
+    GaussProcMCMCEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
@@ -77,13 +77,13 @@ def _make_model_gp_optimize(
     fit_params=True,
 ):
     gpmodel = default_gpmodel(state, random_seed, optimization_config=opt_config)
-    model_factory = GaussProcEmpiricalBayesModelFactory(
+    estimator = GaussProcEmpiricalBayesEstimator(
         active_metric=INTERNAL_METRIC_NAME,
         gpmodel=gpmodel,
         num_fantasy_samples=num_fantasy_samples,
         normalize_targets=normalize_targets,
     )
-    model = model_factory.model(state, fit_params=fit_params)
+    model = estimator.fit_from_state(state, update_params=fit_params)
     return model, gpmodel
 
 
@@ -91,10 +91,10 @@ def _make_model_mcmc(
     state: TuningJobState, random_seed, mcmc_config=DEFAULT_MCMC_CONFIG, fit_params=True
 ):
     gpmodel = default_gpmodel_mcmc(state, random_seed, mcmc_config=mcmc_config)
-    model_factory = GaussProcMCMCModelFactory(
+    estimator = GaussProcMCMCEstimator(
         active_metric=INTERNAL_METRIC_NAME, gpmodel=gpmodel
     )
-    model = model_factory.model(state, fit_params=fit_params)
+    model = estimator.fit_from_state(state, update_params=fit_params)
     return model, gpmodel
 
 
@@ -252,13 +252,13 @@ def test_gp_fantasizing():
             hp_ranges=hp_ranges, cand_tuples=X_full, metrics=Y_full
         )
         # We have to skip parameter optimization here
-        model_factory = GaussProcEmpiricalBayesModelFactory(
+        estimator = GaussProcEmpiricalBayesEstimator(
             active_metric=INTERNAL_METRIC_NAME,
             gpmodel=gpmodel,
             num_fantasy_samples=num_fantasy_samples,
             normalize_targets=False,
         )
-        model2 = model_factory.model(state2, fit_params=False)
+        model2 = estimator.fit_from_state(state2, update_params=False)
         acq_func2 = EIAcquisitionFunction(model2)
         fvals_, grads_ = _compute_acq_with_gradient_many(acq_func2, X_test_enc)
         fvals_cmp[it, :] = fvals_
@@ -270,7 +270,7 @@ def test_gp_fantasizing():
     assert np.allclose(grads, grads2)
 
 
-def default_models() -> List[GaussProcSurrogateModel]:
+def default_models() -> List[GaussProcPredictor]:
     hp_ranges = _simple_hp_ranges()
     X = [
         (0.0, 0.0),

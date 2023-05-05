@@ -75,13 +75,13 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt impo
     SkipPeriodicallyPredicate,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    GaussProcEmpiricalBayesModelFactory,
+    GaussProcEmpiricalBayesEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model import (
-    GaussProcAdditiveModelFactory,
+    GaussProcAdditiveEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost_fifo_model import (
-    CostSurrogateModelFactory,
+    CostEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
@@ -211,7 +211,7 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
     }
 
 
-def _create_gp_model_factory(
+def _create_gp_estimator(
     gpmodel,
     result: Dict[str, Any],
     hp_ranges_for_prediction: Optional[HyperparameterRanges],
@@ -219,7 +219,7 @@ def _create_gp_model_factory(
     **kwargs,
 ):
     filter_observed_data = result["filter_observed_data"]
-    model_factory = GaussProcEmpiricalBayesModelFactory(
+    estimator = GaussProcEmpiricalBayesEstimator(
         active_metric=active_metric,
         gpmodel=gpmodel,
         num_fantasy_samples=kwargs["num_fantasy_samples"],
@@ -230,7 +230,7 @@ def _create_gp_model_factory(
         hp_ranges_for_prediction=hp_ranges_for_prediction,
     )
     return {
-        "model_factory": model_factory,
+        "estimator": estimator,
         "filter_observed_data": filter_observed_data,
     }
 
@@ -276,7 +276,7 @@ def _create_gp_standard_model(
     else:
         gpmodel = GaussianProcessRegression(**common_kwargs)
         hp_ranges_for_prediction = None
-    return _create_gp_model_factory(
+    return _create_gp_estimator(
         gpmodel=gpmodel,
         result=result,
         hp_ranges_for_prediction=hp_ranges_for_prediction,
@@ -321,7 +321,7 @@ def _create_gp_independent_model(
     else:
         gpmodel = IndependentGPPerResourceModel(**common_kwargs)
         hp_ranges_for_prediction = None
-    return _create_gp_model_factory(
+    return _create_gp_estimator(
         gpmodel=gpmodel,
         result=result,
         hp_ranges_for_prediction=hp_ranges_for_prediction,
@@ -361,7 +361,7 @@ def _create_gp_additive_model(
     filter_observed_data = result["filter_observed_data"]
     no_fantasizing = kwargs.get("no_fantasizing", False)
     num_fantasy_samples = 0 if no_fantasizing else kwargs["num_fantasy_samples"]
-    model_factory = GaussProcAdditiveModelFactory(
+    estimator = GaussProcAdditiveEstimator(
         gpmodel=gpmodel,
         num_fantasy_samples=num_fantasy_samples,
         active_metric=active_metric,
@@ -371,7 +371,7 @@ def _create_gp_additive_model(
         normalize_targets=kwargs.get("normalize_targets", True),
     )
     return {
-        "model_factory": model_factory,
+        "estimator": estimator,
         "filter_observed_data": filter_observed_data,
     }
 
@@ -656,26 +656,26 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for constraint metric (model_factory_constraint)
+    # We need two model factories: one for active metric (estimator),
+    # the other for constraint metric (estimator_constraint)
     random_seed, _kwargs = extract_random_seed(**kwargs)
-    model_factory_constraint = _create_gp_standard_model(
+    estimator_constraint = _create_gp_standard_model(
         hp_ranges=result["hp_ranges"],
         active_metric=INTERNAL_CONSTRAINT_NAME,
         random_seed=random_seed,
         is_hyperband=False,
         **_kwargs,
-    )["model_factory"]
+    )["estimator"]
     # Sharing debug_log attribute across models
-    model_factory_constraint._debug_log = model_factory._debug_log
+    estimator_constraint._debug_log = estimator._debug_log
     # The same skip_optimization strategy applies to both models
     skip_optimization_constraint = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_CONSTRAINT_NAME: model_factory_constraint,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_CONSTRAINT_NAME: estimator_constraint,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -684,7 +684,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 
     return dict(
         result,
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         acquisition_class=CEIAcquisitionFunction,
     )
@@ -710,28 +710,28 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for cost metric (model_factory_cost)
+    # We need two model factories: one for active metric (estimator),
+    # the other for cost metric (estimator_cost)
     random_seed, _kwargs = extract_random_seed(**kwargs)
-    model_factory_cost = _create_gp_standard_model(
+    estimator_cost = _create_gp_standard_model(
         hp_ranges=result["hp_ranges"],
         active_metric=INTERNAL_COST_NAME,
         random_seed=random_seed,
         is_hyperband=False,
         **_kwargs,
-    )["model_factory"]
+    )["estimator"]
     # Sharing debug_log attribute across models
-    model_factory_cost._debug_log = model_factory._debug_log
+    estimator_cost._debug_log = estimator._debug_log
     exponent_cost = kwargs.get("exponent_cost", 1.0)
     acquisition_class = (EIpuAcquisitionFunction, dict(exponent_cost=exponent_cost))
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_COST_NAME: model_factory_cost,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_COST_NAME: estimator_cost,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -740,7 +740,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 
     return dict(
         result,
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         acquisition_class=acquisition_class,
     )
@@ -780,11 +780,11 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for cost metric (model_factory_cost)
-    model_factory_cost = CostSurrogateModelFactory(
+    # We need two model factories: one for active metric (estimator),
+    # the other for cost metric (estimator_cost)
+    estimator_cost = CostEstimator(
         model=kwargs["cost_model"], fixed_resource=fixed_resource, num_samples=1
     )
     exponent_cost = kwargs.get("exponent_cost", 1.0)
@@ -792,9 +792,9 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_COST_NAME: model_factory_cost,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_COST_NAME: estimator_cost,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -803,7 +803,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 
     return dict(
         result,
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         acquisition_class=acquisition_class,
         resource_attr=kwargs["resource_attr"],
@@ -838,11 +838,11 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for cost metric (model_factory_cost)
-    model_factory_cost = CostSurrogateModelFactory(
+    # We need two model factories: one for active metric (estimator),
+    # the other for cost metric (estimator_cost)
+    estimator_cost = CostEstimator(
         model=kwargs["cost_model"], fixed_resource=kwargs["max_epochs"], num_samples=1
     )
     exponent_cost = kwargs.get("exponent_cost", 1.0)
@@ -850,9 +850,9 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_COST_NAME: model_factory_cost,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_COST_NAME: estimator_cost,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -865,7 +865,7 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     return dict(
         result,
         resource_attr=kwargs["resource_attr"],
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         resource_for_acquisition=resource_for_acquisition,
         acquisition_class=acquisition_class,

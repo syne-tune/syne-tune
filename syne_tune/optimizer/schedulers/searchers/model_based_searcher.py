@@ -35,15 +35,17 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt impo
     AlwaysSkipPredicate,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
-    TransformerOutputModelFactory,
     ModelStateTransformer,
     StateForModelConverter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
+    OutputEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     AcquisitionClassAndArgs,
     LocalOptimizer,
     ScoringFunction,
-    SurrogateOutputModel,
+    OutputPredictor,
     unwrap_acquisition_class_and_kwargs,
     CandidateGenerator,
 )
@@ -114,7 +116,7 @@ class ModelBasedSearcher(StochasticSearcher):
     def _create_internal(
         self,
         hp_ranges: HyperparameterRanges,
-        model_factory: TransformerOutputModelFactory,
+        estimator: OutputEstimator,
         acquisition_class: AcquisitionClassAndArgs,
         map_reward: Optional[MapReward] = None,
         init_state: TuningJobState = None,
@@ -154,11 +156,11 @@ class ModelBasedSearcher(StochasticSearcher):
                 else local_minimizer_class
             )
         self.acquisition_class = acquisition_class
-        if isinstance(model_factory, dict):
-            model_factory_main = model_factory[INTERNAL_METRIC_NAME]
+        if isinstance(estimator, dict):
+            estimator_main = estimator[INTERNAL_METRIC_NAME]
         else:
-            model_factory_main = model_factory
-        self._debug_log = model_factory_main.debug_log
+            estimator_main = estimator
+        self._debug_log = estimator_main.debug_log
         self.initial_scoring = check_initial_candidates_scorer(initial_scoring)
         self.skip_local_optimization = skip_local_optimization
         # Create state transformer
@@ -170,7 +172,7 @@ class ModelBasedSearcher(StochasticSearcher):
         if init_state is None:
             init_state = TuningJobState.empty_state(self._hp_ranges_in_state())
         self.state_transformer = ModelStateTransformer(
-            model_factory=model_factory,
+            estimator=estimator,
             init_state=init_state,
             skip_optimization=skip_optimization,
             state_converter=state_converter,
@@ -483,22 +485,22 @@ class ModelBasedSearcher(StochasticSearcher):
 
 def create_initial_candidates_scorer(
     initial_scoring: str,
-    model: SurrogateOutputModel,
+    predictor: OutputPredictor,
     acquisition_class: AcquisitionClassAndArgs,
     random_state: np.random.RandomState,
     active_metric: str = INTERNAL_METRIC_NAME,
 ) -> ScoringFunction:
     if initial_scoring == "thompson_indep":
-        if isinstance(model, dict):
-            assert active_metric in model
-            model = model[active_metric]
-        return IndependentThompsonSampling(model, random_state=random_state)
+        if isinstance(predictor, dict):
+            assert active_metric in predictor
+            predictor = predictor[active_metric]
+        return IndependentThompsonSampling(predictor, random_state=random_state)
     else:
         acquisition_class, acquisition_kwargs = unwrap_acquisition_class_and_kwargs(
             acquisition_class
         )
         return acquisition_class(
-            model, active_metric=active_metric, **acquisition_kwargs
+            predictor, active_metric=active_metric, **acquisition_kwargs
         )
 
 
@@ -535,14 +537,14 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
             scheduler, TrialSchedulerWithSearcher
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
-        # Allow model factory to depend on ``scheduler`` as well
-        model_factory = self.state_transformer.model_factory
-        if isinstance(model_factory, dict):
-            model_factories = list(model_factory.values())
+        # Allow estimator(s) to depend on ``scheduler`` as well
+        estimator = self.state_transformer.estimator
+        if isinstance(estimator, dict):
+            estimators = list(estimator.values())
         else:
-            model_factories = [model_factory]
-        for model_factory in model_factories:
-            model_factory.configure_scheduler(scheduler)
+            estimators = [estimator]
+        for estimator in estimators:
+            estimator.configure_scheduler(scheduler)
 
     def register_pending(
         self, trial_id: str, config: Optional[Dict[str, Any]] = None, milestone=None
@@ -617,23 +619,22 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
     def _get_config_modelbased(
         self, exclusion_candidates, **kwargs
     ) -> Optional[Configuration]:
-        # Obtain current :class:`SurrogateModel` from state transformer. Based on
+        # Obtain current :class:`Predictor` from state transformer. Based on
         # this, the BO algorithm components can be constructed
-        # Note: Asking for the model triggers the posterior computation
-        model = self.state_transformer.model()
+        predictor = self.state_transformer.fit()
         # Select and fix target resource attribute (relevant in subclasses)
         self._fix_resource_attribute(**kwargs)
         # Create BO algorithm
         random_generator = self._create_random_generator()
         initial_candidates_scorer = create_initial_candidates_scorer(
             initial_scoring=self.initial_scoring,
-            model=model,
+            predictor=predictor,
             acquisition_class=self.acquisition_class,
             random_state=self.random_state,
         )
         local_optimizer = self.local_minimizer_class(
             hp_ranges=self._hp_ranges_for_prediction(),
-            model=model,
+            predictor=predictor,
             acquisition_class=self.acquisition_class,
             active_metric=INTERNAL_METRIC_NAME,
         )
@@ -719,20 +720,20 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
             if not pick_random:
                 # Model-based decision for remaining ones
                 num_requested_candidates = batch_size - len(configs)
-                model = self.state_transformer.model()
+                predictor = self.state_transformer.fit()
                 # Select and fix target resource attribute (relevant in subclasses)
                 self._fix_resource_attribute(**kwargs)
                 # Create BO algorithm
                 random_generator = self._create_random_generator()
                 initial_candidates_scorer = create_initial_candidates_scorer(
                     initial_scoring=self.initial_scoring,
-                    model=model,
+                    predictor=predictor,
                     acquisition_class=self.acquisition_class,
                     random_state=self.random_state,
                 )
                 local_optimizer = self.local_minimizer_class(
                     hp_ranges=self._hp_ranges_for_prediction(),
-                    model=model,
+                    predictor=predictor,
                     acquisition_class=self.acquisition_class,
                     active_metric=INTERNAL_METRIC_NAME,
                 )
@@ -746,7 +747,7 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
                     # appends pending trials)
                     temporary_state = copy.deepcopy(self.state_transformer.state)
                     pending_candidate_state_transformer = ModelStateTransformer(
-                        model_factory=self.state_transformer.model_factory,
+                        estimator=self.state_transformer.estimator,
                         init_state=temporary_state,
                         skip_optimization=AlwaysSkipPredicate(),
                     )
@@ -784,7 +785,7 @@ class BayesianOptimizationSearcher(ModelBasedSearcher):
     def _new_searcher_kwargs_for_clone(self) -> Dict[str, Any]:
         """
         Helper method for ``clone_from_state``. Args need to be extended
-        by ``model_factory``, ``init_state``, ``skip_optimization``, and others
+        by ``estimator``, ``init_state``, ``skip_optimization``, and others
         args becoming relevant in subclasses only.
 
         :return: kwargs for creating new searcher object in ``clone_from_state``
