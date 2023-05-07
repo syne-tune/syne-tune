@@ -31,6 +31,8 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* Local Backend supports
+  `training with more than one GPU per trial <faq.html#how-can-i-utilize-multiple-gpus>`__.
 * Speculative early checkpoint removal for asynchronous multi-fidelity optimization.
   Retaining all checkpoints often exhausts all available disk space when training
   large models. With this feature, Syne Tune automatically removes checkpoints
@@ -42,9 +44,9 @@ What's New?
   single-objective task by optimizing for a linear combination of all objectives.
   This wrapper works with all single-objective schedulers. 
 * Support for automatic termination criterion proposed by Makarova et al.
-  Instead of defining a fix number of iterations or wall-clock time limit, we
+  Instead of defining a fixed number of iterations or wall-clock time limit, we
   can set a threshold on how much worse we allow the final solution to be
-  compared to the global optima, such that we automatically stop the optimization
+  compared to the global optimum, such that we automatically stop the optimization
   process once we find a solution that meets this criteria.
 * You can now customize writing out results during an experiment, as shown in
   `examples/launch_height_extra_results.py <examples.html#customize-results-written-during-an-experiment>`__.
@@ -57,21 +59,6 @@ What's New?
   from related optimisation runs. Syne Tune provides a number of transfer HPO
   methods and makes it easy to implement new ones. Thanks to
   `Sigrid <https://github.com/sighellan>`__ for this contribution.
-* New scheduler: :class:`~syne_tune.optimizer.baselines.DyHPO`.
-  This is a recent multi-fidelity method, which can be seen as alternative to
-  `ASHA <tutorials/multifidelity/mf_sync_model.html>`__,
-  `MOBSTER <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`__
-  or `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__.
-  Different to these, decisions on whether to promote paused trials are done
-  based on the surrogate model. Our implementation differs from the published
-  work by using a Gaussian process surrogate model, and by a promotion rule which
-  is a hybrid between DyHPO and ASHA.
-* New tutorial: `Progressive ASHA <tutorials/pasha/pasha.html>`__. PASHA is a
-  variant of ASHA where the maximum number of resources (e.g., maximum number
-  of training epochs) is not fixed up front, but is adapted. This can lead to
-  savings when training on large datasets. Thanks to
-  `Ondre <https://github.com/ondrejbohdal>`__ for this contribution.
-
 
 .. toctree::
    :name: Getting Started
