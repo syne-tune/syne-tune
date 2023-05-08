@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from pathlib import Path
 from typing import Optional
-import numpy as np
 
 from syne_tune.experiments.results_utils import sync_from_s3_command
 from syne_tune.optimizer.schedulers.random_seeds import (
