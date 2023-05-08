@@ -179,31 +179,3 @@ class NSGA2Searcher(StochasticSearcher):
             else:
                 config[hp_name] = individual.x[hp_name]
         return config
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    from syne_tune.config_space import uniform, randint, choice
-
-    config_space = {
-        "x0": uniform(0, 1),
-        "x1": uniform(0, 1),
-        "x2": randint(1, 100),
-        "x3": choice(["a", "b"]),
-    }
-    pop_size = 50
-    method = NSGA2Searcher(
-        config_space, metric=["f0", "f1"], mode=["min", "min"], pop_size=pop_size
-    )
-    f = plt.figure(dpi=200)
-    color = 0
-    for i in range(300):
-        config = method.get_config()
-        f0 = (0.5 - config["x0"]) ** 2
-        f1 = (0.5 - config["x1"]) ** 2
-        color = i // pop_size
-        plt.scatter(f0, f1, color=f"C{color}")
-        method.on_trial_result(
-            trial_id=i, config=config, result={"f0": f0, "f1": f1}, update=True
-        )
-    plt.show()
