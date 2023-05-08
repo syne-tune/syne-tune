@@ -25,11 +25,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc im
     CurrentBestProvider,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
-    BaseSurrogateModel,
+    BasePredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    SurrogateOutputModel,
-    SurrogateModel,
+    OutputPredictor,
+    Predictor,
 )
 
 logger = logging.getLogger(__name__)
@@ -42,25 +42,25 @@ MIN_STD_CONSTRAINT = (
 )
 
 
-def _extract_active_and_secondary_metric(model_output_names, active_metric):
+def _extract_active_and_secondary_metric(predictor_output_names, active_metric):
     """
-    Returns the active metric and the secondary metric (such as the cost or constraint metric) from model_output_names.
+    Returns the active metric and the secondary metric (such as the cost or constraint metric) from predictor_output_names.
     """
-    assert len(model_output_names) == 2, (
-        f"The model should consist of exactly 2 outputs, "
-        f"while the current outputs are {model_output_names}"
+    assert len(predictor_output_names) == 2, (
+        f"The predictor should consist of exactly 2 outputs, "
+        f"while the current outputs are {predictor_output_names}"
     )
-    assert active_metric in model_output_names, (
+    assert active_metric in predictor_output_names, (
         f"{active_metric} is not a valid metric. "
         f"The metric name must match one of the following metrics "
-        f"in the model output: {model_output_names}"
+        f"in the predictor output: {predictor_output_names}"
     )
-    if model_output_names[0] == active_metric:
-        secondary_metric = model_output_names[1]
+    if predictor_output_names[0] == active_metric:
+        secondary_metric = predictor_output_names[1]
     else:
-        secondary_metric = model_output_names[0]
+        secondary_metric = predictor_output_names[0]
     logger.debug(
-        f"There are two metrics in the output: {model_output_names}. "
+        f"There are two metrics in the output: {predictor_output_names}. "
         f"The metric to optimize was set to '{active_metric}'. "
         f"The secondary metric is assumed to be '{secondary_metric}'"
     )
@@ -83,13 +83,13 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
 
     def __init__(
         self,
-        model: SurrogateOutputModel,
+        predictor: OutputPredictor,
         active_metric: str = None,
         jitter: float = 0.01,
         debug_collect_stats: bool = False,
     ):
-        assert isinstance(model, SurrogateModel)
-        super().__init__(model, active_metric)
+        assert isinstance(predictor, Predictor)
+        super().__init__(predictor, active_metric)
         self.jitter = jitter
         if debug_collect_stats:
             self._debug_data = {"absdiff": [], "std": [], "u": []}
@@ -169,10 +169,10 @@ class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
     """
 
     def __init__(
-        self, model: SurrogateOutputModel, kappa: float, active_metric: str = None
+        self, predictor: OutputPredictor, kappa: float, active_metric: str = None
     ):
-        super().__init__(model, active_metric)
-        assert isinstance(model, SurrogateModel)
+        super().__init__(predictor, active_metric)
+        assert isinstance(predictor, Predictor)
         assert kappa > 0, "kappa must be positive"
         self.kappa = kappa
 
@@ -229,7 +229,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     :class:`EIpuAcquisitionFunction`.
     The cost is automatically assumed to be the other metric.
 
-    :param model: Surrogate models for main objective and cost
+    :param predictor: Predictors for main objective and cost
     :param active_metric: Name of main objective
     :param exponent_cost: Exponent for cost in denominator. Defaults to 1
     :param jitter: Jitter factor, must be positive. Defaults to 0.01
@@ -237,19 +237,19 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
 
     def __init__(
         self,
-        model: SurrogateOutputModel,
+        predictor: OutputPredictor,
         active_metric: Optional[str] = None,
         exponent_cost: float = 1.0,
         jitter: float = 0.01,
     ):
-        super().__init__(model, active_metric)
+        super().__init__(predictor, active_metric)
         assert (
             0 < exponent_cost <= 1
         ), f"exponent_cost = {exponent_cost} must lie in (0, 1]"
         self.jitter = jitter
         self.exponent_cost = exponent_cost
         self.active_metric, self.cost_metric = _extract_active_and_secondary_metric(
-            self.model_output_names, active_metric
+            self.predictor_output_names, active_metric
         )
 
     def _head_needs_current_best(self) -> bool:
@@ -261,8 +261,8 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
         only needs the mean.
         """
         return {
-            self.model_output_names[0]: {"mean", "std"},
-            self.model_output_names[1]: {"mean"},
+            self.predictor_output_names[0]: {"mean", "std"},
+            self.predictor_output_names[1]: {"mean"},
         }
 
     def _compute_head(
@@ -289,8 +289,8 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
     ) -> HeadWithGradient:
         """
         Returns minus cost-aware expected improvement and, for each output
-        model, the gradients with respect to the mean and standard deviation of
-        that model.
+        predictor, the gradients with respect to the mean and standard deviation of
+        that predictor.
         """
         assert current_best is not None
         mean, std = self._extract_mean_and_std(output_to_predictions)
@@ -321,7 +321,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
         pred_cost = output_to_predictions[self.cost_metric]["mean"]
         if np.any(pred_cost) < 0.0:
             logger.warning(
-                f"The model for {self.cost_metric} predicted some negative cost. "
+                f"The predictor for {self.cost_metric} predicted some negative cost. "
                 f"Capping the minimum cost at {MIN_COST}."
             )
         pred_cost = np.maximum(
@@ -332,7 +332,7 @@ class EIpuAcquisitionFunction(MeanStdAcquisitionFunction):
 
 class ConstraintCurrentBestProvider(CurrentBestProvider):
     """
-    Here, ``current_best`` depends on two models, for active and constraint metric.
+    Here, ``current_best`` depends on two predictors, for active and constraint metric.
     """
 
     def __init__(self, current_best_list: List[np.ndarray], num_samples_active: int):
@@ -378,24 +378,26 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
         | Bayesian Optimization with Unknown Constraints
         | UAI 2014.
 
-    :param model: Surrogate models for main objective and cost
+    :param predictor: Predictors for main objective and cost
     :param active_metric: Name of main objective
     :param jitter: Jitter factor, must be positive. Defaults to 0.01
     """
 
     def __init__(
         self,
-        model: SurrogateOutputModel,
+        predictor: OutputPredictor,
         active_metric: Optional[str] = None,
         jitter: float = 0.01,
     ):
-        super().__init__(model, active_metric)
+        super().__init__(predictor, active_metric)
         self.jitter = jitter
         self._feasible_best_list = None
         (
             self.active_metric,
             self.constraint_metric,
-        ) = _extract_active_and_secondary_metric(self.model_output_names, active_metric)
+        ) = _extract_active_and_secondary_metric(
+            self.predictor_output_names, active_metric
+        )
 
     def _head_needs_current_best(self) -> bool:
         return True
@@ -433,8 +435,8 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
         current_best: Optional[np.ndarray],
     ) -> HeadWithGradient:
         """
-        Returns minus cost-aware expected improvement (- CEI) and, for each output model, the gradients
-        with respect to the mean and standard deviation of that model.
+        Returns minus cost-aware expected improvement (- CEI) and, for each output predictor, the gradients
+        with respect to the mean and standard deviation of that predictor.
         """
         assert current_best is not None
         mean, std = self._extract_mean_and_std(output_to_predictions)
@@ -494,19 +496,19 @@ class CEIAcquisitionFunction(MeanStdAcquisitionFunction):
         return HeadWithGradient(hval=-np.mean(f_acqu), gradient=gradient)
 
     def _get_current_bests_internal(
-        self, model: SurrogateOutputModel
+        self, predictor: OutputPredictor
     ) -> CurrentBestProvider:
-        active_model = model[self.active_metric]
-        assert isinstance(active_model, BaseSurrogateModel)
-        all_means_active = active_model.predict_mean_current_candidates()
+        active_predictor = predictor[self.active_metric]
+        assert isinstance(active_predictor, BasePredictor)
+        all_means_active = active_predictor.predict_mean_current_candidates()
         num_samples_active = len(all_means_active)
-        constraint_model = model[self.constraint_metric]
-        assert isinstance(constraint_model, BaseSurrogateModel)
-        all_means_constraint = constraint_model.predict_mean_current_candidates()
+        constraint_predictor = predictor[self.constraint_metric]
+        assert isinstance(constraint_predictor, BasePredictor)
+        all_means_constraint = constraint_predictor.predict_mean_current_candidates()
         common_shape = all_means_active[0].shape
         assert all(
             x.shape == common_shape for x in all_means_constraint
-        ), "Shape mismatch between models for predict_mean_current_candidates"
+        ), "Shape mismatch between predictors for predict_mean_current_candidates"
         current_best_list = []
         for means_constraint, means_active in itertools.product(
             all_means_constraint, all_means_active

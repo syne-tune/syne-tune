@@ -28,7 +28,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer 
     ModelStateTransformer,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost_fifo_model import (
-    CostSurrogateModelFactory,
+    CostEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
@@ -49,15 +49,15 @@ class MultiModelGPMultiFidelitySearcher(GPMultiFidelitySearcher):
     """
 
     def _call_create_internal(self, kwargs_int):
-        output_model_factory = kwargs_int.pop("output_model_factory")
+        output_estimator = kwargs_int.pop("output_estimator")
         output_skip_optimization = kwargs_int.pop("output_skip_optimization")
-        kwargs_int["model_factory"] = output_model_factory[INTERNAL_METRIC_NAME]
+        kwargs_int["estimator"] = output_estimator[INTERNAL_METRIC_NAME]
         kwargs_int["skip_optimization"] = output_skip_optimization[INTERNAL_METRIC_NAME]
         super()._call_create_internal(kwargs_int)
         # Replace ``state_transformer``
         init_state = self.state_transformer.state
         self.state_transformer = ModelStateTransformer(
-            model_factory=output_model_factory,
+            estimator=output_estimator,
             init_state=init_state,
             skip_optimization=output_skip_optimization,
         )
@@ -127,19 +127,19 @@ class CostAwareGPMultiFidelitySearcher(MultiModelGPMultiFidelitySearcher):
         else:
             # Cost at r_max
             fixed_resource = self.config_space_ext.resource_attr_range[1]
-        cost_model_factory = self.state_transformer.model_factory[INTERNAL_COST_NAME]
-        assert isinstance(cost_model_factory, CostSurrogateModelFactory)
-        cost_model_factory.set_fixed_resource(fixed_resource)
+        cost_estimator = self.state_transformer.estimator[INTERNAL_COST_NAME]
+        assert isinstance(cost_estimator, CostEstimator)
+        cost_estimator.set_fixed_resource(fixed_resource)
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         output_skip_optimization = state["skip_optimization"]
-        output_model_factory = self.state_transformer.model_factory
+        output_estimator = self.state_transformer.estimator
         # Call internal constructor
         new_searcher = CostAwareGPMultiFidelitySearcher(
             **self._new_searcher_kwargs_for_clone(),
-            output_model_factory=output_model_factory,
+            output_estimator=output_estimator,
             init_state=init_state,
             output_skip_optimization=output_skip_optimization,
             config_space_ext=self.config_space_ext,

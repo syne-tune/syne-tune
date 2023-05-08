@@ -99,7 +99,7 @@ def test_lazily_locally_optimize():
         candidates=original_candidates,
         local_optimizer=NoOptimization(None, None, None),
         hp_ranges=hp_ranges,
-        model=None,
+        predictor=None,
     ):
         # no optimization is applied ot the candidates
         assert candidate[0] == original_candidates[i]
@@ -114,7 +114,7 @@ def test_lazily_locally_optimize():
                     candidates=[],
                     local_optimizer=NoOptimization(None, None, None),
                     hp_ranges=hp_ranges,
-                    model=None,
+                    predictor=None,
                 )
             )
         )

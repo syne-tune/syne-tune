@@ -16,9 +16,12 @@ import copy
 
 from numpy.random import RandomState
 
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
+    Estimator,
+    OutputEstimator,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    SurrogateModel,
-    SurrogateOutputModel,
+    OutputPredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
@@ -26,9 +29,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
     SkipOptimizationPredicate,
     NeverSkipPredicate,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
-    DebugLogPrinter,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     PendingEvaluation,
@@ -47,64 +47,9 @@ def _assert_same_keys(dict1, dict2):
     ), f"{list(dict1.keys())} and {list(dict2.keys())} need to be the same keys. "
 
 
-class TransformerModelFactory:
-    """
-    Interface for model factories used in :class:`ModelStateTransformer`. A model
-    factory provides access to tunable model parameters, and :meth:`model` creates
-    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`
-    instances.
-    """
-
-    def get_params(self) -> Dict:
-        """
-        :return: Current tunable model parameters
-        """
-        raise NotImplementedError()
-
-    def set_params(self, param_dict: Dict):
-        """
-        :param param_dict: New model parameters
-        """
-        raise NotImplementedError()
-
-    def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
-        """
-        Creates a
-        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`
-        object based on data in ``state``. This involves fitting model parameters
-        if ``fit_params == True``. Otherwise, the current model parameters are not
-        changed (so may be stale, given that ``state`` has changed). The idea is that
-        often, model fitting is much more expensive than just creating the final
-        :class:`SurrogateModel` (posterior state). It then makes sense to partly
-        work with stale model parameters.
-
-        :param state: Current data model parameters are to be fit on, and the
-            posterior state is to be computed from
-        :param fit_params: See above
-        :return: Fitted model, wrapping the posterior state for predictions
-        """
-        raise NotImplementedError()
-
-    @property
-    def debug_log(self) -> Optional[DebugLogPrinter]:
-        return None
-
-    def configure_scheduler(self, scheduler):
-        """
-        Called by :meth:`configure_scheduler` of searchers which make use of a
-        class:``TransformerModelFactory``. Allows the factory to depend on
-        parameters of the scheduler.
-
-        :param scheduler: Scheduler object
-        """
-        pass
-
-
-# Convenience types allowing for multi-output HPO. These are used for methods that work both in the standard case
-# of a single output model and in the multi-output case
-TransformerOutputModelFactory = Union[
-    TransformerModelFactory, Dict[str, TransformerModelFactory]
-]
+# Convenience type allowing for multi-output HPO. These are used for methods
+# that work both in the standard case of a single output model and in the
+# multi-output case
 
 SkipOptimizationOutputPredicate = Union[
     SkipOptimizationPredicate, Dict[str, SkipOptimizationPredicate]
@@ -141,8 +86,8 @@ class ModelStateTransformer:
     this state. In particular, it provides a fitted surrogate model on demand,
     which encapsulates the GP posterior.
 
-    The state transformer is generic, it uses :class:`TransformerModelFactory`
-    for anything specific to the model type.
+    The state transformer is generic, it uses :class:`Estimator` for anything specific
+    to the model type.
 
     ``skip_optimization`` is a predicate depending on the state, determining
     what is done at the next recent call of ``model``. If ``False``, the model
@@ -160,11 +105,11 @@ class ModelStateTransformer:
     filtering down data when model fitting is superlinear. Another is to convert
     multi-fidelity setups to be used with single-fidelity models inside.
 
-    Note that ``model_factory`` and ``skip_optimization`` can also be a dictionary mapping
+    Note that ``estimator`` and ``skip_optimization`` can also be a dictionary mapping
     output names to models. In that case, the state is shared but the models for each
     output metric are updated independently.
 
-    :param model_factory: Factory for surrogate models, given tuning job state
+    :param estimator: Surrogate model(s)
     :param init_state: Initial tuning job state
     :param skip_optimization: Skip optimization predicate (see above). Defaults to
         ``None`` (fitting is never skipped)
@@ -173,59 +118,59 @@ class ModelStateTransformer:
 
     def __init__(
         self,
-        model_factory: TransformerOutputModelFactory,
+        estimator: OutputEstimator,
         init_state: TuningJobState,
         skip_optimization: Optional[SkipOptimizationOutputPredicate] = None,
         state_converter: Optional[StateForModelConverter] = None,
     ):
         self._use_single_model = False
-        if isinstance(model_factory, TransformerModelFactory):
+        if isinstance(estimator, Estimator):
             self._use_single_model = True
         if not self._use_single_model:
-            assert isinstance(model_factory, Dict), (
-                f"{model_factory} is not an instance of TransformerModelFactory. "
+            assert isinstance(estimator, dict), (
+                f"{estimator} is not an instance of Estimator. "
                 f"It is assumed that we are in the multi-output case and that it "
                 f"must be a Dict. No other types are supported. "
             )
-            _assert_same_keys(model_factory, skip_optimization)
+            _assert_same_keys(estimator, skip_optimization)
             # Default: Always refit model parameters for each output model
             if skip_optimization is None:
                 skip_optimization = {
                     output_name: NeverSkipPredicate()
-                    for output_name in model_factory.keys()
+                    for output_name in estimator.keys()
                 }
             else:
                 assert isinstance(skip_optimization, Dict), (
                     f"{skip_optimization} must be a Dict, consistently "
-                    f"with {model_factory}."
+                    f"with {estimator}."
                 )
                 skip_optimization = {
                     output_name: skip_optimization[output_name]
                     if skip_optimization.get(output_name) is not None
                     else NeverSkipPredicate()
-                    for output_name in model_factory.keys()
+                    for output_name in estimator.keys()
                 }
             # debug_log is shared by all output models
-            self._debug_log = next(iter(model_factory.values())).debug_log
+            self._debug_log = next(iter(estimator.values())).debug_log
         else:
             if skip_optimization is None:
                 # Default: Always refit model parameters
                 skip_optimization = NeverSkipPredicate()
             assert isinstance(skip_optimization, SkipOptimizationPredicate)
-            self._debug_log = model_factory.debug_log
-            # Make model_factory and skip_optimization single-key dictionaries
+            self._debug_log = estimator.debug_log
+            # Make ``estimator`` and ``skip_optimization`` single-key dictionaries
             # for convenience, so that we can treat the single model and multi-model case in the same way
-            model_factory = dictionarize_objective(model_factory)
+            estimator = dictionarize_objective(estimator)
             skip_optimization = dictionarize_objective(skip_optimization)
-        self._model_factory = model_factory
+        self._estimator = estimator
         self._skip_optimization = skip_optimization
         self._state_converter = state_converter
         self._state = copy.copy(init_state)
-        # SurrogateOutputModel computed on demand
-        self._model: Optional[SurrogateOutputModel] = None
+        # OutputPredictor computed on demand
+        self._predictor: Optional[OutputPredictor] = None
         # Observed data for which model parameters were re-fit most
         # recently, separately for each model
-        self._num_evaluations = {output_name: 0 for output_name in model_factory.keys()}
+        self._num_evaluations = {output_name: 0 for output_name in estimator.keys()}
 
     @property
     def state(self) -> TuningJobState:
@@ -242,16 +187,16 @@ class ModelStateTransformer:
         return self._use_single_model
 
     @property
-    def model_factory(self) -> TransformerOutputModelFactory:
-        return self._unwrap_from_dict(self._model_factory)
+    def estimator(self) -> OutputEstimator:
+        return self._unwrap_from_dict(self._estimator)
 
     @property
     def skip_optimization(self) -> SkipOptimizationOutputPredicate:
         return self._unwrap_from_dict(self._skip_optimization)
 
-    def model(self, **kwargs) -> SurrogateOutputModel:
+    def fit(self, **kwargs) -> OutputPredictor:
         """
-        If skip_optimization is given, it overrides the ``self._skip_optimization``
+        If ``skip_optimization`` is given, it overrides the ``self._skip_optimization``
         predicate.
 
         :return: Fitted surrogate model for current state in the standard single
@@ -259,24 +204,24 @@ class ModelStateTransformer:
             output names to surrogate model instances for current state (shared
             across models).
         """
-        if self._model is None:
+        if self._predictor is None:
             skip_optimization = kwargs.get("skip_optimization")
-            self._compute_model(skip_optimization=skip_optimization)
-        return self._unwrap_from_dict(self._model)
+            self._compute_predictor(skip_optimization=skip_optimization)
+        return self._unwrap_from_dict(self._predictor)
 
     def get_params(self):
         params = {
-            output_name: output_model.get_params()
-            for output_name, output_model in self._model_factory.items()
+            output_name: output_estimator.get_params()
+            for output_name, output_estimator in self._estimator.items()
         }
         return self._unwrap_from_dict(params)
 
     def set_params(self, param_dict):
         if self._use_single_model:
             param_dict = dictionarize_objective(param_dict)
-        _assert_same_keys(self._model_factory, param_dict)
-        for output_name in self._model_factory:
-            self._model_factory[output_name].set_params(param_dict[output_name])
+        _assert_same_keys(self._estimator, param_dict)
+        for output_name in self._estimator:
+            self._estimator[output_name].set_params(param_dict[output_name])
 
     def append_trial(
         self,
@@ -293,7 +238,7 @@ class ModelStateTransformer:
         :param resource: Must be given in the multi-fidelity case, to specify
             at which resource level the evaluation is pending
         """
-        self._model = None  # Invalidate
+        self._predictor = None  # Invalidate
         self._state.append_pending(trial_id, config=config, resource=resource)
 
     def drop_pending_evaluation(
@@ -374,7 +319,7 @@ class ModelStateTransformer:
                 metrics[name] = new_labels
             else:
                 metrics[name].update(new_labels)
-        self._model = None  # Invalidate
+        self._predictor = None  # Invalidate
 
     def filter_pending_evaluations(
         self, filter_pred: Callable[[PendingEvaluation], bool]
@@ -388,7 +333,7 @@ class ModelStateTransformer:
             filter(filter_pred, self._state.pending_evaluations)
         )
         if len(new_pending_evaluations) != len(self._state.pending_evaluations):
-            self._model = None  # Invalidate
+            self._predictor = None  # Invalidate
             del self._state.pending_evaluations[:]
             self._state.pending_evaluations.extend(new_pending_evaluations)
 
@@ -397,7 +342,7 @@ class ModelStateTransformer:
         if trial_id not in failed_trials:
             failed_trials.append(trial_id)
 
-    def _compute_model(self, skip_optimization=None):
+    def _compute_predictor(self, skip_optimization=None):
         if skip_optimization is None:
             skip_optimization = dict()
             for (
@@ -414,21 +359,21 @@ class ModelStateTransformer:
                         f"Skipping the refitting of model parameters for {output_name}"
                     )
 
-        _assert_same_keys(skip_optimization, self._model_factory)
+        _assert_same_keys(skip_optimization, self._estimator)
         state_for_model = (
             self._state
             if self._state_converter is None
             else self._state_converter(self._state)
         )
-        output_models = dict()
+        output_predictors = dict()
         for output_name, output_skip_optimization in skip_optimization.items():
-            fit_params = not output_skip_optimization
-            if fit_params:
+            update_params = not output_skip_optimization
+            if update_params:
                 # Did the labeled data really change since the last recent refit?
                 # If not, skip the refitting
                 num_evaluations = self._state.num_observed_cases(output_name)
                 if num_evaluations == self._num_evaluations[output_name]:
-                    fit_params = False
+                    update_params = False
                     if self._debug_log is not None:
                         logger.info(
                             f"Skipping the refitting of model parameters for {output_name}, "
@@ -437,7 +382,7 @@ class ModelStateTransformer:
                 else:
                     # Model will be refitted: Update
                     self._num_evaluations[output_name] = num_evaluations
-            output_models[output_name] = self._model_factory[output_name].model(
-                state=state_for_model, fit_params=fit_params
-            )
-        self._model = output_models
+            output_predictors[output_name] = self._estimator[
+                output_name
+            ].fit_from_state(state=state_for_model, update_params=update_params)
+        self._predictor = output_predictors

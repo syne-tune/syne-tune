@@ -27,7 +27,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     NextCandidatesAlgorithm,
     ScoringFunction,
     LocalOptimizer,
-    SurrogateModel,
+    Predictor,
     CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
@@ -110,10 +110,10 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     debug_log: Optional[DebugLogPrinter] = None
 
     # Note: For greedy batch selection (num_outer_iterations > 1), the
-    # underlying SurrrogateModel changes with each new pending candidate. The
-    # model changes are managed by pending_candidate_state_transformer. The
-    # model has to be passed to both initial_candidates_scorer and
-    # local_optimizer.
+    # underlying ``Predictor`` changes with each new pending candidate. The
+    # model changes are managed by ``pending_candidate_state_transformer``. The
+    # model has to be passed to both ``initial_candidates_scorer`` and
+    # ``local_optimizer``.
     def next_candidates(self) -> List[Configuration]:
         if self.greedy_batch_selection:
             # Select batch greedily, one candidate at a time, updating the
@@ -148,7 +148,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             next_trial_id += 1
         candidates = []
         just_added = True
-        model = None  # SurrogateModel, if num_outer_iterations > 1
+        predictor = None  # Predictor, if num_outer_iterations > 1
         for outer_iter in range(num_outer_iterations):
             if just_added:
                 if self.exclusion_candidates.config_space_exhausted():
@@ -169,7 +169,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                 num_initial_candidates = self.num_initial_candidates
             inner_candidates = self._get_next_candidates(
                 num_inner_candidates,
-                model=model,
+                predictor=predictor,
                 num_initial_candidates=num_initial_candidates,
             )
             candidates.extend(inner_candidates)
@@ -186,7 +186,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                         trial_id=str(next_trial_id), config=candidate
                     )
                     next_trial_id += 1
-                model = self.pending_candidate_state_transformer.model(
+                predictor = self.pending_candidate_state_transformer.fit(
                     skip_optimization=True
                 )
             if (
@@ -205,7 +205,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     def _get_next_candidates(
         self,
         num_candidates: int,
-        model: Optional[SurrogateModel],
+        predictor: Optional[Predictor],
         num_initial_candidates: Optional[int] = None,
     ):
         if num_initial_candidates is None:
@@ -234,9 +234,9 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         logger.info("BayesOpt Algorithm: Scoring (and reordering) candidates.")
         if self.debug_log is not None:
             candidates_and_scores = _order_candidates(
-                initial_candidates,
-                self.initial_candidates_scorer,
-                model=model,
+                candidates=initial_candidates,
+                scoring_function=self.initial_candidates_scorer,
+                predictor=predictor,
                 with_scores=True,
             )
             initial_candidates = [cand for score, cand in candidates_and_scores]
@@ -245,13 +245,15 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             self.debug_log.set_init_config(config, top_scores)
         else:
             initial_candidates = _order_candidates(
-                initial_candidates, self.initial_candidates_scorer, model=model
+                candidates=initial_candidates,
+                scoring_function=self.initial_candidates_scorer,
+                predictor=predictor,
             )
         candidates_with_optimization = _lazily_locally_optimize(
-            initial_candidates,
-            self.local_optimizer,
+            candidates=initial_candidates,
+            local_optimizer=self.local_optimizer,
             hp_ranges=self.exclusion_candidates.hp_ranges,
-            model=model,
+            predictor=predictor,
         )
         logger.info("BayesOpt Algorithm: Selecting final set of candidates.")
         if self.debug_log is not None and isinstance(
@@ -266,10 +268,10 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                 [peek], candidates_with_optimization
             )
         candidates = _pick_from_locally_optimized(
-            candidates_with_optimization,
-            self.exclusion_candidates,
-            num_candidates,
-            self.duplicate_detector,
+            candidates_with_optimization=candidates_with_optimization,
+            exclusion_candidates=self.exclusion_candidates,
+            num_candidates=num_candidates,
+            duplicate_detector=self.duplicate_detector,
         )
         return candidates
 
@@ -277,13 +279,13 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
 def _order_candidates(
     candidates: List[Configuration],
     scoring_function: ScoringFunction,
-    model: Optional[SurrogateModel],
+    predictor: Optional[Predictor],
     with_scores: bool = False,
 ):
     if len(candidates) == 0:
         return []
     # scored in batch as this can be more efficient
-    scores = scoring_function.score(candidates, model=model)
+    scores = scoring_function.score(candidates, predictor=predictor)
     sorted_list = sorted(zip(scores, candidates), key=lambda x: x[0])
     if with_scores:
         return sorted_list
@@ -295,7 +297,7 @@ def _lazily_locally_optimize(
     candidates: List[Configuration],
     local_optimizer: LocalOptimizer,
     hp_ranges: HyperparameterRanges,
-    model: Optional[SurrogateModel],
+    predictor: Optional[Predictor],
 ) -> Iterator[Tuple[Configuration, Configuration]]:
     """
     Due to local deduplication we do not know in advance how many candidates
@@ -307,7 +309,7 @@ def _lazily_locally_optimize(
     for cand in candidates:
         if not considered_already.contains(cand):
             considered_already.add(cand)
-            yield cand, local_optimizer.optimize(cand, model=model)
+            yield cand, local_optimizer.optimize(cand, predictor=predictor)
 
 
 # Note: If ``duplicate_detector`` is at least :class:`DuplicateDetectorIdentical`,

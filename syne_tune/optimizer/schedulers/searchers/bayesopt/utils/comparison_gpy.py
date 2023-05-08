@@ -27,8 +27,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    get_internal_candidate_evaluations,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
+    transform_state_to_data,
 )
 
 
@@ -145,7 +145,7 @@ def expand_data(data: Dict[str, Any]) -> Dict[str, Any]:
     if "state" not in data:
         data = copy.copy(data)
         state = data_to_state(data)
-        data_internal = get_internal_candidate_evaluations(
+        data_internal = transform_state_to_data(
             state,
             active_metric=INTERNAL_METRIC_NAME,
             normalize_targets=True,

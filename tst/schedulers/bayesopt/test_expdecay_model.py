@@ -44,7 +44,7 @@ def _common_kwargs(config_space: Dict) -> Dict:
     }
 
 
-def build_gp_model_factory(config_space: Dict, model_params: Dict) -> Dict:
+def build_gp_estimator(config_space: Dict, model_params: Dict) -> Dict:
     kwargs = dict(
         _common_kwargs(config_space),
         model="gp_multitask",
@@ -54,7 +54,7 @@ def build_gp_model_factory(config_space: Dict, model_params: Dict) -> Dict:
         kwargs, *gp_multifidelity_searcher_defaults(kwargs), dict_name="search_options"
     )
     kwargs_int = gp_multifidelity_searcher_factory(**_kwargs)
-    kwargs_int["model_factory"].set_params(model_params)
+    kwargs_int["estimator"].set_params(model_params)
     return kwargs_int
 
 
@@ -81,7 +81,7 @@ def _convert_model_params(model_params: Dict) -> Dict:
     return new_model_params
 
 
-def build_gped_model_factory(config_space: Dict, model_params: Dict, **kwargs):
+def build_gped_estimator(config_space: Dict, model_params: Dict, **kwargs):
     kwargs = dict(
         _common_kwargs(config_space),
         model="gp_expdecay",
@@ -93,7 +93,7 @@ def build_gped_model_factory(config_space: Dict, model_params: Dict, **kwargs):
     )
     kwargs_int = gp_multifidelity_searcher_factory(**_kwargs)
     # Need to convert ``model_params``
-    kwargs_int["model_factory"].set_params(_convert_model_params(model_params))
+    kwargs_int["estimator"].set_params(_convert_model_params(model_params))
     return kwargs_int
 
 
@@ -227,12 +227,10 @@ def test_compare_gp_model_gped_model(_model_params, _state):
     }
 
     model_params = json.loads(_model_params)
-    gp_objs = build_gp_model_factory(config_space, model_params)
+    gp_objs = build_gp_estimator(config_space, model_params)
     config_space_ext = gp_objs["config_space_ext"]
-    gp_model_factory = gp_objs["model_factory"]
-    gped_model_factory = build_gped_model_factory(config_space, model_params)[
-        "model_factory"
-    ]
+    gp_estimator = gp_objs["estimator"]
+    gped_estimator = build_gped_estimator(config_space, model_params)["estimator"]
 
     state = decode_state_from_old_encoding(
         enc_state=json.loads(_state), hp_ranges=config_space_ext.hp_ranges_ext
@@ -247,8 +245,8 @@ def test_compare_gp_model_gped_model(_model_params, _state):
         )
 
     # We compare the two by computing the learning criterion for either
-    gp_model = gp_model_factory.model(state, fit_params=False)
+    gp_model = gp_estimator.fit_from_state(state, update_params=False)
     gp_critval = gp_model.posterior_states[0].neg_log_likelihood().item()
-    gped_model = gped_model_factory.model(state, fit_params=False)
+    gped_model = gped_estimator.fit_from_state(state, update_params=False)
     gped_critval = gped_model.posterior_states[0].neg_log_likelihood()
     np.testing.assert_allclose(gp_critval, gped_critval, rtol=1e-5)
