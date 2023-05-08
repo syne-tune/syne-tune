@@ -15,6 +15,10 @@ from typing import Optional
 import numpy as np
 
 from syne_tune.experiments.results_utils import sync_from_s3_command
+from syne_tune.optimizer.schedulers.random_seeds import (
+    generate_random_seed,
+    RANDOM_SEED_UPPER_BOUND,
+)
 
 
 def filter_none(a: dict) -> dict:
@@ -94,15 +98,12 @@ def find_or_create_requirements_txt(
     return fname
 
 
-SEED_UPPER_LIMIT = 2**32
-
-
 def get_master_random_seed(random_seed: Optional[int]) -> int:
     if random_seed is None:
-        random_seed = np.random.randint(0, SEED_UPPER_LIMIT)
+        random_seed = generate_random_seed()
     print(f"Master random_seed = {random_seed}")
     return random_seed
 
 
 def effective_random_seed(master_random_seed: int, seed: int) -> int:
-    return (master_random_seed + seed) % SEED_UPPER_LIMIT
+    return (master_random_seed + seed) % RANDOM_SEED_UPPER_BOUND
