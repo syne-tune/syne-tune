@@ -97,10 +97,12 @@ class NSGA2Searcher(StochasticSearcher):
         for hp_name, hp in config_space.items():
             if isinstance(hp, Domain):
                 self.hp_names.append(hp_name)
-                if not isinstance(hp, Categorical) and \
-                        not isinstance(hp, Integer) and \
-                        not isinstance(hp, Float) and \
-                        not isinstance(hp, FiniteRange):
+                if (
+                    not isinstance(hp, Categorical)
+                    and not isinstance(hp, Integer)
+                    and not isinstance(hp, Float)
+                    and not isinstance(hp, FiniteRange)
+                ):
                     raise Exception(
                         f"Type {type(hp)} for hyperparameter {hp_name} "
                         f"is not support for NSGA-2."
@@ -117,7 +119,9 @@ class NSGA2Searcher(StochasticSearcher):
             ),
             eliminate_duplicates=MixedVariableDuplicateElimination(),
         )
-        self.algorithm.setup(problem=self.problem, termination=('n_eval', 2 ** 32 - 1), verbose=False)
+        self.algorithm.setup(
+            problem=self.problem, termination=("n_eval", 2**32 - 1), verbose=False
+        )
 
         self.current_population = self.algorithm.ask()
         self.current_individual = 0
@@ -159,9 +163,11 @@ class NSGA2Searcher(StochasticSearcher):
         """
 
         if self.current_individual >= len(self.current_population):
-            raise Exception('It seems that some configurations are sill pending, while querying a new configuration.'
-                            'Note that NSGA-2 does not support asynchronous scheduling. To avoid this behavious, '
-                            'make sure to set num_workers = 1.')
+            raise Exception(
+                "It seems that some configurations are sill pending, while querying a new configuration."
+                "Note that NSGA-2 does not support asynchronous scheduling. To avoid this behavious, "
+                "make sure to set num_workers = 1."
+            )
         else:
             individual = self.current_population[self.current_individual]
 
@@ -179,7 +185,12 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from syne_tune.config_space import uniform, randint, choice
 
-    config_space = {"x0": uniform(0, 1), "x1": uniform(0, 1), "x2": randint(1, 100), 'x3': choice(['a', 'b'])}
+    config_space = {
+        "x0": uniform(0, 1),
+        "x1": uniform(0, 1),
+        "x2": randint(1, 100),
+        "x3": choice(["a", "b"]),
+    }
     pop_size = 50
     method = NSGA2Searcher(
         config_space, metric=["f0", "f1"], mode=["min", "min"], pop_size=pop_size
