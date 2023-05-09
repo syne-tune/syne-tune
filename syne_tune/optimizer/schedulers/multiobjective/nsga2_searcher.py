@@ -51,7 +51,9 @@ class MultiObjectiveMixedVariableProblem(Problem):
                 elif isinstance(hp, Float):
                     vars[hp_name] = PyMOOReal(bounds=(hp.lower, hp.upper))
                 else:
-                    raise Exception(f'Type {type(hp)} of hyperparameter {hp_name} is not supported!')
+                    raise Exception(
+                        f"Type {type(hp)} of hyperparameter {hp_name} is not supported!"
+                    )
 
         super().__init__(vars=vars, n_obj=n_obj, n_ieq_constr=0, **kwargs)
 
@@ -89,7 +91,7 @@ class NSGA2Searcher(StochasticSearcher):
         self,
         config_space: Dict[str, Any],
         metric: List[str],
-        mode: Union[List[str], str] = 'min',
+        mode: Union[List[str], str] = "min",
         points_to_evaluate: Optional[List[dict]] = None,
         population_size: int = 20,
         **kwargs,
@@ -123,7 +125,7 @@ class NSGA2Searcher(StochasticSearcher):
                 eliminate_duplicates=MixedVariableDuplicateElimination()
             ),
             eliminate_duplicates=MixedVariableDuplicateElimination(),
-            seed=self.random_state.randint(2 ** 32 - 1)
+            seed=self.random_state.randint(2**32 - 1),
         )
         self.algorithm.setup(
             problem=self.problem, termination=("n_eval", 2**32 - 1), verbose=False
