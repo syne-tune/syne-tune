@@ -136,24 +136,24 @@ class NSGA2Searcher(StochasticSearcher):
         self.observed_values = dict()
 
     def _update(self, trial_id: str, config: dict, result: dict):
-        observed_metrics = {}
+        observed_metrics = list()
         for mode, metric in zip(self._mode, self._metric):
             value = result[metric]
             if mode == "max":
                 value *= -1
-            observed_metrics[metric] = value
+            observed_metrics.append(value)
 
-        self.observed_values[trial_id] = np.array(observed_metrics.values())
+        self.observed_values[trial_id] = observed_metrics
 
         if len(self.observed_values.keys()) == len(self.current_population):
-            func_values = np.array([v for v in self.observed_values.keys()])
+            func_values = np.array(list(self.observed_values.values()))
             static = StaticProblem(self.problem, F=func_values)
             Evaluator().eval(static, self.current_population)
             # self.algorithm.evaluator.eval(self.problem, self.current_population)
             self.algorithm.tell(infills=self.current_population)
 
             self.current_population = self.algorithm.ask()
-            self.observed_values = []
+            self.observed_values = dict()
             self.current_individual = 0
 
     def get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
