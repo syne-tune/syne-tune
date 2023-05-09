@@ -16,7 +16,7 @@ from typing import Optional, List, Union, Dict, Any
 
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.config_space import Domain, Float, Integer, Categorical, FiniteRange
-
+from syne_tune.optimizer.schedulers.random_seeds import generate_random_seed
 from syne_tune.try_import import try_import_moo_message
 
 try:
@@ -125,7 +125,7 @@ class NSGA2Searcher(StochasticSearcher):
                 eliminate_duplicates=MixedVariableDuplicateElimination()
             ),
             eliminate_duplicates=MixedVariableDuplicateElimination(),
-            seed=self.random_state.randint(2**32 - 1),
+            seed=generate_random_seed(self.random_state),
         )
         self.algorithm.setup(
             problem=self.problem, termination=("n_eval", 2**32 - 1), verbose=False
