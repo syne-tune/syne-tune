@@ -17,17 +17,22 @@ from typing import Optional, List, Union, Dict, Any
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.config_space import Domain, Float, Integer, Categorical, FiniteRange
 
-from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.core.problem import Problem
-from pymoo.core.evaluator import Evaluator
-from pymoo.problems.static import StaticProblem
-from pymoo.core.mixed import (
-    MixedVariableMating,
-    MixedVariableSampling,
-    MixedVariableDuplicateElimination,
-)
-from pymoo.core.variable import Real, Choice
-from pymoo.core.variable import Integer as PyMOOInteger
+from syne_tune.try_import import try_import_moo_message
+
+try:
+    from pymoo.algorithms.moo.nsga2 import NSGA2
+    from pymoo.core.problem import Problem
+    from pymoo.core.evaluator import Evaluator
+    from pymoo.problems.static import StaticProblem
+    from pymoo.core.mixed import (
+        MixedVariableMating,
+        MixedVariableSampling,
+        MixedVariableDuplicateElimination,
+    )
+    from pymoo.core.variable import Real, Choice
+    from pymoo.core.variable import Integer as PyMOOInteger
+except ImportError:
+    print(try_import_moo_message())
 
 
 class MultiObjectiveMixedVariableProblem(Problem):
@@ -160,8 +165,8 @@ class NSGA2Searcher(StochasticSearcher):
 
         if self.current_individual >= len(self.current_population):
             raise Exception(
-                "It seems that some configurations are sill pending, while querying a new configuration."
-                "Note that NSGA-2 does not support asynchronous scheduling. To avoid this behavious, "
+                "It seems that some configurations are sill pending, while querying a new configuration. "
+                "Note that NSGA-2 does not support asynchronous scheduling. To avoid this behaviour, "
                 "make sure to set num_workers = 1."
             )
         else:
@@ -170,8 +175,9 @@ class NSGA2Searcher(StochasticSearcher):
         self.current_individual += 1
         config = {}
         for hp_name, hp in self.config_space.items():
-            if isinstance(hp, FiniteRange):
-                config[hp_name] = hp.values[individual.x[hp_name]]
-            else:
-                config[hp_name] = individual.x[hp_name]
+            if isinstance(hp, Domain):
+                if isinstance(hp, FiniteRange):
+                    config[hp_name] = hp.values[individual.x[hp_name]]
+                else:
+                    config[hp_name] = individual.x[hp_name]
         return config
