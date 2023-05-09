@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+<a name="v0.6.0"></a>
+## [v0.6.0] - 2023-05-08
+
+### New Features
+- Add example to optimize hyperparams of HF models on SWAG ([#641](https://github.com/awslabs/syne-tune/issues/641))
+- LocalBackend allows for >1 GPU per trial ([#635](https://github.com/awslabs/syne-tune/issues/635))
+
+### Bug Fixes
+- Fixing limits for random seed ([#645](https://github.com/awslabs/syne-tune/issues/645))
+- Pin fastparquet version ([#647](https://github.com/awslabs/syne-tune/issues/647))
+- Fix `ListTrainingJobs` throttling for E2E tests ([#634](https://github.com/awslabs/syne-tune/issues/634))
+- fix: Random seed range in benchmarking ([#656](https://github.com/awslabs/syne-tune/issues/656))
+
+### Code Refactoring
+- Towards introduction of plotting code ([#625](https://github.com/awslabs/syne-tune/issues/625))
+- Simplified Bayesian optimization code ([#640](https://github.com/awslabs/syne-tune/issues/640))
+- Changes to benchmarking formalism ([#637](https://github.com/awslabs/syne-tune/issues/637))
+
+### Documentation Updates
+- Link to D2L chapter in our docs ([#653](https://github.com/awslabs/syne-tune/issues/653))
+- Alternative of 1-NN surrogate to restrict_configurations ([#650](https://github.com/awslabs/syne-tune/issues/650))
+
+### Maintenance
+- Bump gpy from 1.9.9 to 1.12.0 ([#643](https://github.com/awslabs/syne-tune/issues/643))
+- Move long-running test ([#654](https://github.com/awslabs/syne-tune/issues/654))
+- Run two additional examples as tests ([#648](https://github.com/awslabs/syne-tune/issues/648))
+- Only validate PR titles; specify list of valid prefixes ([#646](https://github.com/awslabs/syne-tune/issues/646))
+- Bump codecov/codecov-action from 3.1.2 to 3.1.3 ([#639](https://github.com/awslabs/syne-tune/issues/639))
+- Create workflow to draft CHANGELOG.md; auto-tag PRs on push ([#631](https://github.com/awslabs/syne-tune/issues/631))
+
+[v0.6.0]: https://github.com/awslabs/syne-tune/compare/v0.5.0...v0.6.0
+
 <a name="v0.5.0"></a>
 ## [v0.5.0] - 2023-04-20
 

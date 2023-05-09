@@ -14,11 +14,9 @@ from typing import Dict, List, Set
 import numpy as np
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
-    TransformerModelFactory,
-)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
-    BaseSurrogateModel,
+    BasePredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost.cost_model import (
     CostModel,
@@ -27,13 +25,13 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
     TuningJobState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    SurrogateModel,
+    Predictor,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class CostFixedResourceSurrogateModel(BaseSurrogateModel):
+class CostFixedResourcePredictor(BasePredictor):
     """
     Wraps cost model :math:`c(x, r)` of :class:`CostModel` to be used as
     surrogate model, where predictions are done at r = ``fixed_resource``.
@@ -115,7 +113,7 @@ class CostFixedResourceSurrogateModel(BaseSurrogateModel):
         raise NotImplementedError()
 
 
-class CostSurrogateModelFactory(TransformerModelFactory):
+class CostEstimator(Estimator):
     """
     The name of the cost metric is ``model.cost_metric_name``.
 
@@ -145,14 +143,14 @@ class CostSurrogateModelFactory(TransformerModelFactory):
         assert resource >= 1, "Must be positive integer"
         self._fixed_resource = resource
 
-    def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
+    def fit_from_state(self, state: TuningJobState, update_params: bool) -> Predictor:
         """
         Models of type :class:`CostModel` do not have hyperparameters to be
-        fit, so ``fit_params`` is ignored here (TODO?).
+        fit, so ``update_params`` is ignored here.
 
         """
         self._model.update(state)
-        return CostFixedResourceSurrogateModel(
+        return CostFixedResourcePredictor(
             state=state,
             model=self._model,
             fixed_resource=self._fixed_resource,

@@ -1,5 +1,5 @@
 Benchmarking with Simulator Backend
-====================================
+===================================
 
 The fastest and cheapest way to compare a number of different HPO methods, or
 variants thereof, is benchmarking with the simulator backend. In this case,
@@ -335,6 +335,24 @@ drawbacks:
   using ``--restrict_configurations 1`` with such a benchmark, your methods
   may perform better than they should, just because they nearly sample the
   space exhaustively
+
+In general, ``--restrict_configurations 1`` is supported for schedulers which
+select the next configuration from a finite set. In contrast, methods like
+``DEHB`` or ``BOHB`` (or Bayesian optimization with local acquisition function
+optimization) optimize over encoded vectors, then round the solution back to a
+configuration. In order to use a tabulated benchmark like ``lcbench`` with these
+methods, you need to specify a surrogate. Maybe the least intrusive surrogate
+is nearest neighbor. Here is the benchmark definition for ``lcbench``:
+
+.. literalinclude:: ../../../../benchmarking/commons/benchmark_definitions/lcbench.py
+   :caption: benchmarking/commons/benchmark_definitions/lcbench.py
+   :start-at: def lcbench_benchmark(dataset_name: str, datasets=None) -> SurrogateBenchmarkDefinition:
+   :end-before: lcbench_datasets = [
+
+The 1-NN surrogate is selected by ``surrogate="KNeighborsRegressor"`` and setting
+the number of nearest neighbors to 1. For each configuration, the surrogate finds
+the nearest neighbor in the table (w.r.t. Euclidean distance between encoded
+vectors) and returns its metric values.
 
 Selecting Benchmarks from benchmark_definitions
 -----------------------------------------------

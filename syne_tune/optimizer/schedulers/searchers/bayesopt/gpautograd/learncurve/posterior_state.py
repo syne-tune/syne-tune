@@ -184,12 +184,12 @@ class GaussProcAdditivePosteriorState(PosteriorState):
         std_data: float,
     ) -> np.ndarray:
         """
-        Implements SurrogateModel.backward_gradient, see comments there.
-        This is for a single posterior state. If the SurrogateModel uses
+        Implements Predictor.backward_gradient, see comments there.
+        This is for a single posterior state. If the Predictor uses
         MCMC, have to call this for every sample.
 
         :param input: Single input point x, shape (d,)
-        :param head_gradients: See SurrogateModel.backward_gradient
+        :param head_gradients: See Predictor.backward_gradient
         :param mean_data: Mean used to normalize targets
         :param std_data: Stddev used to normalize targets
         :return:

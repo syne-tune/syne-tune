@@ -17,10 +17,10 @@ import logging
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    SurrogateModel,
+    Predictor,
     ScoringFunction,
     LocalOptimizer,
-    SurrogateOutputModel,
+    OutputPredictor,
     AcquisitionClassAndArgs,
     unwrap_acquisition_class_and_kwargs,
     CandidateGenerator,
@@ -42,14 +42,14 @@ class IndependentThompsonSampling(ScoringFunction):
     but incorrect. In fact, the larger the number of candidates, the more
     likely the winning configuration is arising from pure chance.
 
-    :param model: Surrogate model for statistics of predictive distribution
+    :param predictor: Surrogate predictor for statistics of predictive distribution
     :param random_state: PRN generator
     """
 
     def __init__(
-        self, model: SurrogateModel, random_state: Optional[RandomState] = None
+        self, predictor: Predictor, random_state: Optional[RandomState] = None
     ):
-        self.model = model
+        self.predictor = predictor
         if random_state is None:
             random_state = RandomState(31415629)
         self.random_state = random_state
@@ -57,11 +57,11 @@ class IndependentThompsonSampling(ScoringFunction):
     def score(
         self,
         candidates: Iterable[Configuration],
-        model: Optional[SurrogateModel] = None,
+        predictor: Optional[Predictor] = None,
     ) -> List[float]:
-        if model is None:
-            model = self.model
-        predictions_list = model.predict_candidates(candidates)
+        if predictor is None:
+            predictor = self.predictor
+        predictions_list = predictor.predict_candidates(candidates)
         scores = []
         # If the model supports fantasizing, posterior_means is a matrix. In
         # that case, samples are drawn for every column, then averaged (why
@@ -81,25 +81,25 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
     def __init__(
         self,
         hp_ranges: HyperparameterRanges,
-        model: SurrogateOutputModel,
+        predictor: OutputPredictor,
         acquisition_class: AcquisitionClassAndArgs,
         active_metric: str = None,
     ):
-        super().__init__(hp_ranges, model, acquisition_class, active_metric)
+        super().__init__(hp_ranges, predictor, acquisition_class, active_metric)
         # Number criterion evaluations in last recent optimize call
         self.num_evaluations = None
 
     def optimize(
-        self, candidate: Configuration, model: Optional[SurrogateOutputModel] = None
+        self, candidate: Configuration, predictor: Optional[OutputPredictor] = None
     ) -> Configuration:
         # Before local minimization, the model for this state_id should have been fitted.
-        if model is None:
-            model = self.model
+        if predictor is None:
+            predictor = self.predictor
         acquisition_class, acquisition_kwargs = unwrap_acquisition_class_and_kwargs(
             self.acquisition_class
         )
         acquisition_function = acquisition_class(
-            model, self.active_metric, **acquisition_kwargs
+            predictor, self.active_metric, **acquisition_kwargs
         )
 
         x0 = self.hp_ranges.to_ndarray(candidate)
@@ -138,7 +138,7 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
 
 class NoOptimization(LocalOptimizer):
     def optimize(
-        self, candidate: Configuration, model: Optional[SurrogateModel] = None
+        self, candidate: Configuration, predictor: Optional[Predictor] = None
     ) -> Configuration:
         return candidate
 

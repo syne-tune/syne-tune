@@ -136,11 +136,13 @@ class TensorboardCallback(TunerCallback):
     def _create_summary_writer(self):
         try:
             from tensorboardX import SummaryWriter
-        except ImportError:
-            logger.error(
-                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
+        except ImportError as err:
+            print(
+                "TensorboardCallback requires tensorboardX to be installed:\n"
+                "   pip install tensorboardX\n\n" + str(err)
             )
             raise
+
         return SummaryWriter(self.output_path)
 
     def on_tuning_start(self, tuner):

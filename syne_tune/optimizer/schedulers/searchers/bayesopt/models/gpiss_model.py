@@ -14,11 +14,9 @@ from typing import Dict, List, Optional
 import numpy as np
 import logging
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
-    TransformerModelFactory,
-)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
-    BaseSurrogateModel,
+    BasePredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
     ExtendedConfiguration,
@@ -37,7 +35,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.learncurve.pos
     GaussProcAdditivePosteriorState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    SurrogateModel,
+    Predictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     FantasizedPendingEvaluation,
@@ -50,7 +48,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
 logger = logging.getLogger(__name__)
 
 
-class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
+class GaussProcAdditivePredictor(BasePredictor):
     """
     Gaussian Process additive surrogate model, where model parameters are
     fit by marginal likelihood maximization.
@@ -125,7 +123,12 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
             len(poster_states), len(head_gradients)
         )
         return [
-            poster_state.backward_gradient(input, head_gradient, self.mean, self.std)
+            poster_state.backward_gradient(
+                input=input,
+                head_gradients=head_gradient,
+                mean_data=self.mean,
+                std_data=self.std,
+            )
             for poster_state, head_gradient in zip(poster_states, head_gradients)
         ]
 
@@ -137,7 +140,7 @@ class GaussProcAdditiveSurrogateModel(BaseSurrogateModel):
         return self._gpmodel.states
 
 
-class GaussProcAdditiveModelFactory(TransformerModelFactory):
+class GaussProcAdditiveEstimator(Estimator):
     """
     If ``num_fantasy_samples > 0``, we draw this many fantasy targets
     independently, while each sample is dependent over all pending
@@ -189,7 +192,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
     def set_params(self, param_dict):
         self._gpmodel.set_params(param_dict)
 
-    def model(self, state: TuningJobState, fit_params: bool) -> SurrogateModel:
+    def fit_from_state(self, state: TuningJobState, update_params: bool) -> Predictor:
         assert state.num_observed_cases(self.active_metric) > 0, (
             "Cannot compute posterior: state has no labeled datapoints "
             + f"for metric {self.active_metric}"
@@ -200,13 +203,13 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
 
         # [1] Fit model and compute posterior state, ignoring pending evals
         data = prepare_data(
-            state,
-            self._config_space_ext,
-            self.active_metric,
+            state=state,
+            config_space_ext=self._config_space_ext,
+            active_metric=self.active_metric,
             normalize_targets=self.normalize_targets,
             do_fantasizing=False,
         )
-        if fit_params:
+        if update_params:
             logger.info(f"Fitting surrogate model for {self.active_metric}")
             self._gpmodel.fit(data)
         elif not do_fantasizing:
@@ -242,7 +245,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         else:
             fantasy_samples = []
 
-        return GaussProcAdditiveSurrogateModel(
+        return GaussProcAdditivePredictor(
             state=state,
             gpmodel=self._gpmodel,
             fantasy_samples=fantasy_samples,
@@ -251,9 +254,9 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
             **extra_kwargs,
         )
 
-    def model_for_fantasy_samples(
+    def predictor_for_fantasy_samples(
         self, state: TuningJobState, fantasy_samples: List[FantasizedPendingEvaluation]
-    ) -> SurrogateModel:
+    ) -> Predictor:
         """
         Same as ``model`` with ``fit_params=False``, but ``fantasy_samples`` are
         passed in, rather than sampled here.
@@ -294,7 +297,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
         else:
             extra_kwargs = dict()
 
-        return GaussProcAdditiveSurrogateModel(
+        return GaussProcAdditivePredictor(
             state=state,
             gpmodel=self._gpmodel,
             fantasy_samples=fantasy_samples,
@@ -310,7 +313,7 @@ class GaussProcAdditiveModelFactory(TransformerModelFactory):
 
         assert isinstance(
             scheduler, MultiFidelitySchedulerMixin
-        ), "GaussProcAdditiveModelFactory requires MultiFidelitySchedulerMixin scheduler"
+        ), "GaussProcAdditiveEstimator requires MultiFidelitySchedulerMixin scheduler"
         assert scheduler.searcher_data == "all", (
             "For an additive Gaussian learning curve model (model='gp_issm' or "
             "model='gp_expdecay' in search_options), you need to set "

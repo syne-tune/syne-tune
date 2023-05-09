@@ -15,10 +15,6 @@ import numpy as np
 import torch
 from typing import List, Dict, Any
 
-from syne_tune.tuning_status import TuningStatus
-from syne_tune.optimizer.schedulers.searchers.utils import (
-    make_hyperparameter_ranges,
-)
 from torch import Tensor
 from botorch.models import SingleTaskGP
 from botorch.fit import fit_gpytorch_mll
@@ -29,6 +25,13 @@ from botorch.exceptions.errors import ModelFittingError
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from linear_operator.utils.errors import NotPSDError
+
+from syne_tune.tuning_status import TuningStatus
+from syne_tune.optimizer.schedulers.searchers.utils import (
+    make_hyperparameter_ranges,
+)
+from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +77,9 @@ class AutomaticTerminationCriterion(object):
 
         self._mode = mode
         self._warm_up = warm_up
-        self._seed = np.random.randint(2**32 - 1) if seed is None else seed
+        self._seed = (
+            np.random.randint(RANDOM_SEED_UPPER_BOUND) if seed is None else seed
+        )
         self._metric = metric
         self._topq = topq
         self._beta = beta

@@ -32,7 +32,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
-    BaseSurrogateModel,
+    BasePredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
@@ -126,7 +126,7 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         resource: int,
         start: int,
         end: int,
-        model: BaseSurrogateModel,
+        predictor: BasePredictor,
         sorted_ind: np.ndarray,
         configs_all: List[Dict[str, Any]],
     ) -> (List[float], np.ndarray):
@@ -136,15 +136,15 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         # If there is data at level ``resource``, the incumbent in EI
         # should only be computed over this. If there is no data at level
         # ``resource``, the incumbent is computed over all data
-        state = model.state
+        state = predictor.state
         if state.num_observed_cases(resource=resource) > 0:
             filter_observed_data = my_filter_observed_data
         else:
             filter_observed_data = None
-        model.set_filter_observed_data(filter_observed_data)
+        predictor.set_filter_observed_data(filter_observed_data)
         candidates_scorer = create_initial_candidates_scorer(
             initial_scoring="acq_func",
-            model=model,
+            predictor=predictor,
             acquisition_class=self.acquisition_class,
             random_state=self.random_state,
         )
@@ -215,9 +215,8 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
             kwargs = dict(skip_optimization=skip_optimization)
         else:
             kwargs = dict()
-        # Note: Asking for the model triggers the posterior computation
-        model = self.state_transformer.model(**kwargs)
-        # Note: ``model.state`` can have fewer observations than
+        predictor = self.state_transformer.fit(**kwargs)
+        # Note: ``predictor.state`` can have fewer observations than
         # ``self.state_transformer.state`` used above, because the former can
         # be filtered down
         resources_all = np.array(resources_all)
@@ -237,7 +236,7 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
                 resource=resource,
                 start=start,
                 end=end,
-                model=model,
+                predictor=predictor,
                 sorted_ind=sorted_ind,
                 configs_all=configs_all,
             )

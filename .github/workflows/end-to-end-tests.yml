@@ -158,6 +158,22 @@ jobs:
       requires-aws-credentials: true
     secrets: inherit
 
+  launch_lcbench_simulated:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_lcbench_simulated.py
+      requires-aws-credentials: true
+    secrets: inherit
+
+  example_automatic_termination_criterion:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/example_automatic_termination_criterion.py
+      requires-aws-credentials: true
+    secrets: inherit
+
 # Code in docs/source/tutorials/basics/code
 
   launch_basics_tutorial_rs:

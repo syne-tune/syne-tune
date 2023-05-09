@@ -20,7 +20,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    GaussProcModelFactory,
+    GaussProcEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
@@ -33,7 +33,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import ConfigurationF
 logger = logging.getLogger(__name__)
 
 
-class GaussProcMCMCModelFactory(GaussProcModelFactory):
+class GaussProcMCMCEstimator(GaussProcEstimator):
     """
     We support pending evaluations via fantasizing. Note that state does
     not contain the fantasy values, but just the pending configs. Fantasy

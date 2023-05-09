@@ -13,7 +13,7 @@ import numpy as np
 import logging
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    GaussProcModelFactory,
+    GaussProcEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model import (
     HyperTuneIndependentGPModel,
@@ -56,14 +56,14 @@ class HyperTuneBracketDistribution(DefaultHyperbandBracketDistribution):
 
     def __call__(self) -> np.ndarray:
         distribution = super().__call__()
-        model_factory = self._searcher.state_transformer.model_factory
+        estimator = self._searcher.state_transformer.estimator
         err_msg = (
-            "Hyper-Tune requires GaussProcModelFactory model factory with "
+            "Hyper-Tune requires GaussProcEstimator estimator with "
             "HyperTuneIndependentGPModel or HyperTuneJointGPModel model. Use "
             "searcher = 'hypertune'"
         )
-        assert isinstance(model_factory, GaussProcModelFactory), err_msg
-        gpmodel = model_factory.gpmodel
+        assert isinstance(estimator, GaussProcEstimator), err_msg
+        gpmodel = estimator.gpmodel
         assert isinstance(
             gpmodel, (HyperTuneIndependentGPModel, HyperTuneJointGPModel)
         ), err_msg

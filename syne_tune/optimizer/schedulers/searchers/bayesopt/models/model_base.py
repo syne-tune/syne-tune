@@ -18,17 +18,17 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
     TuningJobState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    SurrogateModel,
+    Predictor,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.common import ConfigurationFilter
 
 logger = logging.getLogger(__name__)
 
 
-class BaseSurrogateModel(SurrogateModel):
+class BasePredictor(Predictor):
     """
     Base class for (most)
-    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.Predictor`
     implementations, provides common code.
     """
 

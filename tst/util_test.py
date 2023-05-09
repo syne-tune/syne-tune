@@ -47,14 +47,18 @@ def temporary_local_backend(entry_point: str, **kwargs):
 
 
 def wait_until_all_trials_completed(backend):
-    def status(backend, trial_ids):
+    def all_status(backend, trial_ids):
         return [trial.status for trial in backend._all_trial_results(trial_ids)]
 
     i = 0
     while not all(
-        [status == Status.completed for status in status(backend, backend.trial_ids)]
+        [
+            status == Status.completed
+            for status in all_status(backend, backend.trial_ids)
+        ]
     ):
         time.sleep(0.1)
+        i += 1
         assert i < 100, "backend trials did not finish after 10s"
 
 

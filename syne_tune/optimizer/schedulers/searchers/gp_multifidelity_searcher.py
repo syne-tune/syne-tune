@@ -270,11 +270,11 @@ class GPMultiFidelitySearcher(GPFIFOSearcher):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         skip_optimization = state["skip_optimization"]
-        model_factory = self.state_transformer.model_factory
+        estimator = self.state_transformer.estimator
         # Call internal constructor
         new_searcher = GPMultiFidelitySearcher(
             **self._new_searcher_kwargs_for_clone(),
-            model_factory=model_factory,
+            estimator=estimator,
             init_state=init_state,
             skip_optimization=skip_optimization,
             config_space_ext=self.config_space_ext,

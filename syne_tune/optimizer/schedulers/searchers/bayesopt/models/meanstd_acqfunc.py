@@ -16,9 +16,9 @@ from dataclasses import dataclass
 import itertools
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    SurrogateModel,
+    Predictor,
     AcquisitionFunction,
-    SurrogateOutputModel,
+    OutputPredictor,
     assign_active_metric,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
@@ -29,7 +29,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 # Type for predictions from (potentially) multiple models
 # ``output_to_predictions[name]`` is a list of dicts, one entry for each
 # MCMC sample (list is size 1 if no MCMC), see also ``predict`` of
-# :class:`SurrogateModel`.
+# :class:`Predictor`.
 # Note: List sizes of different entries can be different. MCMC averaging
 # is done over the Cartesian product of these lists.
 PredictionsPerOutput = Dict[str, List[Dict[str, np.ndarray]]]
@@ -94,33 +94,31 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
        f(x, \mathrm{model}) = h(\mathrm{mean}, \mathrm{std}, \mathrm{model.current_best}())
 
     If model is a
-    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.SurrogateModel`,
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.Predictor`,
     then active_metric is ignored. If model is a ``dict`` mapping output names to models,
     then active_metric must be given.
 
     Note that acquisition functions will always be *minimized*!
     """
 
-    def __init__(
-        self, model: SurrogateOutputModel, active_metric: Optional[str] = None
-    ):
-        super().__init__(model, active_metric)
-        if isinstance(model, SurrogateModel):
+    def __init__(self, predictor: OutputPredictor, active_metric: Optional[str] = None):
+        super().__init__(predictor, active_metric)
+        if isinstance(predictor, Predictor):
             # Ignore active_metric
-            model = dictionarize_objective(model)
-        assert isinstance(model, Dict)
-        self.model = model
-        self.model_output_names = sorted(model.keys())
-        self.active_metric = assign_active_metric(model, active_metric)
-        output_names = list(model.keys())
+            predictor = dictionarize_objective(predictor)
+        assert isinstance(predictor, Dict)
+        self.predictor = predictor
+        self.predictor_output_names = sorted(predictor.keys())
+        self.active_metric = assign_active_metric(predictor, active_metric)
+        output_names = list(predictor.keys())
         active_pos = output_names.index(self.active_metric)
         # active_metric to come first
-        self.model_output_names = (
+        self.predictor_output_names = (
             [self.active_metric]
             + output_names[:active_pos]
             + output_names[(active_pos + 1) :]
         )
-        self._check_keys_predict_of_models()
+        self._check_keys_predict_of_predictors()
         self._current_bests = None
 
     def _output_to_keys_predict(self) -> Dict[str, Set[str]]:
@@ -129,11 +127,11 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         each output model to return "mean" and "std".
         """
         mean_and_std = {"mean", "std"}
-        return {k: mean_and_std for k in self.model_output_names}
+        return {k: mean_and_std for k in self.predictor_output_names}
 
-    def _check_keys_predict_of_models(self):
+    def _check_keys_predict_of_predictors(self):
         for output_name, required_keys in self._output_to_keys_predict().items():
-            keys_predict = self.model[output_name].keys_predict()
+            keys_predict = self.predictor[output_name].keys_predict()
             for k in required_keys:
                 assert k in keys_predict, (
                     f"output_name {output_name}: Required key {k} not "
@@ -165,12 +163,12 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         )
         return max(list(num_fantasy_values))
 
-    def _get_current_bests(self, model: SurrogateOutputModel) -> CurrentBestProvider:
+    def _get_current_bests(self, predictor: OutputPredictor) -> CurrentBestProvider:
         current_bests = self._current_bests
-        default_model = model is self.model
+        default_model = predictor is self.predictor
         if (not default_model) or current_bests is None:
             if self._head_needs_current_best():
-                current_bests = self._get_current_bests_internal(model)
+                current_bests = self._get_current_bests_internal(predictor)
             else:
                 current_bests = NoneCurrentBestProvider()
             if default_model:
@@ -178,7 +176,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         return current_bests
 
     def _get_current_bests_internal(
-        self, model: SurrogateOutputModel
+        self, predictor: OutputPredictor
     ) -> CurrentBestProvider:
         """
         Implements default where ``current_best`` only depends on the model for
@@ -188,20 +186,20 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         Note: The resulting current_bests is redetermined every time, since
         ``model`` may change.
         """
-        active_metric_current_best = model[self.active_metric].current_best()
+        active_metric_current_best = predictor[self.active_metric].current_best()
         return ActiveMetricCurrentBestProvider(active_metric_current_best)
 
     def compute_acq(
-        self, inputs: np.ndarray, model: Optional[SurrogateOutputModel] = None
+        self, inputs: np.ndarray, predictor: Optional[OutputPredictor] = None
     ) -> np.ndarray:
-        if model is None:
-            model = self.model
-        elif isinstance(model, SurrogateModel):
-            model = dictionarize_objective(model)
+        if predictor is None:
+            predictor = self.predictor
+        elif isinstance(predictor, Predictor):
+            predictor = dictionarize_objective(predictor)
         if inputs.ndim == 1:
             inputs = inputs.reshape((1, -1))
-        output_to_predictions = self._map_outputs_to_predictions(model, inputs)
-        current_bests = self._get_current_bests(model)
+        output_to_predictions = self._map_outputs_to_predictions(predictor, inputs)
+        current_bests = self._get_current_bests(predictor)
 
         # Reshaping of predictions to accomodate _compute_head.
         for preds_for_samples in output_to_predictions.values():
@@ -218,11 +216,11 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         # current_best
         list_values = [
             list(enumerate(output_to_predictions[name]))
-            for name in self.model_output_names
+            for name in self.predictor_output_names
         ]
         for preds_and_pos in itertools.product(*list_values):
             positions, predictions = zip(*preds_and_pos)
-            output_to_preds = dict(zip(self.model_output_names, predictions))
+            output_to_preds = dict(zip(self.predictor_output_names, predictions))
             current_best = current_bests(positions)
             # Compute the acquisition function value
             fvals = self._compute_head(output_to_preds, current_best)
@@ -240,16 +238,16 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
             return {k: v + grad2[k] for k, v in grad1.items()}
 
     def compute_acq_with_gradient(
-        self, input: np.ndarray, model: Optional[SurrogateOutputModel] = None
+        self, input: np.ndarray, predictor: Optional[OutputPredictor] = None
     ) -> (float, np.ndarray):
-        if model is None:
-            model = self.model
-        if isinstance(model, SurrogateModel):
-            model = dictionarize_objective(model)
+        if predictor is None:
+            predictor = self.predictor
+        if isinstance(predictor, Predictor):
+            predictor = dictionarize_objective(predictor)
         output_to_predictions = self._map_outputs_to_predictions(
-            model, input.reshape(1, -1)
+            predictor, input.reshape(1, -1)
         )
-        current_bests = self._get_current_bests(model)
+        current_bests = self._get_current_bests(predictor)
 
         # Reshaping of predictions to accomodate _compute_head_and_gradient. We
         # also store the original shapes, which are needed below
@@ -268,7 +266,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         # position in each list
         list_values = [
             list(enumerate(output_to_predictions[name]))
-            for name in self.model_output_names
+            for name in self.predictor_output_names
         ]
         head_gradient = {
             name: [None] * len(predictions)
@@ -276,11 +274,11 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         }
         for preds_and_pos in itertools.product(*list_values):
             positions, predictions = zip(*preds_and_pos)
-            output_to_preds = dict(zip(self.model_output_names, predictions))
+            output_to_preds = dict(zip(self.predictor_output_names, predictions))
             current_best = current_bests(positions)
             head_result = self._compute_head_and_gradient(output_to_preds, current_best)
             fvals_list.append(head_result.hval)
-            for output_name, pos in zip(self.model_output_names, positions):
+            for output_name, pos in zip(self.predictor_output_names, positions):
                 head_gradient[output_name][pos] = self._add_head_gradients(
                     head_result.gradient[output_name], head_gradient[output_name][pos]
                 )
@@ -289,7 +287,7 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         fval = np.mean(fvals_list)
         num_total = len(fvals_list)
         gradient = 0.0
-        for output_name, output_model in model.items():
+        for output_name, output_model in predictor.items():
             # Reshape head gradients so they have the same shape as corresponding
             # predictions. This is required for ``backward_gradient`` to work.
             shp = shapes[output_name]
@@ -305,11 +303,11 @@ class MeanStdAcquisitionFunction(AcquisitionFunction):
         return fval, gradient
 
     def _map_outputs_to_predictions(
-        self, model: SurrogateOutputModel, inputs: np.ndarray
+        self, predictor: OutputPredictor, inputs: np.ndarray
     ) -> PredictionsPerOutput:
         return {
             output_name: output_model.predict(inputs)
-            for output_name, output_model in model.items()
+            for output_name, output_model in predictor.items()
         }
 
     def _extract_mean_and_std(

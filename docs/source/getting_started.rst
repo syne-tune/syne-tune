@@ -33,6 +33,13 @@ In the examples above, Syne Tune is installed with the union of all its
 dependencies, which can be a lot. If you only need specific features, you may
 be able to use `partial dependencies <faq.html#what-are-the-different-installations-options-supported>`__.
 
+What Is Hyperparameter Optimization?
+====================================
+
+Here is an
+`introduction to hyperparameter optimization <https://d2l.ai/chapter_hyperparameter-optimization/index.html>`__
+in the context of deep learning, which uses Syne Tune for some examples.
+
 First Example
 =============
 

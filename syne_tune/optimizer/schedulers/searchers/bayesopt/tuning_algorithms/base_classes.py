@@ -37,26 +37,26 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
 )
 
 
-def assign_active_metric(model, active_metric):
-    """Checks that active_metric is provided when model consists of multiple output models.
-    Otherwise, just sets active_metric to the only model output name available.
+def assign_active_metric(predictor, active_metric):
+    """Checks that active_metric is provided when predictor consists of multiple output predictors.
+    Otherwise, just sets active_metric to the only predictor output name available.
     """
-    model_output_names = sorted(model.keys())
-    num_output_models = len(model_output_names)
-    if num_output_models == 1:
+    predictor_output_names = sorted(predictor.keys())
+    num_output_predictors = len(predictor_output_names)
+    if num_output_predictors == 1:
         if active_metric is not None:
-            assert active_metric == model_output_names[0], (
-                "Only a single output model is given. "
-                "Active metric must be set to that output model."
+            assert active_metric == predictor_output_names[0], (
+                "Only a single output predictor is given. "
+                "Active metric must be set to that output predictor."
             )
-        active_metric = model_output_names[0]
+        active_metric = predictor_output_names[0]
     else:
         assert active_metric is not None, (
-            f"As model has {num_output_models}, active metric cannot be None. "
-            f"Please set active_metric to one of the model output names: "
-            f"{model_output_names}."
+            f"As predictor has {num_output_predictors}, active metric cannot be None. "
+            f"Please set active_metric to one of the predictor output names: "
+            f"{predictor_output_names}."
         )
-        assert active_metric in model_output_names
+        assert active_metric in predictor_output_names
     return active_metric
 
 
@@ -65,11 +65,14 @@ class NextCandidatesAlgorithm:
         raise NotImplementedError
 
 
-class SurrogateModel:
+class Predictor:
     """
-    Base class of surrogate models for Bayesian optimization. A surrogate model
-    supports marginal predictions feeding into an acquisition function, as well
-    as suppport to compute gradients of an acquisition function w.r.t. inputs.
+    Base class for probabilistic predictors used in Bayesian optimization. They
+    support marginal predictions feeding into an acquisition function, as well
+    as computing gradients of an acquisition function w.r.t. inputs.
+
+    In general, a predictor is created by an estimator. It wraps a posterior
+    state, which allows for probabilistic predictions on arbitrary inputs.
 
     :param state: Tuning job state
     :param active_metric: Name of internal objective
@@ -174,11 +177,11 @@ class SurrogateModel:
         raise NotImplementedError
 
 
-# Useful type that allows for a dictionary mapping each output name to a SurrogateModel.
+# Useful type that allows for a dictionary mapping each output name to a Predictor.
 # This is needed for multi-output BO methods such as constrained BO, where each output
-# is associated to a model. This type includes the Union with the standard
-# SurrogateModel type for backward compatibility.
-SurrogateOutputModel = Union[SurrogateModel, Dict[str, SurrogateModel]]
+# is associated to a predictor. This type includes the Union with the standard
+# Predictor type for backward compatibility.
+OutputPredictor = Union[Predictor, Dict[str, Predictor]]
 
 
 class ScoringFunction:
@@ -190,11 +193,11 @@ class ScoringFunction:
     def score(
         self,
         candidates: Iterable[Configuration],
-        model: Optional[SurrogateOutputModel] = None,
+        predictor: Optional[OutputPredictor] = None,
     ) -> List[float]:
         """
         :param candidates: Configurations for which scores are to be computed
-        :param model: Overrides default surrogate model
+        :param predictor: Overrides default  predictor
         :return: List of score values, length of ``candidates``
         """
         raise NotImplementedError
@@ -204,40 +207,37 @@ class AcquisitionFunction(ScoringFunction):
     """
     Base class for acquisition functions :math:`f(x)`.
 
-    :param model: Surrogate model providing predictive statistics (e.g.,
-        mean, variance)
+    :param predictor: Predictor(s) from surrogate model
     :param active_metric: Name of internal metric
     """
 
-    def __init__(
-        self, model: SurrogateOutputModel, active_metric: Optional[str] = None
-    ):
-        self.model = model
+    def __init__(self, predictor: OutputPredictor, active_metric: Optional[str] = None):
+        self.predictor = predictor
         if active_metric is None:
             active_metric = INTERNAL_METRIC_NAME
         self.active_metric = active_metric
 
     def compute_acq(
-        self, inputs: np.ndarray, model: Optional[SurrogateOutputModel] = None
+        self, inputs: np.ndarray, predictor: Optional[OutputPredictor] = None
     ) -> np.ndarray:
         """
         Note: If inputs has shape ``(d,)``, it is taken to be ``(1, d)``
 
         :param inputs: Encoded input points, shape ``(n, d)``
-        :param model: If given, overrides ``self.model``
+        :param predictor: If given, overrides ``self.predictor``
         :return: Acquisition function values, shape ``(n,)``
         """
         raise NotImplementedError
 
     def compute_acq_with_gradient(
-        self, input: np.ndarray, model: Optional[SurrogateOutputModel] = None
+        self, input: np.ndarray, predictor: Optional[OutputPredictor] = None
     ) -> Tuple[float, np.ndarray]:
         """
         For a single input point :math:`x`, compute acquisition function value
         :math:`f(x)` and gradient :math:`\nabla f(x)`.
 
         :param input: Single input point :math:`x`, shape ``(d,)``
-        :param model: If given, overrides ``self.model``
+        :param predictor: If given, overrides ``self.predictor``
         :return: :math:`(f(x), \nabla f(x))`
         """
         raise NotImplementedError
@@ -245,17 +245,17 @@ class AcquisitionFunction(ScoringFunction):
     def score(
         self,
         candidates: Iterable[Configuration],
-        model: Optional[SurrogateOutputModel] = None,
+        predictor: Optional[OutputPredictor] = None,
     ) -> List[float]:
-        if model is None:
-            model = self.model
-        if isinstance(model, dict):
-            active_model = model[self.active_metric]
+        if predictor is None:
+            predictor = self.predictor
+        if isinstance(predictor, dict):
+            active_predictor = predictor[self.active_metric]
         else:
-            active_model = model
-        hp_ranges = active_model.hp_ranges_for_prediction()
+            active_predictor = predictor
+        hp_ranges = active_predictor.hp_ranges_for_prediction()
         inputs = hp_ranges.to_ndarray_matrix(candidates)
-        return list(self.compute_acq(inputs, model=model))
+        return list(self.compute_acq(inputs, predictor=predictor))
 
 
 AcquisitionClassAndArgs = Union[
@@ -276,7 +276,7 @@ class LocalOptimizer:
     """
     Class that tries to find a local candidate with a better score, typically
     using a local optimization method such as L-BFGS. It would normally
-    encapsulate an acquisition function and model.
+    encapsulate an acquisition function and predictor.
 
     ``acquisition_class`` contains the type of the acquisition function
     (subclass of :class:`AcquisitionFunction`). It can also be a tuple of the
@@ -284,7 +284,7 @@ class LocalOptimizer:
     constructor.
 
     :param hp_ranges: Feature generator for configurations
-    :param model: Surrogate model for acquisition function
+    :param predictor: Predictor(s) for acquisition function
     :param acquisition_class: See above
     :param active_metric: Name of internal metric
     """
@@ -292,27 +292,27 @@ class LocalOptimizer:
     def __init__(
         self,
         hp_ranges: HyperparameterRanges,
-        model: SurrogateOutputModel,
+        predictor: OutputPredictor,
         acquisition_class: AcquisitionClassAndArgs,
         active_metric: Optional[str] = None,
     ):
         self.hp_ranges = hp_ranges
-        self.model = model
+        self.predictor = predictor
         if active_metric is None:
             active_metric = INTERNAL_METRIC_NAME
-        if isinstance(model, dict):
-            self.active_metric = assign_active_metric(model, active_metric)
+        if isinstance(predictor, dict):
+            self.active_metric = assign_active_metric(predictor, active_metric)
         else:
             self.active_metric = active_metric
         self.acquisition_class = acquisition_class
 
     def optimize(
-        self, candidate: Configuration, model: Optional[SurrogateOutputModel] = None
+        self, candidate: Configuration, predictor: Optional[OutputPredictor] = None
     ) -> Configuration:
         """Run local optimization, starting from ``candidate``
 
         :param candidate: Starting point
-        :param model: Overrides ``self.model``
+        :param predictor: Overrides ``self.predictor``
         :return: Configuration found by local optimization
         """
         raise NotImplementedError

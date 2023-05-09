@@ -21,7 +21,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     INTERNAL_METRIC_NAME,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    GaussProcEmpiricalBayesModelFactory,
+    GaussProcEmpiricalBayesEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression import (
     GaussianProcessRegression,
@@ -110,11 +110,11 @@ def fit_predict_ours(
         optimization_config=optimization_config,
         random_seed=random_seed,
     )
-    model_factory = GaussProcEmpiricalBayesModelFactory(
+    estimator = GaussProcEmpiricalBayesEstimator(
         active_metric=INTERNAL_METRIC_NAME, gpmodel=_gpmodel, num_fantasy_samples=20
     )
-    model = model_factory.model(data["state"], fit_params=True)
-    model_params = model_factory.get_params()
+    model = estimator.fit_from_state(data["state"], update_params=True)
+    model_params = estimator.get_params()
     print("Hyperparameters: {}".format(model_params))
     # Prediction
     predictions = model.predict(data["test_inputs"])[0]
