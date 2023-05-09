@@ -149,7 +149,6 @@ class NSGA2Searcher(StochasticSearcher):
             func_values = np.array(list(self.observed_values.values()))
             static = StaticProblem(self.problem, F=func_values)
             Evaluator().eval(static, self.current_population)
-            # self.algorithm.evaluator.eval(self.problem, self.current_population)
             self.algorithm.tell(infills=self.current_population)
 
             self.current_population = self.algorithm.ask()
