@@ -29,7 +29,8 @@ try:
         MixedVariableSampling,
         MixedVariableDuplicateElimination,
     )
-    from pymoo.core.variable import Real, Choice
+    from pymoo.core.variable import Real as PyMOOReal
+    from pymoo.core.variable import Choice as PyMOOChoice
     from pymoo.core.variable import Integer as PyMOOInteger
 except ImportError:
     print(try_import_moo_message())
@@ -40,14 +41,17 @@ class MultiObjectiveMixedVariableProblem(Problem):
         vars = {}
 
         for hp_name, hp in config_space.items():
-            if isinstance(hp, Categorical):
-                vars[hp_name] = Choice(options=hp.categories)
-            elif isinstance(hp, Integer):
-                vars[hp_name] = PyMOOInteger(bounds=(hp.lower, hp.upper))
-            elif isinstance(hp, FiniteRange):
-                vars[hp_name] = PyMOOInteger(bounds=(0, hp.size - 1))
-            elif isinstance(hp, Float):
-                vars[hp_name] = Real(bounds=(hp.lower, hp.upper))
+            if isinstance(hp, Domain):
+                if isinstance(hp, Categorical):
+                    vars[hp_name] = PyMOOChoice(options=hp.categories)
+                elif isinstance(hp, Integer):
+                    vars[hp_name] = PyMOOInteger(bounds=(hp.lower, hp.upper - 1))
+                elif isinstance(hp, FiniteRange):
+                    vars[hp_name] = PyMOOInteger(bounds=(0, hp.size - 1))
+                elif isinstance(hp, Float):
+                    vars[hp_name] = PyMOOReal(bounds=(hp.lower, hp.upper))
+                else:
+                    raise Exception(f'Type {type(hp)} of hyperparameter {hp_name} is not supported!')
 
         super().__init__(vars=vars, n_obj=n_obj, n_ieq_constr=0, **kwargs)
 
@@ -56,13 +60,13 @@ class NSGA2Searcher(StochasticSearcher):
     """
     This is a wrapper around the NSGA-2 [1] implementation of pymoo [2].
 
-    [1] K. Deb, A. Pratap, S. Agarwal, and T. Meyarivan.
-    A fast and elitist multiobjective genetic algorithm: nsga-II.
-    Trans. Evol. Comp, 6(2):182–197, April 2002.
+        | [1] K. Deb, A. Pratap, S. Agarwal, and T. Meyarivan.
+        | A fast and elitist multiobjective genetic algorithm: nsga-II.
+        | Trans. Evol. Comp, 6(2):182–197, April 2002.
 
-    [2] J. Blank and K. Deb
-    pymoo: Multi-Objective Optimization in Python
-    IEEE Access, 2020
+        | [2] J. Blank and K. Deb
+        | pymoo: Multi-Objective Optimization in Python
+        | IEEE Access, 2020
 
     :param config_space: Configuration space
     :param metric: Name of metric passed to :meth:`~update`. Can be obtained from
@@ -85,7 +89,7 @@ class NSGA2Searcher(StochasticSearcher):
         self,
         config_space: Dict[str, Any],
         metric: List[str],
-        mode: Union[List[str], str],
+        mode: Union[List[str], str] = 'min',
         points_to_evaluate: Optional[List[dict]] = None,
         population_size: int = 20,
         **kwargs,
@@ -119,6 +123,7 @@ class NSGA2Searcher(StochasticSearcher):
                 eliminate_duplicates=MixedVariableDuplicateElimination()
             ),
             eliminate_duplicates=MixedVariableDuplicateElimination(),
+            seed=self.random_state.randint(2 ** 32 - 1)
         )
         self.algorithm.setup(
             problem=self.problem, termination=("n_eval", 2**32 - 1), verbose=False
@@ -126,7 +131,7 @@ class NSGA2Searcher(StochasticSearcher):
 
         self.current_population = self.algorithm.ask()
         self.current_individual = 0
-        self.observed_values = []
+        self.observed_values = dict()
 
     def _update(self, trial_id: str, config: dict, result: dict):
         observed_metrics = {}
@@ -136,10 +141,11 @@ class NSGA2Searcher(StochasticSearcher):
                 value *= -1
             observed_metrics[metric] = value
 
-        self.observed_values.append(list(observed_metrics.values()))
+        self.observed_values[trial_id] = np.array(observed_metrics.values())
 
-        if len(self.observed_values) == len(self.current_population):
-            static = StaticProblem(self.problem, F=np.array(self.observed_values))
+        if len(self.observed_values.keys()) == len(self.current_population):
+            func_values = np.array([v for v in self.observed_values.keys()])
+            static = StaticProblem(self.problem, F=func_values)
             Evaluator().eval(static, self.current_population)
             # self.algorithm.evaluator.eval(self.problem, self.current_population)
             self.algorithm.tell(infills=self.current_population)
