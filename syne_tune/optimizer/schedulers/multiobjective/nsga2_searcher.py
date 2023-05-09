@@ -31,7 +31,7 @@ from pymoo.core.variable import Integer as PyMOOInteger
 
 
 class MultiObjectiveMixedVariableProblem(Problem):
-    def __init__(self, n_obj, config_space, **kwargs):
+    def __init__(self, n_obj: int, config_space: Dict[str, Any], **kwargs):
         vars = {}
 
         for hp_name, hp in config_space.items():
@@ -73,16 +73,16 @@ class NSGA2Searcher(StochasticSearcher):
     :param mode: Should metric be minimized ("min", default) or maximized
         ("max"). In the case of multi-objective optimization, mode can be a list defining for
         each metric if it is minimized or maximized
-    :param population_size: Size of the population, defaults to 100
+    :param population_size: Size of the population
     """
 
     def __init__(
         self,
-        config_space,
+        config_space: Dict[str, Any],
         metric: List[str],
         mode: Union[List[str], str],
         points_to_evaluate: Optional[List[dict]] = None,
-        population_size: int = 100,
+        population_size: int = 20,
         **kwargs,
     ):
         super(NSGA2Searcher, self).__init__(

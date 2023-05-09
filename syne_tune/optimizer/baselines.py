@@ -787,12 +787,7 @@ class NSGA2(FIFOScheduler):
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
-    :param population_size: See
-        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
-        Defaults to 100
-    :param sample_size: See
-        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
-        Defaults to 10
+    :param population_size: The size of the population for NSGA-2
     :param random_seed: Random seed, optional
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
@@ -803,7 +798,7 @@ class NSGA2(FIFOScheduler):
         config_space: Dict[str, Any],
         metric: List[str],
         mode: Union[List[str], str] = "min",
-        population_size: int = 100,
+        population_size: int = 20,
         random_seed: Optional[int] = None,
         **kwargs,
     ):
