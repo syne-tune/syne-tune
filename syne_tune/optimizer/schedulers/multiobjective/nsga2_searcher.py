@@ -113,7 +113,7 @@ class NSGA2Searcher(StochasticSearcher):
                     Integer,
                     Float,
                     FiniteRange,
-                ], f"Type {type(hp)} for hyperparameter {hp_name} not supported."
+                ], f"Type {type(hp)} for hyperparameter {hp_name} is not supported."
 
         self.problem = MultiObjectiveMixedVariableProblem(
             config_space=config_space, n_var=len(self.hp_names), n_obj=len(metric)
