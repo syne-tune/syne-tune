@@ -97,7 +97,12 @@ class NSGA2Searcher(StochasticSearcher):
         for hp_name, hp in config_space.items():
             if isinstance(hp, Domain):
                 self.hp_names.append(hp_name)
-                assert type(hp) in [Categorical, Integer, Float, FiniteRange], f"Type {type(hp)} for hyperparameter {hp_name} not supported."
+                assert type(hp) in [
+                    Categorical,
+                    Integer,
+                    Float,
+                    FiniteRange,
+                ], f"Type {type(hp)} for hyperparameter {hp_name} not supported."
 
         self.problem = MultiObjectiveMixedVariableProblem(
             config_space=config_space, n_var=len(self.hp_names), n_obj=len(metric)
