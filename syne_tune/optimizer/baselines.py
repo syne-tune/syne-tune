@@ -26,6 +26,7 @@ from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
 from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
     MultiObjectiveRegularizedEvolution,
 )
+from syne_tune.optimizer.schedulers.multiobjective.nsga2_searcher import NSGA2Searcher
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
@@ -771,6 +772,45 @@ class MOREA(FIFOScheduler):
                 mode=mode,
                 population_size=population_size,
                 sample_size=sample_size,
+                random_seed=random_seed,
+            ),
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class NSGA2(FIFOScheduler):
+    """
+
+    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param population_size: The size of the population for NSGA-2
+    :param random_seed: Random seed, optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: List[str],
+        mode: Union[List[str], str] = "min",
+        population_size: int = 20,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        super(NSGA2, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            searcher=NSGA2Searcher(
+                config_space=config_space,
+                metric=metric,
+                mode=mode,
+                population_size=population_size,
                 random_seed=random_seed,
             ),
             random_seed=random_seed,
