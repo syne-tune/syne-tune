@@ -134,6 +134,8 @@ Supported multi-objective optimization methods
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.schedulers.multiobjective.MOASHA`          | `Schmucker, et al. (2021) <https://arxiv.org/abs/2106.12639>`__             | random      | yes           | yes             | no        |
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
+| :class:`~syne_tune.optimizer.baselines.NSGA2`                           | `Deb, et al. (2002) <https://ieeexplore.ieee.org/document/996017>`__        | evolutionary| no            | no              | no        |
++-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 
 HPO methods listed can be used in a multi-objective setting by scalarization
 (:class:`~syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority.LinearScalarizationPriority`)
