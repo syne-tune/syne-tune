@@ -31,7 +31,7 @@ jobs:
       script-path: examples/launch_rl_tuning.py
 
   launch_standalone_bayesian_optimization:
-    uses: ./.github/workflows/run-syne-tune.yml
+    uses: ./.github/workflows/run-syne-tune-gpsearchers-only.yml
     with:
       script-path: examples/launch_standalone_bayesian_optimization.py
 
