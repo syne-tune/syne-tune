@@ -126,8 +126,8 @@ jobs:
   launch_transfer_learning_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-    extras-require: gpsearchers
-    script-path: examples/launch_transfer_learning_example.py
+      extras-require: gpsearchers
+      script-path: examples/launch_transfer_learning_example.py
 
   launch_height_simple:
     uses: ./.github/workflows/run-syne-tune.yml
