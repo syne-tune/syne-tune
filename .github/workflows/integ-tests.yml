@@ -30,7 +30,6 @@ jobs:
   launch_rl_tuning:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      extras-require: gpsearchers
       additional-command: pip install -r examples/training_scripts/rl_cartpole/requirements.txt
       script-path: examples/launch_rl_tuning.py
 
@@ -78,19 +77,20 @@ jobs:
   launch_fashionmnist:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      extras-require: gpsearchers
+      extras-require: gpsearchers,aws
       script-path: examples/launch_fashionmnist.py
 
   launch_checkpoint_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       extras-require: gpsearchers
+      additional-command: pip install xgboost
       script-path: examples/launch_checkpoint_example.py
 
   launch_fashionmnist_costaware:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      extras-require: gpsearchers
+      extras-require: gpsearchers,aws
       script-path: examples/launch_fashionmnist_costaware.py
 
   launch_bayesopt_constrained:
@@ -120,13 +120,14 @@ jobs:
   launch_height_config_json:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      extras-require: gpsearchers
+      extras-require: gpsearchers,aws
       script-path: examples/launch_height_config_json.py
 
   launch_transfer_learning_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       extras-require: gpsearchers
+      additional-command: pip install xgboost
       script-path: examples/launch_transfer_learning_example.py
 
   launch_height_simple:

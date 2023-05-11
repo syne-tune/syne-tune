@@ -49,18 +49,16 @@ jobs:
         with:
           python-version: 3.8
           cache: 'pip'
+      - name: Pip install basics
+        run: |
+          python -m pip install wheel
+          python -m pip install --upgrade pip
       - name: Install Syne Tune with all dependencies
         if: ${{ inputs.extras-require == '' }}
-        run: |
-          python -m pip install wheel
-          python -m pip install --upgrade pip
-          python -m pip install -e '.[extra]'
+        run: python -m pip install -e '.[extra]'
       - name: Install Syne Tune with selected dependencies
         if: ${{ inputs.extras-require != '' }}
-        run: |
-          python -m pip install wheel
-          python -m pip install --upgrade pip
-          python -m pip install -e '.[${{ inputs.extras-require }}]'
+        run: python -m pip install -e '.[${{ inputs.extras-require }}]'
       - name: Run optional custom command
         if: ${{ inputs.additional-command != '' }}
         run: ${{ inputs.additional-command }}
