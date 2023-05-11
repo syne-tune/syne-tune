@@ -16,11 +16,14 @@ jobs:
   launch_tensorboard_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
+      additional-command: pip install tensorboardX
       script-path: examples/launch_tensorboard_example.py
   
   launch_plot_results:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       additional-command: pip install matplotlib
       script-path: examples/launch_plot_results.py
 
@@ -33,21 +36,25 @@ jobs:
   launch_standalone_bayesian_optimization:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_standalone_bayesian_optimization.py
 
   launch_pbt:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_pbt.py
 
   launch_height_standalone_scheduler:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_height_standalone_scheduler.py
 
   launch_height_python_backend:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_height_python_backend.py
 
   launch_height_ray:
@@ -58,41 +65,52 @@ jobs:
   launch_height_baselines:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_height_baselines.py
 
   launch_height_moasha:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_height_moasha.py
 
   launch_fashionmnist:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,aws
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: examples/launch_fashionmnist.py
 
   launch_checkpoint_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
+      additional-command: pip install xgboost scikit-learn
       script-path: examples/launch_checkpoint_example.py
 
   launch_fashionmnist_costaware:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,aws
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: examples/launch_fashionmnist_costaware.py
 
   launch_bayesopt_constrained:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_bayesopt_constrained.py
 
   launch_ask_tell_scheduler:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_ask_tell_scheduler.py
 
   launch_ask_tell_scheduler_hyperband:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_ask_tell_scheduler_hyperband.py
 
   launch_asha_yahpo:
@@ -104,19 +122,24 @@ jobs:
   launch_height_config_json:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,aws
       script-path: examples/launch_height_config_json.py
 
   launch_transfer_learning_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
+      additional-command: pip install xgboost scikit-learn
       script-path: examples/launch_transfer_learning_example.py
 
   launch_height_simple:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_height_simple.py
 
   launch_height_extra_results:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       script-path: examples/launch_height_extra_results.py
