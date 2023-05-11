@@ -16,6 +16,7 @@ from typing import Optional, Dict, Any
 import benchmarking
 import syne_tune
 from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
+from benchmarking.commons.hpo_main_common import ExtraArgsType
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )
@@ -67,3 +68,18 @@ def sagemaker_estimator_args(
         if benchmark.estimator_kwargs is not None:
             sm_args.update(benchmark.estimator_kwargs)
     return sm_args
+
+
+def append_extra_arguments_launch_remote(
+    extra_args: Optional[ExtraArgsType],
+) -> ExtraArgsType:
+    if extra_args is None:
+        extra_args = []
+    return extra_args + [
+        dict(
+            name="skip_initial_jobs",
+            type=int,
+            default=0,
+            help="Skip this number of initial jobs which would be launched",
+        )
+    ]
