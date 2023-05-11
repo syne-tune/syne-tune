@@ -96,13 +96,13 @@ def main(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
     combinations = list(itertools.product(method_names, seeds, benchmark_names))
     print(combinations)
 
-    # get_trial_scheduler: methods[method]
-
     for method, seed, benchmark_name in tqdm(combinations):
+
+        get_trial_scheduler = methods[method]
 
         benchmark = benchmark_definitions[benchmark_name]
 
-        run_experiment(method, seed, benchmark, experiment_tag)
+        run_experiment(get_trial_scheduler, seed, benchmark, experiment_tag)
 
 
 if __name__ == "__main__":

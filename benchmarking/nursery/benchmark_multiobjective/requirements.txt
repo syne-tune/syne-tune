@@ -9,3 +9,4 @@ scikit-learn
 h5py # note: only needed for fcnet
 botorch
 xgboost
+apex

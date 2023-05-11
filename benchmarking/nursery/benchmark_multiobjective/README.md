@@ -1,4 +1,4 @@
-# Benchmark Automl submission
+# Benchmark Multiobjective Methods in Syne Tune
 
 This folder shows one way to run quick experiments running different scheduler on different benchmarks and plot
  results once they are done.
@@ -7,24 +7,24 @@ To run all experiments, you can run the following:
 
 
 ```bash
-pip install -r benchmarking/nursery/benchmark_automl/requirements.txt
-python benchmarking/nursery/benchmark_automl/benchmark_main.py --experiment_tag "my-new-experiment" --num_seeds 2
+pip install -r benchmarking/nursery/benchmark_multiobjective/requirements.txt
+python benchmarking/nursery/benchmark_multiobjective/benchmark_main.py --experiment_tag "my-new-experiment" --num_seeds 2
 ```
 
 Which will run all combinations of methods/benchmark/seeds on your local computer for 2 seeds.
 
 Once all evaluations are done, you can pull results by running:
 
-```python benchmarking/nursery/benchmark_automl/results_analysis/show_results.py --experiment_tag "my-new-experiment"``` 
+```python benchmarking/nursery/benchmark_multiobjective/results_analysis/show_results.py --experiment_tag "my-new-experiment"``` 
 
 you will obtain a plot like showing the confidence intervals of performance over time of all methods on all benchmarks
 and also a table showing the average ranks of methods.
 
-You can also only run only one scheduler by doing `python benchmarking/nursery/benchmark_automl/benchmark_main.py --method RS`, see
+You can also only run only one scheduler by doing `python benchmarking/nursery/benchmark_multiobjective/benchmark_main.py --method RS`, see
 `benchmark_main.py` to see all options supported.
 
-To launch the evaluation benchmark_automl, you can also run 
-```python benchmarking/nursery/benchmark_automl/launch_remote.py --experiment_tag "my-new-experiment"``` which 
+To launch the evaluation benchmark_multiobjective, you can also run 
+```python benchmarking/nursery/benchmark_multiobjective/launch_remote.py --experiment_tag "my-new-experiment"``` which 
 evaluate everything in a remote machine. 
 
 You will need to sync remote results if you want to analyse them locally which can be done with:
