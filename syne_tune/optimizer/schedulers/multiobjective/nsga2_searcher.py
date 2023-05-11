@@ -36,6 +36,37 @@ except ImportError:
     print(try_import_moo_message())
 
 
+def _create_multiobjective_problem(config_space: Dict[str, Any], n_obj: int, **kwargs):
+    # This needs to be an inner class, since ``Problem`` can only be imported
+    # with ``moo`` dependencies. We want this module to be importable even if
+    # ``moo`` dependencies are not present: only creating a ``NSGA2Searcher``
+    # object should fail in this case.
+    class _MultiObjectiveMixedVariableProblem(Problem):
+        def __init__(self, n_obj: int, config_space: Dict[str, Any], **kwargs):
+            vars = {}
+
+            for hp_name, hp in config_space.items():
+                if isinstance(hp, Domain):
+                    if isinstance(hp, Categorical):
+                        vars[hp_name] = PyMOOChoice(options=hp.categories)
+                    elif isinstance(hp, Integer):
+                        vars[hp_name] = PyMOOInteger(bounds=(hp.lower, hp.upper - 1))
+                    elif isinstance(hp, FiniteRange):
+                        vars[hp_name] = PyMOOInteger(bounds=(0, hp.size - 1))
+                    elif isinstance(hp, Float):
+                        vars[hp_name] = PyMOOReal(bounds=(hp.lower, hp.upper))
+                    else:
+                        raise Exception(
+                            f"Type {type(hp)} of hyperparameter {hp_name} is not supported!"
+                        )
+
+            super().__init__(vars=vars, n_obj=n_obj, n_ieq_constr=0, **kwargs)
+
+    return _MultiObjectiveMixedVariableProblem(
+        n_obj=n_obj, config_space=config_space, **kwargs
+    )
+
+
 class NSGA2Searcher(StochasticSearcher):
     """
     This is a wrapper around the NSGA-2 [1] implementation of pymoo [2].
@@ -65,31 +96,6 @@ class NSGA2Searcher(StochasticSearcher):
     :param population_size: Size of the population
     """
 
-    # This needs to be an inner class, since ``Problem`` can only be imported
-    # with ``moo`` dependencies. We want this module to be importable even if
-    # ``moo`` dependencies are not present: only creating a ``NSGA2Searcher``
-    # object should fail in this case.
-    class _MultiObjectiveMixedVariableProblem(Problem):
-        def __init__(self, n_obj: int, config_space: Dict[str, Any], **kwargs):
-            vars = {}
-
-            for hp_name, hp in config_space.items():
-                if isinstance(hp, Domain):
-                    if isinstance(hp, Categorical):
-                        vars[hp_name] = PyMOOChoice(options=hp.categories)
-                    elif isinstance(hp, Integer):
-                        vars[hp_name] = PyMOOInteger(bounds=(hp.lower, hp.upper - 1))
-                    elif isinstance(hp, FiniteRange):
-                        vars[hp_name] = PyMOOInteger(bounds=(0, hp.size - 1))
-                    elif isinstance(hp, Float):
-                        vars[hp_name] = PyMOOReal(bounds=(hp.lower, hp.upper))
-                    else:
-                        raise Exception(
-                            f"Type {type(hp)} of hyperparameter {hp_name} is not supported!"
-                        )
-
-            super().__init__(vars=vars, n_obj=n_obj, n_ieq_constr=0, **kwargs)
-
     def __init__(
         self,
         config_space: Dict[str, Any],
@@ -118,8 +124,8 @@ class NSGA2Searcher(StochasticSearcher):
                     FiniteRange,
                 ], f"Type {type(hp)} for hyperparameter {hp_name} is not supported."
 
-        self.problem = self._MultiObjectiveMixedVariableProblem(
-            config_space=config_space, n_var=len(self.hp_names), n_obj=len(metric)
+        self.problem = _create_multiobjective_problem(
+            config_space=config_space, n_obj=len(metric), n_var=len(self.hp_names)
         )
         self.algorithm = NSGA2(
             pop_size=population_size,
