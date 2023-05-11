@@ -22,9 +22,6 @@ from typing import Callable, Dict, Any, Optional, Union, Tuple, List
 
 import pandas as pd
 
-from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
-    s3_download_files_recursively,
-)
 from syne_tune.constants import (
     ST_DATETIME_FORMAT,
     ST_METADATA_FILENAME,
@@ -400,6 +397,12 @@ def download_result_files_from_s3(
     :param s3_bucket: If not given, the default bucket for the SageMaker session
         is used
     """
+    # We want the most part of ``experiments`` to be available without
+    # ``aws`` dependencies, which is why this import is local
+    from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+        s3_download_files_recursively,
+    )
+
     for experiment_name in experiment_names:
         s3_source_path = s3_experiment_path(
             s3_bucket=s3_bucket, experiment_name=experiment_name
