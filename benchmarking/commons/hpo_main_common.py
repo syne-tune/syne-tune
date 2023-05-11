@@ -131,6 +131,12 @@ class ConfigDict:
             default=False,
             help=f"Internal argument, do not use",
         ),
+        Parameter(
+            name="skip_initial_jobs",
+            type=int,
+            default=0,
+            help="Skip this number of initial jobs to be launched (for remote launching only)",
+        ),
     ]
     __base_parameters = __base_cl_parameters + [
         Parameter(

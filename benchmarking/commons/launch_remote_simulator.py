@@ -126,7 +126,10 @@ def launch_remote(
     simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
     if is_dict_of_dict(benchmark_definitions):
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
-    configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
+    configuration = config_from_argparse(
+        extra_args=extra_args,
+        benchmark_specific_args=simulated_backend_extra_parameters,
+    )
     launch_remote_experiments_simulator(
         configuration, entry_point, methods, benchmark_definitions, is_expensive_method
     )
@@ -200,8 +203,14 @@ def launch_remote_experiments_simulator(
         combinations = list(itertools.product(combinations, benchmark_keys))
     else:
         combinations = [(x, None) for x in combinations]
+    if configuration.skip_initial_jobs > 0:
+        print(
+            f"The first {configuration.skip_initial_jobs} tuning jobs will be skipped"
+        )
 
-    for (method, seed), benchmark_key in tqdm(combinations):
+    for job_no, ((method, seed), benchmark_key) in enumerate(tqdm(combinations)):
+        if job_no < configuration.skip_initial_jobs:
+            continue  # Skip initial number of jobs
         tuner_name = method
         if seed is not None:
             tuner_name += f"-{seed}"
@@ -230,7 +239,7 @@ def launch_remote_experiments_simulator(
             hyperparameters["benchmark_key"] = benchmark_key
         sm_args["hyperparameters"] = hyperparameters
         print(
-            f"{experiment_tag}-{tuner_name}\n"
+            f"Launch tuning job {job_no}: {experiment_tag}-{tuner_name}\n"
             f"hyperparameters = {hyperparameters}\n"
             f"Results written to {sm_args['checkpoint_s3_uri']}"
         )

@@ -63,7 +63,10 @@ def launch_remote(
         command line arguments
     :param extra_args: Extra arguments for command line parser, optional
     """
-    configuration = config_from_argparse(extra_args, SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
+    configuration = config_from_argparse(
+        extra_args=extra_args,
+        benchmark_specific_args=SAGEMAKER_BACKEND_EXTRA_PARAMETERS,
+    )
     launch_remote_experiments_sagemaker(
         configuration, entry_point, methods, benchmark_definitions
     )
