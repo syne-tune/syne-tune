@@ -78,19 +78,21 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       extras-require: gpsearchers,aws
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: examples/launch_fashionmnist.py
 
   launch_checkpoint_example:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       extras-require: gpsearchers
-      additional-command: pip install xgboost
+      additional-command: pip install xgboost scikit-learn
       script-path: examples/launch_checkpoint_example.py
 
   launch_fashionmnist_costaware:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       extras-require: gpsearchers,aws
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: examples/launch_fashionmnist_costaware.py
 
   launch_bayesopt_constrained:
@@ -127,7 +129,7 @@ jobs:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
       extras-require: gpsearchers
-      additional-command: pip install xgboost
+      additional-command: pip install xgboost scikit-learn
       script-path: examples/launch_transfer_learning_example.py
 
   launch_height_simple:
