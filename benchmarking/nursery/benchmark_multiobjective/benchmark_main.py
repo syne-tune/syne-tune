@@ -17,6 +17,7 @@ import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
+from benchmarking.nursery.benchmark_multiobjective.run_experiment import run_experiment
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
     BlackboxRepositoryBackend,
 )
@@ -24,6 +25,7 @@ from benchmarking.commons.hpo_main_simulator import get_transfer_learning_evalua
 from benchmarking.nursery.benchmark_automl.baselines import MethodArguments
 
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
+from syne_tune.experiments import load_experiment
 from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.tuner import Tuner
 
@@ -93,82 +95,19 @@ def main(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):
 
     combinations = list(itertools.product(method_names, seeds, benchmark_names))
     print(combinations)
+
+    # get_trial_scheduler: methods[method]
+
     for method, seed, benchmark_name in tqdm(combinations):
-        np.random.seed(seed)
+
         benchmark = benchmark_definitions[benchmark_name]
 
-        print(
-            f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
-        )
-
-        max_resource_attr = benchmark.max_resource_attr
-        backend = BlackboxRepositoryBackend(
-            elapsed_time_attr=benchmark.elapsed_time_attr,
-            max_resource_attr=max_resource_attr,
-            blackbox_name=benchmark.blackbox_name,
-            dataset=benchmark.dataset_name,
-            surrogate=benchmark.surrogate,
-            surrogate_kwargs=benchmark.surrogate_kwargs,
-            add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
-        )
-
-        resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
-        max_resource_level = int(max(backend.blackbox.fidelity_values))
-        if max_resource_attr is not None:
-            config_space = dict(
-                backend.blackbox.configuration_space,
-                **{max_resource_attr: max_resource_level},
-            )
-            method_kwargs = {"max_resource_attr": max_resource_attr}
-        else:
-            config_space = backend.blackbox.configuration_space
-            method_kwargs = {"max_t": max_resource_level}
-
-        scheduler = methods[method](
-            MethodArguments(
-                config_space=config_space,
-                metric=benchmark.metric,
-                mode=benchmark.mode,
-                random_seed=seed,
-                resource_attr=resource_attr,
-                transfer_learning_evaluations=get_transfer_learning_evaluations(
-                    blackbox_name=benchmark.blackbox_name,
-                    test_task=benchmark.dataset_name,
-                    datasets=benchmark.datasets,
-                ),
-                use_surrogates="lcbench" in benchmark_name,
-                **method_kwargs,
-            )
-        )
-
-        stop_criterion = StoppingCriterion(
-            max_wallclock_time=benchmark.max_wallclock_time,
-            max_num_evaluations=benchmark.max_num_evaluations,
-        )
-        metadata = {
-            "seed": seed,
-            "algorithm": method,
-            "tag": experiment_tag,
-            "benchmark": benchmark_name,
-        }
-        tuner = Tuner(
-            trial_backend=backend,
-            scheduler=scheduler,
-            stop_criterion=stop_criterion,
-            n_workers=benchmark.n_workers,
-            sleep_time=0,
-            callbacks=[SimulatorCallback()],
-            results_update_interval=600,
-            print_update_interval=600,
-            tuner_name=experiment_tag,
-            metadata=metadata,
-        )
-        tuner.run()
+        run_experiment(method, seed, benchmark, experiment_tag)
 
 
 if __name__ == "__main__":
-    from benchmarking.nursery.benchmark_automl.baselines import methods
-    from benchmarking.nursery.benchmark_automl.benchmark_definitions import (
+    from benchmarking.nursery.benchmark_multiobjective.baselines import methods
+    from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
         benchmark_definitions,
     )
 

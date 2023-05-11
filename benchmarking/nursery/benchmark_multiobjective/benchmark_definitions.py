@@ -13,7 +13,6 @@
 from benchmarking.commons.benchmark_definitions import (
     SurrogateBenchmarkDefinition,
     fcnet_benchmark_definitions,
-    lcbench_selected_benchmark_definitions,
 )
 
 
@@ -40,5 +39,4 @@ nas201_benchmark_definitions = {
 benchmark_definitions = {
     **fcnet_benchmark_definitions,
     **nas201_benchmark_definitions,
-    **lcbench_selected_benchmark_definitions,
 }
