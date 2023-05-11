@@ -1,25 +1,25 @@
-Code in benchmarking/nursery/benchmark_dyhpo
-============================================
+Code in benchmarking/examples/benchmark_dyhpo
+=============================================
 
 Comparison of
 `DyHPO <tutorials/multifidelity/mf_async_model.html#dyhpo>`__
 against a number of baselines.
 
-.. literalinclude:: ../../../benchmarking/nursery/benchmark_dyhpo/baselines.py
-   :caption: benchmarking/nursery/benchmark_dyhpo/baselines.py
+.. literalinclude:: ../../../benchmarking/examples/benchmark_dyhpo/baselines.py
+   :caption: benchmarking/examples/benchmark_dyhpo/baselines.py
    :start-after: # permissions and limitations under the License.
 
-.. literalinclude:: ../../../benchmarking/nursery/benchmark_dyhpo/benchmark_definitions.py
-   :caption: benchmarking/nursery/benchmark_dyhpo/benchmark_definitions.py
+.. literalinclude:: ../../../benchmarking/examples/benchmark_dyhpo/benchmark_definitions.py
+   :caption: benchmarking/examples/benchmark_dyhpo/benchmark_definitions.py
    :start-after: # permissions and limitations under the License.
 
-.. literalinclude:: ../../../benchmarking/nursery/benchmark_dyhpo/hpo_main.py
-   :caption: benchmarking/nursery/benchmark_dyhpo/hpo_main.py
+.. literalinclude:: ../../../benchmarking/examples/benchmark_dyhpo/hpo_main.py
+   :caption: benchmarking/examples/benchmark_dyhpo/hpo_main.py
    :start-after: # permissions and limitations under the License.
 
-.. literalinclude:: ../../../benchmarking/nursery/benchmark_dyhpo/launch_remote.py
-   :caption: benchmarking/nursery/benchmark_dyhpo/launch_remote.py
+.. literalinclude:: ../../../benchmarking/examples/benchmark_dyhpo/launch_remote.py
+   :caption: benchmarking/examples/benchmark_dyhpo/launch_remote.py
    :start-after: # permissions and limitations under the License.
 
-.. literalinclude:: ../../../benchmarking/nursery/benchmark_dyhpo/requirements.txt
-   :caption: benchmarking/nursery/benchmark_dyhpo/requirements.txt
+.. literalinclude:: ../../../benchmarking/examples/benchmark_dyhpo/requirements.txt
+   :caption: benchmarking/examples/benchmark_dyhpo/requirements.txt

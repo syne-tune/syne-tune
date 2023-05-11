@@ -37,6 +37,10 @@ class SurrogateBenchmarkDefinition:
     :param fidelities: If given, this is a strictly increasing subset of
         the fidelity values provided by the surrogate, and only those
         will be reported
+    :param points_to_evaluate (optional): Initial configurations to be suggested
+        by the scheduler. If your benchmark training code suggests default
+        values for the hyperparameters, it is good practice serving this
+        default configuration here.
     """
 
     max_wallclock_time: float
@@ -53,6 +57,7 @@ class SurrogateBenchmarkDefinition:
     max_resource_attr: Optional[str] = None
     datasets: Optional[List[str]] = None
     fidelities: Optional[List[int]] = None
+    points_to_evaluate: Optional[List[Dict[str, Any]]] = None
 
     def __post_init__(self):
         if self.max_resource_attr is None:
@@ -79,6 +84,10 @@ class RealBenchmarkDefinition:
     :param estimator_kwargs (optional): Additional arguments to SageMaker
         estimator, e.g. ``framework_version``
     :param max_num_evaluations (optional): Default value for stopping criterion
+    :param points_to_evaluate (optional): Initial configurations to be suggested
+        by the scheduler. If your benchmark training code suggests default
+        values for the hyperparameters, it is good practice serving this
+        default configuration here.
     """
 
     script: Path
@@ -93,6 +102,7 @@ class RealBenchmarkDefinition:
     resource_attr: Optional[str] = None
     estimator_kwargs: Optional[dict] = None
     max_num_evaluations: Optional[int] = None
+    points_to_evaluate: Optional[List[Dict[str, Any]]] = None
 
 
 BenchmarkDefinition = Union[SurrogateBenchmarkDefinition, RealBenchmarkDefinition]

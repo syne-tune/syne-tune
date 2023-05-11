@@ -35,7 +35,7 @@ def run_apidoc(app):
         "../../githooks*",
         "../../tst*",
         "../../syne_tune.egg-info*",
-        "../../benchmarking/nursery/benchmark_automl*",
+        "../../benchmarking/nursery*",
     ]
 
     # Ensure that any stale apidoc files are cleaned up first.

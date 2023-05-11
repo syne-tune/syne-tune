@@ -12,22 +12,17 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote_simulator import launch_remote
-from benchmarking.nursery.benchmark_warping.benchmark_definitions import (
-    benchmark_definitions,
+from benchmarking.commons.launch_remote_sagemaker import launch_remote
+from benchmarking.commons.benchmark_definitions import (
+    real_benchmark_definitions as benchmark_definitions,
 )
-from benchmarking.nursery.benchmark_warping.baselines import methods
+from benchmarking.examples.launch_sagemaker.baselines import methods
 
 
 if __name__ == "__main__":
-
-    def _is_expensive_method(method: str) -> bool:
-        return method.startswith("MOBSTER") or method.startswith("BO")
-
     entry_point = Path(__file__).parent / "hpo_main.py"
     launch_remote(
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
-        is_expensive_method=_is_expensive_method,
     )

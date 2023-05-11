@@ -22,8 +22,8 @@ import sys
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any
 
-import datasets
 import numpy as np
+import datasets
 from datasets import load_dataset, load_metric
 
 import transformers

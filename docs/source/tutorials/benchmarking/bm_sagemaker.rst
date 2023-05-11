@@ -10,7 +10,7 @@ Defining the Experiment
 
 The scripts required to define an experiment are pretty much the same as in the
 local backend case. We will look at an example in
-`benchmarking/nursery/launch_sagemaker/ <../../benchmarking/launch_sagemaker.html>`__.
+`benchmarking/examples/launch_sagemaker/ <../../benchmarking/launch_sagemaker.html>`__.
 Common code used in these benchmarks can be found in
 :mod:`benchmarking.commons`:
 
@@ -19,15 +19,15 @@ Common code used in these benchmarks can be found in
 * Benchmark definitions: :mod:`benchmarking.commons.benchmark_definitions`
 
 The scripts
-`benchmarking/nursery/launch_sagemaker/baselines.py <../../benchmarking/launch_sagemaker.html#id1>`__,
-`benchmarking/nursery/launch_sagemaker/hpo_main.py <../../benchmarking/launch_sagemaker.html#id2>`__, and
-`benchmarking/nursery/launch_sagemaker/launch_remote.py <../../benchmarking/launch_sagemaker.html#id3>`__
+`benchmarking/examples/launch_sagemaker/baselines.py <../../benchmarking/launch_sagemaker.html#id1>`__,
+`benchmarking/examples/launch_sagemaker/hpo_main.py <../../benchmarking/launch_sagemaker.html#id2>`__, and
+`benchmarking/examples/launch_sagemaker/launch_remote.py <../../benchmarking/launch_sagemaker.html#id3>`__
 are identical in structure to what happens in the
 `local backend case <bm_local.html#defining-the-experiment>`__, with the only
 difference that :mod:`benchmarking.commons.hpo_main_sagemaker` or
 :mod:`benchmarking.commons.launch_remote_sagemaker` are imported from. Moreover,
 Syne Tune dependencies need to be specified in
-`benchmarking/nursery/launch_sagemaker/requirements.txt <../../benchmarking/launch_sagemaker.html#id4>`__.
+`benchmarking/examples/launch_sagemaker/requirements.txt <../../benchmarking/launch_sagemaker.html#id4>`__.
 
 In terms of benchmarks, the same definitions can be used for the SageMaker
 backend, in particular you can select from
@@ -55,7 +55,7 @@ locally:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/launch_sagemaker/hpo_main.py \
+   python benchmarking/examples/launch_sagemaker/hpo_main.py \
      --experiment_tag tutorial-sagemaker --benchmark resnet_cifar10 \
      --method ASHA --num_seeds 1
 
@@ -121,7 +121,7 @@ used with ``hpo_main.py``. For the example above:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/launch_sagemaker/hpo_main.py \
+   python benchmarking/examples/launch_sagemaker/hpo_main.py \
      --experiment_tag tutorial-sagemaker --benchmark resnet_cifar10 \
      --method ASHA --num_seeds 1 --warm_pool 1
 

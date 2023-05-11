@@ -10,6 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+# TODO: This example should be replaced by
+# ``benchmarking/examples/fine_tuning_transformer_swag``. We keep the code here
+# only for the plotting. Once this is replicated in the new examples, the code
+# here should be removed.
 import logging
 import matplotlib.pyplot as plt
 

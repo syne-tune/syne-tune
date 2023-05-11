@@ -12,8 +12,8 @@
 # permissions and limitations under the License.
 from typing import Dict, Any
 from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.nursery.benchmark_hypertune.baselines import methods
-from benchmarking.nursery.benchmark_hypertune.benchmark_definitions import (
+from benchmarking.examples.benchmark_hypertune.baselines import methods
+from benchmarking.examples.benchmark_hypertune.benchmark_definitions import (
     benchmark_definitions,
 )
 from syne_tune.util import recursive_merge

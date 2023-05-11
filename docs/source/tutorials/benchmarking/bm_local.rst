@@ -11,7 +11,7 @@ Defining the Experiment
 
 As usual in Syne Tune, the experiment is defined by a number of scripts.
 We will look at an example in
-`benchmarking/nursery/launch_local/ <../../benchmarking/launch_local.html>`__.
+`benchmarking/examples/launch_local/ <../../benchmarking/launch_local.html>`__.
 Common code used in these benchmarks can be found in
 :mod:`benchmarking.commons`:
 
@@ -21,20 +21,20 @@ Common code used in these benchmarks can be found in
 
 Let us look at the scripts in order, and how you can adapt them to your needs:
 
-* `benchmarking/nursery/launch_local/baselines.py <../../benchmarking/launch_local.html#id1>`__:
+* `benchmarking/examples/launch_local/baselines.py <../../benchmarking/launch_local.html#id1>`__:
   This is the same as in the
   `simulator case <bm_simulator.html#defining-the-experiment>`__.
-* `benchmarking/nursery/launch_local/hpo_main.py <../../benchmarking/launch_local.html#id2>`__:
+* `benchmarking/examples/launch_local/hpo_main.py <../../benchmarking/launch_local.html#id2>`__:
   This is the same as in the
   `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
   :mod:`benchmarking.commons.hpo_main_local`. We will see shortly how the
   launcher is called, and what happens inside.
-* `benchmarking/nursery/launch_local/launch_remote.py <../../benchmarking/launch_local.html#id3>`__:
+* `benchmarking/examples/launch_local/launch_remote.py <../../benchmarking/launch_local.html#id3>`__:
   Much the same as in the
   `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
   :mod:`benchmarking.commons.launch_remote_local`. We will see shortly how the
   launcher is called, and what happens inside.
-* `benchmarking/nursery/launch_local/requirements-synetune.txt <../../benchmarking/launch_local.html#id4>`__:
+* `benchmarking/examples/launch_local/requirements-synetune.txt <../../benchmarking/launch_local.html#id4>`__:
   This file is for defining the requirements of the SageMaker training job in
   remote launching, it mainly has to contain the Syne Tune dependencies. Your
   training script may have additional dependencies, and they are combined with
@@ -52,7 +52,7 @@ locally:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/launch_local/hpo_main.py \
+   python benchmarking/examples/launch_local/hpo_main.py \
      --experiment_tag tutorial-local --benchmark resnet_cifar10 \
      --method ASHA --num_seeds 1 --n_workers 1
 
@@ -160,7 +160,7 @@ launching. Here is an example:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/launch_local/launch_remote.py \
+   python benchmarking/examples/launch_local/launch_remote.py \
      --experiment_tag tutorial-local --benchmark resnet_cifar10 \
      --num_seeds 5
 
@@ -173,13 +173,13 @@ up to 4 (the default being 4). Results are written to S3, using paths such as
 ``syne-tune/{experiment_tag}/ASHA-3/`` for method ``ASHA`` and seed 3.
 
 Finally, some readers may be puzzled why Syne Tune dependencies are defined in
-``benchmarking/nursery/launch_local/requirements-synetune.txt``, and not in
+``benchmarking/examples/launch_local/requirements-synetune.txt``, and not in
 ``requirements.txt`` instead. The reason is that dependencies of the SageMaker
 estimator for running the experiment locally is really the union of two such
 files. First, ``requirements-synetune.txt`` for the Syne Tune dependencies,
 and second, ``requirements.txt`` next to the training script. The remote
 launching script is creating a ``requirements.txt`` file with this union in
-``benchmarking/nursery/launch_local/``, which should not become part of the
+``benchmarking/examples/launch_local/``, which should not become part of the
 repository.
 
 Visualizing Tuning Metrics in the SageMaker Training Job Console

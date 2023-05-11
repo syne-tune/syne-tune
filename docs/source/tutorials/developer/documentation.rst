@@ -62,7 +62,7 @@ up-to-date:
 
 * Use ``literalinclude`` for almost all code snippets. In general, the
   documentation is showing code which is part of a functional script,
-  which can either be in ``examples/``, in ``benchmarking/nursery/``, or
+  which can either be in ``examples/``, in ``benchmarking/examples/``, or
   otherwise next to the documentation files.
 * Almost all code shown in the documentation is run as part of
   integration testing (``.github/workflows/integ-tests.yml``) or
