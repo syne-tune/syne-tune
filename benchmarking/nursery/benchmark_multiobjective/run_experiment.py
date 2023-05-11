@@ -104,18 +104,16 @@ if __name__ == "__main__":
 
     name = Methods.RS
 
-    res.plot_hypervolume(
-        metrics_to_plot=["x", "y"],
-        figure_path=f"~/Documents/syne/figures/moo-benchmark-{name}-hypervolume.jpeg",
-        reference_point=np.array([1.01, 1.01])
+    res.plot(
+        metric_to_plot="metric_valid_error",
+        figure_path=f"/tmp/moo-benchmark-{name}-metric_valid_error.jpeg",
     )
     res.plot(
-        metric_to_plot="x",
-        figure_path=f"~/Documents/syne/figures/moo-benchmark-{name}-x.jpeg",
+        metric_to_plot="metric_params",
+        figure_path=f"/tmp/moo-benchmark-{name}-metric_params.jpeg",
     )
-    res.plot(
-        metric_to_plot=1,
-        figure_path=f"~/Documents/syne/figures/moo-benchmark-{name}-1.jpeg",
-    )
-    print(f"best for x: {res.best_config('x')}")
-    print(f"best for y: {res.best_config('y')}")
+    # res.plot_hypervolume( # TODO FIX, this is currently hanging
+    #     metrics_to_plot=["metric_valid_error", "metric_params"],
+    #     figure_path=f"/tmp/moo-benchmark-{name}-hypervolume.jpeg",
+    #     reference_point=np.array([1.01, 1.01])
+    # )
