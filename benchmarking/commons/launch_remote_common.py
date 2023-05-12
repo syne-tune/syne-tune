@@ -16,7 +16,6 @@ from typing import Optional, Dict, Any
 import benchmarking
 import syne_tune
 from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
-from benchmarking.commons.hpo_main_common import ExtraArgsType
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )
