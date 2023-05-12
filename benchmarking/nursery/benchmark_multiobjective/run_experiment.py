@@ -35,7 +35,7 @@ def run_experiment(
         add_surrogate_kwargs=benchmark.add_surrogate_kwargs,
     )
 
-    resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))  # to support multifidelity
+    resource_attr = next(iter(backend.blackbox.fidelity_space.keys()))
     max_resource_level = int(max(backend.blackbox.fidelity_values))
     if benchmark.max_resource_attr is not None:
         config_space = dict(
