@@ -67,3 +67,13 @@ def sagemaker_estimator_args(
         if benchmark.estimator_kwargs is not None:
             sm_args.update(benchmark.estimator_kwargs)
     return sm_args
+
+
+REMOTE_LAUNCHING_EXTRA_PARAMETERS = [
+    dict(
+        name="skip_initial_jobs",
+        type=int,
+        default=0,
+        help="Skip this number of initial jobs which would be launched",
+    )
+]

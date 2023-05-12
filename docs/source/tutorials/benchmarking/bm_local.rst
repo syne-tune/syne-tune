@@ -172,6 +172,9 @@ local backend. Instances of this type have 4 GPUs, so we can use ``n_workers``
 up to 4 (the default being 4). Results are written to S3, using paths such as
 ``syne-tune/{experiment_tag}/ASHA-3/`` for method ``ASHA`` and seed 3.
 
+You can use ``--skip_initial_jobs`` to skip initial jobs, as is explained
+`here <bm_simulator.html#skipping-initial-jobs>`__.
+
 Finally, some readers may be puzzled why Syne Tune dependencies are defined in
 ``benchmarking/examples/launch_local/requirements-synetune.txt``, and not in
 ``requirements.txt`` instead. The reason is that dependencies of the SageMaker
