@@ -13,7 +13,7 @@ from syne_tune.optimizer.scheduler import TrialScheduler
 
 
 def run_experiment(
-        get_trial_scheduler: Callable[[MethodArguments], TrialScheduler],
+        method: str,
         seed: int,
         benchmark: SurrogateBenchmarkDefinition,
         experiment_tag: str
@@ -21,10 +21,8 @@ def run_experiment(
 
     np.random.seed(seed)
 
-    method_name = get_trial_scheduler.__name__
-
     print(
-        f"Starting experiment ({method_name}/{benchmark.blackbox_name}/{benchmark.dataset_name}/{seed}) of {experiment_tag}"
+        f"Starting experiment ({method}/{benchmark.blackbox_name}/{benchmark.dataset_name}/{seed}) of {experiment_tag}"
     )
 
     backend = BlackboxRepositoryBackend(
@@ -49,7 +47,7 @@ def run_experiment(
         config_space = backend.blackbox.configuration_space
         method_kwargs = {"max_t": max_resource_level}
 
-    scheduler = get_trial_scheduler(
+    scheduler = methods[method](
         MethodArguments(
             config_space=config_space,
             metric=benchmark.metric,
@@ -66,7 +64,7 @@ def run_experiment(
     )
     metadata = {
         "seed": seed,
-        "algorithm": get_trial_scheduler.__name__,
+        "algorithm": method,
         "tag": experiment_tag,
         "benchmark": f"{benchmark.blackbox_name}/{benchmark.dataset_name}",
     }
@@ -95,22 +93,22 @@ if __name__ == "__main__":
         benchmark_definitions,
     )
 
+    method = Methods.MOREA
+
     res = run_experiment(
-        get_trial_scheduler=methods[Methods.RS],
+        method=method,
         seed=123,
         benchmark=benchmark_definitions['nas201-cifar10'],
         experiment_tag="TEST"
     )
 
-    name = Methods.RS
-
     res.plot(
         metric_to_plot="metric_valid_error",
-        figure_path=f"/tmp/moo-benchmark-{name}-metric_valid_error.jpeg",
+        figure_path=f"/tmp/moo-benchmark-{method}-metric_valid_error.jpeg",
     )
     res.plot(
         metric_to_plot="metric_params",
-        figure_path=f"/tmp/moo-benchmark-{name}-metric_params.jpeg",
+        figure_path=f"/tmp/moo-benchmark-{method}-metric_params.jpeg",
     )
     # res.plot_hypervolume( # TODO FIX, this is currently hanging
     #     metrics_to_plot=["metric_valid_error", "metric_params"],
