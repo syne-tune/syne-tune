@@ -34,7 +34,7 @@ from benchmarking.commons.hpo_main_local import (
 )
 from benchmarking.commons.launch_remote_common import (
     sagemaker_estimator_args,
-    append_extra_arguments_launch_remote,
+    REMOTE_LAUNCHING_EXTRA_PARAMETERS,
 )
 from benchmarking.commons.utils import (
     filter_none,
@@ -136,8 +136,9 @@ def launch_remote(
     :param extra_args: Extra arguments for command line parser, optional
     """
     configuration = config_from_argparse(
-        extra_args=append_extra_arguments_launch_remote(extra_args),
-        benchmark_specific_args=LOCAL_BACKEND_EXTRA_PARAMETERS,
+        extra_args=extra_args,
+        benchmark_specific_args=LOCAL_BACKEND_EXTRA_PARAMETERS
+        + REMOTE_LAUNCHING_EXTRA_PARAMETERS,
     )
     launch_remote_experiments(
         configuration, entry_point, methods, benchmark_definitions

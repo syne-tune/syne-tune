@@ -70,16 +70,11 @@ def sagemaker_estimator_args(
     return sm_args
 
 
-def append_extra_arguments_launch_remote(
-    extra_args: Optional[ExtraArgsType],
-) -> ExtraArgsType:
-    if extra_args is None:
-        extra_args = []
-    return extra_args + [
-        dict(
-            name="skip_initial_jobs",
-            type=int,
-            default=0,
-            help="Skip this number of initial jobs which would be launched",
-        )
-    ]
+REMOTE_LAUNCHING_EXTRA_PARAMETERS = [
+    dict(
+        name="skip_initial_jobs",
+        type=int,
+        default=0,
+        help="Skip this number of initial jobs which would be launched",
+    )
+]

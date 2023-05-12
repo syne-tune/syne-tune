@@ -31,7 +31,7 @@ from benchmarking.commons.hpo_main_simulator import (
 )
 from benchmarking.commons.launch_remote_common import (
     sagemaker_estimator_args,
-    append_extra_arguments_launch_remote,
+    REMOTE_LAUNCHING_EXTRA_PARAMETERS,
 )
 from benchmarking.commons.utils import (
     filter_none,
@@ -130,8 +130,9 @@ def launch_remote(
     if is_dict_of_dict(benchmark_definitions):
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
     configuration = config_from_argparse(
-        extra_args=append_extra_arguments_launch_remote(extra_args),
-        benchmark_specific_args=simulated_backend_extra_parameters,
+        extra_args=extra_args,
+        benchmark_specific_args=simulated_backend_extra_parameters
+        + REMOTE_LAUNCHING_EXTRA_PARAMETERS,
     )
     launch_remote_experiments_simulator(
         configuration, entry_point, methods, benchmark_definitions, is_expensive_method

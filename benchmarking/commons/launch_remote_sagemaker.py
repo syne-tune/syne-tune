@@ -41,9 +41,7 @@ from benchmarking.commons.utils import (
 from syne_tune.remote.estimators import (
     basic_cpu_instance_sagemaker_estimator,
 )
-from benchmarking.commons.launch_remote_common import (
-    append_extra_arguments_launch_remote,
-)
+from benchmarking.commons.launch_remote_common import REMOTE_LAUNCHING_EXTRA_PARAMETERS
 from benchmarking.commons.launch_remote_local import _launch_experiment_remotely
 from benchmarking.commons.baselines import MethodDefinitions
 
@@ -67,8 +65,9 @@ def launch_remote(
     :param extra_args: Extra arguments for command line parser, optional
     """
     configuration = config_from_argparse(
-        extra_args=append_extra_arguments_launch_remote(extra_args),
-        benchmark_specific_args=SAGEMAKER_BACKEND_EXTRA_PARAMETERS,
+        extra_args=extra_args,
+        benchmark_specific_args=SAGEMAKER_BACKEND_EXTRA_PARAMETERS
+        + REMOTE_LAUNCHING_EXTRA_PARAMETERS,
     )
     launch_remote_experiments_sagemaker(
         configuration, entry_point, methods, benchmark_definitions
