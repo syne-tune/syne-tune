@@ -38,7 +38,7 @@ def fill_trajectory(
     return performance, time_
 
 
-def _compute_mean_and_ci(
+def compute_mean_and_ci(
     metrics_runs: np.ndarray, time: np.ndarray
 ) -> Dict[str, np.ndarray]:
     """
@@ -59,7 +59,7 @@ def _compute_mean_and_ci(
     }
 
 
-def _compute_median_percentiles(
+def compute_median_percentiles(
     metrics_runs: np.ndarray, time: np.ndarray
 ) -> Dict[str, np.ndarray]:
     """
@@ -75,15 +75,7 @@ def _compute_median_percentiles(
     }
 
 
-def _remove_mass(amat: np.ndarray, mass: float, col_index):
-    remaining_mass = mass * np.ones(amat.shape[0])
-    for col in col_index:
-        subtract = np.minimum(remaining_mass, amat[:, col])
-        remaining_mass -= subtract
-        amat[:, col] -= subtract
-
-
-def _compute_iqm_bootstrap(
+def compute_iqm_bootstrap(
     metrics_runs: np.ndarray, time: np.ndarray
 ) -> Dict[str, np.ndarray]:
     """
@@ -95,6 +87,14 @@ def _compute_iqm_bootstrap(
     Note: Error bar scale depends on number of runs `n` via `1 / sqrt(n)`.
 
     """
+
+    def _remove_mass(amat: np.ndarray, mass: float, col_index):
+        remaining_mass = mass * np.ones(amat.shape[0])
+        for col in col_index:
+            subtract = np.minimum(remaining_mass, amat[:, col])
+            remaining_mass -= subtract
+            amat[:, col] -= subtract
+
     num_runs = metrics_runs.shape[1]
     # Sort matrix of metrics (in-place: `metrics_runs` overwritten)
     metrics_runs.sort(axis=1)
@@ -142,10 +142,10 @@ def aggregate_and_errors_over_time(
     metrics_runs = metrics_runs[idx:, :]
     time = time[idx:]
     if mode == "mean_and_ci":
-        return _compute_mean_and_ci(metrics_runs, time)
+        return compute_mean_and_ci(metrics_runs, time)
     elif mode == "median_percentiles":
-        return _compute_median_percentiles(metrics_runs, time)
+        return compute_median_percentiles(metrics_runs, time)
     elif mode == "iqm_bootstrap":
-        return _compute_iqm_bootstrap(metrics_runs, time)
+        return compute_iqm_bootstrap(metrics_runs, time)
     else:
         raise ValueError(f"mode = {mode} not supported")

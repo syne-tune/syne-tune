@@ -146,9 +146,13 @@ class PlotParameters:
     """
     Parameters specifying the figure.
 
-    In plots, lower is better. An original metric value ``metric_val`` is
-    converted as :code:`metric_multiplier * metric_val` if ``mode == "min"``,
+    If ``convert_to_min == True``, then smaller is better in plots. An original
+    metric value ``metric_val`` is converted as
+    :code:`metric_multiplier * metric_val` if ``mode == "min"``,
     and as :code:`1 - metric_multiplier * metric_val` if ``mode == "max"``.
+    If `convert_to_min == False``, we always convert as
+    :code:`metric_multiplier * metric_val`, so that larger is better if
+    ``mode == "max"``.
 
     :param metric: Name of metric, mandatory
     :param mode: See above, "min" or "max". Defaults to "min" if not given
@@ -162,6 +166,7 @@ class PlotParameters:
         :class:`SubplotParameters`
     :param ylim: ``(y_min, y_max)`` for y axis.
     :param metric_multiplier: See above. Defaults to 1
+    :param convert_to_min: See above. Defaults to ``True``
     :param tick_params: Params for ``ax.tick_params``
     :param aggregate_mode: How are values across seeds aggregated?
 
@@ -186,6 +191,7 @@ class PlotParameters:
     xlim: Tuple[float, float] = None
     ylim: Tuple[float, float] = None
     metric_multiplier: float = None
+    convert_to_min: bool = True
     tick_params: Dict[str, Any] = None
     aggregate_mode: str = None
     dpi: int = None
@@ -424,6 +430,7 @@ class ComparativeResults:
         metric = plot_params.metric
         mode = plot_params.mode
         metric_multiplier = plot_params.metric_multiplier
+        convert_to_min = plot_params.convert_to_min
         xlim = plot_params.xlim
         aggregate_mode = plot_params.aggregate_mode
         show_init_trials = plot_params.show_init_trials
@@ -467,7 +474,9 @@ class ComparativeResults:
                 for tuner_name, sub_df in setup_df.groupby("tuner_name"):
                     tuner_names.append(tuner_name)
                     if mode == "max":
-                        ys = 1 - metric_multiplier * np.array(sub_df[metric].cummax())
+                        ys = metric_multiplier * np.array(sub_df[metric].cummax())
+                        if convert_to_min:
+                            ys = 1 - ys
                     else:
                         ys = metric_multiplier * np.array(sub_df[metric].cummin())
                     rt = np.array(sub_df[ST_TUNER_TIME])

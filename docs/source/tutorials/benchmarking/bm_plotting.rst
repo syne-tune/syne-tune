@@ -105,6 +105,9 @@ The figure for benchmark ``nas201-cifar-100`` looks as follows:
   For example, if your metric is accuracy in percent (from 0 to 100), then
   ``mode="max"`` and ``metric_multiplier=0.01``, and the curve shows error
   in [0, 1].
+  However, if ``convert_to_min == False``, ``metric_val`` is always
+  converted as :code:`metric_multiplier * metric_val`, so that larger is
+  better if ``mode == "max"``.
 * These 15 curves are now interpolated to a common grid, and at each grid
   point, the 15 values (one for each seed) are aggregated into 3 values
   ``lower``, ``aggregate``, ``upper``. In the figure, ``aggregate`` is shown
