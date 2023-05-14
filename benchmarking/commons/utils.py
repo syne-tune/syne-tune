@@ -74,7 +74,7 @@ def find_or_create_requirements_txt(
 ) -> Path:
     if requirements_fname is None:
         requirements_fname = "requirements.txt"
-    files = list(entry_point.parent.rglob("requirements*.txt"))
+    files = list(entry_point.parent.glob("requirements*.txt"))
     if len(files) == 0:
         print(
             f"Could not find {entry_point.parent}/requirements*.txt\n"
