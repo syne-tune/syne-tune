@@ -17,7 +17,6 @@ from benchmarking.commons.baselines import (
     MethodArguments,
     convert_categorical_to_ordinal_numeric,
 )
-from syne_tune.config_space import Float, Integer, Categorical
 from syne_tune.optimizer.baselines import (
     RandomSearch as _RandomSearch,
     GridSearch as _GridSearch,

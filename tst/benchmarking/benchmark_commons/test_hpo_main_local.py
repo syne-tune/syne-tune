@@ -13,6 +13,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from benchmarking.commons.default_baselines import RandomSearch
+from benchmarking.commons.hpo_main_common import ConfigDict
 from benchmarking.nursery.benchmark_multiobjective.baselines import (
     Methods,
     MOREABench,
@@ -24,14 +25,12 @@ from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import 
 from benchmarking.nursery.benchmark_multiobjective.hpo_main import main
 
 
-class MultiObjectiveTests(unittest.TestCase):
-    @patch(
-        "benchmarking.nursery.benchmark_multiobjective.hpo_main.run_experiment",
-        new_callable=MagicMock,
-    )
-    @patch("benchmarking.nursery.benchmark_multiobjective.hpo_main.parse_args")
-    def test_run_experiment_fn_is_called_the_expected_number_of_times(
-        self, mock_parse_args, mock_run_experiment
+class HPOMainLocalTests(unittest.TestCase):
+    @patch("benchmarking.commons.hpo_main_simulator.config_from_argparse", new_callable=MagicMock)
+    @patch("benchmarking.commons.hpo_main_simulator.Tuner", new_callable=MagicMock)
+    @patch("benchmarking.commons.hpo_main_simulator.BlackboxRepositoryBackend", new_callable=MagicMock)
+    def test_experiment_is_run_the_expected_number_of_times(
+        self, mock_blackbox_repository_backend, mock_tuner, mock_config_from_argparse
     ):
         methods = {
             Methods.RS: lambda method_arguments: RandomSearch(method_arguments),
@@ -47,16 +46,14 @@ class MultiObjectiveTests(unittest.TestCase):
 
         seeds = [1, 2]
 
-        mock_args = unittest.mock.MagicMock()
-        mock_args.experiment_tag = "test-experiment-tag"
-        mock_parse_args.return_value = (
-            mock_args,
-            methods,
-            benchmark_definitions,
-            seeds,
-        )
+        mock_config_from_argparse.return_value = ConfigDict.from_dict(
+            {'experiment_tag': 'my-new-experiment', 'num_seeds': 2, 'start_seed': 0, 'method': None, 'save_tuner': 0,
+             'n_workers': None, 'max_wallclock_time': None, 'random_seed': None, 'max_size_data_for_model': None,
+             'scale_max_wallclock_time': 0, 'use_long_tuner_name_prefix': True, 'launched_remotely': False,
+             'benchmark': None, 'verbose': 0, 'support_checkpointing': 1, 'fcnet_ordinal': 'nn-log',
+             'restrict_configurations': 0, 'seeds': [0, 1]})
 
         main(methods, benchmark_definitions)
 
         expected_call_count = len(methods) * len(benchmark_definitions) * len(seeds)
-        assert mock_run_experiment.call_count == expected_call_count
+        assert mock_tuner.call_count == expected_call_count

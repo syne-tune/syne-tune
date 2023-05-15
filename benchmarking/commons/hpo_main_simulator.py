@@ -305,7 +305,7 @@ def start_benchmark_simulated_backend(
                     datasets=benchmark.datasets,
                 ),
             )
-        search_options = dict(debug_log=configuration.verbose)
+        search_options = dict(debug_log=False)
         if configuration.restrict_configurations:
             search_options["restrict_configurations"] = blackbox.all_configurations()
         if configuration.max_size_data_for_model is not None:

@@ -11,32 +11,11 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-from typing import Dict, Any
 from benchmarking.commons.hpo_main_simulator import main
 from benchmarking.nursery.benchmark_multiobjective.baselines import methods
 from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
     benchmark_definitions,
 )
-from syne_tune.util import recursive_merge
-
-extra_args = [
-    # dict(
-    #     name="num_brackets",
-    #     type=int,
-    #     help="Number of brackets",
-    # ),
-    # dict(
-    #     name="num_samples",
-    #     type=int,
-    #     default=50,
-    #     help="Number of samples for Hyper-Tune distribution",
-    # ),
-]
-
-
-def map_method_args(args, method: str, method_kwargs: Dict[str, Any]) -> Dict[str, Any]:
-    return method_kwargs
-
 
 if __name__ == "__main__":
-    main(methods, benchmark_definitions, extra_args, map_method_args)
+    main(methods, benchmark_definitions)

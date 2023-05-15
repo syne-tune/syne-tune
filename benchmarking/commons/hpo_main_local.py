@@ -141,7 +141,7 @@ def create_objects_for_tuner(
         num_gpus_per_trial=configuration.num_gpus_per_trial,
         scheduler_kwargs=dict(
             points_to_evaluate=benchmark.points_to_evaluate,
-            search_options=dict(debug_log=verbose),
+            search_options=dict(debug_log=False),
         ),
     )
     if configuration.max_size_data_for_model is not None:

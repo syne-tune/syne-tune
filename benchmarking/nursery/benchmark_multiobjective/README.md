@@ -7,7 +7,8 @@ To run all experiments, you can run the following:
 
 
 ```bash
-pip install -r benchmarking/nursery/benchmark_multiobjective/requirements.txt
+pip install -r requirements.txt
+pip install -r requirements-moo.txt
 python benchmarking/nursery/benchmark_multiobjective/hpo_main.py --experiment_tag "my-new-experiment" --num_seeds 2
 ```
 
