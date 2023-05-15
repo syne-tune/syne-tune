@@ -11,23 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any
-import numpy as np
 import itertools
 import logging
 from argparse import ArgumentParser
 from tqdm import tqdm
 
 from benchmarking.nursery.benchmark_multiobjective.run_experiment import run_experiment
-from syne_tune.blackbox_repository.simulated_tabular_backend import (
-    BlackboxRepositoryBackend,
-)
-from benchmarking.commons.hpo_main_simulator import get_transfer_learning_evaluations
-from benchmarking.nursery.benchmark_automl.baselines import MethodArguments
-
-from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
-from syne_tune.experiments import load_experiment
-from syne_tune.stopping_criterion import StoppingCriterion
-from syne_tune.tuner import Tuner
 
 
 def parse_args(methods: Dict[str, Any], benchmark_definitions: Dict[str, Any]):

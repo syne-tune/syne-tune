@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from benchmarking.commons.benchmark_definitions import (
     SurrogateBenchmarkDefinition,
-    fcnet_benchmark_definitions,
 )
 
 
