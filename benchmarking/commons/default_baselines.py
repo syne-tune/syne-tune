@@ -17,6 +17,7 @@ from benchmarking.commons.baselines import (
     MethodArguments,
     convert_categorical_to_ordinal_numeric,
 )
+from syne_tune.config_space import Float, Integer, Categorical
 from syne_tune.optimizer.baselines import (
     RandomSearch as _RandomSearch,
     GridSearch as _GridSearch,
@@ -36,7 +37,9 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB as _SyncBOHB,
     DEHB as _DEHB,
     SyncMOBSTER as _SyncMOBSTER,
+    MOREA as _MOREA,
 )
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import LinearScalarizedScheduler as _LinearScalarizedScheduler
 from syne_tune.util import recursive_merge
 
 
@@ -133,3 +136,19 @@ def DEHB(method_arguments: MethodArguments, **kwargs):
 
 def SyncMOBSTER(method_arguments: MethodArguments, **kwargs):
     return _SyncMOBSTER(**_baseline_kwargs(method_arguments, kwargs, is_multifid=True))
+
+
+def MOREABench(method_arguments: MethodArguments, **kwargs):
+    # TODO fix MOREA; the below code is a workaround for the fact that MOREA crashes when `Float` is used
+    MOREA_NUM_TO_SAMPLE = 1000
+    kwargs = _baseline_kwargs(method_arguments, kwargs)
+    for name, space in kwargs["config_space"].items():
+        if isinstance(space, Float) or isinstance(space, Integer):
+            space = Categorical(categories=space.sample(size=MOREA_NUM_TO_SAMPLE))
+        kwargs["config_space"][name] = space
+    return _MOREA(**kwargs)
+
+
+def LSOBOBench(method_arguments: MethodArguments, **kwargs):
+    return _LinearScalarizedScheduler(**_baseline_kwargs(method_arguments, kwargs))
+

@@ -12,32 +12,9 @@
 # permissions and limitations under the License.
 from typing import Dict, Any, Optional, List, Union
 
-from benchmarking.commons.baselines import MethodArguments
 from benchmarking.commons.default_baselines import (
-    RandomSearch,
-    BayesianOptimization, _baseline_kwargs,
+    RandomSearch, MOREABench, LSOBOBench,
 )
-from syne_tune.config_space import Float, Integer, Categorical
-from syne_tune.optimizer.baselines import MOREA, _assert_searcher_must_be
-from syne_tune.optimizer.schedulers import FIFOScheduler
-from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import \
-    LinearScalarizedScheduler
-from syne_tune.optimizer.schedulers.searchers import StochasticSearcher, StochasticAndFilterDuplicatesSearcher
-
-NUM_TO_SAMPLE = 1000
-
-
-def MOREABench(method_arguments: MethodArguments, **kwargs):
-    kwargs = _baseline_kwargs(method_arguments, kwargs)
-    for name, space in kwargs["config_space"].items():
-        if isinstance(space, Float) or isinstance(space, Integer):
-            space = Categorical(categories=space.sample(size=NUM_TO_SAMPLE))
-        kwargs["config_space"][name] = space
-    return MOREA(**kwargs)
-
-
-def LSOBOBench(method_arguments: MethodArguments, **kwargs):
-    return LinearScalarizedScheduler(**_baseline_kwargs(method_arguments, kwargs))
 
 
 class Methods:

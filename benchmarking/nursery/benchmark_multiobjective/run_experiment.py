@@ -93,7 +93,6 @@ def run_experiment(
 
 if __name__ == "__main__":
 
-
     method = Methods.MOREA
 
     res = run_experiment(
@@ -111,8 +110,4 @@ if __name__ == "__main__":
         metric_to_plot="metric_params",
         figure_path=f"/tmp/moo-benchmark-{method}-metric_params.jpeg",
     )
-    # res.plot_hypervolume( # TODO FIX, this is currently hanging
-    #     metrics_to_plot=["metric_valid_error", "metric_params"],
-    #     figure_path=f"/tmp/moo-benchmark-{name}-hypervolume.jpeg",
-    #     reference_point=np.array([1.01, 1.01])
-    # )
+
