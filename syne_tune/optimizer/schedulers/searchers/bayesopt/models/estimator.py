@@ -156,14 +156,14 @@ def transform_state_to_data(
     if state.pending_evaluations:
         # In this case, y becomes a matrix, where the observed values are
         # broadcast
-        cand_lst = []
+        cand_lst = [
+            hp_ranges.to_ndarray(config) for config in state.pending_configurations()
+        ]
         fanta_lst = []
-        for pending_candidate, pending_eval in zip(
-            state.pending_configurations(), state.pending_evaluations
-        ):
-            if not isinstance(pending_eval, FantasizedPendingEvaluation):
-                continue
-            cand_lst.append(hp_ranges.to_ndarray(pending_candidate))
+        for pending_eval in state.pending_evaluations:
+            assert isinstance(
+                pending_eval, FantasizedPendingEvaluation
+            ), "state.pending_evaluations has to contain FantasizedPendingEvaluation"
             fantasies = pending_eval.fantasies[active_metric]
             assert (
                 fantasies.size == num_fantasy_samples
