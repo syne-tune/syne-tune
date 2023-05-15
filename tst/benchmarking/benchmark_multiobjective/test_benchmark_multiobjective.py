@@ -34,15 +34,18 @@ class MultiObjectiveTests(unittest.TestCase):
             "nas201-ImageNet16-120": nas201_mo_benchmark("ImageNet16-120"),
         }
 
+        seeds = [1, 2]
+
         mock_args = unittest.mock.MagicMock()
         mock_args.experiment_tag = "test-experiment-tag"
         mock_parse_args.return_value = (
             mock_args,
             methods,
             benchmark_definitions,
-            [1, 2],
+            seeds,
         )
 
         main(methods, benchmark_definitions)
 
-        assert mock_run_experiment.call_count == 18
+        expected_call_count = len(methods) * len(benchmark_definitions) * len(seeds)
+        assert mock_run_experiment.call_count == expected_call_count
