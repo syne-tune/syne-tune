@@ -162,11 +162,16 @@ class TrialsOfExperimentResults:
         subplots = plot_params.subplots
         if subplots is not None:
             subplots_kwargs = subplots.kwargs
-            ncols = subplots_kwargs["ncols"]
-            nrows = subplots.kwargs["nrows"]
+            nrows = subplots.nrows
+            ncols = subplots.ncols
             assert ncols * nrows >= len(
                 self.setups
             ), f"Error in subplots.kwargs: ncols times nrows must be >= {len(self.setups)} (number of setups)"
+            subplots_kwargs = dict(
+                dict() if subplots.kwargs is None else subplots.kwargs,
+                nrows=nrows,
+                ncols=ncols,
+            )
             subplot_titles = subplots.titles
             title_each_figure = subplots.title_each_figure
         else:

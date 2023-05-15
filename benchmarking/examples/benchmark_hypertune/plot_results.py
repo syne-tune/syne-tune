@@ -47,7 +47,9 @@ if __name__ == "__main__":
     # results on the left, and the remaining baselines on the right. Each
     # column gets its own title, and legends are shown in both
     plot_params.subplots = SubplotParameters(
-        kwargs=dict(nrows=1, ncols=2, sharey="all"),
+        nrows=1,
+        ncols=2,
+        kwargs=dict(sharey="all"),
         titles=["Model-based Methods", "Baselines"],
         legend_no=[0, 1],
     )

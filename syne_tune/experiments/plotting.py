@@ -66,13 +66,14 @@ class SubplotParameters:
     """
     Parameters specifying an arrangement of subplots. ``kwargs`` is mandatory.
 
+    :param nrows: Number of rows of subplot matrix
+    :param ncols: Number of columns of subplot matrix
     :param titles: If given, these are titles for each column in the
         arrangement of subplots. If ``title_each_figure == True``, these
         are titles for each subplot. If ``titles`` is not given, then
         ``PlotParameters.title`` is printed on top of the leftmost column
     :param title_each_figure: See ``titles``, defaults to ``False``
-    :param kwargs: Arguments for ``plt.subplots``. Must include entries for
-        "nrows" and "ncols"
+    :param kwargs: Extra arguments for ``plt.subplots``, apart from "nrows" and "ncols"
     :param legend_no: Numbers of subplots where legend is to be shown. Defaults
         to ``[]`` (no legends shown)
     :param xlims: If this is given, must be a list with one entry per subfigure.
@@ -80,6 +81,8 @@ class SubplotParameters:
         ``(0, xlims[subplot_no])``
     """
 
+    nrows: int = None
+    ncols: int = None
     titles: List[str] = None
     title_each_figure: bool = None
     kwargs: Dict[str, Any] = None
@@ -92,13 +95,22 @@ class SubplotParameters:
         new_params = _impute_with_defaults(
             original=self,
             default=default_params,
-            names=["titles", "title_each_figure", "kwargs", "legend_no", "xlims"],
+            names=[
+                "nrows",
+                "ncols",
+                "titles",
+                "title_each_figure",
+                "kwargs",
+                "legend_no",
+                "xlims",
+            ],
         )
-        _check_and_set_defaults(new_params, [("title_each_figure", False)])
-        kwargs = new_params["kwargs"]
-        assert (
-            kwargs is not None and "nrows" in kwargs and "ncols" in kwargs
-        ), "subplots.kwargs must be given and contain 'nrows' and 'ncols' entries"
+        default_values = [
+            ("nrows", None),
+            ("ncols", None),
+            ("title_each_figure", False),
+        ]
+        _check_and_set_defaults(new_params, default_values)
         return SubplotParameters(**new_params)
 
 
@@ -410,9 +422,8 @@ class ComparativeResults:
     def _figure_shape(plot_params: PlotParameters) -> Tuple[int, int]:
         subplots = plot_params.subplots
         if subplots is not None:
-            kwargs = subplots.kwargs
-            nrows = kwargs["nrows"]
-            ncols = kwargs["ncols"]
+            nrows = subplots.nrows
+            ncols = subplots.ncols
         else:
             nrows = ncols = 1
         return nrows, ncols
@@ -546,9 +557,13 @@ class ComparativeResults:
         subplots = plot_params.subplots
         if subplots is not None:
             subplot_xlims = subplots.xlims
-            subplots_kwargs = subplots.kwargs
-            ncols = subplots_kwargs["ncols"]
-            nrows = subplots.kwargs["nrows"]
+            nrows = subplots.nrows
+            ncols = subplots.ncols
+            subplots_kwargs = dict(
+                dict() if subplots.kwargs is None else subplots.kwargs,
+                nrows=nrows,
+                ncols=ncols,
+            )
             subplot_titles = subplots.titles
             legend_no = [] if subplots.legend_no is None else subplots.legend_no
             if not isinstance(legend_no, list):

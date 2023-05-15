@@ -133,8 +133,8 @@ The figure for benchmark ``nas201-cifar-100`` looks as follows:
 * In our example, we separate the MOBSTER and HYPERTUNE setups from the
   baselines, by using two subfigures. This is done by specifying
   ``plot_params.subplots`` and ``metadata_to_subplot``. In the former,
-  ``plot_params.subplots.kwargs`` is mandatory, we need the number of
-  rows ``nrows`` and columns ``ncols`` of the subplot arrangement.
+  ``plot_params.subplots.nrows`` and ``plot_params.subplots.ncols`` are
+  mandatory, provinding the shape of the subplot arrangement.
   In ``plot_params.subplots.titles``, we can provide titles for each column
   (which we do here). If given, this overrides ``plot_params.title``.
   Also, ``plot_params.subplots.legend_no=[0, 1]`` asks for legends in both
