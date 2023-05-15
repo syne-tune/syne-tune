@@ -1,3 +1,15 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 from typing import Tuple, List, Dict, Optional
 
 import numpy as np
@@ -5,7 +17,9 @@ import numpy as np
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import BasePredictor
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
+    BasePredictor,
+)
 
 
 class ContributedPredictor:
@@ -13,7 +27,9 @@ class ContributedPredictor:
     Base class for the contributed predictors
     """
 
-    def predict(self, X: np.ndarray, return_std: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(
+        self, X: np.ndarray, return_std: bool = True
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Returns signals which are statistics of the predictive distribution at
         input points ``inputs``.
@@ -28,7 +44,7 @@ class ContributedPredictor:
         raise NotImplementedError()
 
     def backward_gradient(
-            self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
+        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> np.ndarray:
         """
         Computes the gradient :math:`\nabla f(x)` for an acquisition
@@ -53,10 +69,10 @@ class ContributedPredictorWrapper(BasePredictor):
     """
 
     def __init__(
-            self,
-            contributed_predictor: ContributedPredictor,
-            state: TuningJobState,
-            active_metric: Optional[str] = None,
+        self,
+        contributed_predictor: ContributedPredictor,
+        state: TuningJobState,
+        active_metric: Optional[str] = None,
     ):
         super().__init__(state, active_metric)
         self.contributed_predictor = contributed_predictor
@@ -82,7 +98,7 @@ class ContributedPredictorWrapper(BasePredictor):
         return [outputs]
 
     def backward_gradient(
-            self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
+        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> List[np.ndarray]:
         """
         Computes the gradient :math:`\nabla f(x)` for an acquisition
@@ -98,7 +114,8 @@ class ContributedPredictorWrapper(BasePredictor):
         :param head_gradients: See above
         :return: Gradient :math:`\nabla f(x)` (one-length list)
         """
-        return [self.contributed_predictor.backward_gradient(
-            input=input,
-            head_gradients=head_gradients
-        )]
+        return [
+            self.contributed_predictor.backward_gradient(
+                input=input, head_gradients=head_gradients
+            )
+        ]

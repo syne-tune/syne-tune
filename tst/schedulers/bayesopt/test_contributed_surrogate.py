@@ -39,7 +39,9 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
 
 
 class TestPredictor(ContributedPredictor):
-    def predict(self, X: np.ndarray, return_std: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+    def predict(
+        self, X: np.ndarray, return_std: bool = True
+    ) -> Tuple[np.ndarray, np.ndarray]:
         nexamples = X.shape[0]
         return np.ones_like(nexamples), np.zeros(nexamples)
 

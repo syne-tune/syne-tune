@@ -158,7 +158,9 @@ def transform_state_to_data(
         # broadcast
         cand_lst = []
         fanta_lst = []
-        for pending_candidate, pending_eval in zip(state.pending_configurations(), state.pending_evaluations):
+        for pending_candidate, pending_eval in zip(
+            state.pending_configurations(), state.pending_evaluations
+        ):
             if not isinstance(pending_eval, FantasizedPendingEvaluation):
                 continue
             cand_lst.append(hp_ranges.to_ndarray(pending_candidate))

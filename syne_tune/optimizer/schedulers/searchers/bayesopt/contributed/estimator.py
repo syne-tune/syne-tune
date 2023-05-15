@@ -1,10 +1,31 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.contributed.predictor import ContributedPredictor, \
-    ContributedPredictorWrapper
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import TuningJobState
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator, transform_state_to_data
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import Predictor
+from syne_tune.optimizer.schedulers.searchers.bayesopt.contributed.predictor import (
+    ContributedPredictor,
+    ContributedPredictorWrapper,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
+    TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
+    Estimator,
+    transform_state_to_data,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
+    Predictor,
+)
 
 
 class ContributedEstimator:
@@ -12,7 +33,9 @@ class ContributedEstimator:
     Base class for the contributed Estimators
     """
 
-    def fit(self, X: np.ndarray, y: np.ndarray, update_params: bool) -> ContributedPredictor:
+    def fit(
+        self, X: np.ndarray, y: np.ndarray, update_params: bool
+    ) -> ContributedPredictor:
         """
         Implements :meth:`fit_from_state`, given transformed data.
 
@@ -37,11 +60,7 @@ class ContributedEstimatorWrapper(Estimator):
     Wrapper class for the contributed estimators to be used with BayesianOptimizationSearcher
     """
 
-    def __init__(
-            self,
-            contributed_estimator: ContributedEstimator,
-            *args, **kwargs
-    ):
+    def __init__(self, contributed_estimator: ContributedEstimator, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.contributed_estimator = contributed_estimator
 
@@ -52,7 +71,9 @@ class ContributedEstimatorWrapper(Estimator):
         """
         return self.contributed_estimator.normalize_targets
 
-    def fit_from_state(self, state: TuningJobState, update_params: bool = False) -> Predictor:
+    def fit_from_state(
+        self, state: TuningJobState, update_params: bool = False
+    ) -> Predictor:
         """
         Creates a
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.Predictor`
@@ -74,12 +95,8 @@ class ContributedEstimatorWrapper(Estimator):
             state=state, normalize_targets=self.normalize_targets
         )
         contributed_predictor = self.contributed_estimator.fit(
-            data.features,
-            data.targets,
-            update_params=update_params
+            data.features, data.targets, update_params=update_params
         )
         return ContributedPredictorWrapper(
-            contributed_predictor=contributed_predictor,
-            state=state
-
+            contributed_predictor=contributed_predictor, state=state
         )
