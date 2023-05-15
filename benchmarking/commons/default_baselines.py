@@ -39,7 +39,9 @@ from syne_tune.optimizer.baselines import (
     SyncMOBSTER as _SyncMOBSTER,
     MOREA as _MOREA,
 )
-from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import LinearScalarizedScheduler as _LinearScalarizedScheduler
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
+    LinearScalarizedScheduler as _LinearScalarizedScheduler,
+)
 from syne_tune.util import recursive_merge
 
 
@@ -151,4 +153,3 @@ def MOREABench(method_arguments: MethodArguments, **kwargs):
 
 def LSOBOBench(method_arguments: MethodArguments, **kwargs):
     return _LinearScalarizedScheduler(**_baseline_kwargs(method_arguments, kwargs))
-

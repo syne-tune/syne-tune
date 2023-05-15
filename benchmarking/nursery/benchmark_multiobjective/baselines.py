@@ -13,7 +13,9 @@
 from typing import Dict, Any, Optional, List, Union
 
 from benchmarking.commons.default_baselines import (
-    RandomSearch, MOREABench, LSOBOBench,
+    RandomSearch,
+    MOREABench,
+    LSOBOBench,
 )
 
 

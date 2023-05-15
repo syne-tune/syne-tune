@@ -11,19 +11,14 @@ from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.experiments import ExperimentResult, load_experiment
 from syne_tune.optimizer.scheduler import TrialScheduler
 
-from benchmarking.nursery.benchmark_multiobjective.baselines import (
-    methods,
-    Methods
-)
+from benchmarking.nursery.benchmark_multiobjective.baselines import methods, Methods
 from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
     benchmark_definitions,
 )
 
+
 def run_experiment(
-        method: str,
-        seed: int,
-        benchmark: SurrogateBenchmarkDefinition,
-        experiment_tag: str
+    method: str, seed: int, benchmark: SurrogateBenchmarkDefinition, experiment_tag: str
 ) -> ExperimentResult:
 
     np.random.seed(seed)
@@ -98,8 +93,8 @@ if __name__ == "__main__":
     res = run_experiment(
         method=method,
         seed=123,
-        benchmark=benchmark_definitions['nas201-cifar10'],
-        experiment_tag="TEST"
+        benchmark=benchmark_definitions["nas201-cifar10"],
+        experiment_tag="TEST",
     )
 
     res.plot(
@@ -110,4 +105,3 @@ if __name__ == "__main__":
         metric_to_plot="metric_params",
         figure_path=f"/tmp/moo-benchmark-{method}-metric_params.jpeg",
     )
-
