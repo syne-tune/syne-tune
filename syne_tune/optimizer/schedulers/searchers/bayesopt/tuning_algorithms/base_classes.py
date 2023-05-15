@@ -105,7 +105,7 @@ class Predictor:
 
         * "mean": Predictive means. If the model supports fantasizing with a
             number ``nf`` of fantasies, this has shape ``(n, nf)``, otherwise ``(n,)``
-        - "std": Predictive stddevs, shape ``(n,)``
+        * "std": Predictive stddevs, shape ``(n,)``
 
         If the hyperparameters of the surrogate model are being optimized (e.g.,
         by empirical Bayes), the returned list has length 1. If its

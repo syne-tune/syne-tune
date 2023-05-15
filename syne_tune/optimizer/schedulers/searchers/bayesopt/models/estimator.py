@@ -174,31 +174,3 @@ def transform_state_to_data(
         targets = np.vstack([targets * np.ones((1, num_fantasy_samples))] + fanta_lst)
         features = np.vstack([features] + cand_lst)
     return TransformedData(features, targets, mean, std)
-
-
-class EstimatorFromTransformedData(Estimator):
-    def _fit(self, data: TransformedData, update_params: bool) -> Predictor:
-        """
-        Implements :meth:`fit_from_state`, given transformed data.
-
-        :param data: Transformed data (features, targets)
-        :param update_params: Should model (hyper)parameters be updated?
-        :return: Predictor, wrapping the posterior state
-        """
-        raise NotImplementedError()
-
-    @property
-    def normalize_targets(self) -> bool:
-        """
-        :return: Should targets in ``state`` be normalized before calling
-            :meth:`_fit`?
-        """
-        raise NotImplementedError()
-
-    def fit_from_state(self, state: TuningJobState, update_params: bool) -> Predictor:
-        return self._fit(
-            data=transform_state_to_data(
-                state=state, normalize_targets=self.normalize_targets
-            ),
-            update_params=update_params,
-        )
