@@ -78,7 +78,9 @@ class RandomSearcher(StochasticAndFilterDuplicatesSearcher):
             else:
                 self._debug_log = None
         else:
-            assert isinstance(debug_log, DebugLogPrinter)
+            assert isinstance(
+                debug_log, DebugLogPrinter
+            ), f"debug_log = {debug_log} must either be bool or DebugLogPrinter"
             self._debug_log = debug_log
 
     def configure_scheduler(self, scheduler):

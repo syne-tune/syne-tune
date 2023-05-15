@@ -33,7 +33,7 @@ MapMethodArgsType = Callable[["ConfigDict", str, DictStrKey], DictStrKey]
 ExtraArgsType = List[DictStrKey]
 
 
-def str2bool(v):
+def str2bool(v: Any) -> bool:
     if isinstance(v, bool):
         return v
     if v.lower() in ("yes", "true", "t", "y", "1"):
@@ -83,7 +83,7 @@ class ConfigDict:
         Parameter(
             name="save_tuner",
             type=str2bool,
-            default=0,
+            default=False,
             help="Serialize Tuner object at the end of tuning?",
         ),
         Parameter(
@@ -113,7 +113,7 @@ class ConfigDict:
         Parameter(
             name="scale_max_wallclock_time",
             type=str2bool,
-            default=0,
+            default=False,
             help=(
                 "If 1, benchmark.max_wallclock_time is multiplied by B / min(A, B),"
                 "where A = n_workers and B = benchmark.n_workers"
