@@ -45,7 +45,7 @@ class SklearnPredictorWrapper(BasePredictor):
         input points ``inputs``. By default:
 
         * "mean": Predictive means.
-        - "std": Predictive stddevs, shape ``(n,)``
+        * "std": Predictive stddevs, shape ``(n,)``
 
         This function relies on the assigned ContributedPredictor to execute the predictions
 
