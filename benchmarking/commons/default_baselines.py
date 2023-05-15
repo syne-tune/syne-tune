@@ -141,14 +141,7 @@ def SyncMOBSTER(method_arguments: MethodArguments, **kwargs):
 
 
 def MOREABench(method_arguments: MethodArguments, **kwargs):
-    # TODO fix MOREA; the below code is a workaround for the fact that MOREA crashes when `Float` is used
-    MOREA_NUM_TO_SAMPLE = 1000
-    kwargs = _baseline_kwargs(method_arguments, kwargs)
-    for name, space in kwargs["config_space"].items():
-        if isinstance(space, Float) or isinstance(space, Integer):
-            space = Categorical(categories=space.sample(size=MOREA_NUM_TO_SAMPLE))
-        kwargs["config_space"][name] = space
-    return _MOREA(**kwargs)
+    return _MOREA(**_baseline_kwargs(method_arguments, kwargs))
 
 
 def LSOBOBench(method_arguments: MethodArguments, **kwargs):

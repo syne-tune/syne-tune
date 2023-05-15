@@ -29,9 +29,9 @@ def nas201_mo_benchmark(dataset_name):
 
 
 nas201_mo_benchmark_definitions = {
-    "nas201-cifar10": nas201_mo_benchmark("cifar10"),
-    "nas201-cifar100": nas201_mo_benchmark("cifar100"),
-    "nas201-ImageNet16-120": nas201_mo_benchmark("ImageNet16-120"),
+    "nas201-mo-cifar10": nas201_mo_benchmark("cifar10"),
+    "nas201-mo-cifar100": nas201_mo_benchmark("cifar100"),
+    "nas201-mo-ImageNet16-120": nas201_mo_benchmark("ImageNet16-120"),
 }
 
 
