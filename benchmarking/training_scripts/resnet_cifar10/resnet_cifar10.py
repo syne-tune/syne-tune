@@ -113,8 +113,6 @@ def train(model, train_loader, optimizer):
         optimizer.step()
         total_loss.append(loss.item())
     avg_loss = sum(total_loss) / len(total_loss)
-    # print(f"Epoch: {epoch}:")
-    # print(f"Train Set: Average Loss: {avg_loss:.2f}")
 
 
 def valid(model, valid_loader):
@@ -132,13 +130,8 @@ def valid(model, valid_loader):
             correct += prediction.eq(target.view_as(prediction)).sum().item()
     n_valid = len(valid_loader.sampler)
     loss /= n_valid
-    percentage_correct = 100.0 * correct / n_valid
-    # print(
-    #    "Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)".format(
-    #        loss, correct, len(valid_loader.sampler), percentage_correct
-    #    )
-    # )
-    return loss, percentage_correct / 100
+    valid_error = correct / n_valid
+    return loss, valid_error
 
 
 def _download_data(config):
@@ -191,7 +184,6 @@ def _create_training_objects(config):
     if torch.cuda.is_available():
         model = model.cuda()
         device = torch.device("cuda")
-        # print(device)
         model = torch.nn.DataParallel(
             model, device_ids=[i for i in range(config["num_gpus"])]
         ).to(device)
@@ -210,10 +202,6 @@ def _create_training_objects(config):
 
 def objective(config):
     torch.manual_seed(np.random.randint(10000))
-    trial_id = config.get("trial_id")
-    debug_log = trial_id is not None
-    if debug_log:
-        print("Trial {}: Starting evaluation".format(trial_id), flush=True)
     # Download data, setup data loaders
     input_size, num_classes, train_dataset, valid_dataset = _download_data(config)
     train_loader, valid_loader = _create_data_loaders(
@@ -234,22 +222,19 @@ def objective(config):
 
     for epoch in range(resume_from + 1, config[MAX_RESOURCE_ATTR] + 1):
         train(model, train_loader, optimizer)
-        loss, y = valid(model, valid_loader)
         scheduler.step()
         elapsed_time = time.time() - ts_start
         # Write checkpoint (optional)
         checkpoint_model_at_rung_level(config, save_model_fn, epoch)
-        # Feed the score back to Syne Tune
+        # Evaluate and send metrics back to Syne Tune
+        _, valid_error = valid(model, valid_loader)
         report(
-            **{RESOURCE_ATTR: epoch, METRIC_NAME: y, ELAPSED_TIME_ATTR: elapsed_time}
+            **{
+                RESOURCE_ATTR: epoch,
+                METRIC_NAME: valid_error,
+                ELAPSED_TIME_ATTR: elapsed_time,
+            }
         )
-        if debug_log:
-            print(
-                "Trial {}: epoch = {}, objective = {:.3f}, elapsed_time = {:.2f}".format(
-                    trial_id, epoch, y, elapsed_time
-                ),
-                flush=True,
-            )
 
 
 if __name__ == "__main__":
@@ -275,7 +260,6 @@ if __name__ == "__main__":
     parser.add_argument(f"--{MAX_RESOURCE_ATTR}", type=int, required=True)
     parser.add_argument("--dataset_path", type=str, required=True)
     parser.add_argument("--num_gpus", type=int, default=1)
-    parser.add_argument("--trial_id", type=str)
     add_to_argparse(parser, _config_space)
     add_checkpointing_to_argparse(parser)
 

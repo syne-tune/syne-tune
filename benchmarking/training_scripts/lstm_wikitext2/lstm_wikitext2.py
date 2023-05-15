@@ -157,10 +157,6 @@ def objective(config):
     clip = config["clip"]
     lr_factor = config["lr_factor"]
     report_current_best = parse_bool(config["report_current_best"])
-    trial_id = config.get("trial_id")
-    debug_log = trial_id is not None
-    if debug_log:
-        print("Trial {}: Starting evaluation".format(trial_id), flush=True)
 
     torch.manual_seed(seed)
     if torch.cuda.is_available():
@@ -334,14 +330,6 @@ def objective(config):
         }
         report(**report_kwargs)
 
-        if debug_log:
-            print(
-                "Trial {}: epoch = {}, objective = {:.3f}, elapsed_time = {:.2f}".format(
-                    trial_id, epoch, objective, elapsed_time
-                ),
-                flush=True,
-            )
-
 
 if __name__ == "__main__":
     # Temporarily leave PositionalEncoding module here. Will be moved somewhere else.
@@ -509,7 +497,6 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, required=True)
     parser.add_argument("--dataset_path", type=str, required=True)
     parser.add_argument("--report_current_best", type=str, default="False")
-    parser.add_argument("--trial_id", type=str)
     add_to_argparse(parser, _config_space)
     add_checkpointing_to_argparse(parser)
 
