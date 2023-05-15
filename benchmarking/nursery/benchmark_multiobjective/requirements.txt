@@ -1,4 +1,3 @@
-syne-tune[extra]
 tqdm
 coolname
 numpy>=1.16.0, <1.24.0
