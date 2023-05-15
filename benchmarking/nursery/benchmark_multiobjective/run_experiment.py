@@ -11,6 +11,13 @@ from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.experiments import ExperimentResult, load_experiment
 from syne_tune.optimizer.scheduler import TrialScheduler
 
+from benchmarking.nursery.benchmark_multiobjective.baselines import (
+    methods,
+    Methods
+)
+from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
+    benchmark_definitions,
+)
 
 def run_experiment(
         method: str,
@@ -85,13 +92,7 @@ def run_experiment(
 
 
 if __name__ == "__main__":
-    from benchmarking.nursery.benchmark_multiobjective.baselines import (
-        methods,
-        Methods
-    )
-    from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
-        benchmark_definitions,
-    )
+
 
     method = Methods.MOREA
 

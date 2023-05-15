@@ -8,10 +8,10 @@ To run all experiments, you can run the following:
 
 ```bash
 pip install -r benchmarking/nursery/benchmark_multiobjective/requirements.txt
-python benchmarking/nursery/benchmark_multiobjective/benchmark_main.py --experiment_tag "my-new-experiment" --num_seeds 2
+python benchmarking/nursery/benchmark_multiobjective/hpo_main.py --experiment_tag "my-new-experiment" --num_seeds 2
 ```
 
 Which will run all combinations of methods/benchmark/seeds on your local computer for 2 seeds.
 
-You can also only run only one scheduler by doing `python benchmarking/nursery/benchmark_multiobjective/benchmark_main.py --method RS`, see
+You can also only run only one scheduler by doing `python benchmarking/nursery/benchmark_multiobjective/hpo_main.py --method RS`, see
 `benchmark_main.py` to see all options supported.
