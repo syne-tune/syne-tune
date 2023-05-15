@@ -16,13 +16,17 @@ import numpy as np
 import pytest
 
 from syne_tune.config_space import uniform, choice
-from syne_tune.optimizer.schedulers.searchers.bayesopt.contributed.estimator import (
-    ContributedEstimator,
-    ContributedEstimatorWrapper,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
+    SklearnEstimator,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.contributed.predictor import (
-    ContributedPredictor,
-    ContributedPredictorWrapper,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_estimator import (
+    SklearnEstimatorWrapper,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
+    SklearnPredictor,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_predictor import (
+    SklearnPredictorWrapper,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     dictionarize_objective,
@@ -38,7 +42,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
 )
 
 
-class TestPredictor(ContributedPredictor):
+class TestPredictor(SklearnPredictor):
     def predict(
         self, X: np.ndarray, return_std: bool = True
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -46,7 +50,7 @@ class TestPredictor(ContributedPredictor):
         return np.ones_like(nexamples), np.zeros(nexamples)
 
 
-class TestEstimator(ContributedEstimator):
+class TestEstimator(SklearnEstimator):
     def fit(self, X: np.ndarray, y: np.ndarray, update_params: bool) -> TestPredictor:
         # Assert the right data is passed to the fit
         np.testing.assert_allclose(X[:, 0], np.array([0.2, 0.31, 0.15]))
@@ -66,17 +70,17 @@ def tuning_job_state() -> TuningJobState:
 
 
 def test_estimator_wrapper_interface(tuning_job_state):
-    estimator = ContributedEstimatorWrapper(contributed_estimator=TestEstimator())
+    estimator = SklearnEstimatorWrapper(contributed_estimator=TestEstimator())
     predictor = estimator.fit_from_state(tuning_job_state)
 
-    assert isinstance(predictor, ContributedPredictorWrapper)
+    assert isinstance(predictor, SklearnPredictorWrapper)
     assert isinstance(predictor.contributed_predictor, TestPredictor)
-    assert isinstance(estimator, ContributedEstimatorWrapper)
+    assert isinstance(estimator, SklearnEstimatorWrapper)
     assert isinstance(estimator.contributed_estimator, TestEstimator)
 
 
 def test_predictor_wrapper_interface(tuning_job_state):
-    estimator = ContributedEstimatorWrapper(contributed_estimator=TestEstimator())
+    estimator = SklearnEstimatorWrapper(contributed_estimator=TestEstimator())
     predictor = estimator.fit_from_state(tuning_job_state)
     predictions = predictor.predict(np.random.uniform(size=(10, 3)))
 

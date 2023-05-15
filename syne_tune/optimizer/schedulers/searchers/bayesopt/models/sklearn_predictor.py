@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Tuple, List, Dict, Optional
+from typing import Optional, List, Dict
 
 import numpy as np
 
@@ -20,57 +20,19 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
     BasePredictor,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
+    SklearnPredictor,
+)
 
 
-class ContributedPredictor:
+class SklearnPredictorWrapper(BasePredictor):
     """
-    Base class for the contributed predictors
-    """
-
-    def predict(
-        self, X: np.ndarray, return_std: bool = True
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Returns signals which are statistics of the predictive distribution at
-        input points ``inputs``.
-
-
-        :param inputs: Input points, shape ``(n, d)``
-        :return: Tuple with the following entries:
-            * "mean": Predictive means in shape of ``(n,)``
-            * "std": Predictive stddevs, shape ``(n,)``
-        """
-
-        raise NotImplementedError()
-
-    def backward_gradient(
-        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
-    ) -> np.ndarray:
-        """
-        Computes the gradient :math:`\nabla f(x)` for an acquisition
-        function :math:`f(x)`, where :math:`x` is a single input point. This
-        is using reverse mode differentiation, the head gradients are passed
-        by the acquisition function. The head gradients are
-        :math:`\partial_k f`, where :math:`k` runs over the statistics
-        returned by :meth:`predict` for the single input point :math:`x`.
-        The shape of head gradients is the same as the shape of the
-        statistics.
-
-        :param input: Single input point :math:`x`, shape ``(d,)``
-        :param head_gradients: See above
-        :return: Gradient :math:`\nabla f(x)`
-        """
-        raise NotImplementedError()
-
-
-class ContributedPredictorWrapper(BasePredictor):
-    """
-    Wrapper class for the contributed estimators to be used with ContributedEstimatorWrapper
+    Wrapper class for the sklearn estimators to be used with ContributedEstimatorWrapper
     """
 
     def __init__(
         self,
-        contributed_predictor: ContributedPredictor,
+        contributed_predictor: SklearnPredictor,
         state: TuningJobState,
         active_metric: Optional[str] = None,
     ):

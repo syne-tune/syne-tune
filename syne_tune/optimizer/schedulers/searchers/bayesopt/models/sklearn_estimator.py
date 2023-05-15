@@ -10,12 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import numpy as np
-
-from syne_tune.optimizer.schedulers.searchers.bayesopt.contributed.predictor import (
-    ContributedPredictor,
-    ContributedPredictorWrapper,
-)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
@@ -23,44 +17,23 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
     Estimator,
     transform_state_to_data,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
+    SklearnEstimator,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_predictor import (
+    SklearnPredictorWrapper,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     Predictor,
 )
 
 
-class ContributedEstimator:
+class SklearnEstimatorWrapper(Estimator):
     """
-    Base class for the contributed Estimators
-    """
-
-    def fit(
-        self, X: np.ndarray, y: np.ndarray, update_params: bool
-    ) -> ContributedPredictor:
-        """
-        Implements :meth:`fit_from_state`, given transformed data.
-
-        :param X: Training data in ndarray of shape (n_samples, n_features)
-        :param y: Target values in ndarray of shape (n_samples,)
-        :param update_params: Should model (hyper)parameters be updated?
-        :return: Predictor, wrapping the posterior state
-        """
-        raise NotImplementedError()
-
-    @property
-    def normalize_targets(self) -> bool:
-        """
-        :return: Should targets in ``state`` be normalized before calling
-            :meth:`fit`?
-        """
-        return False
-
-
-class ContributedEstimatorWrapper(Estimator):
-    """
-    Wrapper class for the contributed estimators to be used with BayesianOptimizationSearcher
+    Wrapper class for the sklearn estimators to be used with BayesianOptimizationSearcher
     """
 
-    def __init__(self, contributed_estimator: ContributedEstimator, *args, **kwargs):
+    def __init__(self, contributed_estimator: SklearnEstimator, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.contributed_estimator = contributed_estimator
 
@@ -97,6 +70,6 @@ class ContributedEstimatorWrapper(Estimator):
         contributed_predictor = self.contributed_estimator.fit(
             data.features, data.targets, update_params=update_params
         )
-        return ContributedPredictorWrapper(
+        return SklearnPredictorWrapper(
             contributed_predictor=contributed_predictor, state=state
         )
