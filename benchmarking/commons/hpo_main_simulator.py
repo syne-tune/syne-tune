@@ -56,7 +56,7 @@ SIMULATED_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="verbose",
         type=str2bool,
-        default=0,
+        default=False,
         help="Verbose log output?",
     ),
     dict(
@@ -75,7 +75,7 @@ SIMULATED_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="restrict_configurations",
         type=str2bool,
-        default=0,
+        default=False,
         help="If 1, scheduler only suggests configs contained in tabulated benchmark",
     ),
 ]
