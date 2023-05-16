@@ -1084,8 +1084,8 @@ def config_space_size(
 
     :param config_space: Configuration space
     :param upper_limit: See above. Defaults to :code:`2**20`
-    :return: Number of distinct configurations; or None if infinite or more than
-        ``upper_limit``
+    :return: Number of distinct configurations; or ``None`` if infinite or
+        more than ``upper_limit``
     """
     assert upper_limit > 1
     size = 1

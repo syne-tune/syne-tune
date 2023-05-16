@@ -18,7 +18,7 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
-from syne_tune.config_space import Domain
+from syne_tune.config_space import config_space_size, Domain
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 from syne_tune.optimizer.schedulers.searchers.searcher_base import (
     sample_random_configuration,
@@ -71,6 +71,9 @@ class RegularizedEvolution(StochasticSearcher):
         super(RegularizedEvolution, self).__init__(
             config_space, metric, points_to_evaluate=points_to_evaluate, **kwargs
         )
+        assert (
+            config_space_size(config_space) != 1
+        ), "config_space has size 1, does not offer any diversity"
         self.mode = mode
         self.population_size = population_size
         self.sample_size = sample_size
@@ -84,6 +87,11 @@ class RegularizedEvolution(StochasticSearcher):
             )
         if kwargs.get("restrict_configurations") is not None:
             logger.warning("This class does not support restrict_configurations")
+        self._non_constant_hps = [
+            name
+            for name, domain in config_space.items()
+            if isinstance(domain, Domain) and len(domain) != 1
+        ]
 
     def _mutate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         child_config = copy.deepcopy(config)
@@ -92,19 +100,11 @@ class RegularizedEvolution(StochasticSearcher):
         for sample_try in range(self.num_sample_try):
             if child_config == config:
                 # Sample a random hyperparameter to mutate
-                # Note: If ``len(v) == 0``, the domain of ``v`` is infinite
-                hps = [
-                    (k, v)
-                    for k, v in self.config_space.items()
-                    if isinstance(v, Domain) and len(v) != 1
-                ]
-                assert (
-                    len(hps) >= 0
-                ), "all hyperparameters only have a single value, cannot perform mutations."
-                hp_name, hp = hps[self.random_state.randint(len(hps))]
-
+                hp_name = self.random_state.choice(self._non_constant_hps, 1).item()
                 # mutate the value by sampling
-                child_config[hp_name] = hp.sample(random_state=self.random_state)
+                child_config[hp_name] = self.config_space[hp_name].sample(
+                    random_state=self.random_state
+                )
             else:
                 break
         if sample_try == self.num_sample_try:
