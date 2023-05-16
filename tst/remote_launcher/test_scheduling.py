@@ -14,7 +14,7 @@ import datetime
 
 import pytest
 
-from syne_tune.backend.scheduling import backoff
+from syne_tune.remote.scheduling import backoff
 
 
 @backoff(errorname="AttributeError", ntimes_resource_wait=10, length2sleep=0.01)
