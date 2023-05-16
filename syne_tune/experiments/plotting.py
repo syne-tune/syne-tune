@@ -638,7 +638,7 @@ class ComparativeResults:
 
         If ``plot_params.show_init_trials`` is given, the best metric value
         curve for the data from trials ``<=  plot_params.show_init_trials.trial_id``
-        in a particular setup ``plot_params.show_init_trials.setup_name``is
+        in a particular setup ``plot_params.show_init_trials.setup_name`` is
         shown in all subplots the setup is contained in. This is useful to
         contrast the performance of methods against the performance for one
         particular trial, for example the initial configuration (i.e., to show
@@ -647,13 +647,13 @@ class ComparativeResults:
         it visible. The corresponding curve is labeled with
         ``plot_params.show_init_trials.new_setup_name`` in the legend.
 
-        If ``extra_results_keys``is given, these are column names in the result
+        If ``extra_results_keys`` is given, these are column names in the result
         dataframe. For each setup and seed, we collect the values for the
         largest time stamp. We return a nested dictionary ``extra_results``, so
         that ``extra_results[setup_name][key]`` contains values (over seeds),
         where ``key`` is in ``extra_results_keys``. If ``metadata_subplot_level``
         is ``True`` and ``metadata_to_subplot`` is given, the structure is
-        ``extra_results[setup_name][subplot_no][key]``
+        ``extra_results[setup_name][subplot_no][key]``.
 
         :param benchmark_name: Name of benchmark for which to plot results.
             Not needed if there is only one benchmark
