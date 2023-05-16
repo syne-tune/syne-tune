@@ -67,7 +67,7 @@ class HPOMainLocalTests(unittest.TestCase):
                 "use_long_tuner_name_prefix": True,
                 "launched_remotely": False,
                 "benchmark": None,
-                "verbose": 0,
+                "verbose": False,
                 "support_checkpointing": 1,
                 "fcnet_ordinal": "nn-log",
                 "restrict_configurations": 0,
