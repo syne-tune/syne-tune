@@ -59,11 +59,22 @@ class SklearnEstimatorWrapper(Estimator):
         If your surrogate model is not Bayesian, or does not have hyperparameters,
         you can ignore the ``update_params`` argument,
 
+        If ``self.state.pending_evaluations`` is not empty, we compute posterior for state without pending evals.
+        This method can be overriten for any other behaviour such as one found in
+        ``syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model.GaussProcEstimator.fit_from_state``
+
         :param state: Current data model parameters are to be fit on, and the
             posterior state is to be computed from
         :param update_params: See above
         :return: Predictor, wrapping the posterior state
         """
+        if state.pending_evaluations:
+            state = TuningJobState(
+                hp_ranges=state.hp_ranges,
+                config_for_trial=state.config_for_trial,
+                trials_evaluations=state.trials_evaluations,
+                failed_trials=state.failed_trials,
+            )
         data = transform_state_to_data(
             state=state, normalize_targets=self.normalize_targets
         )
