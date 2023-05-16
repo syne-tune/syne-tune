@@ -460,6 +460,14 @@ Some basic plots can be obtained via
 :class:`~syne_tune.experiments.ExperimentResult`. An example is given in
 `examples/launch_plot_results.py <examples.html#plot-results-of-tuning-experiment>`__.
 
+How can I plot comparative results across many experiments?
+===========================================================
+
+Syne Tune contains powerful plotting tools as part of the benchmarking formalism,
+these are detailed `here <tutorials/benchmarking/bm_plotting.html>`__. An example
+is provided as part of
+`benchmarking/nursery/benchmark_hypertune <benchmarking/benchmark_hypertune.html>`__.
+
 How can I specify additional tuning metadata?
 =============================================
 
@@ -726,7 +734,7 @@ Note that, you need to install
 
    pip install tensorboardX
 
-This will log all metrics that are reported in your training script via
+The callback will log all metrics that are reported in your training script via
 the ``report(...)`` function. Now, to open Tensorboard, run:
 
 .. code:: bash
