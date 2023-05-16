@@ -95,24 +95,26 @@ class RegularizedEvolution(StochasticSearcher):
 
     def _mutate_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
         child_config = copy.deepcopy(config)
-
-        # sample mutation until a different configuration is found
-        for sample_try in range(self.num_sample_try):
-            if child_config == config:
+        config_ms = self._hp_ranges.config_to_match_string(config)
+        # Sample mutation until a different configuration is found
+        config_is_mutated = False
+        for _ in range(self.num_sample_try):
+            if self._hp_ranges.config_to_match_string(child_config) == config_ms:
                 # Sample a random hyperparameter to mutate
                 hp_name = self.random_state.choice(self._non_constant_hps, 1).item()
-                # mutate the value by sampling
+                # Mutate the value by sampling
                 child_config[hp_name] = self.config_space[hp_name].sample(
                     random_state=self.random_state
                 )
             else:
+                config_is_mutated = True
                 break
-        if sample_try == self.num_sample_try:
+        if not config_is_mutated:
             logger.info(
-                f"Did not manage to sample a different configuration with {self.num_sample_try}, "
-                f"sampling at random"
+                "Did not manage to sample a different configuration with "
+                f"{self.num_sample_try}, sampling at random"
             )
-            return self._sample_random_config()
+            child_config = self._sample_random_config()
 
         return child_config
 
