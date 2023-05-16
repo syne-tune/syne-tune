@@ -81,7 +81,7 @@ def test_scalarization(scheduler: LinearScalarizedScheduler, make_metric: Callab
     assert scalarized == 321 - 321
 
 
-def test_resukls_gathering(scheduler: LinearScalarizedScheduler, make_metric: Callable):
+def test_results_gathering(scheduler: LinearScalarizedScheduler, make_metric: Callable):
     trialid = 123
     trial = Trial(
         trial_id=trialid,

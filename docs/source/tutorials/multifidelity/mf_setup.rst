@@ -98,7 +98,7 @@ Let us have a walk through this script, assuming it is called with the default
   In short, we strongly recommend to use ``max_resource_attr`` and to configure
   schedulers with it.
 * [2] If ``max_resource_attr`` is not to be used, the scheduler needs to be
-  passed the maximum resource value explicitly. For ``ASHA-STOP`, this is the
+  passed the maximum resource value explicitly. For ``ASHA-STOP``, this is the
   ``max_t`` attribute. This is not recommended, and not shown here.
 * [3] At this point, we create the multi-fidelity scheduler, which is ASHA in
   the default case. Most supported schedulers can easily be imported from

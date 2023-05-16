@@ -36,6 +36,10 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB as _SyncBOHB,
     DEHB as _DEHB,
     SyncMOBSTER as _SyncMOBSTER,
+    MOREA as _MOREA,
+)
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
+    LinearScalarizedScheduler as _LinearScalarizedScheduler,
 )
 from syne_tune.util import recursive_merge
 
@@ -133,3 +137,11 @@ def DEHB(method_arguments: MethodArguments, **kwargs):
 
 def SyncMOBSTER(method_arguments: MethodArguments, **kwargs):
     return _SyncMOBSTER(**_baseline_kwargs(method_arguments, kwargs, is_multifid=True))
+
+
+def MOREABench(method_arguments: MethodArguments, **kwargs):
+    return _MOREA(**_baseline_kwargs(method_arguments, kwargs))
+
+
+def LSOBOBench(method_arguments: MethodArguments, **kwargs):
+    return _LinearScalarizedScheduler(**_baseline_kwargs(method_arguments, kwargs))
