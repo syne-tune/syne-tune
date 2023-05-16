@@ -91,11 +91,12 @@ class RegularizedEvolution(StochasticSearcher):
         # sample mutation until a different configuration is found
         for sample_try in range(self.num_sample_try):
             if child_config == config:
-                # sample a random hyperparameter to mutate
+                # Sample a random hyperparameter to mutate
+                # Note: If ``len(v) == 0``, the domain of ``v`` is infinite
                 hps = [
                     (k, v)
                     for k, v in self.config_space.items()
-                    if isinstance(v, Domain) and len(v) > 1
+                    if isinstance(v, Domain) and len(v) != 1
                 ]
                 assert (
                     len(hps) >= 0
