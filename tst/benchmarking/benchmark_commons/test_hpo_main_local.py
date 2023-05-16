@@ -26,10 +26,16 @@ from benchmarking.nursery.benchmark_multiobjective.hpo_main import main
 
 
 class HPOMainLocalTests(unittest.TestCase):
-    @patch("benchmarking.commons.hpo_main_simulator.config_from_argparse", new_callable=MagicMock)
+    @patch(
+        "benchmarking.commons.hpo_main_simulator.config_from_argparse",
+        new_callable=MagicMock,
+    )
     @patch("benchmarking.commons.hpo_main_simulator.Tuner", new_callable=MagicMock)
-    @patch("benchmarking.commons.hpo_main_simulator.BlackboxRepositoryBackend", new_callable=MagicMock)
-    def test_experiment_is_run_the_expected_number_of_times(
+    @patch(
+        "benchmarking.commons.hpo_main_simulator.BlackboxRepositoryBackend",
+        new_callable=MagicMock,
+    )
+    def test_tuner_is_run_the_expected_number_of_times(
         self, mock_blackbox_repository_backend, mock_tuner, mock_config_from_argparse
     ):
         methods = {
@@ -47,11 +53,27 @@ class HPOMainLocalTests(unittest.TestCase):
         seeds = [1, 2]
 
         mock_config_from_argparse.return_value = ConfigDict.from_dict(
-            {'experiment_tag': 'my-new-experiment', 'num_seeds': 2, 'start_seed': 0, 'method': None, 'save_tuner': 0,
-             'n_workers': None, 'max_wallclock_time': None, 'random_seed': None, 'max_size_data_for_model': None,
-             'scale_max_wallclock_time': 0, 'use_long_tuner_name_prefix': True, 'launched_remotely': False,
-             'benchmark': None, 'verbose': 0, 'support_checkpointing': 1, 'fcnet_ordinal': 'nn-log',
-             'restrict_configurations': 0, 'seeds': [0, 1]})
+            {
+                "experiment_tag": "my-new-experiment",
+                "num_seeds": len(seeds),
+                "start_seed": 0,
+                "method": None,
+                "save_tuner": 0,
+                "n_workers": None,
+                "max_wallclock_time": None,
+                "random_seed": None,
+                "max_size_data_for_model": None,
+                "scale_max_wallclock_time": 0,
+                "use_long_tuner_name_prefix": True,
+                "launched_remotely": False,
+                "benchmark": None,
+                "verbose": 0,
+                "support_checkpointing": 1,
+                "fcnet_ordinal": "nn-log",
+                "restrict_configurations": 0,
+                "seeds": seeds,
+            }
+        )
 
         main(methods, benchmark_definitions)
 

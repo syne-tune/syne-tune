@@ -14,5 +14,5 @@ python benchmarking/nursery/benchmark_multiobjective/hpo_main.py --experiment_ta
 
 Which will run all combinations of methods/benchmark/seeds on your local computer for 2 seeds.
 
-You can also only run only one scheduler by doing `python benchmarking/nursery/benchmark_multiobjective/hpo_main.py --method RS`, see
+You can also run only one scheduler by doing `python benchmarking/nursery/benchmark_multiobjective/hpo_main.py --method RS`, see
 `benchmark_main.py` to see all options supported.
