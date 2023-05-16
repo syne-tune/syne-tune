@@ -23,6 +23,7 @@ from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import 
     nas201_mo_benchmark,
 )
 from benchmarking.nursery.benchmark_multiobjective.hpo_main import main
+from syne_tune.config_space import randint
 
 
 class HPOMainLocalTests(unittest.TestCase):
@@ -32,11 +33,11 @@ class HPOMainLocalTests(unittest.TestCase):
     )
     @patch("benchmarking.commons.hpo_main_simulator.Tuner", new_callable=MagicMock)
     @patch(
-        "benchmarking.commons.hpo_main_simulator.BlackboxRepositoryBackend",
+        "benchmarking.commons.hpo_main_simulator.BlackboxRepositoryBackend.blackbox",
         new_callable=MagicMock,
     )
     def test_tuner_is_run_the_expected_number_of_times(
-        self, mock_blackbox_repository_backend, mock_tuner, mock_config_from_argparse
+        self, mock_blackbox, mock_tuner, mock_config_from_argparse
     ):
         methods = {
             Methods.RS: lambda method_arguments: RandomSearch(method_arguments),
@@ -50,27 +51,37 @@ class HPOMainLocalTests(unittest.TestCase):
             "nas201-ImageNet16-120": nas201_mo_benchmark("ImageNet16-120"),
         }
 
+        config_space = {
+            "width": randint(1, 20),
+            "height": randint(1, 20),
+            "epochs": 100,
+        }
+
+        mock_blackbox.configuration_space_with_max_resource_attr.return_value = (
+            config_space
+        )
+
         seeds = [1, 2]
 
         mock_config_from_argparse.return_value = ConfigDict.from_dict(
             {
                 "experiment_tag": "my-new-experiment",
                 "num_seeds": len(seeds),
-                "start_seed": 0,
+                "start_seed": False,
                 "method": None,
-                "save_tuner": 0,
+                "save_tuner": False,
                 "n_workers": None,
                 "max_wallclock_time": None,
                 "random_seed": None,
                 "max_size_data_for_model": None,
-                "scale_max_wallclock_time": 0,
+                "scale_max_wallclock_time": False,
                 "use_long_tuner_name_prefix": True,
                 "launched_remotely": False,
                 "benchmark": None,
                 "verbose": False,
-                "support_checkpointing": 1,
+                "support_checkpointing": True,
                 "fcnet_ordinal": "nn-log",
-                "restrict_configurations": 0,
+                "restrict_configurations": False,
                 "seeds": seeds,
             }
         )
