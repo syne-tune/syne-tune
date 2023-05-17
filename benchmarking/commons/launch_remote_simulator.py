@@ -32,6 +32,7 @@ from benchmarking.commons.hpo_main_simulator import (
 from benchmarking.commons.launch_remote_common import (
     sagemaker_estimator_args,
     REMOTE_LAUNCHING_EXTRA_PARAMETERS,
+    remove_remote_launching_parameters,
 )
 from benchmarking.commons.utils import (
     filter_none,
@@ -241,6 +242,7 @@ def launch_remote_experiments_simulator(
         )
         if benchmark_key is not None:
             hyperparameters["benchmark_key"] = benchmark_key
+        hyperparameters = remove_remote_launching_parameters(hyperparameters)
         sm_args["hyperparameters"] = hyperparameters
         print(
             f"Launch tuning job {job_no}: {experiment_tag}-{tuner_name}\n"

@@ -35,6 +35,7 @@ from benchmarking.commons.hpo_main_local import (
 from benchmarking.commons.launch_remote_common import (
     sagemaker_estimator_args,
     REMOTE_LAUNCHING_EXTRA_PARAMETERS,
+    remove_remote_launching_parameters,
 )
 from benchmarking.commons.utils import (
     filter_none,
@@ -249,6 +250,7 @@ def _launch_experiment_remotely(
             configuration=configuration,
         )
         hyperparameters.update(extra_sagemaker_hyperparameters)
+        hyperparameters = remove_remote_launching_parameters(hyperparameters)
         if environment is not None:
             sm_args["environment"] = environment
         sm_args["hyperparameters"] = hyperparameters
