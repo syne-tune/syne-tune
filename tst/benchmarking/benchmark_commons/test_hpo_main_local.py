@@ -23,7 +23,7 @@ from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import 
     nas201_mo_benchmark,
 )
 from benchmarking.nursery.benchmark_multiobjective.hpo_main import main
-from syne_tune.config_space import randint
+from syne_tune.config_space import choice
 
 
 class HPOMainLocalTests(unittest.TestCase):
@@ -51,11 +51,16 @@ class HPOMainLocalTests(unittest.TestCase):
             "nas201-ImageNet16-120": nas201_mo_benchmark("ImageNet16-120"),
         }
 
+        hp_cols = ["hp_x0", "hp_x1", "hp_x2", "hp_x3", "hp_x4", "hp_x5"]
+
         config_space = {
-            "width": randint(1, 20),
-            "height": randint(1, 20),
-            "epochs": 100,
+            node: choice(
+                ["avg_pool_3x3", "nor_conv_3x3", "skip_connect", "nor_conv_1x1", "none"]
+            )
+            for node in hp_cols
         }
+
+        config_space["epochs"] = 200
 
         mock_blackbox.configuration_space_with_max_resource_attr.return_value = (
             config_space
