@@ -190,6 +190,14 @@ class ScoringFunction:
     not support gradient computation. Note that scores are always minimized.
     """
 
+    def __init__(
+        self, predictor: OutputPredictor = None, active_metric: Optional[str] = None
+    ):
+        self.predictor = predictor
+        if active_metric is None:
+            active_metric = INTERNAL_METRIC_NAME
+        self.active_metric = active_metric
+
     def score(
         self,
         candidates: Iterable[Configuration],
@@ -210,12 +218,6 @@ class AcquisitionFunction(ScoringFunction):
     :param predictor: Predictor(s) from surrogate model
     :param active_metric: Name of internal metric
     """
-
-    def __init__(self, predictor: OutputPredictor, active_metric: Optional[str] = None):
-        self.predictor = predictor
-        if active_metric is None:
-            active_metric = INTERNAL_METRIC_NAME
-        self.active_metric = active_metric
 
     def compute_acq(
         self, inputs: np.ndarray, predictor: Optional[OutputPredictor] = None
@@ -260,6 +262,10 @@ class AcquisitionFunction(ScoringFunction):
 
 AcquisitionClassAndArgs = Union[
     Type[AcquisitionFunction], Tuple[Type[AcquisitionFunction], Dict[str, Any]]
+]
+
+ScoringClassAndArgs = Union[
+    Type[ScoringFunction], Tuple[Type[ScoringFunction], Dict[str, Any]]
 ]
 
 
