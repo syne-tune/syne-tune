@@ -35,7 +35,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
     TuningJobState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
-    create_tuning_job_state, tuples_to_configs,
+    create_tuning_job_state,
+    tuples_to_configs,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
@@ -86,6 +87,7 @@ def test_predictor_wrapper_interface(tuning_job_state: TuningJobState):
 
     np.testing.assert_allclose(predictions[0]["mean"], np.ones(shape=10))
     np.testing.assert_allclose(predictions[0]["std"], np.zeros(shape=10))
+
 
 def test_pending_evaluations(tuning_job_state: TuningJobState):
     pending = tuples_to_configs(
