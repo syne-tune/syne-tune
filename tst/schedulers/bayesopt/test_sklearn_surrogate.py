@@ -35,7 +35,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_stat
     TuningJobState,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
-    create_tuning_job_state,
+    create_tuning_job_state, tuples_to_configs,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
@@ -69,7 +69,7 @@ def tuning_job_state() -> TuningJobState:
     return create_tuning_job_state(hp_ranges=hp_ranges1, cand_tuples=X1, metrics=Y1)
 
 
-def test_estimator_wrapper_interface(tuning_job_state):
+def test_estimator_wrapper_interface(tuning_job_state: TuningJobState):
     estimator = SklearnEstimatorWrapper(contributed_estimator=TestEstimator())
     predictor = estimator.fit_from_state(tuning_job_state)
 
@@ -79,10 +79,24 @@ def test_estimator_wrapper_interface(tuning_job_state):
     assert isinstance(estimator.contributed_estimator, TestEstimator)
 
 
-def test_predictor_wrapper_interface(tuning_job_state):
+def test_predictor_wrapper_interface(tuning_job_state: TuningJobState):
     estimator = SklearnEstimatorWrapper(contributed_estimator=TestEstimator())
     predictor = estimator.fit_from_state(tuning_job_state)
     predictions = predictor.predict(np.random.uniform(size=(10, 3)))
 
     np.testing.assert_allclose(predictions[0]["mean"], np.ones(shape=10))
     np.testing.assert_allclose(predictions[0]["std"], np.zeros(shape=10))
+
+def test_pending_evaluations(tuning_job_state: TuningJobState):
+    pending = tuples_to_configs(
+        [(1.0, "a")],
+        make_hyperparameter_ranges(
+            {"a1_hp_1": uniform(-5.0, 5.0), "a1_hp_2": choice(["a", "b", "c"])}
+        ),
+    )
+    tuning_job_state.append_pending("123", pending.pop())
+    estimator = SklearnEstimatorWrapper(contributed_estimator=TestEstimator())
+    predictor = estimator.fit_from_state(tuning_job_state)
+
+    assert isinstance(predictor, SklearnPredictorWrapper)
+    assert isinstance(predictor.contributed_predictor, TestPredictor)
