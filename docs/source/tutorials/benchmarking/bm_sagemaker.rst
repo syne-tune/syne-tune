@@ -106,9 +106,6 @@ metrics are published to the SageMaker training job console (this feature can
 be switched off with ``--remote_tuning_metrics 0``). This is detailed
 `here <bm_local.html#visualizing-tuning-metrics-in-the-sagemaker-training-job-console>`_.
 
-You can use ``--skip_initial_jobs`` to skip initial jobs, as is explained
-`here <bm_simulator.html#skipping-initial-jobs>`__.
-
 Using SageMaker Managed Warm Pools
 ----------------------------------
 

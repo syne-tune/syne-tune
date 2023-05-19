@@ -32,10 +32,7 @@ from benchmarking.commons.hpo_main_local import (
     get_benchmark,
     LOCAL_BACKEND_EXTRA_PARAMETERS,
 )
-from benchmarking.commons.launch_remote_common import (
-    sagemaker_estimator_args,
-    REMOTE_LAUNCHING_EXTRA_PARAMETERS,
-)
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
     filter_none,
     message_sync_from_s3,
@@ -135,11 +132,7 @@ def launch_remote(
         command line arguments
     :param extra_args: Extra arguments for command line parser, optional
     """
-    configuration = config_from_argparse(
-        extra_args=extra_args,
-        benchmark_specific_args=LOCAL_BACKEND_EXTRA_PARAMETERS
-        + REMOTE_LAUNCHING_EXTRA_PARAMETERS,
-    )
+    configuration = config_from_argparse(extra_args, LOCAL_BACKEND_EXTRA_PARAMETERS)
     launch_remote_experiments(
         configuration, entry_point, methods, benchmark_definitions
     )
@@ -167,6 +160,7 @@ def launch_remote_experiments(
     If you like to control the Syne Tune requirements (the default ones are
     ``"extra"``, which can be a lot), place a file ``requirements_synetune.txt`` in
     ``entry_point.parent``.
+
 
     :param configuration: ConfigDict with parameters of the benchmark.
             Must contain all parameters from
@@ -226,13 +220,7 @@ def _launch_experiment_remotely(
     experiment_tag = configuration.experiment_tag
     suffix = random_string(4)
     combinations = list(itertools.product(method_names, configuration.seeds))
-    if configuration.skip_initial_jobs > 0:
-        print(
-            f"The first {configuration.skip_initial_jobs} tuning jobs will be skipped"
-        )
-    for job_no, (method, seed) in enumerate(tqdm(combinations)):
-        if job_no < configuration.skip_initial_jobs:
-            continue  # Skip initial number of jobs
+    for method, seed in tqdm(combinations):
         tuner_name = f"{method}-{seed}"
         sm_args = sagemaker_estimator_args(
             entry_point=entry_point,
@@ -253,7 +241,7 @@ def _launch_experiment_remotely(
             sm_args["environment"] = environment
         sm_args["hyperparameters"] = hyperparameters
         print(
-            f"Launch tuning job {job_no}: {experiment_tag}-{tuner_name}\n"
+            f"{experiment_tag}-{tuner_name}\n"
             f"hyperparameters = {hyperparameters}\n"
             f"Results written to {sm_args['checkpoint_s3_uri']}"
         )
