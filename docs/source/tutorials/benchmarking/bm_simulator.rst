@@ -273,25 +273,6 @@ In this case, experiments are sliced along the axis
 ``("nas201", "fcnet", "lcbench")`` to be run in parallel in different SageMaker
 training jobs.
 
-Skipping Initial Jobs
-~~~~~~~~~~~~~~~~~~~~~
-
-When running a remote launching command which starts many SageMaker training
-jobs, it can happen that the loop breaks after a certain number of jobs have
-been started. In this case, you can restart the command, asking it to skip the
-jobs which have already been launched. To this end, you need to know the number
-of the last recent job which was launched successfully. Look for outputs of
-the form
-
-.. code:: python
-
-   f"Launch tuning job {job_no}: {experiment_tag}-{tuner_name}"
-
-Add one to this number to obtain ``num_jobs_launched``. Then, run the command
-again, appending the option ``--skip_initial_jobs <num_jobs_launched>``. For
-example, if the last recent job successfully launched is 4, append
-``skip_initial_jobs 5``.
-
 Pitfalls of Experiments from Tabulated Blackboxes
 -------------------------------------------------
 

@@ -29,10 +29,7 @@ from benchmarking.commons.hpo_main_simulator import (
     SIMULATED_BACKEND_EXTRA_PARAMETERS,
     BENCHMARK_KEY_EXTRA_PARAMETER,
 )
-from benchmarking.commons.launch_remote_common import (
-    sagemaker_estimator_args,
-    REMOTE_LAUNCHING_EXTRA_PARAMETERS,
-)
+from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
     filter_none,
     message_sync_from_s3,
@@ -129,11 +126,7 @@ def launch_remote(
     simulated_backend_extra_parameters = SIMULATED_BACKEND_EXTRA_PARAMETERS.copy()
     if is_dict_of_dict(benchmark_definitions):
         simulated_backend_extra_parameters.append(BENCHMARK_KEY_EXTRA_PARAMETER)
-    configuration = config_from_argparse(
-        extra_args=extra_args,
-        benchmark_specific_args=simulated_backend_extra_parameters
-        + REMOTE_LAUNCHING_EXTRA_PARAMETERS,
-    )
+    configuration = config_from_argparse(extra_args, simulated_backend_extra_parameters)
     launch_remote_experiments_simulator(
         configuration, entry_point, methods, benchmark_definitions, is_expensive_method
     )
@@ -207,14 +200,8 @@ def launch_remote_experiments_simulator(
         combinations = list(itertools.product(combinations, benchmark_keys))
     else:
         combinations = [(x, None) for x in combinations]
-    if configuration.skip_initial_jobs > 0:
-        print(
-            f"The first {configuration.skip_initial_jobs} tuning jobs will be skipped"
-        )
 
-    for job_no, ((method, seed), benchmark_key) in enumerate(tqdm(combinations)):
-        if job_no < configuration.skip_initial_jobs:
-            continue  # Skip initial number of jobs
+    for (method, seed), benchmark_key in tqdm(combinations):
         tuner_name = method
         if seed is not None:
             tuner_name += f"-{seed}"
@@ -243,7 +230,7 @@ def launch_remote_experiments_simulator(
             hyperparameters["benchmark_key"] = benchmark_key
         sm_args["hyperparameters"] = hyperparameters
         print(
-            f"Launch tuning job {job_no}: {experiment_tag}-{tuner_name}\n"
+            f"{experiment_tag}-{tuner_name}\n"
             f"hyperparameters = {hyperparameters}\n"
             f"Results written to {sm_args['checkpoint_s3_uri']}"
         )
