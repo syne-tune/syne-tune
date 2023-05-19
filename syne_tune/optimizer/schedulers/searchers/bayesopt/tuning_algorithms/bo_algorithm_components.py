@@ -47,9 +47,12 @@ class IndependentThompsonSampling(ScoringFunction):
     """
 
     def __init__(
-        self, predictor: Predictor, random_state: Optional[RandomState] = None
+        self,
+        predictor: OutputPredictor = None,
+        active_metric: Optional[str] = None,
+        random_state: Optional[RandomState] = None,
     ):
-        self.predictor = predictor
+        super().__init__(predictor, active_metric)
         if random_state is None:
             random_state = RandomState(31415629)
         self.random_state = random_state
