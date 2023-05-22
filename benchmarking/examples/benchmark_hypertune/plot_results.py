@@ -13,8 +13,8 @@
 from typing import Dict, Any, Optional
 
 from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
-from benchmarking.nursery.benchmark_hypertune.baselines import methods
-from benchmarking.nursery.benchmark_hypertune.benchmark_definitions import (
+from benchmarking.examples.benchmark_hypertune.baselines import methods
+from benchmarking.examples.benchmark_hypertune.benchmark_definitions import (
     benchmark_definitions,
 )
 
