@@ -1000,6 +1000,86 @@ class KDE(FIFOScheduler):
         )
 
 
+class CQR(FIFOScheduler):
+    """
+    Single-fidelity Conformal Quantile Regression approach proposed in:
+        | Optimizing Hyperparameters with Conformal Quantile Regression.
+        | David Salinas, Jacek Golebiowski, Aaron Klein, Matthias Seeger, Cedric Archambeau.
+        | ICML 2023.
+    The method predict quantile performance with gradient boosted trees and calibrate prediction with conformal
+    predictions.
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        mode: str = "min",
+        random_seed: Optional[int] = None,
+        **surrogate_kwargs,
+    ):
+        try:
+            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+                SurrogateSearcher,
+            )
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
+        super(CQR, self).__init__(
+            searcher=SurrogateSearcher(
+                mode=mode,
+                metric=metric,
+                config_space=config_space,
+                random_seed=random_seed,
+                **surrogate_kwargs,
+            ),
+            mode=mode,
+            config_space=config_space,
+            metric=metric,
+        )
+
+
+class ASHACQR(HyperbandScheduler):
+    """
+    Multi-fidelity Conformal Quantile Regression approach proposed in:
+        | Optimizing Hyperparameters with Conformal Quantile Regression.
+        | David Salinas, Jacek Golebiowski, Aaron Klein, Matthias Seeger, Cedric Archambeau.
+        | ICML 2023.
+    The method predict quantile performance with gradient boosted trees and calibrate prediction with conformal
+    predictions.
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        resource_attr: str,
+        mode: str = "min",
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        try:
+            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+                SurrogateSearcher,
+            )
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
+
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+
+        super(ASHACQR, self).__init__(
+            searcher=SurrogateSearcher(**searcher_kwargs),
+            mode=mode,
+            config_space=config_space,
+            metric=metric,
+            resource_attr=resource_attr,
+            **kwargs,
+        )
+
+
 # Dictionary that allows to also list baselines who don't need a wrapper class
 # such as :class:`PopulationBasedTraining`
 baselines_dict = {
