@@ -11,17 +11,14 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Union, List
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_model import (
     GradientBoostingQuantileRegressor,
-    QuantileRegressor,
     QuantileRegressorPredictions,
 )
 

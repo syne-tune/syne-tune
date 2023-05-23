@@ -1100,4 +1100,6 @@ baselines_dict = {
     "ConstrainedBayesianOptimization": ConstrainedBayesianOptimization,
     "ZeroShotTransfer": ZeroShotTransfer,
     "ASHACTS": ASHACTS,
+    "CQR": CQR,
+    "ASHACQR": ASHACQR,
 }
