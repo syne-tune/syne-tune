@@ -20,7 +20,6 @@ from tqdm import tqdm
 
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_model import (
     GradientBoostingQuantileRegressor,
-    QuantileRegressor,
     QuantileRegressorPredictions,
 )
 
