@@ -98,12 +98,12 @@ def subsample(
     random_state: np.random.RandomState = None,
 ):
     assert len(X_train) == len(z_train)
-    X_train.reset_index(inplace=True)
     if max_samples is not None and max_samples < len(X_train):
         if random_state is None:
             random_indices = np.random.permutation(len(X_train))[:max_samples]
         else:
             random_indices = random_state.permutation(len(X_train))[:max_samples]
+        X_train.reset_index(inplace=True, drop=True)
         X_train = X_train.loc[random_indices]
         z_train = z_train[random_indices]
     return X_train, z_train

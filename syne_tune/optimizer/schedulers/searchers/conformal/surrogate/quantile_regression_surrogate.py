@@ -18,7 +18,7 @@ import pandas as pd
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.surrogate_model import (
     SurrogateModel,
 )
-
+from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regression_model import (
     QuantileRegressorPredictions,
     GradientBoostingQuantileRegressor,
@@ -26,8 +26,9 @@ from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.quantile_regre
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.symmetric_conformalized_quantile_regression_model import (
     SymmetricConformalizedGradientBoostingQuantileRegressor,
 )
+
 from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_based_searcher import (
-    fit_model,
+    subsample,
 )
 
 
@@ -66,23 +67,22 @@ class QuantileRegressionSurrogateModel(SurrogateModel):
         self.model_pipeline = None
 
     def _fit(self, df_features: pd.DataFrame, y: np.array):
-        model_pipeline, sigma_train, _ = fit_model(
-            X=df_features,
-            y=y,
-            max_fit_samples=self.max_fit_samples,
-            config_space=self.config_space,
-            random_state=self.random_state,
+        # only consider non-constant parts of the config space
+        hp_cols = [k for k, v in self.config_space.items() if hasattr(v, "sample")]
+        self.model_pipeline = BlackboxSurrogate.make_model_pipeline(
+            configuration_space={
+                k: v for k, v in self.config_space.items() if k in hp_cols
+            },
+            fidelity_space={},
             model=self.quantile_regressor,
-            max_val_samples=None,
-            do_eval_model=False,
         )
-        self.model_pipeline = model_pipeline
-
-    def _sample_best(self) -> int:
-        residual_samples = self._surrogate_pred()
-        if self.mode == "max":
-            residual_samples *= -1
-        return np.argmin(residual_samples)
+        X_train, y_train = subsample(
+            df_features.loc[:, hp_cols],
+            y,
+            max_samples=self.max_fit_samples,
+            random_state=self.random_state,
+        )
+        self.model_pipeline.fit(X_train, y_train)
 
     def _get_sampler(self, df_features: pd.DataFrame) -> np.array:
         quantileResults = self.predict(df_features)
