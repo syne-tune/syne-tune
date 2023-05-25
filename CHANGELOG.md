@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+<a name="v0.7.0"></a>
+## [v0.7.0] - 2023-05-23
+### New Features
+- Plotting code for fine_tuning_transformer_glue benchmark ([#686](https://github.com/awslabs/syne-tune/issues/686))
+- Backoff decorator for jobs scheduling ([#673](https://github.com/awslabs/syne-tune/issues/673))
+- Plotting tools for result of comparative study ([#652](https://github.com/awslabs/syne-tune/issues/652))
+- New surrogate models API ([#669](https://github.com/awslabs/syne-tune/issues/669))
+- implementation of NSGA-2 ([#660](https://github.com/awslabs/syne-tune/issues/660))
+
+### Bug Fixes
+- typos in "Getting started" code example ([#687](https://github.com/awslabs/syne-tune/issues/687))
+- Made scoring function compatible with acquisition function interface ([#682](https://github.com/awslabs/syne-tune/issues/682))
+- Sklearn estimator now fits the surrogate model without considering pending evaluations. ([#681](https://github.com/awslabs/syne-tune/issues/681))
+- Domain.len returns 0 for infinite domain (e.g., Float) ([#672](https://github.com/awslabs/syne-tune/issues/672))
+- Fix bug in benchmarking where default values were int instead of… ([#670](https://github.com/awslabs/syne-tune/issues/670))
+- Bugfix in benchmarking ([#667](https://github.com/awslabs/syne-tune/issues/667))
+- Fix import bug, and also new workflow to install Syne Tune with … ([#663](https://github.com/awslabs/syne-tune/issues/663))
+
+### Code Refactoring
+- Cleanup of training scripts ([#668](https://github.com/awslabs/syne-tune/issues/668))
+- Allow benchmark to be multi-objective ([#666](https://github.com/awslabs/syne-tune/issues/666))
+- Graduate some content in benchmarking/nursery and create ne… ([#659](https://github.com/awslabs/syne-tune/issues/659))
+- SurrogateModel -> Predictor; ModelFactory -> Estimator; Simplify bayesopt code ([#651](https://github.com/awslabs/syne-tune/issues/651))
+
+### Documentation Updates
+- Tutorial for plotting ([#675](https://github.com/awslabs/syne-tune/issues/675))
+- Update README.md ([#661](https://github.com/awslabs/syne-tune/issues/661))
+
+### Maintenance
+- Bump codecov/codecov-action from 3.1.3 to 3.1.4 ([#685](https://github.com/awslabs/syne-tune/issues/685))
+- fix unit test ([#678](https://github.com/awslabs/syne-tune/issues/678))
+- add initial multiobjective benchmarking logic ([#674](https://github.com/awslabs/syne-tune/issues/674))
+- re-introduce check-standalone-bayesian-optimization.yml ([#664](https://github.com/awslabs/syne-tune/issues/664))
+- Increase time limits on flakey tests ([#658](https://github.com/awslabs/syne-tune/issues/658))
+- Bump zgosalvez/github-actions-ensure-sha-pinned-actions from 2.1.2 to 2.1.3 ([#655](https://github.com/awslabs/syne-tune/issues/655))
+
+[v0.7.0]: https://github.com/awslabs/syne-tune/compare/v0.6.0...v0.7.0
+
+
 <a name="v0.6.0"></a>
 ## [v0.6.0] - 2023-05-08
 
