@@ -466,7 +466,7 @@ How can I plot comparative results across many experiments?
 Syne Tune contains powerful plotting tools as part of the benchmarking formalism,
 these are detailed `here <tutorials/benchmarking/bm_plotting.html>`__. An example
 is provided as part of
-`benchmarking/nursery/benchmark_hypertune <benchmarking/benchmark_hypertune.html>`__.
+`benchmarking/examples/benchmark_hypertune <benchmarking/benchmark_hypertune.html>`__.
 
 How can I specify additional tuning metadata?
 =============================================

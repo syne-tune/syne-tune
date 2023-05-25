@@ -302,8 +302,8 @@ class ComparativeResults:
     ``f"{experiment_path()}{ename}/{patt}/{ename}-*/"``, where ``path`` is from
     ``with_subdirs``, and ``ename`` from ``experiment_names``. The default is
     ``with_subdirs="*"``. If ``with_subdirs`` is ``None``, result files have
-    the path ``f"{experiment_path()}{ename}-*/"``. This is an older convention,
-    which makes it harder to sync files from S3, it is not recommended.
+    the path ``f"{experiment_path()}{ename}-*/"``. Use this if your experiments
+    have been run locally.
 
     If ``datetime_bounds`` is given, it contains a tuple of strings
     ``(lower_time, upper_time)``, or a dictionary mapping names from
