@@ -59,9 +59,9 @@ type). ASHA-PROM results are repeated in all plots for reference.
 
 These results are obtained on a single benchmark with a rather small
 configuration space. Nevertheless, they are roughly in line with results we
-obtained on a larger range of benchmarks (CITATION?). A few conclusions can be
-drawn, which may help readers choosing the best HPO method and its
-configuration for their own problem.
+obtained on a larger range of benchmarks. A few conclusions can be drawn, which
+may help readers choosing the best HPO method and its configuration for their
+own problem.
 
 * Asynchronous methods outperform synchronous ones in general, in particular
   when it comes to any-time performance. A notable exception (on this
@@ -77,6 +77,6 @@ configuration for their own problem.
 * On this benchmark, moving to multiple brackets does not pay off for the
   asynchronous methods. However, on benchmarks where the choice of
   :math:`r_{min}` is more critical, moving beyond successive halving can be
-  beneficial (CITATION?). In such cases, we currently recommend to use
-  HYPERTUNE-INDEP, whose adaptive weighting and bracket sampling is clearly
-  more effective than simpler heuristics used in Hyperband or BOHB
+  beneficial. In such cases, we currently recommend to use HYPERTUNE-INDEP,
+  whose adaptive weighting and bracket sampling is clearly more effective than
+  simpler heuristics used in Hyperband or BOHB.
