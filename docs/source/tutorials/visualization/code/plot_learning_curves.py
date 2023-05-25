@@ -17,7 +17,7 @@ from syne_tune.experiments import (
     PlotParameters,
     MultiFidelityParameters,
 )
-from benchmarking.nursery.benchmark_hypertune.benchmark_definitions import (
+from benchmarking.examples.benchmark_hypertune.benchmark_definitions import (
     benchmark_definitions,
 )
 

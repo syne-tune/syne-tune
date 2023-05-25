@@ -17,12 +17,12 @@ A Comparative Study
 -------------------
 
 For the purpose of this tutorial, we ran the setup of
-`benchmarking/nursery/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`__,
+`benchmarking/examples/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`__,
 using 15 random repetitions (or seeds). This is the command:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/benchmark_hypertune/launch_remote.py \
+   python benchmarking/examples/benchmark_hypertune/launch_remote.py \
      --experiment_tag docs-1 --random_seed 2965402734 --num_seeds 15
 
 Note that we fix the seed here in order to obtain repeatable results. Recall
@@ -63,8 +63,8 @@ result visualization.
 
 Here is the code for generating result plots for two of the benchmarks:
 
-.. literalinclude:: ../../../../benchmarking/nursery/benchmark_hypertune/plot_results.py
-   :caption: benchmarking/nursery/benchmark_hypertune/plot_results.py
+.. literalinclude:: ../../../../benchmarking/examples/benchmark_hypertune/plot_results.py
+   :caption: benchmarking/examples/benchmark_hypertune/plot_results.py
    :start-after: # permissions and limitations under the License.
 
 .. |Results for nas201-cifar-100| image:: img/docs-1-nas201-cifar100.png

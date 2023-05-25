@@ -49,7 +49,7 @@ class SurrogateBenchmarkDefinition:
     :param mode: "max" or "min" (or list of several)
     :param blackbox_name: Name of blackbox, see :func:`load_blackbox`
     :param dataset_name: Dataset (or instance) for blackbox
-    :param max_num_evaluations (optional): Default value for stopping criterion
+    :param max_num_evaluations: Default value for stopping criterion
     :param surrogate: Default value for surrogate to be used, see
         :func:`make_surrogate`. Otherwise: use no surrogate
     :param surrogate_kwargs: Default value for arguments of surrogate,
@@ -60,7 +60,7 @@ class SurrogateBenchmarkDefinition:
     :param fidelities: If given, this is a strictly increasing subset of
         the fidelity values provided by the surrogate, and only those
         will be reported
-    :param points_to_evaluate (optional): Initial configurations to be suggested
+    :param points_to_evaluate: Initial configurations to be suggested
         by the scheduler. If your benchmark training code suggests default
         values for the hyperparameters, it is good practice serving this
         default configuration here.
@@ -109,12 +109,12 @@ class RealBenchmarkDefinition:
     :param max_resource_attr: Name of ``config_space`` entry
     :param framework: SageMaker framework to be used for ``script``. Additional
         dependencies in ``requirements.txt`` in ``script.parent``
-    :param resource_attr (optional): Name of attribute reported (required for
+    :param resource_attr Name of attribute reported (required for
         multi-fidelity)
-    :param estimator_kwargs (optional): Additional arguments to SageMaker
+    :param estimator_kwargs: Additional arguments to SageMaker
         estimator, e.g. ``framework_version``
-    :param max_num_evaluations (optional): Default value for stopping criterion
-    :param points_to_evaluate (optional): Initial configurations to be suggested
+    :param max_num_evaluations: Default value for stopping criterion
+    :param points_to_evaluate: Initial configurations to be suggested
         by the scheduler. If your benchmark training code suggests default
         values for the hyperparameters, it is good practice serving this
         default configuration here.

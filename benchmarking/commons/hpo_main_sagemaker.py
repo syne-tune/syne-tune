@@ -57,7 +57,7 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
         name="max_failures",
         type=int,
         default=3,
-        help=("Number of trials which can fail without experiment being " "terminated"),
+        help="Number of trials which can fail without experiment being terminated",
     ),
     dict(
         name="warm_pool",
@@ -91,7 +91,7 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
         type=str2bool,
         default=True,
         help=(
-            "If 1, checkpoints files on S3 are removed at the end " "of the experiment."
+            "If 1, checkpoints files on S3 are removed at the end of the experiment."
         ),
     ),
     dict(
