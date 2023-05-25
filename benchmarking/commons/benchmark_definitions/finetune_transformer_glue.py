@@ -64,11 +64,10 @@ def finetune_transformer_glue_benchmark(
     choose_model: bool = False,
     dataset: str = "rte",
     model_type: str = "bert-base-cased",
-    max_wallclock_time: Optional[int] = None,
-    n_workers: int = 4,
     num_train_epochs: int = 3,
     train_valid_fraction: float = 0.7,
     random_seed: int = 31415927,
+    **kwargs,
 ) -> RealBenchmarkDefinition:
     """
     This benchmark consists of fine-tuning a Hugging Face transformer model,
@@ -89,13 +88,13 @@ def finetune_transformer_glue_benchmark(
     :param model_type: Pre-trained model to be used. If ``choose_model`` is
         set, this is the model used in the first evaluation. Defaults to
         "bert-base-cased"
-    :param max_wallclock_time: Maximum wall-clock time in secs. Defaults to 2700
-    :param n_workers: Number of workers. Defaults to 4
     :param num_train_epochs: Maximum number of epochs for fine-tuning. Defaults
         to 3
     :param train_valid_fraction: The original training set is split into training
         and validation part, this is the fraction of the training part
     :param random_seed: Random seed for training script
+    :param kwargs: Overwrites default params in ``RealBenchmarkDefinition``
+        object returned
     """
     if sagemaker_backend:
         instance_type = DEFAULT_GPU_INSTANCE_1GPU
@@ -107,8 +106,7 @@ def finetune_transformer_glue_benchmark(
     task_defaults = TASK2METRICSMODE[dataset]
     metric = "eval_" + task_defaults["metric"]
     mode = task_defaults["mode"]
-    if max_wallclock_time is None:
-        max_wallclock_time = task_defaults["max_wallclock_time"]
+    max_wallclock_time = task_defaults["max_wallclock_time"]
 
     hyperparameter_space = {
         "learning_rate": loguniform(1e-6, 1e-4),
@@ -146,14 +144,14 @@ def finetune_transformer_glue_benchmark(
         config_space[MODEL_TYPE_ATTR] = choice(PRETRAINED_MODELS)
         default_configuration[MODEL_TYPE_ATTR] = model_type
 
-    kwargs = dict(
+    _kwargs = dict(
         script=Path(__file__).parent.parent.parent
         / "training_scripts"
         / "finetune_transformer_glue"
         / "run_glue_modified.py",
         config_space=config_space,
         max_wallclock_time=max_wallclock_time,
-        n_workers=n_workers,
+        n_workers=4,
         instance_type=instance_type,
         metric=metric,
         mode=mode,
@@ -162,17 +160,17 @@ def finetune_transformer_glue_benchmark(
         framework="PyTorch",
         points_to_evaluate=[default_configuration],
     )
-    return RealBenchmarkDefinition(**kwargs)
+    _kwargs.update(kwargs)
+    return RealBenchmarkDefinition(**_kwargs)
 
 
 def finetune_transformer_glue_all_benchmarks(
     sagemaker_backend: bool = False,
     model_type: str = "bert-base-cased",
-    max_wallclock_time: Optional[int] = None,
-    n_workers: int = 4,
     num_train_epochs: int = 3,
     train_valid_fraction: float = 0.7,
     random_seed: int = 31415927,
+    **kwargs,
 ) -> Dict[str, RealBenchmarkDefinition]:
     result = dict()
     for choose_model in [True, False]:
@@ -187,11 +185,10 @@ def finetune_transformer_glue_all_benchmarks(
                     choose_model=choose_model,
                     dataset=dataset,
                     model_type=model_type,
-                    max_wallclock_time=max_wallclock_time,
-                    n_workers=n_workers,
                     num_train_epochs=num_train_epochs,
                     train_valid_fraction=train_valid_fraction,
                     random_seed=random_seed,
+                    **kwargs,
                 )
                 for dataset in TASK2METRICSMODE.keys()
             }

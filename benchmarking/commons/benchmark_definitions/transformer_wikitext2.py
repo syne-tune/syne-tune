@@ -41,7 +41,6 @@ def transformer_wikitext2_default_params(sagemaker_backend: bool) -> Dict[str, A
     }
 
 
-# Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def transformer_wikitext2_benchmark(sagemaker_backend: bool = False, **kwargs):
     params = transformer_wikitext2_default_params(sagemaker_backend)
     config_space = dict(

@@ -41,7 +41,6 @@ def resnet_cifar10_default_params(sagemaker_backend: bool):
     }
 
 
-# Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def resnet_cifar10_benchmark(sagemaker_backend: bool = False, **kwargs):
     params = resnet_cifar10_default_params(sagemaker_backend)
     config_space = dict(

@@ -43,7 +43,6 @@ def lstm_wikitext2_default_params(sagemaker_backend: bool) -> Dict[str, Any]:
     }
 
 
-# Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def lstm_wikitext2_benchmark(sagemaker_backend: bool = False, **kwargs):
     params = lstm_wikitext2_default_params(sagemaker_backend)
     config_space = dict(
