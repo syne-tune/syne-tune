@@ -273,6 +273,16 @@ In this case, experiments are sliced along the axis
 ``("nas201", "fcnet", "lcbench")`` to be run in parallel in different SageMaker
 training jobs.
 
+Dealing with ResourceLimitExceeded Errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When launching many experiments in parallel, you may run into your AWS resource
+limits, so that no more SageMaker training jobs can be run. The default behaviour
+in this case is to wait for 10 minutes and try again. You can influence this by
+``--estimator_fit_backoff_wait_time <wait_time>``, where ``<wait_time>`` is the
+waiting time between attempts in seconds. If this is 0 or negative, the script
+terminates with an error once your resource limits are reached.
+
 Pitfalls of Experiments from Tabulated Blackboxes
 -------------------------------------------------
 

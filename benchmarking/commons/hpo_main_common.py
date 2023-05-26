@@ -131,6 +131,16 @@ class ConfigDict:
             default=False,
             help=f"Internal argument, do not use",
         ),
+        Parameter(
+            name="estimator_fit_backoff_wait_time",
+            type=int,
+            default=360,
+            help=(
+                "When a SageMaker training job fails with ResourceLimitExceeded, "
+                "we try again after this many seconds. Pass 0 to switch this off. "
+                "Only for launch_remote, not for hpo_main"
+            ),
+        ),
     ]
     __base_parameters = __base_cl_parameters + [
         Parameter(

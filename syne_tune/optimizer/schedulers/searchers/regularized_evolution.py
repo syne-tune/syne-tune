@@ -73,7 +73,7 @@ class RegularizedEvolution(StochasticSearcher):
         )
         assert (
             config_space_size(config_space) != 1
-        ), "config_space has size 1, does not offer any diversity"
+        ), f"config_space = {config_space} has size 1, does not offer any diversity"
         self.mode = mode
         self.population_size = population_size
         self.sample_size = sample_size

@@ -32,7 +32,10 @@ from benchmarking.commons.hpo_main_local import (
     get_benchmark,
     LOCAL_BACKEND_EXTRA_PARAMETERS,
 )
-from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
+from benchmarking.commons.launch_remote_common import (
+    sagemaker_estimator_args,
+    fit_sagemaker_estimator,
+)
 from benchmarking.commons.utils import (
     filter_none,
     message_sync_from_s3,
@@ -248,5 +251,10 @@ def _launch_experiment_remotely(
         est = sagemaker_estimator_base_class(**sm_args)
         if configuration.remote_tuning_metrics:
             register_metrics_with_estimator(est, benchmark)
-        est.fit(job_name=f"{experiment_tag}-{tuner_name}-{suffix}", wait=False)
+        fit_sagemaker_estimator(
+            backoff_wait_time=configuration.estimator_fit_backoff_wait_time,
+            estimator=est,
+            job_name=f"{experiment_tag}-{tuner_name}-{suffix}",
+            wait=False,
+        )
     return experiment_tag

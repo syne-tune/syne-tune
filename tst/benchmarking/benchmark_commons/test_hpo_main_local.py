@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 import unittest
 from unittest.mock import MagicMock, patch
+
 from benchmarking.commons.default_baselines import RandomSearch
 from benchmarking.commons.hpo_main_common import ConfigDict
 from benchmarking.nursery.benchmark_multiobjective.baselines import (
@@ -66,7 +67,7 @@ class HPOMainLocalTests(unittest.TestCase):
             config_space
         )
 
-        seeds = [1, 2]
+        seeds = [0, 1]
 
         mock_config_from_argparse.return_value = ConfigDict.from_dict(
             {

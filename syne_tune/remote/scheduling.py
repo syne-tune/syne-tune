@@ -14,6 +14,8 @@ import functools
 import logging
 import time
 
+logger = logging.getLogger(__name__)
+
 
 def backoff(errorname: str, ntimes_resource_wait: int = 100, length2sleep: float = 600):
     """
@@ -30,7 +32,7 @@ def backoff(errorname: str, ntimes_resource_wait: int = 100, length2sleep: float
                     if not e.__class__.__name__ == errorname:
                         raise (e)
 
-                logging.info(
+                logger.info(
                     f"{errorname} detected when calling <{some_function.__name__}>, waiting {length2sleep / 60} minutes before retring"
                 )
                 time.sleep(length2sleep)
