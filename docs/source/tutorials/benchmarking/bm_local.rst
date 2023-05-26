@@ -146,8 +146,11 @@ of ``RealBenchmarkDefinition``. Important arguments are:
 * ``framework``, ``estimator_kwargs``: SageMaker framework and additional
   arguments to SageMaker estimator.
 
-Note that parameters like ``n_workers`` and ``max_wallclock_time`` are defaults,
-which can be overwritten by command line arguments.
+Note that parameters like ``n_workers``, ``max_wallclock_time``, or
+``instance_type`` are given default values here, which can be overwritten
+by command line arguments. This is why the function signature ends with
+``**kwargs``, and we execute ``_kwargs.update(kwargs)`` just before creating
+the ``RealBenchmarkDefinition`` object.
 
 Launching Experiments Remotely
 ------------------------------
