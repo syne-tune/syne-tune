@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Also, all methods compared are pause-and-resume
     multi_fidelity_params = MultiFidelityParameters(
         rung_levels=[1, 3, 9, 27, 81, 200],
-        pause_resume_setups=SETUPS_TO_COMPARE,
+        multifidelity_setups={name: True for name in SETUPS_TO_COMPARE},
     )
     # The creation of ``results`` downloads files from S3 (only if
     # ``download_from_s3 == True``), reads the metadata and creates an inverse

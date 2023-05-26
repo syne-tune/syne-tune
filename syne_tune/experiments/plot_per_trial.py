@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, Tuple, Union, List, Iterable
+from typing import Optional, Tuple, Union, List, Iterable, Dict
 import logging
 import copy
 from dataclasses import dataclass
@@ -47,18 +47,26 @@ class MultiFidelityParameters:
     Parameters configuring the multi-fidelity version of
     :class:`TrialsOfExperimentResults`.
 
+    ``multifidelity_setups`` contains names of setups which are multi-fidelity,
+    the remaining ones are single-fidelity. It can also be a dictionary,
+    mapping a multi-fidelity setup name to ``True`` if this is a pause-and-resume
+    method (these are visualized differently), ``False`` otherwise (early
+    stopping method).
+
     :param rung_levels: See above. Positive integers, increasing
-    :param pause_resume_setups: Names of setups which are pause-and-resume
-        methods (these are visualized differently). Must be contained in
-        ``setups``
+    :param multifidelity_setups: See above
     """
 
     rung_levels: List[int]
-    pause_resume_setups: Iterable[str]
+    multifidelity_setups: Union[List[str], Dict[str, bool]]
 
     def check_params(self, setups: Iterable[str]):
-        assert set(setups).issuperset(self.pause_resume_setups), (
-            f"multi_fidelity_params.pause_resume_setups = {self.pause_resume_setups} "
+        if isinstance(self.multifidelity_setups, dict):
+            _mf_setups = list(self.multifidelity_setups.keys())
+        else:
+            _mf_setups = self.multifidelity_setups
+        assert set(setups).issuperset(_mf_setups), (
+            f"multi_fidelity_params.multifidelity_setups = {self.multifidelity_setups} "
             f"must be contained in setups = {setups}"
         )
         assert is_increasing(self.rung_levels) and is_positive_integer(
@@ -72,7 +80,7 @@ class TrialsOfExperimentResults:
     where the curves for different trials have different colours.
 
     Compared to :class:`~syne_tune.experiments.ComparativeResults`, each subfigure
-    uses data from a single experiment (one, benchmark, one seed, one setup). Both
+    uses data from a single experiment (one benchmark, one seed, one setup). Both
     benchmark and seed need to be chosen in :meth:`plot`. If there are different
     setups, they give rise to subfigures (by default, one row with subfigures as
     columns, but can be configured).
@@ -89,7 +97,7 @@ class TrialsOfExperimentResults:
     :param metadata_to_setup: See above
     :param plot_params: Parameters controlling the plot. Can be overwritten
         in :meth:`plot`. See :class:`PlotParameters`
-    :param multi_fidelity_params: If given, we use a special variant taylored
+    :param multi_fidelity_params: If given, we use a special variant tailored
         to multi-fidelity methods (see :meth:`plot`).
     :param benchmark_key: Key for benchmark in metadata files. Defaults to
         "benchmark". If this is ``None``, there is only a single benchmark,
@@ -143,14 +151,18 @@ class TrialsOfExperimentResults:
         self._default_plot_params = copy.deepcopy(plot_params)
         self._benchmark_key = benchmark_key
         if multi_fidelity_params is not None:
-            self._pause_resume_setups = set(multi_fidelity_params.pause_resume_setups)
+            self._multifidelity_setups = multi_fidelity_params.multifidelity_setups
+            if not isinstance(self._multifidelity_setups, dict):
+                self._multifidelity_setups = {
+                    name: False for name in self._multifidelity_setups
+                }
             # We need rung levels minus 1 below
             self._rung_levels = [
                 level - 1 for level in multi_fidelity_params.rung_levels
             ]
         else:
-            self._pause_resume_setups = None
-            self._rung_levels = None
+            self._multifidelity_setups = dict()
+            self._rung_levels = []
 
     def _plot_figure(
         self,
@@ -161,12 +173,16 @@ class TrialsOfExperimentResults:
     ):
         subplots = plot_params.subplots
         if subplots is not None:
-            subplots_kwargs = subplots.kwargs
             nrows = subplots.nrows
             ncols = subplots.ncols
+            subplot_indices = (
+                list(range(len(self.setups)))
+                if subplots.subplot_indices is None
+                else subplots.subplot_indices
+            )
             assert ncols * nrows >= len(
-                self.setups
-            ), f"Error in subplots.kwargs: ncols times nrows must be >= {len(self.setups)} (number of setups)"
+                subplot_indices
+            ), f"Error in subplots.kwargs: ncols times nrows must be >= {len(subplot_indices)} (number of setups)"
             subplots_kwargs = dict(
                 dict() if subplots.kwargs is None else subplots.kwargs,
                 nrows=nrows,
@@ -180,6 +196,7 @@ class TrialsOfExperimentResults:
             subplots_kwargs = dict(nrows=nrows, ncols=ncols, sharey="all")
             subplot_titles = self.setups
             title_each_figure = False
+            subplot_indices = list(range(ncols))
         ylim = plot_params.ylim
         xlim = plot_params.xlim
         xlabel = plot_params.xlabel
@@ -188,8 +205,7 @@ class TrialsOfExperimentResults:
         msg_prefix = f"seed = {seed}: "
         if benchmark_name is not None:
             msg_prefix = f"benchmark_name = {benchmark_name}, " + msg_prefix
-        is_multi_fidelity = self._rung_levels is not None
-        num_rungs = len(self._rung_levels) if is_multi_fidelity else 0
+        num_rungs = len(self._rung_levels)
 
         plt.figure(dpi=plot_params.dpi)
         figsize = (5 * ncols, 4 * nrows)
@@ -202,10 +218,14 @@ class TrialsOfExperimentResults:
                 + f"For setup_name = {setup_name} found tuner_names = {tuner_names}"
             )
             logger.info(msg_prefix + f"setup_name = {setup_name}: {tuner_names[0]}")
+            is_multi_fidelity = setup_name in self._multifidelity_setups
             pause_resume = (
-                setup_name in self._pause_resume_setups if is_multi_fidelity else False
+                self._multifidelity_setups[setup_name] if is_multi_fidelity else False
             )
-            subplot_no = self.setups.index(setup_name)
+            subplot_index = self.setups.index(setup_name)
+            if subplot_index not in subplot_indices:
+                continue
+            subplot_no = subplot_indices.index(subplot_index)
             row = subplot_no % nrows
             col = subplot_no // nrows
             ax = axs[row, col]

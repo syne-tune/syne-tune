@@ -74,11 +74,15 @@ class SubplotParameters:
         ``PlotParameters.title`` is printed on top of the leftmost column
     :param title_each_figure: See ``titles``, defaults to ``False``
     :param kwargs: Extra arguments for ``plt.subplots``, apart from "nrows" and "ncols"
-    :param legend_no: Numbers of subplots where legend is to be shown. Defaults
-        to ``[]`` (no legends shown)
+    :param legend_no: Subplot indices where legend is to be shown. Defaults
+        to ``[]`` (no legends shown). This is not relative to ``subplot_indices``
     :param xlims: If this is given, must be a list with one entry per subfigure.
         In this case, the global ``xlim`` is overwritten by
-        ``(0, xlims[subplot_no])``
+        ``(0, xlims[subplot_no])``. If ``subplot_indices`` is given, ``xlims``
+        must have the same length, and ``xlims[j]`` refers to subplot index
+        ``subplot_indices[j]`` then
+    :param subplot_indices: If this is given, we only plot subfigures with indices
+        in this list, and in this order. Otherwise, we plot subfigures 0, 1, 2, ...
     """
 
     nrows: int = None
@@ -88,6 +92,7 @@ class SubplotParameters:
     kwargs: Dict[str, Any] = None
     legend_no: List[int] = None
     xlims: List[int] = None
+    subplot_indices: List[int] = None
 
     def merge_defaults(
         self, default_params: "SubplotParameters"
@@ -103,6 +108,7 @@ class SubplotParameters:
                 "kwargs",
                 "legend_no",
                 "xlims",
+                "subplot_indices",
             ],
         )
         default_values = [
@@ -569,6 +575,11 @@ class ComparativeResults:
             if not isinstance(legend_no, list):
                 legend_no = [legend_no]
             title_each_figure = subplots.title_each_figure
+            subplot_indices = (
+                list(range(len(stats)))
+                if subplots.subplot_indices is None
+                else subplots.subplot_indices
+            )
         else:
             subplot_xlims = None
             nrows = ncols = 1
@@ -576,6 +587,7 @@ class ComparativeResults:
             subplot_titles = None
             legend_no = [0]
             title_each_figure = False
+            subplot_indices = [0]
         if subplot_titles is None:
             subplot_titles = [plot_params.title] + ["" * (ncols - 1)]
         ylim = plot_params.ylim
@@ -587,7 +599,8 @@ class ComparativeResults:
         plt.figure(dpi=plot_params.dpi)
         figsize = (5 * ncols, 4 * nrows)
         fig, axs = plt.subplots(**subplots_kwargs, squeeze=False, figsize=figsize)
-        for subplot_no, stats_subplot in enumerate(stats):
+        for subplot_no, subplot_index in enumerate(subplot_indices):
+            stats_subplot = stats[subplot_index]
             row = subplot_no % nrows
             col = subplot_no // nrows
             ax = axs[row, col]
@@ -619,7 +632,7 @@ class ComparativeResults:
                     ax.set_title(subplot_titles[col])
             if plot_params.grid:
                 ax.grid(True)
-            if subplot_no in legend_no:
+            if subplot_index in legend_no:
                 ax.legend()
         plt.show()
         return fig, axs
