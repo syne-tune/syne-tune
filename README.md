@@ -151,7 +151,7 @@ Constrained Bayesian Optimization | Gardner, et al. (2014) | model-based | yes |
 MOASHA | Schmucker, et al. (2021) | random | yes | yes | no
 NSGA-2 | Deb, et al. (2002) | evolutionary | no | no | no
 
-HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizers/schedulers/multiobjective/multiobjective_priority.py) for details.
+HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizer/schedulers/multiobjective/multiobjective_priority.py) for details.
 
 ## Examples
 
