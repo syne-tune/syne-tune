@@ -28,19 +28,18 @@ BATCH_SIZE_ATTR = "per_device_train_batch_size"
 
 def finetune_transformer_swag_benchmark(
     sagemaker_backend: bool = False,
-    max_wallclock_time: int = 5 * 3600,
-    n_workers: int = 4,
     num_train_epochs: int = 3,
     per_device_train_batch_size: int = 8,
+    **kwargs,
 ) -> RealBenchmarkDefinition:
     """
     :param sagemaker_backend: Use SageMaker backend? This affects the choice
         of instance type. Defaults to ``False``
-    :param max_wallclock_time: Maximum wall-clock time in secs. Defaults to 1800
-    :param n_workers: Number of workers. Defaults to 4
     :param num_train_epochs: Maximum number of epochs for fine-tuning. Defaults
         to 3
     :param per_device_train_batch_size: Batch size per device. Defaults to 8
+    :param kwargs: Overwrites default params in ``RealBenchmarkDefinition``
+        object returned
     """
     if sagemaker_backend:
         instance_type = DEFAULT_GPU_INSTANCE_1GPU
@@ -71,14 +70,14 @@ def finetune_transformer_swag_benchmark(
         "max_grad_norm": 1.0,
     }
 
-    kwargs = dict(
+    _kwargs = dict(
         script=Path(__file__).parent.parent.parent
         / "training_scripts"
         / "finetune_transformer_swag"
         / "multiple_choice_on_swag.py",
         config_space=config_space,
-        max_wallclock_time=max_wallclock_time,
-        n_workers=n_workers,
+        max_wallclock_time=5 * 3600,
+        n_workers=4,
         instance_type=instance_type,
         metric=METRIC,
         mode=MODE,
@@ -87,4 +86,5 @@ def finetune_transformer_swag_benchmark(
         framework="PyTorch",
         points_to_evaluate=[default_configuration],
     )
-    return RealBenchmarkDefinition(**kwargs)
+    _kwargs.update(kwargs)
+    return RealBenchmarkDefinition(**_kwargs)
