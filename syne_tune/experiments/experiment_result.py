@@ -82,7 +82,7 @@ class ExperimentResult:
         figure_path: str = None,
         **plt_kwargs,
     ):
-        """Plot best hyervolume value as function of wallclock time
+        """Plot best hypervolume value as function of wallclock time
 
         :param reference_point: Reference point for hypervolume calculations.
             If None, the maximum values of each metric is used.

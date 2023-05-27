@@ -36,4 +36,4 @@ def test_hypervolume_progress():
     ref_point = np.array([2, 2])
     points = np.array([[1, 0], [0.5, 0.5], [0, 1], [1.5, 0.75]])
     hv = hypervolume_cumulative(results_array=points, reference_point=ref_point)
-    assert np.allclose(hv, np.array([0.0, 2.0, 2.75, 3.25]))
+    assert np.allclose(hv, np.array([2.0, 2.75, 3.25, 3.25]))
