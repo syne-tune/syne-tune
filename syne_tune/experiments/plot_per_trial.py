@@ -82,8 +82,16 @@ class TrialsOfExperimentResults:
     Compared to :class:`~syne_tune.experiments.ComparativeResults`, each subfigure
     uses data from a single experiment (one benchmark, one seed, one setup). Both
     benchmark and seed need to be chosen in :meth:`plot`. If there are different
-    setups, they give rise to subfigures (by default, one row with subfigures as
-    columns, but can be configured).
+    setups, they give rise to subfigures.
+
+    If ``plot_params.subplots`` is not given, the arrangement is one row with
+    columns corresponding to setups, and setup names as titles. Specify
+    ``plot_params.subplots`` in order to change this arrangement (e.g., to have
+    more than one row). Setups can be selected by using
+    ``plot_params.subplots.subplot_indices``. Also, if
+    ``plot_params.subplots.titles`` is not given, we use setup names, and each
+    subplot gets its own title (``plot_params.subplots.title_each_figure`` is
+    ignored).
 
     For ``plot_params``, we use the same
     :class:`~syne_tune.experiments.PlotParameters` as in
@@ -188,8 +196,15 @@ class TrialsOfExperimentResults:
                 nrows=nrows,
                 ncols=ncols,
             )
-            subplot_titles = subplots.titles
-            title_each_figure = subplots.title_each_figure
+            if subplots.titles is not None:
+                subplot_titles = subplots.titles
+                title_each_figure = subplots.title_each_figure
+            else:
+                # If ``plot_params.subplots.titles`` is not given, we use setup
+                # names as titles. In this case, each subfigure has its own
+                # title, not just each column
+                subplot_titles = [self.setups[ind] for ind in subplot_indices]
+                title_each_figure = True
         else:
             nrows = 1
             ncols = len(self.setups)
