@@ -105,6 +105,8 @@ The figure for benchmark ``nas201-cifar-100`` looks as follows:
   for every benchmark (this is optional).
 * If we pass ``file_name`` as argument to ``results.plot``, the figure is
   stored in this file.
+* ``results.plot`` returns a dictionary, whose entries "fig" and "axs" contain
+  the figure and its axes (subfigures), allowing for further fine-tuning.
 
 .. note::
    If suplots are used, the grouping is w.r.t. ``(subplot, setup)``, not
@@ -313,7 +315,7 @@ used to monitor some internals of the HPO method being used, in which case we
 may be satisfied to see these statistics at the end of experiments. If
 ``extra_results_keys`` is used in
 :meth:`~syne_tune.experiments.ComparativeResults.plot`, the method returns
-a nested dictionary ``extra_results``, so that
+a nested dictionary ``extra_results`` under key "extra_results", so that
 ``extra_results[setup_name][key]`` contains a list of values (one for each
 seed) for setup ``setup_name`` and ``key`` an extra result name from
 ``extra_results_keys``. As `above <#extract-meta-data-values>`__, if

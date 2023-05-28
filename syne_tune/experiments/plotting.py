@@ -643,7 +643,7 @@ class ComparativeResults:
         plot_params: Optional[PlotParameters] = None,
         file_name: Optional[str] = None,
         extra_results_keys: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """
         Create comparative plot from results of all experiments collected at
         construction, for benchmark ``benchmark_name`` (if there is a single
@@ -674,8 +674,8 @@ class ComparativeResults:
             here overwrite values provided at construction.
         :param file_name: If given, the figure is stored in a file of this name
         :param extra_results_keys: See above, optional
-        :return: ``extra_results`` if ``extra_results_keys`` is given, otherwise
-            ``None``
+        :return: Dictionary with "fig", "axs" (for further processing). If
+            ``extra_results_keys``, "extra_results" entry as stated above
         """
         benchmark_name = self._check_benchmark_name(benchmark_name)
         if plot_params is None:
@@ -686,16 +686,22 @@ class ComparativeResults:
             self._reverse_index[benchmark_name]
         )
         logger.info("Aggregate results")
-        result = self._aggregrate_results(
+        aggregate_result = self._aggregrate_results(
             df=results_df,
             plot_params=plot_params,
             extra_results_keys=extra_results_keys,
         )
         fig, axs = self._plot_figure(
-            stats=result["stats"],
+            stats=aggregate_result["stats"],
             plot_params=plot_params,
-            setup_names=result["setup_names"],
+            setup_names=aggregate_result["setup_names"],
         )
         if file_name is not None:
             fig.savefig(file_name, dpi=plot_params.dpi)
-        return None if extra_results_keys is None else result["extra_results"]
+        results = {
+            "fig": fig,
+            "axs": axs,
+        }
+        if extra_results_keys is not None:
+            results["extra_results"] = aggregate_result["extra_results"]
+        return results
