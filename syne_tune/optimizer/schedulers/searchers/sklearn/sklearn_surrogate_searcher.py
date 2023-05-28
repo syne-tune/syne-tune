@@ -40,8 +40,8 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 logger = logging.getLogger(__name__)
 
 
-class ContributedSurrogateSearcher(BayesianOptimizationSearcher):
-    """Contributed Surrogate Bayesian optimization for FIFO scheduler
+class SklearnSurrogateSearcher(BayesianOptimizationSearcher):
+    """Sklearn Surrogate Bayesian optimization for FIFO scheduler
 
     This searcher must be used with
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
@@ -116,7 +116,7 @@ class ContributedSurrogateSearcher(BayesianOptimizationSearcher):
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         estimator = self.state_transformer.estimator
         # Call internal constructor
-        new_searcher = ContributedSurrogateSearcher(
+        new_searcher = SklearnSurrogateSearcher(
             **self._new_searcher_kwargs_for_clone(),
             estimator=estimator,
             init_state=init_state,

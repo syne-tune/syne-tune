@@ -54,11 +54,11 @@ from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.contributed_surrogate_searcher import (
-    ContributedSurrogateSearcher,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
+    LCBAcquisitionFunction,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
-    IndependentThompsonSampling,
+from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
+    SklearnSurrogateSearcher,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
@@ -384,18 +384,18 @@ list_schedulers_to_test = [
     ),
     FIFOScheduler(
         config_space,
-        searcher=ContributedSurrogateSearcher(
+        searcher=SklearnSurrogateSearcher(
             config_space=config_space,
             metric="mean_loss",
             estimator=TestEstimator(),
-            scoring_class_and_args=IndependentThompsonSampling,
+            scoring_class_and_args=LCBAcquisitionFunction,
         ),
         metric=metric1,
         mode=mode,
     ),
     FIFOScheduler(
         config_space,
-        searcher=ContributedSurrogateSearcher(
+        searcher=SklearnSurrogateSearcher(
             config_space=config_space,
             metric="mean_loss",
             estimator=TestEstimator(),

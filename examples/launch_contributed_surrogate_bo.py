@@ -21,17 +21,17 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
 from syne_tune.optimizer.schedulers import FIFOScheduler
-from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.contributed_surrogate_searcher import (
-    ContributedSurrogateSearcher,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
+    EIAcquisitionFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
+    SklearnSurrogateSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
     SklearnEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
     SklearnPredictor,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
-    IndependentThompsonSampling,
 )
 
 
@@ -95,11 +95,11 @@ def main():
     }
     # Scheduler (i.e., HPO algorithm)
     myestimator = BayesianRidgeEstimator()
-    searcher = ContributedSurrogateSearcher(
+    searcher = SklearnSurrogateSearcher(
         config_space=config_space,
         metric="mean_loss",
         estimator=myestimator,
-        scoring_class_and_args=IndependentThompsonSampling,
+        scoring_class_and_args=EIAcquisitionFunction,
     )
 
     scheduler = FIFOScheduler(
@@ -120,7 +120,7 @@ def main():
         trial_backend=LocalBackend(entry_point=entry_point),
         scheduler=scheduler,
         stop_criterion=StoppingCriterion(max_wallclock_time=300),
-        n_workers=4,  # how many trials are evaluated in parallel
+        n_workers=1,  # how many trials are evaluated in parallel
     )
     tuner.run()
 

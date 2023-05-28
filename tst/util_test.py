@@ -48,7 +48,7 @@ class TestPredictor(SklearnPredictor):
         self, X: np.ndarray, return_std: bool = True
     ) -> Tuple[np.ndarray, np.ndarray]:
         nexamples = X.shape[0]
-        return np.ones_like(nexamples), np.zeros(nexamples)
+        return np.ones(nexamples), np.ones(nexamples)
 
 
 class TestEstimator(SklearnEstimator):
