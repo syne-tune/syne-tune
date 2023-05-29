@@ -21,18 +21,18 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import 
     BasePredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
-    SklearnPredictor,
+    SKLearnPredictor,
 )
 
 
-class SklearnPredictorWrapper(BasePredictor):
+class SKLearnPredictorWrapper(BasePredictor):
     """
     Wrapper class for the sklearn estimators to be used with ContributedEstimatorWrapper
     """
 
     def __init__(
         self,
-        contributed_predictor: SklearnPredictor,
+        contributed_predictor: SKLearnPredictor,
         state: TuningJobState,
         active_metric: Optional[str] = None,
     ):

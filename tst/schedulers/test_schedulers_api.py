@@ -58,7 +58,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
     LCBAcquisitionFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
-    SklearnSurrogateSearcher,
+    SKLearnSurrogateSearcher,
 )
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
@@ -384,7 +384,7 @@ list_schedulers_to_test = [
     ),
     FIFOScheduler(
         config_space,
-        searcher=SklearnSurrogateSearcher(
+        searcher=SKLearnSurrogateSearcher(
             config_space=config_space,
             metric="mean_loss",
             estimator=TestEstimator(),
@@ -395,7 +395,7 @@ list_schedulers_to_test = [
     ),
     FIFOScheduler(
         config_space,
-        searcher=SklearnSurrogateSearcher(
+        searcher=SKLearnSurrogateSearcher(
             config_space=config_space,
             metric="mean_loss",
             estimator=TestEstimator(),

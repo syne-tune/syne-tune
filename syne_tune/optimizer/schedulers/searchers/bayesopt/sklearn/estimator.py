@@ -13,18 +13,18 @@
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
-    SklearnPredictor,
+    SKLearnPredictor,
 )
 
 
-class SklearnEstimator:
+class SKLearnEstimator:
     """
     Base class for the sklearn Estimators
     """
 
     def fit(
         self, X: np.ndarray, y: np.ndarray, update_params: bool
-    ) -> SklearnPredictor:
+    ) -> SKLearnPredictor:
         """
         Implements :meth:`fit_from_state`, given transformed data.
 

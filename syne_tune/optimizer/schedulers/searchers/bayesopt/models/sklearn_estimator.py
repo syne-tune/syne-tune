@@ -18,22 +18,22 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
     transform_state_to_data,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
-    SklearnEstimator,
+    SKLearnEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_predictor import (
-    SklearnPredictorWrapper,
+    SKLearnPredictorWrapper,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     Predictor,
 )
 
 
-class SklearnEstimatorWrapper(Estimator):
+class SKLearnEstimatorWrapper(Estimator):
     """
     Wrapper class for the sklearn estimators to be used with BayesianOptimizationSearcher
     """
 
-    def __init__(self, contributed_estimator: SklearnEstimator, *args, **kwargs):
+    def __init__(self, contributed_estimator: SKLearnEstimator, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.contributed_estimator = contributed_estimator
 
@@ -81,6 +81,6 @@ class SklearnEstimatorWrapper(Estimator):
         contributed_predictor = self.contributed_estimator.fit(
             data.features, data.targets, update_params=update_params
         )
-        return SklearnPredictorWrapper(
+        return SKLearnPredictorWrapper(
             contributed_predictor=contributed_predictor, state=state
         )

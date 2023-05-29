@@ -25,17 +25,17 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
     EIAcquisitionFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
-    SklearnSurrogateSearcher,
+    SKLearnSurrogateSearcher,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
-    SklearnEstimator,
+    SKLearnEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
-    SklearnPredictor,
+    SKLearnPredictor,
 )
 
 
-class BayesianRidgePredictor(SklearnPredictor):
+class BayesianRidgePredictor(SKLearnPredictor):
     """
     Base class for the sklearn predictors
     """
@@ -60,7 +60,7 @@ class BayesianRidgePredictor(SklearnPredictor):
         return self.ridge.predict(X, return_std=True)
 
 
-class BayesianRidgeEstimator(SklearnEstimator):
+class BayesianRidgeEstimator(SKLearnEstimator):
     """
     Base class for the sklearn Estimators
     """
@@ -95,7 +95,7 @@ def main():
     }
     # Scheduler (i.e., HPO algorithm)
     myestimator = BayesianRidgeEstimator()
-    searcher = SklearnSurrogateSearcher(
+    searcher = SKLearnSurrogateSearcher(
         config_space=config_space,
         metric="mean_loss",
         estimator=myestimator,

@@ -19,10 +19,10 @@ import numpy as np
 from syne_tune.backend import LocalBackend
 from syne_tune.backend.trial_status import Status
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
-    SklearnEstimator,
+    SKLearnEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
-    SklearnPredictor,
+    SKLearnPredictor,
 )
 from syne_tune.util import script_height_example_path
 from syne_tune.blackbox_repository.simulated_tabular_backend import (
@@ -43,7 +43,7 @@ from examples.training_scripts.height_example.blackbox_height import (
 )
 
 
-class TestPredictor(SklearnPredictor):
+class TestPredictor(SKLearnPredictor):
     def predict(
         self, X: np.ndarray, return_std: bool = True
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -51,7 +51,7 @@ class TestPredictor(SklearnPredictor):
         return np.ones(nexamples), np.ones(nexamples)
 
 
-class TestEstimator(SklearnEstimator):
+class TestEstimator(SKLearnEstimator):
     def fit(self, X: np.ndarray, y: np.ndarray, update_params: bool) -> TestPredictor:
         return TestPredictor()
 

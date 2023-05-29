@@ -17,10 +17,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
     EIAcquisitionFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_estimator import (
-    SklearnEstimatorWrapper,
+    SKLearnEstimatorWrapper,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
-    SklearnEstimator,
+    SKLearnEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     ScoringClassAndArgs,
@@ -40,8 +40,8 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 logger = logging.getLogger(__name__)
 
 
-class SklearnSurrogateSearcher(BayesianOptimizationSearcher):
-    """Sklearn Surrogate Bayesian optimization for FIFO scheduler
+class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
+    """SKLearn Surrogate Bayesian optimization for FIFO scheduler
 
     This searcher must be used with
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
@@ -55,7 +55,7 @@ class SklearnSurrogateSearcher(BayesianOptimizationSearcher):
         self,
         config_space: Dict[str, Any],
         metric: str,
-        estimator: SklearnEstimator,
+        estimator: SKLearnEstimator,
         scoring_class_and_args: ScoringClassAndArgs = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
         num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
@@ -69,7 +69,7 @@ class SklearnSurrogateSearcher(BayesianOptimizationSearcher):
         :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
         :param estimator: Instance of
-            :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator.SklearnEstimator`
+            :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator.SKLearn`
             to be used as surrogate
         :param scoring_class_and_args: The scoring function (or acquisition function) class
             and any extra parameters used to instantiate it. If None, expected improvement (EI) is used.
@@ -85,7 +85,7 @@ class SklearnSurrogateSearcher(BayesianOptimizationSearcher):
             random_seed_generator=kwargs.get("random_seed_generator"),
             random_seed=kwargs.get("random_seed"),
         )
-        self.estimator = SklearnEstimatorWrapper(estimator)
+        self.estimator = SKLearnEstimatorWrapper(estimator)
 
         if scoring_class_and_args is None:
             scoring_class_and_args = EIAcquisitionFunction
@@ -116,7 +116,7 @@ class SklearnSurrogateSearcher(BayesianOptimizationSearcher):
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         estimator = self.state_transformer.estimator
         # Call internal constructor
-        new_searcher = SklearnSurrogateSearcher(
+        new_searcher = SKLearnSurrogateSearcher(
             **self._new_searcher_kwargs_for_clone(),
             estimator=estimator,
             init_state=init_state,
