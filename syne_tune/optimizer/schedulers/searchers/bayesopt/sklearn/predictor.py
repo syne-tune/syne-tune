@@ -15,7 +15,7 @@ from typing import Tuple, List, Dict
 import numpy as np
 
 
-class SklearnPredictor:
+class SKLearnPredictor:
     """
     Base class for the sklearn predictors
     """

@@ -54,6 +54,12 @@ from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
+    LCBAcquisitionFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
+    SKLearnSurrogateSearcher,
+)
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
     BoundingBox,
@@ -63,7 +69,7 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
     QuantileBasedSurrogateSearcher,
 )
 from syne_tune.config_space import randint, uniform, choice
-
+from tst.util_test import TestEstimator
 
 config_space = {
     "steps": 100,
@@ -375,6 +381,27 @@ list_schedulers_to_test = [
         scalarization_weights=[1, 1],
         base_scheduler_factory=FIFOScheduler,
         searcher="random",
+    ),
+    FIFOScheduler(
+        config_space,
+        searcher=SKLearnSurrogateSearcher(
+            config_space=config_space,
+            metric="mean_loss",
+            estimator=TestEstimator(),
+            scoring_class_and_args=LCBAcquisitionFunction,
+        ),
+        metric=metric1,
+        mode=mode,
+    ),
+    FIFOScheduler(
+        config_space,
+        searcher=SKLearnSurrogateSearcher(
+            config_space=config_space,
+            metric="mean_loss",
+            estimator=TestEstimator(),
+        ),
+        metric=metric1,
+        mode=mode,
     ),
 ]
 if sys.version_info >= (3, 8):
