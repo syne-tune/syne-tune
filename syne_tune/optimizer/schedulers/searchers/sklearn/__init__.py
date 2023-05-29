@@ -10,15 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.try_import import try_import_sklearn_message
+from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (  # noqa: F401
+    SKLearnSurrogateSearcher,
+)
 
-__all__ = []
-
-try:
-    from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
-        SKLearnSurrogateSearcher,
-    )
-
-    __all__.append("SKLearnSurrogateSearcher")
-except ImportError:
-    print(try_import_sklearn_message())
+__all__ = ["SKLearnSurrogateSearcher"]
