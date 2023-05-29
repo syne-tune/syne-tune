@@ -133,27 +133,24 @@ class SquaredDistance(Block):
     def forward(self, X1, X2):
         """Computes matrix of squared distances
 
-        :param X1: input matrix, shape ``(n1,d)``
-        :param X2: input matrix, shape ``(n2,d)``
+        :param X1: input matrix, shape ``(n1, d)``
+        :param X2: input matrix, shape ``(n2, d)``
         """
         # In case inverse_bandwidths if of size (1, dimension), dimension>1,
         # ARD is handled by broadcasting
         inverse_bandwidths = anp.reshape(self._inverse_bandwidths(), (1, -1))
 
+        X1_scaled = anp.multiply(X1, inverse_bandwidths)
+        X1_squared_norm = anp.sum(anp.square(X1_scaled), axis=1)
         if X2 is X1:
-            X1_scaled = anp.multiply(X1, inverse_bandwidths)
             D = -2.0 * anp.dot(X1_scaled, anp.transpose(X1_scaled))
-            X1_squared_norm = anp.sum(anp.square(X1_scaled), axis=1)
-            D = D + anp.reshape(X1_squared_norm, (1, -1))
-            D = D + anp.reshape(X1_squared_norm, (-1, 1))
+            X2_squared_norm = X1_squared_norm
         else:
-            X1_scaled = anp.multiply(X1, inverse_bandwidths)
             X2_scaled = anp.multiply(X2, inverse_bandwidths)
-            X1_squared_norm = anp.sum(anp.square(X1_scaled), axis=1)
-            X2_squared_norm = anp.sum(anp.square(X2_scaled), axis=1)
             D = -2.0 * anp.matmul(X1_scaled, anp.transpose(X2_scaled))
-            D = D + anp.reshape(X1_squared_norm, (-1, 1))
-            D = D + anp.reshape(X2_squared_norm, (1, -1))
+            X2_squared_norm = anp.sum(anp.square(X2_scaled), axis=1)
+        D = D + anp.reshape(X1_squared_norm, (-1, 1))
+        D = D + anp.reshape(X2_squared_norm, (1, -1))
 
         return anp.abs(D)
 
@@ -226,7 +223,7 @@ class Matern52(KernelFunction):
                 )
 
     @property
-    def ARD(self) -> float:
+    def ARD(self) -> bool:
         return self.squared_distance.ARD
 
     def _covariance_scale(self):
@@ -247,14 +244,12 @@ class Matern52(KernelFunction):
         X1 = self._check_input_shape(X1)
         if X2 is not X1:
             X2 = self._check_input_shape(X2)
-        D = self.squared_distance(X1, X2)
+        D = 5.0 * self.squared_distance(X1, X2)
         # Using the plain np.sqrt is numerically unstable for D ~ 0
         # (non-differentiability)
         # that's why we add NUMERICAL_JITTER
-        B = anp.sqrt(5.0 * D + NUMERICAL_JITTER)
-        K = anp.multiply((1.0 + B + 5.0 / 3.0 * D) * anp.exp(-B), covariance_scale)
-
-        return K
+        B = anp.sqrt(D + NUMERICAL_JITTER)
+        return anp.multiply((1.0 + B + D / 3.0) * anp.exp(-B), covariance_scale)
 
     def diagonal(self, X):
         X = self._check_input_shape(X)

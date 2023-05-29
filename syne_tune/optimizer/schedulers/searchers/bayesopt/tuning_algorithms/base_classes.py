@@ -104,7 +104,8 @@ class Predictor:
         input points ``inputs``. By default:
 
         * "mean": Predictive means. If the model supports fantasizing with a
-            number ``nf`` of fantasies, this has shape ``(n, nf)``, otherwise ``(n,)``
+          number ``nf`` of fantasies, this has shape ``(n, nf)``, otherwise
+          ``(n,)``
         * "std": Predictive stddevs, shape ``(n,)``
 
         If the hyperparameters of the surrogate model are being optimized (e.g.,
@@ -158,8 +159,8 @@ class Predictor:
     def backward_gradient(
         self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> List[np.ndarray]:
-        """
-        Computes the gradient :math:`\nabla f(x)` for an acquisition
+        r"""
+        Computes the gradient :math:`\nabla_x f(x)` for an acquisition
         function :math:`f(x)`, where :math:`x` is a single input point. This
         is using reverse mode differentiation, the head gradients are passed
         by the acquisition function. The head gradients are
@@ -172,7 +173,7 @@ class Predictor:
 
         :param input: Single input point :math:`x`, shape ``(d,)``
         :param head_gradients: See above
-        :return: Gradient :math:`\nabla f(x)` (several if MCMC is used)
+        :return: Gradient :math:`\nabla_x f(x)` (several if MCMC is used)
         """
         raise NotImplementedError
 
@@ -234,13 +235,13 @@ class AcquisitionFunction(ScoringFunction):
     def compute_acq_with_gradient(
         self, input: np.ndarray, predictor: Optional[OutputPredictor] = None
     ) -> Tuple[float, np.ndarray]:
-        """
+        r"""
         For a single input point :math:`x`, compute acquisition function value
-        :math:`f(x)` and gradient :math:`\nabla f(x)`.
+        :math:`f(x)` and gradient :math:`\nabla_x f(x)`.
 
         :param input: Single input point :math:`x`, shape ``(d,)``
         :param predictor: If given, overrides ``self.predictor``
-        :return: :math:`(f(x), \nabla f(x))`
+        :return: :math:`(f(x), \nabla_x f(x))`
         """
         raise NotImplementedError
 

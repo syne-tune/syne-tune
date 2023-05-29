@@ -211,6 +211,10 @@ full range of arguments. We list the most important ones:
   number of observations grows large. If so, you can choose to do it only
   every ``opt_skip_period`` rounds. Skipping optimizations is done only once
   the number of observations is above ``opt_skip_init_length``.
+* ``gp_base_kernel``: Selects the covariance (or kernel) function to be used in
+  the surrogate model. Current choices are "matern52-ard" (Matern ``5/2`` with
+  automatic relevance determination; the default) and "matern52-noard"
+  (Matern ``5/2`` without ARD).
 * ``input_warping``: If this is ``True``, inputs are warped before being fed
   into the covariance function, the effective kernel becomes
   :math:`k(w(x), w(x'))`, where :math:`w(x)` is a warping transform with two

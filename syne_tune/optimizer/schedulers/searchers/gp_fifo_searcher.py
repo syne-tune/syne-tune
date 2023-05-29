@@ -118,6 +118,12 @@ class GPFIFOSearcher(BayesianOptimizationSearcher):
         for :math:`\lambda = 0`, and :math:`y - 1` for :math:`\lambda = 1`. This
         option requires the targets to be positive. Defaults to ``False``.
     :type boxcox_transform: bool, optional
+    :param gp_base_kernel: Selects the covariance (or kernel) function to be
+        used. Supported choices are
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory.SUPPORTED_BASE_MODELS`.
+        Defaults to "matern52-ard" (Matern 5/2 with automatic relevance
+        determination).
+    :type gp_base_kernel: str, optional
     :param initial_scoring: Scoring function to rank initial candidates
         (local optimization of EI is started from top scorer):
 

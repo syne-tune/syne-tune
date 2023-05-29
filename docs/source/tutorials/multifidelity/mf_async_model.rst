@@ -56,9 +56,9 @@ A simple learning curve surrogate model is obtained by
 at each rung level :math:`r` is represented by an independent Gaussian process
 model. The models have individual constant mean functions
 :math:`\mu_r(\mathbf{x}) = \mu_r` and covariance functions
-:math:`k_r(\mathbf{x}, \mathbf{x}') = v_r k(\mathbf{x}, \mathbf{x}')`,
+:math:`k_r(\mathbf{x}, \mathbf{x}') = c_r k(\mathbf{x}, \mathbf{x}')`,
 where :math:`k(\mathbf{x}, \mathbf{x}')` is a Matern-5/2 ARD kernel without
-variance parameter, which is shared between the models, and the :math:`v_r > 0`
+variance parameter, which is shared between the models, and the :math:`c_r > 0`
 are individual variance parameters. The idea is that while validation errors at
 different rung levels may be scaled and shifted, they should still exhibit
 similar dependencies on the hyperparameters. The noise variance :math:`\sigma^2`

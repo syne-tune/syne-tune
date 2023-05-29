@@ -22,8 +22,10 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
     SUPPORTED_RESOURCE_FOR_ACQUISITION,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory import (
-    resource_kernel_factory,
+    SUPPORTED_BASE_MODELS,
+    base_kernel_factory,
     SUPPORTED_RESOURCE_MODELS,
+    resource_kernel_factory,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
     ExtendedConfiguration,
@@ -39,7 +41,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression 
     GaussianProcessRegression,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
-    Matern52,
     KernelFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import (
@@ -164,9 +165,9 @@ def _create_base_gp_kernel(hp_ranges: HyperparameterRanges, **kwargs) -> KernelF
         kernel = create_base_gp_kernel_for_warmstarting(hp_ranges, **kwargs)
     else:
         has_covariance_scale = kwargs.get("has_covariance_scale", True)
-        kernel = Matern52(
+        kernel = base_kernel_factory(
+            name=kwargs["gp_base_kernel"],
             dimension=hp_ranges.ndarray_size,
-            ARD=True,
             has_covariance_scale=has_covariance_scale,
         )
         if input_warping:
@@ -903,6 +904,7 @@ def _common_defaults(
         "input_warping": False,
         "boxcox_transform": False,
         "max_size_top_fraction": 0.25,
+        "gp_base_kernel": "matern52-ard",
     }
     if is_restrict_configs:
         default_options["initial_scoring"] = "acq_func"
@@ -953,6 +955,7 @@ def _common_defaults(
         "boxcox_transform": Boolean(),
         "max_size_data_for_model": IntegerOrNone(1, None),
         "max_size_top_fraction": Float(0.0, 1.0),
+        "gp_base_kernel": Categorical(choices=SUPPORTED_BASE_MODELS),
     }
 
     if is_hyperband:
