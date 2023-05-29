@@ -90,6 +90,23 @@ which is passed to the :class:`~syne_tune.Tuner`. In order to visualize
 other metrics, you may have to modify this callback.
 
 
+Bayesian Optimization with Scikit-learn Based Surrogate Model
+=============================================================
+
+.. literalinclude:: ../../examples/launch_sklearn_surrogate_bo.py
+   :caption: examples/launch_sklearn_surrogate_bo.py
+   :start-after: # permissions and limitations under the License.
+
+**Requirements**:
+
+* Needs ``sckit-learn`` to be installed. If you installed Syne Tune
+  with ``sklearn`` or ``extra``, this dependence is included.
+
+In this example, a simple new surrogate model is implemented based on
+``sklearn.linear_model.BayesianRidge``, and Bayesian optimization is run with
+this surrogate model rather than a Gaussian process model.
+
+
 Launch HPO Experiment with Simulator Backend
 ============================================
 

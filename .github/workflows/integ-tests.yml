@@ -143,3 +143,9 @@ jobs:
     with:
       extras-require: gpsearchers
       script-path: examples/launch_height_extra_results.py
+
+  launch_sklearn_surrogate_bo:
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      extras-require: gpsearchers,sklearn
+      script-path: examples/launch_sklearn_surrogate_bo.py

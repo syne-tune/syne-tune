@@ -84,8 +84,7 @@ class Predictor:
             active_metric = INTERNAL_METRIC_NAME
         self.active_metric = active_metric
 
-    @staticmethod
-    def keys_predict() -> Set[str]:
+    def keys_predict(self) -> Set[str]:
         """Keys of signals returned by :meth:`predict`.
 
         Note: In order to work with :class:`AcquisitionFunction` implementations,

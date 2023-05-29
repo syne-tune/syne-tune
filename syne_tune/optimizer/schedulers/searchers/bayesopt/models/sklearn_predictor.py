@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Set
 
 import numpy as np
 
@@ -27,36 +27,31 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import 
 
 class SKLearnPredictorWrapper(BasePredictor):
     """
-    Wrapper class for the sklearn estimators to be used with ContributedEstimatorWrapper
+    Wrapper class for sklearn predictors returned by ``fit_from_state`` of
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_estimator.SKLearnEstimatorWrapper`.
     """
 
     def __init__(
         self,
-        contributed_predictor: SKLearnPredictor,
+        sklearn_predictor: SKLearnPredictor,
         state: TuningJobState,
         active_metric: Optional[str] = None,
     ):
         super().__init__(state, active_metric)
-        self.contributed_predictor = contributed_predictor
+        self.sklearn_predictor = sklearn_predictor
+
+    def keys_predict(self) -> Set[str]:
+        if self.sklearn_predictor.returns_std():
+            return {"mean", "std"}
+        else:
+            return {"mean"}
 
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
-        """
-        Returns signals which are statistics of the predictive distribution at
-        input points ``inputs``. By default:
-
-        * "mean": Predictive means.
-        * "std": Predictive stddevs, shape ``(n,)``
-
-        This function relies on the assigned ContributedPredictor to execute the predictions
-
-        :param inputs: Input points, shape ``(n, d)``
-        :return: List of ``dict`` with keys :meth:`keys_predict`, of length 1
-        """
-
-        mean, std = self.contributed_predictor.predict(inputs)
-        outputs = {"mean": mean}
-        if std is not None:
-            outputs["std"] = std
+        prediction = self.sklearn_predictor.predict(X=inputs)
+        if self.sklearn_predictor.returns_std():
+            outputs = {"mean": prediction[0], "std": prediction[1]}
+        else:
+            outputs = {"mean": prediction}
         return [outputs]
 
     def backward_gradient(
@@ -76,8 +71,9 @@ class SKLearnPredictorWrapper(BasePredictor):
         :param head_gradients: See above
         :return: Gradient :math:`\nabla f(x)` (one-length list)
         """
+        assert len(head_gradients) == 1
         return [
-            self.contributed_predictor.backward_gradient(
-                input=input, head_gradients=head_gradients
+            self.sklearn_predictor.backward_gradient(
+                input=input, head_gradients=head_gradients[0]
             )
         ]

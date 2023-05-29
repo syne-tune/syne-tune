@@ -78,6 +78,12 @@ def try_import_visual_message() -> str:
     )
 
 
+def try_import_sklearn_message() -> str:
+    return _try_import_message(
+        "Dependencies for scikit-learn are not imported", tag="sklearn"
+    )
+
+
 def try_import_backends_message() -> str:
     return _try_import_message(
         "LocalBackend / PythonBackend are not imported", tag=None
