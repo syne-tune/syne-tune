@@ -63,6 +63,9 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
         surrogate model is used.
     :param allow_duplicates: If ``True``, allow for the same candidate to be
         selected more than once.
+    :param restrict_configurations: If given, the searcher only suggests
+        configurations from this list. If ``allow_duplicates == False``,
+        entries are popped off this list once suggested.
     """
 
     def __init__(
@@ -75,6 +78,7 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
         num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
         allow_duplicates: bool = False,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         clone_from_state: bool = False,
         **kwargs,
     ):
@@ -102,6 +106,7 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
                 initial_scoring="acq_func",
                 skip_local_optimization=True,
                 allow_duplicates=allow_duplicates,
+                restrict_configurations=restrict_configurations,
                 **kwargs,
             )
         else:
