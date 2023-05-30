@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Tuple, Union
+from typing import Tuple
 
 import numpy as np
 import pytest
@@ -44,13 +44,7 @@ from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
 
 
 class TestPredictor(SKLearnPredictor):
-    @staticmethod
-    def returns_std() -> bool:
-        return True
-
-    def predict(
-        self, X: np.ndarray
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         nexamples = X.shape[0]
         return np.ones_like(nexamples), np.zeros(nexamples)
 

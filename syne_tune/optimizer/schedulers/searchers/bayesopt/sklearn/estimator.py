@@ -20,7 +20,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import 
 
 class SKLearnEstimator:
     """
-    Base class for sklearn estimators.
+    Base class scikit-learn based estimators, giving rise to surrogate models
+    for Bayesian optimization.
     """
 
     def fit(
@@ -34,7 +35,7 @@ class SKLearnEstimator:
         :param X: Feature matrix, shape ``(n_samples, n_features)``
         :param y: Target values, shape ``(n_samples,)``
         :param update_params: Should model (hyper)parameters be updated?
-            Ignored of estimator has no hyperparameters
+            Ignored if estimator has no hyperparameters
         :return: Predictor, wrapping the posterior state
         """
         raise NotImplementedError

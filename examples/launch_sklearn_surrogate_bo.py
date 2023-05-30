@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import copy
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Tuple
 import logging
 
 import numpy as np
@@ -49,13 +49,7 @@ class BayesianRidgePredictor(SKLearnPredictor):
     def __init__(self, ridge: BayesianRidge):
         self.ridge = ridge
 
-    @staticmethod
-    def returns_std() -> bool:
-        return True
-
-    def predict(
-        self, X: np.ndarray
-    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         return self.ridge.predict(X, return_std=True)
 
 

@@ -40,19 +40,9 @@ class SKLearnPredictorWrapper(BasePredictor):
         super().__init__(state, active_metric)
         self.sklearn_predictor = sklearn_predictor
 
-    def keys_predict(self) -> Set[str]:
-        if self.sklearn_predictor.returns_std():
-            return {"mean", "std"}
-        else:
-            return {"mean"}
-
     def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
-        prediction = self.sklearn_predictor.predict(X=inputs)
-        if self.sklearn_predictor.returns_std():
-            outputs = {"mean": prediction[0], "std": prediction[1]}
-        else:
-            outputs = {"mean": prediction}
-        return [outputs]
+        means, stddevs = self.sklearn_predictor.predict(X=inputs)
+        return [{"mean": means, "std": stddevs}]
 
     def backward_gradient(
         self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]

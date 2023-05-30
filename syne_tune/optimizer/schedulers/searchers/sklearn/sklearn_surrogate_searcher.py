@@ -82,7 +82,6 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
         clone_from_state: bool = False,
         **kwargs,
     ):
-        """ """
         super().__init__(
             config_space,
             metric=metric,
