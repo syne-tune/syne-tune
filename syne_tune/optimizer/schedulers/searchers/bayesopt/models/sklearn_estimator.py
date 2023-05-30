@@ -10,6 +10,8 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from typing import Dict, Any
+
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
 )
@@ -30,23 +32,20 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
 
 class SKLearnEstimatorWrapper(Estimator):
     """
-    Wrapper class for the sklearn estimators to be used with BayesianOptimizationSearcher
+    Wrapper class for sklearn estimators.
     """
 
-    def __init__(self, contributed_estimator: SKLearnEstimator, *args, **kwargs):
+    def __init__(self, sklearn_estimator: SKLearnEstimator, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.contributed_estimator = contributed_estimator
+        self.sklearn_estimator = sklearn_estimator
 
-    @property
-    def normalize_targets(self) -> bool:
-        """
-        :return: Should targets in ``state`` be normalized before fitting the estimator
-        """
-        return self.contributed_estimator.normalize_targets
+    def get_params(self) -> Dict[str, Any]:
+        return self.sklearn_estimator.get_params()
 
-    def fit_from_state(
-        self, state: TuningJobState, update_params: bool = False
-    ) -> Predictor:
+    def set_params(self, param_dict: Dict[str, Any]):
+        self.sklearn_estimator.set_params(param_dict)
+
+    def fit_from_state(self, state: TuningJobState, update_params: bool) -> Predictor:
         """
         Creates a
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes.Predictor`
@@ -59,7 +58,7 @@ class SKLearnEstimatorWrapper(Estimator):
         you can ignore the ``update_params`` argument.
 
         If ``self.state.pending_evaluations`` is not empty, we compute posterior for state without pending evals.
-        This method can be overriten for any other behaviour such as one found in
+        This method can be overwritten for any other behaviour such as one found in
         ``syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model.GaussProcEstimator.fit_from_state``
 
         :param state: Current data model parameters are to be fit on, and the
@@ -68,19 +67,17 @@ class SKLearnEstimatorWrapper(Estimator):
         :return: Predictor, wrapping the posterior state
         """
         if state.pending_evaluations:
+            # Remove pending evaluations
             state = TuningJobState(
                 hp_ranges=state.hp_ranges,
                 config_for_trial=state.config_for_trial,
                 trials_evaluations=state.trials_evaluations,
                 failed_trials=state.failed_trials,
             )
-
         data = transform_state_to_data(
-            state=state, normalize_targets=self.normalize_targets
+            state=state, normalize_targets=self.sklearn_estimator.normalize_targets
         )
-        contributed_predictor = self.contributed_estimator.fit(
-            data.features, data.targets, update_params=update_params
+        sklearn_predictor = self.sklearn_estimator.fit(
+            X=data.features, y=data.targets, update_params=update_params
         )
-        return SKLearnPredictorWrapper(
-            contributed_predictor=contributed_predictor, state=state
-        )
+        return SKLearnPredictorWrapper(sklearn_predictor=sklearn_predictor, state=state)

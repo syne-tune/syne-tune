@@ -13,10 +13,16 @@
 import copy
 from pathlib import Path
 from typing import Tuple
+import logging
 
 import numpy as np
 from sklearn.linear_model import BayesianRidge
 
+from examples.training_scripts.height_example.train_height import (
+    METRIC_ATTR,
+    METRIC_MODE,
+    MAX_RESOURCE_ATTR,
+)
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint
@@ -24,45 +30,35 @@ from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
 )
-from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
-    SKLearnSurrogateSearcher,
-)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
     SKLearnEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
     SKLearnPredictor,
 )
+from syne_tune.optimizer.schedulers.searchers.sklearn import (
+    SKLearnSurrogateSearcher,
+)
 
 
 class BayesianRidgePredictor(SKLearnPredictor):
     """
-    Base class for the sklearn predictors
+    Predictor for surrogate model given by ``sklearn.linear_model.BayesianRidge``.
     """
 
     def __init__(self, ridge: BayesianRidge):
         self.ridge = ridge
 
-    def predict(
-        self, X: np.ndarray, return_std: bool = True
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Returns signals which are statistics of the predictive distribution at
-        input points ``inputs``.
-
-
-        :param inputs: Input points, shape ``(n, d)``
-        :return: Tuple with the following entries:
-            * "mean": Predictive means in shape of ``(n,)``
-            * "std": Predictive stddevs, shape ``(n,)``
-        """
-        print(f"Predicting with BayesianRidgePredictor using X.shape={X.shape}")
+    def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         return self.ridge.predict(X, return_std=True)
 
 
 class BayesianRidgeEstimator(SKLearnEstimator):
     """
-    Base class for the sklearn Estimators
+    Estimator for surrogate model given by ``sklearn.linear_model.BayesianRidge``.
+
+    None of the parameters of ``BayesianRidge`` are exposed here, so they are all
+    fixed up front.
     """
 
     def __init__(self, *args, **kwargs):
@@ -70,60 +66,51 @@ class BayesianRidgeEstimator(SKLearnEstimator):
 
     def fit(
         self, X: np.ndarray, y: np.ndarray, update_params: bool
-    ) -> BayesianRidgePredictor:
-        """
-        Implements :meth:`fit_from_state`, given transformed data.
-
-        :param X: Training data in ndarray of shape (n_samples, n_features)
-        :param y: Target values in ndarray of shape (n_samples,)
-        :param update_params: Should model (hyper)parameters be updated?
-        :return: Predictor, wrapping the posterior state
-        """
-        print(
-            f"Fitting BayesianRidgePredictor using X.shape={X.shape}, y.shape={y.shape}"
-        )
+    ) -> SKLearnPredictor:
         self.ridge.fit(X, y.ravel())
         return BayesianRidgePredictor(ridge=copy.deepcopy(self.ridge))
 
 
-def main():
-    # Hyperparameter configuration space
+if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.INFO)
+
+    random_seed = 31415927
+    max_epochs = 100
+    n_workers = 4
+
     config_space = {
         "width": randint(1, 20),
         "height": randint(1, 20),
-        "epochs": 10,
+        MAX_RESOURCE_ATTR: 100,
     }
-    # Scheduler (i.e., HPO algorithm)
-    myestimator = BayesianRidgeEstimator()
-    searcher = SKLearnSurrogateSearcher(
-        config_space=config_space,
-        metric="mean_loss",
-        estimator=myestimator,
-        scoring_class_and_args=EIAcquisitionFunction,
-    )
-
-    scheduler = FIFOScheduler(
-        config_space,
-        metric="mean_loss",
-        mode="min",
-        searcher=searcher,
-        search_options={"debug_log": False},
-    )
-
     entry_point = str(
         Path(__file__).parent
         / "training_scripts"
         / "height_example"
-        / "train_height_simple.py"
+        / "train_height.py"
     )
+
+    # We use ``FIFOScheduler`` with a specific searcher based on our surrogate
+    # model
+    searcher = SKLearnSurrogateSearcher(
+        config_space=config_space,
+        metric=METRIC_ATTR,
+        estimator=BayesianRidgeEstimator(),
+        scoring_class_and_args=EIAcquisitionFunction,
+    )
+    scheduler = FIFOScheduler(
+        config_space,
+        metric=METRIC_ATTR,
+        mode=METRIC_MODE,
+        max_resource_attr=MAX_RESOURCE_ATTR,
+        searcher=searcher,
+    )
+
     tuner = Tuner(
         trial_backend=LocalBackend(entry_point=entry_point),
         scheduler=scheduler,
-        stop_criterion=StoppingCriterion(max_wallclock_time=300),
-        n_workers=1,  # how many trials are evaluated in parallel
+        stop_criterion=StoppingCriterion(max_wallclock_time=60),
+        n_workers=n_workers,
     )
+
     tuner.run()
-
-
-if __name__ == "__main__":
-    main()

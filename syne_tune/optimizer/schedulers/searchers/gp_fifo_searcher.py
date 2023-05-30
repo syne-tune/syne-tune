@@ -180,7 +180,7 @@ class GPFIFOSearcher(BayesianOptimizationSearcher):
     :param restrict_configurations: If given, the searcher only suggests
         configurations from this list. This needs
         ``skip_local_optimization == True``. If ``allow_duplicates == False``,
-         entries are popped off this list once suggested.
+        entries are popped off this list once suggested.
     :type restrict_configurations: List[dict], optional
     :param map_reward: In the scheduler, the metric may be minimized or
         maximized, but internally, Bayesian optimization is minimizing

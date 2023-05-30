@@ -45,10 +45,27 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
 
     This searcher must be used with
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
-    Bayesian optimization, based on a Contributed surrogate model.
+    Bayesian optimization, based on a scikit-learn estimator based surrogate model.
 
-    Most of the implementation is generic in
-    :class:`~syne_tune.optimizer.schedulers.searchers.model_based_searcher.BayesianOptimizationSearcher`.
+    Additional arguments on top of parent class
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
+
+    :param estimator: Instance of
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator.SKLearnEstimator`
+        to be used as surrogate model
+    :param scoring_class_and_args: The scoring function (or acquisition
+        function) class and any extra parameters used to instantiate it. If
+        ``None``, expected improvement (EI) is used. Note that the acquisition
+        function is not locally optimized with this searcher.
+    :param num_initial_candidates: Number of candidates sampled for scoring with
+        acquisition function.
+    :param num_initial_random_choices: Number of randomly chosen candidates before
+        surrogate model is used.
+    :param allow_duplicates: If ``True``, allow for the same candidate to be
+        selected more than once.
+    :param restrict_configurations: If given, the searcher only suggests
+        configurations from this list. If ``allow_duplicates == False``,
+        entries are popped off this list once suggested.
     """
 
     def __init__(
@@ -56,28 +73,15 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
         config_space: Dict[str, Any],
         metric: str,
         estimator: SKLearnEstimator,
-        scoring_class_and_args: ScoringClassAndArgs = None,
+        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        scoring_class_and_args: Optional[ScoringClassAndArgs] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
         num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
         allow_duplicates: bool = False,
-        points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
+        restrict_configurations: Optional[List[Dict[str, Any]]] = None,
         clone_from_state: bool = False,
         **kwargs,
     ):
-        """
-        Additional arguments on top of parent class
-        :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
-
-        :param estimator: Instance of
-            :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator.SKLearn`
-            to be used as surrogate
-        :param scoring_class_and_args: The scoring function (or acquisition function) class
-            and any extra parameters used to instantiate it. If None, expected improvement (EI) is used.
-            Note that the acquisition function is not locally optimized with this searcher.
-        :param num_initial_candidates: Number of candidates sampled for scoring with acquisition function.
-        :param num_initial_random_choices: Number of randomly chosen candidates before surrogate model is used.
-        :param allow_duplicates: If True, allow for the same candidate to be selected more than once.
-        """
         super().__init__(
             config_space,
             metric=metric,
@@ -96,15 +100,14 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
                 hp_ranges=hp_ranges,
                 estimator=self.estimator,
                 acquisition_class=scoring_class_and_args,
-                skip_local_optimization=True,
-                initial_scoring="acq_func",
                 num_initial_candidates=num_initial_candidates,
                 num_initial_random_choices=num_initial_random_choices,
+                initial_scoring="acq_func",
+                skip_local_optimization=True,
                 allow_duplicates=allow_duplicates,
-                resource_attr=None,  # TODO This needs to be passed for multi-fidelity
+                restrict_configurations=restrict_configurations,
                 **kwargs,
             )
-
         else:
             # Internal constructor, bypassing the factory
             # Note: Members which are part of the mutable state, will be

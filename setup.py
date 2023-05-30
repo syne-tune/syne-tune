@@ -40,6 +40,7 @@ required_dev = load_requirements("requirements-dev.txt")
 required_aws = load_requirements("requirements-aws.txt")
 required_moo = load_requirements("requirements-moo.txt")
 required_visual = load_requirements("requirements-visual.txt")
+required_sklearn = load_requirements("requirements-sklearn.txt")
 
 long_description = (Path(__file__).parent / "README.md").read_text()
 required_extra = (
@@ -49,6 +50,7 @@ required_extra = (
     + required_aws
     + required_moo
     + required_visual
+    + required_sklearn
     + required_blackbox_repository
     + required_benchmarks
     + required_yahpo
@@ -79,6 +81,7 @@ setup(
         "aws": required_aws,
         "moo": required_moo,
         "visual": required_visual,
+        "sklearn": required_sklearn,
         "blackbox-repository": required_blackbox_repository,
         "benchmarks": required_benchmarks,
         "yahpo": required_yahpo,
