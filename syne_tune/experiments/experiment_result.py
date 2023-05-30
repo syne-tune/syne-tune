@@ -104,8 +104,10 @@ class ExperimentResult:
         ), f"All metrics must be maximized but the following modes were selected: {metric_modes}"
 
         if self.results is not None and len(self.results) > 0:
-            from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumulative
-            
+            from syne_tune.optimizer.schedulers.multiobjective.utils import (
+                hypervolume_cumulative,
+            )
+
             results_df = self.results.sort_values(ST_TUNER_TIME)
 
             x = self.results.loc[:, ST_TUNER_TIME]
