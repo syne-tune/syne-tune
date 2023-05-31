@@ -142,6 +142,14 @@ jobs:
       requires-aws-credentials: true
     secrets: inherit
 
+  launch_pasha_nasbench201:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_cqr_nasbench201.py
+      requires-aws-credentials: true
+    secrets: inherit
+
   launch_height_config_json_sagemaker:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml

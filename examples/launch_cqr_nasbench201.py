@@ -53,7 +53,7 @@ if __name__ == "__main__":
     tuner = Tuner(
         trial_backend=trial_backend,
         scheduler=scheduler,
-        stop_criterion=StoppingCriterion(max_wallclock_time=3600*3),
+        stop_criterion=StoppingCriterion(max_wallclock_time=3600 * 3),
         n_workers=n_workers,
         sleep_time=0,
         # this callback is required in order to make things work with the
