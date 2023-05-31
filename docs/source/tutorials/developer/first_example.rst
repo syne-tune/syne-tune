@@ -92,11 +92,11 @@ schedulers which can be implemented in Syne Tune, some examples are:
    returns a :class:`~syne_tune.optimizer.scheduler.SchedulerDecision`,
    signaling the tuner to *continue*, *stop*, or *pause* the reporting trial.
    The difference between *pause* and *stop* is important. If a trial is stopped,
-   it cannot be resumed later on. In particular, its checkpoints are removed (by
-   default). On the other hand, if a trial is paused, it may be resumed in the
-   future, and its most recent checkpoint is retained (in the future, Syne Tune
-   may allow to remove checkpoints of paused trials pre-emptively in order to
-   save disk space).
+   it cannot be resumed later on. In particular, its checkpoints may be removed
+   (if the backend is created with ``delete_checkpoints=True``). On the other
+   hand, if a trial is paused, it may be resumed in the future, and its most
+   recent checkpoint is retained (more details are given
+   `here <../../faq.html#checkpoints-are-filling-up-my-disk-what-can-i-do>`__).
 
 Asynchronous Job Execution
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

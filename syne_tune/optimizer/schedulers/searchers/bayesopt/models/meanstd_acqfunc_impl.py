@@ -83,7 +83,7 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
 
     def __init__(
         self,
-        predictor: OutputPredictor,
+        predictor: Predictor,
         active_metric: str = None,
         jitter: float = 0.01,
         debug_collect_stats: bool = False,
@@ -168,9 +168,7 @@ class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
        h(\mu, \sigma) = \mu - \kappa * \sigma
     """
 
-    def __init__(
-        self, predictor: OutputPredictor, kappa: float, active_metric: str = None
-    ):
+    def __init__(self, predictor: Predictor, kappa: float, active_metric: str = None):
         super().__init__(predictor, active_metric)
         assert isinstance(predictor, Predictor)
         assert kappa > 0, "kappa must be positive"

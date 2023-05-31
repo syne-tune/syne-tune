@@ -72,13 +72,13 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
     :param separate_noise_variances: See above. Defaults to ``False``
     :param initial_noise_variance: Initial value for noise variance(s).
         Defaults to
-        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_NOISE_VARIANCE``
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_NOISE_VARIANCE`
     :param initial_covariance_scale: Initial value for covariance scales.
         Defaults to
-        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_COVARIANCE_SCALE``
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_COVARIANCE_SCALE`
     :param encoding_type: Encoding used for noise variance(s) and covariance
         scales. Defaults to
-        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING``
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING`
     """
 
     def __init__(

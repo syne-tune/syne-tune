@@ -29,6 +29,23 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
 )
 
 
+SUPPORTED_BASE_MODELS = (
+    "matern52-ard",
+    "matern52-noard",
+)
+
+
+def base_kernel_factory(name: str, dimension: int, **kwargs) -> KernelFunction:
+    assert (
+        name in SUPPORTED_BASE_MODELS
+    ), f"name = {name} not supported. Choose from:\n{SUPPORTED_BASE_MODELS}"
+    return Matern52(
+        dimension=dimension,
+        ARD=name == "matern52-ard",
+        has_covariance_scale=kwargs.get("has_covariance_scale", True),
+    )
+
+
 SUPPORTED_RESOURCE_MODELS = (
     "exp-decay-sum",
     "exp-decay-combined",
@@ -61,7 +78,7 @@ def resource_kernel_factory(
     """
     dim_x = kernel_x.dimension
     if name == "matern52":
-        res_kernel = Matern52(dimension=dim_x + 1, ARD=True)
+        res_kernel = base_kernel_factory("matern52-ard", dimension=dim_x + 1)
         if isinstance(kernel_x, WarpedKernel):
             res_kernel = WarpedKernel(kernel=res_kernel, warpings=kernel_x.warpings)
         res_mean = mean_x
@@ -73,7 +90,7 @@ def resource_kernel_factory(
         else:
             warpings = [res_warping]
         res_kernel = WarpedKernel(
-            kernel=Matern52(dimension=dim_x + 1, ARD=True),
+            kernel=base_kernel_factory("matern52-ard", dimension=dim_x + 1),
             warpings=warpings,
         )
         res_mean = mean_x
@@ -88,8 +105,8 @@ def resource_kernel_factory(
         num_folds = kwargs.get("num_folds")
         assert (
             num_folds is not None
-        ), f"Resource kenel '{name}' needs num_folds argument"
-        kernel_residual = Matern52(dimension=dim_x, ARD=False)
+        ), f"Resource kernel '{name}' needs num_folds argument"
+        kernel_residual = base_kernel_factory("matern52-noard", dimension=dim_x)
         res_kernel = CrossValidationKernelFunction(
             kernel_main=kernel_x,
             kernel_residual=kernel_residual,
