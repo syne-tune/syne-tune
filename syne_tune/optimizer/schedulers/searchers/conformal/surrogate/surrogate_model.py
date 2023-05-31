@@ -19,10 +19,7 @@ from typing import Dict, Optional, Tuple, List, Union
 from syne_tune.config_space import Domain
 
 
-from syne_tune.optimizer.schedulers.searchers.conformal.surrogate.model import Model
-
-
-class SurrogateModel(Model):
+class SurrogateModel:
     def __init__(
         self,
         config_space: Dict,
@@ -30,9 +27,11 @@ class SurrogateModel(Model):
         max_fit_samples: Optional[int] = None,
         random_state: Optional[np.random.RandomState] = None,
     ):
-        super(SurrogateModel, self).__init__(
-            config_space=config_space, mode=mode, random_state=random_state
-        )
+        self.random_state = random_state if random_state else np.random
+        self.config_space = config_space
+        self.mode = mode
+        self.config_candidates = []
+        self.config_seen = set()
         self._sampler = None
         self.max_fit_samples = max_fit_samples
 

@@ -67,7 +67,6 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
         quantiles: Union[int, List[float]] = 5,
         verbose: bool = False,
         valid_fraction: float = 0.0,
-        parallel: bool = False,
         **kwargs,
     ):
         super(GradientBoostingQuantileRegressor).__init__()
@@ -77,15 +76,7 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
             quantiles = np.around(quantiles, decimals=1 + int(np.log(len(quantiles))))
         self.quantiles = quantiles
         self.verbose = verbose
-        self.parallel = parallel
         self.valid_fraction = valid_fraction
-
-        if parallel:
-            from ray.util.multiprocessing import Pool
-
-            self.pool = Pool()
-        else:
-            self.pool = None
 
         self.quantile_regressors = {
             quantile: GradientBoostingRegressor(
@@ -103,23 +94,12 @@ class GradientBoostingQuantileRegressor(QuantileRegressor, GradientBoostingRegre
             x_training = df_features
             y_training = np.ravel(y)
 
-        if not self.parallel:
-            for quantile in tqdm(
-                self.quantile_regressors,
-                desc="Training Quantile Regression",
-                disable=not self.verbose,
-            ):
-                self.quantile_regressors[quantile].fit(x_training, y_training)
-        else:
-
-            def fit_worker(quantile):
-                return self.quantile_regressors[quantile].fit_worker(
-                    x_training, y_training
-                )
-
-            estimators = self.pool.map(fit_worker, self.quantiles)
-            for quantile, est in zip(self.quantiles, estimators):
-                self.quantile_regressors[quantile] = est
+        for quantile in tqdm(
+            self.quantile_regressors,
+            desc="Training Quantile Regression",
+            disable=not self.verbose,
+        ):
+            self.quantile_regressors[quantile].fit(x_training, y_training)
 
     def predict(self, df_test: pd.DataFrame) -> QuantileRegressorPredictions:
         quantile_res = {
