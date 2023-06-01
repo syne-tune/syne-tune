@@ -18,9 +18,6 @@ import numpy as np
 from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumulative
 
 
-DEFAULT_HYPERVOLUME_INDICATOR_NAME = "hypervolume_indicator"
-
-
 def hypervolume_indicator_column_generator(
     metrics_and_modes: List[Tuple[str, str]],
     reference_point: Optional[np.ndarray] = None,

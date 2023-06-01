@@ -276,7 +276,6 @@ would look like this:
 
    from syne_tune.experiments.multiobjective import (
        hypervolume_indicator_column_generator,
-       DEFAULT_HYPERVOLUME_INDICATOR_NAME,
    )
 
    # ...
@@ -285,7 +284,7 @@ would look like this:
        metrics_and_modes = [("cost", "min"), ("latency", "min")]
    )
    plot_params = PlotParameters(
-       metric=DEFAULT_HYPERVOLUME_INDICATOR_NAME,
+       metric="hypervolume_indicator",
        mode="max",
    )
    results.plot(
