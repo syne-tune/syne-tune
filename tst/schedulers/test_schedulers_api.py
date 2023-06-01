@@ -40,7 +40,12 @@ from syne_tune.optimizer.baselines import (
     ZeroShotTransfer,
     MOREA,
     NSGA2,
+    CQR,
+    ASHACQR,
     # ASHACTS,
+)
+from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+    SurrogateSearcher,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
@@ -218,6 +223,22 @@ list_schedulers_to_test = [
     RandomSearch(config_space=config_space, metric=metric1, mode=mode),
     GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
     BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
+    FIFOScheduler(
+        searcher=SurrogateSearcher(
+            mode=mode,
+            config_space=config_space,
+            metric=metric1,
+        ),
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+    ),
+    FIFOScheduler(
+        searcher="cqr",
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+    ),
     REA(
         config_space=config_space,
         metric=metric1,
@@ -317,6 +338,20 @@ list_schedulers_to_test = [
         config_space=config_space,
         metric=metric1,
     ),
+    CQR(
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+        num_init_random_draws=2,
+    ),
+    ASHACQR(
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        search_options={"num_init_random_draws": 2},
+        max_resource_attr="steps",
+    ),
     RUSHScheduler(
         resource_attr=resource_attr,
         max_t=max_t,
@@ -404,6 +439,8 @@ list_schedulers_to_test = [
         mode=mode,
     ),
 ]
+
+
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
     from syne_tune.optimizer.baselines import BoTorch
