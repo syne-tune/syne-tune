@@ -14,9 +14,6 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from benchmarking.commons.hpo_main_sagemaker import (
-    SAGEMAKER_BACKEND_EXTRA_PARAMETERS,
-)
 from syne_tune.try_import import try_import_aws_message
 
 try:
@@ -28,6 +25,9 @@ from benchmarking.commons.hpo_main_common import (
     ExtraArgsType,
     ConfigDict,
     config_from_argparse,
+)
+from benchmarking.commons.hpo_main_sagemaker import (
+    SAGEMAKER_BACKEND_EXTRA_PARAMETERS,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,

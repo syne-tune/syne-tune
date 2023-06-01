@@ -164,7 +164,6 @@ def launch_remote_experiments(
     ``"extra"``, which can be a lot), place a file ``requirements_synetune.txt`` in
     ``entry_point.parent``.
 
-
     :param configuration: ConfigDict with parameters of the benchmark.
             Must contain all parameters from
             hpo_main_local.LOCAL_LOCAL_BENCHMARK_REQUIRED_PARAMETERS

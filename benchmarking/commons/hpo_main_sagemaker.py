@@ -28,6 +28,7 @@ from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
     create_objects_for_tuner,
+    LOCAL_AND_SAGEMAKER_BACKEND_EXTRA_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
@@ -46,13 +47,9 @@ from syne_tune.tuner import Tuner
 # Maximum time a warm pool instance is kept alive, waiting to be associated with
 # a new job. Setting this too large may lead to extra costs.
 WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS = 10 * 60
-SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
-    dict(
-        name="benchmark",
-        type=str,
-        default="resnet_cifar10",
-        help="Benchmark to run",
-    ),
+
+
+SAGEMAKER_BACKEND_ONLY_EXTRA_PARAMETERS = [
     dict(
         name="max_failures",
         type=int,
@@ -70,11 +67,6 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
         ),
     ),
     dict(
-        name="instance_type",
-        type=str,
-        help="AWS SageMaker instance type (overwrites default of benchmark)",
-    ),
-    dict(
         name="start_jobs_without_delay",
         type=str2bool,
         default=False,
@@ -86,21 +78,13 @@ SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
             "feature not working optimal."
         ),
     ),
-    dict(
-        name="delete_checkpoints",
-        type=str2bool,
-        default=True,
-        help=(
-            "If 1, checkpoints files on S3 are removed at the end of the experiment."
-        ),
-    ),
-    dict(
-        name="remote_tuning_metrics",
-        type=str2bool,
-        default=True,
-        help="Remote tuning publishes metrics to Sagemaker console?",
-    ),
 ]
+
+
+SAGEMAKER_BACKEND_EXTRA_PARAMETERS = (
+    LOCAL_AND_SAGEMAKER_BACKEND_EXTRA_PARAMETERS
+    + SAGEMAKER_BACKEND_ONLY_EXTRA_PARAMETERS
+)
 
 
 def start_benchmark_sagemaker_backend(

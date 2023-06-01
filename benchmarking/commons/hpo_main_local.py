@@ -44,18 +44,14 @@ logger = logging.getLogger(__name__)
 
 
 RealBenchmarkDefinitions = Callable[..., Dict[str, RealBenchmarkDefinition]]
-LOCAL_BACKEND_EXTRA_PARAMETERS = [
+
+
+LOCAL_AND_SAGEMAKER_BACKEND_EXTRA_PARAMETERS = [
     dict(
         name="benchmark",
         type=str,
         default="resnet_cifar10",
         help="Benchmark to run",
-    ),
-    dict(
-        name="verbose",
-        type=str2bool,
-        default=False,
-        help="Verbose log output?",
     ),
     dict(
         name="instance_type",
@@ -64,16 +60,26 @@ LOCAL_BACKEND_EXTRA_PARAMETERS = [
         help="AWS SageMaker instance type",
     ),
     dict(
+        name="delete_checkpoints",
+        type=str2bool,
+        default=False,
+        help="Remove checkpoints of trials once no longer needed?",
+    ),
+    dict(
         name="remote_tuning_metrics",
         type=str2bool,
         default=True,
         help="Remote tuning publishes metrics to Sagemaker console?",
     ),
+]
+
+
+LOCAL_BACKEND_ONLY_EXTRA_PARAMETERS = [
     dict(
-        name="delete_checkpoints",
+        name="verbose",
         type=str2bool,
         default=False,
-        help="Remove checkpoints of trials once no longer needed?",
+        help="Verbose log output?",
     ),
     dict(
         name="num_gpus_per_trial",
@@ -82,6 +88,11 @@ LOCAL_BACKEND_EXTRA_PARAMETERS = [
         help="Number of GPUs to allocate to each trial",
     ),
 ]
+
+
+LOCAL_BACKEND_EXTRA_PARAMETERS = (
+    LOCAL_AND_SAGEMAKER_BACKEND_EXTRA_PARAMETERS + LOCAL_BACKEND_ONLY_EXTRA_PARAMETERS
+)
 
 
 def get_benchmark(
@@ -130,6 +141,7 @@ def create_objects_for_tuner(
     extra_tuning_job_metadata: Optional[DictStrKey] = None,
     map_method_args: Optional[MapMethodArgsType] = None,
     extra_results: Optional[ExtraResultsComposer] = None,
+    num_gpus_per_trial: int = 1,
 ) -> Dict[str, Any]:
     method_kwargs = dict(
         config_space=benchmark.config_space,
@@ -138,7 +150,7 @@ def create_objects_for_tuner(
         random_seed=effective_random_seed(master_random_seed, seed),
         resource_attr=benchmark.resource_attr,
         max_resource_attr=benchmark.max_resource_attr,
-        num_gpus_per_trial=configuration.num_gpus_per_trial,
+        num_gpus_per_trial=num_gpus_per_trial,
         scheduler_kwargs=dict(
             points_to_evaluate=benchmark.points_to_evaluate,
             search_options=dict(debug_log=verbose),
@@ -167,7 +179,7 @@ def create_objects_for_tuner(
         extra_metadata=extra_tuning_job_metadata,
     )
     metadata["instance_type"] = benchmark.instance_type
-    metadata["num_gpus_per_trial"] = configuration.num_gpus_per_trial
+    metadata["num_gpus_per_trial"] = num_gpus_per_trial
     tuner_name = configuration.experiment_tag
     if configuration.use_long_tuner_name_prefix:
         tuner_name += f"-{sanitize_sagemaker_name(configuration.benchmark)}-{seed}"
@@ -267,6 +279,7 @@ def start_benchmark_local_backend(
             extra_tuning_job_metadata=extra_tuning_job_metadata,
             map_method_args=map_method_args,
             extra_results=extra_results,
+            num_gpus_per_trial=configuration.num_gpus_per_trial,
         )
         # If this experiments runs remotely as a SageMaker training job, logs and
         # checkpoints are written to a different directory than tuning results, so
