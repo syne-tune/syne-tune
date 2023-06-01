@@ -30,14 +30,12 @@ from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
-    SKLearnEstimator,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
-    SKLearnPredictor,
-)
 from syne_tune.optimizer.schedulers.searchers.sklearn import (
     SKLearnSurrogateSearcher,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn import (
+    SKLearnEstimator,
+    SKLearnPredictor,
 )
 
 
