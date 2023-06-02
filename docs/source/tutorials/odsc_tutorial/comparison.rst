@@ -47,9 +47,11 @@ to consider in our study:
    :caption: transformer_wikitext2/benchmark_definitions.py
    :start-after: # permissions and limitations under the License.
 
-The only benchmark to consider here is our ``transformer_wikitext2`` tuning
-problem, with its default configuration space. Our study has the
-following properties:
+The only benchmark we consider in this study is our ``transformer_wikitext2``
+tuning problem, with its default configuration space (in general, many
+benchmarks can be selected from
+:func:`benchmarking.commons.benchmark_definitions.real_benchmark_definitions.real_benchmark_definitions`).
+Our study has the following properties:
 
 * We use :class:`~syne_tune.backend.LocalBackend` as execution backend, which
   runs ``n_workers=4`` trials as parallel processes. The AWS instance type is
@@ -61,10 +63,10 @@ following properties:
 These details are specified in scripts
 `hpo_main.py <remote_local.html#launching-our-study>`__ and
 `launch_remote.py <remote_local.html#launching-our-study>`__, which we will
-discuss in more detail in Module 2, along with the choice of the execution
-backend. Once all experiments have finished (if all of them are run in parallel,
-this takes a little more than ``max_wallclock_time``, or 5 hours), we can
-visualize results.
+discuss in more detail in `Module 2 <remote_local.html>`__, along with the
+choice of the execution backend. Once all experiments have finished (if all of
+them are run in parallel, this takes a little more than ``max_wallclock_time``,
+or 5 hours), we can visualize results.
 
 .. |Local transformer_wikitext2| image:: img/odsc-comparison-local-transformer_wikitext2.png
 

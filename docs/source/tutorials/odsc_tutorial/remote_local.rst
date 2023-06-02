@@ -9,8 +9,8 @@ approach, namely how to increase the *number of experiments run in parallel*.
 Launching our Study
 -------------------
 
-Here is how we specified and ran experiments of the
-`study above <comparison.html#a-comparative-study>`__. First, we specify a
+Here is how we specified and ran experiments of our
+`study <comparison.html#a-comparative-study>`__. First, we specify a
 script for launching experiments locally:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/local/hpo_main.py

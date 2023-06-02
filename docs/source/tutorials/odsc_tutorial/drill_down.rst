@@ -10,8 +10,8 @@ Plotting Learning Curves per Trial
 
 A useful step towards understanding performance differences between setups is
 to look at the learning curves of trials. Here is a script for creating such
-plots for the methods compared in the
-`study above <comparison.html#a-comparative-study>`__:
+plots for the methods compared in our
+`study <comparison.html#a-comparative-study>`__:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/local/plot_learning_curves.py
    :caption: transformer_wikitext2/local/plot_learning_curves.py
@@ -55,7 +55,7 @@ happens:
   configurations earlier than BO (in about half the time).
 
 With a small modification of the script, we can plot pairs of subfigures for
-side-to-side comparisons:
+side-by-side comparisons:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/local/plot_learning_curve_pairs.py
    :caption: transformer_wikitext2/local/plot_learning_curve_pairs.py

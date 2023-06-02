@@ -2,7 +2,7 @@ Getting Started with Hyperparameter Tuning
 ==========================================
 
 In this section, you will learn what is needed to get hyperparameter tuning up
-and running. We will look at an example, where a deep learning language model
+and running. We will look at an example where a deep learning language model
 is trained on natural language text.
 
 What is Hyperparameter Tuning?
@@ -26,8 +26,8 @@ is minimal.
 In this tutorial, we will mostly
 be focussed on making decisions and tuning free parameters in the context of
 *training machine learning models on data*, so their predictions can be used as
-part of a solution to a business problem. There are many other steps from
-initial need to deployed solution, such as understanding business requirements,
+part of a solution to a business problem. There are many other steps between the
+initial need and a deployed solution, such as understanding business requirements,
 collecting, cleaning and labeling data, monitoring and maintenance. Some of
 these can be addressed with automated tuning as well, others need different
 tools.
@@ -57,7 +57,7 @@ Annotating a Training Script
 
 First, we need a script to execute a trial, by training a model and evaluating it.
 Since training models is bread and butter to machine learners, you will have no
-problem to come up with one. We start with an example
+problem to come up with one. We start with an example:
 `training_script_report_end.py <training_scripts.html#reporting-once-at-the-end>`__.
 Ignoring the boilerplate, here are the important parts. First, we define the
 hyperparameters which should be optimized over:
