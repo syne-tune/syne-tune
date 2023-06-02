@@ -267,6 +267,9 @@ class PlotParameters:
 DataFrameColumnGenerator = Callable[[pd.DataFrame], pd.Series]
 
 
+DataFrameGroups = Dict[Tuple[int, str], List[Tuple[str, pd.DataFrame]]]
+
+
 class ComparativeResults:
     """
     This class loads, processes, and plots results of a comparative study,
@@ -435,20 +438,42 @@ class ComparativeResults:
             nrows = ncols = 1
         return nrows, ncols
 
-    def _enrich_results_per_experiment(
-        self,
-        df: pd.DataFrame,
+    @staticmethod
+    def _group_results_dataframe(df: pd.DataFrame) -> DataFrameGroups:
+        result = dict()
+        for (subplot_no, setup_name, tuner_name), tuner_df in df.groupby(
+            ["subplot_no", "setup_name", "tuner_name"]
+        ):
+            key = (int(subplot_no), setup_name)
+            value = (tuner_name, tuner_df)
+            if key in result:
+                result[key].append(value)
+            else:
+                result[key] = [value]
+        return result
+
+    @staticmethod
+    def _enrich_results(
+        grouped_dfs: DataFrameGroups,
         column_name: str,
         dataframe_column_generator: Optional[DataFrameColumnGenerator],
-    ) -> pd.DataFrame:
+    ) -> DataFrameGroups:
         if dataframe_column_generator is None:
-            return df
-        assert column_name not in df.columns, (
-            f"New column to be appended to results dataframe: {column_name} is "
-            f"already a column: {df.columns}"
-        )
-        new_column = dataframe_column_generator(df)
-        return df.assign(**{column_name: new_column})
+            return grouped_dfs
+        result = dict()
+        for key, tuner_dfs in grouped_dfs.items():
+            new_tuner_dfs = []
+            for tuner_name, tuner_df in tuner_dfs:
+                assert column_name not in tuner_df.columns, (
+                    f"New column to be appended to results dataframe: {column_name} is "
+                    f"already a column: {tuner_df.columns}"
+                )
+                new_column = dataframe_column_generator(tuner_df)
+                new_tuner_dfs.append(
+                    (tuner_name, tuner_df.assign(**{column_name: new_column}))
+                )
+            result[key] = new_tuner_dfs
+        return result
 
     def _extract_result_curves_per_experiment(
         self,
@@ -461,10 +486,26 @@ class ComparativeResults:
         extra_results: Dict[str, Any],
         prev_max_rt: Optional[float],
         xlim: Tuple[float, float],
-    ) -> Dict[str, Any]:
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Extracts curve data ``(runtimes, values)`` which go into aggregation.
+
+        :param df: Results grouped w.r.t. subplot, setup, and experiment.
+        :param plot_params: Plot parameters
+        :param extra_results_keys: If given, info is written into ``extra_results``
+        :param one_trial_special: Is this special iteration for plotting results of single
+            trial?
+        :param setup_name:
+        :param subplot_no:
+        :param extra_results: Dictionary written to if ``extra_results_keys`` are given
+        :param prev_max_rt: Only if ``one_trial_special == True``. Largest value of
+            ``runtimes`` returned for the same experiment
+        :param xlim: Range for x axis
+        :return: ``(runtimes, values)``
+        """
         metric = plot_params.metric
-        show_init_trials = plot_params.show_init_trials
         metric_multiplier = plot_params.metric_multiplier
+        show_init_trials = plot_params.show_init_trials
         if one_trial_special:
             # Filter down the dataframe
             df = df[df["trial_id"] <= show_init_trials.trial_id]
@@ -499,14 +540,13 @@ class ComparativeResults:
                     key_sequence=key_sequence + [key],
                     value=final_row[key],
                 )
-        return {"values": ys, "runtimes": rt}
+        return rt, ys
 
-    def _transform_and_aggregrate_results(
+    def _aggregate_results(
         self,
-        df: pd.DataFrame,
+        grouped_dfs: DataFrameGroups,
         plot_params: PlotParameters,
         extra_results_keys: Optional[List[str]],
-        dataframe_column_generator: Optional[DataFrameColumnGenerator],
     ) -> Dict[str, Any]:
         subplots = plot_params.subplots
         subplot_xlims = None if subplots is None else subplots.xlims
@@ -523,19 +563,7 @@ class ComparativeResults:
             setup_names = setup_names + (show_init_trials.new_setup_name,)
 
         stats = [[None] * len(setup_names) for _ in range(num_subplots)]
-        for (subplot_no, setup_name), setup_df in df.groupby(
-            ["subplot_no", "setup_name"]
-        ):
-            # Group by experiment (i.e., by tuner), and apply
-            # ``dataframe_column_generator`` if given
-            tuner_dfs = []
-            for tuner_name, tuner_df in setup_df.groupby("tuner_name"):
-                tuner_df = self._enrich_results_per_experiment(
-                    df=tuner_df,
-                    column_name=plot_params.metric,
-                    dataframe_column_generator=dataframe_column_generator,
-                )
-                tuner_dfs.append((tuner_name, tuner_df))
+        for (subplot_no, setup_name), tuner_dfs in grouped_dfs.items():
             if subplot_xlims is not None:
                 xlim = (0, subplot_xlims[subplot_no])
             if do_show_init_trials and show_init_trials.setup_name == setup_name:
@@ -559,7 +587,7 @@ class ComparativeResults:
                 runtimes = []
                 max_rt = []
                 for tuner_pos, (_, tuner_df) in enumerate(tuner_dfs):
-                    result = self._extract_result_curves_per_experiment(
+                    rt, ys = self._extract_result_curves_per_experiment(
                         df=tuner_df,
                         plot_params=plot_params,
                         extra_results_keys=extra_results_keys,
@@ -572,8 +600,7 @@ class ComparativeResults:
                         else None,
                         xlim=xlim,
                     )
-                    trajectories.append(result["values"])
-                    rt = result["runtimes"]
+                    trajectories.append(ys)
                     runtimes.append(rt)
                     max_rt.append(rt[-1])
 
@@ -604,6 +631,25 @@ class ComparativeResults:
         if extra_results_keys is not None:
             result["extra_results"] = extra_results
         return result
+
+    def _transform_and_aggregrate_results(
+        self,
+        df: pd.DataFrame,
+        plot_params: PlotParameters,
+        extra_results_keys: Optional[List[str]],
+        dataframe_column_generator: Optional[DataFrameColumnGenerator],
+    ) -> Dict[str, Any]:
+        # Group results according to subplot, setup, and tuner (experiment)
+        grouped_dfs = self._group_results_dataframe(df)
+        # If ``dataframe_column_generator`` is given, an additional column is
+        # appended to the grouped dataframes
+        grouped_dfs = self._enrich_results(
+            grouped_dfs=grouped_dfs,
+            column_name=plot_params.metric,
+            dataframe_column_generator=dataframe_column_generator,
+        )
+        # Extract curves and aggregate them
+        return self._aggregate_results(grouped_dfs, plot_params, extra_results_keys)
 
     def _plot_figure(
         self,
@@ -759,10 +805,7 @@ class ComparativeResults:
         )
         if file_name is not None:
             fig.savefig(file_name, dpi=plot_params.dpi)
-        results = {
-            "fig": fig,
-            "axs": axs,
-        }
+        results = {"fig": fig, "axs": axs}
         if extra_results_keys is not None:
             results["extra_results"] = aggregate_result["extra_results"]
         return results
