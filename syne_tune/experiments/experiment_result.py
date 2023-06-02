@@ -29,7 +29,6 @@ from syne_tune.constants import (
     ST_TUNER_CREATION_TIMESTAMP,
     ST_TUNER_TIME,
 )
-from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumulative
 from syne_tune.try_import import try_import_aws_message, try_import_visual_message
 from syne_tune.util import experiment_path, s3_experiment_path
 
@@ -105,6 +104,10 @@ class ExperimentResult:
         ), f"All metrics must be maximized but the following modes were selected: {metric_modes}"
 
         if self.results is not None and len(self.results) > 0:
+            from syne_tune.optimizer.schedulers.multiobjective.utils import (
+                hypervolume_cumulative,
+            )
+
             results_df = self.results.sort_values(ST_TUNER_TIME)
 
             x = self.results.loc[:, ST_TUNER_TIME]
