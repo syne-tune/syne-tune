@@ -91,6 +91,7 @@ What's New?
    tutorials/developer/README
    tutorials/pasha/pasha
    tutorials/transfer_learning/transfer_learning
+   tutorials/odsc_tutorial/README
 
 .. toctree::
    :name: API docs
