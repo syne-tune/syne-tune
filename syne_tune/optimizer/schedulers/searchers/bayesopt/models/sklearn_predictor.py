@@ -47,7 +47,7 @@ class SKLearnPredictorWrapper(BasePredictor):
     def backward_gradient(
         self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
     ) -> List[np.ndarray]:
-        """
+        r"""
         Computes the gradient :math:`\nabla f(x)` for an acquisition
         function :math:`f(x)`, where :math:`x` is a single input point. This
         is using reverse mode differentiation, the head gradients are passed
