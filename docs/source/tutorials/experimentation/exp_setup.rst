@@ -88,9 +88,9 @@ Recording Extra Results
 Next, we need to write the ``hpo_main.py`` script which runs a single experiment.
 As shown `here <../benchmarking/bm_simulator.html#defining-the-experiment>`__,
 this is mostly about selecting the correct ``main`` function among
-:func:`~benchmarking.commons.hpo_main_simulator.main`,
-:func:`~benchmarking.commons.hpo_main_local.main`,
-:func:`~benchmarking.commons.hpo_main_sagemaker.main`, depending on the trial
+:func:`benchmarking.commons.hpo_main_simulator.main`,
+:func:`benchmarking.commons.hpo_main_local.main`,
+:func:`benchmarking.commons.hpo_main_sagemaker.main`, depending on the trial
 backend we want to use. In our case, we also would like to record extra
 information about the experiment. Here is the script:
 
@@ -98,7 +98,7 @@ information about the experiment. Here is the script:
    :caption: benchmarking/nursery/demo_experiment/hpo_main.py
    :start-after: # permissions and limitations under the License.
 
-* As usual, we import :func:`~benchmarking.commons.hpo_main_simulator.main`
+* As usual, we import :func:`benchmarking.commons.hpo_main_simulator.main`
   (we use the simulator backend) and call it, passing our ``methods`` and
   ``benchmark_definitions``. We also pass ``extra_results``, since we would
   like to record extra results.
