@@ -10,10 +10,21 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import copy
+import numpy as np
+from typing import Optional, List, Dict, Any
+
+from syne_tune.try_import import try_import_botorch_message
+
+try:
+    from torch import Tensor
+    import torch
+    from botorch.utils.transforms import normalize
+except ImportError:
+    print(try_import_botorch_message())
+
 import syne_tune.config_space as sp
 from syne_tune.optimizer.baselines import BoTorch
-
-from typing import Optional, List, Dict, Any
 from syne_tune.optimizer.schedulers.searchers.botorch import BoTorchSearcher
 from syne_tune.optimizer.baselines import _create_searcher_kwargs
 
@@ -21,17 +32,8 @@ from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
 )
 from syne_tune.optimizer.schedulers.searchers.utils import (
-    HyperparameterRanges,
     make_hyperparameter_ranges,
 )
-
-import numpy as np
-import copy
-from torch import Tensor
-import torch
-from botorch.utils.transforms import normalize
-
-# TODO: clean up imports
 
 
 def parse_value(val):
@@ -53,7 +55,7 @@ class BoTorchTransfer(BoTorch):
         config_space: dict,
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        new_task_id: str,  # TODO: string for now but want to allow ordinal
+        new_task_id: Any,
         random_seed: Optional[int] = None,
         encode_tasks_ordinal: bool = False,
         **kwargs,
@@ -70,7 +72,7 @@ class BoTorchTransfer(BoTorch):
         searcher_kwargs["transfer_learning_evaluations"] = transfer_learning_evaluations
         searcher_kwargs["new_task_id"] = new_task_id
         searcher_kwargs["encode_tasks_ordinal"] = encode_tasks_ordinal
-        super(BoTorch, self).__init__(  # TODO: change to BoTorchTransfer?
+        super(BoTorch, self).__init__(
             config_space=config_space,
             metric=metric,
             searcher=BoTorchTransferSearcher(**searcher_kwargs),
@@ -85,7 +87,7 @@ class BoTorchTransferSearcher(BoTorchSearcher):
         config_space: dict,
         metric: str,
         transfer_learning_evaluations: Dict[str, TransferLearningTaskEvaluations],
-        new_task_id: Any,  # TODO: string for now but want to allow ordinal
+        new_task_id: Any,
         points_to_evaluate: Optional[List[dict]] = None,
         allow_duplicates: bool = False,
         num_init_random: int = 0,
@@ -143,7 +145,6 @@ class BoTorchTransferSearcher(BoTorchSearcher):
                 self._metric
             )
             all_tasks.append(obs.flatten())
-        # TODO: dtype of returned array
         return np.hstack(all_tasks)
 
     def _extend_config_with_task(self, config: dict, task_val: str) -> dict:
@@ -173,7 +174,7 @@ class BoTorchTransferSearcher(BoTorchSearcher):
         for jj in range(J):
             for ii in range(I):
                 if torch.isnan(X_normalized[ii, jj]):
-                    X_normalized[:, jj] = X[:, jj]  # hacky, to avoid nan values
+                    X_normalized[:, jj] = X[:, jj]  # Avoid nan values
         return X_normalized
 
     def _get_gp_bounds(self):
