@@ -18,7 +18,7 @@ to consult the benchmarking tutorial for background information.
 
 .. note::
    In order to use the *benchmarking* framework, you need to have
-   `installed Syne Tune from source <getting_started.html#installation>`__.
+   `installed Syne Tune from source <../../getting_started.html#installation>`__.
 
 .. toctree::
    :name: Rapid Experimentation with Syne Tune Sections

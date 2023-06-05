@@ -9,7 +9,7 @@ problems.
 
 .. note::
    This tutorial makes use of the *benchmarking* framework, you need to have
-   `installed Syne Tune from source <getting_started.html#installation>`__
+   `installed Syne Tune from source <../../getting_started.html#installation>`__
    to run it.
 
 .. toctree::

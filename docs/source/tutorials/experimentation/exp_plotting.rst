@@ -117,7 +117,7 @@ wasteful repetitions. Here are some ways in which Syne Tune can support you.
   You do not have to re-run baselines, but can easily combine older results
   with more recent ones. This is explained
   `here <../visualization/comparisons.html#combining-sesults-from-multiple-studies>`__.
-* When running many experiments, some will fail. Syne Tune supports you in not
+* When running many experiments, some may fail. Syne Tune supports you in not
   having to re-run everything from scratch. As already noted above, when
   creating aggregate plots, it is important not to use incomplete results
   stored for failed experiments. The cleanest way to do so is to remove these
