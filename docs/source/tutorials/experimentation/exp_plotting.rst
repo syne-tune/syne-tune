@@ -106,8 +106,8 @@ Moreover, we obtain an output for extra results, as follows:
   also retrieve extra results. This method returns a dictionary, whose
   "extra_results" entry is what we need.
 
-Advanced Experimenteering
--------------------------
+Advanced Experimenting
+----------------------
 
 Once you start to run many experiments, you will get better at avoiding
 wasteful repetitions. Here are some ways in which Syne Tune can support you.
