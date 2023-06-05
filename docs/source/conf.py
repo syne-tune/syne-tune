@@ -10,10 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
-# This file has been taken from Ray. The reason for reusing the file is to be able to support the same API when
-# defining search space while avoiding to have Ray as a required dependency. We may want to add functionality in the
-# future.
 import datetime
 import os
 import shutil
@@ -22,7 +18,7 @@ import sys
 import syne_tune
 
 
-sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("../../"))
 
 
 def run_apidoc(app):
