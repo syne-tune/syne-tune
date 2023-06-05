@@ -85,7 +85,6 @@ def compute_iqm_bootstrap(
     CI estimates are available, they are more expensive to compute.
 
     Note: Error bar scale depends on number of runs `n` via `1 / sqrt(n)`.
-
     """
 
     def _remove_mass(amat: np.ndarray, mass: float, col_index):
