@@ -605,9 +605,17 @@ class ComparativeResults:
                     max_rt.append(rt[-1])
 
                 setup_id = setup_names.index(new_setup_name)
-                stats[subplot_no][setup_id] = aggregate_and_errors_over_time(
-                    errors=trajectories, runtimes=runtimes, mode=aggregate_mode
-                )
+                if len(traj) > 1:
+                    stats[subplot_no][setup_id] = aggregate_and_errors_over_time(
+                        errors=trajectories, runtimes=runtime, mode=aggregate_mode
+                    )
+                else:
+                    # If there is only a single seed, we plot a curve without
+                    # error bars
+                    stats[subplot_no][setup_id] = {
+                        "time": runtime[0],
+                        "aggregate": traj[0],
+                    }
                 if not one_trial_special:
                     if subplots is not None:
                         msg = f"[{subplot_no}, {setup_name}]: "
@@ -708,8 +716,13 @@ class ComparativeResults:
                     color = f"C{i}"
                     x = curves["time"]
                     ax.plot(x, curves["aggregate"], color=color, label=setup_name)
-                    ax.plot(x, curves["lower"], color=color, alpha=0.4, linestyle="--")
-                    ax.plot(x, curves["upper"], color=color, alpha=0.4, linestyle="--")
+                    if "lower" in curves:
+                        ax.plot(
+                            x, curves["lower"], color=color, alpha=0.4, linestyle="--"
+                        )
+                        ax.plot(
+                            x, curves["upper"], color=color, alpha=0.4, linestyle="--"
+                        )
             if subplot_xlims is not None:
                 xlim = (0, subplot_xlims[subplot_no])
             if xlim is not None:

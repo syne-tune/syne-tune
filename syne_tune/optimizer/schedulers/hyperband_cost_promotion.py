@@ -40,7 +40,7 @@ class CostPromotionRungEntry(PromotionRungEntry):
 
 
 class CostPromotionRungSystem(PromotionRungSystem):
-    """
+    r"""
     Cost-aware extension of promotion-based asynchronous Hyperband (ASHA).
 
     This code is equivalent with base

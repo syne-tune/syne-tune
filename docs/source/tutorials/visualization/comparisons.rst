@@ -117,6 +117,10 @@ The figure for benchmark ``nas201-cifar-100`` looks as follows:
    subplots and show the *same* setups in each subplot. In any case, the
    mapping of setups to colors is fixed and the same in every subplot.
 
+.. note::
+   Plotting features presented here can also be used to visualize results
+   for a single seed. In this case, there are no error bars.
+
 Additional Features
 -------------------
 

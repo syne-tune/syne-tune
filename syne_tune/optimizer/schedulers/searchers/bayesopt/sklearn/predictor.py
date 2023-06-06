@@ -37,7 +37,7 @@ class SKLearnPredictor:
     def backward_gradient(
         self, input: np.ndarray, head_gradients: Dict[str, np.ndarray]
     ) -> np.ndarray:
-        """
+        r"""
         Needs to be implemented only if gradient-based local optimization of
         an acquisition function is supported.
 

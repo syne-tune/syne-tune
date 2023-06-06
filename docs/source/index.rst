@@ -88,9 +88,11 @@ What's New?
    tutorials/multifidelity/README
    tutorials/benchmarking/README
    tutorials/visualization/README
+   tutorials/experimentation/README
    tutorials/developer/README
    tutorials/pasha/pasha
    tutorials/transfer_learning/transfer_learning
+   tutorials/odsc_tutorial/README
 
 .. toctree::
    :name: API docs

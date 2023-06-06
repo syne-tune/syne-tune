@@ -12,10 +12,10 @@
 # permissions and limitations under the License.
 import argparse
 import os
-import time
 import logging
 import math
 from pathlib import Path
+import time
 
 try:
     # Benchmark-specific imports are done here, in order to avoid import
@@ -72,7 +72,7 @@ _config_space = {
 DATASET_PATH = "https://raw.githubusercontent.com/pytorch/examples/master/word_language_model/data/wikitext-2/"
 
 
-def download_data(root):
+def download_wikitext2_dataset(root):
     import urllib
 
     path = os.path.join(root, "wikitext-2")
@@ -185,7 +185,7 @@ def setprec(t, precision):
         raise ValueError(f"invalid precision string {precision}")
 
 
-def _download_data(config):
+def download_dataset(config):
     path = config["input_data_dir"]
     os.makedirs(path, exist_ok=True)
     # Lock protection is needed for backends which run multiple worker
@@ -195,7 +195,7 @@ def _download_data(config):
     try:
         with lock.acquire(timeout=120, poll_intervall=1):
             # Make sure files are present locally
-            download_data(path)
+            download_wikitext2_dataset(path)
             corpus = Corpus(os.path.join(path, "wikitext-2"))
     except Timeout:
         print(
@@ -203,113 +203,85 @@ def _download_data(config):
             flush=True,
         )
         # Make sure files are present locally
-        download_data(path)
+        download_wikitext2_dataset(path)
         corpus = Corpus(os.path.join(path, "wikitext-2"))
     return corpus
 
 
-def objective(config):
-    eval_batch_size = 10
-
-    # Set the random seed manually for reproducibility.
-    torch.manual_seed(config["seed"])
-    use_cuda = config["use_cuda"]
-    if torch.cuda.is_available() and not use_cuda:
-        print("WARNING: You have a CUDA device, so you should run with --use-cuda 1")
-    device = torch.device("cuda" if use_cuda else "cpu")
-
-    #######################################################################
-    # Load data
-    #######################################################################
-    corpus = _download_data(config)
-    train_data = batchify(corpus.train, config["batch_size"], device)
-    val_data = batchify(corpus.valid, eval_batch_size, device)
-
-    # Do not want to count the time to download the dataset, which can be
-    # substantial the first time
-    ts_start = time.time()
-    report = Reporter()
-
-    #######################################################################
-    # Build the model
-    #######################################################################
-    ntokens = len(corpus.dictionary)
+def evaluate(model, valid_data, criterion, config, ntokens):
+    # Turn on evaluation mode which disables dropout
+    model.eval()
     bptt = config["bptt"]
-    precision = config["precision"]
-
-    def evaluate(data_source):
-        # Turn on evaluation mode which disables dropout.
-        model.eval()
-        total_loss = 0.0
-        with torch.no_grad():
-            for i in range(0, data_source.size(0) - 1, bptt):
-                data, targets = get_batch(data_source, i, bptt)
-                output = model(data)
-                output = output.view(-1, ntokens)
-                total_loss += len(data) * criterion(output, targets).item()
-        return total_loss / (len(data_source) - 1)
-
-    def train(optimizer, epoch):
-        # Turn on training mode which enables dropout.
-        model.train()
-        total_loss = 0.0
-        epoch_loss = 0.0
-        start_time = time.time()
-        first_loss = None
-        for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
-            data, targets = get_batch(train_data, i, bptt)
-            # Starting each batch, we detach the hidden state from how it was previously produced.
-            # If we didn't, the model would try backpropagating all the way to start of the dataset.
-
-            optimizer.zero_grad()
+    total_loss = 0.0
+    with torch.no_grad():
+        for i in range(0, valid_data.size(0) - 1, bptt):
+            data, targets = get_batch(valid_data, i, bptt)
             output = model(data)
             output = output.view(-1, ntokens)
-            loss = criterion(output, targets)
-            if torch.isnan(loss):
-                exit(0)
+            total_loss += len(data) * criterion(output, targets).item()
+    return total_loss / (len(valid_data) - 1)
+
+
+def train(model, train_data, optimizer, criterion, config, ntokens, epoch):
+    # Turn on training mode which enables dropout
+    model.train()
+    bptt = config["bptt"]
+    precision = config["precision"]
+    log_interval = config["log_interval"]
+    total_loss = 0.0
+    epoch_loss = 0.0
+    start_time = time.time()
+    first_loss = None
+    for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
+        data, targets = get_batch(train_data, i, bptt)
+        # Starting each batch, we detach the hidden state from how it was previously produced.
+        # If we didn't, the model would try backpropagating all the way to start of the dataset.
+        optimizer.zero_grad()
+        output = model(data)
+        output = output.view(-1, ntokens)
+        loss = criterion(output, targets)
+        if torch.isnan(loss):
+            exit(0)
+        if precision == "half":
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        clip = config["clip"]
+        if clip > 0:
+            # ``clip_grad_norm`` helps prevent the exploding gradient problem in RNNs / LSTMs.
             if precision == "half":
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
+                params = amp.master_params(optimizer)
             else:
-                loss.backward()
-
-            clip = config["clip"]
-            if clip > 0:
-                # ``clip_grad_norm`` helps prevent the exploding gradient problem in RNNs / LSTMs.
-                if precision == "half":
-                    params = amp.master_params(optimizer)
-                else:
-                    params = model.parameters()
-                torch.nn.utils.clip_grad_norm_(params, clip)
-
-            optimizer.step()
-
-            total_loss += loss.item()
-            epoch_loss += len(data) * loss.item()
-
-            log_interval = config["log_interval"]
-            if batch % log_interval == 0 and batch > 0:
-                cur_loss = total_loss / log_interval
-                elapsed = time.time() - start_time
-                print(
-                    "| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.5f} | ms/batch {:5.2f} | "
-                    "loss {:5.2f} | ppl {:8.2f}".format(
-                        epoch,
-                        batch,
-                        len(train_data) // bptt,
-                        config["lr"],
-                        elapsed * 1000 / log_interval,
-                        cur_loss,
-                        np.exp(cur_loss),
-                    )
+                params = model.parameters()
+            torch.nn.utils.clip_grad_norm_(params, clip)
+        optimizer.step()
+        total_loss += loss.item()
+        epoch_loss += len(data) * loss.item()
+        if batch % log_interval == 0 and batch > 0:
+            cur_loss = total_loss / log_interval
+            elapsed = time.time() - start_time
+            print(
+                "| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.5f} | ms/batch {:5.2f} | "
+                "loss {:5.2f} | ppl {:8.2f}".format(
+                    epoch,
+                    batch,
+                    len(train_data) // bptt,
+                    config["lr"],
+                    elapsed * 1000 / log_interval,
+                    cur_loss,
+                    np.exp(cur_loss),
                 )
-                total_loss = 0
-                start_time = time.time()
-                if first_loss is None:
-                    first_loss = cur_loss
+            )
+            total_loss = 0
+            start_time = time.time()
+            if first_loss is None:
+                first_loss = cur_loss
+    return epoch_loss / (len(train_data) - 1), first_loss
 
-        return epoch_loss / (len(train_data) - 1), first_loss
 
+def create_training_objects(config, ntokens, device):
+    precision = config["precision"]
     d_model = config["d_model"]
     model = TransformerModel(
         ntokens,
@@ -319,11 +291,9 @@ def objective(config):
         nlayers=config["nlayers"],
         dropout=config["dropout"],
     )
-
     model = model.to(device)
     model = setprec(model, precision)
     criterion = nn.NLLLoss()
-
     if config["optimizer_name"] == "sgd":
         optimizer = torch.optim.SGD(
             model.parameters(),
@@ -337,32 +307,43 @@ def objective(config):
             betas=(config["momentum"], 0.999),
         )
     else:
-        raise ValueError()
-
+        raise ValueError(f"optimizer_name = {config['optimizer_name']} not supported")
     # half-precision black magic
     if precision == "half":
         model, optimizer = amp.initialize(
             model, optimizer, opt_level="O1", min_loss_scale=0.0001, verbosity=0
         )
+    return model, optimizer, criterion
 
+
+def objective(config):
+    torch.manual_seed(config["seed"])
+    use_cuda = config["use_cuda"]
+    if torch.cuda.is_available() and not use_cuda:
+        print("WARNING: You have a CUDA device, so you should run with --use-cuda 1")
+    device = torch.device("cuda" if use_cuda else "cpu")
+    # Download data, setup data loaders
+    corpus = download_dataset(config)
+    ntokens = len(corpus.dictionary)
+    train_data = batchify(corpus.train, bsz=config["batch_size"], device=device)
+    valid_data = batchify(corpus.valid, bsz=10, device=device)
+    # Do not want to count the time to download the dataset, which can be
+    # substantial the first time
+    ts_start = time.time()
+    # Used for reporting metrics to Syne Tune
+    report = Reporter()
+    # Create model and optimizer
+    model, optimizer, criterion = create_training_objects(config, ntokens, device)
     # Checkpointing
-    # Note that ``best_val_loss`` and ``logs`` are also part of the state to be
-    # checkpointed. In order for things to work out, we keep them in a
-    # dict (otherwise, they'd not be mutable in ``load_model_fn``,
-    # ``save_model_fn``).
-    mutable_state = {"best_val_loss": None, "logs": []}
     state_dict_objects = {
         "model": model,
         "optimizer": optimizer,
     }
-    if precision == "half":
+    if config["precision"] == "half":
         state_dict_objects["amp"] = amp
-
     load_model_fn, save_model_fn = pytorch_load_save_functions(
         state_dict_objects=state_dict_objects,
-        mutable_state=mutable_state,
     )
-
     # Resume from checkpoint (optional)
     resume_from = resume_from_checkpointed_model(config, load_model_fn)
 
@@ -370,9 +351,8 @@ def objective(config):
     try:
         for epoch in range(resume_from + 1, config[MAX_RESOURCE_ATTR] + 1):
             epoch_start_time = time.time()
-            train_loss, first_loss = train(optimizer, epoch)
-            val_loss = evaluate(val_data)
-
+            train(model, train_data, optimizer, criterion, config, ntokens, epoch)
+            val_loss = evaluate(model, valid_data, criterion, config, ntokens)
             curr_ts = time.time()
             elapsed_time = curr_ts - ts_start
             duration = curr_ts - epoch_start_time
@@ -382,30 +362,15 @@ def objective(config):
                 "valid ppl {:8.2f}".format(epoch, duration, val_loss, np.exp(val_loss))
             )
             print("-" * 89)
-            mutable_state["logs"].append(
-                dict(
-                    epoch=epoch,
-                    train_loss=train_loss,
-                    val_loss=val_loss,
-                    first_loss=first_loss,
-                    duration=duration,
-                )
-            )
-            best_val_loss = mutable_state["best_val_loss"]
-            if not best_val_loss or val_loss < best_val_loss:
-                mutable_state["best_val_loss"] = val_loss
-
             # Write checkpoint (optional)
             checkpoint_model_at_rung_level(config, save_model_fn, epoch)
-
-            # report validation loss back to Syne Tune
+            # Report metrics back to Syne Tune
             report_kwargs = {
                 RESOURCE_ATTR: epoch,
                 METRIC_NAME: val_loss,
                 ELAPSED_TIME_ATTR: elapsed_time,
             }
             report(**report_kwargs)
-
     except KeyboardInterrupt:
         print("-" * 89)
         print("Exiting from training early")

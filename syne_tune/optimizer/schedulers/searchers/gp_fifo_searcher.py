@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class GPFIFOSearcher(BayesianOptimizationSearcher):
-    """Gaussian process Bayesian optimization for FIFO scheduler
+    r"""Gaussian process Bayesian optimization for FIFO scheduler
 
     This searcher must be used with
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
