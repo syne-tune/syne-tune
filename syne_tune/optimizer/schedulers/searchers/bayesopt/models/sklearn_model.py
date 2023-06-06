@@ -10,24 +10,71 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
+
+import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.tuning_job_state import (
     TuningJobState,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_base import (
+    BasePredictor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
     Estimator,
     transform_state_to_data,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn import (
+    SKLearnPredictor,
     SKLearnEstimator,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_predictor import (
-    SKLearnPredictorWrapper,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     Predictor,
 )
+
+
+class SKLearnPredictorWrapper(BasePredictor):
+    """
+    Wrapper class for sklearn predictors returned by ``fit_from_state`` of
+    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_estimator.SKLearnEstimatorWrapper`.
+    """
+
+    def __init__(
+        self,
+        sklearn_predictor: SKLearnPredictor,
+        state: TuningJobState,
+        active_metric: Optional[str] = None,
+    ):
+        super().__init__(state, active_metric)
+        self.sklearn_predictor = sklearn_predictor
+
+    def predict(self, inputs: np.ndarray) -> List[Dict[str, np.ndarray]]:
+        means, stddevs = self.sklearn_predictor.predict(X=inputs)
+        return [{"mean": means, "std": stddevs}]
+
+    def backward_gradient(
+        self, input: np.ndarray, head_gradients: List[Dict[str, np.ndarray]]
+    ) -> List[np.ndarray]:
+        r"""
+        Computes the gradient :math:`\nabla f(x)` for an acquisition
+        function :math:`f(x)`, where :math:`x` is a single input point. This
+        is using reverse mode differentiation, the head gradients are passed
+        by the acquisition function. The head gradients are
+        :math:`\partial_k f`, where :math:`k` runs over the statistics
+        returned by :meth:`predict` for the single input point :math:`x`.
+        The shape of head gradients is the same as the shape of the
+        statistics.
+
+        :param input: Single input point :math:`x`, shape ``(d,)``
+        :param head_gradients: See above
+        :return: Gradient :math:`\nabla f(x)` (one-length list)
+        """
+        assert len(head_gradients) == 1
+        return [
+            self.sklearn_predictor.backward_gradient(
+                input=input, head_gradients=head_gradients[0]
+            )
+        ]
 
 
 class SKLearnEstimatorWrapper(Estimator):

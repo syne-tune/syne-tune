@@ -22,10 +22,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.predictor import (
     SKLearnPredictor,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_estimator import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model import (
     SKLearnEstimatorWrapper,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_predictor import (
     SKLearnPredictorWrapper,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (

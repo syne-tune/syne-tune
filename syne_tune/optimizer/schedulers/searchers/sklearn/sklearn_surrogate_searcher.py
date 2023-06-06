@@ -16,7 +16,7 @@ from typing import Optional, List, Dict, Any
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_estimator import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model import (
     SKLearnEstimatorWrapper,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
