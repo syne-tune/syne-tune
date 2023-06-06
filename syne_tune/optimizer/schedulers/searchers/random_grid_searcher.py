@@ -54,7 +54,7 @@ class RandomSearcher(StochasticAndFilterDuplicatesSearcher):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
+        metric: Union[List[str], str],
         points_to_evaluate: Optional[List[dict]] = None,
         debug_log: Union[bool, DebugLogPrinter] = False,
         resource_attr: Optional[str] = None,
@@ -126,12 +126,16 @@ class RandomSearcher(StochasticAndFilterDuplicatesSearcher):
 
     def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         if self._debug_log is not None:
-            metric_val = result[self._metric]
             if self._resource_attr is not None:
                 # For HyperbandScheduler, also add the resource attribute
                 resource = int(result[self._resource_attr])
                 trial_id = trial_id + f":{resource}"
-            msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
+            msg = f"Update for trial_id {trial_id}: "
+            if isinstance(self._metric, list):
+                parts = [f"{name} = {result[name]:.3f}" for name in self._metric]
+                msg += ",".join(parts)
+            else:
+                msg += f"{result[self._metric]:.3f}"
             logger.info(msg)
 
     def clone_from_state(self, state: Dict[str, Any]):

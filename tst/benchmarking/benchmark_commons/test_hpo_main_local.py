@@ -17,8 +17,8 @@ from benchmarking.commons.default_baselines import RandomSearch
 from benchmarking.commons.hpo_main_common import ConfigDict
 from benchmarking.nursery.benchmark_multiobjective.baselines import (
     Methods,
-    MOREABench,
-    LSOBOBench,
+    MOREA,
+    LSOBO,
 )
 from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
     nas201_mo_benchmark,
@@ -42,8 +42,8 @@ class HPOMainLocalTests(unittest.TestCase):
     ):
         methods = {
             Methods.RS: lambda method_arguments: RandomSearch(method_arguments),
-            Methods.MOREA: lambda method_arguments: MOREABench(method_arguments),
-            Methods.LSOBO: lambda method_arguments: LSOBOBench(method_arguments),
+            Methods.MOREA: lambda method_arguments: MOREA(method_arguments),
+            Methods.LSOBO: lambda method_arguments: LSOBO(method_arguments),
         }
 
         benchmark_definitions = {

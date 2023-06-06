@@ -54,17 +54,15 @@ class MultiObjectiveRegularizedEvolution(RegularizedEvolution):
     ):
 
         if isinstance(mode, str):
-            modes = [mode] * len(metric)
-        else:
-            modes = mode
+            mode = [mode] * len(metric)
 
         super(MultiObjectiveRegularizedEvolution, self).__init__(
             config_space,
             metric=metric,
-            mode=modes,
             points_to_evaluate=points_to_evaluate,
             population_size=population_size,
             sample_size=sample_size,
+            mode=mode,
             **kwargs,
         )
 
@@ -74,7 +72,6 @@ class MultiObjectiveRegularizedEvolution(RegularizedEvolution):
             self._multiobjective_priority = multiobjective_priority
 
     def _update(self, trial_id: str, config: dict, result: dict):
-
         results = {}
         for mode, metric in zip(self._mode, self._metric):
             value = result[metric]

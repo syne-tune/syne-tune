@@ -37,6 +37,7 @@ from syne_tune.optimizer.baselines import (
     DEHB as _DEHB,
     SyncMOBSTER as _SyncMOBSTER,
     MOREA as _MOREA,
+    NSGA2 as _NSGA2,
 )
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler as _LinearScalarizedScheduler,
@@ -139,9 +140,13 @@ def SyncMOBSTER(method_arguments: MethodArguments, **kwargs):
     return _SyncMOBSTER(**_baseline_kwargs(method_arguments, kwargs, is_multifid=True))
 
 
-def MOREABench(method_arguments: MethodArguments, **kwargs):
+def MOREA(method_arguments: MethodArguments, **kwargs):
     return _MOREA(**_baseline_kwargs(method_arguments, kwargs))
 
 
-def LSOBOBench(method_arguments: MethodArguments, **kwargs):
+def LSOBO(method_arguments: MethodArguments, **kwargs):
     return _LinearScalarizedScheduler(**_baseline_kwargs(method_arguments, kwargs))
+
+
+def NSGA2(method_arguments: MethodArguments, **kwargs):
+    return _NSGA2(**_baseline_kwargs(method_arguments, kwargs))

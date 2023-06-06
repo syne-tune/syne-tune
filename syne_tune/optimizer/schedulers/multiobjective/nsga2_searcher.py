@@ -67,6 +67,10 @@ def _create_multiobjective_problem(config_space: Dict[str, Any], n_obj: int, **k
     )
 
 
+# TODO:
+# - ``points_to_evaluate`` should be used, to initialize the population
+# - Do we want the first K configs to be selected at random, so the
+#   behavior is the same to other searchers?
 class NSGA2Searcher(StochasticSearcher):
     """
     This is a wrapper around the NSGA-2 [1] implementation of pymoo [2].

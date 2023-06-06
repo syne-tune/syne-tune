@@ -10,25 +10,3 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.default_baselines import (
-    RandomSearch,
-    MOREA,
-    LSOBO,
-)
-
-
-class Methods:
-    RS = "RS"
-    MOREA = "MOREA"
-    LSOBO = "LSOBO"
-
-
-methods = {
-    Methods.RS: lambda method_arguments: RandomSearch(method_arguments),
-    Methods.MOREA: lambda method_arguments: MOREA(
-        method_arguments, population_size=10, sample_size=5
-    ),
-    Methods.LSOBO: lambda method_arguments: LSOBO(
-        method_arguments, searcher="bayesopt"
-    ),
-}
