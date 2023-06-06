@@ -605,16 +605,16 @@ class ComparativeResults:
                     max_rt.append(rt[-1])
 
                 setup_id = setup_names.index(new_setup_name)
-                if len(traj) > 1:
+                if len(trajectories) > 1:
                     stats[subplot_no][setup_id] = aggregate_and_errors_over_time(
-                        errors=trajectories, runtimes=runtime, mode=aggregate_mode
+                        errors=trajectories, runtimes=runtimes, mode=aggregate_mode
                     )
                 else:
                     # If there is only a single seed, we plot a curve without
                     # error bars
                     stats[subplot_no][setup_id] = {
-                        "time": runtime[0],
-                        "aggregate": traj[0],
+                        "time": runtimes[0],
+                        "aggregate": trajectories[0],
                     }
                 if not one_trial_special:
                     if subplots is not None:
