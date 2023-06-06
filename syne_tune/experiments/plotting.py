@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Any, Optional, Tuple, Union, List, Iterable
+from typing import Dict, Any, Optional, Tuple, Union, List, Iterable, Callable
 from dataclasses import dataclass
 import logging
 import copy
@@ -18,9 +18,7 @@ import copy
 import numpy as np
 import pandas as pd
 
-from syne_tune.constants import (
-    ST_TUNER_TIME,
-)
+from syne_tune.constants import ST_TUNER_TIME
 from syne_tune.experiments.aggregate_results import aggregate_and_errors_over_time
 from syne_tune.experiments.results_utils import (
     MapMetadataToSetup,
@@ -266,6 +264,12 @@ class PlotParameters:
         return PlotParameters(**new_params)
 
 
+DataFrameColumnGenerator = Callable[[pd.DataFrame], pd.Series]
+
+
+DataFrameGroups = Dict[Tuple[int, str], List[Tuple[str, pd.DataFrame]]]
+
+
 class ComparativeResults:
     """
     This class loads, processes, and plots results of a comparative study,
@@ -434,9 +438,113 @@ class ComparativeResults:
             nrows = ncols = 1
         return nrows, ncols
 
-    def _aggregrate_results(
+    @staticmethod
+    def _group_results_dataframe(df: pd.DataFrame) -> DataFrameGroups:
+        result = dict()
+        for (subplot_no, setup_name, tuner_name), tuner_df in df.groupby(
+            ["subplot_no", "setup_name", "tuner_name"]
+        ):
+            key = (int(subplot_no), setup_name)
+            value = (tuner_name, tuner_df)
+            if key in result:
+                result[key].append(value)
+            else:
+                result[key] = [value]
+        return result
+
+    @staticmethod
+    def _enrich_results(
+        grouped_dfs: DataFrameGroups,
+        column_name: str,
+        dataframe_column_generator: Optional[DataFrameColumnGenerator],
+    ) -> DataFrameGroups:
+        if dataframe_column_generator is None:
+            return grouped_dfs
+        result = dict()
+        for key, tuner_dfs in grouped_dfs.items():
+            new_tuner_dfs = []
+            for tuner_name, tuner_df in tuner_dfs:
+                assert column_name not in tuner_df.columns, (
+                    f"New column to be appended to results dataframe: {column_name} is "
+                    f"already a column: {tuner_df.columns}"
+                )
+                new_column = dataframe_column_generator(tuner_df)
+                new_tuner_dfs.append(
+                    (tuner_name, tuner_df.assign(**{column_name: new_column}))
+                )
+            result[key] = new_tuner_dfs
+        return result
+
+    def _extract_result_curves_per_experiment(
         self,
         df: pd.DataFrame,
+        plot_params: PlotParameters,
+        extra_results_keys: Optional[List[str]],
+        one_trial_special: bool,
+        setup_name: str,
+        subplot_no: int,
+        extra_results: Dict[str, Any],
+        prev_max_rt: Optional[float],
+        xlim: Tuple[float, float],
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Extracts curve data ``(runtimes, values)`` which go into aggregation.
+
+        :param df: Results grouped w.r.t. subplot, setup, and experiment.
+        :param plot_params: Plot parameters
+        :param extra_results_keys: If given, info is written into ``extra_results``
+        :param one_trial_special: Is this special iteration for plotting results of single
+            trial?
+        :param setup_name:
+        :param subplot_no:
+        :param extra_results: Dictionary written to if ``extra_results_keys`` are given
+        :param prev_max_rt: Only if ``one_trial_special == True``. Largest value of
+            ``runtimes`` returned for the same experiment
+        :param xlim: Range for x axis
+        :return: ``(runtimes, values)``
+        """
+        metric = plot_params.metric
+        metric_multiplier = plot_params.metric_multiplier
+        show_init_trials = plot_params.show_init_trials
+        if one_trial_special:
+            # Filter down the dataframe
+            df = df[df["trial_id"] <= show_init_trials.trial_id]
+        if plot_params.mode == "max":
+            ys = metric_multiplier * np.array(df[metric].cummax())
+            if plot_params.convert_to_min:
+                ys = 1 - ys
+        else:
+            ys = metric_multiplier * np.array(df[metric].cummin())
+        rt = np.array(df[ST_TUNER_TIME])
+        if one_trial_special:
+            # Extend curve to the end, so it can be seen
+            rt = np.append(rt, prev_max_rt)
+            ys = np.append(ys, ys[-1])
+        if xlim is not None:
+            # Slice w.r.t. time. Doing this here, speeds up
+            # aggregation
+            ind = np.logical_and(rt >= xlim[0], rt <= xlim[1])
+            rt = rt[ind]
+            ys = ys[ind]
+        # Collect extra results
+        if extra_results_keys is not None and not one_trial_special:
+            if self._metadata_subplot_level:
+                key_sequence = [setup_name, subplot_no]
+            else:
+                key_sequence = [setup_name]
+            final_pos = df[ST_TUNER_TIME].idxmax()
+            final_row = dict(df.loc[final_pos])
+            for key in extra_results_keys:
+                _insert_into_nested_dict(
+                    dictionary=extra_results,
+                    key_sequence=key_sequence + [key],
+                    value=final_row[key],
+                )
+        return rt, ys
+
+    def _aggregate_results(
+        self,
+        grouped_dfs: DataFrameGroups,
         plot_params: PlotParameters,
         extra_results_keys: Optional[List[str]],
     ) -> Dict[str, Any]:
@@ -444,10 +552,6 @@ class ComparativeResults:
         subplot_xlims = None if subplots is None else subplots.xlims
         fig_shape = self._figure_shape(plot_params)
         num_subplots = fig_shape[0] * fig_shape[1]
-        metric = plot_params.metric
-        mode = plot_params.mode
-        metric_multiplier = plot_params.metric_multiplier
-        convert_to_min = plot_params.convert_to_min
         xlim = plot_params.xlim
         aggregate_mode = plot_params.aggregate_mode
         show_init_trials = plot_params.show_init_trials
@@ -459,9 +563,7 @@ class ComparativeResults:
             setup_names = setup_names + (show_init_trials.new_setup_name,)
 
         stats = [[None] * len(setup_names) for _ in range(num_subplots)]
-        for (subplot_no, setup_name), setup_df in df.groupby(
-            ["subplot_no", "setup_name"]
-        ):
+        for (subplot_no, setup_name), tuner_dfs in grouped_dfs.items():
             if subplot_xlims is not None:
                 xlim = (0, subplot_xlims[subplot_no])
             if do_show_init_trials and show_init_trials.setup_name == setup_name:
@@ -470,75 +572,49 @@ class ComparativeResults:
                 num_iter = 1
             max_rt = None
             # If this setup is named as ``show_init_trials.setup_name``, we need
-            # to go over the data 2x. The first iteration is as usual, the
+            # to go over the data twice. The first iteration is as usual, the
             # second extracts the information for the single trial and extends
             # the curve.
             for it in range(num_iter):
                 one_trial_special = it == 1
                 if one_trial_special:
-                    # Filter down the dataframe
-                    trial_id = show_init_trials.trial_id
-                    setup_df = setup_df[setup_df["trial_id"] <= trial_id]
                     new_setup_name = show_init_trials.new_setup_name
                     prev_max_rt = max_rt
                 else:
                     new_setup_name = setup_name
-                traj = []
-                runtime = []
-                trial_nums = []
-                tuner_names = []
+                    prev_max_rt = None
+                trajectories = []
+                runtimes = []
                 max_rt = []
-                for tuner_name, sub_df in setup_df.groupby("tuner_name"):
-                    tuner_names.append(tuner_name)
-                    if mode == "max":
-                        ys = metric_multiplier * np.array(sub_df[metric].cummax())
-                        if convert_to_min:
-                            ys = 1 - ys
-                    else:
-                        ys = metric_multiplier * np.array(sub_df[metric].cummin())
-                    rt = np.array(sub_df[ST_TUNER_TIME])
-                    if one_trial_special:
-                        # Hack to extend curve to the end, so it can be
-                        # seen
-                        pos = len(runtime)
-                        rt = np.append(rt, prev_max_rt[pos])
-                        ys = np.append(ys, ys[-1])
+                for tuner_pos, (_, tuner_df) in enumerate(tuner_dfs):
+                    rt, ys = self._extract_result_curves_per_experiment(
+                        df=tuner_df,
+                        plot_params=plot_params,
+                        extra_results_keys=extra_results_keys,
+                        one_trial_special=one_trial_special,
+                        setup_name=setup_name,
+                        subplot_no=subplot_no,
+                        extra_results=extra_results,
+                        prev_max_rt=prev_max_rt[tuner_pos]
+                        if one_trial_special
+                        else None,
+                        xlim=xlim,
+                    )
+                    trajectories.append(ys)
+                    runtimes.append(rt)
                     max_rt.append(rt[-1])
-                    if xlim is not None:
-                        # Slice w.r.t. time. Doing this here, speeds up
-                        # aggregation
-                        ind = np.logical_and(rt >= xlim[0], rt <= xlim[1])
-                        rt = rt[ind]
-                        ys = ys[ind]
-                    traj.append(ys)
-                    runtime.append(rt)
-                    trial_nums.append(len(sub_df.trial_id.unique()))
-                    # Collect extra results
-                    if extra_results_keys is not None and not one_trial_special:
-                        if self._metadata_subplot_level:
-                            key_sequence = [setup_name, subplot_no]
-                        else:
-                            key_sequence = [setup_name]
-                        final_pos = sub_df[ST_TUNER_TIME].idxmax()
-                        final_row = dict(sub_df.loc[final_pos])
-                        for key in extra_results_keys:
-                            _insert_into_nested_dict(
-                                dictionary=extra_results,
-                                key_sequence=key_sequence + [key],
-                                value=final_row[key],
-                            )
 
                 setup_id = setup_names.index(new_setup_name)
-                if len(traj) > 1:
+                if len(trajectories) > 1:
                     stats[subplot_no][setup_id] = aggregate_and_errors_over_time(
-                        errors=traj, runtimes=runtime, mode=aggregate_mode
+                        errors=trajectories, runtimes=runtimes, mode=aggregate_mode
                     )
                 else:
                     # If there is only a single seed, we plot a curve without
                     # error bars
                     stats[subplot_no][setup_id] = {
-                        "time": runtime[0],
-                        "aggregate": traj[0],
+                        "time": runtimes[0],
+                        "aggregate": trajectories[0],
                     }
                 if not one_trial_special:
                     if subplots is not None:
@@ -547,20 +623,41 @@ class ComparativeResults:
                         msg = f"[{setup_name}]: "
                     msg += f"max_rt = {np.mean(max_rt):.2f} (+- {np.std(max_rt):.2f})"
                     logger.info(msg)
-                    num_repeats = len(tuner_names)
+                    num_repeats = len(tuner_dfs)
                     if num_repeats != self.num_runs:
                         if subplots is not None:
                             part = f"subplot = {subplot_no}, "
                         else:
                             part = ""
+                        tuner_names = [name for name, _ in tuner_dfs]
                         logger.warning(
                             f"{part}setup = {setup_name} has {num_repeats} repeats "
                             f"instead of {self.num_runs}:\n{tuner_names}"
                         )
+
         result = {"stats": stats, "setup_names": setup_names}
         if extra_results_keys is not None:
             result["extra_results"] = extra_results
         return result
+
+    def _transform_and_aggregrate_results(
+        self,
+        df: pd.DataFrame,
+        plot_params: PlotParameters,
+        extra_results_keys: Optional[List[str]],
+        dataframe_column_generator: Optional[DataFrameColumnGenerator],
+    ) -> Dict[str, Any]:
+        # Group results according to subplot, setup, and tuner (experiment)
+        grouped_dfs = self._group_results_dataframe(df)
+        # If ``dataframe_column_generator`` is given, an additional column is
+        # appended to the grouped dataframes
+        grouped_dfs = self._enrich_results(
+            grouped_dfs=grouped_dfs,
+            column_name=plot_params.metric,
+            dataframe_column_generator=dataframe_column_generator,
+        )
+        # Extract curves and aggregate them
+        return self._aggregate_results(grouped_dfs, plot_params, extra_results_keys)
 
     def _plot_figure(
         self,
@@ -656,6 +753,7 @@ class ComparativeResults:
         plot_params: Optional[PlotParameters] = None,
         file_name: Optional[str] = None,
         extra_results_keys: Optional[List[str]] = None,
+        dataframe_column_generator: Optional[DataFrameColumnGenerator] = None,
     ) -> Dict[str, Any]:
         """
         Create comparative plot from results of all experiments collected at
@@ -681,12 +779,20 @@ class ComparativeResults:
         is ``True`` and ``metadata_to_subplot`` is given, the structure is
         ``extra_results[setup_name][subplot_no][key]``.
 
+        If ``dataframe_column_generator`` is given, it maps a result dataframe
+        for a single experiment to a new column named ``plot_params.metric``.
+        This is applied before computing cumulative maximum or minimum and
+        aggregation over seeds. This way, we can plot derived metrics which are
+        not contained in the results as columns. Note that the transformed
+        dataframe is not retained.
+
         :param benchmark_name: Name of benchmark for which to plot results.
             Not needed if there is only one benchmark
         :param plot_params: Parameters controlling the plot. Values provided
             here overwrite values provided at construction.
         :param file_name: If given, the figure is stored in a file of this name
         :param extra_results_keys: See above, optional
+        :param dataframe_column_generator: See above, optional
         :return: Dictionary with "fig", "axs" (for further processing). If
             ``extra_results_keys``, "extra_results" entry as stated above
         """
@@ -699,10 +805,11 @@ class ComparativeResults:
             self._reverse_index[benchmark_name]
         )
         logger.info("Aggregate results")
-        aggregate_result = self._aggregrate_results(
+        aggregate_result = self._transform_and_aggregrate_results(
             df=results_df,
             plot_params=plot_params,
             extra_results_keys=extra_results_keys,
+            dataframe_column_generator=dataframe_column_generator,
         )
         fig, axs = self._plot_figure(
             stats=aggregate_result["stats"],
@@ -711,10 +818,7 @@ class ComparativeResults:
         )
         if file_name is not None:
             fig.savefig(file_name, dpi=plot_params.dpi)
-        results = {
-            "fig": fig,
-            "axs": axs,
-        }
+        results = {"fig": fig, "axs": axs}
         if extra_results_keys is not None:
             results["extra_results"] = aggregate_result["extra_results"]
         return results

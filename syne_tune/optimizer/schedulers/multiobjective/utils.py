@@ -23,6 +23,10 @@ except ImportError:
 EPSILON = 1e-6
 
 
+def default_reference_point(results_array: np.ndarray) -> np.ndarray:
+    return results_array.max(axis=0) * (1 + EPSILON) + EPSILON
+
+
 def hypervolume(
     results_array: np.ndarray,
     reference_point: np.ndarray = None,
@@ -30,16 +34,23 @@ def hypervolume(
     """
     Compute the hypervolume of all results based on reference points
 
-    :param results_df: Array with experiment results ordered by time with shape (npoints, ndimensions)
+    :param results_array: Array with experiment results ordered by time with
+        shape ``(npoints, ndimensions)``.
     :param reference_point: Reference points for hypervolume calculations.
-        If None, the maximum values of each dimension of results_array is used.
+        If ``None``, the maximum values of each dimension of results_array is
+        used.
+    :return Hypervolume indicator
     """
     if reference_point is None:
-        reference_point = results_array.max(axis=0) * (1 + EPSILON) + EPSILON
+        reference_point = default_reference_point(results_array)
     indicator_fn = HV(ref_point=reference_point)
     return indicator_fn(results_array)
 
 
+# TODO: Use code for incremental hypervolume (adding one more point). Computation
+# here can be slow.
+# At least we could check for each new row if it is dominated by rows before. If
+# so, the cumulative indicator remains the same.
 def hypervolume_cumulative(
     results_array: np.ndarray,
     reference_point: np.ndarray = None,
@@ -47,17 +58,19 @@ def hypervolume_cumulative(
     """
     Compute the cumulative hypervolume of all results based on reference points
     Returns an array with hypervolumes given by an increasing range of points.
-    ``return_array[idx] = hypervolume(results_array[0: idx])``
+    ``return_array[idx] = hypervolume(results_array[0 : (idx + 1)])``
 
-    :param results_array: Array with experiment results ordered by time with shape (npoints, ndimensions).
+    :param results_array: Array with experiment results ordered by time with
+        shape ``(npoints, ndimensions)``.
     :param reference_point: Reference points for hypervolume calculations.
-        If None, the maximum values of each dimension of results_array is used.
-    :return: Cumulative hypervolume array with dimensions (npoints, )
+        If ``None``, the maximum values of each dimension of results_array is
+        used.
+    :return: Cumulative hypervolume array, shape ``(npoints,)``
     """
     if reference_point is None:
-        reference_point = results_array.max(axis=0) * (1 + EPSILON) + EPSILON
+        reference_point = default_reference_point(results_array)
     indicator_fn = HV(ref_point=reference_point)
     hypervolume_indicator = np.zeros(shape=len(results_array))
     for idx in range(len(results_array)):
-        hypervolume_indicator[idx] = indicator_fn(results_array[0:idx])
+        hypervolume_indicator[idx] = indicator_fn(results_array[0 : (idx + 1)])
     return hypervolume_indicator

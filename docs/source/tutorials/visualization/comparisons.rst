@@ -265,6 +265,44 @@ for ``plot_params.subplots``:
   ``xlims[i]`` corresponds to subfigure ``subplot_indices[i]``), but
   ``legend_no`` is not.
 
+Plotting Derived Metrics
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also plot metrics which are not directly contained in the results data
+(as a column), but which can be computed from the results. To this end, you
+can pass a dataframe column generator as ``dataframe_column_generator`` to
+:meth:`~syne_tune.experiments.ComparativeResults.plot`. For example, assume
+we run multi-objective HPO methods on a benchmark involving metrics ``cost``
+and ``latency`` (``mode="min"`` for both of them). The final ``plot`` command
+would look like this:
+
+.. code-block:: python
+
+   from syne_tune.experiments.multiobjective import (
+       hypervolume_indicator_column_generator,
+   )
+
+   # ...
+
+   dataframe_column_generator = hypervolume_indicator_column_generator(
+       metrics_and_modes = [("cost", "min"), ("latency", "min")]
+   )
+   plot_params = PlotParameters(
+       metric="hypervolume_indicator",
+       mode="max",
+   )
+   results.plot(
+       benchmark_name=benchmark_name,
+       plot_params=plot_params,
+       dataframe_column_generator=dataframe_column_generator,
+   )
+
+The mapping returned by
+:func:`~syne_tune.experiments.multiobjective.hypervolume_indicator_column_generator`
+maps a results dataframe to a new column containing the best hypervolume
+indicator as function of wall-clock time for the metrics ``cost`` and
+``latency``, which must be contained in the results dataframe.
+
 Filtering Experiments by DateTime Bounds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
