@@ -464,7 +464,17 @@ class ComparativeResults:
         :param grouped_dfs:
         :return:
         """
-        # HIER!
+        logger.info("Filtering results down to one row per trial (final result)")
+        result = dict()
+        for key, tuner_dfs in grouped_dfs.items():
+            new_tuner_dfs = []
+            for tuner_name, tuner_df in tuner_dfs:
+                df_by_trial = tuner_df.groupby("trial_id")
+                max_time_in_trial = df_by_trial[ST_TUNER_TIME].transform(max)
+                max_time_in_trial_mask = max_time_in_trial == tuner_df[ST_TUNER_TIME]
+                new_tuner_dfs.append((tuner_name, tuner_df[max_time_in_trial_mask]))
+            result[key] = new_tuner_dfs
+        return result
 
     @staticmethod
     def _enrich_results(
@@ -663,9 +673,13 @@ class ComparativeResults:
         plot_params: PlotParameters,
         extra_results_keys: Optional[List[str]],
         dataframe_column_generator: Optional[DataFrameColumnGenerator],
+        one_result_per_trial: bool,
     ) -> Dict[str, Any]:
         # Group results according to subplot, setup, and tuner (experiment)
         grouped_dfs = self._group_results_dataframe(df)
+        # Filter down to one result per trial
+        if one_result_per_trial:
+            grouped_dfs = self._filter_final_row_per_trial(grouped_dfs)
         # If ``dataframe_column_generator`` is given, an additional column is
         # appended to the grouped dataframes
         grouped_dfs = self._enrich_results(
@@ -771,6 +785,7 @@ class ComparativeResults:
         file_name: Optional[str] = None,
         extra_results_keys: Optional[List[str]] = None,
         dataframe_column_generator: Optional[DataFrameColumnGenerator] = None,
+        one_result_per_trial: bool = False,
     ) -> Dict[str, Any]:
         """
         Create comparative plot from results of all experiments collected at
@@ -810,6 +825,11 @@ class ComparativeResults:
         :param file_name: If given, the figure is stored in a file of this name
         :param extra_results_keys: See above, optional
         :param dataframe_column_generator: See above, optional
+        :param one_result_per_trial: If ``True``, results for each experiment
+            are filtered down to one row per trial (the one with the largest
+            time stamp). This is useful for results from a single-fidelity
+            method, where the training script reported results after every
+            epoch.
         :return: Dictionary with "fig", "axs" (for further processing). If
             ``extra_results_keys``, "extra_results" entry as stated above
         """
@@ -827,6 +847,7 @@ class ComparativeResults:
             plot_params=plot_params,
             extra_results_keys=extra_results_keys,
             dataframe_column_generator=dataframe_column_generator,
+            one_result_per_trial=one_result_per_trial,
         )
         fig, axs = self._plot_figure(
             stats=aggregate_result["stats"],

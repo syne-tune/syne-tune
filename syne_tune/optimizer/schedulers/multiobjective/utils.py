@@ -90,7 +90,6 @@ def hypervolume_cumulative(
     indices = list(range(0, sz, increment))
     if indices[-1] != sz - 1:
         indices.append(sz - 1)
-    print(f"sz = {sz}, increment = {increment}")
     for idx in indices:
         hypervolume_indicator[idx] = indicator_fn(results_array[0 : (idx + 1)])
     if increment > 1:
