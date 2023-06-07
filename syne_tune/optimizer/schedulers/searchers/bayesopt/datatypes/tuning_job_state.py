@@ -18,7 +18,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     MetricValues,
     INTERNAL_METRIC_NAME,
 )
-from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
+from syne_tune.optimizer.schedulers.searchers.utils.common import (
+    Configuration,
+    ConfigurationFilter,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges import (
     HyperparameterRanges,
 )
@@ -302,3 +305,25 @@ class TuningJobState:
         return self._map_configs_for_matching(
             self.config_for_trial
         ) == self._map_configs_for_matching(other.config_for_trial)
+
+    def all_configurations(
+        self, filter_observed_data: Optional[ConfigurationFilter] = None
+    ) -> List[Configuration]:
+        """
+        Returns list of configurations for all trials represented here, whether
+        observed, pending, or failed. If ``filter_observed_data`` is given, the
+        configurations for observed trials are filtered with this predicate.
+
+        :param filter_observed_data: See above, optional
+        :return: List of all configurations
+        """
+        _elist = [x.trial_id for x in self.pending_evaluations] + self.failed_trials
+        observed_trial_ids = [x.trial_id for x in self.trials_evaluations]
+        if filter_observed_data is not None:
+            observed_trial_ids = [
+                trial_id
+                for trial_id in observed_trial_ids
+                if filter_observed_data(self.config_for_trial[trial_id])
+            ]
+        _elist = set(_elist + observed_trial_ids)
+        return [self.config_for_trial[trial_id] for trial_id in _elist]

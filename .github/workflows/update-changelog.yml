@@ -1,0 +1,30 @@
+name: Draft Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      next_release_tag_value:
+        description: "Tag for the new release, for example. v0.7.0 or v0.12.3"
+        required: false
+
+jobs:
+  update-changelog:
+    concurrency:
+      group: changelog-build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository 
+      with:
+        fetch-depth: 0
+      uses: actions/checkout@v3
+    - name: fetch tags
+      run: | 
+        git fetch --tags origin
+    - name: Draft Changelog with specified next release tag
+      if:  ${{ inputs.next_release_tag_value }}
+      run: | 
+        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4 --next-tag ${{ inputs.next_release_tag_value }}
+    - name: Draft Changelog
+      if:  ${{ !inputs.next_release_tag_value }}
+      run: | 
+        docker run -v "${PWD}":/workdir quay.io/git-chglog/git-chglog:0.15.4

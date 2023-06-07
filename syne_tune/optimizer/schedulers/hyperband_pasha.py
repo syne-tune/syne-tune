@@ -81,19 +81,21 @@ class PASHARungSystem(PromotionRungSystem):
             self._rungs[-self.current_rung_idx],
             self._rungs[-self.current_rung_idx + 1],
         ]:
-            if rung.data != {}:
-                trial_ids = rung.data.keys()
-                values = []
-                for trial_id in trial_ids:
-                    values.append(rung.data[trial_id][0])
-                # order specifies where the value should be placed in the sorted list
-                values_order = np.array(values).argsort()
-                # calling argsort on the order will give us the ranking
-                values_ranking = values_order.argsort()
+            if rung:
+                # Note that entries in ``rung.data`` are already sorted
+                trial_ids, values = zip(
+                    *[(x.trial_id, x.metric_val) for x in rung.data]
+                )
+                # Note: To retain the exact logic of older code (which used
+                # ``numpy.argsort``, we assume the ranks for increasing metric
+                # values, which is the opposite ordering to ``rung.data`` if
+                # ``self._mode == "max"``
+                if self._mode == "min":
+                    values_ranking = list(range(len(trial_ids)))
+                else:
+                    values_ranking = list(range(len(trial_ids) - 1, -1, -1))
                 ranking = list(zip(trial_ids, values_ranking, values))
-
                 rankings.append(ranking)
-
         return rankings
 
     def _get_sorted_top_rungs(self, rankings):
@@ -111,11 +113,7 @@ class PASHARungSystem(PromotionRungSystem):
             lambda e: e[0] in top_rung_keys, rankings[1]
         )
         # if we try to maximize the objective, we need to reverse the ranking
-        if self._mode == "max":
-            reverse = True
-        else:
-            reverse = False
-
+        reverse = self._mode == "max"
         sorted_top_rung = sorted(rankings[0], key=lambda e: e[1], reverse=reverse)
         sorted_previous_rung = sorted(
             corresponding_previous_rung_trials, key=lambda e: e[1], reverse=reverse
@@ -227,18 +225,15 @@ class PASHARungSystem(PromotionRungSystem):
                 raise ValueError("Epsilon became nan")
 
     def _update_per_epoch_results(self, trial_id, result):
+        resource = result[self._resource_attr]
+        metric_val = result[self._metric]
         if trial_id not in self.per_epoch_results:
-            self.per_epoch_results[trial_id] = {}
-        self.per_epoch_results[trial_id][result[self._resource_attr]] = result[
-            self._metric
-        ]
-
-        if result[self._resource_attr] not in self.epoch_to_trials:
-            self.epoch_to_trials[result[self._resource_attr]] = set()
-        self.epoch_to_trials[result[self._resource_attr]].add(trial_id)
-
-        if result[self._resource_attr] > self.current_max_epoch:
-            self.current_max_epoch = result[self._resource_attr]
+            self.per_epoch_results[trial_id] = dict()
+        self.per_epoch_results[trial_id][resource] = metric_val
+        if resource not in self.epoch_to_trials:
+            self.epoch_to_trials[resource] = set()
+        self.epoch_to_trials[resource].add(trial_id)
+        self.current_max_epoch = max(self.current_max_epoch, resource)
 
     def _decide_resource_increase(self, rankings) -> bool:
         """

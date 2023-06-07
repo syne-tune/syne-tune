@@ -16,7 +16,7 @@ resources than ASHA.
 What is PASHA?
 --------------
 
-The goal of `PASHA <https://openreview.net/forum?id=syfgJE6nFRW>`_ is to identify
+The goal of `PASHA <https://openreview.net/forum?id=syfgJE6nFRW>`__ is to identify
 well-performing configurations significantly faster than current methods,
 so that we can then retrain the model with the selected configuration
 (in practice on the combined training and validation sets). By giving preference
@@ -57,10 +57,10 @@ How well does PASHA work?
 Experimental evaluation has shown PASHA consistently leads to strong improvements in runtime,
 while achieving similar accuracies as ASHA. PASHA is e.g. three times faster than ASHA on NASBench201.
 Full experiments and further details are available in 
-`PASHA: Efficient HPO and NAS with Progressive Resource Allocation <https://openreview.net/forum?id=syfgJE6nFRW>`_.
+`PASHA: Efficient HPO and NAS with Progressive Resource Allocation <https://openreview.net/forum?id=syfgJE6nFRW>`__.
 
 We provide an example script
-`launch_pasha_nasbench201.py <../../examples.html#pasha-efficient-hpo-and-nas-with-progressive-resource-allocation>`_
+`launch_pasha_nasbench201.py <../../examples.html#pasha-efficient-hpo-and-nas-with-progressive-resource-allocation>`__
 that shows how to run an experiment with PASHA on NASBench201.
 
 Recommendations

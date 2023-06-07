@@ -26,12 +26,10 @@ from syne_tune.config_space import (
     config_space_size,
 )
 from syne_tune.optimizer.schedulers.searchers import (
-    SearcherWithRandomSeed,
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticSearcher,
+    StochasticAndFilterDuplicatesSearcher,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
@@ -40,11 +38,11 @@ from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_r
 logger = logging.getLogger(__name__)
 
 
-class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
+class RandomSearcher(StochasticAndFilterDuplicatesSearcher):
     """
     Searcher which randomly samples configurations to try next.
 
-    Additional arguments on top of parent class :class:`SearcherWithRandomSeedAndFilterDuplicates`:
+    Additional arguments on top of parent class :class:`StochasticAndFilterDuplicatesSearcher`:
 
     :param debug_log: If ``True``, debug log printing is activated.
         Logs which configs are chosen when, and which metric values are
@@ -80,7 +78,9 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
             else:
                 self._debug_log = None
         else:
-            assert isinstance(debug_log, DebugLogPrinter)
+            assert isinstance(
+                debug_log, DebugLogPrinter
+            ), f"debug_log = {debug_log} must either be bool or DebugLogPrinter"
             self._debug_log = debug_log
 
     def configure_scheduler(self, scheduler):
@@ -154,13 +154,13 @@ class RandomSearcher(SearcherWithRandomSeedAndFilterDuplicates):
 DEFAULT_NSAMPLE = 5
 
 
-class GridSearcher(SearcherWithRandomSeed):
+class GridSearcher(StochasticSearcher):
     """Searcher that samples configurations from an equally spaced grid over config_space.
 
     It first evaluates configurations defined in points_to_evaluate and then
     continues with the remaining points from the grid.
 
-    Additional arguments on top of parent class :class:`SearcherWithRandomSeed`.
+    Additional arguments on top of parent class :class:`StochasticSearcher`.
 
     :param num_samples: Dictionary, optional. Number of samples per
         hyperparameter. This is required for hyperparameters of type float,
@@ -203,7 +203,7 @@ class GridSearcher(SearcherWithRandomSeed):
         self._generate_all_candidates_on_grid()
         self._next_index = 0
         self._allow_duplicates = allow_duplicates
-        self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
+        self._all_initial_configs = ExclusionList(self._hp_ranges)
 
     def _validate_config_space(
         self, config_space: Dict[str, Any], num_samples: Optional[Dict[str, int]]
@@ -329,22 +329,21 @@ class GridSearcher(SearcherWithRandomSeed):
         """
 
         num_combinations = len(self.hp_values_combinations)
-        if self._next_index < num_combinations:
-            is_not_done = True
-            while is_not_done and self._next_index < num_combinations:
-                candidate = dict(
-                    zip(self.hp_keys, self.hp_values_combinations[self._next_index])
-                )
-                self._next_index += 1
-                is_not_done = self._all_initial_configs.contains(candidate)
+        candidate = None
+        while candidate is None and self._next_index < num_combinations:
+            candidate = dict(
+                zip(self.hp_keys, self.hp_values_combinations[self._next_index])
+            )
+            self._next_index += 1
+            if self._all_initial_configs.contains(candidate):
+                candidate = None
             if self._allow_duplicates and self._next_index == num_combinations:
-                # Another round through the grid
+                # Another round through the grid. It is important to reset
+                # ``_all_initial_configs`` to empty, so the initial configs can be
+                # suggested again in the second round
                 self._next_index = 0
-                self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
-            return candidate
-        else:
-            # No more candidates
-            return None
+                self._all_initial_configs = ExclusionList(self._hp_ranges)
+        return candidate
 
     def get_state(self) -> Dict[str, Any]:
         state = dict(
@@ -367,7 +366,7 @@ class GridSearcher(SearcherWithRandomSeed):
     def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
         self._next_index = state["next_index"]
-        self._all_initial_configs = ExclusionList.empty_list(self._hp_ranges)
+        self._all_initial_configs = ExclusionList(self._hp_ranges)
         self._all_initial_configs.clone_from_state(state["all_initial_configs"])
 
     def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):

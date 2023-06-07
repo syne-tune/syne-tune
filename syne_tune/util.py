@@ -18,13 +18,17 @@ import random
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Union, Dict, Any
+from typing import Optional, List, Union, Dict, Any, Iterable
 from time import perf_counter
 from contextlib import contextmanager
 
 import numpy as np
 
-from syne_tune.constants import SYNE_TUNE_DEFAULT_FOLDER, SYNE_TUNE_ENV_FOLDER
+from syne_tune.constants import (
+    SYNE_TUNE_DEFAULT_FOLDER,
+    SYNE_TUNE_ENV_FOLDER,
+    ST_DATETIME_FORMAT,
+)
 from syne_tune.try_import import try_import_aws_message
 
 try:
@@ -117,6 +121,12 @@ def check_valid_sagemaker_name(name: str):
     ), f"{name} should consists in alpha-digits possibly separated by character -"
 
 
+def sanitize_sagemaker_name(name: str) -> str:
+    new_name = name.replace("_", "-")
+    check_valid_sagemaker_name(new_name)
+    return new_name
+
+
 def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> str:
     """Append a timestamp to the provided string.
 
@@ -137,9 +147,8 @@ def name_from_base(base: Optional[str], default: str, max_length: int = 63) -> s
 
     moment = time.time()
     moment_ms = repr(moment).split(".")[1][:3]
-    timestamp = time.strftime(
-        "%Y-%m-%d-%H-%M-%S-{}".format(moment_ms), time.gmtime(moment)
-    )
+    format = ST_DATETIME_FORMAT + f"-{moment_ms}"
+    timestamp = time.strftime(format, time.gmtime(moment))
     trimmed_base = base[: max_length - len(timestamp) - 1]
     return "{}-{}".format(trimmed_base, timestamp)
 
@@ -295,3 +304,10 @@ def recursive_merge(
         return result
     else:
         return a
+
+
+def find_first_of_type(a: Iterable[Any], typ) -> Optional[Any]:
+    try:
+        return next(x for x in a if isinstance(x, typ))
+    except StopIteration:
+        return None

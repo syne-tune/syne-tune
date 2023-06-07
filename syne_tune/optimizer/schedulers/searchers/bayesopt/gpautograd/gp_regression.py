@@ -27,8 +27,10 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.likelihood imp
     GaussianProcessMarginalLikelihood,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
-    ScalarMeanFunction,
     MeanFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    ScalarTargetTransform,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,10 +43,12 @@ class GaussianProcessRegression(GaussianProcessOptimizeModel):
     Takes as input a mean function (which depends on X only) and a kernel
     function.
 
-    :param kernel: Kernel function (for instance, a Matern52---note we cannot
-        provide Matern52() as default argument since we need to provide with
-        the dimension of points in X)
-    :param mean: Mean function (which depends on X only)
+    :param kernel: Kernel function
+    :param mean: Mean function which depends on the input X only (by default,
+        a scalar fitted while optimizing the likelihood)
+    :param target_transform: Invertible transform of target values y to
+        latent values z, which are then modelled as Gaussian. Defaults to
+        the identity
     :param initial_noise_variance: Initial value for noise variance parameter
     :param optimization_config: Configuration that specifies the behavior of
         the optimization of the marginal likelihood.
@@ -57,6 +61,7 @@ class GaussianProcessRegression(GaussianProcessOptimizeModel):
         self,
         kernel: KernelFunction,
         mean: Optional[MeanFunction] = None,
+        target_transform: Optional[ScalarTargetTransform] = None,
         initial_noise_variance: Optional[float] = None,
         optimization_config: Optional[OptimizationConfig] = None,
         random_seed=None,
@@ -67,10 +72,11 @@ class GaussianProcessRegression(GaussianProcessOptimizeModel):
             random_seed=random_seed,
             fit_reset_params=fit_reset_params,
         )
-        if mean is None:
-            mean = ScalarMeanFunction()
         self._likelihood = GaussianProcessMarginalLikelihood(
-            kernel=kernel, mean=mean, initial_noise_variance=initial_noise_variance
+            kernel=kernel,
+            mean=mean,
+            target_transform=target_transform,
+            initial_noise_variance=initial_noise_variance,
         )
         self.reset_params()
 

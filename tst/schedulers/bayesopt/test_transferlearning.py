@@ -46,7 +46,9 @@ def test_create_transfer_learning():
         "transfer_learning_active_config_space": active_config_space,
     }
     kwargs = check_and_merge_defaults(
-        search_options, *gp_fifo_searcher_defaults(), dict_name="search_options"
+        search_options,
+        *gp_fifo_searcher_defaults(search_options),
+        dict_name="search_options"
     )
     kwargs_int = gp_fifo_searcher_factory(**kwargs)
 
@@ -76,7 +78,7 @@ def test_create_transfer_learning():
     expected_mat = np.array([[x[i] for x in expected_ndarray_bounds] for i in range(2)])
     np.testing.assert_almost_equal(mat, expected_mat)
 
-    kernel = kwargs_int["model_factory"]._gpmodel.likelihood.kernel
+    kernel = kwargs_int["estimator"]._gpmodel.likelihood.kernel
     assert isinstance(kernel, ProductKernelFunction)
     kernel1 = kernel.kernel1
     assert isinstance(kernel1, Matern52)

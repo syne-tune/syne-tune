@@ -22,8 +22,10 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
     SUPPORTED_RESOURCE_FOR_ACQUISITION,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory import (
-    resource_kernel_factory,
+    SUPPORTED_BASE_MODELS,
+    base_kernel_factory,
     SUPPORTED_RESOURCE_MODELS,
+    resource_kernel_factory,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
     ExtendedConfiguration,
@@ -39,7 +41,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.gp_regression 
     GaussianProcessRegression,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
-    Matern52,
     KernelFunction,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.warping import (
@@ -67,18 +68,21 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_m
     HyperTuneJointGPModel,
     HyperTuneDistributionArguments,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    BoxCoxTargetTransform,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
     SkipNoMaxResourcePredicate,
     SkipPeriodicallyPredicate,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    GaussProcEmpiricalBayesModelFactory,
+    GaussProcEmpiricalBayesEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gpiss_model import (
-    GaussProcAdditiveModelFactory,
+    GaussProcAdditiveEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost_fifo_model import (
-    CostSurrogateModelFactory,
+    CostEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
     EIAcquisitionFunction,
@@ -98,10 +102,16 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.subsample_state import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_multi_fidelity import (
     SubsampleMultiFidelityStateConverter,
+    SubsampleMFDenseDataStateConverter,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state_single_fidelity import (
+    SubsampleSingleFidelityStateConverter,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
+    StateForModelConverter,
+)
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     Integer,
     Categorical,
@@ -115,6 +125,8 @@ from syne_tune.optimizer.schedulers.searchers.utils.warmstarting import (
     create_base_gp_kernel_for_warmstarting,
 )
 from syne_tune.optimizer.schedulers.searchers import extract_random_seed
+from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
+
 
 __all__ = [
     "gp_fifo_searcher_factory",
@@ -153,9 +165,9 @@ def _create_base_gp_kernel(hp_ranges: HyperparameterRanges, **kwargs) -> KernelF
         kernel = create_base_gp_kernel_for_warmstarting(hp_ranges, **kwargs)
     else:
         has_covariance_scale = kwargs.get("has_covariance_scale", True)
-        kernel = Matern52(
+        kernel = base_kernel_factory(
+            name=kwargs["gp_base_kernel"],
             dimension=hp_ranges.ndarray_size,
-            ARD=True,
             has_covariance_scale=has_covariance_scale,
         )
         if input_warping:
@@ -180,27 +192,27 @@ def _create_gp_common(hp_ranges: HyperparameterRanges, **kwargs):
         verbose=kwargs["opt_verbose"],
         n_starts=kwargs["opt_nstarts"],
     )
-    if kwargs.get("profiler", False):
-        profiler = SimpleProfiler()
-    else:
-        profiler = None
     if kwargs.get("debug_log", False):
         debug_log = DebugLogPrinter()
     else:
         debug_log = None
+    if kwargs.get("boxcox_transform", False):
+        target_transform = BoxCoxTargetTransform()
+    else:
+        target_transform = None
     filter_observed_data = create_filter_observed_data_for_warmstarting(**kwargs)
     return {
         "opt_warmstart": opt_warmstart,
         "kernel": kernel,
         "mean": mean,
+        "target_transform": target_transform,
         "optimization_config": optimization_config,
-        "profiler": profiler,
         "debug_log": debug_log,
         "filter_observed_data": filter_observed_data,
     }
 
 
-def _create_gp_model_factory(
+def _create_gp_estimator(
     gpmodel,
     result: Dict[str, Any],
     hp_ranges_for_prediction: Optional[HyperparameterRanges],
@@ -208,19 +220,18 @@ def _create_gp_model_factory(
     **kwargs,
 ):
     filter_observed_data = result["filter_observed_data"]
-    model_factory = GaussProcEmpiricalBayesModelFactory(
+    estimator = GaussProcEmpiricalBayesEstimator(
         active_metric=active_metric,
         gpmodel=gpmodel,
         num_fantasy_samples=kwargs["num_fantasy_samples"],
         normalize_targets=kwargs.get("normalize_targets", True),
-        profiler=result["profiler"],
         debug_log=result["debug_log"],
         filter_observed_data=filter_observed_data,
         no_fantasizing=kwargs.get("no_fantasizing", False),
         hp_ranges_for_prediction=hp_ranges_for_prediction,
     )
     return {
-        "model_factory": model_factory,
+        "estimator": estimator,
         "filter_observed_data": filter_observed_data,
     }
 
@@ -246,6 +257,7 @@ def _create_gp_standard_model(
     common_kwargs = dict(
         kernel=kernel,
         mean=mean,
+        target_transform=result["target_transform"],
         optimization_config=result["optimization_config"],
         random_seed=random_seed,
         fit_reset_params=not result["opt_warmstart"],
@@ -265,7 +277,7 @@ def _create_gp_standard_model(
     else:
         gpmodel = GaussianProcessRegression(**common_kwargs)
         hp_ranges_for_prediction = None
-    return _create_gp_model_factory(
+    return _create_gp_estimator(
         gpmodel=gpmodel,
         result=result,
         hp_ranges_for_prediction=hp_ranges_for_prediction,
@@ -291,6 +303,7 @@ def _create_gp_independent_model(
         kernel=kernel,
         mean_factory=mean_factory,
         resource_attr_range=resource_attr_range,
+        target_transform=result["target_transform"],
         optimization_config=result["optimization_config"],
         random_seed=random_seed,
         fit_reset_params=not result["opt_warmstart"],
@@ -309,7 +322,7 @@ def _create_gp_independent_model(
     else:
         gpmodel = IndependentGPPerResourceModel(**common_kwargs)
         hp_ranges_for_prediction = None
-    return _create_gp_model_factory(
+    return _create_gp_estimator(
         gpmodel=gpmodel,
         result=result,
         hp_ranges_for_prediction=hp_ranges_for_prediction,
@@ -349,20 +362,68 @@ def _create_gp_additive_model(
     filter_observed_data = result["filter_observed_data"]
     no_fantasizing = kwargs.get("no_fantasizing", False)
     num_fantasy_samples = 0 if no_fantasizing else kwargs["num_fantasy_samples"]
-    model_factory = GaussProcAdditiveModelFactory(
+    estimator = GaussProcAdditiveEstimator(
         gpmodel=gpmodel,
         num_fantasy_samples=num_fantasy_samples,
         active_metric=active_metric,
         config_space_ext=config_space_ext,
-        profiler=result["profiler"],
         debug_log=result["debug_log"],
         filter_observed_data=filter_observed_data,
         normalize_targets=kwargs.get("normalize_targets", True),
     )
     return {
-        "model_factory": model_factory,
+        "estimator": estimator,
         "filter_observed_data": filter_observed_data,
     }
+
+
+def _create_state_converter(
+    model: str,
+    is_hyperband: bool,
+    **kwargs,
+) -> Optional[StateForModelConverter]:
+    """
+    For model-based multi-fidelity methods, if ``max_size_data_for_model`` is given,
+    we use a state converter which reduces the number of observed datapoints to
+    ``max_size_data_for_model``. There are different such converters, depending on
+    which method is being used.
+
+    Note: These state converters need a ``random_state``. This is not created here,
+    but is assigned later, in order to maintain control of random seeds
+
+    :param kwargs: Arguments
+    :return: State converter; or ``None`` if ``max_size_data_for_model`` not given
+    """
+    max_size = kwargs.get("max_size_data_for_model")
+    if max_size is None:
+        return None
+    if is_hyperband:
+        if model not in ("gp_multitask", "gp_independent"):
+            logger.warning(
+                f"Cannot use max_size_data_for_model together with model={model}"
+            )
+            return None
+        if kwargs.get("searcher_data") == "all":
+            logger.warning(
+                f"You are using max_size_data_for_model={max_size} together with "
+                f"model={model} and searcher_data='all'. This may lead to poor "
+                "results. Use searcher_data='rungs' to limit the size of the data, "
+                "which you can combine with max_size_data_for_model"
+            )
+        if kwargs["scheduler"] == "hyperband_dyhpo":
+            # In DyHPO, there is too much data for some trials, so we need to limit the
+            # data differently
+            # Note: We use the defaults for ``grace_period`` and ``reduction_factor``
+            # here, could make them configurable as well.
+            return SubsampleMFDenseDataStateConverter(max_size=max_size)
+        else:
+            return SubsampleMultiFidelityStateConverter(max_size=max_size)
+    else:
+        scheduler_mode = kwargs.get("mode", "min")
+        top_fraction = kwargs["max_size_top_fraction"]
+        return SubsampleSingleFidelityStateConverter(
+            max_size=max_size, mode=scheduler_mode, top_fraction=top_fraction
+        )
 
 
 def _create_common_objects(model=None, is_hypertune=False, **kwargs):
@@ -433,10 +494,10 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
             resource_attr_key=kwargs["resource_attr"],
             resource_attr_range=epoch_range,
         )
-        # State converter to down sample data
-        max_size = kwargs.get("max_size_data_for_model")
-        if max_size is not None:
-            result["state_converter"] = SubsampleMultiFidelityStateConverter(max_size)
+    # State converter to down sample data
+    state_converter = _create_state_converter(model, is_hyperband, **kwargs)
+    if state_converter is not None:
+        result["state_converter"] = state_converter
 
     # Create model factory
     if model == "gp_multitask":
@@ -596,26 +657,26 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for constraint metric (model_factory_constraint)
+    # We need two model factories: one for active metric (estimator),
+    # the other for constraint metric (estimator_constraint)
     random_seed, _kwargs = extract_random_seed(**kwargs)
-    model_factory_constraint = _create_gp_standard_model(
+    estimator_constraint = _create_gp_standard_model(
         hp_ranges=result["hp_ranges"],
         active_metric=INTERNAL_CONSTRAINT_NAME,
         random_seed=random_seed,
         is_hyperband=False,
         **_kwargs,
-    )["model_factory"]
+    )["estimator"]
     # Sharing debug_log attribute across models
-    model_factory_constraint._debug_log = model_factory._debug_log
+    estimator_constraint._debug_log = estimator._debug_log
     # The same skip_optimization strategy applies to both models
     skip_optimization_constraint = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_CONSTRAINT_NAME: model_factory_constraint,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_CONSTRAINT_NAME: estimator_constraint,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -624,7 +685,7 @@ def constrained_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 
     return dict(
         result,
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         acquisition_class=CEIAcquisitionFunction,
     )
@@ -650,28 +711,28 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for cost metric (model_factory_cost)
+    # We need two model factories: one for active metric (estimator),
+    # the other for cost metric (estimator_cost)
     random_seed, _kwargs = extract_random_seed(**kwargs)
-    model_factory_cost = _create_gp_standard_model(
+    estimator_cost = _create_gp_standard_model(
         hp_ranges=result["hp_ranges"],
         active_metric=INTERNAL_COST_NAME,
         random_seed=random_seed,
         is_hyperband=False,
         **_kwargs,
-    )["model_factory"]
+    )["estimator"]
     # Sharing debug_log attribute across models
-    model_factory_cost._debug_log = model_factory._debug_log
+    estimator_cost._debug_log = estimator._debug_log
     exponent_cost = kwargs.get("exponent_cost", 1.0)
     acquisition_class = (EIpuAcquisitionFunction, dict(exponent_cost=exponent_cost))
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_COST_NAME: model_factory_cost,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_COST_NAME: estimator_cost,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -680,7 +741,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 
     return dict(
         result,
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         acquisition_class=acquisition_class,
     )
@@ -720,11 +781,11 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for cost metric (model_factory_cost)
-    model_factory_cost = CostSurrogateModelFactory(
+    # We need two model factories: one for active metric (estimator),
+    # the other for cost metric (estimator_cost)
+    estimator_cost = CostEstimator(
         model=kwargs["cost_model"], fixed_resource=fixed_resource, num_samples=1
     )
     exponent_cost = kwargs.get("exponent_cost", 1.0)
@@ -732,9 +793,9 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_COST_NAME: model_factory_cost,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_COST_NAME: estimator_cost,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -743,7 +804,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
 
     return dict(
         result,
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         acquisition_class=acquisition_class,
         resource_attr=kwargs["resource_attr"],
@@ -778,11 +839,11 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     )
     # Common objects
     result = _create_common_objects(**kwargs)
-    model_factory = result.pop("model_factory")
+    estimator = result.pop("estimator")
     skip_optimization = result.pop("skip_optimization")
-    # We need two model factories: one for active metric (model_factory),
-    # the other for cost metric (model_factory_cost)
-    model_factory_cost = CostSurrogateModelFactory(
+    # We need two model factories: one for active metric (estimator),
+    # the other for cost metric (estimator_cost)
+    estimator_cost = CostEstimator(
         model=kwargs["cost_model"], fixed_resource=kwargs["max_epochs"], num_samples=1
     )
     exponent_cost = kwargs.get("exponent_cost", 1.0)
@@ -790,9 +851,9 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
-    output_model_factory = {
-        INTERNAL_METRIC_NAME: model_factory,
-        INTERNAL_COST_NAME: model_factory_cost,
+    output_estimator = {
+        INTERNAL_METRIC_NAME: estimator,
+        INTERNAL_COST_NAME: estimator_cost,
     }
     output_skip_optimization = {
         INTERNAL_METRIC_NAME: skip_optimization,
@@ -805,7 +866,7 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     return dict(
         result,
         resource_attr=kwargs["resource_attr"],
-        output_model_factory=output_model_factory,
+        output_estimator=output_estimator,
         output_skip_optimization=output_skip_optimization,
         resource_for_acquisition=resource_for_acquisition,
         acquisition_class=acquisition_class,
@@ -813,6 +874,7 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
 
 
 def _common_defaults(
+    kwargs: Dict[str, Any],
     is_hyperband: bool,
     is_multi_output: bool = False,
     is_hypertune: bool = False,
@@ -823,7 +885,6 @@ def _common_defaults(
     default_options = {
         "opt_skip_init_length": 150,
         "opt_skip_period": 1,
-        "profiler": False,
         "opt_maxiter": 50,
         "opt_nstarts": 2,
         "opt_warmstart": False,
@@ -841,6 +902,9 @@ def _common_defaults(
         "no_fantasizing": False,
         "allow_duplicates": False,
         "input_warping": False,
+        "boxcox_transform": False,
+        "max_size_top_fraction": 0.25,
+        "gp_base_kernel": "matern52-ard",
     }
     if is_restrict_configs:
         default_options["initial_scoring"] = "acq_func"
@@ -860,16 +924,19 @@ def _common_defaults(
         default_options["separate_noise_variances"] = False
         default_options["hypertune_distribution_num_samples"] = 50
         default_options["hypertune_distribution_num_brackets"] = 1
+    if (not is_hyperband) or (
+        kwargs.get("model") in (None, "gp_multitask", "gp_independent")
+        and kwargs.get("searcher_data") != "all"
+    ):
         default_options["max_size_data_for_model"] = DEFAULT_MAX_SIZE_DATA_FOR_MODEL
     if is_multi_output:
         default_options["initial_scoring"] = "acq_func"
         default_options["exponent_cost"] = 1.0
 
     constraints = {
-        "random_seed": Integer(0, 2**32 - 1),
+        "random_seed": Integer(0, RANDOM_SEED_UPPER_BOUND),
         "opt_skip_init_length": Integer(0, None),
         "opt_skip_period": Integer(1, None),
-        "profiler": Boolean(),
         "opt_maxiter": Integer(1, None),
         "opt_nstarts": Integer(1, None),
         "opt_warmstart": Boolean(),
@@ -885,6 +952,10 @@ def _common_defaults(
         "no_fantasizing": Boolean(),
         "allow_duplicates": Boolean(),
         "input_warping": Boolean(),
+        "boxcox_transform": Boolean(),
+        "max_size_data_for_model": IntegerOrNone(1, None),
+        "max_size_top_fraction": Float(0.0, 1.0),
+        "gp_base_kernel": Categorical(choices=SUPPORTED_BASE_MODELS),
     }
 
     if is_hyperband:
@@ -904,7 +975,6 @@ def _common_defaults(
         constraints["separate_noise_variances"] = Boolean()
         constraints["hypertune_distribution_num_samples"] = Integer(1, None)
         constraints["hypertune_distribution_num_brackets"] = Integer(1, None)
-        constraints["max_size_data_for_model"] = IntegerOrNone(1, None)
     if is_multi_output:
         constraints["initial_scoring"] = Categorical(choices=tuple({"acq_func"}))
         constraints["exponent_cost"] = Float(0.0, 1.0)
@@ -912,7 +982,7 @@ def _common_defaults(
     return mandatory, default_options, constraints
 
 
-def gp_fifo_searcher_defaults(kwargs: Optional[dict] = None) -> (Set[str], dict, dict):
+def gp_fifo_searcher_defaults(kwargs: Dict[str, Any]) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -922,16 +992,15 @@ def gp_fifo_searcher_defaults(kwargs: Optional[dict] = None) -> (Set[str], dict,
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    if kwargs is None:
-        kwargs = dict()
     return _common_defaults(
+        kwargs,
         is_hyperband=False,
         is_restrict_configs=kwargs.get("restrict_configurations") is not None,
     )
 
 
 def gp_multifidelity_searcher_defaults(
-    kwargs: Optional[dict] = None,
+    kwargs: Dict[str, Any]
 ) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
@@ -942,17 +1011,14 @@ def gp_multifidelity_searcher_defaults(
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    if kwargs is None:
-        kwargs = dict()
     return _common_defaults(
+        kwargs,
         is_hyperband=True,
         is_restrict_configs=kwargs.get("restrict_configurations") is not None,
     )
 
 
-def hypertune_searcher_defaults(
-    kwargs: Optional[dict] = None,
-) -> (Set[str], dict, dict):
+def hypertune_searcher_defaults(kwargs: Dict[str, Any]) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
     :func:`~syne_tune.optimizer.schedulers.searchers.utils.default_arguments.check_and_merge_defaults`
@@ -962,9 +1028,8 @@ def hypertune_searcher_defaults(
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    if kwargs is None:
-        kwargs = dict()
     return _common_defaults(
+        kwargs,
         is_hyperband=True,
         is_hypertune=True,
         is_restrict_configs=kwargs.get("restrict_configurations") is not None,
@@ -972,7 +1037,7 @@ def hypertune_searcher_defaults(
 
 
 def constrained_gp_fifo_searcher_defaults(
-    kwargs: Optional[dict] = None,
+    kwargs: Dict[str, Any]
 ) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
@@ -982,9 +1047,8 @@ def constrained_gp_fifo_searcher_defaults(
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    if kwargs is None:
-        kwargs = dict()
     return _common_defaults(
+        kwargs,
         is_hyperband=False,
         is_multi_output=True,
         is_restrict_configs=kwargs.get("restrict_configurations") is not None,
@@ -992,7 +1056,7 @@ def constrained_gp_fifo_searcher_defaults(
 
 
 def cost_aware_gp_fifo_searcher_defaults(
-    kwargs: Optional[dict] = None,
+    kwargs: Dict[str, Any]
 ) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
@@ -1003,9 +1067,8 @@ def cost_aware_gp_fifo_searcher_defaults(
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    if kwargs is None:
-        kwargs = dict()
     return _common_defaults(
+        kwargs,
         is_hyperband=False,
         is_multi_output=True,
         is_restrict_configs=kwargs.get("restrict_configurations") is not None,
@@ -1013,7 +1076,7 @@ def cost_aware_gp_fifo_searcher_defaults(
 
 
 def cost_aware_gp_multifidelity_searcher_defaults(
-    kwargs: Optional[dict] = None,
+    kwargs: Dict[str, Any]
 ) -> (Set[str], dict, dict):
     """
     Returns ``mandatory``, ``default_options``, ``config_space`` for
@@ -1024,9 +1087,8 @@ def cost_aware_gp_multifidelity_searcher_defaults(
     :return: ``(mandatory, default_options, config_space)``
 
     """
-    if kwargs is None:
-        kwargs = dict()
     return _common_defaults(
+        kwargs,
         is_hyperband=True,
         is_multi_output=True,
         is_restrict_configs=kwargs.get("restrict_configurations") is not None,

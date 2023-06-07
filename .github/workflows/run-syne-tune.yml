@@ -19,6 +19,9 @@ on:
       timeout-minutes:
         required: false
         type: number
+      extras-require:
+        required: false
+        type: string
     secrets:
       PROD_AWS_INTEG_TEST_ROLE_ARN:
         required: false
@@ -35,21 +38,27 @@ jobs:
     steps:
       - name: Configure AWS Credentials (if required)
         if: ${{ inputs.requires-aws-credentials == true }}
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.PROD_AWS_INTEG_TEST_ROLE_ARN }}
           role-session-name: integtestsession
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
           cache: 'pip'
-      - name: Install Syne Tune
+      - name: Pip install basics
         run: |
+          python -m pip install wheel
           python -m pip install --upgrade pip
-          python -m pip install -e '.[extra]'
+      - name: Install Syne Tune with all dependencies
+        if: ${{ inputs.extras-require == '' }}
+        run: python -m pip install -e '.[extra]'
+      - name: Install Syne Tune with selected dependencies
+        if: ${{ inputs.extras-require != '' }}
+        run: python -m pip install -e '.[${{ inputs.extras-require }}]'
       - name: Run optional custom command
         if: ${{ inputs.additional-command != '' }}
         run: ${{ inputs.additional-command }}

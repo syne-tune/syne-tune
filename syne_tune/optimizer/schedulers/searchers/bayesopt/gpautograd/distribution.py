@@ -19,7 +19,14 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants impo
     MIN_POSTERIOR_VARIANCE,
 )
 
-__all__ = ["Distribution", "Gamma", "Uniform", "Normal", "LogNormal", "Horseshoe"]
+__all__ = [
+    "Distribution",
+    "Gamma",
+    "Uniform",
+    "Normal",
+    "LogNormal",
+    "Horseshoe",
+]
 
 
 class Distribution:

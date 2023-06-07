@@ -15,6 +15,7 @@ import logging
 import numpy as np
 from dataclasses import dataclass
 
+from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
 from syne_tune.optimizer.schedulers.synchronous.dehb_bracket_manager import (
     DifferentialEvolutionHyperbandBracketManager,
 )
@@ -42,9 +43,7 @@ from syne_tune.optimizer.schedulers.searchers.searcher import (
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
     make_hyperparameter_ranges,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
@@ -81,7 +80,7 @@ _DEFAULT_OPTIONS = {
 _CONSTRAINTS = {
     "metric": String(),
     "mode": Categorical(choices=("min", "max")),
-    "random_seed": Integer(0, 2**32 - 1),
+    "random_seed": Integer(0, RANDOM_SEED_UPPER_BOUND),
     "max_resource_attr": String(),
     "max_resource_level": Integer(1, None),
     "resource_attr": String(),
@@ -285,7 +284,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         )
         # Needed to convert encoded configs to configs
         self._hp_ranges = make_hyperparameter_ranges(self.config_space)
-        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
+        self._excl_list = ExclusionList(self._hp_ranges)
         # PRNG for mutation and crossover random draws
         self.random_state = np.random.RandomState(self.random_seed_generator())
         # How often is selection skipped because target still pending?
@@ -325,8 +324,6 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
                     for bracket, rungs in enumerate(self.bracket_manager.bracket_rungs)
                 ]
                 logger.info("\n".join(parts))
-            if self.searcher is None:
-                self._debug_log.start_get_config("random", trial_id=trial_id)
         # Ask bracket manager for job
         bracket_id, slot_in_rung = self.bracket_manager.next_job()
         ext_slot = ExtendedSlotInRung(bracket_id, slot_in_rung)
@@ -502,6 +499,7 @@ class DifferentialEvolutionHyperbandScheduler(SynchronousHyperbandCommon):
         if not self._allow_duplicates:
             self._excl_list.add(config)  # Should not be suggested again
         if self._debug_log is not None and self.searcher is None:
+            self._debug_log.start_get_config("random", trial_id=trial_id)
             self._debug_log.set_final_config(config)
             self._debug_log.write_block()
         config = cast_config_values(config, self.config_space)

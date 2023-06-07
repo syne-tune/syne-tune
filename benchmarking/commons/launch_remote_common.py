@@ -12,14 +12,18 @@
 # permissions and limitations under the License.
 from pathlib import Path
 from typing import Optional, Dict, Any
+import time
+
+from sagemaker.estimator import EstimatorBase
+from botocore.exceptions import ClientError
 
 import benchmarking
-from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
 import syne_tune
-from syne_tune.util import s3_experiment_path
+from benchmarking.commons.benchmark_definitions.common import BenchmarkDefinition
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
 )
+from syne_tune.util import s3_experiment_path
 
 
 def sagemaker_estimator_args(
@@ -67,3 +71,43 @@ def sagemaker_estimator_args(
         if benchmark.estimator_kwargs is not None:
             sm_args.update(benchmark.estimator_kwargs)
     return sm_args
+
+
+ERROR_NAME = "ResourceLimitExceeded"
+
+
+def fit_sagemaker_estimator(
+    backoff_wait_time: int,
+    estimator: EstimatorBase,
+    ntimes_resource_wait: int = 100,
+    **kwargs,
+):
+    """
+    Runs ``estimator.fit(**kwargs)``. If ``backoff_wait_time > 0``, we make sure
+    that if ``fit`` fails with ``ClientError`` of type "ResourceLimitExceeded",
+    we wait for ``backoff_wait_time`` seconds and try again (up to
+    ``ntimes_resource_wait`` times).
+
+    If ``backoff_wait_time <= 0``, the call of ``fit`` is not wrapped.
+
+    :param backoff_wait_time: See above.
+    :param estimator: SageMaker estimator to call ``fit`` for
+    :param ntimes_resource_wait: Maximum number of retries
+    :param kwargs: Arguments for ``estimator.fit``
+    """
+    if backoff_wait_time <= 0:
+        return estimator.fit(**kwargs)
+
+    for _ in range(ntimes_resource_wait):
+        try:
+            return estimator.fit(**kwargs)
+        except ClientError as ex:
+            if ERROR_NAME not in str(ex):
+                raise ex
+
+        print(
+            f"botocore.exceptions.ClientError[{ERROR_NAME}] detected "
+            f"when calling estimator.fit. Waiting "
+            f"{backoff_wait_time / 60:.2f} minutes before retrying"
+        )
+        time.sleep(backoff_wait_time)

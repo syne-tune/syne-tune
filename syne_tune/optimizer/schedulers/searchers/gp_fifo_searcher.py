@@ -10,12 +10,12 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import numpy as np
 from typing import Optional, List, Dict, Any
 import logging
-import copy
 
-from syne_tune.optimizer.schedulers.searchers import ModelBasedSearcher
+from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
+    BayesianOptimizationSearcher,
+)
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_factory import (
     gp_fifo_searcher_factory,
     gp_fifo_searcher_defaults,
@@ -26,65 +26,12 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
 from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
     check_and_merge_defaults,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    INTERNAL_METRIC_NAME,
-)
-from syne_tune.optimizer.schedulers.searchers.utils.common import (
-    Configuration,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_transformer import (
-    ModelStateTransformer,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.model_skipopt import (
-    AlwaysSkipPredicate,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    ScoringFunction,
-    SurrogateOutputModel,
-    AcquisitionClassAndArgs,
-    unwrap_acquisition_class_and_kwargs,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm import (
-    BayesianOptimizationAlgorithm,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
-    IndependentThompsonSampling,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    RandomStatefulCandidateGenerator,
-    RandomFromSetCandidateGenerator,
-    CandidateGenerator,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector import (
-    DuplicateDetectorIdentical,
-)
 
 logger = logging.getLogger(__name__)
 
 
-def create_initial_candidates_scorer(
-    initial_scoring: str,
-    model: SurrogateOutputModel,
-    acquisition_class: AcquisitionClassAndArgs,
-    random_state: np.random.RandomState,
-    active_output: str = INTERNAL_METRIC_NAME,
-) -> ScoringFunction:
-    if initial_scoring == "thompson_indep":
-        if isinstance(model, dict):
-            assert active_output in model
-            model = model[active_output]
-        return IndependentThompsonSampling(model, random_state=random_state)
-    else:
-        acquisition_class, acquisition_kwargs = unwrap_acquisition_class_and_kwargs(
-            acquisition_class
-        )
-        return acquisition_class(
-            model, active_metric=active_output, **acquisition_kwargs
-        )
-
-
-class GPFIFOSearcher(ModelBasedSearcher):
-    """Gaussian process Bayesian optimization for FIFO scheduler
+class GPFIFOSearcher(BayesianOptimizationSearcher):
+    r"""Gaussian process Bayesian optimization for FIFO scheduler
 
     This searcher must be used with
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
@@ -97,6 +44,9 @@ class GPFIFOSearcher(ModelBasedSearcher):
     This will use the appropriate functions from
     :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory`` to
     create components in a consistent way.
+
+    Most of the implementation is generic in
+    :class:`~syne_tune.optimizer.schedulers.searchers.model_based_searcher.BayesianOptimizationSearcher`.
 
     Note: If metric values are to be maximized (``mode-"max"`` in scheduler),
     the searcher uses ``map_reward`` to map metric values to internal
@@ -115,21 +65,6 @@ class GPFIFOSearcher(ModelBasedSearcher):
     (maximizing the marginal likelihood). In general, this hyperparameter
     fitting is the most expensive part of a :meth:`get_config` call.
 
-    The following happens in :meth:`get_config`:
-
-    * For the first ``num_init_random`` calls, a config is drawn at random
-      (after ``points_to_evaluate``, which are included in the ``num_init_random``
-      initial ones). Afterwards, Bayesian optimization is used, unless there
-      are no finished evaluations yet (a surrogate model cannot be fix on no
-      data).
-    * For BO, model hyperparameter are refit first. This step can be skipped
-      (see ``opt_skip_*`` parameters).
-    * Next, ``num_init_candidates`` configs are sampled at random (as in random
-      search), and ranked by a scoring function (``initial_scoring``).
-    * BFGS local optimization is then run starting from the top scoring config,
-      where EI is minimized (this is skipped if
-      ``skip_local_optimization == True``).
-
     Note that the full logic of construction based on arguments is given in
     :mod:``syne_tune.optimizer.schedulers.searchers.gp_searcher_factory``. In
     particular, see
@@ -137,7 +72,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     for default values.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
     :param clone_from_state: Internal argument, do not use
     :type clone_from_state: bool
@@ -176,6 +111,19 @@ class GPFIFOSearcher(ModelBasedSearcher):
         Coordinates which belong to categorical hyperparameters, are not warped.
         Defaults to ``False``.
     :type input_warping: bool, optional
+    :param boxcox_transform: If ``True``, target values are transformed before
+        being fitted with a Gaussian marginal likelihood. This is using the Box-Cox
+        transform with a parameter :math:`\lambda`, which is learned alongside
+        other parameters of the surrogate model. The transform is :math:`\log y`
+        for :math:`\lambda = 0`, and :math:`y - 1` for :math:`\lambda = 1`. This
+        option requires the targets to be positive. Defaults to ``False``.
+    :type boxcox_transform: bool, optional
+    :param gp_base_kernel: Selects the covariance (or kernel) function to be
+        used. Supported choices are
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory.SUPPORTED_BASE_MODELS`.
+        Defaults to "matern52-ard" (Matern 5/2 with automatic relevance
+        determination).
+    :type gp_base_kernel: str, optional
     :param initial_scoring: Scoring function to rank initial candidates
         (local optimization of EI is started from top scorer):
 
@@ -207,6 +155,22 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :param opt_verbose: Parameter for surrogate model fitting. If ``True``,
         lots of output. Defaults to ``False``
     :type opt_verbose: bool, optional
+    :param max_size_data_for_model: If this is set, we limit the number of
+        observations the surrogate model is fitted on this value. If there are
+        more observations, they are down sampled, see
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state.SubsampleSingleFidelityStateConverter`
+        for details. This down sampling is repeated every time the model is
+        fit. The ``opt_skip_*`` predicates are evaluated before the state is
+        downsampled. Pass ``None`` not to apply such a threshold. The default is
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+    :type max_size_data_for_model: int, optional
+    :param max_size_top_fraction: Only used if ``max_size_data_for_model`` is
+        set. This fraction of the down sampled set is filled with the top entries
+        in the full set, the remaining ones are sampled at random from the full
+        set, see
+        :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.subsample_state.SubsampleSingleFidelityStateConverter`
+        for details. Defaults to 0.25.
+    :type max_size_top_fraction: float, optional
     :param opt_skip_init_length: Parameter for surrogate model fitting,
         skip predicate. Fitting is never skipped as long as number of
         observations below this threshold. Defaults to 150
@@ -222,7 +186,7 @@ class GPFIFOSearcher(ModelBasedSearcher):
     :param restrict_configurations: If given, the searcher only suggests
         configurations from this list. This needs
         ``skip_local_optimization == True``. If ``allow_duplicates == False``,
-         entries are popped off this list once suggested.
+        entries are popped off this list once suggested.
     :type restrict_configurations: List[dict], optional
     :param map_reward: In the scheduler, the metric may be minimized or
         maximized, but internally, Bayesian optimization is minimizing
@@ -320,310 +284,15 @@ class GPFIFOSearcher(ModelBasedSearcher):
         """
         self._create_internal(**kwargs_int)
 
-    def configure_scheduler(self, scheduler):
-        from syne_tune.optimizer.schedulers.scheduler_searcher import (
-            TrialSchedulerWithSearcher,
-        )
-
-        assert isinstance(
-            scheduler, TrialSchedulerWithSearcher
-        ), "This searcher requires TrialSchedulerWithSearcher scheduler"
-        super().configure_scheduler(scheduler)
-        # Allow model factory to depend on ``scheduler`` as well
-        model_factory = self.state_transformer.model_factory
-        if isinstance(model_factory, dict):
-            model_factories = list(model_factory.values())
-        else:
-            model_factories = [model_factory]
-        for model_factory in model_factories:
-            model_factory.configure_scheduler(scheduler)
-
-    def register_pending(
-        self, trial_id: str, config: Optional[Dict[str, Any]] = None, milestone=None
-    ):
-        """
-        Registers trial as pending. This means the corresponding evaluation
-        task is running. Once it finishes, update is called for this trial.
-
-        """
-        # It is OK for the candidate already to be registered as pending, in
-        # which case we do nothing
-        state = self.state_transformer.state
-        if not state.is_pending(trial_id):
-            assert not state.is_labeled(trial_id), (
-                f"Trial trial_id = {trial_id} is already labeled, so cannot "
-                + "be pending"
-            )
-            self.state_transformer.append_trial(trial_id, config=config)
-
-    def _fix_resource_attribute(self, **kwargs):
-        pass
-
-    def _postprocess_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        return config
-
-    def _create_random_generator(self) -> CandidateGenerator:
-        if self._restrict_configurations is None:
-            return RandomStatefulCandidateGenerator(
-                hp_ranges=self._hp_ranges_for_prediction(),
-                random_state=self.random_state,
-            )
-        else:
-            hp_ranges = self._hp_ranges_for_prediction()
-            if hp_ranges.is_attribute_fixed():
-                ext_config = {hp_ranges.name_last_pos: hp_ranges.value_for_last_pos}
-            else:
-                ext_config = None
-            return RandomFromSetCandidateGenerator(
-                base_set=self._restrict_configurations,
-                random_state=self.random_state,
-                ext_config=ext_config,
-            )
-
-    def _update_restrict_configurations(
-        self,
-        new_configs: List[Dict[str, Any]],
-        random_generator: RandomFromSetCandidateGenerator,
-    ):
-        # ``random_generator`` maintains all positions returned during the
-        # search. This is used to restrict the search of ``new_configs``
-        new_ms = set(
-            self.hp_ranges.config_to_match_string(config) for config in new_configs
-        )
-        num_new = len(new_configs)
-        assert num_new >= 1
-        remove_pos = []
-        for pos in random_generator.pos_returned:
-            config_ms = self.hp_ranges.config_to_match_string(
-                self._restrict_configurations[pos]
-            )
-            if config_ms in new_ms:
-                remove_pos.append(pos)
-                if len(remove_pos) == num_new:
-                    break
-        if len(remove_pos) == 1:
-            self._restrict_configurations.pop(remove_pos[0])
-        else:
-            remove_pos = set(remove_pos)
-            self._restrict_configurations = [
-                config
-                for pos, config in enumerate(self._restrict_configurations)
-                if pos not in remove_pos
-            ]
-
-    def _get_config_modelbased(
-        self, exclusion_candidates, **kwargs
-    ) -> Optional[Configuration]:
-        # Obtain current :class:`SurrogateModel` from state transformer. Based on
-        # this, the BO algorithm components can be constructed
-        if self.do_profile:
-            self.profiler.push_prefix("getconfig")
-            self.profiler.start("all")
-            self.profiler.start("gpmodel")
-        # Note: Asking for the model triggers the posterior computation
-        model = self.state_transformer.model()
-        if self.do_profile:
-            self.profiler.stop("gpmodel")
-        # Select and fix target resource attribute (relevant in subclasses)
-        self._fix_resource_attribute(**kwargs)
-        # Create BO algorithm
-        random_generator = self._create_random_generator()
-        initial_candidates_scorer = create_initial_candidates_scorer(
-            initial_scoring=self.initial_scoring,
-            model=model,
-            acquisition_class=self.acquisition_class,
-            random_state=self.random_state,
-        )
-        local_optimizer = self.local_minimizer_class(
-            hp_ranges=self._hp_ranges_for_prediction(),
-            model=model,
-            acquisition_class=self.acquisition_class,
-            active_metric=INTERNAL_METRIC_NAME,
-        )
-        bo_algorithm = BayesianOptimizationAlgorithm(
-            initial_candidates_generator=random_generator,
-            initial_candidates_scorer=initial_candidates_scorer,
-            num_initial_candidates=self.num_initial_candidates,
-            local_optimizer=local_optimizer,
-            pending_candidate_state_transformer=None,
-            exclusion_candidates=exclusion_candidates,
-            num_requested_candidates=1,
-            greedy_batch_selection=False,
-            duplicate_detector=DuplicateDetectorIdentical(),
-            profiler=self.profiler,
-            sample_unique_candidates=False,
-            debug_log=self.debug_log,
-        )
-        # Next candidate decision
-        _config = bo_algorithm.next_candidates()
-        if len(_config) > 0:
-            config = self._postprocess_config(_config[0])
-            if self._restrict_configurations is not None:
-                # Remove ``config`` from ``_restrict_configurations``
-                self._update_restrict_configurations([config], random_generator)
-        else:
-            config = None
-        if self.do_profile:
-            self.profiler.stop("all")
-            self.profiler.pop_prefix()  # getconfig
-        return config
-
-    def get_batch_configs(
-        self,
-        batch_size: int,
-        num_init_candidates_for_batch: Optional[int] = None,
-        **kwargs,
-    ) -> List[Configuration]:
-        """
-        Asks for a batch of ``batch_size`` configurations to be suggested. This
-        is roughly equivalent to calling ``get_config`` ``batch_size`` times,
-        marking the suggested configs as pending in the state (but the state
-        is not modified here). This means the batch is chosen sequentially,
-        at about the cost of calling ``get_config`` ``batch_size`` times.
-
-        If ``num_init_candidates_for_batch`` is given, it is used instead
-        of ``num_init_candidates`` for the selection of all but the first
-        config in the batch. In order to speed up batch selection, choose
-        ``num_init_candidates_for_batch`` smaller than
-        ``num_init_candidates``.
-
-        If less than ``batch_size`` configs are returned, the search space
-        has been exhausted.
-
-        Note: Batch selection does not support ``debug_log`` right now: make sure
-        to switch this off when creating scheduler and searcher.
-        """
-        assert round(batch_size) == batch_size and batch_size >= 1
-        configs = []
-        if batch_size == 1:
-            config = self.get_config(**kwargs)
-            if config is not None:
-                configs.append(config)
-        else:
-            # :class:`DebugLogWriter` does not support batch selection right now,
-            # must be switched off
-            assert self.debug_log is None, (
-                "``get_batch_configs`` does not support debug_log right now. "
-                + "Please set ``debug_log=False`` in search_options argument "
-                + "of scheduler, or create your searcher with ``debug_log=False``"
-            )
-            exclusion_candidates = self._get_exclusion_candidates(
-                skip_observed=self._allow_duplicates
-            )
-            pick_random = True
-            while pick_random and len(configs) < batch_size:
-                config, pick_random = self._get_config_not_modelbased(
-                    exclusion_candidates
-                )
-                if pick_random:
-                    if config is not None:
-                        configs.append(config)
-                        # Even if ``allow_duplicates == True``, we don't want to have
-                        # duplicates in the same batch
-                        exclusion_candidates.add(config)
-                    else:
-                        break  # Space exhausted
-            if not pick_random:
-                # Model-based decision for remaining ones
-                num_requested_candidates = batch_size - len(configs)
-                model = self.state_transformer.model()
-                # Select and fix target resource attribute (relevant in subclasses)
-                self._fix_resource_attribute(**kwargs)
-                # Create BO algorithm
-                random_generator = self._create_random_generator()
-                initial_candidates_scorer = create_initial_candidates_scorer(
-                    initial_scoring=self.initial_scoring,
-                    model=model,
-                    acquisition_class=self.acquisition_class,
-                    random_state=self.random_state,
-                )
-                local_optimizer = self.local_minimizer_class(
-                    hp_ranges=self._hp_ranges_for_prediction(),
-                    model=model,
-                    acquisition_class=self.acquisition_class,
-                    active_metric=INTERNAL_METRIC_NAME,
-                )
-                pending_candidate_state_transformer = None
-                if num_requested_candidates > 1:
-                    # Internally, if num_requested_candidates > 1, the candidates are
-                    # selected greedily. This needs model updates after each greedy
-                    # selection, because of one more pending evaluation.
-                    # We need a copy of the state here, since
-                    # ``pending_candidate_state_transformer`` modifies the state (it
-                    # appends pending trials)
-                    temporary_state = copy.deepcopy(self.state_transformer.state)
-                    pending_candidate_state_transformer = ModelStateTransformer(
-                        model_factory=self.state_transformer.model_factory,
-                        init_state=temporary_state,
-                        skip_optimization=AlwaysSkipPredicate(),
-                    )
-                bo_algorithm = BayesianOptimizationAlgorithm(
-                    initial_candidates_generator=random_generator,
-                    initial_candidates_scorer=initial_candidates_scorer,
-                    num_initial_candidates=self.num_initial_candidates,
-                    num_initial_candidates_for_batch=num_init_candidates_for_batch,
-                    local_optimizer=local_optimizer,
-                    pending_candidate_state_transformer=pending_candidate_state_transformer,
-                    exclusion_candidates=exclusion_candidates,
-                    num_requested_candidates=num_requested_candidates,
-                    greedy_batch_selection=True,
-                    duplicate_detector=DuplicateDetectorIdentical(),
-                    sample_unique_candidates=False,
-                    debug_log=self.debug_log,
-                )
-                # Next candidate decision
-                _configs = [
-                    self._postprocess_config(config)
-                    for config in bo_algorithm.next_candidates()
-                ]
-                configs.extend(_configs)
-                if self._restrict_configurations is not None:
-                    self._update_restrict_configurations(_configs, random_generator)
-        return configs
-
-    def evaluation_failed(self, trial_id: str):
-        # Remove pending evaluation
-        self.state_transformer.drop_pending_evaluation(trial_id)
-        # Mark config as failed (which means it will be blacklisted in
-        # future get_config calls)
-        self.state_transformer.mark_trial_failed(trial_id)
-
-    def _new_searcher_kwargs_for_clone(self) -> Dict[str, Any]:
-        """
-        Helper method for ``clone_from_state``. Args need to be extended
-        by ``model_factory``, ``init_state``, ``skip_optimization``, and others
-        args becoming relevant in subclasses only.
-
-        :return: kwargs for creating new searcher object in ``clone_from_state``
-        """
-        return dict(
-            config_space=self.config_space,
-            metric=self._metric,
-            clone_from_state=True,
-            hp_ranges=self.hp_ranges,
-            acquisition_class=self.acquisition_class,
-            map_reward=self.map_reward,
-            local_minimizer_class=self.local_minimizer_class,
-            num_initial_candidates=self.num_initial_candidates,
-            num_initial_random_choices=self.num_initial_random_choices,
-            initial_scoring=self.initial_scoring,
-            skip_local_optimization=self.skip_local_optimization,
-            cost_attr=self._cost_attr,
-            resource_attr=self._resource_attr,
-            filter_observed_data=self._filter_observed_data,
-            allow_duplicates=self._allow_duplicates,
-            restrict_configurations=self._restrict_configurations,
-        )
-
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         skip_optimization = state["skip_optimization"]
-        model_factory = self.state_transformer.model_factory
+        estimator = self.state_transformer.estimator
         # Call internal constructor
         new_searcher = GPFIFOSearcher(
             **self._new_searcher_kwargs_for_clone(),
-            model_factory=model_factory,
+            estimator=estimator,
             init_state=init_state,
             skip_optimization=skip_optimization,
         )

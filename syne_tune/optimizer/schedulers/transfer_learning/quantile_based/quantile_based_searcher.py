@@ -11,13 +11,13 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Tuple
 import numpy as np
 import xgboost
 from sklearn.model_selection import train_test_split
 
 from syne_tune.blackbox_repository.blackbox_surrogate import BlackboxSurrogate
-from syne_tune.optimizer.schedulers.searchers import SearcherWithRandomSeed
+from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 
 import pandas as pd
 
@@ -92,24 +92,30 @@ def eval_model(model_pipeline, X, y):
 
 
 def subsample(
-    X_train,
-    z_train,
-    max_samples: int = 10000,
+    X: pd.DataFrame,
+    y: np.array,
+    max_samples: Optional[int] = 10000,
     random_state: np.random.RandomState = None,
-):
-    assert len(X_train) == len(z_train)
-    X_train.reset_index(inplace=True)
-    if max_samples is not None and max_samples < len(X_train):
+) -> Tuple[pd.DataFrame, np.array]:
+    """
+    Subsample both X and y with `max_samples` elements. If `max_samples` is not set then X and y are returned as such
+    and if it is set, the index of X is reset.
+    :return: (X, y) with `max_samples` sampled elements.
+    """
+    assert len(X) == len(y)
+    if max_samples is not None and max_samples < len(X):
         if random_state is None:
-            random_indices = np.random.permutation(len(X_train))[:max_samples]
+            random_indices = np.random.permutation(len(X))[:max_samples]
         else:
-            random_indices = random_state.permutation(len(X_train))[:max_samples]
-        X_train = X_train.loc[random_indices]
-        z_train = z_train[random_indices]
-    return X_train, z_train
+            random_indices = random_state.permutation(len(X))[:max_samples]
+        # reset the index to be able to address elements between [0, len(X_train)-1]
+        X.reset_index(inplace=True, drop=True)
+        X = X.loc[random_indices]
+        y = y[random_indices]
+    return X, y
 
 
-class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
+class QuantileBasedSurrogateSearcher(StochasticSearcher):
     """
     Implements the transfer-learning method:
 
@@ -123,7 +129,7 @@ class QuantileBasedSurrogateSearcher(SearcherWithRandomSeed):
     from and the best configurations are returned as next candidate to evaluate.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeed`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticSearcher`:
 
     :param mode: Whether to minimize or maximize, default to "min".
     :param transfer_learning_evaluations: Dictionary from task name to offline

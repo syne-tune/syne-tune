@@ -14,10 +14,13 @@ import numbers
 import os
 from time import perf_counter
 from typing import Optional, List, Dict, Any
+import logging
 
 from syne_tune.backend.trial_status import Trial
 from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.tuner_callback import TunerCallback, logger
+from syne_tune.tuner_callback import TunerCallback
+
+logger = logging.getLogger(__name__)
 
 
 class TensorboardCallback(TunerCallback):
@@ -133,11 +136,13 @@ class TensorboardCallback(TunerCallback):
     def _create_summary_writer(self):
         try:
             from tensorboardX import SummaryWriter
-        except ImportError:
-            logger.error(
-                "TensoboardX is not installed. You can install it via: pip install tensorboardX"
+        except ImportError as err:
+            print(
+                "TensorboardCallback requires tensorboardX to be installed:\n"
+                "   pip install tensorboardX\n\n" + str(err)
             )
             raise
+
         return SummaryWriter(self.output_path)
 
     def on_tuning_start(self, tuner):
@@ -163,10 +168,11 @@ class TensorboardCallback(TunerCallback):
         return state
 
     def __setstate__(self, state):
-        super().__init__(
+        self.__init__(
             ignore_metrics=state["ignore_metrics"],
             target_metric=state["target_metric"],
             mode="min" if state["metric_sign"] == 1 else "max",
+            log_hyperparameters=state["log_hyperparameters"],
         )
         self.results = state["results"]
         self.curr_best_value = state["curr_best_value"]

@@ -3,5 +3,5 @@ opencv-python
 ray[rllib]==2.2.0
 dm-tree==0.1.8
 gym==0.23.1
-tensorflow==2.11.0
+tensorflow==2.11.1
 pygame==2.1.2

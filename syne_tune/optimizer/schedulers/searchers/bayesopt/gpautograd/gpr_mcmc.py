@@ -43,7 +43,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_stat
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.slice import (
     SliceSampler,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 
 class GPRegressionMCMC(GaussianProcessModel):
@@ -70,7 +69,7 @@ class GPRegressionMCMC(GaussianProcessModel):
     def number_samples(self) -> int:
         return self.mcmc_config.n_samples
 
-    def fit(self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None):
+    def fit(self, data: Dict[str, Any]):
         features, targets = self._check_features_targets(
             features=data["features"], targets=data["targets"]
         )

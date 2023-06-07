@@ -24,10 +24,19 @@ from syne_tune.backend.trial_backend import (
     TrialIdAndResultList,
 )
 from syne_tune.backend.trial_status import Status, Trial, TrialResult
-from syne_tune.config_space import config_space_to_json_dict
-from syne_tune.constants import ST_TUNER_CREATION_TIMESTAMP, ST_TUNER_START_TIMESTAMP
+from syne_tune.constants import (
+    ST_TUNER_CREATION_TIMESTAMP,
+    ST_TUNER_START_TIMESTAMP,
+    ST_METADATA_FILENAME,
+    ST_TUNER_DILL_FILENAME,
+    TUNER_DEFAULT_SLEEP_TIME,
+)
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
-from syne_tune.tuner_callback import StoreResultsCallback, TunerCallback
+from syne_tune.optimizer.schedulers.remove_checkpoints import (
+    RemoveCheckpointsSchedulerMixin,
+)
+from syne_tune.tuner_callback import TunerCallback
+from syne_tune.results_callback import StoreResultsCallback
 from syne_tune.tuning_status import TuningStatus, print_best_metric_found
 from syne_tune.util import (
     RegularCallback,
@@ -38,8 +47,6 @@ from syne_tune.util import (
 )
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_SLEEP_TIME = 5.0
 
 
 class Tuner:
@@ -58,7 +65,7 @@ class Tuner:
         needs to support (at least) this number of workers to be run
         in parallel
     :param sleep_time: Time to sleep when all workers are busy. Defaults to
-        :const:`DEFAULT_SLEEP_TIME`
+        :const:`~syne_tune.constants.DEFAULT_SLEEP_TIME`
     :param results_update_interval: Frequency at which results are updated and
         stored (in seconds). Defaults to 10.
     :param print_update_interval: Frequency at which result table is printed.
@@ -82,7 +89,7 @@ class Tuner:
         when a result is seen. The default callback stores results every
         ``results_update_interval``.
     :param metadata: Dictionary of user-metadata that will be persisted in
-        ``{tuner_path}/metadata.json``, in addition to metadata provided by
+        ``{tuner_path}/{ST_METADATA_FILENAME}``, in addition to metadata provided by
         the user. ``SMT_TUNER_CREATION_TIMESTAMP`` is always included which
         measures the time-stamp when the tuner started to run.
     :param suffix_tuner_name: If ``True``, a timestamp is appended to the
@@ -112,6 +119,15 @@ class Tuner:
         ``start_jobs_without_delay=False``, since otherwise more than ``n_workers``
         warm pools will be started, because existing ones are busy with
         stopping when they should be reassigned.
+    :param trial_backend_path: If this is given, the path of ``trial_backend``
+        (where logs and checkpoints of trials are stored) is set to this.
+        Otherwise, it is set to ``self.tuner_path``, so that per-trial
+        information is written to the same path as tuning results.
+
+        If the backend is :class:`~syne_tune.backend.LocalBackend` and the
+        experiment is ru remotely, we recommend to set this, since otherwise
+        checkpoints and logs are synced to S3, along with tuning results, which
+        is costly and error-prone.
     """
 
     def __init__(
@@ -120,7 +136,7 @@ class Tuner:
         scheduler: TrialScheduler,
         stop_criterion: Callable[[TuningStatus], bool],
         n_workers: int,
-        sleep_time: float = DEFAULT_SLEEP_TIME,
+        sleep_time: float = TUNER_DEFAULT_SLEEP_TIME,
         results_update_interval: float = 10.0,
         print_update_interval: float = 30.0,
         max_failures: int = 1,
@@ -132,6 +148,7 @@ class Tuner:
         suffix_tuner_name: bool = True,
         save_tuner: bool = True,
         start_jobs_without_delay: bool = True,
+        trial_backend_path: Optional[str] = None,
     ):
         self.trial_backend = trial_backend
         self.scheduler = scheduler
@@ -167,15 +184,43 @@ class Tuner:
         # inform the backend to the folder of the Tuner. This allows the local backend
         # to store the logs and tuner results in the same folder.
         self.trial_backend.set_path(
-            results_root=str(self.tuner_path), tuner_name=self.name
+            results_root=str(self.tuner_path)
+            if trial_backend_path is None
+            else trial_backend_path,
+            tuner_name=self.name,
         )
-        self.callbacks = (
-            callbacks if callbacks is not None else [self._default_callback()]
-        )
-
+        self._init_callbacks(callbacks)
         self.tuning_status = None
         self.tuner_saver = None
         self.status_printer = None
+        self._initialize_early_checkpoint_removal()
+
+    def _init_callbacks(self, callbacks: Optional[List[TunerCallback]]):
+        if callbacks is None:
+            callbacks = [self._default_callback()]
+        else:
+            if not any(
+                isinstance(callback, StoreResultsCallback) for callback in callbacks
+            ):
+                logger.warning(
+                    "None of the callbacks provided are of type StoreResultsCallback. "
+                    "This means no tuning results will be written."
+                )
+        self.callbacks: List[TunerCallback] = callbacks
+
+    def _initialize_early_checkpoint_removal(self):
+        """
+        If the scheduler supports early checkpoint removal, the specific callback
+        for this is created here and appended to ``self.callbacks``.
+        """
+        if self.trial_backend.delete_checkpoints:
+            callback = (
+                self.scheduler.callback_for_checkpoint_removal(self.stop_criterion)
+                if isinstance(self.scheduler, RemoveCheckpointsSchedulerMixin)
+                else None
+            )
+            if callback is not None:
+                self.callbacks.append(callback)
 
     def run(self):
         """Launches the tuning."""
@@ -349,22 +394,14 @@ class Tuner:
         """
         res = metadata if metadata is not None else dict()
         self._set_metadata(res, ST_TUNER_CREATION_TIMESTAMP, time.time())
-        self._set_metadata(res, "metric_names", self.scheduler.metric_names())
-        self._set_metadata(res, "metric_mode", self.scheduler.metric_mode())
         self._set_metadata(res, "entrypoint", self.trial_backend.entrypoint_path().stem)
         self._set_metadata(res, "backend", str(type(self.trial_backend).__name__))
-
-        self._set_metadata(
-            res, "scheduler_name", str(self.scheduler.__class__.__name__)
-        )
-        config_space_json = dump_json_with_numpy(
-            config_space_to_json_dict(self.scheduler.config_space)
-        )
-        self._set_metadata(res, "config_space", config_space_json)
+        for key, value in self.scheduler.metadata().items():
+            self._set_metadata(res, key, value)
         return res
 
     def _save_metadata(self):
-        dump_json_with_numpy(self.metadata, self.tuner_path / "metadata.json")
+        dump_json_with_numpy(self.metadata, self.tuner_path / ST_METADATA_FILENAME)
 
     def _stop_condition(self) -> bool:
         return (
@@ -406,7 +443,7 @@ class Tuner:
         # - scheduler decided to interrupt them.
         # Note: ``done_trials`` includes trials which are paused.
         done_trials_statuses = self._update_running_trials(
-            trial_status_dict, new_results, callbacks=self.callbacks
+            trial_status_dict, new_results
         )
         trial_status_dict.update(done_trials_statuses)
 
@@ -482,6 +519,8 @@ class Tuner:
                 checkpoint_trial_id=suggestion.checkpoint_trial_id,
             )
             self.scheduler.on_trial_add(trial=trial)
+            for callback in self.callbacks:
+                callback.on_start_trial(trial)
             logger.info(f"(trial {trial.trial_id}) - scheduled {suggestion}")
             return trial
         else:
@@ -493,6 +532,8 @@ class Tuner:
             trial = self.trial_backend.resume_trial(
                 trial_id=suggestion.checkpoint_trial_id, new_config=suggestion.config
             )
+            for callback in self.callbacks:
+                callback.on_resume_trial(trial)
             return trial
 
     def _handle_failure(self, done_trials_statuses: Dict[int, Tuple[Trial, str]]):
@@ -508,9 +549,9 @@ class Tuner:
 
     def save(self, folder: Optional[str] = None):
         if folder is None:
-            tuner_serialized_path = self.tuner_path / "tuner.dill"
+            tuner_serialized_path = self.tuner_path / ST_TUNER_DILL_FILENAME
         else:
-            tuner_serialized_path = Path(folder) / "tuner.dill"
+            tuner_serialized_path = Path(folder) / ST_TUNER_DILL_FILENAME
         with open(tuner_serialized_path, "wb") as f:
             logger.debug(f"saving tuner in {tuner_serialized_path}")
             dill.dump(self, f)
@@ -518,7 +559,7 @@ class Tuner:
 
     @staticmethod
     def load(tuner_path: Optional[str]):
-        with open(Path(tuner_path) / "tuner.dill", "rb") as f:
+        with open(Path(tuner_path) / ST_TUNER_DILL_FILENAME, "rb") as f:
             tuner = dill.load(f)
             tuner.tuner_path = Path(experiment_path(tuner_name=tuner.name))
             return tuner
@@ -527,7 +568,6 @@ class Tuner:
         self,
         trial_status_dict: TrialAndStatusInformation,
         new_results: TrialIdAndResultList,
-        callbacks: List[TunerCallback],
     ) -> TrialAndStatusInformation:
         """
         Updates schedulers with new results and sends decision to stop/pause
@@ -542,7 +582,6 @@ class Tuner:
         :param trial_status_dict: Information on trials from
             ``trial_backend.fetch_status_results``
         :param new_results: New results from ``trial_backend.fetch_status_results``
-        :param callbacks: ``on_trial_result`` for these callbacks is called here
         :return: Dictionary mapping trial-ids that are finished to status
         """
         # gets the list of jobs from running_jobs that are done
@@ -556,7 +595,7 @@ class Tuner:
                 self.last_seen_result_per_trial[trial_id] = result
                 decision = self.scheduler.on_trial_result(trial=trial, result=result)
 
-                for callback in callbacks:
+                for callback in self.callbacks:
                     callback.on_trial_result(
                         trial=trial,
                         status=status,
@@ -615,7 +654,7 @@ class Tuner:
                 if trial_id not in done_trials:
                     self.scheduler.on_trial_complete(trial, last_result)
                 if status == Status.completed:
-                    for callback in callbacks:
+                    for callback in self.callbacks:
                         callback.on_trial_complete(trial, last_result)
                 done_trials[trial_id] = (trial, status)
 
@@ -638,7 +677,8 @@ class Tuner:
 
         return done_trials
 
-    def _default_callback(self):
+    @staticmethod
+    def _default_callback():
         """
         :return: Default callback to store results
         """

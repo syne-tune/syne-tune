@@ -23,10 +23,12 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import (
     ConfigurationFilter,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.kernel import (
-    Matern52,
     ProductKernelFunction,
     KernelFunction,
     RangeKernelFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory import (
+    base_kernel_factory,
 )
 from syne_tune.config_space import (
     Categorical,
@@ -128,11 +130,11 @@ def create_base_gp_kernel_for_warmstarting(
     _, categ_dim = hp_ranges.encoded_ranges[task_attr]
     full_dim = hp_ranges.ndarray_size
     model = kwargs.get("transfer_learning_model", "matern52_product")
-    kernel2 = Matern52(full_dim - categ_dim, ARD=True)
+    kernel2 = base_kernel_factory("matern52-ard", dimension=full_dim - categ_dim)
     if model == "matern52_product":
         # Kernel is a product of Matern with single length scale on task_id
         # attribute, and Matern ARD kernel on the rest
-        kernel1 = Matern52(categ_dim, ARD=False)
+        kernel1 = base_kernel_factory("matern52-noard", dimension=categ_dim)
         return ProductKernelFunction(kernel1, kernel2)
     else:
         assert (

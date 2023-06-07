@@ -19,7 +19,7 @@ import logging
 import time
 
 from syne_tune import Reporter
-from benchmarking.utils import (
+from syne_tune.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
     add_checkpointing_to_argparse,

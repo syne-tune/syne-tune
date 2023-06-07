@@ -27,23 +27,18 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     NextCandidatesAlgorithm,
     ScoringFunction,
     LocalOptimizer,
-    SurrogateModel,
+    Predictor,
+    CandidateGenerator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     LBFGSOptimizeAcquisition,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
     generate_unique_candidates,
-    ExclusionList,
-    CandidateGenerator,
+    DuplicateDetector,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
     DebugLogPrinter,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector import (
-    DuplicateDetector,
-)
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +88,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
         ``num_initial_candidates_for_batch`` in this case, which speeds up
         selecting large batches, but still select the first candidate
         thoroughly
-    :param profiler: If given, this is used for profiling parts in the code
     :param sample_unique_candidates: If ``True``, we check that initial candidates
         sampled at random are unique and disjoint from the exclusion list.
         This can be expensive. Defaults to ``False``
@@ -112,15 +106,14 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     greedy_batch_selection: bool
     duplicate_detector: DuplicateDetector
     num_initial_candidates_for_batch: Optional[int] = None
-    profiler: Optional[SimpleProfiler] = None
     sample_unique_candidates: bool = False
     debug_log: Optional[DebugLogPrinter] = None
 
     # Note: For greedy batch selection (num_outer_iterations > 1), the
-    # underlying SurrrogateModel changes with each new pending candidate. The
-    # model changes are managed by pending_candidate_state_transformer. The
-    # model has to be passed to both initial_candidates_scorer and
-    # local_optimizer.
+    # underlying ``Predictor`` changes with each new pending candidate. The
+    # model changes are managed by ``pending_candidate_state_transformer``. The
+    # model has to be passed to both ``initial_candidates_scorer`` and
+    # ``local_optimizer``.
     def next_candidates(self) -> List[Configuration]:
         if self.greedy_batch_selection:
             # Select batch greedily, one candidate at a time, updating the
@@ -155,7 +148,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             next_trial_id += 1
         candidates = []
         just_added = True
-        model = None  # SurrogateModel, if num_outer_iterations > 1
+        predictor = None  # Predictor, if num_outer_iterations > 1
         for outer_iter in range(num_outer_iterations):
             if just_added:
                 if self.exclusion_candidates.config_space_exhausted():
@@ -176,7 +169,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                 num_initial_candidates = self.num_initial_candidates
             inner_candidates = self._get_next_candidates(
                 num_inner_candidates,
-                model=model,
+                predictor=predictor,
                 num_initial_candidates=num_initial_candidates,
             )
             candidates.extend(inner_candidates)
@@ -193,7 +186,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                         trial_id=str(next_trial_id), config=candidate
                     )
                     next_trial_id += 1
-                model = self.pending_candidate_state_transformer.model(
+                predictor = self.pending_candidate_state_transformer.fit(
                     skip_optimization=True
                 )
             if (
@@ -212,7 +205,7 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
     def _get_next_candidates(
         self,
         num_candidates: int,
-        model: Optional[SurrogateModel],
+        predictor: Optional[Predictor],
         num_initial_candidates: Optional[int] = None,
     ):
         if num_initial_candidates is None:
@@ -223,10 +216,6 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             f"BayesOpt Algorithm: Generating {num_initial_candidates} "
             "initial candidates."
         )
-        if self.profiler is not None:
-            self.profiler.push_prefix("nextcand")
-            self.profiler.start("all")
-            self.profiler.start("genrandom")
         if self.sample_unique_candidates:
             # This can be expensive, depending on what type Candidate is
             initial_candidates = generate_unique_candidates(
@@ -242,15 +231,12 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                     num_initial_candidates, exclusion_list=self.exclusion_candidates
                 )
             )
-        if self.profiler is not None:
-            self.profiler.stop("genrandom")
-            self.profiler.start("scoring")
         logger.info("BayesOpt Algorithm: Scoring (and reordering) candidates.")
         if self.debug_log is not None:
             candidates_and_scores = _order_candidates(
-                initial_candidates,
-                self.initial_candidates_scorer,
-                model=model,
+                candidates=initial_candidates,
+                scoring_function=self.initial_candidates_scorer,
+                predictor=predictor,
                 with_scores=True,
             )
             initial_candidates = [cand for score, cand in candidates_and_scores]
@@ -259,16 +245,15 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
             self.debug_log.set_init_config(config, top_scores)
         else:
             initial_candidates = _order_candidates(
-                initial_candidates, self.initial_candidates_scorer, model=model
+                candidates=initial_candidates,
+                scoring_function=self.initial_candidates_scorer,
+                predictor=predictor,
             )
-        if self.profiler is not None:
-            self.profiler.stop("scoring")
-            self.profiler.start("localsearch")
         candidates_with_optimization = _lazily_locally_optimize(
-            initial_candidates,
-            self.local_optimizer,
+            candidates=initial_candidates,
+            local_optimizer=self.local_optimizer,
             hp_ranges=self.exclusion_candidates.hp_ranges,
-            model=model,
+            predictor=predictor,
         )
         logger.info("BayesOpt Algorithm: Selecting final set of candidates.")
         if self.debug_log is not None and isinstance(
@@ -283,28 +268,24 @@ class BayesianOptimizationAlgorithm(NextCandidatesAlgorithm):
                 [peek], candidates_with_optimization
             )
         candidates = _pick_from_locally_optimized(
-            candidates_with_optimization,
-            self.exclusion_candidates,
-            num_candidates,
-            self.duplicate_detector,
+            candidates_with_optimization=candidates_with_optimization,
+            exclusion_candidates=self.exclusion_candidates,
+            num_candidates=num_candidates,
+            duplicate_detector=self.duplicate_detector,
         )
-        if self.profiler is not None:
-            self.profiler.stop("localsearch")
-            self.profiler.stop("all")
-            self.profiler.pop_prefix()  # nextcand
         return candidates
 
 
 def _order_candidates(
     candidates: List[Configuration],
     scoring_function: ScoringFunction,
-    model: Optional[SurrogateModel],
+    predictor: Optional[Predictor],
     with_scores: bool = False,
 ):
     if len(candidates) == 0:
         return []
     # scored in batch as this can be more efficient
-    scores = scoring_function.score(candidates, model=model)
+    scores = scoring_function.score(candidates, predictor=predictor)
     sorted_list = sorted(zip(scores, candidates), key=lambda x: x[0])
     if with_scores:
         return sorted_list
@@ -316,7 +297,7 @@ def _lazily_locally_optimize(
     candidates: List[Configuration],
     local_optimizer: LocalOptimizer,
     hp_ranges: HyperparameterRanges,
-    model: Optional[SurrogateModel],
+    predictor: Optional[Predictor],
 ) -> Iterator[Tuple[Configuration, Configuration]]:
     """
     Due to local deduplication we do not know in advance how many candidates
@@ -324,11 +305,11 @@ def _lazily_locally_optimize(
     of locally optimized candidates.
     Note that ``candidates`` may contain duplicates, but such are skipped here.
     """
-    considered_already = ExclusionList.empty_list(hp_ranges)
+    considered_already = ExclusionList(hp_ranges)
     for cand in candidates:
         if not considered_already.contains(cand):
             considered_already.add(cand)
-            yield cand, local_optimizer.optimize(cand, model=model)
+            yield cand, local_optimizer.optimize(cand, predictor=predictor)
 
 
 # Note: If ``duplicate_detector`` is at least :class:`DuplicateDetectorIdentical`,

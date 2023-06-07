@@ -18,10 +18,26 @@ import argparse
 import logging
 import time
 import math
+from pathlib import Path
+
+try:
+    # Benchmark-specific imports are done here, in order to avoid import
+    # errors if the dependencies are not installed (such errors should happen
+    # only when the code is really called)
+    from io import open
+    import numpy as np
+    from filelock import SoftFileLock, Timeout
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+except ImportError:
+    logging.info(
+        f"Please install benchmark-specific dependencies ({Path(__file__).parent / 'requirements.txt'})"
+    )
 
 from syne_tune import Reporter
 from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
-from benchmarking.utils import (
+from syne_tune.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
     add_checkpointing_to_argparse,
@@ -141,10 +157,6 @@ def objective(config):
     clip = config["clip"]
     lr_factor = config["lr_factor"]
     report_current_best = parse_bool(config["report_current_best"])
-    trial_id = config.get("trial_id")
-    debug_log = trial_id is not None
-    if debug_log:
-        print("Trial {}: Starting evaluation".format(trial_id), flush=True)
 
     torch.manual_seed(seed)
     if torch.cuda.is_available():
@@ -318,28 +330,8 @@ def objective(config):
         }
         report(**report_kwargs)
 
-        if debug_log:
-            print(
-                "Trial {}: epoch = {}, objective = {:.3f}, elapsed_time = {:.2f}".format(
-                    trial_id, epoch, objective, elapsed_time
-                ),
-                flush=True,
-            )
-
 
 if __name__ == "__main__":
-    # Benchmark-specific imports are done here, in order to avoid import
-    # errors if the dependencies are not installed (such errors should happen
-    # only when the code is really called)
-    from io import open
-    import numpy as np
-    from filelock import SoftFileLock, Timeout
-    import torch
-    import torch.nn as nn
-    import torch.nn.functional as F
-
-    # References to superclasses require torch and torch.nn to be defined here
-
     # Temporarily leave PositionalEncoding module here. Will be moved somewhere else.
     class PositionalEncoding(nn.Module):
         r"""Inject some information about the relative or absolute position of the tokens
@@ -505,7 +497,6 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, required=True)
     parser.add_argument("--dataset_path", type=str, required=True)
     parser.add_argument("--report_current_best", type=str, default="False")
-    parser.add_argument("--trial_id", type=str)
     add_to_argparse(parser, _config_space)
     add_checkpointing_to_argparse(parser)
 

@@ -38,13 +38,30 @@ class TrialBackend:
 
     :param delete_checkpoints: If ``True``, the checkpoints written by a trial
         are deleted once the trial is stopped or is registered as
-        completed. Also, as part of :meth:`stop_all` called at the end of the
-        tuning loop, all remaining checkpoints are deleted. Defaults to
-        ``False``.
+        completed. Checkpoints of paused trials may also be removed, if the
+        scheduler supports early checkpoint removal. Also, as part of
+        :meth:`stop_all` called at the end of the tuning loop, all remaining
+        checkpoints are deleted. Defaults to ``False`` (no checkpoints are
+        removed).
+    :param pass_args_as_json: Normally, the hyperparameter configuration is
+        passed as command line arguments to the trial evaluation script. This
+        works if all hyperparameters have elementary types. If
+        ``pass_args_as_json == True``, the configuration is instead written into
+        a JSON file, whose name is passed as command line argument
+        :const:`~syne_tune.constants.ST_CONFIG_JSON_FNAME_ARG`. The trial
+        evaluation script then loads the configuration from this file. This allows
+        the configuration to contain entries with complex types (e.g., lists or
+        dictionaries), as long as they are JSON-serializable.
+        Defaults to ``False``.
     """
 
-    def __init__(self, delete_checkpoints: bool = False):
+    def __init__(
+        self,
+        delete_checkpoints: bool = False,
+        pass_args_as_json: bool = False,
+    ):
         self.delete_checkpoints = delete_checkpoints
+        self.pass_args_as_json = pass_args_as_json
         self.trial_ids = []
         self._trial_dict = dict()
 
@@ -146,6 +163,7 @@ class TrialBackend:
         assert trial_id < len(self.trial_ids), f"Invalid trial_id = {trial_id}"
         self._trial_dict[trial_id].status = Status.paused
         self._pause_trial(trial_id=trial_id, result=result)
+        self._cleanup_after_trial(trial_id)
 
     def _pause_trial(self, trial_id: int, result: Optional[dict]):
         """Implements :meth:`pause_trial`.
@@ -173,6 +191,17 @@ class TrialBackend:
         if self.delete_checkpoints:
             logger.info(f"Removing checkpoints for trial_id = {trial_id}")
             self.delete_checkpoint(trial_id=trial_id)  # checkpoint not needed anymore
+        self._cleanup_after_trial(trial_id)
+
+    def _cleanup_after_trial(self, trial_id: int):
+        """
+        This is called whenever a trial is stopped or paused.
+        Note that ``delete_checkpoints`` should not be dealt with here, since
+        checkpoints must not be deleted when a trial is paused.
+
+        :param trial_id: ID of trial to clean up after
+        """
+        pass
 
     def _stop_trial(self, trial_id: int, result: Optional[dict]):
         """Backend specific operation that stops the trial.
@@ -293,6 +322,7 @@ class TrialBackend:
             logger.info("Removing all remaining checkpoints of trials")
             for trial_id in self.trial_ids:
                 self.delete_checkpoint(trial_id=trial_id)
+                self._cleanup_after_trial(trial_id)
 
     def set_path(
         self, results_root: Optional[str] = None, tuner_name: Optional[str] = None

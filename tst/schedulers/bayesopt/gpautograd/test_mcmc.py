@@ -167,6 +167,8 @@ def build_kernel():
     return WarpedKernel(kernel=kernel, warpings=[warping])
 
 
+# TODO: This test is not useful. It depends on the internal representation, namely
+# the ordering of components, which has nothing to do with what this class is doing
 def test_get_gp_hps():
     mean = ScalarMeanFunction()
     warped_kernel = build_kernel()
@@ -175,9 +177,9 @@ def test_get_gp_hps():
     )
     likelihood.initialize(force_reinit=True)
     hp_values = _get_gp_hps(likelihood)
-    # the oder of hps are noise, mean, covariance scale, bandwidth, warping a, warping b
+    # The order of hps are noise, covariance scale, bandwidth, warping a, warping b, mean
     numpy.testing.assert_array_almost_equal(
-        hp_values, anp.array([1e-6, 0.0, 1.0, 1.0, 1.0, 1.0])
+        hp_values, anp.array([1e-6, 1.0, 1.0, 1.0, 1.0, 0.0])
     )
 
 

@@ -7,6 +7,11 @@ ideas used to speed up HPO. You will learn about the differences and relationshi
 between different methods, and how to choose the best approach for your own
 problems.
 
+.. note::
+   This tutorial makes use of the *benchmarking* framework, you need to have
+   `installed Syne Tune from source <../../getting_started.html#installation>`__
+   to run it.
+
 .. toctree::
    :name: Multi-Fidelity Hyperparameter Optimization Sections
    :maxdepth: 1

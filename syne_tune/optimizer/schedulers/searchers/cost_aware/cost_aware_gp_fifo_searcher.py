@@ -44,15 +44,15 @@ class MultiModelGPFIFOSearcher(GPFIFOSearcher):
     """
 
     def _call_create_internal(self, kwargs_int):
-        output_model_factory = kwargs_int.pop("output_model_factory")
+        output_estimator = kwargs_int.pop("output_estimator")
         output_skip_optimization = kwargs_int.pop("output_skip_optimization")
-        kwargs_int["model_factory"] = output_model_factory[INTERNAL_METRIC_NAME]
+        kwargs_int["estimator"] = output_estimator[INTERNAL_METRIC_NAME]
         kwargs_int["skip_optimization"] = output_skip_optimization[INTERNAL_METRIC_NAME]
         self._create_internal(**kwargs_int)
         # Replace ``state_transformer``
         init_state = self.state_transformer.state
         self.state_transformer = ModelStateTransformer(
-            model_factory=output_model_factory,
+            estimator=output_estimator,
             init_state=init_state,
             skip_optimization=output_skip_optimization,
         )
@@ -140,11 +140,11 @@ class CostAwareGPFIFOSearcher(MultiModelGPFIFOSearcher):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         output_skip_optimization = state["skip_optimization"]
-        output_model_factory = self.state_transformer.model_factory
+        output_estimator = self.state_transformer.estimator
         # Call internal constructor
         new_searcher = CostAwareGPFIFOSearcher(
             **self._new_searcher_kwargs_for_clone(),
-            output_model_factory=output_model_factory,
+            output_estimator=output_estimator,
             init_state=init_state,
             output_skip_optimization=output_skip_optimization,
         )

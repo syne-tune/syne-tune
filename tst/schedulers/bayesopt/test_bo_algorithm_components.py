@@ -26,10 +26,10 @@ from syne_tune.config_space import uniform, choice, randint
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.test_objects import (
     create_tuning_job_state,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
+from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     RandomFromSetCandidateGenerator,
-    ExclusionList,
 )
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 
 
 @pytest.fixture(scope="function")
@@ -134,7 +134,7 @@ def test_random_from_set_candidate_generator(
         random_state=random_state,
     )
     if excl_list:
-        exclusion_list = ExclusionList.empty_list(hp_ranges)
+        exclusion_list = ExclusionList(hp_ranges)
         for c in excl_list:
             exclusion_list.add(c)
     else:

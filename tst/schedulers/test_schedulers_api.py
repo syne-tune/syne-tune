@@ -38,7 +38,14 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     SyncMOBSTER,
     ZeroShotTransfer,
+    MOREA,
+    NSGA2,
+    CQR,
+    ASHACQR,
     # ASHACTS,
+)
+from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+    SurrogateSearcher,
 )
 from syne_tune.optimizer.scheduler import SchedulerDecision
 from syne_tune.optimizer.schedulers import (
@@ -49,6 +56,15 @@ from syne_tune.optimizer.schedulers import (
     RayTuneScheduler,
 )
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
+    LinearScalarizedScheduler,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
+    LCBAcquisitionFunction,
+)
+from syne_tune.optimizer.schedulers.searchers.sklearn.sklearn_surrogate_searcher import (
+    SKLearnSurrogateSearcher,
+)
 from syne_tune.optimizer.schedulers.transfer_learning import (
     TransferLearningTaskEvaluations,
     BoundingBox,
@@ -58,7 +74,7 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.quantile_ba
     QuantileBasedSurrogateSearcher,
 )
 from syne_tune.config_space import randint, uniform, choice
-
+from tst.util_test import TestEstimator
 
 config_space = {
     "steps": 100,
@@ -207,12 +223,41 @@ list_schedulers_to_test = [
     RandomSearch(config_space=config_space, metric=metric1, mode=mode),
     GridSearch(config_space=categorical_config_space, metric=metric1, mode=mode),
     BayesianOptimization(config_space=config_space, metric=metric1, mode=mode),
+    FIFOScheduler(
+        searcher=SurrogateSearcher(
+            mode=mode,
+            config_space=config_space,
+            metric=metric1,
+        ),
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+    ),
+    FIFOScheduler(
+        searcher="cqr",
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+    ),
     REA(
         config_space=config_space,
         metric=metric1,
         population_size=1,
         sample_size=2,
         mode=mode,
+    ),
+    MOREA(
+        config_space=config_space,
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+        population_size=1,
+        sample_size=2,
+    ),
+    NSGA2(
+        config_space=config_space,
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+        population_size=10,
     ),
     ASHA(
         config_space=config_space,
@@ -293,6 +338,20 @@ list_schedulers_to_test = [
         config_space=config_space,
         metric=metric1,
     ),
+    CQR(
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+        num_init_random_draws=2,
+    ),
+    ASHACQR(
+        mode=mode,
+        config_space=config_space,
+        metric=metric1,
+        resource_attr=resource_attr,
+        search_options={"num_init_random_draws": 2},
+        max_resource_attr="steps",
+    ),
     RUSHScheduler(
         resource_attr=resource_attr,
         max_t=max_t,
@@ -343,7 +402,45 @@ list_schedulers_to_test = [
     #     max_t=max_t,
     #     resource_attr=resource_attr,
     # ),
+    LinearScalarizedScheduler(
+        config_space=config_space,
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+        scalarization_weights=[1, 1],
+        base_scheduler_factory=FIFOScheduler,
+    ),
+    LinearScalarizedScheduler(
+        config_space=config_space,
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+        scalarization_weights=[1, 1],
+        base_scheduler_factory=FIFOScheduler,
+        searcher="random",
+    ),
+    FIFOScheduler(
+        config_space,
+        searcher=SKLearnSurrogateSearcher(
+            config_space=config_space,
+            metric="mean_loss",
+            estimator=TestEstimator(),
+            scoring_class_and_args=LCBAcquisitionFunction,
+        ),
+        metric=metric1,
+        mode=mode,
+    ),
+    FIFOScheduler(
+        config_space,
+        searcher=SKLearnSurrogateSearcher(
+            config_space=config_space,
+            metric="mean_loss",
+            estimator=TestEstimator(),
+        ),
+        metric=metric1,
+        mode=mode,
+    ),
 ]
+
+
 if sys.version_info >= (3, 8):
     # BoTorch scheduler requires Python 3.8 or later
     from syne_tune.optimizer.baselines import BoTorch
@@ -361,11 +458,13 @@ if sys.version_info >= (3, 8):
 def test_schedulers_api(scheduler):
     trial_ids = range(4)
 
-    if isinstance(scheduler, MOASHA):
+    if scheduler.is_multiobjective_scheduler():
         assert scheduler.metric_names() == [metric1, metric2]
     else:
         assert scheduler.metric_names() == [metric1]
-    assert scheduler.metric_mode() == mode
+
+    if isinstance(scheduler, MOREA):
+        assert scheduler.metric_mode() == [mode, mode]
 
     # checks suggestions are properly formatted
     trials = []
@@ -400,3 +499,10 @@ def test_schedulers_api(scheduler):
             dill.dump(scheduler, f)
         with open(Path(local_path) / "scheduler.dill", "rb") as f:
             dill.load(f)
+
+    # Check metadata, metric_names() and metric_mode() are tested above
+    meta = scheduler.metadata()
+    assert meta["metric_names"] == scheduler.metric_names()
+    assert meta["metric_mode"] == scheduler.metric_mode()
+    assert meta["scheduler_name"] == str(scheduler.__class__.__name__)
+    assert "config_space" in meta

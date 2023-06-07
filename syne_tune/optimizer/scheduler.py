@@ -11,16 +11,31 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 import logging
 
 from syne_tune.backend.trial_status import Trial
-from syne_tune.config_space import non_constant_hyperparameter_keys, cast_config_values
+from syne_tune.config_space import (
+    non_constant_hyperparameter_keys,
+    cast_config_values,
+    config_space_to_json_dict,
+)
+from syne_tune.util import dump_json_with_numpy
 
 logger = logging.getLogger(__name__)
 
 
 class SchedulerDecision:
+    """
+    Possible return values of :meth:`TrialScheduler.on_trial_result`, signals the
+    tuner how to proceed with the reporting trial.
+
+    The difference between :const:`PAUSE` and :const:`STOP` is important. If a
+    trial is stopped, it cannot be resumed afterwards. Its checkpoints may be
+    deleted. If a trial is paused, it may be resumed in the future, and its
+    most recent checkpoint should be retained.
+    """
+
     CONTINUE = "CONTINUE"  #: Status for continuing trial execution
     PAUSE = "PAUSE"  #: Status for pausing trial execution
     STOP = "STOP"  #: Status for stopping trial execution
@@ -28,7 +43,7 @@ class SchedulerDecision:
 
 @dataclass
 class TrialSuggestion:
-    """Suggestion returned by a scheduler.
+    """Suggestion returned by :meth:`TrialScheduler.suggest`
 
     :param spawn_new_trial_id: Whether a new ``trial_id`` should be used.
     :param checkpoint_trial_id: Checkpoint of this trial ID should
@@ -251,16 +266,39 @@ class TrialScheduler:
     def metric_names(self) -> List[str]:
         """
         :return: List of metric names. The first one is the target
-            metric optimized over
+            metric optimized over, unless the scheduler is a genuine
+            multi-objective metric (for example, for sampling the Pareto front)
         """
         raise NotImplementedError()
 
-    def metric_mode(self) -> str:
+    def metric_mode(self) -> Union[str, List[str]]:
         """
         :return: "min" if target metric is minimized, otherwise "max".
-            Here, "min" should be the default.
+            Here, "min" should be the default. For a genuine multi-objective
+            scheduler, a list of modes is returned
         """
         if hasattr(self, "mode"):
             return self.mode
         else:
             raise NotImplementedError
+
+    def metadata(self) -> Dict[str, Any]:
+        """
+        :return: Metadata for the scheduler
+        """
+        config_space_json = dump_json_with_numpy(
+            config_space_to_json_dict(self.config_space)
+        )
+        return {
+            "metric_names": self.metric_names(),
+            "metric_mode": self.metric_mode(),
+            "scheduler_name": str(self.__class__.__name__),
+            "config_space": config_space_json,
+        }
+
+    def is_multiobjective_scheduler(self) -> bool:
+        """
+        Return True if a scheduler is multi-objective.
+        """
+        # This is set to False as a default but should be overriden by any classes that implement MO Schedulers
+        return False

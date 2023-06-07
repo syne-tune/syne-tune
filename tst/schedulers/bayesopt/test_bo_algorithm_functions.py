@@ -16,8 +16,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algo
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm_components import (
     NoOptimization,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.duplicate_detector import (
     DuplicateDetectorIdentical,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.hp_ranges_factory import (
@@ -101,7 +99,7 @@ def test_lazily_locally_optimize():
         candidates=original_candidates,
         local_optimizer=NoOptimization(None, None, None),
         hp_ranges=hp_ranges,
-        model=None,
+        predictor=None,
     ):
         # no optimization is applied ot the candidates
         assert candidate[0] == original_candidates[i]
@@ -116,7 +114,7 @@ def test_lazily_locally_optimize():
                     candidates=[],
                     local_optimizer=NoOptimization(None, None, None),
                     hp_ranges=hp_ranges,
-                    model=None,
+                    predictor=None,
                 )
             )
         )

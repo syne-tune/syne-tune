@@ -34,8 +34,12 @@ from syne_tune.backend.simulator_backend.events import (
     StopEvent,
     OnTrialResultEvent,
 )
-from syne_tune.constants import ST_CHECKPOINT_DIR, ST_WORKER_TIMESTAMP, ST_TUNER_TIME
-from syne_tune.tuner import DEFAULT_SLEEP_TIME
+from syne_tune.constants import (
+    ST_CHECKPOINT_DIR,
+    ST_WORKER_TIMESTAMP,
+    ST_TUNER_TIME,
+    TUNER_DEFAULT_SLEEP_TIME,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +133,7 @@ class SimulatorBackend(LocalBackend):
         entry_point: str,
         elapsed_time_attr: str,
         simulator_config: Optional[SimulatorConfig] = None,
-        tuner_sleep_time: float = DEFAULT_SLEEP_TIME,
+        tuner_sleep_time: float = TUNER_DEFAULT_SLEEP_TIME,
         debug_resource_attr: Optional[str] = None,
     ):
         super().__init__(entry_point=entry_point, rotate_gpus=False)
@@ -483,7 +487,7 @@ class SimulatorBackend(LocalBackend):
         trial_path = self.trial_path(trial_id)
         os.makedirs(trial_path, exist_ok=True)
         config_copy = config.copy()
-        config_copy[ST_CHECKPOINT_DIR] = str(trial_path / "checkpoints")
+        config_copy[ST_CHECKPOINT_DIR] = str(self.checkpoint_trial_path(trial_id))
         config_str = " ".join(
             [f"--{key} {value}" for key, value in config_copy.items()]
         )

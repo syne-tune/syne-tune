@@ -189,6 +189,12 @@ class MOASHA(TrialScheduler):
     def on_trial_remove(self, trial: Trial):
         del self._trial_info[trial.trial_id]
 
+    def is_multiobjective_scheduler(self) -> bool:
+        """
+        Return True if a scheduler is multi-objective.
+        """
+        return True
+
 
 class _Bracket:
     """Bookkeeping system to track recorded values.
@@ -245,6 +251,7 @@ class _Bracket:
                 break
         return action
 
+    # TODO: Merge with plotting tools in ``experiments``
     def _plot(self, milestone, metric_recorded, priorities):
         """
         Plots the multiobjective candidates and the rank given by the multiobjective priority.

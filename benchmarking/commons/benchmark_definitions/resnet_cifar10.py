@@ -16,6 +16,7 @@ from benchmarking.commons.benchmark_definitions.common import RealBenchmarkDefin
 from benchmarking.training_scripts.resnet_cifar10.resnet_cifar10 import (
     METRIC_NAME,
     RESOURCE_ATTR,
+    MAX_RESOURCE_ATTR,
     _config_space,
 )
 from syne_tune.remote.estimators import (
@@ -40,12 +41,11 @@ def resnet_cifar10_default_params(sagemaker_backend: bool):
     }
 
 
-# Note: Latest PyTorch version 1.10 not yet supported with remote launching
 def resnet_cifar10_benchmark(sagemaker_backend: bool = False, **kwargs):
     params = resnet_cifar10_default_params(sagemaker_backend)
     config_space = dict(
         _config_space,
-        epochs=params["max_resource_level"],
+        **{MAX_RESOURCE_ATTR: params["max_resource_level"]},
         dataset_path=params["dataset_path"],
         num_gpus=params["num_gpus"],
     )
@@ -60,7 +60,7 @@ def resnet_cifar10_benchmark(sagemaker_backend: bool = False, **kwargs):
         instance_type=params["instance_type"],
         metric=METRIC_NAME,
         mode="max",
-        max_resource_attr="epochs",
+        max_resource_attr=MAX_RESOURCE_ATTR,
         resource_attr=RESOURCE_ATTR,
         framework="PyTorch",
     )

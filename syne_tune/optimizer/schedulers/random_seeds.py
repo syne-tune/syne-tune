@@ -11,6 +11,14 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
+from numpy.random import RandomState
+
+
+RANDOM_SEED_UPPER_BOUND = 2**31 - 1
+
+
+def generate_random_seed(random_state: RandomState = np.random) -> int:
+    return random_state.randint(0, RANDOM_SEED_UPPER_BOUND)
 
 
 class RandomSeedGenerator:
@@ -18,4 +26,4 @@ class RandomSeedGenerator:
         self._random_state = np.random.RandomState(master_seed)
 
     def __call__(self) -> int:
-        return self._random_state.randint(0, 2**31 - 1)
+        return generate_random_seed(self._random_state)

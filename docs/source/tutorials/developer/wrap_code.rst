@@ -12,7 +12,7 @@ on surrogate benchmarks, or distributed across several machines.
 
 In this chapter, we will walk through an example of how to wrap Gaussian
 process based Bayesian optimization from
-`BoTorch <https://botorch.org/docs/introduction>`_.
+`BoTorch <https://botorch.org/docs/introduction>`__.
 
 BoTorchSearcher
 ---------------
@@ -20,7 +20,7 @@ BoTorchSearcher
 While Syne Tune supports Gaussian process based Bayesian optimization natively
 via :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`, with
 ``searcher="bayesopt"`` in :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`,
-you can also use `BoTorch <https://botorch.org/docs/introduction>`_ via
+you can also use `BoTorch <https://botorch.org/docs/introduction>`__ via
 :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher`,
 with ``searcher="botorch"`` in
 :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
@@ -44,9 +44,10 @@ given all previous data), but has robust and easy to use solutions in Syne Tune,
 as we demonstrate here. Here is
 :meth:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher._get_config`:
 
-.. literalinclude:: ../../examples/syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
-   :caption: examples/syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
-   :lines: 112-125
+.. literalinclude:: ../../../../syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
+   :caption: syne_tune/optimizer/schedulers/searchers/botorch/botorch_searcher.py
+   :start-at: def _get_config(self, trial_id: str, **kwargs)
+   :end-before: def register_pending(
 
 * First, :code:`self._next_initial_config()` is called, which returns a
   configuration from ``points_to_evaluate`` if there is still one not yet
@@ -56,12 +57,12 @@ as we demonstrate here. Here is
   (:code:`self._get_random_config()`), otherwise one suggested by BoTorch
   (:code:`self._sample_next_candidate()`).
 * Here, :code:`self._get_random_config()` is implemented in the base class
-  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+  :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
   and calls the same code as all other schedulers employing random suggestions
   in Syne Tune. In particular, this function allows to pass an exclusion list
   of configurations to avoid.
 * The exclusion list :code:`self._excl_list` is maintained in the base class
-  :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`.
+  :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`.
   If ``allow_duplicates == False``, it contains all configurations suggested
   previously. Otherwise, it contains configurations of failed or pending trials,
   which we want to avoid in any case. The exclusion list is implemented as
@@ -72,7 +73,7 @@ as we demonstrate here. Here is
   happen that all configurations have already been suggested, in which case
   ``get_config`` returns ``None``.
 * Finally, ``_get_config`` is called in
-  :meth:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates.get_config`,
+  :meth:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher.get_config`,
   where if ``allow_duplicates == False``, the new configuration is added to the
   exclusion list.
 * In :meth:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher._sample_next_candidate`,
@@ -120,7 +121,7 @@ encoded as vectors with values in :math:`[0, 1]`, which is done using the
 .. note::
    When implementing a new searcher, whether from scratch or wrapping external
    code, we recommend you use the base class
-   :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`
+   :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`
    and implement the ``allow_duplicates`` argument. This will also give you
    proper random seed management and ``points_to_evaluate``. Instead of
    ``get_config``, you implement the internal method ``_get_config``. If you need
@@ -150,7 +151,7 @@ hyperparameter domains.
 
 With :class:`~syne_tune.optimizer.schedulers.searchers.utils.HyperparameterRanges`,
 Syne Tune provides encoding and decoding for all domains in
-:mod:`syne_tune.config_space` (see `this tutorial <../search_space.html>`_ for
+:mod:`syne_tune.config_space` (see `this tutorial <../search_space.html>`__ for
 a summary). In fact, this API can be implemented in different ways, and the
 factory function
 :func:`~syne_tune.optimizer.schedulers.searchers.utils.make_hyperparameter_ranges`
@@ -189,11 +190,11 @@ External code can come with extra dependencies. For example, ``BoTorchSearcher``
 depends on ``torch``, ``botorch``, and ``gpytorch``. If you just use Syne Tune
 for your own experiments, you do not have to worry about this. However, we
 strongly encourage you to
-`contribute back your extension <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`_.
+`contribute back your extension <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__.
 
 Since some applications of Syne Tune require restricted dependencies, such are
 carefully managed. There are different
-`installation options <../../faq.html#what-are-the-different-installation-options-supported>`_,
+`installation options <../../faq.html#what-are-the-different-installation-options-supported>`__,
 each of which coming with a ``requirements.txt`` file (see ``setup.py`` for
 details).
 

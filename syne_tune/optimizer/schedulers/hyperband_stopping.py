@@ -11,33 +11,104 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any
-
-import numpy as np
+from typing import List, Tuple, Dict, Any, Optional
+from sortedcontainers import SortedList
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
 class RungEntry:
     """
-    :param level: Rung level :math:`r_j`
-    :param prom_quant: romotion quantile :math:`q_j`
-    :param data: Data of all previous jobs reaching the level
+    Represents entry in a rung. This class is extended by rung level systems
+    which need to maintain more information per entry.
+
+    :param trial_id: ID of trial
+    :param metric_val: Metric value
     """
 
-    level: int
-    prom_quant: float
-    data: Dict[str, Any]
+    def __init__(self, trial_id: str, metric_val: float):
+        self.trial_id = trial_id
+        self.metric_val = metric_val
 
 
-def quantile_cutoff(values, prom_quant, mode):
-    if len(values) < 2:
-        # Cannot determine cutoff from one value
-        return None
-    q = prom_quant if mode == "min" else (1 - prom_quant)
-    return np.quantile(values, q)
+class Rung:
+    """
+    :param level: Rung level :math:`r_j`
+    :param prom_quant: promotion quantile :math:`q_j`
+    :param data: Data of all previous jobs reaching the level. This list is
+        kept sorted w.r.t. ``metric_val``, so that best values come first
+    """
+
+    def __init__(
+        self,
+        level: int,
+        prom_quant: float,
+        mode: str,
+        data: Optional[List[RungEntry]] = None,
+    ):
+        self.level = level
+        assert 0 < prom_quant < 1
+        self.prom_quant = prom_quant
+        assert mode in ["min", "max"]
+        self._is_min = mode == "min"
+        # ``SortedList`` supports insertion in :math:`O(log n)`
+        if data is None:
+            data = []
+        sign = 1 if self._is_min else -1
+        self.data = SortedList(iterable=data, key=lambda x: sign * x.metric_val)
+        # We need to test whether ``trial_id`` is in the rung, but not at which
+        # position it is
+        self._trial_ids = {entry.trial_id for entry in data}
+
+    def add(self, entry: RungEntry):
+        self.data.add(entry)
+        self._trial_ids.add(entry.trial_id)
+
+    def pop(self, pos: int) -> RungEntry:
+        entry = self.data.pop(pos)
+        self._trial_ids.remove(entry.trial_id)
+        return entry
+
+    def __contains__(self, trial_id: str):
+        return trial_id in self._trial_ids
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def quantile(self) -> Optional[float]:
+        """
+        Returns same value as ``numpy.quantile(metric_vals, q)``, where
+        ``metric_vals`` are the metric values in ``data``, and
+        ``q = prom_quant`` if ``mode == "min"``, ``q = ``1 - prom_quant``
+        otherwise. If ``len(data) < 2``, we return ``None``.
+
+        See `here <https://numpy.org/doc/stable/reference/generated/numpy.quantile.html>`__.
+        The default for ``numpy.quantile`` is ``method="linear"``.
+
+        :return: See above
+        """
+        len_data = len(self.data)
+        if len_data < 2:
+            return None
+        # In ``numpy.quantile``, values are sorted in increasing order. This is
+        # the case for ``self.data`` for "min" mode, otherwise ``self.data`` is
+        # sorted in decreasing order, so we need to use it in reverse
+        q = self.prom_quant if self._is_min else 1 - self.prom_quant
+        virt_index = (len_data - 1) * q + 1
+        index = int(virt_index)  # i in ``numpy.quantile`` docs
+        assert 1 <= index < len_data  # Sanity check
+        frac_part = virt_index - index  # g in ``numpy.quantile`` docs
+        if self._is_min:
+            left_pos = index - 1
+            g = frac_part
+        else:
+            left_pos = len_data - index - 1
+            g = 1 - frac_part
+        values = [x.metric_val for x in self.data.islice(left_pos, left_pos + 2)]
+        return g * values[1] + (1 - g) * values[0]
+
+
+PausedTrialsResult = List[Tuple[str, int, float, int]]
 
 
 class RungSystem:
@@ -75,11 +146,8 @@ class RungSystem:
         self._mode = mode
         self._resource_attr = resource_attr
         self._max_t = max_t
-        # The data entry in ``_rungs`` is a dict with key trial_id. The
-        # value type depends on the subclass, but it contains the
-        # metric value
         self._rungs = [
-            RungEntry(level=x, prom_quant=y, data=dict())
+            Rung(level=x, prom_quant=y, mode=mode)
             for x, y in reversed(list(zip(rung_levels, promote_quantiles)))
         ]
 
@@ -90,6 +158,13 @@ class RungSystem:
         promoted. If so, return dict with keys "trial_id", "resume_from"
         (rung level where trial is paused), "milestone" (next rung level
         the trial will reach, or None).
+
+        If no trial can be promoted, or if the rung system is not
+        promotion-based, the returned dictionary must not contain the
+        "trial_id" key. It is nevertheless passed back via ``extra_kwargs`` in
+        :meth:`~syne_tune.optimizer.schedulers.hyperband.HyperbandBracketManager.on_task_schedule`.
+        The default is to return an empty dictionary, but some special subclasses
+        can use this to return information in case a trial is not promoted.
 
         If no trial can be promoted, or if the rung system is not
         promotion-based, the returned dictionary must not contain the
@@ -151,7 +226,7 @@ class RungSystem:
             else self._max_t
         )
 
-    def _milestone_rungs(self, skip_rungs: int) -> List[RungEntry]:
+    def _milestone_rungs(self, skip_rungs: int) -> List[Rung]:
         if skip_rungs > 0:
             return self._rungs[:(-skip_rungs)]
         else:
@@ -167,7 +242,7 @@ class RungSystem:
         milestone_rungs = self._milestone_rungs(skip_rungs)
         return [x.level for x in milestone_rungs]
 
-    def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, dict]]:
+    def snapshot_rungs(self, skip_rungs: int) -> List[Tuple[int, List[RungEntry]]]:
         """
         A snapshot is a list of rung levels with entries ``(level, data)``,
         ordered from top to bottom (largest rung first).
@@ -177,7 +252,7 @@ class RungSystem:
         :return: Snapshot (see above)
         """
         milestone_rungs = self._milestone_rungs(skip_rungs)
-        return [(x.level, x.data) for x in milestone_rungs]
+        return [(x.level, list(x.data)) for x in milestone_rungs]
 
     @staticmethod
     def does_pause_resume() -> bool:
@@ -186,6 +261,45 @@ class RungSystem:
             sense that trials can be paused and resumed later?
         """
         raise NotImplementedError
+
+    def support_early_checkpoint_removal(self) -> bool:
+        """
+        :return: Do we support early checkpoint removal via
+            :meth:`paused_trials`?
+        """
+        return False
+
+    def paused_trials(self, resource: Optional[int] = None) -> PausedTrialsResult:
+        """
+        Only for pause and resume schedulers (:meth:`does_pause_resume` returns
+        ``True``), where trials can be paused at certain rung levels only.
+        If ``resource`` is not given, returns list of all paused trials
+        ``(trial_id, rank, metric_val, level)``, where ``level`` is
+        the rung level, and ``rank`` is the rank of the trial in the rung
+        (0 for the best metric value). If ``resource`` is given, only the
+        paused trials in the rung of this level are returned. If ``resource``
+        is not a rung level, the returned list is empty.
+
+        :param resource: If given, paused trials of only this rung level are
+            returned. Otherwise, all paused trials are returned
+        :return: See above
+        """
+        return []
+
+    def information_for_rungs(self) -> List[Tuple[int, int, float]]:
+        """
+        :return: List of ``(resource, num_entries, prom_quant)``, where
+            ``resource`` is a rung level, ``num_entries`` the number of entries
+            in the rung, and ``prom_quant`` the promotion quantile
+        """
+        return [(rung.level, len(rung), rung.prom_quant) for rung in self._rungs]
+
+    def _rung_pos_for_level(self, level: int) -> Optional[int]:
+        try:
+            rung_pos = next(i for i, v in enumerate(self._rungs) if v.level == level)
+        except StopIteration:
+            rung_pos = None
+        return rung_pos
 
 
 class StoppingRungSystem(RungSystem):
@@ -203,32 +317,23 @@ class StoppingRungSystem(RungSystem):
     in case ``mode == "min"``. See also :meth:`_task_continues`.
     """
 
-    def _cutoff(self, recorded, prom_quant):
-        values = list(recorded.values())
-        return quantile_cutoff(values, prom_quant, self._mode)
-
     def _task_continues(
         self,
-        metric_value: float,
-        recorded: Dict[str, Any],
-        prom_quant: float,
         trial_id: str,
-        resource: int,
+        metric_val: float,
+        rung: Rung,
     ) -> bool:
         r"""
-        :param metric_value: :math:`f(\mathbf{x}, r)` for trial
-            :math:`\mathbf{x}` at rung :math:`r`
-        :param recorded: Data for rung :math:`r` (including
-            :math:`r(\mathbf{x}, r)`)
-        :param prom_quant: Quantile threshold (for mode 'min')
         :param trial_id: ID of trial
-        :param resource: Rung level
+        :param metric_val: :math:`f(\mathbf{x}, r)` for trial
+            :math:`\mathbf{x}` at rung :math:`r`
+        :param rung: Rung where new entry has just been inserted
         :return: Continue trial? Stop otherwise
         """
-        cutoff = self._cutoff(recorded, prom_quant)
+        cutoff = rung.quantile()
         if cutoff is None:
             return True
-        return metric_value <= cutoff if self._mode == "min" else metric_value >= cutoff
+        return metric_val <= cutoff if self._mode == "min" else metric_val >= cutoff
 
     def on_task_schedule(self, new_trial_id: str) -> Dict[str, Any]:
         return dict()
@@ -237,7 +342,7 @@ class StoppingRungSystem(RungSystem):
         self, trial_id: str, result: Dict[str, Any], skip_rungs: int
     ) -> Dict[str, Any]:
         resource = result[self._resource_attr]
-        metric_value = result[self._metric]
+        metric_val = result[self._metric]
         if resource == self._max_t:
             task_continues = False
             milestone_reached = True
@@ -246,12 +351,9 @@ class StoppingRungSystem(RungSystem):
             task_continues = True
             milestone_reached = False
             next_milestone = self._max_t
-            milestone_rungs = self._milestone_rungs(skip_rungs)
-            for rung in milestone_rungs:
+            for rung in self._milestone_rungs(skip_rungs):
                 milestone = rung.level
-                prom_quant = rung.prom_quant
-                recorded = rung.data
-                if not (resource < milestone or trial_id in recorded):
+                if not (resource < milestone or trial_id in rung):
                     # Note: It is important for model-based searchers that
                     # milestones are reached exactly, not jumped over. In
                     # particular, if a future milestone is reported via
@@ -266,13 +368,11 @@ class StoppingRungSystem(RungSystem):
                     else:
                         milestone_reached = True
                         # Enter new metric value before checking condition
-                        recorded[trial_id] = metric_value
+                        rung.add(RungEntry(trial_id=trial_id, metric_val=metric_val))
                         task_continues = self._task_continues(
-                            metric_value=metric_value,
-                            recorded=recorded,
-                            prom_quant=prom_quant,
                             trial_id=trial_id,
-                            resource=resource,
+                            metric_val=metric_val,
+                            rung=rung,
                         )
                     break
                 next_milestone = milestone

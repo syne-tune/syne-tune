@@ -103,7 +103,7 @@ class ScalarEncodingBase:
     ``dec`` is used in :meth:`set`. Use class:'IdentityScalarEncoding' for no
     encoding (identity). Note: ``enc`` (and ``dec``) must be strictly increasing.
 
-    Box constraints are given by ``constr_lower_int < constr_upper_int``.
+    Box constraints are given by ``constr_lower_int <= constr_upper_int``.
 
     Here, None means no constraint. The constraints apply to ``param_internal``.
     If both are None, ``param_internal`` is unconstrained (default).
@@ -133,7 +133,7 @@ class ScalarEncodingBase:
     ):
 
         if constr_lower is not None and constr_upper is not None:
-            assert constr_lower < constr_upper
+            assert constr_lower <= constr_upper
         init_val = self._check_or_set_init_val(init_val, constr_lower, constr_upper)
         init_val_int = self.decode(init_val, "init_val")
 
@@ -145,7 +145,10 @@ class ScalarEncodingBase:
 
         if constr_upper is not None:
             assert init_val <= constr_upper
-            constr_upper_int = self.decode(constr_upper, "constr_upper")
+            if constr_upper == constr_lower:
+                constr_upper_int = constr_lower_int
+            else:
+                constr_upper_int = self.decode(constr_upper, "constr_upper")
         else:
             constr_upper_int = None
 

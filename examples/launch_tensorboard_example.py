@@ -10,18 +10,23 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-
 """
 Example showing how to visualize the HPO process of Syne Tune with Tensorboard.
 Results will be stored in ~/syne-tune/{tuner_name}/tensoboard_output. To start
 tensorboard, execute in a separate shell:
 
->  tensorboard --logdir  /~/syne-tune/{tuner_name}/tensorboard_output
+.. code:: bash
+
+   tensorboard --logdir  /~/syne-tune/{tuner_name}/tensorboard_output
 
 Open the displayed URL in the browser.
 
-Note that, to use this functionality you need to install tensorboardX:
-pip install tensorboardX
+To use this functionality you need to install tensorboardX:
+
+.. code:: bash
+
+   pip install tensorboardX
+
 """
 
 import logging
@@ -32,7 +37,12 @@ from syne_tune.optimizer.baselines import RandomSearch
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import randint
 from syne_tune.callbacks.tensorboard_callback import TensorboardCallback
-from syne_tune.tuner_callback import StoreResultsCallback
+from syne_tune.results_callback import StoreResultsCallback
+from examples.training_scripts.height_example.train_height import (
+    METRIC_ATTR,
+    METRIC_MODE,
+    MAX_RESOURCE_ATTR,
+)
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
@@ -42,7 +52,7 @@ if __name__ == "__main__":
     n_workers = 4
 
     config_space = {
-        "steps": max_steps,
+        MAX_RESOURCE_ATTR: max_steps,
         "width": randint(0, 20),
         "height": randint(-100, 100),
     }
@@ -52,14 +62,12 @@ if __name__ == "__main__":
         / "height_example"
         / "train_height.py"
     )
-    mode = "min"
-    metric = "mean_loss"
 
     trial_backend = LocalBackend(entry_point=entry_point)
 
     # Random search without stopping
     scheduler = RandomSearch(
-        config_space, mode=mode, metric=metric, random_seed=random_seed
+        config_space, mode=METRIC_MODE, metric=METRIC_ATTR, random_seed=random_seed
     )
 
     stop_criterion = StoppingCriterion(max_wallclock_time=20)
@@ -72,7 +80,7 @@ if __name__ == "__main__":
         # Adding the TensorboardCallback overwrites the default callback which consists of the StoreResultsCallback.
         # To write results on this disk as well, we put this in here as well.
         callbacks=[
-            TensorboardCallback(target_metric=metric, mode=mode),
+            TensorboardCallback(target_metric=METRIC_ATTR, mode=METRIC_MODE),
             StoreResultsCallback(),
         ],
         tuner_name="tensorboardx-demo",

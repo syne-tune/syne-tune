@@ -11,12 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from dataclasses import dataclass
-from typing import Dict, Optional, Callable, Any, List
+from typing import Dict, Optional, Callable, Any
 
-from syne_tune.config_space import ordinal, Categorical, Domain, Ordinal
 from syne_tune.blackbox_repository.conversion_scripts.scripts.fcnet_import import (
     CONFIGURATION_SPACE,
 )
+from syne_tune.config_space import ordinal, Categorical, Domain, Ordinal
 from syne_tune.optimizer.scheduler import TrialScheduler
 
 
@@ -34,23 +34,22 @@ class MethodArguments:
     :param resource_attr: Name of resource attribute
     :param max_resource_attr: Name of ``max_resource_value`` in ``config_space``.
         One of ``max_resource_attr``, ``max_t`` is mandatory
-    :param max_t: Value for ``max_resource_value``. One of ``max_resource_attr``,
-        ``max_t`` is mandatory
+    :param scheduler_kwargs: If given, overwrites defaults of scheduler
+        arguments
     :param transfer_learning_evaluations: Support for transfer learning. Only
         for simulator backend experiments right now
     :param use_surrogates: For simulator backend experiments, defaults to
         ``False``
-    :param verbose: If True, fine-grained log information about the tuning is
-        printed. Defaults to False
     :param fcnet_ordinal: Only for simulator backend and ``fcnet`` blackbox.
         This blackbox is tabulated with finite domains, one of which has
         irregular spacing. If ``fcnet_ordinal="none"``, this is left as
         categorical, otherwise we use ordinal encoding with
         ``kind=fcnet_ordinal``.
-    :param scheduler_kwargs: If given, overwrites defaults of scheduler
-        arguments
-    :param restrict_configurations: Only for simulator backend. If given, the
-        scheduler is restricted to suggest configs from this list only
+    :param num_gpus_per_trial: Only for local backend and GPU training. Number
+        of GPUs assigned to a trial.
+        This is passed here, because it needs to be written into the
+        configuration space for some benchmarks (TODO: Should be done by code
+        specific to the benchmark!). Defaults to 1
     """
 
     config_space: Dict[str, Any]
@@ -59,26 +58,14 @@ class MethodArguments:
     random_seed: int
     resource_attr: str
     max_resource_attr: Optional[str] = None
-    max_t: Optional[int] = None
+    scheduler_kwargs: Optional[Dict[str, Any]] = None
     transfer_learning_evaluations: Optional[Dict[str, Any]] = None
     use_surrogates: bool = False
-    verbose: Optional[bool] = False
     fcnet_ordinal: Optional[str] = None
-    restrict_configurations: Optional[List[Dict[str, Any]]] = None
-    scheduler_kwargs: Optional[Dict[str, Any]] = None
+    num_gpus_per_trial: int = 1
 
 
 MethodDefinitions = Dict[str, Callable[[MethodArguments], TrialScheduler]]
-
-
-def search_options(args: MethodArguments) -> Dict[str, Any]:
-    result = {"debug_log": args.verbose}
-    if args.restrict_configurations is not None:
-        result["restrict_configurations"] = args.restrict_configurations
-    k = "search_options"
-    if args.scheduler_kwargs is not None and k in args.scheduler_kwargs:
-        result.update(args.scheduler_kwargs[k])
-    return result
 
 
 def default_arguments(

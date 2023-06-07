@@ -10,9 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import numpy as np
 from collections import Counter
+import pytest
 
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket import (
     SynchronousHyperbandBracket,
@@ -58,7 +59,9 @@ def _send_results(
     bracket: SynchronousHyperbandBracket,
     slots: List[SlotInRung],
     all_results: List[Tuple[int, float]],
+    trials_not_promoted: Optional[List[int]],
 ):
+    trials_n_p = None
     for slot_in_rung in slots:
         trial_id, metric_val = all_results[slot_in_rung.slot_index]
         result = SlotInRung(
@@ -68,7 +71,12 @@ def _send_results(
             trial_id=trial_id,
             metric_val=metric_val,
         )
-        bracket.on_result(result)
+        trials_n_p = bracket.on_result(result)
+    if trials_not_promoted is None:
+        assert trials_n_p is None, trials_n_p
+    else:
+        assert trials_n_p is not None
+        assert set(trials_not_promoted) == set(trials_n_p)
 
 
 def test_hyperband_bracket():
@@ -88,6 +96,7 @@ def test_hyperband_bracket():
         [(2, 3.1), (6, 3.0), (0, 2.9), (3, 3.0)],
         [(0, 1.0)],
     ]
+    trials_not_promoted = [[1, 4, 5, 7, 8], [2, 3, 6], None]
     bracket = SynchronousHyperbandBracket(rungs, mode="min")
 
     # Rung index 0
@@ -100,7 +109,13 @@ def test_hyperband_bracket():
         bracket, rung_index, level, slot_index, trial_ids=[None] * num_jobs
     )
     assert bracket.num_pending_slots() == num_jobs
-    _send_results(bracket, slots, results[rung_index])
+    all_results = results[rung_index]
+    _send_results(
+        bracket=bracket,
+        slots=slots,
+        all_results=all_results,
+        trials_not_promoted=None,
+    )
     assert bracket.num_pending_slots() == 0
     # Ask for some, but do not return all for now
     num_jobs = 3
@@ -112,12 +127,25 @@ def test_hyperband_bracket():
         assert bracket.num_pending_slots() == num_jobs + i
         slots_remaining.append(slots[0])
         slots = slots[1:]
-        _send_results(bracket, slots, results[rung_index])
+        _send_results(
+            bracket=bracket,
+            slots=slots,
+            all_results=all_results,
+            trials_not_promoted=None,
+        )
         assert bracket.num_pending_slots() == i + 1
     # At this point, there are no free slots, but some are pending
-    for slot in slots_remaining:
+    num_remaining = len(slots_remaining)
+    for i, slot in enumerate(slots_remaining):
         assert bracket.next_free_slot() is None
-        _send_results(bracket, [slot], results[rung_index])
+        _send_results(
+            bracket=bracket,
+            slots=[slot],
+            all_results=all_results,
+            trials_not_promoted=trials_not_promoted[rung_index]
+            if i == num_remaining - 1
+            else None,
+        )
     # The first rung must be fully occupied now
     assert bracket.num_pending_slots() == 0
 
@@ -131,7 +159,12 @@ def test_hyperband_bracket():
         )
         assert bracket.num_pending_slots() == num_jobs
         assert bracket.next_free_slot() is None
-        _send_results(bracket, slots, all_results)
+        _send_results(
+            bracket=bracket,
+            slots=slots,
+            all_results=all_results,
+            trials_not_promoted=trials_not_promoted[rung_index],
+        )
         assert bracket.num_pending_slots() == 0
     # Now, the bracket must be complete
     assert bracket.is_bracket_complete()
@@ -154,6 +187,7 @@ def _send_result(
 
 # Runs Hyperband for some number of iterations, checking that no assertions
 # are raised
+@pytest.mark.timeout(10)
 def test_hyperband_bracket_manager_running():
     random_seed = 31415927
     random_state = np.random.RandomState(random_seed)

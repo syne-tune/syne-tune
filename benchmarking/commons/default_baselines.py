@@ -13,7 +13,6 @@
 from typing import Dict, Any
 
 from benchmarking.commons.baselines import (
-    search_options,
     default_arguments,
     MethodArguments,
     convert_categorical_to_ordinal_numeric,
@@ -37,6 +36,10 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB as _SyncBOHB,
     DEHB as _DEHB,
     SyncMOBSTER as _SyncMOBSTER,
+    MOREA as _MOREA,
+)
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
+    LinearScalarizedScheduler as _LinearScalarizedScheduler,
 )
 from syne_tune.util import recursive_merge
 
@@ -49,10 +52,7 @@ def _baseline_kwargs(
     config_space = convert_categorical_to_ordinal_numeric(
         method_arguments.config_space, kind=method_arguments.fcnet_ordinal
     )
-    da_input = dict(
-        config_space=config_space,
-        search_options=search_options(method_arguments),
-    )
+    da_input = dict(config_space=config_space)
     if is_multifid:
         da_input["resource_attr"] = method_arguments.resource_attr
     result = recursive_merge(
@@ -137,3 +137,11 @@ def DEHB(method_arguments: MethodArguments, **kwargs):
 
 def SyncMOBSTER(method_arguments: MethodArguments, **kwargs):
     return _SyncMOBSTER(**_baseline_kwargs(method_arguments, kwargs, is_multifid=True))
+
+
+def MOREABench(method_arguments: MethodArguments, **kwargs):
+    return _MOREA(**_baseline_kwargs(method_arguments, kwargs))
+
+
+def LSOBOBench(method_arguments: MethodArguments, **kwargs):
+    return _LinearScalarizedScheduler(**_baseline_kwargs(method_arguments, kwargs))

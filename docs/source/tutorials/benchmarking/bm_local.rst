@@ -11,7 +11,7 @@ Defining the Experiment
 
 As usual in Syne Tune, the experiment is defined by a number of scripts.
 We will look at an example in
-`benchmarking/nursery/launch_local/ <../../benchmarking/launch_local.html>`_.
+`benchmarking/examples/launch_local/ <../../benchmarking/launch_local.html>`__.
 Common code used in these benchmarks can be found in
 :mod:`benchmarking.commons`:
 
@@ -21,24 +21,28 @@ Common code used in these benchmarks can be found in
 
 Let us look at the scripts in order, and how you can adapt them to your needs:
 
-* `benchmarking/nursery/launch_local/baselines.py <../../benchmarking/launch_local.html#id1>`_:
+* `benchmarking/examples/launch_local/baselines.py <../../benchmarking/launch_local.html#id1>`__:
   This is the same as in the
-  `simulator case <bm_simulator.html#defining-the-experiment>`_.
-* `benchmarking/nursery/launch_local/hpo_main.py <../../benchmarking/launch_local.html#id2>`_:
+  `simulator case <bm_simulator.html#defining-the-experiment>`__.
+* `benchmarking/examples/launch_local/hpo_main.py <../../benchmarking/launch_local.html#id2>`__:
   This is the same as in the
-  `simulator case <bm_simulator.html#defining-the-experiment>`_, but based on
+  `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
   :mod:`benchmarking.commons.hpo_main_local`. We will see shortly how the
   launcher is called, and what happens inside.
-* `benchmarking/nursery/launch_local/launch_remote.py <../../benchmarking/launch_local.html#id3>`_:
+* `benchmarking/examples/launch_local/launch_remote.py <../../benchmarking/launch_local.html#id3>`__:
   Much the same as in the
-  `simulator case <bm_simulator.html#defining-the-experiment>`_, but based on
+  `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
   :mod:`benchmarking.commons.launch_remote_local`. We will see shortly how the
   launcher is called, and what happens inside.
-* `benchmarking/nursery/launch_local/requirements-synetune.txt <../../benchmarking/launch_local.html#id4>`_:
+* `benchmarking/examples/launch_local/requirements-synetune.txt <../../benchmarking/launch_local.html#id4>`__:
   This file is for defining the requirements of the SageMaker training job in
   remote launching, it mainly has to contain the Syne Tune dependencies. Your
   training script may have additional dependencies, and they are combined with
   the ones here automatically, as detailed below.
+
+Extra arguments can be specified by ``extra_args``, ``map_method_args``, and
+extra results can be written using ``extra_results``, as is explained
+`here <bm_simulator.html#specifying-extra-arguments>`__.
 
 Launching Experiments Locally
 -----------------------------
@@ -48,8 +52,8 @@ locally:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/launch_local/hpo_main.py \
-     --experiment_tag tutorial_local --benchmark resnet_cifar10 \
+   python benchmarking/examples/launch_local/hpo_main.py \
+     --experiment_tag tutorial-local --benchmark resnet_cifar10 \
      --method ASHA --num_seeds 1 --n_workers 1
 
 This call runs a single experiment on the local machine (which needs to have a
@@ -71,8 +75,29 @@ GPU with PyTorch being installed):
   runs for a single seed equal to 5.
 * ``n_workers``, ``max_wallclock_time``: You can overwrite the default values
   for the selected benchmark by these command line arguments.
-* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
-  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
+* ``max_size_data_for_model``: Parameter for Bayesian optimization, MOBSTER or
+  Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`__
+  and
+  `here <../basics/basics_bayesopt.html#speeding-up-decision-making>`__.
+* ``num_gpus_per_trial``: If you run on an instance with more than one GPU,
+  you can prescribe how many GPUs should be allocated to each trial. The default
+  is 1. Note that if the product of ``n_workers`` and ``num_gpus_per_trial`` is
+  larger than the number of GPUs on the instance, trials will be delayed.
+* ``delete_checkpoints``: If 1, checkpoints of trials are removed whenever they
+  are not needed anymore. The default is 0, in that all checkpoints are
+  retained.
+* ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
+  argument, but not ``max_wallclock_time``, the benchmark default
+  ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,
+  where ``A = n_workers``, ``B = benchmark.n_workers``. This means we run for
+  longer if ``n_workers < benchmark.n_workers``, but keep
+  ``benchmark.max_wallclock_time`` the same otherwise.
+* ``use_long_tuner_name_prefix``: If 1, results for an experiment are written
+  to a directory whose prefix is
+  :code:`f"{experiment_tag}-{benchmark_name}-{seed}"`, followed by a postfix
+  containing date-time and a 3-digit hash. If 0, the prefix is
+  :code:`experiment_tag` only. The default is 1 (long prefix).
 
 If you defined additional arguments via ``extra_args``, you can use them here
 as well.
@@ -86,7 +111,7 @@ as well.
    ``n_workers=1``: you need to launch on a machine with 1 GPU, and with
    PyTorch being installed and properly setup to run GPU computations. If you
    cannot be bothered with all of this, please consider
-   `remote launching <bm_local.html#launching-experiments-remotely>`_ as an
+   `remote launching <bm_local.html#launching-experiments-remotely>`__ as an
    alternative. On the other hand, you can launch experiments locally without
    using SageMaker (or AWS) at all.
 
@@ -121,8 +146,11 @@ of ``RealBenchmarkDefinition``. Important arguments are:
 * ``framework``, ``estimator_kwargs``: SageMaker framework and additional
   arguments to SageMaker estimator.
 
-Note that parameters like ``n_workers`` and ``max_wallclock_time`` are defaults,
-which can be overwritten by command line arguments.
+Note that parameters like ``n_workers``, ``max_wallclock_time``, or
+``instance_type`` are given default values here, which can be overwritten
+by command line arguments. This is why the function signature ends with
+``**kwargs``, and we execute ``_kwargs.update(kwargs)`` just before creating
+the ``RealBenchmarkDefinition`` object.
 
 Launching Experiments Remotely
 ------------------------------
@@ -135,8 +163,8 @@ launching. Here is an example:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/launch_local/launch_remote.py \
-     --experiment_tag tutorial_local --benchmark resnet_cifar10 \
+   python benchmarking/examples/launch_local/launch_remote.py \
+     --experiment_tag tutorial-local --benchmark resnet_cifar10 \
      --num_seeds 5
 
 Since ``--method`` is not used, we run experiments for all methods (``RS``,
@@ -148,14 +176,63 @@ up to 4 (the default being 4). Results are written to S3, using paths such as
 ``syne-tune/{experiment_tag}/ASHA-3/`` for method ``ASHA`` and seed 3.
 
 Finally, some readers may be puzzled why Syne Tune dependencies are defined in
-``benchmarking/nursery/launch_local/requirements-synetune.txt``, and not in
+``benchmarking/examples/launch_local/requirements-synetune.txt``, and not in
 ``requirements.txt`` instead. The reason is that dependencies of the SageMaker
 estimator for running the experiment locally is really the union of two such
 files. First, ``requirements-synetune.txt`` for the Syne Tune dependencies,
 and second, ``requirements.txt`` next to the training script. The remote
 launching script is creating a ``requirements.txt`` file with this union in
-``benchmarking/nursery/launch_local/``, which should not become part of the
+``benchmarking/examples/launch_local/``, which should not become part of the
 repository.
+
+Visualizing Tuning Metrics in the SageMaker Training Job Console
+----------------------------------------------------------------
+
+When experiments are launched remotely with the local or SageMaker backend, a
+number of metrics are published to the SageMaker training job console (this
+feature can be switched off with ``--remote_tuning_metrics 0``):
+
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_METRIC_VALUE`: Best
+  metric value attained so far
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_TRIAL_ID`: ID of trial
+  for best metric value so far
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_RESOURCE_VALUE`:
+  Resource value for best metric value so far
+* :const:`~syne_tune.remote.remote_metrics_callback.BEST_HP_PREFIX`, followed
+  by hyperparameter name: Hyperparameter value for best metric value so far
+
+You can inspect these metrics in real time in AWS CloudWatch. To do so:
+
+* Locate the training job running your experiment in the AWS SageMaker console.
+  Click on ``Training``, then ``Training jobs``, then on the job in the list.
+  For the command above, the jobs are named like
+  ``tutorial-local-RS-0-XyK8`` (experiment tag, then method, then seed, then
+  4-character hash).
+* Under ``Metrics``, you will see a number of entries, starting with
+  ``best_metric_value`` and ``best_trial_id``.
+* Further below, under ``Monitor``, click on ``View algorithm metrics``. This
+  opens a CloudWatch dashboard
+* At this point, you need to change a few defaults, in that CloudWatch only
+  samples metrics (by grepping the logs) every 5 minutes and then displays
+  average values over the 5-minute window. Click on ``Browse`` and select the
+  metrics you want to display. For now, select ``best_metric_value``,
+  ``best_trial_id``, ``best_resource_value``.
+* Click on ``Graphed metrics``, and for every metric, select
+  ``Period -> 30 seconds``. Also, select ``Statistics -> Maximum`` for metrics
+  ``best_trial_id``, ``best_resource_value``. For ``best_metric_value``, select
+  ``Statistics -> Minimum`` if your objective metric is minimized (``mode="min"``),
+  and ``Statistics -> Maximum`` otherwise. In our ``resnet_cifar10`` example,
+  the objective is accuracy, to be maximized, so we select the latter.
+* Finally, select ```10s`` for auto-refresh (the circle with arrow in the
+  upper right corner), and change the temporal resolution by displaying ``1h``
+  (top row).
+
+This visualization shows you the best metric value attained so far, and which
+trial attained it for which resource value (e.g., number of epochs). It can be
+improved. For example, we could plot the curves in different axes. Also, we can
+visualize the best hyperparameter configuration found so far. In the
+``resnet_cifar10`` example, this is given by the metrics ``best_hp_lr``,
+``best_hp_batch_size``, ``best_hp_weight_decay``, ``best_hp_momentum``.
 
 Random Seeds and Paired Comparisons
 -----------------------------------
@@ -186,7 +263,7 @@ the initial configurations (which in BO are either taken from
 The scheduler random seed used in a benchmark experiment is a combination of
 a *master random seed* and the seed number introduced above (the latter has
 values :math:`0, 1, 2, \dots`). The master random seed is passed to
-``launch_remote.py`` or ``hpo_main.py`` as ``--random_seed`. If no master
+``launch_remote.py`` or ``hpo_main.py`` as ``--random_seed``. If no master
 random seed is passed, it is drawn at random and output. The master random
 seed is also written into ``metadata.json`` as part of experimental results.
 Importantly, the scheduler random seed is the same across different methods

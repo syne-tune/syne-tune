@@ -19,6 +19,10 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from syne_tune import Tuner
+from syne_tune.backend import LocalBackend
+from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
+    backend_path_not_synced_to_s3,
+)
 
 
 def decode_bool(hp: str):
@@ -46,20 +50,24 @@ if __name__ == "__main__":
     logging.info(f"load tuner from path {args.tuner_path}")
     tuner = Tuner.load(tuner_path)
 
-    # The output of the tuner (results, metadata, tuner state) is written into SageMaker checkpoint directory
-    # which is synced regularly by SageMaker so that results are updated continuously
+    # The output of the tuner (results, metadata, tuner state) is written into
+    # SageMaker checkpoint directory, which is synced regularly by SageMaker so
+    # that results are updated continuously
     tuner.tuner_path = Path("/opt/ml/checkpoints/")
 
-    # The logs/checkpoints of trials are persisted to the checkpoint directory only where store_logs is True
-    if args.store_logs:
-        # inform the backend of the desired path so that logs are persisted
-        tuner.trial_backend.set_path(results_root=tuner.tuner_path)
+    # For the local backend, the logs/checkpoints of trials are persisted to S3
+    # only when ``store_logs == True``
+    trial_backend = tuner.trial_backend
+    if args.store_logs or not isinstance(trial_backend, LocalBackend):
+        # Logs and checkpoints are persisted. For the SageMaker backend, this
+        # is crucial. For the local backend, it may lead to errors, because the
+        # same trials can write checkpoints at the same time
+        backend_path = tuner.tuner_path
     else:
-        # sets a path where logs will not be stored, we use "/opt/ml/input/data/training" as it is mounted
-        # on a partition that is larger than "~/"
-        path = Path("/opt/ml/input/data/")
-        path.mkdir(parents=True, exist_ok=True)
-        tuner.trial_backend.set_path(results_root=str(path), tuner_name=tuner.name)
+        # For the local backend, logs and checkpoints are not persisted if
+        # ``store_logs == False`` (default)
+        backend_path = str(backend_path_not_synced_to_s3())
+    trial_backend.set_path(results_root=backend_path)
 
     # Run the tuner on the sagemaker instance. If the simulation backend is
     # used, this needs a specific callback

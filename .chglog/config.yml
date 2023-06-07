@@ -1,0 +1,40 @@
+style: github
+template: CHANGELOG.tpl.md
+info:
+  title: CHANGELOG
+  repository_url: https://github.com/awslabs/syne-tune
+options:
+  commits:
+    # filters:
+    #   Type:
+    #     - feat
+    #     - fix
+    #     - perf
+    #     - refactor
+  commit_groups:
+    sort_by: Custom
+    title_order:
+      - feat
+      - fix
+      - refactor
+      - docs
+      - chore
+      
+    title_maps:
+      feat: New Features
+      feature: New Features
+      fix: Bug Fixes
+      refactor: Code Refactoring
+      docs: Documentation Updates
+      chore: Maintenance
+      revert: Regression
+
+  header:
+    pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
+    pattern_maps:
+      - Type
+      - Scope
+      - Subject
+  notes:
+    keywords:
+      - BREAKING CHANGE

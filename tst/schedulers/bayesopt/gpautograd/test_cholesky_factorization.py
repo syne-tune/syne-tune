@@ -14,6 +14,7 @@ import numpy as np
 import autograd.numpy as anp
 import autograd.scipy.linalg as aspl
 from autograd import grad
+import pytest
 
 # from autograd.test_util import check_grads
 import time
@@ -56,6 +57,7 @@ def _testfunc_mahal_from_xb(xb, use_my):
     return _testfunc_mahal(a, b, use_my)
 
 
+@pytest.mark.timeout(10)
 def test_cholesky_factorization():
     # num_rep = 10
     # min_n = 100

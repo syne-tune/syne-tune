@@ -16,6 +16,24 @@ DistilBERT fine-tuned on IMDB sentiment classification task
 import argparse
 import logging
 import time
+from pathlib import Path
+
+try:
+    # Benchmark-specific imports are done here, in order to avoid import
+    # errors if the dependencies are not installed (such errors should happen
+    # only when the code is really called)
+    from transformers import (
+        AutoModelForSequenceClassification,
+        Trainer,
+        TrainingArguments,
+        AutoTokenizer,
+    )
+    from transformers import TrainerCallback
+    from datasets import load_dataset, load_metric
+except ImportError:
+    logging.info(
+        f"Please install benchmark-specific dependencies ({Path(__file__).parent / 'requirements.txt'})"
+    )
 
 from syne_tune import Reporter
 from syne_tune.config_space import loguniform, add_to_argparse
@@ -144,18 +162,6 @@ def objective(config):
 
 
 if __name__ == "__main__":
-    # Benchmark-specific imports are done here, in order to avoid import
-    # errors if the dependencies are not installed (such errors should happen
-    # only when the code is really called)
-    from transformers import (
-        AutoModelForSequenceClassification,
-        Trainer,
-        TrainingArguments,
-        AutoTokenizer,
-    )
-    from transformers import TrainerCallback
-    from datasets import load_dataset, load_metric
-
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
 

@@ -13,8 +13,9 @@ Here is an example for a configuration space:
 
 .. code-block:: python
 
-   from syne_tune.config_space import randint, uniform, loguniform, \
-       choice
+   from syne_tune.config_space import (
+       randint, uniform, loguniform, choice,
+   )
 
    config_space = {
        'n_units': randint(4, 1024),
@@ -85,8 +86,8 @@ currently supported (for full details, see :mod:`syne_tune.config_space`):
 * ``logfinrange(lower, upper, size)``: Can be used as finite analogue
   of ``loguniform``. Values are ``exp(x)``, where ``x`` is drawn
   uniformly from the finite range ``log(lower), ..., log(upper)`` of
-  size ``size``. Note that both ``lower`` and ``upper`` are part of the
-  value range.
+  size ``size`` (entries equally spaced). Note that both ``lower`` and ``upper``
+  are part of the value range.
 
 By default, the value type for ``finrange`` and ``logfinrange`` is ``float``.
 It can be changed to ``int`` by the argument ``cast_int=True``. For example,
@@ -108,7 +109,7 @@ cases. Here, we provide some recommendations:
   parameter is numerical, therefore has a linear ordering. They cannot
   do that if you do not tell them, and search performance will normally
   suffer. A good example is
-  `Bayesian optimization <tutorials/basics/basics_bayesopt.html>`_.
+  `Bayesian optimization <tutorials/basics/basics_bayesopt.html>`__.
   Numerical parameters are encoded as themselves (the int domain is relaxed to
   the corresponding float interval), allowing the surrogate model (e.g.,
   Gaussian process covariance kernel) to exploit ordering and distance in these
@@ -134,13 +135,14 @@ cases. Here, we provide some recommendations:
   or ``logordinal``. For example,
   ``choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])`` can be replaced by
   ``logordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``.
-* **Explore ordinal or logordinal as alternative to choice.**
-  Ordinal parameters are encoded by a single int value (if ``kind="equal"``)
-  or a single float value (if ``kind in {"nn", "nn-log"}``), which is more
-  economical in Bayesian optimization.
+* **Explore ordinal or logordinal as alternative to choice.** What if your
+  finite set of numerical values is not equi-spaced? Ordinal parameters are
+  encoded by a single int value (if ``kind="equal"``) or a single float value
+  (if ``kind in {"nn", "nn-log"}``), which is more economical in Bayesian
+  optimization.
 * **Use a log transform** for parameters which may vary over several orders
   of magnitude. Examples are learning rates or regularization constants.
 * **Use points_to_evaluate**. On top of refining your configuration space, we
   strongly recommend to
-  `specify initial default configurations <schedulers.html#fifoscheduler>`_
+  `specify initial default configurations <schedulers.html#fifoscheduler>`__
   by ``points_to_evaluate``.

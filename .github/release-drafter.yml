@@ -1,0 +1,67 @@
+autolabeler:
+  - label: 'feature'
+    title:
+    - '/feat(\((.+)\))?(:.+)/'
+  - label: 'documentation'
+    title:
+    - '/(docs)(\((.+)\))?(:.+)/'
+  - label: 'chore'
+    title:
+    - '/(chore)(\((.+)\))?(:.+)/'
+  - label: 'bug'
+    title:
+      - '/(fix|bug)(\((.+)\))?(:.+)/'
+  - label: 'refactor'
+    title:
+      - '/(refactor)(\((.+)\))?(:.+)/'
+change-template: "* $TITLE (#$NUMBER) by @$AUTHOR"
+categories:
+  - title: "⚡ Breaking Changes"
+    labels:
+      - "breaking-change"
+  - title: "🌟 New Features"
+    labels:
+      - "feature"
+      - "enhancement"
+  - title: "📜 Documentation Updates"
+    labels:
+      - "documentation"
+  - title: "🐛 Bug Fixes"
+    labels:
+      - "bug"
+      - "fix"
+  - title: "🏗️ Code Refactoring"
+    labels:
+      - "refactor"
+  - title: "🔧 Maintenance"
+    labels:
+      - "chore"
+      - "internal"
+      - "dependencies"
+version-resolver:
+  # major: # do not automatically bump major versions, only do this manually
+  #   labels:
+  #     - 'major'
+  #     - "breaking-change"
+  minor:
+    labels:
+      - 'minor'
+      - 'feature'
+  patch:
+    labels:
+      - 'patch'
+      - 'fix'
+  default: patch
+tag-template: 'v$RESOLVED_VERSION'
+template: |
+  ## What's New
+
+  **[Insert summary of changes in this release here]**
+
+  ## Changes
+
+  $CHANGES
+
+  ## This release was made possible by the following contributors:
+
+  $CONTRIBUTORS

@@ -34,6 +34,7 @@ SUPPORTED_SEARCHERS_FIFO = {
     "grid",
     "kde",
     "bore",
+    "cqr",
     "botorch",
     "bayesopt",
     "bayesopt_constrained",
@@ -46,6 +47,7 @@ SUPPORTED_SEARCHERS_HYPERBAND = {
     "grid",
     "kde",
     "bore",
+    "cqr",
     "bayesopt",
     "bayesopt_cost",
     "hypertune",
@@ -113,6 +115,15 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
         else:
             supported_schedulers = _OUR_MULTIFIDELITY_SCHEDULERS
             searcher_cls = MultiFidelityBore
+    elif searcher_name == "cqr":
+        try:
+            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+                SurrogateSearcher,
+            )
+        except ImportError:
+            logger.info(try_import_bore_message())
+            raise
+        searcher_cls = SurrogateSearcher
     elif searcher_name == "botorch":
         try:
             from syne_tune.optimizer.schedulers.searchers.botorch import (

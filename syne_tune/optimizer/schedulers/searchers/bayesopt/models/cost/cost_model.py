@@ -23,7 +23,7 @@ __all__ = ["CostValue", "CostModel"]
 
 @dataclass
 class CostValue:
-    """
+    r"""
     Represents cost value :math:`(c_0(x), c_1(x))`:
 
     * :math:`c_0(x)`: Startup cost for evaluation at config :math:`x`

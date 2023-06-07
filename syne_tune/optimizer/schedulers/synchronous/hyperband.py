@@ -10,10 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Set, Dict, Any
+from typing import Optional, List, Set, Dict, Any, Tuple
 import logging
 import numpy as np
 
+from syne_tune.callbacks.remove_checkpoints_callback import (
+    DefaultRemoveCheckpointsSchedulerMixin,
+)
+from syne_tune.optimizer.schedulers.random_seeds import RANDOM_SEED_UPPER_BOUND
 from syne_tune.optimizer.schedulers.synchronous.hyperband_bracket_manager import (
     SynchronousHyperbandBracketManager,
 )
@@ -62,7 +66,7 @@ _DEFAULT_OPTIONS = {
 _CONSTRAINTS = {
     "metric": String(),
     "mode": Categorical(choices=("min", "max")),
-    "random_seed": Integer(0, 2**32 - 1),
+    "random_seed": Integer(0, RANDOM_SEED_UPPER_BOUND),
     "max_resource_attr": String(),
     "max_resource_level": Integer(1, None),
     "resource_attr": String(),
@@ -156,7 +160,9 @@ class SynchronousHyperbandCommon(
         return self._searcher_data
 
 
-class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
+class SynchronousHyperbandScheduler(
+    SynchronousHyperbandCommon, DefaultRemoveCheckpointsSchedulerMixin
+):
     """
     Synchronous Hyperband. Compared to
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`, this is also
@@ -192,7 +198,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
         initially (in that order). Each config in the list can be partially
         specified, or even be an empty dict. For each hyperparameter not
         specified, the default value is determined using a midpoint heuristic.
-        If None (default), this is mapped to ``[dict()]``, a single default config
+        If ``None`` (default), this is mapped to ``[dict()]``, a single default config
         determined by the midpoint heuristic. If ``[]`` (empty list), no initial
         configurations are specified.
     :type points_to_evaluate: ``List[dict]``, optional
@@ -253,7 +259,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
             bracket_rungs,
             mode=self.mode,
         )
-        # Maps trial_id to tuples (bracket_id, slot_in_rung), as returned
+        # Maps trial_id to tuples ``(bracket_id, slot_in_rung)``, as returned
         # by ``bracket_manager.next_job``, and required by
         # ``bracket_manager.on_result``. Entries are removed once passed to
         # ``on_result``. Note that a trial_id can be associated with different
@@ -262,6 +268,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
         # Maps trial_id (active) to config
         self._trial_to_config = dict()
         self._rung_levels = [level for _, level in bracket_rungs[0]]
+        self._trials_checkpoints_can_be_removed = []
 
     @property
     def rung_levels(self) -> List[int]:
@@ -324,7 +331,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
             )
             self._trial_to_pending_slot[trial_id] = (bracket_id, slot_in_rung)
         else:
-            # Searcher failed to return a config for a new trial_id. We report
+            # Searcher failed to return a config for a new ``trial_id``. We report
             # the corresponding job as failed, so that in case the experiment
             # is continued, the bracket is not blocked with a slot which remains
             # pending forever
@@ -335,6 +342,11 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
             self._report_as_failed(bracket_id, slot_in_rung)
         return suggestion
 
+    def _on_result(self, result: Tuple[int, SlotInRung]):
+        trials_not_promoted = self.bracket_manager.on_result(result)
+        if trials_not_promoted is not None:
+            self._trials_checkpoints_can_be_removed.extend(trials_not_promoted)
+
     def _report_as_failed(self, bracket_id: int, slot_in_rung: SlotInRung):
         result_failed = SlotInRung(
             rung_index=slot_in_rung.rung_index,
@@ -343,7 +355,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
             trial_id=slot_in_rung.trial_id,
             metric_val=np.NAN,
         )
-        self.bracket_manager.on_result((bracket_id, result_failed))
+        self._on_result((bracket_id, result_failed))
 
     def on_trial_result(self, trial: Trial, result: Dict[str, Any]) -> str:
         trial_id = trial.trial_id
@@ -370,7 +382,7 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
                 )
                 # Reached rung level: Pass result to bracket manager
                 slot_in_rung.metric_val = metric_val
-                self.bracket_manager.on_result((bracket_id, slot_in_rung))
+                self._on_result((bracket_id, slot_in_rung))
                 # Remove it from pending slots
                 del self._trial_to_pending_slot[trial_id]
                 # Trial should be paused
@@ -422,3 +434,8 @@ class SynchronousHyperbandScheduler(SynchronousHyperbandCommon):
 
     def metric_mode(self) -> str:
         return self.mode
+
+    def trials_checkpoints_can_be_removed(self) -> List[int]:
+        result = self._trials_checkpoints_can_be_removed
+        self._trials_checkpoints_can_be_removed = []
+        return result

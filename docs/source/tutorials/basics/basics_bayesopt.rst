@@ -42,11 +42,11 @@ One of the oldest and most widely used instantiations of sequential model-based
 search is *Bayesian optimization*. There are a number of great tutorials and
 review articles on Bayesian optimization, and we won’t repeat them here:
 
-* `Slides by Ryan Adams <https://www.cs.toronto.edu/~rgrosse/courses/csc411_f18/tutorials/tut8_adams_slides.pdf>`_
-* `Review by Peter Frazier <https://arxiv.org/abs/1807.02811>`_
-* `Video by Peter Frazier <https://www.youtube.com/watch?v=c4KKvyWW_Xk>`_
-* `Video by Nando de Freitas <https://www.youtube.com/watch?v=vz3D36VXefI>`_
-* `Video by Matthew Hoffman <https://www.youtube.com/watch?v=C5nqEHpdyoE>`_
+* `Slides by Ryan Adams <https://www.cs.toronto.edu/~rgrosse/courses/csc411_f18/tutorials/tut8_adams_slides.pdf>`__
+* `Review by Peter Frazier <https://arxiv.org/abs/1807.02811>`__
+* `Video by Peter Frazier <https://www.youtube.com/watch?v=c4KKvyWW_Xk>`__
+* `Video by Nando de Freitas <https://www.youtube.com/watch?v=vz3D36VXefI>`__
+* `Video by Matthew Hoffman <https://www.youtube.com/watch?v=C5nqEHpdyoE>`__
 
 Most instances of Bayesian optimization work by modelling the objective as
 function :math:`f(\mathbf{x})`, where :math:`\mathbf{x}` is a configuration
@@ -80,7 +80,7 @@ The Bayesian optimization template requires us to make two choices:
   most popular choice in practice: expected improvement.
 
 GP-based Bayesian optimization is run by our
-`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_
+`launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
 with the argument ``--method BO``. Many options can be specified via
 ``search_options``, but we use the defaults here. See
 :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher` for all
@@ -114,7 +114,7 @@ Recommendations
 ---------------
 
 Here, we collect some additional recommendations. Further details are
-found `here <../../schedulers.html#bayesian-optimization>`_.
+found `here <../../schedulers.html#bayesian-optimization>`__.
 
 Categorical Hyperparameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,7 +157,7 @@ lost. If you insist on a sparse “regular grid” value range, you can use
 ``logfinrange(4, 1024, 9)``, which has the same 9 values, but uses a
 latent ``int`` representation, which is encoded with a single number.
 More information can be found
-`here <../../search_space.html#recommendations>`_.
+`here <../../search_space.html#recommendations>`__.
 
 Speeding up Decision-Making
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -165,19 +165,30 @@ Speeding up Decision-Making
 Gaussian process surrogate models have many crucial advantages over
 other probabilistic surrogate models typically used in machine learning.
 But they have one key disadvantage: inference computations scale
-cubically in the number of observations. For most HPO use cases, this is
+*cubically* in the number of observations. For most HPO use cases, this is
 not a problem, since no more than a few hundred evaluations can be
 afforded.
 
-If you find yourself in a situation where an experiment can run a
-thousand evaluations, there are some ``search_options`` arguments you
-can use in order to speed up Bayesian optimization. The most expensive
-part of making a decision consists in refitting the parameters of the GP
-surrogate model, such as the ARD parameters of the kernel. While this
-refitting is essential for good performance with a small number of
-observations, it can be thinned out or even stopped when the dataset
-gets large. You can use ``opt_skip_init_length``, ``opt_skip_period`` to
-this end.
+Syne Tune allows to control the number of observations the GP surrogate model
+is fit to, via ``max_size_data_for_model`` in ``search_options``. If the data
+is larger, it is downsampled to this size. Sampling is controlled by another
+argument ``max_size_top_fraction``. Namely, this fraction of entries in the
+downsampled set are filled by those points in the full set with the best metric
+values, while the remaining entries are sampled (with replacement) from the
+rest of the full set. The default for ``max_size_data_for_model`` is
+:const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults.DEFAULT_MAX_SIZE_DATA_FOR_MODEL`.
+The feature is switched off by setting this to ``None`` or a very large value,
+but this is not recommended. Subsampling is repeated every time the surrogate
+model is fit.
+
+Beyond, there are some ``search_options`` arguments you can use in order to
+speed up Bayesian optimization. The most expensive part of making a decision
+consists in refitting the parameters of the GP surrogate model, such as the ARD
+parameters of the kernel. While this refitting is essential for good performance
+with a small number of observations, it can be thinned out or even stopped when
+the dataset gets large. You can use ``opt_skip_init_length``,
+``opt_skip_period`` to this end (details are
+`here <../../schedulers.html#bayesian-optimization>`__.
 
 Warping of Inputs
 ~~~~~~~~~~~~~~~~~
@@ -190,3 +201,25 @@ other parameters of the surrogate model. Input warping allows the surrogate
 model to represent non-stationary functions, while still keeping the numbers
 of parameters small. Note that only such components of :math:`x` are warped
 which belong to non-categorical hyperparameters.
+
+Box-Cox Transformation of Target Values
+---------------------------------------
+
+This option is available only for positive target values. If you use
+``boxcox_transform=True`` in ``search_options``, target values are transformed
+before being fitted with a Gaussian marginal likelihood. This is using the Box-Cox
+transform with a parameter :math:`\lambda`, which is learned alongside other
+parameters of the surrogate model. The transform is :math:`\log y` for
+:math:`\lambda = 0`, and :math:`y - 1` for :math:`\lambda = 1`.
+
+Both input warping and Box-Cox transform of target values are combined in this
+paper:
+
+    | Cowen-Rivers, A. et.al.
+    | HEBO: Pushing the Limits of Sample-efficient Hyper-parameter Optimisation
+    | Journal of Artificial Intelligence Research 74 (2022), 1269-1349
+    | `ArXiV <https://arxiv.org/abs/2012.03826>`__
+
+However, they fit :math:`\lambda` up front by maximizing the likelihood of the
+targets under a univariate Gaussian assumption for the latent :math:`z`, while
+we learn :math:`\lambda` jointly with all other parameters.

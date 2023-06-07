@@ -11,32 +11,36 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
 import benchmarking
 from benchmarking.commons.baselines import MethodDefinitions
 from benchmarking.commons.hpo_main_common import (
-    parse_args as _parse_args,
     ExtraArgsType,
-    MapExtraArgsType,
-    PostProcessingType,
+    MapMethodArgsType,
+    ConfigDict,
+    extra_metadata,
+    DictStrKey,
+    str2bool,
+    config_from_argparse,
 )
 from benchmarking.commons.hpo_main_local import (
     RealBenchmarkDefinitions,
     get_benchmark,
     create_objects_for_tuner,
+    LOCAL_AND_SAGEMAKER_BACKEND_EXTRA_PARAMETERS,
 )
 from benchmarking.commons.launch_remote_common import sagemaker_estimator_args
 from benchmarking.commons.utils import (
     get_master_random_seed,
 )
 from syne_tune.backend import SageMakerBackend
-from syne_tune.remote.estimators import sagemaker_estimator
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     default_sagemaker_session,
 )
+from syne_tune.remote.estimators import sagemaker_estimator
+from syne_tune.results_callback import ExtraResultsComposer
 from syne_tune.tuner import Tuner
-
 
 # SageMaker managed warm pools:
 # https://docs.aws.amazon.com/sagemaker/latest/dg/train-warm-pools.html#train-warm-pools-resource-limits
@@ -45,124 +49,94 @@ from syne_tune.tuner import Tuner
 WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS = 10 * 60
 
 
-def parse_args(
-    methods: Dict[str, Any], extra_args: Optional[ExtraArgsType] = None
-) -> (Any, List[str], List[int]):
-    """Parse command line arguments for SageMaker backend experiments.
-
-    :param methods: If ``--method`` is not given, then ``method_names`` are the
-        keys of this dictionary
-    :param extra_args: List of dictionaries, containing additional arguments
-        to be passed. Must contain ``name`` for argument name (without leading
-        ``"--"``), and other kwargs to ``parser.add_argument``. Optional
-    :return: ``(args, method_names, seeds)``, where ``args`` is result of
-        ``parser.parse_args()``, ``method_names`` see ``methods``, and
-        ``seeds`` are list of seeds specified by ``--num_seeds`` and ``--start_seed``
-    """
-    if extra_args is None:
-        extra_args = []
-    else:
-        extra_args = extra_args.copy()
-    extra_args.extend(
-        [
-            dict(
-                name="benchmark",
-                type=str,
-                default="resnet_cifar10",
-                help="Benchmark to run",
-            ),
-            dict(
-                name="max_failures",
-                type=int,
-                default=3,
-                help=(
-                    "Number of trials which can fail without experiment being "
-                    "terminated"
-                ),
-            ),
-            dict(
-                name="warm_pool",
-                type=int,
-                default=1,
-                help=(
-                    "If 1, the SageMaker managed warm pools feature is used. "
-                    "This can be more expensive, but also reduces startup "
-                    "delays, leading to an experiment finishing in less time"
-                ),
-            ),
-            dict(
-                name="instance_type",
-                type=str,
-                help="AWS SageMaker instance type (overwrites default of benchmark)",
-            ),
-            dict(
-                name="start_jobs_without_delay",
-                type=int,
-                default=0,
-                help=(
-                    "If 1, the tuner starts new trials immediately after "
-                    "sending existing ones a stop signal. This leads to more "
-                    "than n_workers instances being used during certain times, "
-                    "which can lead to quotas being exceeded, or the warm pool "
-                    "feature not working optimal."
-                ),
-            ),
-            dict(
-                name="delete_checkpoints",
-                type=int,
-                default=1,
-                help=(
-                    "If 1, checkpoints files on S3 are removed at the end "
-                    "of the experiment."
-                ),
-            ),
-        ]
-    )
-    args, method_names, seeds = _parse_args(methods, extra_args)
-    args.warm_pool = bool(args.warm_pool)
-    args.start_jobs_without_delay = bool(args.start_jobs_without_delay)
-    args.delete_checkpoints = bool(args.delete_checkpoints)
-    return args, method_names, seeds
+SAGEMAKER_BACKEND_ONLY_EXTRA_PARAMETERS = [
+    dict(
+        name="max_failures",
+        type=int,
+        default=3,
+        help="Number of trials which can fail without experiment being terminated",
+    ),
+    dict(
+        name="warm_pool",
+        type=str2bool,
+        default=True,
+        help=(
+            "If 1, the SageMaker managed warm pools feature is used. "
+            "This can be more expensive, but also reduces startup "
+            "delays, leading to an experiment finishing in less time"
+        ),
+    ),
+    dict(
+        name="start_jobs_without_delay",
+        type=str2bool,
+        default=False,
+        help=(
+            "If 1, the tuner starts new trials immediately after "
+            "sending existing ones a stop signal. This leads to more "
+            "than n_workers instances being used during certain times, "
+            "which can lead to quotas being exceeded, or the warm pool "
+            "feature not working optimal."
+        ),
+    ),
+]
 
 
-def main(
+SAGEMAKER_BACKEND_EXTRA_PARAMETERS = (
+    LOCAL_AND_SAGEMAKER_BACKEND_EXTRA_PARAMETERS
+    + SAGEMAKER_BACKEND_ONLY_EXTRA_PARAMETERS
+)
+
+
+def start_benchmark_sagemaker_backend(
+    configuration: ConfigDict,
     methods: MethodDefinitions,
     benchmark_definitions: RealBenchmarkDefinitions,
-    extra_args: Optional[ExtraArgsType] = None,
-    map_extra_args: Optional[MapExtraArgsType] = None,
-    post_processing: Optional[PostProcessingType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
+    map_method_args: Optional[MapMethodArgsType] = None,
+    extra_tuning_job_metadata: Optional[DictStrKey] = None,
 ):
     """
     Runs experiment with SageMaker backend.
 
-    Command line arguments must specify a single benchmark, method, and seed,
-    for example ``--method ASHA --num_seeds 5 --start_seed 4`` starts experiment
-    with ``seed=4``, or ``--method ASHA --num_seeds 1`` starts experiment with
-    ``seed=0``. Here, ``ASHA`` must be key in ``methods``.
+    ``map_method_args`` can be used to modify ``method_kwargs`` for constructing
+    :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
+    ``configuration`` and the method. This allows for extra flexibility to specify specific arguments for chosen methods
+    Its signature is :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
+    where ``method`` is the name of the baseline.
 
-    :param methods: Dictionary with method constructors
-    :param benchmark_definitions: Definitions of benchmark; one is selected from
+    :param configuration: ConfigDict with parameters of the benchmark
+        Must contain all parameters from SAGEMAKER_BACKEND_EXTRA_PARAMETERS
+    :param methods: Dictionary with method constructors.
+    :param benchmark_definitions: Definitions of benchmarks; one is selected from
         command line arguments
-    :param extra_args: Extra arguments for command line parser. Optional
-    :param map_extra_args: Maps ``args`` returned by :func:`parse_args` to dictionary
-        for extra argument values. Needed if ``extra_args`` is given
-    :param post_processing: Called after tuning has finished, passing the tuner
-        as argument. Can be used for postprocessing, such as output or storage
-        of extra information
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
+    :param map_method_args: See above, optional
+    :param extra_tuning_job_metadata: Metadata added to the tuner, can be used to manage results
     """
-    args, method_names, seeds = parse_args(methods, extra_args)
-    experiment_tag = args.experiment_tag
-    benchmark_name = args.benchmark
-    master_random_seed = get_master_random_seed(args.random_seed)
+    configuration.check_if_all_paremeters_present(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
+    configuration.expand_base_arguments(SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
+
+    experiment_tag = configuration.experiment_tag
+    benchmark_name = configuration.benchmark
+    master_random_seed = get_master_random_seed(configuration.random_seed)
+    method_names = list(methods.keys())
+
     assert (
-        len(method_names) == 1 and len(seeds) == 1
+        len(method_names) == 1 and len(configuration.seeds) == 1
     ), "Can only launch single (method, seed). Use launch_remote to launch several combinations"
     method = method_names[0]
-    seed = seeds[0]
+    seed = configuration.seeds[0]
     logging.getLogger().setLevel(logging.INFO)
 
-    benchmark = get_benchmark(args, benchmark_definitions, sagemaker_backend=True)
-    print(f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}")
+    benchmark = get_benchmark(
+        configuration, benchmark_definitions, sagemaker_backend=True
+    )
+    print(
+        f"Starting experiment ({method}/{benchmark_name}/{seed}) of {experiment_tag}"
+        f"  max_wallclock_time = {benchmark.max_wallclock_time}, "
+        f"  n_workers = {benchmark.n_workers}"
+    )
 
     sm_args = sagemaker_estimator_args(
         entry_point=benchmark.script,
@@ -173,7 +147,7 @@ def main(
     del sm_args["checkpoint_s3_uri"]
     sm_args["sagemaker_session"] = default_sagemaker_session()
     sm_args["dependencies"] = benchmarking.__path__
-    if args.warm_pool:
+    if configuration.warm_pool:
         print(
             "--------------------------------------------------------------------------\n"
             "Using SageMaker managed warm pools in order to decrease start-up delays.\n"
@@ -182,34 +156,88 @@ def main(
             "--------------------------------------------------------------------------"
         )
         sm_args["keep_alive_period_in_seconds"] = WARM_POOL_KEEP_ALIVE_PERIOD_IN_SECONDS
-    if args.instance_type is not None:
-        sm_args["instance_type"] = args.instance_type
+    if configuration.instance_type is not None:
+        sm_args["instance_type"] = configuration.instance_type
     trial_backend = SageMakerBackend(
         sm_estimator=sagemaker_estimator[benchmark.framework](**sm_args),
         # names of metrics to track. Each metric will be detected by Sagemaker if it is written in the
         # following form: "[RMSE]: 1.2", see in train_main_example how metrics are logged for an example
-        delete_checkpoints=args.delete_checkpoints,
+        delete_checkpoints=configuration.delete_checkpoints,
         metrics_names=[benchmark.metric],
     )
 
     tuner_kwargs = create_objects_for_tuner(
-        args,
+        configuration,
         methods=methods,
-        extra_args=extra_args,
-        map_extra_args=map_extra_args,
         method=method,
         benchmark=benchmark,
         master_random_seed=master_random_seed,
         seed=seed,
         verbose=True,
+        extra_tuning_job_metadata=extra_tuning_job_metadata,
+        map_method_args=map_method_args,
+        extra_results=extra_results,
     )
     tuner = Tuner(
         trial_backend=trial_backend,
         **tuner_kwargs,
         sleep_time=5.0,
-        max_failures=args.max_failures,
-        start_jobs_without_delay=args.start_jobs_without_delay,
+        max_failures=configuration.max_failures,
+        start_jobs_without_delay=configuration.start_jobs_without_delay,
     )
     tuner.run()
-    if post_processing is not None:
-        post_processing(tuner)
+
+
+def main(
+    methods: MethodDefinitions,
+    benchmark_definitions: RealBenchmarkDefinitions,
+    extra_args: Optional[ExtraArgsType] = None,
+    map_method_args: Optional[MapMethodArgsType] = None,
+    extra_results: Optional[ExtraResultsComposer] = None,
+):
+    """
+    Runs experiment with SageMaker backend.
+
+    Command line arguments must specify a single benchmark, method, and seed,
+    for example ``--method ASHA --num_seeds 5 --start_seed 4`` starts experiment
+    with ``seed=4``, or ``--method ASHA --num_seeds 1`` starts experiment with
+    ``seed=0``. Here, ``ASHA`` must be key in ``methods``.
+
+    ``map_method_args`` can be used to modify ``method_kwargs`` for constructing
+    :class:`~benchmarking.commons.baselines.MethodArguments`, depending on
+    ``configuration`` returned by :func:`parse_args` and the method. Its
+    signature is
+    :code:`method_kwargs = map_method_args(configuration, method, method_kwargs)`,
+    where ``method`` is the name of the baseline. It is called just before the
+    method is created.
+
+    :param methods: Dictionary with method constructors
+    :param benchmark_definitions: Definitions of benchmark; one is selected from
+        command line arguments
+    :param extra_args: Extra arguments for command line parser. Optional
+    :param map_method_args: See above. Needed if ``extra_args`` is given
+    :param extra_results: If given, this is used to append extra information to the
+        results dataframe
+    """
+    configuration = config_from_argparse(extra_args, SAGEMAKER_BACKEND_EXTRA_PARAMETERS)
+    method_names = (
+        [configuration.method]
+        if configuration.method is not None
+        else list(methods.keys())
+    )
+    methods = {mname: methods[mname] for mname in method_names}
+    if extra_args is not None:
+        assert (
+            map_method_args is not None
+        ), "map_method_args must be specified if extra_args is used"
+
+    start_benchmark_sagemaker_backend(
+        configuration,
+        methods=methods,
+        benchmark_definitions=benchmark_definitions,
+        map_method_args=map_method_args,
+        extra_results=extra_results,
+        extra_tuning_job_metadata=None
+        if extra_args is None
+        else extra_metadata(configuration, extra_args),
+    )

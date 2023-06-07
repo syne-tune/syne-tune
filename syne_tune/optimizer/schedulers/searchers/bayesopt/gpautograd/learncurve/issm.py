@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 
 import numpy as np
 import scipy.linalg as spl
@@ -41,7 +41,6 @@ from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
     ExtendedConfiguration,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import SimpleProfiler
 
 
 def _prepare_data_internal(
@@ -404,7 +403,6 @@ def issm_likelihood_computations(
     r_min: int,
     r_max: int,
     skip_c_d: bool = False,
-    profiler: Optional[SimpleProfiler] = None,
 ) -> Dict:
     """
     Given ``precomputed`` from ``issm_likelihood_precomputations`` and ISSM
@@ -449,8 +447,6 @@ def issm_likelihood_computations(
     if not skip_c_d:
         # We could probably refactor this to fit into the loop below, but it
         # seems subdominant
-        if profiler is not None:
-            profiler.start("issm_part1")
         c_lst = []
         d_lst = []
         for i, ydim in enumerate(precomputed["ydims"]):
@@ -472,12 +468,8 @@ def issm_likelihood_computations(
             else:
                 c_lst.append(0.0)
                 d_lst.append(0.0)
-        if profiler is not None:
-            profiler.stop("issm_part1")
 
     # Loop over ydim
-    if profiler is not None:
-        profiler.start("issm_part2")
     deltay = precomputed["deltay"]
     logr = precomputed["logr"]
     off_dely = num_all_configs
@@ -534,8 +526,6 @@ def issm_likelihood_computations(
     if compute_wtw:
         wtw_lst.append(wtw)
         wtw_all = anp.concatenate(tuple(reversed(wtw_lst)), axis=0)
-    if profiler is not None:
-        profiler.stop("issm_part2")
 
     # Compile results
     result = {"num_data": sum(precomputed["ydims"]), "vtv": vtv_all, "wtv": wtv_all}
@@ -893,7 +883,6 @@ def issm_likelihood_slow_computations(
     r_min: int,
     r_max: int,
     skip_c_d: bool = False,
-    profiler: Optional[SimpleProfiler] = None,
 ) -> Dict:
     """
     Naive implementation of ``issm_likelihood_computations``, which does not
@@ -926,8 +915,6 @@ def issm_likelihood_slow_computations(
         alpha_m1 = alpha - 1.0
         beta = betas[i]
         ydim = ymat.shape[0]
-        if profiler is not None:
-            profiler.start("issm_part1")
         num_data += ydim
         r_obs = r_min + ydim  # Observed in range(r_min, r_obs)
         assert 0 < ydim <= num_res, f"len(y[{i}]) = {ydim}, num_res = {num_res}"
@@ -946,9 +933,6 @@ def issm_likelihood_slow_computations(
                 c_lst.append(0.0)
                 d_lst.append(0.0)
         # Inner loop for v_i, w_i
-        if profiler is not None:
-            profiler.stop("issm_part1")
-            profiler.start("issm_part2")
         yprev = ymat[-1].reshape((1, -1))  # y_{j-1} (vector)
         vprev = 1.0  # v_{j-1} (scalar)
         wprev = yprev  # w_{j-1} (row vector)
@@ -975,8 +959,6 @@ def issm_likelihood_slow_computations(
         if compute_wtw:
             assert wtw.shape == (1, 1)
             wtw_lst.append(wtw.item())
-        if profiler is not None:
-            profiler.stop("issm_part2")
     # Compile results
     result = {
         "num_data": num_data,

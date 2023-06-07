@@ -17,10 +17,26 @@ import os
 import argparse
 import logging
 import time
+from pathlib import Path
+
+try:
+    # Benchmark-specific imports are done here, in order to avoid import
+    # errors if the dependencies are not installed (such errors should happen
+    # only when the code is really called)
+    from filelock import SoftFileLock, Timeout
+    import torch
+    import torch.nn as nn
+    from torch.utils.data.sampler import SubsetRandomSampler
+    from torchvision import datasets
+    from torchvision import transforms
+except ImportError:
+    logging.info(
+        f"Please install benchmark-specific dependencies ({Path(__file__).parent / 'requirements.txt'})"
+    )
 
 from syne_tune import Reporter
 from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
-from benchmarking.utils import (
+from syne_tune.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
     add_checkpointing_to_argparse,
@@ -188,16 +204,6 @@ def objective(config):
 
 
 if __name__ == "__main__":
-    # Benchmark-specific imports are done here, in order to avoid import
-    # errors if the dependencies are not installed (such errors should happen
-    # only when the code is really called)
-    from filelock import SoftFileLock, Timeout
-    import torch
-    import torch.nn as nn
-    from torch.utils.data.sampler import SubsetRandomSampler
-    from torchvision import datasets
-    from torchvision import transforms
-
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 

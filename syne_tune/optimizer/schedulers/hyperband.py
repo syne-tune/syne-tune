@@ -13,7 +13,7 @@
 import copy
 import logging
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple, Callable
 
 import numpy as np
 
@@ -30,7 +30,16 @@ from syne_tune.optimizer.schedulers.hyperband_rush import (
     RUSHPromotionRungSystem,
     RUSHStoppingRungSystem,
 )
-from syne_tune.optimizer.schedulers.hyperband_stopping import StoppingRungSystem
+from syne_tune.optimizer.schedulers.hyperband_stopping import (
+    StoppingRungSystem,
+    PausedTrialsResult,
+)
+from syne_tune.optimizer.schedulers.hyperband_checkpoint_removal import (
+    create_callback_for_checkpoint_removal,
+)
+from syne_tune.optimizer.schedulers.remove_checkpoints import (
+    RemoveCheckpointsSchedulerMixin,
+)
 from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
     DyHPORungSystem,
     DEFAULT_SH_PROBABILITY,
@@ -48,6 +57,11 @@ from syne_tune.optimizer.schedulers.searchers.utils.default_arguments import (
 from syne_tune.optimizer.schedulers.searchers.bracket_distribution import (
     DefaultHyperbandBracketDistribution,
 )
+from syne_tune.optimizer.schedulers.utils.successive_halving import (
+    successive_halving_rung_levels,
+)
+from syne_tune.tuning_status import TuningStatus
+from syne_tune.tuner_callback import TunerCallback
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +91,7 @@ _ARGUMENT_KEYS = {
     "rung_system_per_bracket",
     "rung_levels",
     "rung_system_kwargs",
+    "early_checkpoint_removal_kwargs",
 }
 
 _DEFAULT_OPTIONS = {
@@ -107,6 +122,7 @@ _CONSTRAINTS = {
     "do_snapshots": Boolean(),
     "rung_system_per_bracket": Boolean(),
     "rung_system_kwargs": Dictionary(),
+    "early_checkpoint_removal_kwargs": Dictionary(),
 }
 
 
@@ -142,7 +158,9 @@ class TrialInformation:
         self.trial_decision = SchedulerDecision.CONTINUE
 
 
-class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
+class HyperbandScheduler(
+    FIFOScheduler, MultiFidelitySchedulerMixin, RemoveCheckpointsSchedulerMixin
+):
     r"""Implements different variants of asynchronous Hyperband
 
     See ``type`` for the different variants. One implementation detail is
@@ -197,7 +215,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
 
     **Cost-aware schedulers or searchers**
 
-    Some schedulers (e.g., ``type == 'cost_promotion'``) or searchers may depend
+    Some schedulers (e.g., ``type == "cost_promotion"``) or searchers may depend
     on cost values (with key ``cost_attr``) reported alongside the target metric.
     For promotion-based scheduling, a trial may pause and resume several times.
     The cost received in ``on_trial_result`` only counts the cost since the last
@@ -227,7 +245,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
     ``searcher.register_pending`` is called for :math:`r_{next}` only, while for
     other ``searcher_data`` values, pending evaluations are registered for
     :math:`r + 1, r + 2, \dots, r_{next}`.
-    However, if in this case, ``register_pending_myopic`` is True, we instead
+    However, if in this case, ``register_pending_myopic`` is ``True``, we instead
     call ``searcher.register_pending`` for :math:`r + 1` when each observation is
     obtained (not just at a rung level). This leads to less pending
     evaluations at any one time. On the other hand, when a trial is continued
@@ -303,6 +321,9 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
           :class:`~syne_tune.optimizer.schedulers.transfer_learning.RUSHScheduler`.
         * rush_promotion: Same as ``rush_stopping`` but for promotion, see
           :class:`~syne_tune.optimizer.schedulers.hyperband_rush.RUSHPromotionRungSystem`
+        * dyhpo: A model-based scheduler, which can be seen as extension of
+          "promotion" with ``rung_increment`` rather than ``reduction_factor``, see
+          :class:`~syne_tune.optimizer.schedulers.searchers.dyhpo.DynamicHPOSearcher`
 
     :type type: str, optional
     :param cost_attr: Required if the scheduler itself uses a cost metric
@@ -369,9 +390,17 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
           especially at the beginning).
 
     :type rung_system_kwargs: Dict[str, Any], optional
+    :param early_checkpoint_removal_kwargs: If given, speculative early removal
+        of checkpoints is done, see
+        :class:`~syne_tune.callbacks.hyperband_remove_checkpoints_callback.HyperbandRemoveCheckpointsCallback`.
+        The constructor arguments for the ``HyperbandRemoveCheckpointsCallback``
+        must be given here, if they cannot be inferred (key ``max_num_checkpoints``
+        is mandatory). This feature is used only for scheduler types which pause
+        and resume trials.
+    :type early_checkpoint_removal_kwargs: Dict[str, Any], optional
     """
 
-    def __init__(self, config_space, **kwargs):
+    def __init__(self, config_space: Dict[str, Any], **kwargs):
         # Before we can call the superclass constructor, we need to set a few
         # members (see also ``_extend_search_options``).
         # To do this properly, we first check values and impute defaults for
@@ -389,6 +418,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         self._resource_attr = kwargs["resource_attr"]
         self._rung_system_kwargs = kwargs["rung_system_kwargs"]
         self._cost_attr = kwargs.get("cost_attr")
+        self._searcher_data = kwargs["searcher_data"]
         assert not (
             scheduler_type == "cost_promotion" and self._cost_attr is None
         ), "cost_attr must be given if type='cost_promotion'"
@@ -437,7 +467,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
                     f"{kwargs.get('reduction_factor')} and rung_increment = "
                     f"{kwargs.get('rung_increment')} are ignored!"
                 )
-        rung_levels = hyperband_rung_levels(
+        rung_levels = successive_halving_rung_levels(
             rung_levels,
             grace_period=kwargs["grace_period"],
             reduction_factor=kwargs.get("reduction_factor"),
@@ -465,7 +495,6 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             scheduler=self,
         )
         self.do_snapshots = do_snapshots
-        self._searcher_data = kwargs["searcher_data"]
         self._register_pending_myopic = kwargs["register_pending_myopic"]
         # _active_trials:
         # Maintains information for all tasks (running, paused, or stopped).
@@ -477,6 +506,19 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         # least once, this records the sum of costs for reaching its last
         # recent milestone.
         self._cost_offset = dict()
+        self._initialize_early_checkpoint_removal(
+            kwargs.get("early_checkpoint_removal_kwargs")
+        )
+
+    def _initialize_early_checkpoint_removal(
+        self, callback_kwargs: Optional[Dict[str, Any]]
+    ):
+        if callback_kwargs is not None:
+            for name in ["max_num_checkpoints"]:
+                assert (
+                    name in callback_kwargs
+                ), f"early_checkpoint_removal_kwargs must contain '{name}' entry"
+        self._early_checkpoint_removal_kwargs = callback_kwargs
 
     def does_pause_resume(self) -> bool:
         """
@@ -523,7 +565,10 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         # Note: Needs ``self.scheduler_type`` to be set
         scheduler = "hyperband_{}".format(self.scheduler_type)
         result = dict(
-            search_options, scheduler=scheduler, resource_attr=self._resource_attr
+            search_options,
+            scheduler=scheduler,
+            resource_attr=self._resource_attr,
+            searcher_data=self._searcher_data,
         )
         # Cost attribute: For promotion-based, cost needs to be accumulated
         # for each trial
@@ -537,7 +582,7 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
             # by the number of rung levels, which in turn requires ``max_t``
             # to have been determined. This is why we need some extra effort
             # here
-            rung_levels = hyperband_rung_levels(
+            rung_levels = successive_halving_rung_levels(
                 self._num_brackets_info["rung_levels"],
                 grace_period=self._num_brackets_info["grace_period"],
                 reduction_factor=self._num_brackets_info["reduction_factor"],
@@ -811,9 +856,10 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
 
     def _check_result(self, result: Dict[str, Any]):
         super()._check_result(result)
-        self._check_key_of_result(result, self._resource_attr)
+        keys = [self._resource_attr]
         if self.scheduler_type == "cost_promotion":
-            self._check_key_of_result(result, self._cost_attr)
+            keys.append(self._cost_attr)
+        self._check_keys_of_result(result, keys)
         resource = result[self._resource_attr]
         assert 1 <= resource == round(resource), (
             "Your training evaluation function needs to report positive "
@@ -968,75 +1014,24 @@ class HyperbandScheduler(FIFOScheduler, MultiFidelitySchedulerMixin):
         self.searcher.cleanup_pending(trial_id)
         self._cleanup_trial(trial_id, trial_decision=SchedulerDecision.STOP)
 
-
-def _is_positive_int(x):
-    return int(x) == x and x >= 1
-
-
-def hyperband_rung_levels(
-    rung_levels: Optional[List[int]],
-    grace_period: int,
-    reduction_factor: Optional[float],
-    rung_increment: Optional[int],
-    max_t: int,
-) -> List[int]:
-    """Creates ``rung_levels`` from ``grace_period``, ``reduction_factor``
-
-    Note: If ``rung_levels`` is given and ``rung_levels[-1] == max_t``, we strip
-    off this final entry, so that all rung levels are ``< max_t``.
-
-    :param rung_levels: If given, this is returned (but see above)
-    :param grace_period: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param reduction_factor: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param rung_increment: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :param max_t: See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
-    :return: List of rung levels
-    """
-    if rung_levels is not None:
-        assert (
-            isinstance(rung_levels, list) and len(rung_levels) > 1
-        ), "rung_levels must be list of size >= 2"
-        assert all(
-            _is_positive_int(x) for x in rung_levels
-        ), "rung_levels must be list of positive integers"
-        rung_levels = [int(x) for x in rung_levels]
-        assert all(
-            x < y for x, y in zip(rung_levels, rung_levels[1:])
-        ), "rung_levels must be strictly increasing sequence"
-        assert (
-            rung_levels[-1] <= max_t
-        ), f"Last entry of rung_levels ({rung_levels[-1]}) must be <= max_t ({max_t})"
-    else:
-        # Rung levels given by grace_period, reduction_factor, max_t
-        assert _is_positive_int(grace_period)
-        assert _is_positive_int(max_t)
-        assert (
-            max_t > grace_period
-        ), f"max_t ({max_t}) must be greater than grace_period ({grace_period})"
-        if reduction_factor is not None:
-            assert reduction_factor >= 2
-            rf = reduction_factor
-            min_t = grace_period
-            max_rungs = 0
-            while min_t * np.power(rf, max_rungs) < max_t:
-                max_rungs += 1
-            rung_levels = [
-                int(round(min_t * np.power(rf, k))) for k in range(max_rungs)
-            ]
-            assert rung_levels[-1] <= max_t  # Sanity check
-            if rung_increment is not None:
-                logger.warning(
-                    f"You specified both reduction_factor = {reduction_factor} "
-                    f"and rung_increment = {rung_increment}. The former takes "
-                    "precedence, the latter will be ignored"
-                )
+    def callback_for_checkpoint_removal(
+        self, stop_criterion: Callable[[TuningStatus], bool]
+    ) -> Optional[TunerCallback]:
+        if (
+            self._early_checkpoint_removal_kwargs is None
+            or not self.terminator.support_early_checkpoint_removal()
+        ):
+            return None
         else:
-            assert rung_increment is not None
-            assert _is_positive_int(rung_increment)
-            rung_levels = list(range(grace_period, max_t, rung_increment))
-    if rung_levels[-1] == max_t:
-        rung_levels = rung_levels[:-1]
-    return rung_levels
+            callback_kwargs = dict(
+                self._early_checkpoint_removal_kwargs,
+                metric=self.metric,
+                resource_attr=self._resource_attr,
+                mode=self.mode,
+            )
+            return create_callback_for_checkpoint_removal(
+                callback_kwargs, stop_criterion=stop_criterion
+            )
 
 
 class HyperbandBracketManager:
@@ -1162,8 +1157,10 @@ class HyperbandBracketManager:
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
         rung_sys.on_task_add(trial_id, skip_rungs=skip_rungs, **kwargs)
         milestones = rung_sys.get_milestones(skip_rungs)
-        if milestones[0] < self._max_t:
+        if milestones:
             milestones.insert(0, self._max_t)
+        else:
+            milestones = [self._max_t]
         return milestones
 
     def on_task_report(self, trial_id: str, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -1237,6 +1234,10 @@ class HyperbandBracketManager:
         is returned. This information is passed to ``get_config`` of the
         searcher.
 
+        Note: ``extra_kwargs`` can return information also if ``trial_id = None``
+        is returned. This information is passed to ``get_config`` of the
+        searcher.
+
         :param new_trial_id: ID for new trial as passed to :meth:`_suggest`
         :return: ``(trial_id, extra_kwargs)``
         """
@@ -1258,3 +1259,32 @@ class HyperbandBracketManager:
     def snapshot_rungs(self, bracket_id):
         rung_sys, skip_rungs = self._get_rung_system_for_bracket_id(bracket_id)
         return rung_sys.snapshot_rungs(skip_rungs)
+
+    def paused_trials(self, resource: Optional[int] = None) -> PausedTrialsResult:
+        """
+        Only for pause and resume schedulers (:meth:`does_pause_resume` returns
+        ``True``), where trials can be paused at certain rung levels only.
+        If ``resource`` is not given, returns list of all paused trials
+        ``(trial_id, rank, metric_val, level)``, where ``level`` is
+        the rung level, and ``rank`` is the rank of the trial in the rung
+        (0 for the best metric value). If ``resource`` is given, only the
+        paused trials in the rung of this level are returned.
+
+        :param resource: If given, paused trials of only this rung level are
+            returned. Otherwise, all paused trials are returned
+        :return: See above
+        """
+        return [
+            entry for rs in self._rung_systems for entry in rs.paused_trials(resource)
+        ]
+
+    def information_for_rungs(self) -> List[Tuple[int, int, float]]:
+        """
+        :return: List of ``(resource, num_entries, prom_quant)``, where
+            ``resource`` is a rung level, ``num_entries`` the number of entries
+            in the rung, and ``prom_quant`` the promotion quantile
+        """
+        return self._rung_systems[0].information_for_rungs()
+
+    def support_early_checkpoint_removal(self) -> bool:
+        return self._rung_systems[0].support_early_checkpoint_removal()

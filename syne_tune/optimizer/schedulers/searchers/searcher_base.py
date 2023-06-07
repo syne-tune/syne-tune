@@ -15,9 +15,7 @@ import logging
 import numpy as np
 
 from syne_tune.optimizer.schedulers.searchers import BaseSearcher
-from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.common import (
-    ExclusionList,
-)
+from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
 from syne_tune.optimizer.schedulers.searchers.utils import (
     HyperparameterRanges,
     make_hyperparameter_ranges,
@@ -69,7 +67,7 @@ def sample_random_configuration(
     return new_config
 
 
-class SearcherWithRandomSeed(BaseSearcher):
+class StochasticSearcher(BaseSearcher):
     """
     Base class of searchers which use random decisions. Creates the
     ``random_state`` member, which must be used for all random draws.
@@ -174,7 +172,7 @@ class SearcherWithRandomSeed(BaseSearcher):
         return restrict_configurations
 
 
-class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
+class StochasticAndFilterDuplicatesSearcher(StochasticSearcher):
     """
     Base class for searchers with the following properties:
 
@@ -201,7 +199,7 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
 
     Note: Not all searchers which filter duplicates make use of this class.
 
-    Additional arguments on top of parent class :class:`SearcherWithRandomSeed`:
+    Additional arguments on top of parent class :class:`StochasticSearcher`:
 
     :param allow_duplicates: See above. Defaults to ``False``
     :param restrict_configurations: See above, optional
@@ -225,7 +223,7 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
         self._allow_duplicates = allow_duplicates
         # Used to avoid returning the same config more than once. If
         # ``allow_duplicates == True``, this is used to block failed trials
-        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
+        self._excl_list = ExclusionList(self._hp_ranges)
         # Maps ``trial_id`` to configuration. This is used to blacklist
         # configurations whose trial has failed (only if
         # `allow_duplicates == True``)
@@ -353,7 +351,7 @@ class SearcherWithRandomSeedAndFilterDuplicates(SearcherWithRandomSeed):
 
     def _restore_from_state(self, state: Dict[str, Any]):
         super()._restore_from_state(state)
-        self._excl_list = ExclusionList.empty_list(self._hp_ranges)
+        self._excl_list = ExclusionList(self._hp_ranges)
         self._excl_list.clone_from_state(state["excl_list"])
         if self._allow_duplicates:
             self._config_for_trial_id = state["config_for_trial_id"]

@@ -12,8 +12,8 @@
 # permissions and limitations under the License.
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model import (
-    get_internal_candidate_evaluations,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
+    transform_state_to_data,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     dictionarize_objective,
@@ -47,7 +47,7 @@ def test_get_internal_candidate_evaluations():
     )
     state.failed_trials.append("0")  # First trial with observation also failed
 
-    result = get_internal_candidate_evaluations(
+    result = transform_state_to_data(
         state, INTERNAL_METRIC_NAME, normalize_targets=True, num_fantasy_samples=20
     )
 

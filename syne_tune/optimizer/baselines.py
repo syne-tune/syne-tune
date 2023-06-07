@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List, Union
 import logging
 import copy
 
@@ -23,6 +23,10 @@ from syne_tune.optimizer.schedulers.multiobjective import MOASHA
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
+from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
+    MultiObjectiveRegularizedEvolution,
+)
+from syne_tune.optimizer.schedulers.multiobjective.nsga2_searcher import NSGA2Searcher
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
@@ -36,6 +40,7 @@ from syne_tune.try_import import (
     try_import_bore_message,
     try_import_botorch_message,
 )
+from syne_tune.util import dict_get
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +237,7 @@ class HyperTune(HyperbandScheduler):
         searcher_name = "hypertune"
         _assert_searcher_must_be(kwargs, searcher_name)
         kwargs = copy.deepcopy(kwargs)
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         k, v, supp = "model", "gp_independent", {"gp_independent", "gp_multitask"}
         model = search_options.get(k, v)
         assert model in supp, (
@@ -324,10 +329,10 @@ class DyHPO(HyperbandScheduler):
         ), "Must have type='dyhpo'"
         kwargs["type"] = "dyhpo"
         if probability_sh is not None:
-            rung_system_kwargs = kwargs.get("rung_system_kwargs", dict())
+            rung_system_kwargs = dict_get(kwargs, "rung_system_kwargs", dict())
             rung_system_kwargs["probability_sh"] = probability_sh
             kwargs["rung_system_kwargs"] = rung_system_kwargs
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         k = "opt_skip_period"
         if k not in search_options:
             search_options[k] = 3
@@ -536,7 +541,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
         _assert_need_one(kwargs, need_one={"max_resource_level", "max_resource_attr"})
         searcher_name = "bayesopt"
         _assert_searcher_must_be(kwargs, searcher_name)
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         if "model" not in search_options:
             search_options["model"] = "gp_independent"
         kwargs["search_options"] = search_options
@@ -560,7 +565,7 @@ def _create_searcher_kwargs(
         metric=metric,
         points_to_evaluate=kwargs.get("points_to_evaluate"),
     )
-    search_options = kwargs.get("search_options", dict())
+    search_options = dict_get(kwargs, "search_options", dict())
     searcher_kwargs.update(search_options)
     if random_seed is not None:
         searcher_kwargs["random_seed"] = _random_seed_from_generator(random_seed)
@@ -728,6 +733,91 @@ class REA(FIFOScheduler):
         )
 
 
+class MOREA(FIFOScheduler):
+    """
+
+    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param population_size: See
+        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        Defaults to 100
+    :param sample_size: See
+        :class:`~syne_tune.optimizer.schedulers.searchers.RegularizedEvolution`.
+        Defaults to 10
+    :param random_seed: Random seed, optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: List[str],
+        mode: Union[List[str], str] = "min",
+        population_size: int = 100,
+        sample_size: int = 10,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        super(MOREA, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            searcher=MultiObjectiveRegularizedEvolution(
+                config_space=config_space,
+                metric=metric,
+                mode=mode,
+                population_size=population_size,
+                sample_size=sample_size,
+                random_seed=random_seed,
+            ),
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class NSGA2(FIFOScheduler):
+    """
+
+    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param population_size: The size of the population for NSGA-2
+    :param random_seed: Random seed, optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: List[str],
+        mode: Union[List[str], str] = "min",
+        population_size: int = 20,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        super(NSGA2, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            searcher=NSGA2Searcher(
+                config_space=config_space,
+                metric=metric,
+                mode=mode,
+                population_size=population_size,
+                random_seed=random_seed,
+            ),
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
 class ConstrainedBayesianOptimization(FIFOScheduler):
     """Constrained Bayesian Optimization.
 
@@ -746,7 +836,7 @@ class ConstrainedBayesianOptimization(FIFOScheduler):
     ):
         searcher_name = "bayesopt_constrained"
         _assert_searcher_must_be(kwargs, searcher_name)
-        search_options = kwargs.get("search_options", dict())
+        search_options = dict_get(kwargs, "search_options", dict())
         kwargs["search_options"] = dict(search_options, constraint_attr=constraint_attr)
         super(ConstrainedBayesianOptimization, self).__init__(
             config_space=config_space,
@@ -910,6 +1000,86 @@ class KDE(FIFOScheduler):
         )
 
 
+class CQR(FIFOScheduler):
+    """
+    Single-fidelity Conformal Quantile Regression approach proposed in:
+        | Optimizing Hyperparameters with Conformal Quantile Regression.
+        | David Salinas, Jacek Golebiowski, Aaron Klein, Matthias Seeger, Cedric Archambeau.
+        | ICML 2023.
+    The method predict quantile performance with gradient boosted trees and calibrate prediction with conformal
+    predictions.
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        mode: str = "min",
+        random_seed: Optional[int] = None,
+        **surrogate_kwargs,
+    ):
+        try:
+            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+                SurrogateSearcher,
+            )
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
+        super(CQR, self).__init__(
+            searcher=SurrogateSearcher(
+                mode=mode,
+                metric=metric,
+                config_space=config_space,
+                random_seed=random_seed,
+                **surrogate_kwargs,
+            ),
+            mode=mode,
+            config_space=config_space,
+            metric=metric,
+        )
+
+
+class ASHACQR(HyperbandScheduler):
+    """
+    Multi-fidelity Conformal Quantile Regression approach proposed in:
+        | Optimizing Hyperparameters with Conformal Quantile Regression.
+        | David Salinas, Jacek Golebiowski, Aaron Klein, Matthias Seeger, Cedric Archambeau.
+        | ICML 2023.
+    The method predict quantile performance with gradient boosted trees and calibrate prediction with conformal
+    predictions.
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: str,
+        resource_attr: str,
+        mode: str = "min",
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        try:
+            from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
+                SurrogateSearcher,
+            )
+        except ImportError:
+            logging.info(try_import_blackbox_repository_message())
+            raise
+
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+
+        super(ASHACQR, self).__init__(
+            searcher=SurrogateSearcher(**searcher_kwargs),
+            mode=mode,
+            config_space=config_space,
+            metric=metric,
+            resource_attr=resource_attr,
+            **kwargs,
+        )
+
+
 # Dictionary that allows to also list baselines who don't need a wrapper class
 # such as :class:`PopulationBasedTraining`
 baselines_dict = {
@@ -930,4 +1100,6 @@ baselines_dict = {
     "ConstrainedBayesianOptimization": ConstrainedBayesianOptimization,
     "ZeroShotTransfer": ZeroShotTransfer,
     "ASHACTS": ASHACTS,
+    "CQR": CQR,
+    "ASHACQR": ASHACQR,
 }

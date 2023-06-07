@@ -48,8 +48,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.mean import (
 from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_state import (
     PosteriorState,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import (
-    SimpleProfiler,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    ScalarTargetTransform,
+    IdentityTargetTransform,
 )
 
 
@@ -65,16 +66,19 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
     :param kernel: Shared kernel function :math:`k(x, x')`
     :param mean: Maps rung level :math:`r` to mean function :math:`\mu_r`
     :param resource_attr_range: :math:`(r_{min}, r_{max})`
+    :param target_transform: Invertible transform of target values y to
+        latent values z, which are then modelled as Gaussian. Shared across
+        different :math:`r`. Defaults to the identity
     :param separate_noise_variances: See above. Defaults to ``False``
     :param initial_noise_variance: Initial value for noise variance(s).
         Defaults to
-        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_NOISE_VARIANCE``
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_NOISE_VARIANCE`
     :param initial_covariance_scale: Initial value for covariance scales.
         Defaults to
-        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_COVARIANCE_SCALE``
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.INITIAL_COVARIANCE_SCALE`
     :param encoding_type: Encoding used for noise variance(s) and covariance
         scales. Defaults to
-        :const:syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING``
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.constants.DEFAULT_ENCODING`
     """
 
     def __init__(
@@ -82,6 +86,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         kernel: KernelFunction,
         mean: Dict[int, MeanFunction],
         resource_attr_range: Tuple[int, int],
+        target_transform: Optional[ScalarTargetTransform] = None,
         separate_noise_variances: bool = False,
         initial_noise_variance: Optional[float] = None,
         initial_covariance_scale: Optional[float] = None,
@@ -95,6 +100,8 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
             initial_covariance_scale = INITIAL_COVARIANCE_SCALE
         if encoding_type is None:
             encoding_type = DEFAULT_ENCODING
+        if target_transform is None:
+            target_transform = IdentityTargetTransform()
         self.encoding_noise = create_encoding(
             encoding_name=encoding_type,
             init_val=initial_noise_variance,
@@ -116,6 +123,7 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         for v in self.mean.values():
             self.register_child(v)
         self.kernel = kernel
+        self.target_transform = target_transform
         self.resource_attr_range = resource_attr_range
         self._separate_noise_variances = separate_noise_variances
         with self.name_scope():
@@ -156,9 +164,10 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
 
     def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
+        targets = self.target_transform(data["targets"])
         return IndependentGPPerResourcePosteriorState(
             features=data["features"],
-            targets=data["targets"],
+            targets=targets,
             kernel=self.kernel,
             mean=self.mean,
             covariance_scale=self._covariance_scale(),
@@ -167,12 +176,23 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         )
 
     def forward(self, data: Dict[str, Any]):
-        return self.get_posterior_state(data).neg_log_likelihood()
+        return self.get_posterior_state(
+            data
+        ).neg_log_likelihood() + self.target_transform.negative_log_jacobian(
+            data["targets"]
+        )
+
+    def _components(self) -> List[Tuple[str, MeanFunction]]:
+        return [("kernel_", self.kernel), ("ytrans_", self.target_transform)] + [
+            (f"mean{resource}_", mean) for resource, mean in self.mean.items()
+        ]
 
     def param_encoding_pairs(self) -> List[tuple]:
-        result = self.kernel.param_encoding_pairs()
-        for mean in self.mean.values():
-            result.extend(mean.param_encoding_pairs())
+        result = [
+            x
+            for _, component in self._components()
+            for x in component.param_encoding_pairs()
+        ]
         for internal in self.covariance_scale_internal.values():
             result.append((internal, self.encoding_covscale))
         _noise_variances = (
@@ -210,11 +230,6 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         assert internal is not None, f"resource = {resource} not supported"
         self.encoding_covscale.set(internal, val)
 
-    def _components(self):
-        return [("kernel_", self.kernel)] + [
-            (f"mean{resource}_", mean) for resource, mean in self.mean.items()
-        ]
-
     def get_params(self) -> Dict[str, np.ndarray]:
         result = dict()
         for pref, func in self._components():
@@ -247,11 +262,10 @@ class IndependentGPPerResourceMarginalLikelihood(MarginalLikelihood):
         else:
             self._set_noise_variance(1, param_dict["noise_variance"])
 
-    def on_fit_start(
-        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
-    ):
+    def on_fit_start(self, data: Dict[str, Any]):
         GaussianProcessMarginalLikelihood.assert_data_entries(data)
         targets = data["targets"]
         assert (
             targets.shape[1] == 1
         ), "targets cannot be a matrix if parameters are to be fit"
+        self.target_transform.on_fit_start(targets)

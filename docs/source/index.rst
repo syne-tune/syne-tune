@@ -21,7 +21,7 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 * Wide coverage (>20) of different HPO methods, including:
 
   * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
-  * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
+  * Multi-fidelity methods supporting model-based decisions (BOHB, MOBSTER, Hyper-Tune, DyHPO, BORE);
   * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
   * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
 
@@ -31,30 +31,36 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
-* New scheduler: :class:`~syne_tune.optimizer.baselines.DyHPO`.
-  This is a recent multi-fidelity method, which can be seen as alternative to
-  `ASHA <tutorials/multifidelity/mf_sync_model.html>`_,
-  `MOBSTER <tutorials/multifidelity/mf_async_model.html#asynchronous-mobster>`_
-  or `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`_.
-  Different to these, decisions on whether to promote paused trials are done
-  based on the surrogate model. Our implementation differs from the published
-  work by using a Gaussian process surrogate model, and by a promotion rule which
-  is a hybrid between DyHPO and ASHA.
-* New tutorial: `How to Contribute a New Scheduler <tutorials/developer/README.html>`_.
-  Learn how to implement your own scheduler, wrap external code, or modify
-  one of the existing templates in order to get your job done.
-* New tutorial: `Benchmarking in Syne Tune <tutorials/benchmarking/README.html>`_.
-  You'd like to run many experiments in parallel, or launch training jobs on
-  different instances, all by modifying some simple scripts to your needs? Then
-  our benchmarking mechanism is for you.
-* You can now
-  `do paired comparisons and manage seed choices <tutorials/benchmarking/bm_local.html#random-seeds-and-paired-comparisons>`_
-  in order to control randomness in your comparisons.
-* The `YAHPO benchmarking <tutorials/benchmarking/bm_simulator.html#the-yahpo-family>`_
-  suite is integrated in our blackbox repository
-* New benchmark: Transformer on WikiText-2
-  (:func:`~benchmarking.commons.benchmark_definitions.transformer_wikitext2_benchmark`)
-
+* You can now create comparative plots, combining the results of many experiments,
+  as shown `here <tutorials/visualization/README.html>`__.
+* Local Backend supports
+  `training with more than one GPU per trial <faq.html#how-can-i-utilize-multiple-gpus>`__.
+* Speculative early checkpoint removal for asynchronous multi-fidelity optimization.
+  Retaining all checkpoints often exhausts all available disk space when training
+  large models. With this feature, Syne Tune automatically removes checkpoints
+  that are unlikely to be needed.
+  `Details <faq.html#checkpoints-are-filling-up-my-disk-what-can-i-do>`__.
+* New Multi-Objective Scheduler:
+  :class:`~syne_tune.optimizer.schedulers.multiobjective.LinearScalarizedScheduler`.
+  The method works by taking a multi-objective problem and turning it into a
+  single-objective task by optimizing for a linear combination of all objectives.
+  This wrapper works with all single-objective schedulers. 
+* Support for automatic termination criterion proposed by Makarova et al.
+  Instead of defining a fixed number of iterations or wall-clock time limit, we
+  can set a threshold on how much worse we allow the final solution to be
+  compared to the global optimum, such that we automatically stop the optimization
+  process once we find a solution that meets this criteria.
+* You can now customize writing out results during an experiment, as shown in
+  `examples/launch_height_extra_results.py <examples.html#customize-results-written-during-an-experiment>`__.
+* You can now warp inputs and apply a
+  `Box-Cox transform to your targets <tutorials/basics/basics_bayesopt.html#box-cox-transformation-of-target-values>`__
+  in Bayesian or MOBSTER, free parameters are adjusted automatically.
+* New tutorial:
+  `Using Syne Tune for Transfer Learning <tutorials/transfer_learning/transfer_learning.html>`__.
+  Transfer learning allows us to speed up our current optimisation by learning
+  from related optimisation runs. Syne Tune provides a number of transfer HPO
+  methods and makes it easy to implement new ones. Thanks to
+  `Sigrid <https://github.com/sighellan>`__ for this contribution.
 
 .. toctree::
    :name: Getting Started
@@ -81,8 +87,12 @@ What's New?
    schedulers
    tutorials/multifidelity/README
    tutorials/benchmarking/README
+   tutorials/visualization/README
+   tutorials/experimentation/README
    tutorials/developer/README
    tutorials/pasha/pasha
+   tutorials/transfer_learning/transfer_learning
+   tutorials/odsc_tutorial/README
 
 .. toctree::
    :name: API docs

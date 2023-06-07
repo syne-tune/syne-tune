@@ -12,9 +12,12 @@
 # permissions and limitations under the License.
 from pathlib import Path
 from typing import Optional
-import numpy as np
 
-from syne_tune.util import s3_experiment_path
+from syne_tune.experiments.results_utils import sync_from_s3_command
+from syne_tune.optimizer.schedulers.random_seeds import (
+    generate_random_seed,
+    RANDOM_SEED_UPPER_BOUND,
+)
 
 
 def filter_none(a: dict) -> dict:
@@ -25,9 +28,7 @@ def message_sync_from_s3(experiment_tag: str) -> str:
     return (
         "Launched all requested experiments. Once everything is done, use this "
         "command to sync result files from S3:\n"
-        f"$ aws s3 sync {s3_experiment_path(experiment_name=experiment_tag)} "
-        f'~/syne-tune/{experiment_tag}/ --exclude "*" '
-        '--include "*metadata.json" --include "*results.csv.zip"'
+        + sync_from_s3_command(experiment_name=experiment_tag)
     )
 
 
@@ -73,7 +74,7 @@ def find_or_create_requirements_txt(
 ) -> Path:
     if requirements_fname is None:
         requirements_fname = "requirements.txt"
-    files = list(entry_point.parent.rglob("requirements*.txt"))
+    files = list(entry_point.parent.glob("requirements*.txt"))
     if len(files) == 0:
         print(
             f"Could not find {entry_point.parent}/requirements*.txt\n"
@@ -96,15 +97,12 @@ def find_or_create_requirements_txt(
     return fname
 
 
-SEED_UPPER_LIMIT = 2**32
-
-
 def get_master_random_seed(random_seed: Optional[int]) -> int:
     if random_seed is None:
-        random_seed = np.random.randint(0, SEED_UPPER_LIMIT)
+        random_seed = generate_random_seed()
     print(f"Master random_seed = {random_seed}")
     return random_seed
 
 
 def effective_random_seed(master_random_seed: int, seed: int) -> int:
-    return (master_random_seed + seed) % SEED_UPPER_LIMIT
+    return (master_random_seed + seed) % RANDOM_SEED_UPPER_BOUND

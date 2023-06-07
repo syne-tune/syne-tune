@@ -23,10 +23,10 @@ class DifferentialEvolutionHyperbandBracket(SynchronousBracket):
     Represents a bracket in Differential Evolution Hyperband (DEHB).
 
     There are a number of differences to brackets in standard synchronous
-    Hyperband (:class:`SynchronousHyperbandBracket`):
+    Hyperband (:class:`~syne_tune.optimizer.schedulers.synchronous.hyperband_bracket.SynchronousHyperbandBracket`):
 
-    * ``on_result``: ``result.trial_id`` overwrites ``trial_id`` in rung even if
-      latter is not None.
+    * :meth:`on_result`: ``result.trial_id`` overwrites ``trial_id`` in rung
+      even if latter is not ``None``.
     * Promotions are not triggered automatically when a rung is complete
     * Some additional methods
     """
@@ -68,7 +68,7 @@ class DifferentialEvolutionHyperbandBracket(SynchronousBracket):
         previous_rung, _ = self._rungs[self.current_rung - 1]
         return get_top_list(
             rung=previous_rung, new_len=self.size_of_current_rung(), mode=self._mode
-        )
+        )[0]
 
-    def _promote_trials_at_rung_complete(self):
-        pass
+    def _promote_trials_at_rung_complete(self) -> List[int]:
+        return []

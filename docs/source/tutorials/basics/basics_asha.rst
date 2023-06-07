@@ -130,29 +130,15 @@ In this section, we will focus on the *stopping* variant of ASHA, leaving
 the promotion variant for later. First, we need to modify our training
 script. In order to support early stopping decisions, it needs to compute and
 report validation errors during training. Recall
-`traincode_report_end.py <basics_setup.html#annotating-the-training-script>`_
+`traincode_report_end.py <basics_setup.html#annotating-the-training-script>`__
 used with random search and Bayesian optimization. We will replace
 ``objective`` with the following code snippet, giving rise to
 ``traincode_report_eachepoch.py``:
 
-.. code-block:: python
-
-   # traincode_report_eachepoch.py (relevant part)
-   def objective(config):
-       # Download data
-       data_train = download_data(config)
-       # Report results to Syne Tune
-       report = Reporter()
-       # Split into training and validation set
-       train_loader, valid_loader = split_data(config, data_train)
-       # Create model and optimizer
-       state = model_and_optimizer(config)
-       # Training loop
-       for epoch in range(1, config["epochs"] + 1):
-           train_model(config, state, train_loader)
-           # Report validation accuracy at end of each epoch
-           accuracy = validate_model(config, state, valid_loader)
-           report(epoch=epoch, accuracy=accuracy)
+.. literalinclude:: code/traincode_report_eachepoch.py
+   :caption: traincode_report_eachepoch.py (relevant part)
+   :start-at: def objective(config):
+   :end-before: if __name__ == "__main__":
 
 Instead of computing and reporting the validation error only after
 ``config['epochs']`` epochs, we do this at the end of each epoch. To
@@ -172,14 +158,14 @@ and we can keep our script simple. Moreover, Syne Tune provides some advanced
 model-based extensions of ASHA scheduling, which make good use of metric data
 reported at the end of every epoch.
 
-Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`_
+Our `launcher script <basics_randomsearch.html#launcher-script-for-random-search>`__
 runs stopping-based ASHA with the argument ``--method ASHA-STOP``. Note that
 the entry point is ``traincode_report_eachepoch.py`` in this case, and the
 scheduler is ``ASHA``. Also, we need to pass the name of the resource attribute
-in ``resource_attr``. Finally, ``mode="stopping"` selects the stopping
+in ``resource_attr``. Finally, ``mode="stopping"`` selects the stopping
 variant. Further details about ASHA and relevant additional arguments (for
 which we use defaults here) are found in
-`this tutorial <../multifidelity/README.html>`_.
+`this tutorial <../multifidelity/README.html>`__.
 
 When you run this script, you will note that many more trials are started than
 for random search, and that the majority of trials are stopped after 1 or 3
@@ -190,11 +176,11 @@ Results for Asynchronous Successive Halving
 
 .. |Results for Asynchronous Successive Halving| image:: img/tutorial_rs_bo_shrs_stop.png
 
-+-----------------------------------------------------------------------+
-| |Results for Asynchronous Successive Halving|                         |
-+=======================================================================+
-| Results for Asynchronous Successive Halving                           |
-+-----------------------------------------------------------------------+
++-----------------------------------------------+
+| |Results for Asynchronous Successive Halving| |
++===============================================+
+| Results for Asynchronous Successive Halving   |
++-----------------------------------------------+
 
 Here are results for our running example (4 workers; 3 hours; median, 25/75
 percentiles over 50 repeats). ASHA stopping makes a big difference,

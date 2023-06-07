@@ -25,12 +25,14 @@ from syne_tune.remote.estimators import (
     instance_sagemaker_estimator,
     DEFAULT_CPU_INSTANCE,
 )
+from syne_tune.remote.remote_metrics_callback import RemoteTuningMetricsCallback
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     add_syne_tune_dependency,
     get_execution_role,
 )
 from syne_tune.constants import ST_REMOTE_UPLOAD_DIR_NAME
 from syne_tune.util import s3_experiment_path
+from syne_tune.optimizer.schedulers.multi_fidelity import MultiFidelitySchedulerMixin
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +55,10 @@ class RemoteLauncher:
         dependencies for the backend script to run
     :param estimator_kwargs: Extra arguments for creating the SageMaker
         estimator for the tuning code.
-    :param store_logs_localbackend: Whether to store logs of trials when
-        using the local backend. When using SageMaker backend, logs are
-        persisted by SageMaker. Defauls to ``False``
+    :param store_logs_localbackend: Whether to sync logs and checkpoints to S3
+        when using the local backend. When using SageMaker backend, logs are
+        persisted by SageMaker. Using ``True`` can lead to failure with large
+        checkpoints. Defauls to ``False``
     :param log_level: Logging level. Default is ``logging.INFO``, while
         ``logging.DEBUG`` gives more messages
     :param s3_path: S3 base path used for checkpointing, outputs of tuning
@@ -64,6 +67,11 @@ class RemoteLauncher:
         Defaults to :func:`~syne_tune.util.s3_experiment_path`
     :param no_tuner_logging: If ``True``, the logging level for ``syne_tune.tuner``
         is set to ``logging.ERROR``. Defaults to ``False``
+    :param publish_tuning_metrics: If ``True``, a number of tuning metrics (see
+        :class:`~syne_tune.remote.remote_metrics_callback.RemoteTuningMetricsCallback`)
+        are reported and displayed in the SageMaker training job console. This is
+        modifying ``tuner``, in the sense that a callback is appended to
+        ``tuner.callbacks``. Defaults to ``True``.
     """
 
     def __init__(
@@ -76,6 +84,7 @@ class RemoteLauncher:
         log_level: Optional[int] = None,
         s3_path: Optional[str] = None,
         no_tuner_logging: bool = False,
+        publish_tuning_metrics: bool = True,
         **estimator_kwargs,
     ):
         assert not self.is_lambda(tuner.stop_criterion), (
@@ -102,6 +111,29 @@ class RemoteLauncher:
         self.s3_path = s3_path.rstrip("/")
         assert isinstance(no_tuner_logging, bool)
         self.no_tuner_logging = no_tuner_logging
+        self._tuning_metrics_callback = None
+        if publish_tuning_metrics:
+            self._init_tuning_metrics_callback()
+
+    def _init_tuning_metrics_callback(self):
+        assert not any(
+            isinstance(c, RemoteTuningMetricsCallback) for c in self.tuner.callbacks
+        ), "tuner.callbacks must not contain any RemoteTuningMetricsCallback"
+        scheduler = self.tuner.scheduler
+        metric = scheduler.metric_names()[0]
+        mode = scheduler.metric_mode()
+        if isinstance(mode, list):
+            mode = mode[0]
+        resource_attr = None
+        if isinstance(scheduler, MultiFidelitySchedulerMixin):
+            resource_attr = scheduler.resource_attr
+        self._tuning_metrics_callback = RemoteTuningMetricsCallback(
+            metric=metric,
+            mode=mode,
+            config_space=scheduler.config_space,
+            resource_attr=resource_attr,
+        )
+        self.tuner.callbacks.append(self._tuning_metrics_callback)
 
     def is_lambda(self, f):
         """
@@ -210,7 +242,6 @@ class RemoteLauncher:
         return Path(__file__).parent
 
     def launch_tuning_job_on_sagemaker(self, wait: bool):
-        # todo add Sagemaker cloudwatch metrics to visualize live results of tuning best results found over time.
         if self.instance_type != "local":
             checkpoint_s3_root = f"{self.s3_path}/{self.tuner.name}"
             logger.info(f"Tuner will checkpoint results to {checkpoint_s3_root}")
@@ -255,13 +286,15 @@ class RemoteLauncher:
         )
 
         add_syne_tune_dependency(tuner_estimator)
-
         # ask Sagemaker to send the path containing entrypoint script and tuner.
         tuner_estimator.dependencies.append(str(self.upload_dir()))
-
         if self.dependencies is not None:
             tuner_estimator.dependencies += self.dependencies
-
+        # Register tuning metrics with estimator
+        if self._tuning_metrics_callback is not None:
+            self._tuning_metrics_callback.register_metrics_with_estimator(
+                tuner_estimator
+            )
         # launches job on Sagemaker
         return tuner_estimator.fit(wait=wait, job_name=self.tuner.name)
 

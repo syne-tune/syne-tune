@@ -1,0 +1,15 @@
+ignore:
+  - "docs/*"
+  - "examples/*"
+
+github_checks:
+    annotations: false
+
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true

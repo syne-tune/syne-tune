@@ -19,12 +19,12 @@ separate *workers* (which can be different GPUs or CPU cores on the same
 instance, or different instances).
 
 In Syne Tune, this process is split between two entities: the trial backend
-and the `trial scheduler <../../schedulers.html>`_. The backend wraps the
+and the `trial scheduler <../../schedulers.html>`__. The backend wraps the
 training code to be executed for different configurations and is responsible to
 start jobs, as well as stop, pause or resume them. It also collects results
 reported by the training jobs and relays them to the scheduler. In Syne Tune,
 pause-and-resume scheduling is done via
-`checkpointing <../../faq.html#how-can-i-enable-trial-checkpointing>`_. While
+`checkpointing <../../faq.html#how-can-i-enable-trial-checkpointing>`__. While
 code to write and load checkpoints locally must be provided by the training
 script, the backend makes them available when needed. There are two basic
 events which happen repeatedly during an HPO experiment, as orchestrated by the
@@ -34,7 +34,7 @@ events which happen repeatedly during an HPO experiment, as orchestrated by the
   available. For each free worker, it calls
   :meth:`~syne_tune.optimizer.scheduler.TrialScheduler.suggest`, asking for
   what to do next. As already seen in our
-  `first example <first_example.html#first-example>`_, the scheduler will
+  `first example <first_example.html#first-example>`__, the scheduler will
   typically suggest a configuration for a new trial to be started. On the
   other hand, a pause-and-resume scheduler may also suggest to resume a
   trial which is currently paused (having been started, and then paused,
@@ -61,7 +61,7 @@ TrialScheduler API
 
 We now discuss additional aspects of the
 :class:`~syne_tune.optimizer.scheduler.TrialScheduler` API, beyond what has
-already been covered `here <first_example.html#first-example>`_:
+already been covered `here <first_example.html#first-example>`__:
 
 * ``suggest`` returns a
   :class:`~syne_tune.optimizer.scheduler.TrialSuggestion` object with fields
@@ -71,7 +71,7 @@ already been covered `here <first_example.html#first-example>`_:
   started with configuration ``config``. Typically, this trial starts training
   from scratch. However, some specific schedulers allow the trial to warm-start
   from a checkpoint written for a different trial (an example is
-  class:`syne_tune.optimizer.schedulers.PopulationBasedTraining`).
+  :class:`~syne_tune.optimizer.schedulers.PopulationBasedTraining`).
   A pause-and-resume scheduler may also return
   :meth:`~syne_tune.optimizer.scheduler.TrialSuggestion.resume_suggestion`,
   where ``spawn_new_trial_id=False`` and ``checkpoint_trial_id`` is mandatory.
@@ -83,7 +83,7 @@ already been covered `here <first_example.html#first-example>`_:
 * The only reason for ``suggest`` to return ``None`` is if no further
   suggestion can be made. This can happen if the configuration space has been
   exhausted. As discussed
-  `here <first_example.html#asynchronous-job-execution>`_, the scheduler
+  `here <first_example.html#asynchronous-job-execution>`__, the scheduler
   cannot delay a ``suggest`` decision to a later point in time.
 * The helper methods ``_preprocess_config`` and ``_postprocess_config`` are
   used when interfacing with a searcher. Namely, the configuration space

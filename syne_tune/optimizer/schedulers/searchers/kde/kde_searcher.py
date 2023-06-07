@@ -10,14 +10,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import logging
 import numpy as np
 import statsmodels.api as sm
 import scipy.stats as sps
 
 from syne_tune.optimizer.schedulers.searchers import (
-    SearcherWithRandomSeedAndFilterDuplicates,
+    StochasticAndFilterDuplicatesSearcher,
 )
 import syne_tune.config_space as sp
 from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
@@ -27,7 +27,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.utils.debug_log import (
 logger = logging.getLogger(__name__)
 
 
-class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
+class KernelDensityEstimator(StochasticAndFilterDuplicatesSearcher):
     """
     Fits two kernel density estimators (KDE) to model the density of the top N
     configurations as well as the density of the configurations that are not
@@ -55,7 +55,7 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
     reimplementing the selection of configs in :meth:`_get_config`.
 
     Additional arguments on top of parent class
-    :class:`~syne_tune.optimizer.schedulers.searchers.SearcherWithRandomSeedAndFilterDuplicates`:
+    :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
 
     :param mode: Mode to use for the metric given, can be "min" or "max". Is
         obtained from scheduler in :meth:`configure_scheduler`. Defaults to "min"
@@ -269,10 +269,13 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
             msg = f"Update for trial_id {trial_id}: metric = {metric_val:.3f}"
             logger.info(msg)
 
-    def _get_config(self, **kwargs) -> Optional[dict]:
+    def _get_config(self, **kwargs) -> Optional[Dict[str, Any]]:
         suggestion = self._next_initial_config()
         if suggestion is None:
-            models = self._train_kde(np.array(self.X), np.array(self.y))
+            if self.y:
+                models = self._train_kde(np.array(self.X), np.array(self.y))
+            else:
+                models = None
 
             if models is None or self.random_state.rand() < self.random_fraction:
                 # return random candidate because a) we don't have enough data points or
@@ -287,7 +290,6 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
                 def acquisition_function(x):
                     return max(1e-32, g(x)) / max(l(x), 1e-32)
 
-                current_best = None
                 val_current_best = None
                 for i in range(self.num_candidates):
                     idx = self.random_state.randint(0, len(self.good_kde.data))
@@ -340,10 +342,9 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
                     if (
                         val_current_best is None or val_current_best > val
                     ) and not self.should_not_suggest(config):
-                        current_best = config
+                        suggestion = config
                         val_current_best = val
 
-                suggestion = current_best
                 if suggestion is None:
                     # This can happen if the configuration space is almost exhausted
                     logger.warning(
@@ -353,30 +354,40 @@ class KernelDensityEstimator(SearcherWithRandomSeedAndFilterDuplicates):
 
         return suggestion
 
-    def _train_kde(self, train_data, train_targets):
-        if train_data.shape[0] < self.num_min_data_points:
-            return None
+    def _check_data_shape_and_good_size(
+        self, data_shape: Tuple[int, int]
+    ) -> Optional[int]:
+        """
+        Determine size of data for "good" model (the rest of the data is for the
+        "bad" model). Both sizes must be larger than the number of features,
+        otherwise ``None`` is returned.
 
-        n_good = max(
-            self.num_min_data_points, (self.top_n_percent * train_data.shape[0]) // 100
-        )
-        n_bad = max(
-            self.num_min_data_points,
-            ((100 - self.top_n_percent) * train_data.shape[0]) // 100,
-        )
+        :param data_shape: Shape of ``train_data``
+        :return: Size of data for "good" model, or ``None`` (models cannot be
+            fit, too little data)
+        """
+        num_data, num_features = data_shape
+        n_good = max(self.num_min_data_points, (self.top_n_percent * num_data) // 100)
+        # Number of data points have to be larger than the number of features to meet
+        # the input constraints of ``statsmodels.KDEMultivariate``
+        if min(n_good, num_data - n_good) <= num_features:
+            return None
+        else:
+            return n_good
+
+    def _train_kde(
+        self, train_data: np.ndarray, train_targets: np.ndarray
+    ) -> Optional[Tuple[Any, Any]]:
+        train_data = train_data.reshape((train_targets.size, -1))
+        n_good = self._check_data_shape_and_good_size(train_data.shape)
+        if n_good is None:
+            return None
 
         idx = np.argsort(train_targets)
-
         train_data_good = train_data[idx[:n_good]]
-        train_data_bad = train_data[idx[n_good : n_good + n_bad]]
-
-        if train_data_good.shape[0] <= train_data_good.shape[1]:
-            return None
-        if train_data_bad.shape[0] <= train_data_bad.shape[1]:
-            return None
+        train_data_bad = train_data[idx[n_good:]]
 
         types = [t[0] for t in self.vartypes]
-
         bad_kde = sm.nonparametric.KDEMultivariate(
             data=train_data_bad, var_type=types, bw="normal_reference"
         )

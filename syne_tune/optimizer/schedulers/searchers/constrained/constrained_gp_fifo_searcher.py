@@ -102,11 +102,11 @@ class ConstrainedGPFIFOSearcher(MultiModelGPFIFOSearcher):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         output_skip_optimization = state["skip_optimization"]
-        output_model_factory = self.state_transformer.model_factory
+        output_estimator = self.state_transformer.estimator
         # Call internal constructor
         new_searcher = ConstrainedGPFIFOSearcher(
             **self._new_searcher_kwargs_for_clone(),
-            output_model_factory=output_model_factory,
+            output_estimator=output_estimator,
             init_state=init_state,
             output_skip_optimization=output_skip_optimization,
             constraint_attr=self._constraint_attr,

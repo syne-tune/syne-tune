@@ -41,8 +41,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.posterior_stat
     PosteriorState,
     GaussProcPosteriorState,
 )
-from syne_tune.optimizer.schedulers.utils.simple_profiler import (
-    SimpleProfiler,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.target_transform import (
+    ScalarTargetTransform,
+    IdentityTargetTransform,
 )
 
 
@@ -107,14 +108,11 @@ class MarginalLikelihood(Block):
         """
         pass
 
-    def on_fit_start(
-        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
-    ):
+    def on_fit_start(self, data: Dict[str, Any]):
         """
         Called at the beginning of ``fit``.
 
         :param data: Argument passed to ``fit``
-        :param profiler: Argument passed to ``fit``
 
         """
         raise NotImplementedError
@@ -124,11 +122,12 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
     """
     Marginal likelihood of Gaussian process with Gaussian likelihood
 
-    :param kernel: Kernel function (for instance, a Matern52---note we cannot
-        provide Matern52() as default argument since we need to provide with
-        the dimension of points in X)
+    :param kernel: Kernel function
     :param mean: Mean function which depends on the input X only (by default,
         a scalar fitted while optimizing the likelihood)
+    :param target_transform: Invertible transform of target values y to
+        latent values z, which are then modelled as Gaussian. Defaults to
+        the identity
     :param initial_noise_variance: A scalar to initialize the value of the
         residual noise variance
     """
@@ -137,6 +136,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         self,
         kernel: KernelFunction,
         mean: Optional[MeanFunction] = None,
+        target_transform: Optional[ScalarTargetTransform] = None,
         initial_noise_variance=None,
         encoding_type=None,
         **kwargs,
@@ -144,6 +144,8 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         super(GaussianProcessMarginalLikelihood, self).__init__(**kwargs)
         if mean is None:
             mean = ScalarMeanFunction()
+        if target_transform is None:
+            target_transform = IdentityTargetTransform()
         if initial_noise_variance is None:
             initial_noise_variance = INITIAL_NOISE_VARIANCE
         if encoding_type is None:
@@ -158,6 +160,7 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
         )
         self.mean = mean
         self.kernel = kernel
+        self.target_transform = target_transform
         with self.name_scope():
             self.noise_variance_internal = register_parameter(
                 self.params, "noise_variance", self.encoding_noise
@@ -186,31 +189,34 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
 
     def get_posterior_state(self, data: Dict[str, Any]) -> PosteriorState:
         self.assert_data_entries(data)
+        targets = self.target_transform(data["targets"])
         return GaussProcPosteriorState(
             features=data["features"],
-            targets=data["targets"],
+            targets=targets,
             mean=self.mean,
             kernel=self.kernel,
             noise_variance=self._noise_variance(),
         )
 
     def forward(self, data: Dict[str, Any]):
-        """
-        Actual computation of the marginal likelihood
-        See http://www.gaussianprocess.org/gpml/chapters/RW.pdf, equation (2.30)
+        return self.get_posterior_state(
+            data
+        ).neg_log_likelihood() + self.target_transform.negative_log_jacobian(
+            data["targets"]
+        )
 
-        :param features: input data matrix X of size (n, d)
-        :param targets: targets corresponding to X, of size (n, 1)
-        """
-        return self.get_posterior_state(data).neg_log_likelihood()
+    def _components(self) -> List[Tuple[str, MeanFunction]]:
+        return [
+            ("kernel_", self.kernel),
+            ("mean_", self.mean),
+            ("ytrans_", self.target_transform),
+        ]
 
     def param_encoding_pairs(self) -> List[tuple]:
-        own_param_encoding_pairs = [(self.noise_variance_internal, self.encoding_noise)]
-        return (
-            own_param_encoding_pairs
-            + self.mean.param_encoding_pairs()
-            + self.kernel.param_encoding_pairs()
-        )
+        _param_encoding_pairs = [(self.noise_variance_internal, self.encoding_noise)]
+        for _, component in self._components():
+            _param_encoding_pairs.extend(component.param_encoding_pairs())
+        return _param_encoding_pairs
 
     def get_noise_variance(self, as_ndarray=False):
         noise_variance = self._noise_variance()
@@ -221,12 +227,12 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
 
     def get_params(self) -> Dict[str, np.ndarray]:
         result = {"noise_variance": self.get_noise_variance()}
-        for pref, func in [("kernel_", self.kernel), ("mean_", self.mean)]:
+        for pref, func in self._components():
             result.update({(pref + k): v for k, v in func.get_params().items()})
         return result
 
     def set_params(self, param_dict: Dict[str, np.ndarray]):
-        for pref, func in [("kernel_", self.kernel), ("mean_", self.mean)]:
+        for pref, func in self._components():
             len_pref = len(pref)
             stripped_dict = {
                 k[len_pref:]: v for k, v in param_dict.items() if k.startswith(pref)
@@ -234,13 +240,13 @@ class GaussianProcessMarginalLikelihood(MarginalLikelihood):
             func.set_params(stripped_dict)
         self._set_noise_variance(param_dict["noise_variance"])
 
-    def on_fit_start(
-        self, data: Dict[str, Any], profiler: Optional[SimpleProfiler] = None
-    ):
+    def on_fit_start(self, data: Dict[str, Any]):
         self.assert_data_entries(data)
         targets = data["targets"]
         assert (
             targets.shape[1] == 1
         ), "targets cannot be a matrix if parameters are to be fit"
+        self.target_transform.on_fit_start(targets)
+        targets = self.target_transform(targets)
         if isinstance(self.mean, ScalarMeanFunction):
             self.mean.set_mean_value(anp.mean(targets))

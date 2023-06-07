@@ -19,7 +19,7 @@ import math
 import os
 import time
 
-from benchmarking.utils import (
+from syne_tune.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
     add_checkpointing_to_argparse,

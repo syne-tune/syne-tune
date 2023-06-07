@@ -1,5 +1,5 @@
 Benchmarking with Simulator Backend
-====================================
+===================================
 
 The fastest and cheapest way to compare a number of different HPO methods, or
 variants thereof, is benchmarking with the simulator backend. In this case,
@@ -14,7 +14,7 @@ Defining the Experiment
 
 As usual in Syne Tune, the experiment is defined by a number of scripts. We
 will look at an example in
-`benchmarking/nursery/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`_.
+`benchmarking/examples/benchmark_hypertune/ <../../benchmarking/benchmark_hypertune.html>`__.
 Common code used in these benchmarks can be found in :mod:`benchmarking.commons`.
 
 * Local launcher: :mod:`benchmarking.commons.hpo_main_simulator`
@@ -23,7 +23,7 @@ Common code used in these benchmarks can be found in :mod:`benchmarking.commons`
 
 Let us look at the scripts in order, and how you can adapt them to your needs:
 
-* `benchmarking/nursery/benchmark_hypertune/baselines.py <../../benchmarking/benchmark_hypertune.html#id1>`_:
+* `benchmarking/examples/benchmark_hypertune/baselines.py <../../benchmarking/benchmark_hypertune.html#id1>`__:
   Defines the HPO methods to take part in the experiment, in the form of a
   dictionary ``methods`` which maps method names to factory functions, which in
   turn map :class:`~benchmarking.commons.baselines.MethodArguments` to scheduler
@@ -33,12 +33,12 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   mapping from ``MethodsArguments`` to scheduler are defined for most baseline
   methods in :mod:`benchmarking.commons.default_baselines` (as noted just below,
   this mapping involves merging argument dictionaries), but you can override
-  arguments as well (for example, ``config_space`` and ``type`` in the examples
+  arguments as well (for example, ``type`` in the examples
   here). Note that if you like to compare different variants of a method, you
   need to create different entries in ``methods``, for example
   ``Methods.MOBSTER_JOINT`` and ``Methods.MOBSTER_INDEP`` are different variants
   of MOBSTER.
-* `benchmarking/nursery/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`_:
+* `benchmarking/examples/benchmark_hypertune/benchmark_definitions.py <../../benchmarking/benchmark_hypertune.html#id2>`__:
   Defines the benchmarks to be considered in this experiment, in the form of a
   dictionary ``benchmark_definitions`` with values of type
   :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
@@ -47,39 +47,39 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
   parameters, for example ``surrogate`` and ``surrogate_kwargs`` in order to
   select a different surrogate model, or you can change the defaults for
   ``n_workers`` or ``max_wallclock_time``.
-* `benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`_:
+* `benchmarking/examples/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__:
   Script for launching experiments locally. All you typically need to do here
   is to import :mod:`benchmarking.commons.hpo_main_simulator` and (optionally)
   to add additional command line arguments you would like to parameterize your
   experiment with. In our example here, we add two options, ``num_brackets``
   which configures Hyperband schedulers, and ``num_samples`` which configures
   the Hyper-Tune methods only. Apart from ``extra_args``, you also need to
-  define ``map_extra_args``, which modifies ``method_kwargs`` (the arguments of
+  define ``map_method_args``, which modifies ``method_kwargs`` (the arguments of
   :class:`~benchmarking.commons.baselines.MethodArguments`) based on the extra
-  arguments. Details for ``map_extra_kwargs`` are given just below. Finally,
+  arguments. Details for ``map_method_args`` are given just below. Finally,
   :func:`~benchmarking.commons.hpo_main_simulator.main` is called with your
   ``methods`` and ``benchmark_definitions`` dictionaries, and (optionally) with
-  ``extra_args`` and ``map_extra_args``. We will see shortly how the launcher
+  ``extra_args`` and ``map_method_args``. We will see shortly how the launcher
   is called, and what happens inside.
-* `benchmarking/nursery/benchmark_hypertune/launch_remote.py <../../benchmarking/benchmark_hypertune.html#id4>`_:
+* `benchmarking/examples/benchmark_hypertune/launch_remote.py <../../benchmarking/benchmark_hypertune.html#id4>`__:
   Script for launching experiments remotely, in that each experiment runs as its
   own SageMaker training job, in parallel with other experiments. You need to
   import :mod:`benchmarking.commons.launch_remote_simulator` and pass the same
-  ``methods``, ``benchmark_definitions``, ``extra_args``, ``map_extra_args`` as
-  in :mod:`benchmarking.nursery.benchmark_hypertune.hpo_main`. On top of that,
+  ``methods``, ``benchmark_definitions``, ``extra_args`` as
+  in :mod:`benchmarking.examples.benchmark_hypertune.hpo_main`. On top of that,
   you can pass an indicator function ``is_expensive_method`` to tag the HPO
   methods which are themselves expensive to run. As detailed below, our script
   runs different seeds (repetitions) in parallel for expensive methods, but
   sequentially for cheap ones. We will see shortly how the launcher is called,
   and what happens inside.
-* `benchmarking/nursery/benchmark_hypertune/requirements.txt <../../benchmarking/benchmark_hypertune.html#id5>`_:
+* `benchmarking/examples/benchmark_hypertune/requirements.txt <../../benchmarking/benchmark_hypertune.html#id5>`__:
   Dependencies for ``hpo_main.py`` to be run remotely as SageMaker training job,
   in the context of launching experiments remotely. In particular, this needs
   the dependencies of Syne Tune itself. A safe bet here is ``syne-tune[extra]``
   and ``tqdm`` (which is the default if ``requirements.txt`` is missing). However,
   you can decrease startup time by narrowing down the dependencies you really
   need (see
-  `FAQ <../../faq.html#what-are-the-different-installations-options-supported>`_).
+  `FAQ <../../faq.html#what-are-the-different-installations-options-supported>`__).
   In our example here, we need ``gpsearchers`` and ``kde`` for methods. For
   simulated experiments, you always need to have ``blackbox-repository`` here.
   In order to use YAHPO benchmarks, also add ``yahpo``.
@@ -87,38 +87,68 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
 Specifying Extra Arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As noted above, you can define extra command line arguments for your experiment
-via ``extra_args`` and ``map_extra_args``. This is typically used in order to be
-able to configure scheduler arguments for certain methods. But in principle, any
-argument of :class:`~benchmarking.commons.baselines.MethodArguments` can be
-modified. Here, ``extra_args`` is simply extending arguments to the command
-line parser, where the ``name`` field contains the name of the option without
-any leading "-". ``map_extra_args`` has the signature
+In many cases, you will want to run different methods using their default
+arguments, or only change them as part of the definition in ``baselines.py``.
+But sometimes, it can be useful to be able to set options via extra command line
+arguments. This can be done via ``extra_args`` and ``map_method_args``, which are
+typically used in order to be able to configure scheduler arguments for certain
+methods. But in principle, any argument of
+:class:`~benchmarking.commons.baselines.MethodArguments` can be modified. Here,
+``extra_args`` is simply extending arguments to the command line parser, where the
+``name`` field contains the name of the option without any leading "-".
+
+``map_method_args`` has the signature
 
 .. code-block:: python
 
-   method_kwargs = map_extra_args(args, method, method_kwargs)
+   method_kwargs = map_method_args(args, method, method_kwargs)
 
 Here, ``method_kwargs`` are arguments of
 :class:`~benchmarking.commons.baselines.MethodArguments`, which can be modified
-by ``map_extra_kwargs`` (the modified dictionary is returned). ``args`` is the
+by ``map_method_args`` (the modified dictionary is returned). ``args`` is the
 result of command line parsing, and ``method`` is the name of the method to
 be constructed based on these arguments. The latter argument allows
-``map_extra_kwargs`` to depend on the method. In our example
-`benchmarking/nursery/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`_,
+``map_method_args`` to depend on the method. In our example
+`benchmarking/examples/benchmark_hypertune/hpo_main.py <../../benchmarking/benchmark_hypertune.html#id3>`__,
 ``num_brackets`` applies to all methods, while ``num_samples`` only applies
 to the variants of Hyper-Tune. Both arguments modify the dictionary
 ``scheduler_kwargs`` in :class:`~benchmarking.commons.baselines.MethodArguments`,
 which contains constructor arguments for the scheduler.
 
 Note the use of ``recursive_merge``. This means that the changes done in
-``map_extra_args`` are recursively merged into the prior ``method_kwargs``. In
+``map_method_args`` are recursively merged into the prior ``method_kwargs``. In
 our example, we may already have ``method_kwargs.scheduler_kwargs`` or even
 ``method_kwargs.scheduler_kwargs.search_options``. While the new settings here
 take precedence, prior content of ``method_kwargs`` not affected remains in
 place. In the same way, extra arguments passed to baseline wrappers in
 :mod:`benchmarking.commons.default_baselines` are recursively merged into the
 arguments determined by the default logic.
+
+.. note::
+   ``map_method_args`` is applied to rewrite ``method_kwargs`` just before the
+   method is created. This means that all entries of
+   :class:`~benchmarking.commons.baselines.MethodArguments` can be modified from
+   their default values. You can also use ``map_method_args`` independent of
+   ``extra_args`` (however, if ``extra_args`` is given, then ``map_method_args``
+   must be given as well).
+
+Writing Extra Results
+~~~~~~~~~~~~~~~~~~~~~
+
+By default, Syne Tune writes result files ``metadata.json``, ``results.csv.zip``,
+and ``tuner.dill`` for every experiment, see
+`here <../../faq.html#what-does-the-output-of-the-tuning-contain>`__. Here,
+``results.csv.zip`` contains all data reported by training jobs, along with
+time stamps. The contents of this dataframe can be customized, by adding extra
+columns to it. This is done by passing ``extra_results_composer`` of type
+:class:`~syne_tune.results_callback.ExtraResultsComposer` when creating the
+:class:`~syne_tune.results_callback.StoreResultsCallback` callback, which
+is passed in ``callbacks`` to :class:`~syne_tune.Tuner`. You can use this
+mechanism by passing a :class:`~syne_tune.results_callback.ExtraResultsComposer`
+object as ``extra_results`` to ``main``. This object extracts extra information
+and returns it as dictionary, which is appended to the results dataframe. A
+complete example is
+`benchmarking/examples/benchmark_dyhpo <../../benchmarking/benchmark_dyhpo.html>`__.
 
 Launching Experiments Locally
 -----------------------------
@@ -127,8 +157,8 @@ Here is an example of how simulated experiments are launched locally:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/benchmark_hypertune/hpo_main.py \
-     --experiment_tag tutorial_simulated --benchmark nas201-cifar100 \
+   python benchmarking/examples/benchmark_hypertune/hpo_main.py \
+     --experiment_tag tutorial-simulated --benchmark nas201-cifar100 \
      --method ASHA --num_seeds 10
 
 This call runs a number of experiments sequentially on the local machine:
@@ -148,23 +178,31 @@ This call runs a number of experiments sequentially on the local machine:
   parameter is ``start_seed`` (default: 0), giving seeds
   ``start_seed, ..., num_seeds - 1``. For example, ``--start_seed 5  --num_seeds 6``
   runs for a single seed equal to 5. The dependence of random choices on the
-  seed is detailed `below <bm_local.html#random-seeds-and-paired-comparisons>`_.
+  seed is detailed `below <bm_local.html#random-seeds-and-paired-comparisons>`__.
 * ``max_wallclock_time``, ``n_workers``: These arguments overwrite the defaults
   specified in the benchmark definitions.
-* ``max_size_data_for_model``: Parameter for MOBSTER or Hyper-Tune, see
-  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`_.
+* ``max_size_data_for_model``: Parameter for Bayesian optimization, MOBSTER or
+  Hyper-Tune, see
+  `here <../multifidelity/mf_async_model.html#controlling-mobster-computations>`__
+  and
+  `here <../basics/basics_bayesopt.html#speeding-up-decision-making>`__.
 * ``scale_max_wallclock_time``: If 1, and if ``n_workers`` is given as
   argument, but not ``max_wallclock_time``, the benchmark default
   ``benchmark.max_wallclock_time`` is multiplied by :math:``B / min(A, B)``,
   where ``A = n_workers``, ``B = benchmark.n_workers``. This means we run for
   longer if ``n_workers < benchmark.n_workers``, but keep
   ``benchmark.max_wallclock_time`` the same otherwise.
+* ``use_long_tuner_name_prefix``: If 1, results for an experiment are written
+  to a directory whose prefix is
+  :code:`f"{experiment_tag}-{benchmark_name}-{seed}"`, followed by a postfix
+  containing date-time and a 3-digit hash. If 0, the prefix is
+  :code:`experiment_tag` only. The default is 1 (long prefix).
 * ``restrict_configurations``: See
-  `below <#restricting-scheduler-to-configurations-of-tabulated-blackbox>`_.
+  `below <#restricting-scheduler-to-configurations-of-tabulated-blackbox>`__.
 * ``fcnet_ordinal``: Applies to FCNet benchmarks only. The hyperparameter
   ``hp_init_lr`` has domain ``choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``.
   Since the parameter is really ordinal, this is
-  `not a good choice <../../search_space.html#recommendations>`_. With this
+  `not a good choice <../../search_space.html#recommendations>`__. With this
   option, the domain can be switched to different variants of ``ordinal``.
   The default is ``nn-log``, which is the domain
   ``logordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``. In order to keep
@@ -185,8 +223,8 @@ using a number of SageMaker training jobs. Here is an example:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/benchmark_hypertune/launch_remote.py \
-     --experiment_tag tutorial_simulated --benchmark nas201-cifar100 \
+   python benchmarking/examples/benchmark_hypertune/launch_remote.py \
+     --experiment_tag tutorial-simulated --benchmark nas201-cifar100 \
      --num_seeds 10
 
 Since ``--method`` is not used, we run experiments for all methods. Also, we
@@ -234,6 +272,16 @@ following:
 In this case, experiments are sliced along the axis
 ``("nas201", "fcnet", "lcbench")`` to be run in parallel in different SageMaker
 training jobs.
+
+Dealing with ResourceLimitExceeded Errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When launching many experiments in parallel, you may run into your AWS resource
+limits, so that no more SageMaker training jobs can be run. The default behaviour
+in this case is to wait for 10 minutes and try again. You can influence this by
+``--estimator_fit_backoff_wait_time <wait_time>``, where ``<wait_time>`` is the
+waiting time between attempts in seconds. If this is 0 or negative, the script
+terminates with an error once your resource limits are reached.
 
 Pitfalls of Experiments from Tabulated Blackboxes
 -------------------------------------------------
@@ -298,13 +346,31 @@ drawbacks:
   may perform better than they should, just because they nearly sample the
   space exhaustively
 
+In general, ``--restrict_configurations 1`` is supported for schedulers which
+select the next configuration from a finite set. In contrast, methods like
+``DEHB`` or ``BOHB`` (or Bayesian optimization with local acquisition function
+optimization) optimize over encoded vectors, then round the solution back to a
+configuration. In order to use a tabulated benchmark like ``lcbench`` with these
+methods, you need to specify a surrogate. Maybe the least intrusive surrogate
+is nearest neighbor. Here is the benchmark definition for ``lcbench``:
+
+.. literalinclude:: ../../../../benchmarking/commons/benchmark_definitions/lcbench.py
+   :caption: benchmarking/commons/benchmark_definitions/lcbench.py
+   :start-at: def lcbench_benchmark(dataset_name: str, datasets=None) -> SurrogateBenchmarkDefinition:
+   :end-before: lcbench_datasets = [
+
+The 1-NN surrogate is selected by ``surrogate="KNeighborsRegressor"`` and setting
+the number of nearest neighbors to 1. For each configuration, the surrogate finds
+the nearest neighbor in the table (w.r.t. Euclidean distance between encoded
+vectors) and returns its metric values.
+
 Selecting Benchmarks from benchmark_definitions
 -----------------------------------------------
 
 Each family of tabulated (or surrogate) blackboxes accessible to the
 benchmarking tooling discussed here, are represented by a Python file in
 :mod:`benchmarking.commons.benchmark_definitions` (the same directly also
-contains definitions for `real benchmarks <bm_local.html>`_). For example:
+contains definitions for `real benchmarks <bm_local.html>`__). For example:
 
 * NASBench201 (:mod:`benchmarking.commons.benchmark_definitions.nas201`):
   Tabulated, no surrogate needed.
@@ -341,8 +407,8 @@ The YAHPO Family
 ~~~~~~~~~~~~~~~~
 
 A rich source of blackbox surrogates in Syne Tune comes from
-`YAHPO <https://github.com/slds-lmu/yahpo_gym>`_, which is also detailed in
-this `paper <https://arxiv.org/abs/2109.03670>`_. YAHPO contains a number of
+`YAHPO <https://github.com/slds-lmu/yahpo_gym>`__, which is also detailed in
+this `paper <https://arxiv.org/abs/2109.03670>`__. YAHPO contains a number of
 blackboxes (called scenarios), some of which over a lot of datasets (called
 instances). All our definitions are in
 :mod:`benchmarking.commons.benchmark_definitions.yahpo`. Further details can
