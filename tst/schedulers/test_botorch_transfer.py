@@ -14,10 +14,6 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from syne_tune.optimizer.schedulers.searchers.botorch.botorch_transfer_searcher import (
-    BoTorchTransfer,
-)
-
 import syne_tune.config_space as sp
 
 from syne_tune.optimizer.schedulers.transfer_learning import (
@@ -66,8 +62,15 @@ combinations = [
 ]
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
+)
 @pytest.mark.parametrize("encode_tasks_ordinal, task_id_list", combinations)
 def test_transfer_samples_added_and_encoding(encode_tasks_ordinal, task_id_list):
+    from syne_tune.optimizer.schedulers.searchers.botorch.botorch_transfer_searcher import (
+        BoTorchTransfer,
+    )
+
     scheduler = BoTorchTransfer(
         config_space=config_space,
         metric="WhoKnows",

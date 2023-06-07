@@ -60,11 +60,6 @@ class BoTorchTransfer(BoTorch):
         encode_tasks_ordinal: bool = False,
         **kwargs,
     ):
-        try:
-            from syne_tune.optimizer.schedulers.searchers.botorch import BoTorchSearcher
-        except ImportError:
-            logging.info(try_import_botorch_message())
-            raise
 
         searcher_kwargs = _create_searcher_kwargs(
             config_space, metric, random_seed, kwargs
