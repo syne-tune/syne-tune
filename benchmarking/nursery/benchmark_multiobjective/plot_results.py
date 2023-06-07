@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any, Optional
+import logging
 
 from syne_tune.experiments import ComparativeResults, PlotParameters
 from syne_tune.experiments.multiobjective import hypervolume_indicator_column_generator
@@ -26,6 +27,7 @@ def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
 
 
 if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.INFO)
     experiment_name = "icml-17"
     experiment_names = (experiment_name,)
     setups = list(methods.keys())

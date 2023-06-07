@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any, Optional
+import logging
 
 from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
 from benchmarking.examples.benchmark_hypertune.baselines import methods
@@ -32,6 +33,7 @@ def metadata_to_subplot(metadata: Dict[str, Any]) -> Optional[int]:
 
 
 if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.INFO)
     experiment_name = "docs-1"
     experiment_names = (experiment_name,)
     setups = list(methods.keys())

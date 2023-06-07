@@ -460,6 +460,9 @@ class ComparativeResults:
     ) -> DataFrameGroups:
         if dataframe_column_generator is None:
             return grouped_dfs
+        logger.info(
+            "Enriching results by additional column (dataframe_column_generator)"
+        )
         result = dict()
         for key, tuner_dfs in grouped_dfs.items():
             new_tuner_dfs = []
