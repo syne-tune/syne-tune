@@ -14,14 +14,11 @@ from blackbox_helper import (
     get_points_to_evaluate_myoptic,
     get_transfer_points_active,
     do_tasks_in_order,
-    simopt_backend_conf,
     get_configs,
 )
 
-from backend_definitions_dict import BACKEND_DEFS
 
 import pickle
-import datetime
 import argparse
 import os
 

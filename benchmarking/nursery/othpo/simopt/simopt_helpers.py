@@ -12,8 +12,7 @@
 # permissions and limitations under the License.
 from simopt.base import Problem
 import numpy as np
-from typing import Any, Dict, List
-import matplotlib.pyplot as plt
+from typing import List
 
 
 def evaluate_problem_price(prob: Problem, xx, rand_gen, reps: int = 1):
@@ -47,30 +46,6 @@ def evaluate_problem_price(prob: Problem, xx, rand_gen, reps: int = 1):
     # Reset the utility factors
     prob.model.factors["c_utility"] = list(utility_raw)
     return profit
-
-
-def evaluate_problem(prob: Problem, xx, rand_gen, reps: int = 1):
-    """
-    Function that evaluates a feature vector xx on a problem prob,
-    using the random number generator rand_gen
-
-    Parameters
-        ----------
-        prob
-            Problem from SimOpt library
-        xx
-            feature vector of initial inventory levels, one per item
-        rand_gen
-            random number generator from MRG32k3a
-        reps
-            how many simulations to average over
-    """
-    # Create a Solution object with the feature vector
-    sol_xx = Solution(xx, prob)
-    # Update the problem with the feature vector
-    prob.model.factors.update(sol_xx.decision_factors)
-    # Simulate the feature vector performance
-    return np.mean([prob.model.replicate([rand_gen])[0]["profit"] for _ in range(reps)])
 
 
 def plot_problem(

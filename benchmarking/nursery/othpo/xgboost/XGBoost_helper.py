@@ -73,8 +73,6 @@ def train_and_evaluate(
             objective="binary:logistic",
             seed=seed,
         )
-    elif model_name == "LogisticRegression":
-        model = linear_model.LogisticRegression(C=1 / par_dict["reg"])
     else:
         raise ValueError
     model.fit(X_train, Y_train)

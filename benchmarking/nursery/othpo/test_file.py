@@ -13,14 +13,11 @@
 import copy
 import pytest
 import pandas as pd
-import pickle
 import numpy as np
 import itertools
 
 from blackbox_helper import (
     get_transfer_points_active,
-    get_points_to_evaluate_myoptic,
-    do_tasks_in_order,
     simopt_backend_conf,
     num_optima,
     get_configs,

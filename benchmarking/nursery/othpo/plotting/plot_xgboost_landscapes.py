@@ -15,7 +15,6 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as plc
 import numpy as np
-import copy
 
 from plotting_helper import task_pos_in_order
 

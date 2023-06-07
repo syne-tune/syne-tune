@@ -13,14 +13,11 @@
 import XGBoost_helper
 
 import argparse
-import datetime
 import numpy as np
 import pickle
 import time
 import os
-from pathlib import Path
-import pandas as pd
-from sklearn import linear_model, datasets
+from sklearn import datasets
 
 
 def evaluate_XGBoost(

@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import numpy as np
 import pickle
 from pathlib import Path
 import sys
@@ -26,10 +25,8 @@ plt.rcParams["font.family"] = "Times New Roman"
 sys.path.append(str(Path(__file__).parent.parent))
 plt.rcParams["pdf.fonttype"] = 42
 
-from blackbox_helper import get_configs
 from plotting_helper import (
     colours,
-    labels,
     legend_order,
     task_pos_in_order,
     sort_legend_labels,

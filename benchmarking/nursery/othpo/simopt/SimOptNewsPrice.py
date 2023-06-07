@@ -22,7 +22,6 @@ import sys
 sys.path.insert(0, "..")
 
 from simopt.models.dynamnews import DynamNewsMaxProfit
-from simopt.base import Solution
 
 from syne_tune import Reporter
 

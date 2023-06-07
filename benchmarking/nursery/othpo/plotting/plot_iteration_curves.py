@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import matplotlib.pyplot as plt
-import numpy as np
 import os
 from pathlib import Path
 import pickle
@@ -24,8 +23,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams["pdf.fonttype"] = 42
 
-from backend_definitions_dict import BACKEND_DEFS
-from blackbox_helper import get_configs
 from plotting_helper import (
     colours,
     linestyles,
