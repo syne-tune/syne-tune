@@ -21,6 +21,7 @@ from syne_tune.optimizer.schedulers.multiobjective.utils import hypervolume_cumu
 def hypervolume_indicator_column_generator(
     metrics_and_modes: List[Tuple[str, str]],
     reference_point: Optional[np.ndarray] = None,
+    increment: int = 1,
 ):
     """
     Returns generator for new dataframe column containing the best hypervolume
@@ -31,7 +32,9 @@ def hypervolume_indicator_column_generator(
     :param metrics_and_modes: List of ``(metric, mode)``, see above
     :param reference_point: Reference point for hypervolume computation. If not
         given, a default value is used
-    :return: Dataframe columm generator
+    :param increment: If ``> 1``, the HV indicator is linearly interpolated, this
+        is faster. Defaults to 1 (no interpolation)
+    :return: Dataframe column generator
     """
     assert (
         len(metrics_and_modes) > 1
@@ -48,7 +51,11 @@ def hypervolume_indicator_column_generator(
             name in df.columns for name in metric_names
         ), f"All metric names {metric_names} must be in df.columns = {df.columns}"
         results_array = df[metric_names].values * metric_signs.reshape((1, -1))
-        hv_indicator = hypervolume_cumulative(results_array, reference_point)
+        hv_indicator = hypervolume_cumulative(
+            results_array,
+            reference_point=reference_point,
+            increment=increment,
+        )
         return pd.Series(hv_indicator, index=df.index)
 
     return dataframe_column_generator

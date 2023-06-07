@@ -453,6 +453,20 @@ class ComparativeResults:
         return result
 
     @staticmethod
+    def _filter_final_row_per_trial(
+        grouped_dfs: DataFrameGroups,
+    ) -> DataFrameGroups:
+        """
+        We filter rows such that only one row per trial ID remains, namely the
+        one with the largest time stamp. This makes sense for single-fidelity
+        methods, where reports have still been done after every epoch.
+
+        :param grouped_dfs:
+        :return:
+        """
+        # HIER!
+
+    @staticmethod
     def _enrich_results(
         grouped_dfs: DataFrameGroups,
         column_name: str,

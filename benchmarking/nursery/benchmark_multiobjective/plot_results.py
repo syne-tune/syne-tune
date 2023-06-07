@@ -59,7 +59,8 @@ if __name__ == "__main__":
     # We would like to plot the hypervolume indicator, which is a derived
     # metric
     dataframe_column_generator = hypervolume_indicator_column_generator(
-        metrics_and_modes=list(zip(benchmark.metric, benchmark.mode))
+        metrics_and_modes=list(zip(benchmark.metric, benchmark.mode)),
+        increment=100,
     )
     plot_params = PlotParameters(
         metric="hypervolume_indicator",
@@ -75,7 +76,8 @@ if __name__ == "__main__":
     benchmark_name = "nas201-mo-ImageNet16-120"
     benchmark = benchmark_definitions[benchmark_name]
     dataframe_column_generator = hypervolume_indicator_column_generator(
-        metrics_and_modes=list(zip(benchmark.metric, benchmark.mode))
+        metrics_and_modes=list(zip(benchmark.metric, benchmark.mode)),
+        increment=10,
     )
     results.plot(
         benchmark_name=benchmark_name,
