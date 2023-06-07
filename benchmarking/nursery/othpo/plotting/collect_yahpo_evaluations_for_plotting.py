@@ -23,7 +23,7 @@ from syne_tune.blackbox_repository.conversion_scripts.utils import (
     blackbox_local_path,
 )
 from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-    serialize_yahpo
+    serialize_yahpo,
 )
 
 hp_names = {
@@ -126,12 +126,14 @@ def run():
                     result = get_rbv_result(scenario, b, hp, trainsize)
                     results.append(result)
 
-            if not os.path.exists('yahpo_data'):
-                os.makedirs('yahpo_data')
-            if not os.path.exists('yahpo_data/'+scenario):
-                os.makedirs('yahpo_data/'+scenario)
+            if not os.path.exists("yahpo_data"):
+                os.makedirs("yahpo_data")
+            if not os.path.exists("yahpo_data/" + scenario):
+                os.makedirs("yahpo_data/" + scenario)
 
-            pd.DataFrame(results).to_csv(f"yahpo_data/{scenario}/{instance}.csv", index=False)
+            pd.DataFrame(results).to_csv(
+                f"yahpo_data/{scenario}/{instance}.csv", index=False
+            )
 
 
 if __name__ == "__main__":
@@ -139,7 +141,7 @@ if __name__ == "__main__":
     local_config.set_data_path(str(repository_path / "yahpo"))
     for scenario in scenarios:
         # Use syne-tune to download yahpo data
-        scenario_long = 'yahpo-'+scenario
+        scenario_long = "yahpo-" + scenario
         serialize_yahpo(
             scenario_long, target_path=blackbox_local_path(name=scenario_long)
         )

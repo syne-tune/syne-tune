@@ -22,40 +22,41 @@ from pathlib import Path
 import pandas as pd
 from sklearn import linear_model, datasets
 
-def evaluate_XGBoost(hyp_dict_file, hyp_id_start, hyp_id_end, timestamp, dataset, run_locally=False):
+
+def evaluate_XGBoost(
+    hyp_dict_file, hyp_id_start, hyp_id_end, timestamp, dataset, run_locally=False
+):
     print(timestamp)
 
-    print('Starting XGBoost part')
+    print("Starting XGBoost part")
 
-    if dataset == 'digits':
+    if dataset == "digits":
         dataset = datasets.load_digits()
         size_lin_space = np.linspace(-1, 0, 10)
-    elif dataset == 'mnist':
-        dataset = datasets.fetch_openml('mnist_784')
+    elif dataset == "mnist":
+        dataset = datasets.fetch_openml("mnist_784")
         size_lin_space = np.linspace(-3, 0, 28)
     else:
         raise ValueError
-    
 
     X = np.array(dataset.data)
-    Y = np.array(dataset.target).astype('uint32')
-    test_threshold = int(0.8*len(Y))
+    Y = np.array(dataset.target).astype("uint32")
+    test_threshold = int(0.8 * len(Y))
 
-    data_sizes = np.array([int(test_threshold*10**ii) 
-                           for ii in size_lin_space])
+    data_sizes = np.array([int(test_threshold * 10**ii) for ii in size_lin_space])
     num_hyp_pars = hyp_id_end - hyp_id_start + 1
 
-    model_name, llik = 'XGBClassifier', False
+    model_name, llik = "XGBClassifier", False
     print(data_sizes)
 
     num_seeds = 1
     split_seed = 1
 
     X_train, Y_train, X_test, Y_test = XGBoost_helper.get_data_splits(
-            split_seed, X, Y, test_threshold, 
-            smallest_train=np.min(data_sizes))
+        split_seed, X, Y, test_threshold, smallest_train=np.min(data_sizes)
+    )
 
-    parameters_mat = pickle.load(open(hyp_dict_file, 'rb'))
+    parameters_mat = pickle.load(open(hyp_dict_file, "rb"))
 
     train_error_mat = []
     test_error_mat = []
@@ -69,17 +70,17 @@ def evaluate_XGBoost(hyp_dict_file, hyp_id_start, hyp_id_end, timestamp, dataset
             test_error_mat[ii].append([])
             execution_times[ii].append([])
 
-
-    to_store = {'parameters_mat': parameters_mat,
-                'train_error_mat': train_error_mat,
-                'test_error_mat': test_error_mat,
-                'execution_times': execution_times,
-                'data_sizes': data_sizes,
-                'hyp_dict_file': hyp_dict_file,
-                'num_hyp_pars': num_hyp_pars,
-                'hyp_id_start': hyp_id_start,
-                'hyp_id_end': hyp_id_end,
-               }
+    to_store = {
+        "parameters_mat": parameters_mat,
+        "train_error_mat": train_error_mat,
+        "test_error_mat": test_error_mat,
+        "execution_times": execution_times,
+        "data_sizes": data_sizes,
+        "hyp_dict_file": hyp_dict_file,
+        "num_hyp_pars": num_hyp_pars,
+        "hyp_id_start": hyp_id_start,
+        "hyp_id_end": hyp_id_end,
+    }
 
     for seed in list(range(num_seeds)):
         print(seed)
@@ -91,31 +92,45 @@ def evaluate_XGBoost(hyp_dict_file, hyp_id_start, hyp_id_end, timestamp, dataset
 
                 start_t = time.time()
 
-                par_dict = {'learning_rate': parameters_mat['learning_rates'][jj+hyp_id_start],
-                            'max_depth': parameters_mat['max_depth'][jj+hyp_id_start],
-                            'min_child_weight': parameters_mat['min_child_weight'][jj+hyp_id_start],
-                            'n_estimators': parameters_mat['n_estimators'][jj+hyp_id_start]}
+                par_dict = {
+                    "learning_rate": parameters_mat["learning_rates"][
+                        jj + hyp_id_start
+                    ],
+                    "max_depth": parameters_mat["max_depth"][jj + hyp_id_start],
+                    "min_child_weight": parameters_mat["min_child_weight"][
+                        jj + hyp_id_start
+                    ],
+                    "n_estimators": parameters_mat["n_estimators"][jj + hyp_id_start],
+                }
 
-                test_error, train_error, _, _ = \
-                    XGBoost_helper.train_and_evaluate(
-                    X_train[:data_s], Y_train[:data_s],
-                                       par_dict, X_test, Y_test,
-                                       model_name, llik)
+                test_error, train_error, _, _ = XGBoost_helper.train_and_evaluate(
+                    X_train[:data_s],
+                    Y_train[:data_s],
+                    par_dict,
+                    X_test,
+                    Y_test,
+                    model_name,
+                    llik,
+                )
 
-                to_store['train_error_mat'][ii][jj].append(train_error)
-                to_store['test_error_mat'][ii][jj].append(test_error)
-                to_store['execution_times'][ii][jj].append(time.time()-start_t)
+                to_store["train_error_mat"][ii][jj].append(train_error)
+                to_store["test_error_mat"][ii][jj].append(test_error)
+                to_store["execution_times"][ii][jj].append(time.time() - start_t)
 
-                print(train_error, test_error, to_store['execution_times'][ii][jj])
+                print(train_error, test_error, to_store["execution_times"][ii][jj])
 
                 if run_locally:
-                    output_folder = '../xgboost_experiment_results/random-mnist'
+                    output_folder = "../xgboost_experiment_results/random-mnist"
                     os.makedirs(output_folder, exist_ok=True)
                 else:
                     output_folder = os.environ.get("SM_MODEL_DIR")
-                pickle.dump(to_store, open(output_folder+'/XGBoost_HPO_%s.p' %timestamp, 'wb'))
+                pickle.dump(
+                    to_store,
+                    open(output_folder + "/XGBoost_HPO_%s.p" % timestamp, "wb"),
+                )
 
-        print('Completed!')
+        print("Completed!")
+
 
 def get_parser():
     """
@@ -131,7 +146,8 @@ def get_parser():
     parser.add_argument("--dataset", type=str)
     parser.add_argument("--run_locally", type=bool, default=False)
     return parser
-        
+
+
 if __name__ == "__main__":
     import os
 

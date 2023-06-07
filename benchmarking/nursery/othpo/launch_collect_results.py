@@ -46,29 +46,32 @@ def main(run_locally):
     ]
 
     experiments = [
-                   ('SimOpt', optimisers_all),
-                   ('XGBoost', optimisers_all),
-                   ('YAHPO_auc_svm_1220', optimisers_all),
-                   ('YAHPO_auc_svm_458', optimisers_subset),
-                   ('YAHPO_auc_aknn_4538', optimisers_subset),
-                   ('YAHPO_auc_aknn_41138', optimisers_subset),
-                   ('YAHPO_auc_ranger_4154', optimisers_subset),
-                   ('YAHPO_auc_ranger_40978', optimisers_subset),
-                   ('YAHPO_auc_glmnet_375', optimisers_subset),
-                   ('YAHPO_auc_glmnet_40981', optimisers_subset),
-                  ]
+        ("SimOpt", optimisers_all),
+        ("XGBoost", optimisers_all),
+        ("YAHPO_auc_svm_1220", optimisers_all),
+        ("YAHPO_auc_svm_458", optimisers_subset),
+        ("YAHPO_auc_aknn_4538", optimisers_subset),
+        ("YAHPO_auc_aknn_41138", optimisers_subset),
+        ("YAHPO_auc_ranger_4154", optimisers_subset),
+        ("YAHPO_auc_ranger_40978", optimisers_subset),
+        ("YAHPO_auc_glmnet_375", optimisers_subset),
+        ("YAHPO_auc_glmnet_40981", optimisers_subset),
+    ]
 
     seed_start = 0
     seed_end = 49
     points_per_task = 25
-    
-    xgboost_res_file_long = "xgboost_experiment_results/random-mnist/aggregated_experiments.p"
+
+    xgboost_res_file_long = (
+        "xgboost_experiment_results/random-mnist/aggregated_experiments.p"
+    )
     xgboost_res_file_short = "aggregated_experiments.p"
 
     if run_locally:
         from collect_results import collect_res
+
         xgboost_res_file = xgboost_res_file_long
-        print('Running experiments locally. This will take a while.')
+        print("Running experiments locally. This will take a while.")
     else:
         from pathlib import Path
         from sagemaker.pytorch import PyTorch
@@ -83,9 +86,7 @@ def main(run_locally):
         session = boto3.Session(profile_name=profile_name)
         sm_session = sagemaker.Session(boto_session=session)
 
-        repo_main_dir = Path(
-            os.path.dirname(os.path.realpath(__file__))
-        )
+        repo_main_dir = Path(os.path.dirname(os.path.realpath(__file__)))
 
         source_dir = repo_main_dir / "sagemaker_source_dir_temp_code_to_upload"
         if source_dir.exists():
@@ -96,48 +97,57 @@ def main(run_locally):
         shutil.copytree(repo_main_dir / "simopt", source_dir / "simopt")
 
         # Copy required files
-        shutil.copy(repo_main_dir / "requirements_on_sagemaker.txt", source_dir / "requirements.txt")
+        shutil.copy(
+            repo_main_dir / "requirements_on_sagemaker.txt",
+            source_dir / "requirements.txt",
+        )
         shutil.copy(repo_main_dir / "collect_results.py", source_dir)
         shutil.copy(repo_main_dir / "blackbox_helper.py", source_dir)
         shutil.copy(repo_main_dir / "bo_warm_transfer.py", source_dir)
         shutil.copy(repo_main_dir / "backend_definitions_dict.py", source_dir)
 
         # Only needed for XGBoost
-        shutil.copy(
-            repo_main_dir / xgboost_res_file_long,
-            source_dir)
+        shutil.copy(repo_main_dir / xgboost_res_file_long, source_dir)
         xgboost_res_file = xgboost_res_file_short
-    
+
     for experiment, optimiser_set in experiments:
         experiment_meta_data = experiments_meta_dict[experiment]
-        backend = experiment_meta_data['backend']
+        backend = experiment_meta_data["backend"]
         for optimiser, optimiser_type in optimiser_set:
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
-            hyperparameters = {'seed_start': seed_start,
-                               'seed_end': seed_end,
-                               'timestamp': timestamp,
-                               'points_per_task': points_per_task,
-                               'optimiser': optimiser,
-                               'optimiser_type': optimiser_type,
-                               'backend': backend,
-                              }
+            hyperparameters = {
+                "seed_start": seed_start,
+                "seed_end": seed_end,
+                "timestamp": timestamp,
+                "points_per_task": points_per_task,
+                "optimiser": optimiser,
+                "optimiser_type": optimiser_type,
+                "backend": backend,
+            }
 
-            if backend == 'SimOpt':
-                hyperparameters['simopt_backend_file'] = experiment_meta_data['simopt_backend_file']
-            if backend == 'XGBoost':
-                hyperparameters['xgboost_res_file'] = xgboost_res_file
-            if backend == 'YAHPO':
-                hyperparameters['yahpo_dataset'] = experiment_meta_data['yahpo_dataset']
-                hyperparameters['yahpo_scenario'] = experiment_meta_data['yahpo_scenario']
+            if backend == "SimOpt":
+                hyperparameters["simopt_backend_file"] = experiment_meta_data[
+                    "simopt_backend_file"
+                ]
+            if backend == "XGBoost":
+                hyperparameters["xgboost_res_file"] = xgboost_res_file
+            if backend == "YAHPO":
+                hyperparameters["yahpo_dataset"] = experiment_meta_data["yahpo_dataset"]
+                hyperparameters["yahpo_scenario"] = experiment_meta_data[
+                    "yahpo_scenario"
+                ]
 
             if run_locally:
-                hyperparameters['run_locally'] = True,
+                hyperparameters["run_locally"] = True
                 collect_res(**hyperparameters)
 
-                print('Finished experiment %s, optimiser %s' %(experiment, optimiser))
+                print("Finished experiment %s, optimiser %s" % (experiment, optimiser))
             else:
-                print('Starting experiment %s, optimiser %s remotely' %(experiment, optimiser))
+                print(
+                    "Starting experiment %s, optimiser %s remotely"
+                    % (experiment, optimiser)
+                )
                 estimator = PyTorch(
                     entry_point="collect_results.py",
                     source_dir=str(source_dir),
@@ -149,24 +159,25 @@ def main(run_locally):
                     disable_profiler=True,
                     sagemaker_session=sm_session,
                     hyperparameters=hyperparameters,
-                    output_path="s3://%s/outputs/" %s3bucket,
+                    output_path="s3://%s/outputs/" % s3bucket,
                 )
                 estimator.fit(
-                    inputs={"ds_path": "s3://%s/datasets/" %s3bucket},
+                    inputs={"ds_path": "s3://%s/datasets/" % s3bucket},
                     wait=False,
-                    job_name="%s-collect-res-%s-%s-%s" %(alias, timestamp, optimiser[:11], backend)
+                    job_name="%s-collect-res-%s-%s-%s"
+                    % (alias, timestamp, optimiser[:11], backend),
                 )
 
             time.sleep(1)
 
+
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--local", action="store_true", help="run experiments locally."
-    )
+    parser.add_argument("--local", action="store_true", help="run experiments locally.")
     return parser
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     main(args.local)

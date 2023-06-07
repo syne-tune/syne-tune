@@ -16,23 +16,24 @@ import datetime
 import time
 import sys
 
-sys.path.append('../')
+sys.path.append("../")
+
 
 def main(run_locally):
-    
-    dataset = 'mnist'
-    hyp_dict_file = 'hyperparameters_file_random_num-1000_seed-13.p'
+
+    dataset = "mnist"
+    hyp_dict_file = "hyperparameters_file_random_num-1000_seed-13.p"
     num_hyp_pars = 1000
 
     # Split into multiple runs
     start_ids, end_ids = [], []
     for ii in range(num_hyp_pars // 100):
         start_ids.append(ii * 100)
-        end_ids.append((ii+1) * 100 -1)
+        end_ids.append((ii + 1) * 100 - 1)
     if num_hyp_pars % 100 != 0:
         start_ids.append((num_hyp_pars // 100) * 100)
         end_ids.append(num_hyp_pars - 1)
-        
+
     if run_locally:
         from XGBoost_script import evaluate_XGBoost
     else:
@@ -40,28 +41,29 @@ def main(run_locally):
         from sagemaker.pytorch import PyTorch
         import boto3
         import sagemaker
-        
+
         # local file with configs for running experiments on Sagemaker
         from sagemaker_config import role, profile_name, alias, s3bucket
 
         session = boto3.Session(profile_name=profile_name)
         sm_session = sagemaker.Session(boto_session=session)
 
-    print('Experiment broken into following sub-experiments by hyperparameter ids.')
+    print("Experiment broken into following sub-experiments by hyperparameter ids.")
     for hyp_id_start, hyp_id_end in zip(start_ids, end_ids):
         print(hyp_id_start, hyp_id_end)
 
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
-        hyperparameters = {'hyp_id_start': hyp_id_start,
-                           'hyp_id_end': hyp_id_end,
-                           'hyp_dict_file': hyp_dict_file,
-                           'timestamp': timestamp,
-                           'dataset': dataset,
-                           }
-        
+        hyperparameters = {
+            "hyp_id_start": hyp_id_start,
+            "hyp_id_end": hyp_id_end,
+            "hyp_dict_file": hyp_dict_file,
+            "timestamp": timestamp,
+            "dataset": dataset,
+        }
+
         if run_locally:
-            hyperparameters['run_locally'] = True
+            hyperparameters["run_locally"] = True
             evaluate_XGBoost(**hyperparameters)
         else:
             estimator = PyTorch(
@@ -75,15 +77,16 @@ def main(run_locally):
                 disable_profiler=True,
                 sagemaker_session=sm_session,
                 hyperparameters=hyperparameters,
-                output_path="s3://%s/outputs/" %s3bucket,
+                output_path="s3://%s/outputs/" % s3bucket,
             )
             estimator.fit(
-                inputs={"ds_path": "s3://%s/datasets/" %s3bucket},
+                inputs={"ds_path": "s3://%s/datasets/" % s3bucket},
                 wait=False,
-                job_name="%s-xgboost-%s" %(alias, timestamp),
+                job_name="%s-xgboost-%s" % (alias, timestamp),
             )
 
         time.sleep(1)
+
 
 def get_parser():
     parser = argparse.ArgumentParser()
@@ -92,7 +95,8 @@ def get_parser():
     )
     return parser
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     main(args.local)

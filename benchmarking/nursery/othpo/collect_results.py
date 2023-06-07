@@ -15,7 +15,7 @@ from blackbox_helper import (
     get_transfer_points_active,
     do_tasks_in_order,
     simopt_backend_conf,
-    get_configs
+    get_configs,
 )
 
 from backend_definitions_dict import BACKEND_DEFS
@@ -25,9 +25,24 @@ import datetime
 import argparse
 import os
 
-def collect_res(timestamp, points_per_task, optimiser, optimiser_type, backend, seed_start=0, seed_end=0,
-                xgboost_res_file=None, simopt_backend_file=None, yahpo_dataset=None, yahpo_scenario=None,
-                metric=None, store_res=True, task_lim=None, run_locally=False):
+
+def collect_res(
+    timestamp,
+    points_per_task,
+    optimiser,
+    optimiser_type,
+    backend,
+    seed_start=0,
+    seed_end=0,
+    xgboost_res_file=None,
+    simopt_backend_file=None,
+    yahpo_dataset=None,
+    yahpo_scenario=None,
+    metric=None,
+    store_res=True,
+    task_lim=None,
+    run_locally=False,
+):
     if optimiser_type == "Transfer":
         pte_func = get_transfer_points_active
     elif optimiser_type == "Naive":
@@ -36,14 +51,15 @@ def collect_res(timestamp, points_per_task, optimiser, optimiser_type, backend, 
         raise ValueError
 
     metric_def, opt_mode, active_task_str, uses_fidelity = BACKEND_DEFS[backend]
-    full_task_list, get_backend = get_configs(backend, xgboost_res_file, simopt_backend_file,
-                                              yahpo_dataset, yahpo_scenario)
+    full_task_list, get_backend = get_configs(
+        backend, xgboost_res_file, simopt_backend_file, yahpo_dataset, yahpo_scenario
+    )
 
     if metric is None:
-        print('Using default metric %s' %metric_def)
+        print("Using default metric %s" % metric_def)
         metric = metric_def
     else:
-        print('Using given metric %s' %metric)
+        print("Using given metric %s" % metric)
 
     if task_lim is None:
         active_task_list = full_task_list
@@ -51,7 +67,7 @@ def collect_res(timestamp, points_per_task, optimiser, optimiser_type, backend, 
         active_task_list = [int(aa) for aa in full_task_list[:task_lim]]
 
     results = {}
-    for seed in range(seed_start, seed_end+1):
+    for seed in range(seed_start, seed_end + 1):
         res = do_tasks_in_order(
             seed=seed,
             active_task_list=active_task_list,
@@ -67,17 +83,23 @@ def collect_res(timestamp, points_per_task, optimiser, optimiser_type, backend, 
         )
         results[(backend, optimiser, seed)] = res
         if store_res:
-            print('Storing result')
+            print("Storing result")
             if run_locally:
-                print('Storing locally')
-                result_folder = 'optimisation_results'
+                print("Storing locally")
+                result_folder = "optimisation_results"
                 os.makedirs(result_folder, exist_ok=True)
             else:
-                print('Storing remotely')
+                print("Storing remotely")
                 result_folder = os.environ.get("SM_MODEL_DIR")
-            pickle.dump(results, open(result_folder+'/collect_results_%s.p' %timestamp, 'wb'))
-            print('Result stored at %s' %(result_folder+'/collect_results_%s.p' %timestamp))
+            pickle.dump(
+                results, open(result_folder + "/collect_results_%s.p" % timestamp, "wb")
+            )
+            print(
+                "Result stored at %s"
+                % (result_folder + "/collect_results_%s.p" % timestamp)
+            )
     return results
+
 
 def get_parser():
     """

@@ -33,7 +33,7 @@ from collect_results import collect_res
 
 
 # Dataframes for tests
-metric, _, _, _ = BACKEND_DEFS['SimOpt']
+metric, _, _, _ = BACKEND_DEFS["SimOpt"]
 points_per_task = 3
 
 df_0 = pd.DataFrame(
@@ -102,17 +102,18 @@ df_5 = pd.DataFrame(
     }
 )
 
+
 def test_num_optima():
     backend_file = "simopt/SimOptNewsPrice.py"
     getbackend_simopt = lambda active_task_val: simopt_backend_conf(
         backend_file, active_task_val
     )
 
-    metric, _, active_task_str, _ = BACKEND_DEFS['SimOpt']
-    opt_mode = "min" # Not the standard for SimOpt
-    
+    metric, _, active_task_str, _ = BACKEND_DEFS["SimOpt"]
+    opt_mode = "min"  # Not the standard for SimOpt
+
     _, conf_space, _ = getbackend_simopt(0)
-    
+
     assert 0 == num_optima(
         past_points=[],
         past_df=None,
@@ -185,7 +186,13 @@ def test_num_optima():
 
     # Add df_2 to past_points
     past_points = get_transfer_points_active(
-        df_2, [0, 1, 2], points_per_task, conf_space, past_points, active_task_str, metric
+        df_2,
+        [0, 1, 2],
+        points_per_task,
+        conf_space,
+        past_points,
+        active_task_str,
+        metric,
     )
 
     assert 2 == num_optima(
@@ -210,7 +217,13 @@ def test_num_optima():
 
     # Add df_3 to past_points
     past_points = get_transfer_points_active(
-        df_3, [0, 1, 2, 3], points_per_task, conf_space, past_points, active_task_str, metric
+        df_3,
+        [0, 1, 2, 3],
+        points_per_task,
+        conf_space,
+        past_points,
+        active_task_str,
+        metric,
     )
 
     assert 1 == num_optima(
@@ -229,11 +242,7 @@ xgboost_res_file = "xgboost_experiment_results/random-mnist/aggregated_experimen
 yahpo_dataset = "1220"
 yahpo_scenario = "rbv2_svm"
 
-backends = [
-    "SimOpt",
-    "YAHPO",
-    "XGBoost"
-]
+backends = ["SimOpt", "YAHPO", "XGBoost"]
 optimisers = [
     "BoundingBox",
     "ZeroShot",
@@ -258,6 +267,7 @@ optimiser_type_dict = {
 
 combinations = list(itertools.product(backends, optimisers))
 
+
 @pytest.mark.timeout(60)
 @pytest.mark.parametrize("backend, optimiser", combinations)
 def test_backends_transfer(backend, optimiser):
@@ -266,12 +276,23 @@ def test_backends_transfer(backend, optimiser):
     seed = 2
     points_per_task = 10
 
-    results = collect_res(seed_start=seed, seed_end=seed, timestamp=None, points_per_task=points_per_task,
-                          optimiser=optimiser, optimiser_type=optimiser_type, backend=backend,
-                          xgboost_res_file=xgboost_res_file, simopt_backend_file=simopt_backend_file,
-                          yahpo_dataset=yahpo_dataset, yahpo_scenario=yahpo_scenario,
-                          metric=None, store_res=False, task_lim=3)
-    
+    results = collect_res(
+        seed_start=seed,
+        seed_end=seed,
+        timestamp=None,
+        points_per_task=points_per_task,
+        optimiser=optimiser,
+        optimiser_type=optimiser_type,
+        backend=backend,
+        xgboost_res_file=xgboost_res_file,
+        simopt_backend_file=simopt_backend_file,
+        yahpo_dataset=yahpo_dataset,
+        yahpo_scenario=yahpo_scenario,
+        metric=None,
+        store_res=False,
+        task_lim=3,
+    )
+
     res = results[(backend, optimiser, seed)]
 
     _, _, active_task_str, _ = BACKEND_DEFS[backend]
@@ -297,11 +318,22 @@ def test_different_metrics(metric):
     seed = 4
     points_per_task = 10
 
-    results = collect_res(seed_start=seed, seed_end=seed, timestamp=None, points_per_task=points_per_task,
-                          optimiser=optimiser, optimiser_type=optimiser_type, backend=backend,
-                          xgboost_res_file=None, simopt_backend_file=None,
-                          yahpo_dataset=yahpo_dataset, yahpo_scenario=yahpo_scenario,
-                          metric=metric, store_res=False, task_lim=3)
+    results = collect_res(
+        seed_start=seed,
+        seed_end=seed,
+        timestamp=None,
+        points_per_task=points_per_task,
+        optimiser=optimiser,
+        optimiser_type=optimiser_type,
+        backend=backend,
+        xgboost_res_file=None,
+        simopt_backend_file=None,
+        yahpo_dataset=yahpo_dataset,
+        yahpo_scenario=yahpo_scenario,
+        metric=metric,
+        store_res=False,
+        task_lim=3,
+    )
 
     res = results[(backend, optimiser, seed)]
 
@@ -309,76 +341,122 @@ def test_different_metrics(metric):
 #########
 # Prepare for test_StudentBO
 #########
-ordered_sol_df5_v1 = pd.DataFrame({'price_A': [30, 2, 5, 3, 20],
-                                'price_B': [30, 2, 7, 6, 20],
-                                'price_C': [30, 2, 9, 6, 20]})
+ordered_sol_df5_v1 = pd.DataFrame(
+    {
+        "price_A": [30, 2, 5, 3, 20],
+        "price_B": [30, 2, 7, 6, 20],
+        "price_C": [30, 2, 9, 6, 20],
+    }
+)
 
-ordered_sol_df5_v2 = pd.DataFrame({'price_A': [30, 2, 3, 5, 20],
-                                'price_B': [30, 2, 6, 7, 20],
-                                'price_C': [30, 2, 6, 9, 20]})
+ordered_sol_df5_v2 = pd.DataFrame(
+    {
+        "price_A": [30, 2, 3, 5, 20],
+        "price_B": [30, 2, 6, 7, 20],
+        "price_C": [30, 2, 6, 9, 20],
+    }
+)
 
-ordered_sol_df3_v1 = pd.DataFrame({'price_A': [5, 3, 1],
-                                'price_B': [7, 6, 2],
-                                'price_C': [9, 6, 3]})
+ordered_sol_df3_v1 = pd.DataFrame(
+    {"price_A": [5, 3, 1], "price_B": [7, 6, 2], "price_C": [9, 6, 3]}
+)
 
-ordered_sol_df3_v2 = pd.DataFrame({'price_A': [3, 5, 1],
-                                'price_B': [6, 7, 2],
-                                'price_C': [6, 9, 3]})
+ordered_sol_df3_v2 = pd.DataFrame(
+    {"price_A": [3, 5, 1], "price_B": [6, 7, 2], "price_C": [6, 9, 3]}
+)
 
 
-StudentBO_Combs = [('short', [df_0, df_1, df_2, df_3], [ordered_sol_df3_v1, ordered_sol_df3_v2]),
-                   ('long', [df_0, df_1, df_2, df_3, df_4, df_5], [ordered_sol_df5_v1, ordered_sol_df5_v2])]
+StudentBO_Combs = [
+    ("short", [df_0, df_1, df_2, df_3], [ordered_sol_df3_v1, ordered_sol_df3_v2]),
+    (
+        "long",
+        [df_0, df_1, df_2, df_3, df_4, df_5],
+        [ordered_sol_df5_v1, ordered_sol_df5_v2],
+    ),
+]
+
 
 @pytest.mark.parametrize("tst_id, dataframes, exp_sols", StudentBO_Combs)
 def test_StudentBO(tst_id, dataframes, exp_sols):
-    
-    metric, opt_mode, active_task_str, _ = BACKEND_DEFS['SimOpt']
+
+    metric, opt_mode, active_task_str, _ = BACKEND_DEFS["SimOpt"]
 
     _, getbackend = get_configs(
-        'SimOpt', xgboost_res_file=None, simopt_backend_file=simopt_backend_file,
-        yahpo_dataset=None)
+        "SimOpt",
+        xgboost_res_file=None,
+        simopt_backend_file=simopt_backend_file,
+        yahpo_dataset=None,
+    )
     _, conf_space, _ = getbackend(0)
     base_kwargs = {
-        'config_space': conf_space,
-        'mode': opt_mode,
-        'metric': metric,
-        'random_seed': 10,
+        "config_space": conf_space,
+        "mode": opt_mode,
+        "metric": metric,
+        "random_seed": 10,
     }
-    
+
     # Build up TransferPoints
     past_points = None
     for df_idx in range(len(dataframes)):
         df = dataframes[df_idx]
         past_points = get_transfer_points_active(
-            df, list(range(df_idx)), points_per_task, conf_space, past_points, active_task_str, metric
+            df,
+            list(range(df_idx)),
+            points_per_task,
+            conf_space,
+            past_points,
+            active_task_str,
+            metric,
         )
 
     transfer_kwargs = copy.deepcopy(base_kwargs)
-    transfer_kwargs['transfer_learning_evaluations'] = past_points
+    transfer_kwargs["transfer_learning_evaluations"] = past_points
 
     scheduler_sorted, _ = initialise_scheduler_stopping_criterion(
-        'WarmBO', base_kwargs, transfer_kwargs, points_per_task, past_points, True,
-        active_task_val=None
+        "WarmBO",
+        base_kwargs,
+        transfer_kwargs,
+        points_per_task,
+        past_points,
+        True,
+        active_task_val=None,
     )
 
     points_ordered = pd.DataFrame(scheduler_sorted.searcher._points_to_evaluate)
 
-    assert (exp_sols[0] == points_ordered).all().all() or (exp_sols[1] == points_ordered).all().all()
+    assert (exp_sols[0] == points_ordered).all().all() or (
+        exp_sols[1] == points_ordered
+    ).all().all()
 
     points_shuffled = []
     for _ in range(5):
         scheduler_shuffl, _ = initialise_scheduler_stopping_criterion(
-            'WarmBOShuffled', base_kwargs, transfer_kwargs, points_per_task, past_points, True,
-            active_task_val=None
+            "WarmBOShuffled",
+            base_kwargs,
+            transfer_kwargs,
+            points_per_task,
+            past_points,
+            True,
+            active_task_val=None,
         )
-            
-        points_shuffled.append(pd.DataFrame(scheduler_shuffl.searcher._points_to_evaluate))
 
-    if tst_id == 'short':
+        points_shuffled.append(
+            pd.DataFrame(scheduler_shuffl.searcher._points_to_evaluate)
+        )
+
+    if tst_id == "short":
         # Enough shared optima that the points are the same even if we shuffle
-        assert np.array([(points_shuffled[pp] == exp_sols[0]).all().all() or
-                         (points_shuffled[pp] == exp_sols[1]).all().all()
-                             for pp in range(len(points_shuffled))]).all()
+        assert np.array(
+            [
+                (points_shuffled[pp] == exp_sols[0]).all().all()
+                or (points_shuffled[pp] == exp_sols[1]).all().all()
+                for pp in range(len(points_shuffled))
+            ]
+        ).all()
     else:
-        assert not np.array([(points_shuffled[pp] == points_ordered).all().all() 
-                             for pp in range(len(points_shuffled))]).all()
+        assert not np.array(
+            [
+                (points_shuffled[pp] == points_ordered).all().all()
+                for pp in range(len(points_shuffled))
+            ]
+        ).all()
