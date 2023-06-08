@@ -17,6 +17,7 @@ from blackbox_helper import (
     get_configs,
 )
 
+from backend_definitions_dict import BACKEND_DEFS
 
 import pickle
 import argparse

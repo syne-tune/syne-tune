@@ -13,6 +13,7 @@
 import pytest
 import pandas as pd
 import numpy as np
+import sys
 
 import syne_tune.config_space as sp
 
