@@ -207,7 +207,7 @@ class PlotParameters:
     xlim: Tuple[float, float] = None
     ylim: Tuple[float, float] = None
     metric_multiplier: float = None
-    convert_to_min: bool = True
+    convert_to_min: bool = None
     tick_params: Dict[str, Any] = None
     aggregate_mode: str = None
     dpi: int = None
@@ -228,6 +228,7 @@ class PlotParameters:
                 "xlim",
                 "ylim",
                 "metric_multiplier",
+                "convert_to_min",
                 "tick_params",
                 "aggregate_mode",
                 "dpi",
@@ -239,6 +240,7 @@ class PlotParameters:
             ("mode", "min"),
             ("title", ""),
             ("metric_multiplier", 1),
+            ("convert_to_min", True),
             ("aggregate_mode", DEFAULT_AGGREGATE_MODE),
             ("dpi", 200),
             ("grid", False),

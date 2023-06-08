@@ -44,7 +44,7 @@ def hypervolume_indicator_column_generator(
     assert all(
         mode in ["min", "max"] for mode in metric_modes
     ), f"Modes must be 'min' or 'max':\n{metrics_and_modes}"
-    metric_signs = np.array([-1 if mode == "min" else 1 for mode in metric_modes])
+    metric_signs = np.array([1 if mode == "min" else -1 for mode in metric_modes])
 
     def dataframe_column_generator(df: pd.DataFrame) -> pd.Series:
         assert all(
