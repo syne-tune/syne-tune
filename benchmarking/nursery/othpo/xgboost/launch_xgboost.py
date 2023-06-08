@@ -15,8 +15,9 @@ import argparse
 import datetime
 import time
 import sys
+from pathlib import Path
 
-sys.path.append("../")
+sys.path.append(str(Path(__file__).parent))
 
 
 def main(run_locally):

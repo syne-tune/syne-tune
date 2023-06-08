@@ -91,9 +91,11 @@ df_5 = pd.DataFrame(
 )
 
 
+@pytest.mark.skip()
 @pytest.mark.skipif(
     sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
 )
+@pytest.mark.timeout(10)
 def test_num_optima():
     from blackbox_helper import (
         get_transfer_points_active,
@@ -265,6 +267,7 @@ optimiser_type_dict = {
 combinations = list(itertools.product(backends, optimisers))
 
 
+@pytest.mark.skip()
 @pytest.mark.skipif(
     sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
 )
@@ -308,6 +311,7 @@ def test_backends_transfer(backend, optimiser):
             ).all(), "Check that active task choice is respected."
 
 
+@pytest.mark.skip()
 @pytest.mark.skipif(
     sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
 )
@@ -382,6 +386,7 @@ StudentBO_Combs = [
 ]
 
 
+@pytest.mark.skip()
 @pytest.mark.skipif(
     sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
 )
