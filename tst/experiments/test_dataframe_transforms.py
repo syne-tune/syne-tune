@@ -23,7 +23,7 @@ def test_append_hypervolume_indicator():
     reference_point = np.array([2, 2])
     points = np.array([[1, 0], [0.5, 0.5], [0, 1], [1.5, 0.75]])
     metric_names = ["metric_a", "metric_b"]
-    metrics_and_modes = list(zip(metric_names, ["max"] * 2))
+    metrics_and_modes = list(zip(metric_names, ["min"] * 2))
     df = pd.DataFrame(points, columns=metric_names)
     tuner_time_values = np.arange(4) * 0.05 + 1.2
     df[ST_TUNER_TIME] = tuner_time_values
