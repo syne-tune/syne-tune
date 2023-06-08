@@ -19,8 +19,6 @@ import sys
 
 from backend_definitions_dict import BACKEND_DEFS
 
-from collect_results import collect_res
-
 
 # Dataframes for tests
 metric, _, _, _ = BACKEND_DEFS["SimOpt"]
@@ -273,6 +271,7 @@ combinations = list(itertools.product(backends, optimisers))
 @pytest.mark.timeout(60)
 @pytest.mark.parametrize("backend, optimiser", combinations)
 def test_backends_transfer(backend, optimiser):
+    from collect_results import collect_res
 
     optimiser_type = optimiser_type_dict[optimiser]
     seed = 2
@@ -315,6 +314,7 @@ def test_backends_transfer(backend, optimiser):
 @pytest.mark.timeout(60)
 @pytest.mark.parametrize("metric", ["auc", "acc"])
 def test_different_metrics(metric):
+    from collect_results import collect_res
 
     optimiser = "BayesianOptimization"
     optimiser_type = optimiser_type_dict[optimiser]
