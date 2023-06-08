@@ -15,14 +15,7 @@ import pytest
 import pandas as pd
 import numpy as np
 import itertools
-
-from blackbox_helper import (
-    get_transfer_points_active,
-    simopt_backend_conf,
-    num_optima,
-    get_configs,
-    initialise_scheduler_stopping_criterion,
-)
+import sys
 
 from backend_definitions_dict import BACKEND_DEFS
 
@@ -100,7 +93,16 @@ df_5 = pd.DataFrame(
 )
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
+)
 def test_num_optima():
+    from blackbox_helper import (
+        get_transfer_points_active,
+        simopt_backend_conf,
+        num_optima,
+    )
+
     backend_file = "simopt/SimOptNewsPrice.py"
     getbackend_simopt = lambda active_task_val: simopt_backend_conf(
         backend_file, active_task_val
@@ -265,6 +267,9 @@ optimiser_type_dict = {
 combinations = list(itertools.product(backends, optimisers))
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
+)
 @pytest.mark.timeout(60)
 @pytest.mark.parametrize("backend, optimiser", combinations)
 def test_backends_transfer(backend, optimiser):
@@ -304,9 +309,13 @@ def test_backends_transfer(backend, optimiser):
             ).all(), "Check that active task choice is respected."
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
+)
 @pytest.mark.timeout(60)
 @pytest.mark.parametrize("metric", ["auc", "acc"])
 def test_different_metrics(metric):
+
     optimiser = "BayesianOptimization"
     optimiser_type = optimiser_type_dict[optimiser]
     backend = "YAHPO"
@@ -373,8 +382,16 @@ StudentBO_Combs = [
 ]
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
+)
 @pytest.mark.parametrize("tst_id, dataframes, exp_sols", StudentBO_Combs)
 def test_StudentBO(tst_id, dataframes, exp_sols):
+    from blackbox_helper import (
+        get_transfer_points_active,
+        get_configs,
+        initialise_scheduler_stopping_criterion,
+    )
 
     metric, opt_mode, active_task_str, _ = BACKEND_DEFS["SimOpt"]
 
