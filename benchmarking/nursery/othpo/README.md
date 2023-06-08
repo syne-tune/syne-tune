@@ -1,6 +1,8 @@
 # Obeying the Order: Introducing Ordered Transfer Hyperparameter Optimisation
 This folder contains the code needed to reproduce the results in the above paper. 
 
+The generated files are not included here. To use these, please go to [this fork](https://github.com/sighellan/syne-tune/tree/othpo-results).
+
 
 ## Naming
 Different names were used for the methods in the code and in the paper. These are defined in `plotting/plotting_helper.py`, but also summarised here. We also refer to the NewsVendor benchmark in the code as simopt.
