@@ -140,6 +140,12 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
 
 
 class NoOptimization(LocalOptimizer):
+    def __init__(self, *args, **kwargs):
+        # In case of no-optimization, no setup is needed.
+        # This is necessary if a single NoOptimization instance is to be used
+        # For multi-objective (multi-metric) optimization
+        pass
+
     def optimize(
         self, candidate: Configuration, predictor: Optional[Predictor] = None
     ) -> Configuration:

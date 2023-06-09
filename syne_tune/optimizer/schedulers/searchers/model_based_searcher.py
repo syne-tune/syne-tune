@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import time
+import random
 from typing import Optional, Type, Dict, Any, List
 import logging
 import numpy as np
@@ -157,7 +158,11 @@ class ModelBasedSearcher(StochasticSearcher):
             )
         self.acquisition_class = acquisition_class
         if isinstance(estimator, dict):
-            estimator_main = estimator[INTERNAL_METRIC_NAME]
+            # If no estimator for INTERNAL_METRIC_NAME can be found,
+            # use the debug log from a randomly selected one
+            estimator_main = estimator.get(
+                INTERNAL_METRIC_NAME, random.choice(list(estimator.values()))
+            )
         else:
             estimator_main = estimator
         self._debug_log = estimator_main.debug_log
