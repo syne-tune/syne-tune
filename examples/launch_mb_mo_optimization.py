@@ -10,16 +10,15 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import copy
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Any, Optional
 
 import numpy as np
-from sklearn.linear_model import BayesianRidge
 
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint, uniform
+from syne_tune.optimizer.baselines import BayesianOptimization
 from syne_tune.optimizer.schedulers import FIFOScheduler
 from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objective_searcher import (
     MultiObjectiveMultiSurrogateSearcher,
@@ -27,60 +26,30 @@ from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objecti
 from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
     MultiObjectiveLCBRandomLinearScalarization,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model import (
-    SKLearnEstimatorWrapper,
-)
-from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn import (
-    SKLearnEstimator,
-    SKLearnPredictor,
-)
 
 
-class BayesianRidgePredictor(SKLearnPredictor):
-    """
-    Base class for the sklearn predictors
-    """
+def create_gaussian_process_estimator(
+    config_space: Dict[str, Any],
+    metric: str,
+    mode: Optional[str] = None,
+    random_seed: Optional[int] = None,
+    search_options: Optional[Dict[str, Any]] = None,
+):
+    scheduler = BayesianOptimization(
+        config_space=config_space,
+        metric=metric,
+        mode=mode,
+        random_seed=random_seed,
+        search_options=search_options,
+    )
+    searcher = scheduler.searcher  # GPFIFOSearcher
+    state_transformer = searcher.state_transformer  # ModelStateTransformer
+    estimator = state_transformer.estimator  # GaussProcEmpiricalBayesEstimator
 
-    def __init__(self, ridge: BayesianRidge):
-        self.ridge = ridge
-
-    def predict(
-        self, X: np.ndarray, return_std: bool = True
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Returns signals which are statistics of the predictive distribution at
-        input points ``inputs``.
-
-
-        :param inputs: Input points, shape ``(n, d)``
-        :return: Tuple with the following entries:
-            * "mean": Predictive means in shape of ``(n,)``
-            * "std": Predictive stddevs, shape ``(n,)``
-        """
-        return self.ridge.predict(X, return_std=True)
-
-
-class BayesianRidgeEstimator(SKLearnEstimator):
-    """
-    Base class for the sklearn Estimators
-    """
-
-    def __init__(self, *args, **kwargs):
-        self.ridge = BayesianRidge(*args, **kwargs)
-
-    def fit(
-        self, X: np.ndarray, y: np.ndarray, update_params: bool
-    ) -> BayesianRidgePredictor:
-        """
-        Implements :meth:`fit_from_state`, given transformed data.
-
-        :param X: Training data in ndarray of shape (n_samples, n_features)
-        :param y: Target values in ndarray of shape (n_samples,)
-        :param update_params: Should model (hyper)parameters be updated?
-        :return: Predictor, wrapping the posterior state
-        """
-        self.ridge.fit(X, y.ravel())
-        return BayesianRidgePredictor(ridge=copy.deepcopy(self.ridge))
+    # update the estimator properties
+    estimator.active_metric = metric
+    estimator._no_fantasizing = True
+    return estimator
 
 
 def main():
@@ -90,35 +59,38 @@ def main():
         "theta": uniform(0, np.pi / 2),
         "sleep_time": 0.01,
     }
-    # Scheduler (i.e., HPO algorithm)
-    sklearn_myestimators = {
-        "y1": BayesianRidgeEstimator(),
-        "y2": BayesianRidgeEstimator(),
-    }
+    metrics = ["y1", "y2"]
+    modes = ["min", "min"]
+    # Create Gaussian process estimators
+    # In ``search_options``, the GP model can be configured, see comments
+    # of ``GPFIFOSearcher``
+    search_options = {"debug_log": False}
     myestimators = {
-        metric: SKLearnEstimatorWrapper(estim, target_metric=metric)
-        for metric, estim in sklearn_myestimators.items()
+        metric: create_gaussian_process_estimator(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            search_options=search_options,
+        )
+        for metric, mode in zip(metrics, modes)
     }
     searcher = MultiObjectiveMultiSurrogateSearcher(
         config_space=config_space,
-        metric=["y1", "y2"],
+        metric=metrics,
         estimators=myestimators,
         scoring_class_and_args=MultiObjectiveLCBRandomLinearScalarization,
     )
 
     scheduler = FIFOScheduler(
         config_space,
-        metric=["y1", "y2"],
-        mode=["min", "min"],
+        metric=metrics,
+        mode=modes,
         searcher=searcher,
-        search_options={"debug_log": False},
+        search_options=search_options,
     )
 
     entry_point = str(
-        Path(__file__).parent
-        / "training_scripts"
-        / "mo_artificial"
-        / "mo_artificial.py"
+        Path(__file__).parent / "training_scripts" / "mo_artificial" / "mo_artificial.py"
     )
     tuner = Tuner(
         trial_backend=LocalBackend(entry_point=entry_point),
