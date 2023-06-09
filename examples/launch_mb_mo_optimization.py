@@ -90,7 +90,10 @@ def main():
     )
 
     entry_point = str(
-        Path(__file__).parent / "training_scripts" / "mo_artificial" / "mo_artificial.py"
+        Path(__file__).parent
+        / "training_scripts"
+        / "mo_artificial"
+        / "mo_artificial.py"
     )
     tuner = Tuner(
         trial_backend=LocalBackend(entry_point=entry_point),
