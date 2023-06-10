@@ -272,6 +272,63 @@ DataFrameColumnGenerator = Callable[[pd.DataFrame], pd.Series]
 DataFrameGroups = Dict[Tuple[int, str], List[Tuple[str, pd.DataFrame]]]
 
 
+def group_results_dataframe(df: pd.DataFrame) -> DataFrameGroups:
+    result = dict()
+    for (subplot_no, setup_name, tuner_name), tuner_df in df.groupby(
+        ["subplot_no", "setup_name", "tuner_name"]
+    ):
+        key = (int(subplot_no), setup_name)
+        value = (tuner_name, tuner_df)
+        if key in result:
+            result[key].append(value)
+        else:
+            result[key] = [value]
+    return result
+
+
+def filter_final_row_per_trial(grouped_dfs: DataFrameGroups) -> DataFrameGroups:
+    """
+    We filter rows such that only one row per trial ID remains, namely the
+    one with the largest time stamp. This makes sense for single-fidelity
+    methods, where reports have still been done after every epoch.
+    """
+    logger.info("Filtering results down to one row per trial (final result)")
+    result = dict()
+    for key, tuner_dfs in grouped_dfs.items():
+        new_tuner_dfs = []
+        for tuner_name, tuner_df in tuner_dfs:
+            df_by_trial = tuner_df.groupby("trial_id")
+            max_time_in_trial = df_by_trial[ST_TUNER_TIME].transform(max)
+            max_time_in_trial_mask = max_time_in_trial == tuner_df[ST_TUNER_TIME]
+            new_tuner_dfs.append((tuner_name, tuner_df[max_time_in_trial_mask]))
+        result[key] = new_tuner_dfs
+    return result
+
+
+def enrich_results(
+    grouped_dfs: DataFrameGroups,
+    column_name: str,
+    dataframe_column_generator: Optional[DataFrameColumnGenerator],
+) -> DataFrameGroups:
+    if dataframe_column_generator is None:
+        return grouped_dfs
+    logger.info("Enriching results by additional column (dataframe_column_generator)")
+    result = dict()
+    for key, tuner_dfs in grouped_dfs.items():
+        new_tuner_dfs = []
+        for tuner_name, tuner_df in tuner_dfs:
+            assert column_name not in tuner_df.columns, (
+                f"New column to be appended to results dataframe: {column_name} is "
+                f"already a column: {tuner_df.columns}"
+            )
+            new_column = dataframe_column_generator(tuner_df)
+            new_tuner_dfs.append(
+                (tuner_name, tuner_df.assign(**{column_name: new_column}))
+            )
+        result[key] = new_tuner_dfs
+    return result
+
+
 class ComparativeResults:
     """
     This class loads, processes, and plots results of a comparative study,
@@ -439,70 +496,6 @@ class ComparativeResults:
         else:
             nrows = ncols = 1
         return nrows, ncols
-
-    @staticmethod
-    def _group_results_dataframe(df: pd.DataFrame) -> DataFrameGroups:
-        result = dict()
-        for (subplot_no, setup_name, tuner_name), tuner_df in df.groupby(
-            ["subplot_no", "setup_name", "tuner_name"]
-        ):
-            key = (int(subplot_no), setup_name)
-            value = (tuner_name, tuner_df)
-            if key in result:
-                result[key].append(value)
-            else:
-                result[key] = [value]
-        return result
-
-    @staticmethod
-    def _filter_final_row_per_trial(
-        grouped_dfs: DataFrameGroups,
-    ) -> DataFrameGroups:
-        """
-        We filter rows such that only one row per trial ID remains, namely the
-        one with the largest time stamp. This makes sense for single-fidelity
-        methods, where reports have still been done after every epoch.
-
-        :param grouped_dfs:
-        :return:
-        """
-        logger.info("Filtering results down to one row per trial (final result)")
-        result = dict()
-        for key, tuner_dfs in grouped_dfs.items():
-            new_tuner_dfs = []
-            for tuner_name, tuner_df in tuner_dfs:
-                df_by_trial = tuner_df.groupby("trial_id")
-                max_time_in_trial = df_by_trial[ST_TUNER_TIME].transform(max)
-                max_time_in_trial_mask = max_time_in_trial == tuner_df[ST_TUNER_TIME]
-                new_tuner_dfs.append((tuner_name, tuner_df[max_time_in_trial_mask]))
-            result[key] = new_tuner_dfs
-        return result
-
-    @staticmethod
-    def _enrich_results(
-        grouped_dfs: DataFrameGroups,
-        column_name: str,
-        dataframe_column_generator: Optional[DataFrameColumnGenerator],
-    ) -> DataFrameGroups:
-        if dataframe_column_generator is None:
-            return grouped_dfs
-        logger.info(
-            "Enriching results by additional column (dataframe_column_generator)"
-        )
-        result = dict()
-        for key, tuner_dfs in grouped_dfs.items():
-            new_tuner_dfs = []
-            for tuner_name, tuner_df in tuner_dfs:
-                assert column_name not in tuner_df.columns, (
-                    f"New column to be appended to results dataframe: {column_name} is "
-                    f"already a column: {tuner_df.columns}"
-                )
-                new_column = dataframe_column_generator(tuner_df)
-                new_tuner_dfs.append(
-                    (tuner_name, tuner_df.assign(**{column_name: new_column}))
-                )
-            result[key] = new_tuner_dfs
-        return result
 
     def _extract_result_curves_per_experiment(
         self,
@@ -678,13 +671,13 @@ class ComparativeResults:
         one_result_per_trial: bool,
     ) -> Dict[str, Any]:
         # Group results according to subplot, setup, and tuner (experiment)
-        grouped_dfs = self._group_results_dataframe(df)
+        grouped_dfs = group_results_dataframe(df)
         # Filter down to one result per trial
         if one_result_per_trial:
-            grouped_dfs = self._filter_final_row_per_trial(grouped_dfs)
+            grouped_dfs = filter_final_row_per_trial(grouped_dfs)
         # If ``dataframe_column_generator`` is given, an additional column is
         # appended to the grouped dataframes
-        grouped_dfs = self._enrich_results(
+        grouped_dfs = enrich_results(
             grouped_dfs=grouped_dfs,
             column_name=plot_params.metric,
             dataframe_column_generator=dataframe_column_generator,

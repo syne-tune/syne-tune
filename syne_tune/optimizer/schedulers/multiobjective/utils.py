@@ -48,7 +48,7 @@ def hypervolume(
     return indicator_fn(results_array)
 
 
-def _linear_interpolate(hv_indicator: np.ndarray, indices: List[int]):
+def linear_interpolate(hv_indicator: np.ndarray, indices: List[int]):
     for first, last in zip(indices[:-1], indices[1:]):
         num = last - first + 1
         v_first = hv_indicator[first]
@@ -93,5 +93,5 @@ def hypervolume_cumulative(
     for idx in indices:
         hypervolume_indicator[idx] = indicator_fn(results_array[0 : (idx + 1)])
     if increment > 1:
-        _linear_interpolate(hypervolume_indicator, indices)
+        linear_interpolate(hypervolume_indicator, indices)
     return hypervolume_indicator
