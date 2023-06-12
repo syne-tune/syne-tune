@@ -14,7 +14,7 @@ import copy
 import logging
 
 from collections import deque
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from dataclasses import dataclass
 
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
@@ -61,9 +61,8 @@ class RegularizedEvolution(StochasticSearcher):
     def __init__(
         self,
         config_space,
-        metric: str,
+        metric: Union[List[str], str],
         points_to_evaluate: Optional[List[dict]] = None,
-        mode: str = "min",
         population_size: int = 100,
         sample_size: int = 10,
         **kwargs,
@@ -74,7 +73,6 @@ class RegularizedEvolution(StochasticSearcher):
         assert (
             config_space_size(config_space) != 1
         ), f"config_space = {config_space} has size 1, does not offer any diversity"
-        self.mode = mode
         self.population_size = population_size
         self.sample_size = sample_size
         self.population = deque()
@@ -141,7 +139,7 @@ class RegularizedEvolution(StochasticSearcher):
     def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         score = result[self._metric]
 
-        if self.mode == "max":
+        if self._mode == "max":
             score *= -1
 
         # Add element to the population

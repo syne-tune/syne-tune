@@ -342,7 +342,7 @@ list_schedulers_to_test = [
         mode=mode,
         config_space=config_space,
         metric=metric1,
-        num_init_random_draws=2,
+        search_options={"num_init_random_draws": 2},
     ),
     ASHACQR(
         mode=mode,

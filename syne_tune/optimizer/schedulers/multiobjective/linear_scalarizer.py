@@ -38,19 +38,22 @@ def _all_equal(iterable: Iterable) -> bool:
 
 
 class LinearScalarizedScheduler(TrialScheduler):
-    """Scheduler with a Linear Scalarization of multiple objectives.
-    This method optimizes a single objective equal to the linear scalarization of given two objectives.
-    The scalarized single objective is named: 'scalarized_<metric1>_<metric2>_..._<metricN>'
+    """Scheduler with linear scalarization of multiple objectives
 
+    This method optimizes a single objective equal to the linear scalarization
+    of given two objectives. The scalarized single objective is named:
+    ``"scalarized_<metric1>_<metric2>_..._<metricN>"``.
 
     :param base_scheduler_factory: Factory method for the single-objective scheduler
-        used on the scalarized objective. It will be initialized inside this Scheduler
-        If None, FIFOScheduler is used.
+        used on the scalarized objective. It will be initialized inside this scheduler.
+        Defaults to :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`.
     :param config_space: Configuration space for evaluation function
     :param metric: Names of metrics to optimize
-    :param mode: Modes of metrics to optimize (min or max). All must be matching.
-    :param scalarization_weights: Weights used to scalarize objectives, if None an array of 1s is used
-    :param base_scheduler_kwargs: Additional arguments to base_scheduler beyond config_space, metric and mode
+    :param mode: Modes of metrics to optimize ("min" or "max"). All must be matching.
+    :param scalarization_weights: Weights used to scalarize objectives. Defaults to
+        an array of 1s
+    :param base_scheduler_kwargs: Additional arguments to ``base_scheduler_factory``
+        beyond ``config_space``, ``metric``, ``mode``
     """
 
     scalarization_weights: np.ndarray
