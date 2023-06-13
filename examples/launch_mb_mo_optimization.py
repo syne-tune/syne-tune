@@ -26,6 +26,7 @@ from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objecti
 from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
     MultiObjectiveLCBRandomLinearScalarization,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 
 
 def create_gaussian_process_estimator(
@@ -34,7 +35,7 @@ def create_gaussian_process_estimator(
     mode: Optional[str] = None,
     random_seed: Optional[int] = None,
     search_options: Optional[Dict[str, Any]] = None,
-):
+) -> Estimator:
     scheduler = BayesianOptimization(
         config_space=config_space,
         metric=metric,

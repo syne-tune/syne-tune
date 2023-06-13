@@ -558,3 +558,17 @@ Ask Tell interface for Hyperband
 This is an extension of
 :ref:`launch_ask_tell_scheduler.py <launch_ask_tell_scheduler_script>` to run
 multi-fidelity methods such as Hyperband.
+
+Ask Tell Interface
+==================
+
+.. literalinclude:: ../../examples/launch_mb_mo_optimization.py
+   :name: launch_mb_mo_optimization
+   :caption: examples/launch_mb_mo_optimization.py
+   :start-after: # permissions and limitations under the License.
+
+This example shows how to use the multi-objective multi-surrogate (MSMOS) searcher to tune
+a multi-objective problem. In this example, we use two gaussian-process regresors
+as the surrogate models and rely on lower confidence bound random scalarizer
+as the acquisition function. With that in mind, any syne_tune `Estimator` can be
+used as surrogate.
