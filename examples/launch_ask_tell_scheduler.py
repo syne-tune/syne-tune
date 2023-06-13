@@ -73,7 +73,7 @@ class AskTellScheduler:
         self.bscheduler.on_trial_complete(trial=trial, result=experiment_result)
         self.completed_experiments[trial_result.trial_id] = trial_result
 
-    def best_trial(self, metris: str) -> TrialResult:
+    def best_trial(self, metric: str) -> TrialResult:
         """
         Return the best trial according to the provided metric
         """
@@ -84,7 +84,7 @@ class AskTellScheduler:
 
         return max(
             [value for key, value in self.completed_experiments.items()],
-            key=lambda trial: sign * trial.metrics[metris],
+            key=lambda trial: sign * trial.metrics[metric],
         )
 
 

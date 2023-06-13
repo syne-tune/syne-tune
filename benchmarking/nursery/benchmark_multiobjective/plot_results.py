@@ -13,9 +13,10 @@
 from typing import Dict, Any, Optional
 import logging
 
-from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
-from benchmarking.examples.benchmark_hypertune.baselines import methods
-from benchmarking.examples.benchmark_hypertune.benchmark_definitions import (
+from syne_tune.experiments import ComparativeResults, PlotParameters
+from syne_tune.experiments.multiobjective import hypervolume_indicator_column_generator
+from benchmarking.nursery.benchmark_multiobjective.baselines import methods
+from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
     benchmark_definitions,
 )
 
@@ -25,35 +26,18 @@ def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:
     return metadata["algorithm"]
 
 
-SETUPS_RIGHT = ("ASHA", "SYNCHB", "BOHB")
-
-
-def metadata_to_subplot(metadata: Dict[str, Any]) -> Optional[int]:
-    return int(metadata["algorithm"] in SETUPS_RIGHT)
-
-
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    experiment_name = "docs-1"
+    experiment_name = "icml-17"
     experiment_names = (experiment_name,)
     setups = list(methods.keys())
-    num_runs = 15
+    num_runs = 20
     download_from_s3 = False  # Set ``True`` in order to download files from S3
     # Plot parameters across all benchmarks
     plot_params = PlotParameters(
         xlabel="wall-clock time",
         aggregate_mode="iqm_bootstrap",
         grid=True,
-    )
-    # We would like two subplots (1 row, 2 columns), with MOBSTER and HYPERTUNE
-    # results on the left, and the remaining baselines on the right. Each
-    # column gets its own title, and legends are shown in both
-    plot_params.subplots = SubplotParameters(
-        nrows=1,
-        ncols=2,
-        kwargs=dict(sharey="all"),
-        titles=["Model-based Methods", "Baselines"],
-        legend_no=[0, 1],
     )
     # The creation of ``results`` downloads files from S3 (only if
     # ``download_from_s3 == True``), reads the metadata and creates an inverse
@@ -65,35 +49,40 @@ if __name__ == "__main__":
         num_runs=num_runs,
         metadata_to_setup=metadata_to_setup,
         plot_params=plot_params,
-        metadata_to_subplot=metadata_to_subplot,
         download_from_s3=download_from_s3,
     )
+
     # We can now create plots for the different benchmarks
-    # First: nas201-cifar100
-    benchmark_name = "nas201-cifar100"
+    # First: nas201-mo-cifar100
+    benchmark_name = "nas201-mo-cifar100"
     benchmark = benchmark_definitions[benchmark_name]
-    # These parameters overwrite those given at construction
+    # We would like to plot the hypervolume indicator, which is a derived
+    # metric
+    dataframe_column_generator = hypervolume_indicator_column_generator(
+        metrics_and_modes=list(zip(benchmark.metric, benchmark.mode))
+    )
     plot_params = PlotParameters(
-        metric=benchmark.metric,
-        mode=benchmark.mode,
-        ylim=(0.265, 0.31),
+        metric="hypervolume_indicator",
+        mode="max",
+        convert_to_min=False,
     )
     results.plot(
         benchmark_name=benchmark_name,
         plot_params=plot_params,
+        dataframe_column_generator=dataframe_column_generator,
+        one_result_per_trial=True,
         file_name=f"./{experiment_name}-{benchmark_name}.png",
     )
-    # Next: nas201-ImageNet16-120
-    benchmark_name = "nas201-ImageNet16-120"
+    # Next: nas201-mo-ImageNet16-120
+    benchmark_name = "nas201-mo-ImageNet16-120"
     benchmark = benchmark_definitions[benchmark_name]
-    # These parameters overwrite those given at construction
-    plot_params = PlotParameters(
-        metric=benchmark.metric,
-        mode=benchmark.mode,
-        ylim=(0.535, 0.58),
+    dataframe_column_generator = hypervolume_indicator_column_generator(
+        metrics_and_modes=list(zip(benchmark.metric, benchmark.mode))
     )
     results.plot(
         benchmark_name=benchmark_name,
         plot_params=plot_params,
+        dataframe_column_generator=dataframe_column_generator,
+        one_result_per_trial=True,
         file_name=f"./{experiment_name}-{benchmark_name}.png",
     )
