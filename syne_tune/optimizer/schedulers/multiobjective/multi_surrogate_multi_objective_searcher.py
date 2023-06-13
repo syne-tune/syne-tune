@@ -11,7 +11,10 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
+from functools import partial
 from typing import Optional, List, Dict, Any
+
+from syne_tune.optimizer.schedulers.searchers.searcher_base import extract_random_seed
 
 from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
     MultiObjectiveLCBRandomLinearScalarization,
@@ -72,7 +75,7 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
         config_space: Dict[str, Any],
         metric: List[str],
         estimators: Dict[str, Estimator],
-        mode: List[str] = None,
+        mode: Optional[List[str]] = None,
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
         scoring_class_and_args: Optional[ScoringClassAndArgs] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
@@ -93,23 +96,24 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
             random_seed_generator=kwargs.get("random_seed_generator"),
             random_seed=kwargs.get("random_seed"),
         )
-        self.estimator = estimators
         if scoring_class_and_args is None:
-            scoring_class_and_args = MultiObjectiveLCBRandomLinearScalarization
+            random_seed, _ = extract_random_seed(**kwargs)
+            scoring_class_and_args = partial(
+                MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
+            )
 
         if not clone_from_state:
             hp_ranges = make_hyperparameter_ranges(self.config_space)
             self._create_internal(
                 hp_ranges=hp_ranges,
-                estimator=self.estimator,
+                estimator=estimators,
                 acquisition_class=scoring_class_and_args,
                 num_initial_candidates=num_initial_candidates,
                 num_initial_random_choices=num_initial_random_choices,
                 initial_scoring="acq_func",
-                skip_local_optimization={name: True for name in self.estimator.keys()},
+                skip_local_optimization={name: True for name in estimators.keys()},
                 allow_duplicates=allow_duplicates,
                 restrict_configurations=restrict_configurations,
-                **kwargs,
             )
         else:
             # Internal constructor, bypassing the factory
@@ -121,22 +125,12 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
         # Gather metrics
         metrics = {name: result[name] for name in self._metric}
 
-        # Cost value only dealt with here if ``resource_attr`` not given
-        attr = self._cost_attr
-        cost_val = None
-        if attr is not None and attr in result:
-            cost_val = float(result[attr])
-            if self._resource_attr is None:
-                metrics[INTERNAL_COST_NAME] = cost_val
-
         self.state_transformer.label_trial(
             TrialEvaluations(trial_id=trial_id, metrics=metrics), config=config
         )
         if self.debug_log is not None:
             _trial_id = self._trial_id_string(trial_id, result)
             msg = f"Update for trial_id {_trial_id}: metric = {metrics:.3f}"
-            if cost_val is not None:
-                msg += f", cost_val = {cost_val:.2f}"
             logger.info(msg)
 
     def clone_from_state(self, state):

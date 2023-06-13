@@ -41,6 +41,7 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
             <name of metric 2> : <weight for metric 2>,
             ...
         }
+    :param kappa: Hyperparameter used for the LCM portion of the scoring
     """
 
     def __init__(
@@ -49,15 +50,15 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
         active_metric: Optional[List[str]] = None,
         weights_sampler: Optional[Callable[[], Dict[str, float]]] = None,
         kappa: float = 0.5,
+        random_seed: int = None,
     ):
+        super(MultiObjectiveLCBRandomLinearScalarization, self).__init__(
+            predictor, active_metric
+        )
         self.kappa = kappa
-        self.predictor = predictor
-        if active_metric is None:
-            active_metric = [name for name in predictor.keys()]
-        self.active_metric = active_metric
 
         if weights_sampler is None:
-            state = RandomState(123)
+            state = RandomState(random_seed)
 
             def weights_sampler():
                 return {name: state.uniform() for name in predictor.keys()}

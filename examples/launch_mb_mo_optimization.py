@@ -10,6 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from functools import partial
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -49,7 +50,6 @@ def create_gaussian_process_estimator(
 
     # update the estimator properties
     estimator.active_metric = metric
-    estimator._no_fantasizing = True
     return estimator
 
 
@@ -65,7 +65,7 @@ def main():
     # Create Gaussian process estimators
     # In ``search_options``, the GP model can be configured, see comments
     # of ``GPFIFOSearcher``
-    search_options = {"debug_log": False}
+    search_options = {"debug_log": False, "no_fantasizing": True}
     myestimators = {
         metric: create_gaussian_process_estimator(
             config_space=config_space,
@@ -79,7 +79,9 @@ def main():
         config_space=config_space,
         metric=metrics,
         estimators=myestimators,
-        scoring_class_and_args=MultiObjectiveLCBRandomLinearScalarization,
+        scoring_class_and_args=partial(
+            MultiObjectiveLCBRandomLinearScalarization, random_seed=123
+        ),
     )
 
     scheduler = FIFOScheduler(

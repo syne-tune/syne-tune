@@ -85,13 +85,13 @@ class SKLearnEstimatorWrapper(Estimator):
     def __init__(
         self,
         sklearn_estimator: SKLearnEstimator,
-        target_metric: str = None,
+        active_metric: str = None,
         *args,
         **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.sklearn_estimator = sklearn_estimator
-        self.target_metric = target_metric
+        self.target_metric = active_metric
 
     def get_params(self) -> Dict[str, Any]:
         return self.sklearn_estimator.get_params()
