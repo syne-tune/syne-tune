@@ -14,13 +14,10 @@ import logging
 from functools import partial
 from typing import Optional, List, Dict, Any
 
-from syne_tune.optimizer.schedulers.searchers.searcher_base import extract_random_seed
-
 from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
     MultiObjectiveLCBRandomLinearScalarization,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
-    INTERNAL_COST_NAME,
     TrialEvaluations,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
@@ -37,6 +34,7 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
 from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
     BayesianOptimizationSearcher,
 )
+from syne_tune.optimizer.schedulers.searchers.searcher_base import extract_random_seed
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 
 logger = logging.getLogger(__name__)
