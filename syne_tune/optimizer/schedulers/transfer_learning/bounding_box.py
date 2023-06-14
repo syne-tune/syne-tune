@@ -28,6 +28,8 @@ from syne_tune.config_space import (
     config_space_size,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class BoundingBox(TransferLearningMixin, TrialScheduler):
     """
@@ -140,7 +142,7 @@ class BoundingBox(TransferLearningMixin, TrialScheduler):
                     new_config_space[name] = domain
             else:
                 new_config_space[name] = domain
-        logging.info(
+        logger.info(
             f"new configuration space obtained after computing bounding-box: {new_config_space}"
         )
 

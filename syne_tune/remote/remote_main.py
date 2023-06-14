@@ -24,6 +24,8 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     backend_path_not_synced_to_s3,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def decode_bool(hp: str):
     # Sagemaker encodes hyperparameters in estimators as literals which are compatible with Python,
@@ -47,7 +49,7 @@ if __name__ == "__main__":
     args.no_tuner_logging = decode_bool(args.no_tuner_logging)
 
     tuner_path = Path(args.tuner_path)
-    logging.info(f"load tuner from path {args.tuner_path}")
+    logger.info(f"load tuner from path {args.tuner_path}")
     tuner = Tuner.load(tuner_path)
 
     # The output of the tuner (results, metadata, tuner state) is written into
@@ -73,5 +75,5 @@ if __name__ == "__main__":
     # used, this needs a specific callback
     if args.no_tuner_logging == "True":
         logging.getLogger("syne_tune.tuner").setLevel(logging.ERROR)
-    logging.info("starting remote tuning")
+    logger.info("starting remote tuning")
     tuner.run()

@@ -495,7 +495,7 @@ class SimulatorBackend(LocalBackend):
         dump_json_with_numpy(config, trial_path / "config.json")
         cmd = f"python {self.entry_point} {config_str}"
         env = dict(os.environ)
-        logging.info(f"running script with command: {cmd}")
+        logger.info(f"running script with command: {cmd}")
         with open(trial_path / "std.out", "a") as stdout:
             with open(trial_path / "std.err", "a") as stderr:
                 return_status = subprocess.run(

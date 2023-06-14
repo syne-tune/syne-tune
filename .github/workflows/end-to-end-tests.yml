@@ -93,11 +93,19 @@ jobs:
       requires-aws-credentials: true
     secrets: inherit
 
-  launch_height_sagemaker_remotely:
+  launch_height_sagemaker_remotely_false:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      script-path: examples/launch_height_sagemaker_remotely.py
+      script-path: examples/launch_height_sagemaker_remotely.py --use_sagemaker_backend 0
+      requires-aws-credentials: true
+    secrets: inherit
+
+  launch_height_sagemaker_remotely_true:
+    needs: stop_all_training_jobs
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: examples/launch_height_sagemaker_remotely.py --use_sagemaker_backend 1
       requires-aws-credentials: true
     secrets: inherit
 
