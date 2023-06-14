@@ -42,6 +42,7 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
             ...
         }
     :param kappa: Hyperparameter used for the LCM portion of the scoring
+    :param random_seed: The random seed used for default weights_sampler if not provided.
     """
 
     def __init__(

@@ -54,6 +54,7 @@ def create_gaussian_process_estimator(
 
 
 def main():
+    random_seed = 6287623
     # Hyperparameter configuration space
     config_space = {
         "steps": randint(0, 100),
@@ -80,9 +81,9 @@ def main():
         metric=metrics,
         estimators=myestimators,
         scoring_class_and_args=partial(
-            MultiObjectiveLCBRandomLinearScalarization, random_seed=123
+            MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
         ),
-        random_seed=123,
+        random_seed=random_seed,
     )
 
     scheduler = FIFOScheduler(
