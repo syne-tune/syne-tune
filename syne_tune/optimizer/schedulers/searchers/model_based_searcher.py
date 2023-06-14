@@ -157,7 +157,11 @@ class ModelBasedSearcher(StochasticSearcher):
             )
         self.acquisition_class = acquisition_class
         if isinstance(estimator, dict):
-            estimator_main = estimator[INTERNAL_METRIC_NAME]
+            # If no estimator for INTERNAL_METRIC_NAME can be found,
+            # use the debug log from a first metric
+            estimator_main = estimator.get(
+                INTERNAL_METRIC_NAME, next(iter(estimator.values()))
+            )
         else:
             estimator_main = estimator
         self._debug_log = estimator_main.debug_log

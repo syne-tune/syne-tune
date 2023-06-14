@@ -145,11 +145,13 @@ Syne Tune also supports [BoTorch](https://github.com/awslabs/syne-tune/blob/main
 
 ## Supported multi-objective optimization methods
 
-Method | Reference | Searcher | Asynchronous? | Multi-fidelity? | Transfer?
-:--- | :---: | :---: | :---: | :---: | :---: 
-Constrained Bayesian Optimization | Gardner, et al. (2014) | model-based | yes | no | no
-MOASHA | Schmucker, et al. (2021) | random | yes | yes | no
-NSGA-2 | Deb, et al. (2002) | evolutionary | no | no | no
+Method |          Reference          |   Searcher   | Asynchronous? | Multi-fidelity? | Transfer?
+:--- |:---------------------------:|:------------:| :---: | :---: | :---: 
+Constrained Bayesian Optimization |   Gardner, et al. (2014)    | model-based  | yes | no | no
+MOASHA |  Schmucker, et al. (2021)   |    random    | yes | yes | no
+NSGA-2 |     Deb, et al. (2002)      | evolutionary | no | no | no
+Multi Objective Multi Surrogate (MSMOS) | Guerrero-Viu, et al. (2021) | model-based  | no | no | no
+MSMOS wihh random scalarization |    Paria, et al. (2018)     | model-based  | no | no | no
 
 HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizer/schedulers/multiobjective/multiobjective_priority.py) for details.
 

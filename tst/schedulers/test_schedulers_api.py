@@ -44,6 +44,12 @@ from syne_tune.optimizer.baselines import (
     ASHACQR,
     # ASHACTS,
 )
+from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objective_searcher import (
+    MultiObjectiveMultiSurrogateSearcher,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model import (
+    SKLearnEstimatorWrapper,
+)
 from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
     SurrogateSearcher,
 )
@@ -437,6 +443,20 @@ list_schedulers_to_test = [
         ),
         metric=metric1,
         mode=mode,
+    ),
+    FIFOScheduler(
+        config_space,
+        searcher=MultiObjectiveMultiSurrogateSearcher(
+            config_space=config_space,
+            metric=[metric1, metric2],
+            mode=[mode, mode],
+            estimators={
+                metric1: SKLearnEstimatorWrapper(TestEstimator()),
+                metric2: SKLearnEstimatorWrapper(TestEstimator()),
+            },
+        ),
+        metric=[metric1, metric2],
+        mode=[mode, mode],
     ),
 ]
 

@@ -132,7 +132,6 @@ class ModelStateTransformer:
                 f"It is assumed that we are in the multi-output case and that it "
                 f"must be a Dict. No other types are supported. "
             )
-            _assert_same_keys(estimator, skip_optimization)
             # Default: Always refit model parameters for each output model
             if skip_optimization is None:
                 skip_optimization = {
@@ -144,6 +143,7 @@ class ModelStateTransformer:
                     f"{skip_optimization} must be a Dict, consistently "
                     f"with {estimator}."
                 )
+                _assert_same_keys(estimator, skip_optimization)
                 skip_optimization = {
                     output_name: skip_optimization[output_name]
                     if skip_optimization.get(output_name) is not None
