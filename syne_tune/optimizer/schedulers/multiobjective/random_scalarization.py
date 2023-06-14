@@ -42,7 +42,7 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
             ...
         }
     :param kappa: Hyperparameter used for the LCM portion of the scoring
-    :param normalize: If True, use rank-normalization on the acquisition function results before weighting.
+    :param normalize_acquisition: If True, use rank-normalization on the acquisition function results before weighting.
     :param random_seed: The random seed used for default weights_sampler if not provided.
     """
 
@@ -52,14 +52,14 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
         active_metric: Optional[List[str]] = None,
         weights_sampler: Optional[Callable[[], Dict[str, float]]] = None,
         kappa: float = 0.5,
-        normalize: bool = True,
+        normalize_acquisition: bool = True,
         random_seed: int = None,
     ):
         super(MultiObjectiveLCBRandomLinearScalarization, self).__init__(
             predictor, active_metric
         )
         self.kappa = kappa
-        self.normalize = normalize
+        self.normalize_acquisition = normalize_acquisition
 
         if weights_sampler is None:
             state = RandomState(random_seed)
@@ -85,7 +85,7 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
             predicted_std = predictions[0]["std"]
 
             metric_score = self._single_objective_score(predicted_mean, predicted_std)
-            if self.normalize:
+            if self.normalize_acquisition:
                 metrics_score_normalized = scipy.stats.rankdata(metric_score)
                 metrics_score_normalized = (
                     metrics_score_normalized / metrics_score_normalized.max()
