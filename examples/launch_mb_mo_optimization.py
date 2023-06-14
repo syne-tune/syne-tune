@@ -82,6 +82,7 @@ def main():
         scoring_class_and_args=partial(
             MultiObjectiveLCBRandomLinearScalarization, random_seed=123
         ),
+        random_seed=123,
     )
 
     scheduler = FIFOScheduler(
