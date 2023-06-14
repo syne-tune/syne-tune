@@ -260,24 +260,6 @@ class AcquisitionFunction(ScoringFunction):
         return list(self.compute_acq(inputs, predictor=predictor))
 
 
-AcquisitionClassAndArgs = Union[
-    Type[AcquisitionFunction], Tuple[Type[AcquisitionFunction], Dict[str, Any]]
-]
-
-ScoringClassAndArgs = Union[
-    Type[ScoringFunction], Tuple[Type[ScoringFunction], Dict[str, Any]]
-]
-
-
-def unwrap_acquisition_class_and_kwargs(
-    acquisition_class: AcquisitionClassAndArgs,
-) -> (Type[AcquisitionFunction], Dict[str, Any]):
-    if isinstance(acquisition_class, tuple):
-        return acquisition_class
-    else:
-        return acquisition_class, dict()
-
-
 class LocalOptimizer:
     """
     Class that tries to find a local candidate with a better score, typically
@@ -299,7 +281,7 @@ class LocalOptimizer:
         self,
         hp_ranges: HyperparameterRanges,
         predictor: OutputPredictor,
-        acquisition_class: AcquisitionClassAndArgs,
+        acquisition_class: Type[AcquisitionFunction],
         active_metric: Optional[str] = None,
     ):
         self.hp_ranges = hp_ranges

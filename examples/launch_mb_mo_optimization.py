@@ -80,7 +80,7 @@ def main():
         config_space=config_space,
         metric=metrics,
         estimators=myestimators,
-        scoring_class_and_args=partial(
+        scoring_class=partial(
             MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
         ),
         random_seed=random_seed,
