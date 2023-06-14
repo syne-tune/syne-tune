@@ -19,7 +19,6 @@ from typing import (
     Set,
     Dict,
     Union,
-    Any,
     Iterator,
 )
 import numpy as np
