@@ -113,13 +113,6 @@ jobs:
       extras-require: gpsearchers
       script-path: examples/launch_ask_tell_scheduler_hyperband.py
 
-  launch_asha_yahpo:
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      additional-command: pip install matplotlib
-      script-path: examples/launch_asha_yahpo.py
-
-
   launch_mb_mo_optimization:
     uses: ./.github/workflows/run-syne-tune.yml
     with:
