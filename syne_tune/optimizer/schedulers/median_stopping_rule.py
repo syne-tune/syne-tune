@@ -23,6 +23,8 @@ from syne_tune.optimizer.scheduler import (
     TrialSuggestion,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class MedianStoppingRule(TrialScheduler):
     """
@@ -110,7 +112,7 @@ class MedianStoppingRule(TrialScheduler):
         ):
             return self.scheduler.on_trial_result(trial=trial, result=result)
         else:
-            logging.info(
+            logger.info(
                 f"see new results {new_metric} at time-step {time_step} for trial {trial.trial_id}"
                 f" with rank {int(normalized_rank * 100)}%, "
                 f"stopping it as it does not rank on the top {int(self.rank_cutoff * 100)}%"
