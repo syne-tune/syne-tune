@@ -184,6 +184,9 @@ class RemoteLauncher:
         self.update_backend_with_remote_paths()
 
         # save tuner
+        logger.info(
+            f"*** DEBUG: Saving tuner: s3_path = {self.tuner.trial_backend.s3_path}, tuner_name = {self.tuner.trial_backend.tuner_name}"
+        )
         self.tuner.save(upload_dir)
 
         # avoid side effect

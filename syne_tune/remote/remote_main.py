@@ -68,6 +68,9 @@ if __name__ == "__main__":
         # ``store_logs == False`` (default)
         backend_path = str(backend_path_not_synced_to_s3())
     trial_backend.set_path(results_root=backend_path)
+    logging.info(
+        f"*** DEBUG: s3_path = {trial_backend.s3_path}, tuner_name = {trial_backend.tuner_name}"
+    )
 
     # Run the tuner on the sagemaker instance. If the simulation backend is
     # used, this needs a specific callback
