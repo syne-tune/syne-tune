@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 from functools import partial
-from typing import Optional, List, Dict, Any, Type
+from typing import Optional, List, Dict, Any
 
 from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
     MultiObjectiveLCBRandomLinearScalarization,
