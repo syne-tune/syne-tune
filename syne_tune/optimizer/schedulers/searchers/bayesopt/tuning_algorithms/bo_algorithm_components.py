@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     LocalOptimizer,
     OutputPredictor,
     CandidateGenerator,
-    AcquisitionFunctionCreator,
+    AcquisitionFunctionConstructor,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
@@ -84,7 +84,7 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
         self,
         hp_ranges: HyperparameterRanges,
         predictor: OutputPredictor,
-        acquisition_class: AcquisitionFunctionCreator,
+        acquisition_class: AcquisitionFunctionConstructor,
         active_metric: str = None,
     ):
         super().__init__(hp_ranges, predictor, acquisition_class, active_metric)

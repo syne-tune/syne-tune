@@ -22,7 +22,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    ScoringFunctionCreator,
+    ScoringFunctionConstructor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults import (
     DEFAULT_NUM_INITIAL_CANDIDATES,
@@ -75,7 +75,7 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
         estimators: Dict[str, Estimator],
         mode: Optional[List[str]] = None,
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
-        scoring_class: Optional[ScoringFunctionCreator] = None,
+        scoring_class: Optional[ScoringFunctionConstructor] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
         num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
         allow_duplicates: bool = False,

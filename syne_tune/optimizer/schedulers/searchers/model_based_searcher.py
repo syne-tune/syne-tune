@@ -46,7 +46,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     ScoringFunction,
     OutputPredictor,
     CandidateGenerator,
-    AcquisitionFunctionCreator,
+    AcquisitionFunctionConstructor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm import (
     BayesianOptimizationAlgorithm,
@@ -116,7 +116,7 @@ class ModelBasedSearcher(StochasticSearcher):
         self,
         hp_ranges: HyperparameterRanges,
         estimator: OutputEstimator,
-        acquisition_class: AcquisitionFunctionCreator,
+        acquisition_class: AcquisitionFunctionConstructor,
         map_reward: Optional[MapReward] = None,
         init_state: TuningJobState = None,
         local_minimizer_class: Type[LocalOptimizer] = None,
@@ -489,7 +489,7 @@ class ModelBasedSearcher(StochasticSearcher):
 def create_initial_candidates_scorer(
     initial_scoring: str,
     predictor: OutputPredictor,
-    acquisition_class: AcquisitionFunctionCreator,
+    acquisition_class: AcquisitionFunctionConstructor,
     random_state: np.random.RandomState,
     active_metric: str = INTERNAL_METRIC_NAME,
 ) -> ScoringFunction:

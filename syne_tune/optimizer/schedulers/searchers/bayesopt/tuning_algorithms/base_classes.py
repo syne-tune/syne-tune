@@ -260,10 +260,10 @@ class AcquisitionFunction(ScoringFunction):
         return list(self.compute_acq(inputs, predictor=predictor))
 
 
-AcquisitionFunctionCreator = Callable[[Any], AcquisitionFunction]
+AcquisitionFunctionConstructor = Callable[[Any], AcquisitionFunction]
 
 
-ScoringFunctionCreator = Callable[[Any], ScoringFunction]
+ScoringFunctionConstructor = Callable[[Any], ScoringFunction]
 
 
 class LocalOptimizer:
@@ -287,7 +287,7 @@ class LocalOptimizer:
         self,
         hp_ranges: HyperparameterRanges,
         predictor: OutputPredictor,
-        acquisition_class: AcquisitionFunctionCreator,
+        acquisition_class: AcquisitionFunctionConstructor,
         active_metric: Optional[str] = None,
     ):
         self.hp_ranges = hp_ranges
