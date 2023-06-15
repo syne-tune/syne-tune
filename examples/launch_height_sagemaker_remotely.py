@@ -15,7 +15,6 @@ This example show how to launch a tuning job that will be executed on Sagemaker 
 """
 import logging
 from pathlib import Path
-from argparse import ArgumentParser
 
 from sagemaker.pytorch import PyTorch
 
@@ -43,11 +42,6 @@ from syne_tune.remote.remote_launcher import RemoteLauncher
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
-    parser = ArgumentParser()
-    parser.add_argument("--use_sagemaker_backend", type=int, default=0)
-    args = parser.parse_args()
-    use_sagemaker_backend = bool(args.use_sagemaker_backend)
-
     max_steps = 100
     n_workers = 4
 
@@ -66,7 +60,8 @@ if __name__ == "__main__":
     # We can use the local or sagemaker backend when tuning remotely.
     # Using the local backend means that the remote instance will evaluate the trials locally.
     # Using the sagemaker backend means the remote instance will launch one sagemaker job per trial.
-    if use_sagemaker_backend:
+    distribute_trials_on_sagemaker = False
+    if distribute_trials_on_sagemaker:
         trial_backend = SageMakerBackend(
             sm_estimator=PyTorch(
                 instance_type=DEFAULT_CPU_INSTANCE_SMALL,
@@ -85,8 +80,7 @@ if __name__ == "__main__":
     else:
         trial_backend = LocalBackend(entry_point=entry_point)
 
-    num_seeds = 1 if use_sagemaker_backend else 2
-    for seed in range(num_seeds):
+    for seed in range(2):
         # Random search without stopping
         scheduler = RandomSearch(
             config_space, mode=METRIC_MODE, metric=METRIC_ATTR, random_seed=seed

@@ -127,8 +127,6 @@ class SageMakerBackend(TrialBackend):
         if s3_path is None:
             s3_path = s3_experiment_path()
         self.s3_path = s3_path.rstrip("/")
-        # ``tuner_name`` has to be set before the backend can be used. This is
-        # typically done when the ``Tuner`` is created
         self.tuner_name = None
         # Trials which may currently be busy (status in ``BUSY_STATUS``). The
         # corresponding jobs are polled for status in ``busy_trial_ids``, and
@@ -183,14 +181,10 @@ class SageMakerBackend(TrialBackend):
     def _numpy_serialize(mydict):
         return json.loads(dump_json_with_numpy(mydict))
 
-    def _assert_tuner_name_is_set(self):
-        assert (
-            self.tuner_name is not None
-        ), "tuner_name has to be set (by calling set_path) before the backend can be used"
-
     def _checkpoint_s3_uri_for_trial(self, trial_id: int) -> str:
-        self._assert_tuner_name_is_set()
-        res_path = f"{self.s3_path}/{self.tuner_name}"
+        res_path = self.s3_path
+        if self.tuner_name is not None:
+            res_path = f"{res_path}/{self.tuner_name}"
         return f"{res_path}/{str(trial_id)}/checkpoints/"
 
     def _config_json_filename(self, trial_id: int, with_path: bool) -> str:
@@ -327,7 +321,6 @@ class SageMakerBackend(TrialBackend):
              first to avoid mismatch when searching for job information in
             SageMaker from prefix.
         """
-        self._assert_tuner_name_is_set()
         job_name = f"{trial_id}"
         if job_running_number > 0:
             job_name += f"-{job_running_number}"
@@ -529,12 +522,8 @@ class SageMakerBackend(TrialBackend):
     def set_path(
         self, results_root: Optional[str] = None, tuner_name: Optional[str] = None
     ):
-        """
-        For this backend, it is mandatory to call this method passing ``tuner_name``
-        before the backend is used. ``results_root`` is ignored here.
-        """
-        if tuner_name is not None:
-            self.tuner_name = tuner_name
+        # we use the tuner-name to set the checkpoint directory
+        self.tuner_name = tuner_name
 
     def on_tuner_save(self):
         # Re-initialize the session after :class:`~syne_tune.Tuner` is serialized
