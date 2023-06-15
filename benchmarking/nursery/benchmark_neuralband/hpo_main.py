@@ -11,11 +11,9 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any
-from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.nursery.benchmark_neuralband.baselines import methods
-from benchmarking.nursery.benchmark_neuralband.benchmark_definitions import (
-    benchmark_definitions,
-)
+from syne_tune.experiments.launchers.hpo_main_simulator import main
+from baselines import methods
+from benchmark_definitions import benchmark_definitions
 from syne_tune.util import recursive_merge
 
 

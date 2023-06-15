@@ -25,8 +25,8 @@ result visualization.
 
 Here is the code for generating result plots for two of the benchmarks:
 
-.. literalinclude:: ../../../../benchmarking/nursery/demo_experiment/plot_results.py
-   :caption: benchmarking/nursery/demo_experiment/plot_results.py
+.. literalinclude:: ../../../../benchmarking/examples/demo_experiment/plot_results.py
+   :caption: benchmarking/examples/demo_experiment/plot_results.py
    :start-after: # permissions and limitations under the License.
 
 .. |Results for fcnet-protein| image:: img/docs-2-fcnet-protein.png

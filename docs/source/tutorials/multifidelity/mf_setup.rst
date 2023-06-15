@@ -55,8 +55,8 @@ Let us have a walk through this script, assuming it is called with the default
   there.
 * [1] We first select the benchmark and create the simulator backend linked
   with this benchmark. Relevant properties of supported benchmarks are
-  collected in :mod:`benchmarking.commons.benchmark_definitions`, using
-  :class:`~benchmarking.commons.benchmark_definitions.SurrogateBenchmarkDefinition`.
+  collected in :mod:`syne_tune.experiments.benchmark_definitions`, using
+  :class:`~syne_tune.experiments.benchmark_definitions.SurrogateBenchmarkDefinition`.
   Some properties are tied to the benchmark and must not be changed
   (``elapsed_time_attr``, ``metric``, ``mode``, ``blackbox_name``,
   ``max_resource_attr``). Other properties are default values suggested for the

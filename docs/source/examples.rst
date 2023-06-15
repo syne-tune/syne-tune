@@ -23,7 +23,7 @@ Fine-Tuning Hugging Face Model for Sentiment Classification
 
 **Requirements**:
 
-* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
+* Running this script requires Syne Tune to be installed
   `from source <getting_started.html#installation>`__.
 * `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
 * Runs on four ``ml.g4dn.xlarge`` instances
@@ -116,8 +116,6 @@ Launch HPO Experiment with Simulator Backend
 
 **Requirements**:
 
-* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
-  `from source <getting_started.html#installation>`__.
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 * If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
@@ -140,7 +138,8 @@ Joint Tuning of Instance Type and Hyperparameters using MOASHA
 
 **Requirements**:
 
-* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
+* Needs code from :mod:`benchmarking.training_scripts.distilbert_on_imdb`,
+* which requires Syne Tune to be installed
   `from source <getting_started.html#installation>`__.
 * `Access to AWS SageMaker <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
 * Runs training jobs on instances of type ``ml.g4dn.xlarge``, ``ml.g5.xlarge``,
@@ -186,8 +185,6 @@ PASHA: Efficient HPO and NAS with Progressive Resource Allocation
 
 **Requirements**:
 
-* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
-  `from source <getting_started.html#installation>`__.
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 
@@ -221,8 +218,6 @@ Restrict Scheduler to Tabulated Configurations with Simulator Backend
 
 **Requirements**:
 
-* Needs ``benchmarking`` framework, which requires Syne Tune to be installed
-  `from source <getting_started.html#installation>`__.
 * Needs ``lcbench`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 * If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
@@ -392,7 +387,7 @@ Launch HPO Experiment on mlp_fashionmnist Benchmark
 
 **Requirements**:
 
-* Uses ``benchmarking`` framework, which requires Syne Tune to have been
+* Needs "mlp_fashionmnist" benchmark, which requires Syne Tune to have been
   installed `from source <getting_started.html#installation>`__.
 
 In this example, we tune one of the built-in benchmark problems, which
@@ -560,7 +555,7 @@ This is an extension of
 multi-fidelity methods such as Hyperband.
 
 Multi Objective Multi Surrogate (MSMOS) Searcher
-==================
+================================================
 
 .. literalinclude:: ../../examples/launch_mb_mo_optimization.py
    :name: launch_mb_mo_optimization

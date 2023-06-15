@@ -12,13 +12,9 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote_simulator import launch_remote
-from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
-    benchmark_definitions,
-)
-from benchmarking.nursery.benchmark_multiobjective.baselines import (
-    methods,
-)
+from benchmark_definitions import benchmark_definitions
+from baselines import methods
+from syne_tune.experiments.launchers.launch_remote_simulator import launch_remote
 
 if __name__ == "__main__":
 

@@ -12,11 +12,12 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote_sagemaker import launch_remote
-from benchmarking.commons.benchmark_definitions import (
+import benchmarking
+from benchmarking.benchmark_definitions import (
     real_benchmark_definitions as benchmark_definitions,
 )
 from benchmarking.examples.launch_sagemaker.baselines import methods
+from syne_tune.experiments.launchers.launch_remote_sagemaker import launch_remote
 
 
 if __name__ == "__main__":
@@ -25,4 +26,5 @@ if __name__ == "__main__":
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
+        source_dependencies=benchmarking.__path__,
     )

@@ -17,15 +17,18 @@ from syne_tune.experiments.experiment_result import (
     list_experiments,
     load_experiments_df,
 )
-from syne_tune.experiments.plotting import (
+from syne_tune.experiments.visualization.plot_per_trial import (
+    TrialsOfExperimentResults,
+    MultiFidelityParameters,
+)
+from syne_tune.experiments.visualization.plotting import (
     ComparativeResults,
     PlotParameters,
     SubplotParameters,
     ShowTrialParameters,
 )
-from syne_tune.experiments.plot_per_trial import (
-    TrialsOfExperimentResults,
-    MultiFidelityParameters,
+from syne_tune.experiments.visualization.multiobjective import (
+    hypervolume_indicator_column_generator,
 )
 
 __all__ = [
@@ -40,4 +43,5 @@ __all__ = [
     "ShowTrialParameters",
     "TrialsOfExperimentResults",
     "MultiFidelityParameters",
+    "hypervolume_indicator_column_generator",
 ]

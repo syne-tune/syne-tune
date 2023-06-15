@@ -12,12 +12,13 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote_local import launch_remote
-from benchmarking.commons.benchmark_definitions import (
+import benchmarking
+from benchmarking.benchmark_definitions import (
     real_benchmark_definitions as benchmark_definitions,
 )
 from benchmarking.examples.fine_tuning_transformer_glue.baselines import methods
 from benchmarking.examples.fine_tuning_transformer_glue.hpo_main import extra_args
+from syne_tune.experiments.launchers.launch_remote_local import launch_remote
 
 
 if __name__ == "__main__":
@@ -26,5 +27,6 @@ if __name__ == "__main__":
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
+        source_dependencies=benchmarking.__path__,
         extra_args=extra_args,
     )

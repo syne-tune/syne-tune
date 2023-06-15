@@ -12,15 +12,15 @@
 # permissions and limitations under the License.
 from typing import Dict, Any
 
-from benchmarking.commons.hpo_main_local import main
 from benchmarking.examples.fine_tuning_transformer_swag.baselines import methods
-from benchmarking.commons.benchmark_definitions import (
+from benchmarking.benchmark_definitions import (
     real_benchmark_definitions as benchmark_definitions,
 )
-from benchmarking.commons.benchmark_definitions.finetune_transformer_swag import (
+from benchmarking.benchmark_definitions.finetune_transformer_swag import (
     MAX_RESOURCE_ATTR,
     BATCH_SIZE_ATTR,
 )
+from syne_tune.experiments.launchers.hpo_main_local import main
 
 
 extra_args = [

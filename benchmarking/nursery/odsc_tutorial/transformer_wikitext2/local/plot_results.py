@@ -13,11 +13,11 @@
 from typing import Dict, Any, Optional
 import logging
 
-from syne_tune.experiments import ComparativeResults, PlotParameters
 from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.baselines import methods
 from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.benchmark_definitions import (
     benchmark_definitions,
 )
+from syne_tune.experiments import ComparativeResults, PlotParameters
 
 
 SETUPS = list(methods.keys())

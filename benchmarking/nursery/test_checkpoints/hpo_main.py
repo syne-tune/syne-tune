@@ -12,15 +12,15 @@
 # permissions and limitations under the License.
 from typing import Dict, Optional, Any, List
 
-from benchmarking.commons.benchmark_definitions import (
+from benchmarking.benchmark_definitions import (
     real_benchmark_definitions as benchmark_definitions,
 )
-from benchmarking.commons.hpo_main_local import main
 from benchmarking.nursery.test_checkpoints.baselines import methods
 from syne_tune import Tuner
 from syne_tune.callbacks.hyperband_remove_checkpoints_callback import (
     HyperbandRemoveCheckpointsCommon,
 )
+from syne_tune.experiments.launchers.hpo_main_local import main
 from syne_tune.results_callback import ExtraResultsComposer
 from syne_tune.util import find_first_of_type
 

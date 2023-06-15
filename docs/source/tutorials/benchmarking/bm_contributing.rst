@@ -49,11 +49,11 @@ to be done:
     have to, because every resume operation requires them to train the model
     from scratch.
 
-* :mod:`benchmarking.commons.benchmark_definitions.resnet_cifar10`:
+* :mod:`benchmarking.benchmark_definitions.resnet_cifar10`:
   You need to define some meta-data for your benchmark in
-  :mod:`benchmarking.commons.benchmark_definitions`. This should be a
+  :mod:`benchmarking.benchmark_definitions`. This should be a
   function returning a
-  :class:`~benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
+  :class:`~syne_tune.experiments.benchmark_definitions.RealBenchmarkDefinition`
   object. Arguments should be a flag ``sagemaker_backend`` (``True`` for
   SageMaker backend experiment, ``False`` otherwise), and ``**kwargs``
   overwriting values in ``RealBenchmarkDefinition``. Hints:
@@ -79,6 +79,12 @@ to be done:
     ``resource_attr`` are required parameters for your benchmark, which are
     arguments to schedulers.
 
+.. note::
+   If you simply would like to run experiments with your own training code,
+   it is not necessary for you to the :mod:`benchmarking` module at all. It
+   just makes comparisons to other built-in benchmarks easier. See
+   `this tutorial <../experimentation/README.html>`__ for more details.
+
 Role of benchmarking/nursery/
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -95,7 +101,7 @@ request.
 
 Once your benchmark is in there, it may be used by the community. If others
 find it useful, it can be graduated into
-:mod:`benchmarking.commons.benchmark_definitions`,
+:mod:`benchmarking.benchmark_definitions`,
 :mod:`benchmarking.training_scripts`, and :mod:`benchmarking.examples`.
 
 We are looking forward to your

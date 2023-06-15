@@ -76,7 +76,6 @@ if __name__ == "__main__":
     else:
         from sagemaker.pytorch import PyTorch
         import syne_tune
-        import benchmarking
 
         if "AWS_DEFAULT_REGION" not in os.environ:
             os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
@@ -88,7 +87,7 @@ if __name__ == "__main__":
                 framework_version=PYTORCH_LATEST_FRAMEWORK,
                 py_version=PYTORCH_LATEST_PY_VERSION,
                 role=get_execution_role(),
-                dependencies=syne_tune.__path__ + benchmarking.__path__,
+                dependencies=syne_tune.__path__,
                 max_run=10 * 60,
                 sagemaker_session=default_sagemaker_session(),
                 disable_profiler=True,

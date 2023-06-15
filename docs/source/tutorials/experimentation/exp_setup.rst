@@ -26,6 +26,20 @@ default configuration space for these benchmarks:
    :start-at: CONFIGURATION_SPACE = {
    :end-before: def convert_dataset(dataset_path: Path, max_rows: int = None):
 
+.. note::
+   In the Syne Tune experimentation framework, a tuning problem (i.e., training and
+   evaluation script or blackbox, together with defaults) is called a *benchmark*.
+   This terminology is used even if the goal of experimentation is not benchmarking
+   (i.e., comparing different HPO methods), as is the case in this tutorial here.
+
+.. note::
+   The code used in this tutorial is contained in the
+   `Syne Tune sources <../../getting_started.html#installation>`__, it is not
+   installed by ``pip``. You can obtain this code by installing Syne Tune from
+   source, but the only code that is needed is in
+   :mod:`benchmarking.examples.demo_experiment`, so if you copy that out of the
+   repository, you do not need all the remaining sources.
+
 Modifying the Configuration Space
 ---------------------------------
 
@@ -48,13 +62,13 @@ study, we will compare the following methods:
 
 Here is the script defining these alternatives:
 
-.. literalinclude:: ../../../../benchmarking/nursery/demo_experiment/baselines.py
-   :caption: benchmarking/nursery/demo_experiment/baselines.py
+.. literalinclude:: ../../../../benchmarking/examples/demo_experiment/baselines.py
+   :caption: benchmarking/examples/demo_experiment/baselines.py
    :start-after: # permissions and limitations under the License.
 
 * Different methods are defined in dictionary ``methods``, as functions
   mapping ``method_arguments`` of type
-  :class:`~benchmarking.commons.baselines.MethodArguments` to a scheduler
+  :class:`~syne_tune.experiments.baselines.MethodArguments` to a scheduler
   object. Here, ``method_arguments.config_space`` contains the default
   configuration space for the benchmark, where both
   ``hp_activation_fn_1`` and ``hp_activation_fn_2`` are hyperparameters
@@ -66,15 +80,15 @@ Here is the script defining these alternatives:
   anymore).
 * Another way to modify ``method_arguments`` just before a method is created,
   is to use the ``map_extra_args`` argument of
-  :func:`~benchmarking.commons.hpo_main_simulator.main`, as detailed
+  :func:`~syne_tune.experiments.launchers.hpo_main_simulator.main`, as detailed
   `here <../benchmarking/bm_simulator.html#specifying-extra-arguments>`__. This
   allows the modification to depend on extra command line arguments.
 
 Next, we define the benchmarks our study should run over. For our simple
 example, we use the ``fcnet`` benchmarks:
 
-.. literalinclude:: ../../../../benchmarking/nursery/demo_experiment/benchmark_definitions.py
-   :caption: benchmarking/nursery/demo_experiment/benchmark_definitions.py
+.. literalinclude:: ../../../../benchmarking/examples/demo_experiment/benchmark_definitions.py
+   :caption: benchmarking/examples/demo_experiment/benchmark_definitions.py
    :start-after: # permissions and limitations under the License.
 
 This is where you would have to plug in your own benchmarks, namely your training
@@ -88,20 +102,22 @@ Recording Extra Results
 Next, we need to write the ``hpo_main.py`` script which runs a single experiment.
 As shown `here <../benchmarking/bm_simulator.html#defining-the-experiment>`__,
 this is mostly about selecting the correct ``main`` function among
-:func:`benchmarking.commons.hpo_main_simulator.main`,
-:func:`benchmarking.commons.hpo_main_local.main`,
-:func:`benchmarking.commons.hpo_main_sagemaker.main`, depending on the trial
+:func:`syne_tune.experiments.launchers.hpo_main_simulator.main`,
+:func:`syne_tune.experiments.launchers.hpo_main_local.main`,
+:func:`syne_tune.experiments.launchers.hpo_main_sagemaker.main`, depending on the trial
 backend we want to use. In our case, we also would like to record extra
 information about the experiment. Here is the script:
 
-.. literalinclude:: ../../../../benchmarking/nursery/demo_experiment/hpo_main.py
-   :caption: benchmarking/nursery/demo_experiment/hpo_main.py
+.. literalinclude:: ../../../../benchmarking/examples/demo_experiment/hpo_main.py
+   :caption: benchmarking/examples/demo_experiment/hpo_main.py
    :start-after: # permissions and limitations under the License.
 
-* As usual, we import :func:`benchmarking.commons.hpo_main_simulator.main`
+* As usual, we import :func:`syne_tune.experiments.launchers.hpo_main_simulator.main`
   (we use the simulator backend) and call it, passing our ``methods`` and
   ``benchmark_definitions``. We also pass ``extra_results``, since we would
   like to record extra results.
+* Note that apart from :mod:`syne_tune` imports, this script is only doing local
+  imports. No other code from :mod:`benchmarking` is required.
 * A certain number of time-stamped results are recorded by default in
   ``results.csv.zip``, details are
   `here <../../faq.html#what-does-the-output-of-the-tuning-contain>`__. In
@@ -126,7 +142,13 @@ information about the experiment. Here is the script:
 
 The outcome is that a number of additional columns are appended to the dataframe
 stored in ``results.csv.zip``, at least for experiments with ASHA or
-MOBSTER schedulers.
+MOBSTER schedulers. Running this script launches an experiment locally (if you
+installed Syne Tune from sources, you need to start the script from the
+``benchmarking/examples`` directory):
+
+.. code-block:: bash
+
+   python demo_experiment/hpo_main.py --experiment_tag docs-2-debug
 
 Running Experiments in Parallel
 -------------------------------
@@ -149,15 +171,17 @@ machine for other work.
 
 Running experiments in parallel requires a remote launcher script:
 
-.. literalinclude:: ../../../../benchmarking/nursery/demo_experiment/launch_remote.py
-   :caption: benchmarking/nursery/demo_experiment/launch_remote.py
+.. literalinclude:: ../../../../benchmarking/examples/demo_experiment/launch_remote.py
+   :caption: benchmarking/examples/demo_experiment/launch_remote.py
    :start-after: # permissions and limitations under the License.
 
 * Again, we simply choose the correct ``launch_remote`` function among
-  :func:`~benchmarking.commons.launch_remote_simulator.launch_remote`,
-  :func:`~benchmarking.commons.launch_remote_main.launch_remote`,
-  :func:`~benchmarking.commons.launch_remote_sagemaker.launch_remote`,
+  :func:`~syne_tune.experiments.launchers.launch_remote_simulator.launch_remote`,
+  :func:`~syne_tune.experiments.launchers.launch_remote_main.launch_remote`,
+  :func:`~syne_tune.experiments.launchers.launch_remote_sagemaker.launch_remote`,
   depending on the trial backend.
+* Note that apart from :mod:`syne_tune` imports, this script is only doing local
+  imports. No other code from :mod:`benchmarking` is required.
 * In ``is_expensive_method``, we pass a predicate from method name. If
   ``is_expensive_method(method)`` is ``True``, the 20 different seeds are
   run in parallel. Otherwise, they are run sequentially.
@@ -168,11 +192,13 @@ Running experiments in parallel requires a remote launcher script:
   ``fcnet`` contains four benchmarks, we run ``8 * 20 * 4 = 640`` experiments
   in total.
 
-All of these experiments can be launched with a single command:
+All of these experiments can be launched with a single command (if you
+installed Syne Tune from sources, you need to start the script from the
+``benchmarking/examples`` directory):
 
 .. code-block:: bash
 
-   python benchmarking/nursery/demo_experiment/launch_remote.py \
+   python demo_experiment/launch_remote.py \
      --experiment_tag docs-2 --random_seed 2465497701 --num_seeds 20
 
 If ``--random_seed`` is not given, a master random seed is drawn at random,
@@ -193,7 +219,7 @@ tests. For example:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/demo_experiment/hpo_main.py \
+   python demo_experiment/hpo_main.py \
      --experiment_tag docs-2-debug --random_seed 2465497701 \
      --method ASHA-RELU --verbose 1
 
@@ -207,7 +233,7 @@ Next, we launch the setup remotely, but for a single seed:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/demo_experiment/launch_remote.py \
+   python demo_experiment/launch_remote.py \
      --experiment_tag docs-2 --random_seed 2465497701 --num_seeds 1
 
 This will start 8 SageMaker training jobs, one for each method, and with
@@ -219,7 +245,7 @@ Finally, if this looks good, we can launch all the rest:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/demo_experiment/launch_remote.py \
+   python demo_experiment/launch_remote.py \
      --experiment_tag docs-2 --random_seed 2465497701 --num_seeds 20 \
      --start_seed 1
 
@@ -250,7 +276,7 @@ the ``MOBSTER-TANH`` experiments of ``seed == 13`` failed:
 
 .. code-block:: bash
 
-   python benchmarking/nursery/demo_experiment/launch_remote.py \
+   python demo_experiment/launch_remote.py \
      --experiment_tag docs-2 --random_seed 2465497701 --num_seeds 14 \
      --start_seed 13 --method MOBSTER-TANH
 
@@ -263,7 +289,7 @@ we can rerun all its experiments, by first removing everything under
 
 .. code-block:: bash
 
-   python benchmarking/nursery/demo_experiment/launch_remote.py \
+   python demo_experiment/launch_remote.py \
      --experiment_tag docs-2 --random_seed 2465497701 --num_seeds 20 \
      --method ASHA
 

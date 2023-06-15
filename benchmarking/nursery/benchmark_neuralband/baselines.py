@@ -11,11 +11,11 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any
-from benchmarking.commons.baselines import (
+from syne_tune.experiments.baselines import (
     search_options,
     default_arguments,
 )
-from benchmarking.commons.default_baselines import (
+from syne_tune.experiments.default_baselines import (
     RandomSearch,
     BayesianOptimization,
     ASHA,

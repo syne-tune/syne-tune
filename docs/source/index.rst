@@ -31,6 +31,14 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* The experimentation framework of Syne Tune, providing an easy access to all the
+  different methods, execution backends, and ways to run many experiments in parallel,
+  is now available in :mod:`syne_tune.experiments`, there is no need to install from
+  source anymore. This framework is the best place to start serious
+  `experimentation work with Syne Tune <tutorials/experimentation/README.html>`__.
+* New tutorial:
+  `Distributed Hyperparameter Tuning: Finding the Right Model can be Fast and Fun <tutorials/odsc_tutorial/README.html>`__.
+  Provides an overview of Syne Tune and its experimentation framework.
 * You can now create comparative plots, combining the results of many experiments,
   as shown `here <tutorials/visualization/README.html>`__.
 * Local Backend supports
@@ -50,17 +58,6 @@ What's New?
   can set a threshold on how much worse we allow the final solution to be
   compared to the global optimum, such that we automatically stop the optimization
   process once we find a solution that meets this criteria.
-* You can now customize writing out results during an experiment, as shown in
-  `examples/launch_height_extra_results.py <examples.html#customize-results-written-during-an-experiment>`__.
-* You can now warp inputs and apply a
-  `Box-Cox transform to your targets <tutorials/basics/basics_bayesopt.html#box-cox-transformation-of-target-values>`__
-  in Bayesian or MOBSTER, free parameters are adjusted automatically.
-* New tutorial:
-  `Using Syne Tune for Transfer Learning <tutorials/transfer_learning/transfer_learning.html>`__.
-  Transfer learning allows us to speed up our current optimisation by learning
-  from related optimisation runs. Syne Tune provides a number of transfer HPO
-  methods and makes it easy to implement new ones. Thanks to
-  `Sigrid <https://github.com/sighellan>`__ for this contribution.
 
 .. toctree::
    :name: Getting Started

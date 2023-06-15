@@ -115,9 +115,10 @@ instead of having it in ``kwargs``.
    configures :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` or
    class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` with a new
    searcher, it is strongly recommended to adhere to the policy to specify
-   searcher arguments in ``kwargs["search_options"]``. This simplifies exposing
-   the new scheduler in the ``benchmarking`` mechanism, and in general provides
-   a common user experience across different schedulers.
+   searcher arguments in ``kwargs["search_options"]``. This simplifies enabling
+   the new scheduler in the simple experimentation framework of
+   :mod:`syne_tune.experiments`, and in general provides a common user
+   experience across different schedulers.
 
 Let us look at an example of a baseline wrapper whose underlying scheduler is
 of type :class:`~syne_tune.optimizer.schedulers.FIFOScheduler` with a specific
@@ -147,12 +148,12 @@ searcher, which is not itself created via a searcher factory:
 Baselines and Benchmarking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As shown in `this tutorial <../benchmarking/README.html>`__ and
+As shown in `this tutorial <../experimentation/README.html>`__ and
 `this tutorial <../odsc_tutorial/README.html>`__, a particularly convenient
-way to define and run experiments is using the code in :mod:`benchmarking`.
-Once a new scheduler has a baseline wrapper, it is very easy to make it
-available there: you just need to add a wrapper in
-:mod:`benchmarking.commons.default_baselines`. For the ``REA`` example above,
+way to define and run experiments is using the code in
+:mod:`syne_tune.experiments`. Once a new scheduler has a baseline wrapper, it
+is very easy to make it available there: you just need to add a wrapper in
+:mod:`syne_tune.experiments.default_baselines`. For the ``REA`` example above,
 this is:
 
 .. code-block:: python

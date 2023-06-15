@@ -17,27 +17,36 @@ why you may prefer Syne Tune over these alternatives:
 * **Simple, modular design**: Rather than wrapping all sorts of other HPO
   frameworks, Syne Tune provides simple APIs and scheduler templates, which can
   easily be `extended to your specific needs <tutorials/developer/README.html>`__.
+  Studying the code will allow you to understand what the different algorithms
+  are doing, and how they differ from each other.
 * **Industry-strength Bayesian optimization**: Syne Tune has special support
   for `Gaussian process based Bayesian optimization <tutorials/basics/basics_bayesopt.html>`__.
   The same code powers modalities like multi-fidelity HPO, constrained HPO, or
   cost-aware HPO, having been tried and tested for several years.
+* **Support for distributed parallelized experimentation**: We built Syne Tune
+  to be able to move fast, using the parallel resources AWS SageMaker offers.
+  Syne Tune allows ML/AI practitioners to easily set up and run studies with many
+  `experiments running in parallel <tutorials/experimentation/README.html>`__.
 * **Special support for researchers**: Syne Tune allows for rapid development
   and comparison between different tuning algorithms. Its
   `blackbox repository and simulator backend <tutorials/multifidelity/mf_setup.html>`__
   run realistic simulations of experiments many times faster than real time.
-  `Benchmarking <tutorials/benchmarking/README.html>`__ is simple and efficient.
+  `Benchmarking <tutorials/benchmarking/README.html>`__ is simple, efficient, and
+  allows to compare different methods as apples to apples (same execution
+  backend, implementation from the same parts).
 
 If you are an AWS customer, there are additional good reasons to use Syne Tune
 over the alternatives:
 
 * If you use AWS services or SageMaker frameworks day to day, Syne Tune works
-  out of the box and fits into your normal workflow.
+  out of the box and fits into your normal workflow. It unlocks the power of
+  distributed experimentation that SageMaker offers.
 * Syne Tune is developed in collaboration with the team behind the
   `Automatic Model Tuning <https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html>`__
   service.
 
 What are the different installation options supported?
-=======================================================
+======================================================
 
 To install Syne Tune with minimal dependencies from pip, you can simply do:
 
@@ -268,7 +277,7 @@ off syncing checkpoints to S3 (but not tuning results!) by setting
 :class:`~syne_tune.Tuner` object. An example is
 `fine_tuning_transformer_glue/hpo_main.py <benchmarking/fine_tuning_transformer_glue.html>`__.
 It is also supported by default in the
-`benchmarking framework <tutorials/benchmarking/README.html>`__ and in
+`experimentation framework <tutorials/experimentation/README.html>`__ and in
 :class:`~syne_tune.remote.RemoteLauncher`.
 
 There are some convenience functions which help you to implement checkpointing
@@ -453,6 +462,29 @@ When running tuning remotely with the remote launcher, only ``config.json``,
 unless ``store_logs_localbackend=True`` when creating :class:`~syne_tune.Tuner`,
 in which case the trial logs and informations are also persisted.
 
+Is the experimentation framework only useful to compare different HPO methods?
+==============================================================================
+
+No, by all means no! Most of our users do not use it that way, but simply to speed
+up experimentation, often with a single HPO methods, but many variants of their
+problem. More details about Syne Tune for rapid experimentation are provided
+`here <tutorials/experimentation/README.html>`__ and
+`here <tutorials/odsc_tutorial/README.html>`__. Just to clarify:
+
+* We use the term *benchmark* to denote a tuning problem, consisting of some
+  code for training and evaluation, plus some default configuration space
+  (which can be changed to result in different variants of the benchmark).
+* While the code for the experimentation framework resides in
+  :mod:`syne_tune.experiments`, we collect example benchmarks in
+  :mod:`benchmarking` (only available if Syne Tune is installed from source).
+  Many of the examples there are about comparison of different HPO methods,
+  but some are not (for example, :mod:`benchmarking.examples.demo_experiment`).
+* In fact, while you do not have to use the experimentation framework to
+  run studies in Syne Tune, it is much easier than maintaining your own
+  launcher scripts and plotting code, so you are strongly encouraged to do
+  so, whether your goal is benchmarking HPO methods or simply just find a
+  good ML model for your current problem faster.
+
 How can I plot the results of a tuning?
 =======================================
 
@@ -463,9 +495,10 @@ Some basic plots can be obtained via
 How can I plot comparative results across many experiments?
 ===========================================================
 
-Syne Tune contains powerful plotting tools as part of the benchmarking formalism,
-these are detailed `here <tutorials/benchmarking/bm_plotting.html>`__. An example
-is provided as part of
+Syne Tune contains powerful plotting tools as part of the experimentation framework
+in mod:`syne_tune.experiments`, these are detailed
+`here <tutorials/benchmarking/bm_plotting.html>`__. An example is provided as
+part of
 `benchmarking/examples/benchmark_hypertune <benchmarking/benchmark_hypertune.html>`__.
 
 How can I specify additional tuning metadata?
@@ -526,16 +559,16 @@ SageMaker training jobs. An example for running the remote launcher is
 given in
 `launch_height_sagemaker_remotely.py <examples.html#launch-experiments-remotely-on-sagemaker>`__.
 
-Remote launching for benchmarking (i.e., running many remote experiments
-in order to compare multiple methods) is detailed in
-`this tutorial <tutorials/benchmarking/README.html>`__.
+Remote launching for experimentation is detailed in
+`this tutorial <tutorials/benchmarking/README.html>`__ or
+`this tutorial <tutorials/experimentation/README.html>`__.
 
 How can I run many experiments in parallel?
 ===========================================
 
 You can remotely launch any number of experiments, which will then run
 in parallel, as detailed in
-`this tutorial <tutorials/benchmarking/README.html>`__, see also these examples:
+`this tutorial <tutorials/experimentation/README.html>`__, see also these examples:
 
 * Local backend:
   `benchmarking/examples/launch_local/ <benchmarking/launch_local.html>`__
@@ -545,7 +578,7 @@ in parallel, as detailed in
   `benchmarking/examples/launch_sagemaker/ <benchmarking/launch_sagemaker.html>`__
 
 .. note::
-   In order to use the *benchmarking* framework, you need to have
+   In order to run these examples, you need to have
    `installed Syne Tune from source <getting_started.html#installation>`__.
 
 How can I access results after tuning remotely?
@@ -597,7 +630,7 @@ in `this tutorial <tutorials/benchmarking/README.html>`__, see also these exampl
   `benchmarking/examples/benchmark_hypertune/ <benchmarking/benchmark_hypertune.html>`__
 
 .. note::
-   In order to use the *benchmarking* framework, you need to have
+   In order to run these examples, you need to have
    `installed Syne Tune from source <getting_started.html#installation>`__.
 
 What different schedulers do you support? What are the main differences between them?
@@ -664,7 +697,7 @@ tractable. Draw a set of N configurations from A at random, then start N
 HPO experiments in parallel, where in each of them the search space is
 over B only, while the parameters in A are fixed. Syne Tune supports
 massively parallel experimentation, see
-`this tutorial <tutorials/benchmarking/README.html>`__.
+`this tutorial <tutorials/experimentation/README.html>`__.
 
 How do I set arguments of multi-fidelity schedulers?
 ====================================================

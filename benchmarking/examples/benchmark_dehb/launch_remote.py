@@ -12,15 +12,10 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote_simulator import launch_remote
-from benchmarking.examples.benchmark_dehb.benchmark_definitions import (
-    benchmark_definitions,
-)
-from benchmarking.examples.benchmark_dehb.baselines import (
-    methods,
-    Methods,
-)
-from benchmarking.examples.benchmark_dehb.hpo_main import extra_args
+from benchmark_definitions import benchmark_definitions
+from baselines import methods, Methods
+from hpo_main import extra_args
+from syne_tune.experiments.launchers.launch_remote_simulator import launch_remote
 
 
 if __name__ == "__main__":

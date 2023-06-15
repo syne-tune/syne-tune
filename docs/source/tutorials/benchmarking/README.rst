@@ -10,8 +10,17 @@ The tutorial also shows how any number of experiments can be run in parallel,
 in order to obtain desired results faster.
 
 .. note::
-   In order to use the *benchmarking* framework, you need to have
+   In order to run the code in this tutorial, you need to have
    `installed Syne Tune from source <../../getting_started.html#installation>`__.
+
+.. note::
+   Benchmarking (i.e., comparing different HPO methods) is using the Syne Tune
+   experimentation framework in :mod:`syne_tune.experiments`. In this framework,
+   a *benchmark* is simply just a tuning problem endowed with some defaults.
+   There are other use cases of experimentation than benchmarking (see
+   `here <../experimentation/README.html>`__ and
+   `here <../odsc_tutorial/README.html>`__), but the term *benchmark* for tuning
+   problem is used in all of them.
 
 .. toctree::
    :name: Benchmarking in Syne Tune Sections

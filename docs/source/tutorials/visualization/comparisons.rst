@@ -36,7 +36,7 @@ The figure for benchmark ``nas201-cifar-100`` looks as follows:
 * The function ``metadata_to_setup`` maps the metadata stored for an experiment
   to the setup name, or to ``None`` if this experiment should be filtered out.
   In our basic case, the setup is simply the name of the tuning algorithm.
-  Our benchmarking framework stores a host of information as metadata, the
+  Our experimentation framework stores a host of information as metadata, the
   most useful keys for grouping are:
 
   * ``algorithm``: Name of method (``ASHA``, ``MOBSTER-INDEP``, ... in our example)

@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_definitions.yahpo import (
+from syne_tune.experiments.benchmark_definitions.yahpo import (
     benchmark_name,
     yahpo_iaml_benchmark,
     yahpo_iaml_methods,

@@ -10,11 +10,9 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.nursery.test_bolimit.baselines import methods
-from benchmarking.nursery.test_bolimit.benchmark_definitions import (
-    benchmark_definitions,
-)
+from baselines import methods
+from benchmark_definitions import benchmark_definitions
+from syne_tune.experiments.launchers.hpo_main_simulator import main
 
 
 if __name__ == "__main__":

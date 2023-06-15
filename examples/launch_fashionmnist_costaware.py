@@ -15,7 +15,7 @@ Example for cost-aware promotion-based Hyperband
 """
 import logging
 
-from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
+from benchmarking.benchmark_definitions.mlp_on_fashionmnist import (
     mlp_fashionmnist_benchmark,
 )
 from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist import (

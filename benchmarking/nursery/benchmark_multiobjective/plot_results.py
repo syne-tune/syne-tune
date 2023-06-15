@@ -13,11 +13,12 @@
 from typing import Dict, Any, Optional
 import logging
 
-from syne_tune.experiments import ComparativeResults, PlotParameters
-from syne_tune.experiments.multiobjective import hypervolume_indicator_column_generator
-from benchmarking.nursery.benchmark_multiobjective.baselines import methods
-from benchmarking.nursery.benchmark_multiobjective.benchmark_definitions import (
-    benchmark_definitions,
+from baselines import methods
+from benchmark_definitions import benchmark_definitions
+from syne_tune.experiments import (
+    ComparativeResults,
+    PlotParameters,
+    hypervolume_indicator_column_generator,
 )
 
 
