@@ -12,6 +12,7 @@
 # permissions and limitations under the License.
 from typing import Set, Optional, Dict, Any
 import logging
+from functools import partial
 
 from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
     map_reward_const_minus_x,
@@ -726,7 +727,7 @@ def cost_aware_coarse_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     # Sharing debug_log attribute across models
     estimator_cost._debug_log = estimator._debug_log
     exponent_cost = kwargs.get("exponent_cost", 1.0)
-    acquisition_class = (EIpuAcquisitionFunction, dict(exponent_cost=exponent_cost))
+    acquisition_class = partial(EIpuAcquisitionFunction, exponent_cost=exponent_cost)
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
@@ -789,7 +790,7 @@ def cost_aware_fine_gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
         model=kwargs["cost_model"], fixed_resource=fixed_resource, num_samples=1
     )
     exponent_cost = kwargs.get("exponent_cost", 1.0)
-    acquisition_class = (EIpuAcquisitionFunction, dict(exponent_cost=exponent_cost))
+    acquisition_class = partial(EIpuAcquisitionFunction, exponent_cost=exponent_cost)
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 
@@ -847,7 +848,7 @@ def cost_aware_gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
         model=kwargs["cost_model"], fixed_resource=kwargs["max_epochs"], num_samples=1
     )
     exponent_cost = kwargs.get("exponent_cost", 1.0)
-    acquisition_class = (EIpuAcquisitionFunction, dict(exponent_cost=exponent_cost))
+    acquisition_class = partial(EIpuAcquisitionFunction, exponent_cost=exponent_cost)
     # The same skip_optimization strategy applies to both models
     skip_optimization_cost = skip_optimization
 

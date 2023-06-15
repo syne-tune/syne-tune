@@ -429,7 +429,7 @@ list_schedulers_to_test = [
             config_space=config_space,
             metric="mean_loss",
             estimator=TestEstimator(),
-            scoring_class_and_args=LCBAcquisitionFunction,
+            scoring_class=LCBAcquisitionFunction,
         ),
         metric=metric1,
         mode=mode,

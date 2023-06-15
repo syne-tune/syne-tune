@@ -21,9 +21,8 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_cl
     ScoringFunction,
     LocalOptimizer,
     OutputPredictor,
-    AcquisitionClassAndArgs,
-    unwrap_acquisition_class_and_kwargs,
     CandidateGenerator,
+    AcquisitionFunctionConstructor,
 )
 from syne_tune.optimizer.schedulers.searchers.utils.common import Configuration
 from syne_tune.optimizer.schedulers.searchers.utils.exclusion_list import ExclusionList
@@ -85,7 +84,7 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
         self,
         hp_ranges: HyperparameterRanges,
         predictor: OutputPredictor,
-        acquisition_class: AcquisitionClassAndArgs,
+        acquisition_class: AcquisitionFunctionConstructor,
         active_metric: str = None,
     ):
         super().__init__(hp_ranges, predictor, acquisition_class, active_metric)
@@ -98,12 +97,7 @@ class LBFGSOptimizeAcquisition(LocalOptimizer):
         # Before local minimization, the model for this state_id should have been fitted.
         if predictor is None:
             predictor = self.predictor
-        acquisition_class, acquisition_kwargs = unwrap_acquisition_class_and_kwargs(
-            self.acquisition_class
-        )
-        acquisition_function = acquisition_class(
-            predictor, self.active_metric, **acquisition_kwargs
-        )
+        acquisition_function = self.acquisition_class(predictor, self.active_metric)
 
         x0 = self.hp_ranges.to_ndarray(candidate)
         bounds = self.hp_ranges.get_ndarray_bounds()

@@ -23,7 +23,7 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import 
     SKLearnEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    ScoringClassAndArgs,
+    ScoringFunctionConstructor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.defaults import (
     DEFAULT_NUM_INITIAL_CANDIDATES,
@@ -53,7 +53,7 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
     :param estimator: Instance of
         :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator.SKLearnEstimator`
         to be used as surrogate model
-    :param scoring_class_and_args: The scoring function (or acquisition
+    :param scoring_class: The scoring function (or acquisition
         function) class and any extra parameters used to instantiate it. If
         ``None``, expected improvement (EI) is used. Note that the acquisition
         function is not locally optimized with this searcher.
@@ -74,7 +74,7 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
         metric: str,
         estimator: SKLearnEstimator,
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
-        scoring_class_and_args: Optional[ScoringClassAndArgs] = None,
+        scoring_class: Optional[ScoringFunctionConstructor] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
         num_initial_random_choices: int = DEFAULT_NUM_INITIAL_RANDOM_EVALUATIONS,
         allow_duplicates: bool = False,
@@ -91,15 +91,15 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
         )
         self.estimator = SKLearnEstimatorWrapper(estimator)
 
-        if scoring_class_and_args is None:
-            scoring_class_and_args = EIAcquisitionFunction
+        if scoring_class is None:
+            scoring_class = EIAcquisitionFunction
 
         if not clone_from_state:
             hp_ranges = make_hyperparameter_ranges(self.config_space)
             self._create_internal(
                 hp_ranges=hp_ranges,
                 estimator=self.estimator,
-                acquisition_class=scoring_class_and_args,
+                acquisition_class=scoring_class,
                 num_initial_candidates=num_initial_candidates,
                 num_initial_random_choices=num_initial_random_choices,
                 initial_scoring="acq_func",

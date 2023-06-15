@@ -94,7 +94,7 @@ if __name__ == "__main__":
         config_space=config_space,
         metric=METRIC_ATTR,
         estimator=BayesianRidgeEstimator(),
-        scoring_class_and_args=EIAcquisitionFunction,
+        scoring_class=EIAcquisitionFunction,
     )
     scheduler = FIFOScheduler(
         config_space,
