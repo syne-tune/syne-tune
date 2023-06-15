@@ -71,7 +71,7 @@ class BenchmarkInfo:
     resource_attr: str
 
 
-def main():
+if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
 
     benchmark_infos = {
