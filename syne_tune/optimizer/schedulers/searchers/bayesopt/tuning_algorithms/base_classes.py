@@ -20,6 +20,8 @@ from typing import (
     Dict,
     Union,
     Iterator,
+    Callable,
+    Any,
 )
 import numpy as np
 
@@ -259,6 +261,12 @@ class AcquisitionFunction(ScoringFunction):
         return list(self.compute_acq(inputs, predictor=predictor))
 
 
+AcquisitionFunctionCreator = Callable[[Any], AcquisitionFunction]
+
+
+ScoringFunctionCreator = Callable[[Any], ScoringFunction]
+
+
 class LocalOptimizer:
     """
     Class that tries to find a local candidate with a better score, typically
@@ -280,7 +288,7 @@ class LocalOptimizer:
         self,
         hp_ranges: HyperparameterRanges,
         predictor: OutputPredictor,
-        acquisition_class: Type[AcquisitionFunction],
+        acquisition_class: AcquisitionFunctionCreator,
         active_metric: Optional[str] = None,
     ):
         self.hp_ranges = hp_ranges
