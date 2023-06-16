@@ -13,7 +13,6 @@
 import numpy as np
 import pandas as pd
 import copy
-import pickle
 
 import syne_tune.config_space as sp
 from syne_tune.blackbox_repository.blackbox_tabular import BlackboxTabular
