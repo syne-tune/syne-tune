@@ -11,6 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
+import os
+from pathlib import Path
+
+cur_folder = str(Path(__file__).parent)
+output_folder = cur_folder + "/Figures"
+os.makedirs(output_folder, exist_ok=True)
 
 legend_order = {
     "WarmBO": 7,
