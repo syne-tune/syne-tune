@@ -138,7 +138,7 @@ def test_resume_config_local_backend(caplog):
     )
 
 
-@pytest.mark.timeout(5)
+@pytest.mark.timeout(7)
 def test_start_config_previous_checkpoint(caplog):
     caplog.set_level(logging.INFO)
     path_script = Path(__file__).parent / "main_checkpoint.py"

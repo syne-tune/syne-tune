@@ -81,10 +81,6 @@ class MyGPMultiFidelitySearcher(GPMultiFidelitySearcher):
         ), f"Key {INTERNAL_KEY} must not be used in config_space (reserved)"
         super().__init__(config_space, **kwargs)
         self._debug_log_copy = None
-        # DEBUG
-        # self.acquisition_class = (
-        #     self.acquisition_class, {"debug_collect_stats": True}
-        # )
 
     def _get_config_modelbased(
         self, exclusion_candidates: ExclusionList, **kwargs

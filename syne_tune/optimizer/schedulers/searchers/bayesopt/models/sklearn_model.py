@@ -82,9 +82,16 @@ class SKLearnEstimatorWrapper(Estimator):
     Wrapper class for sklearn estimators.
     """
 
-    def __init__(self, sklearn_estimator: SKLearnEstimator, *args, **kwargs):
+    def __init__(
+        self,
+        sklearn_estimator: SKLearnEstimator,
+        active_metric: str = None,
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.sklearn_estimator = sklearn_estimator
+        self.target_metric = active_metric
 
     def get_params(self) -> Dict[str, Any]:
         return self.sklearn_estimator.get_params()
@@ -121,8 +128,11 @@ class SKLearnEstimatorWrapper(Estimator):
                 trials_evaluations=state.trials_evaluations,
                 failed_trials=state.failed_trials,
             )
+
         data = transform_state_to_data(
-            state=state, normalize_targets=self.sklearn_estimator.normalize_targets
+            state=state,
+            active_metric=self.target_metric,
+            normalize_targets=self.sklearn_estimator.normalize_targets,
         )
         sklearn_predictor = self.sklearn_estimator.fit(
             X=data.features, y=data.targets, update_params=update_params

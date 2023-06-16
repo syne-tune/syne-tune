@@ -14,13 +14,13 @@ from typing import (
     List,
     Iterable,
     Tuple,
-    Type,
     Optional,
     Set,
     Dict,
     Union,
-    Any,
     Iterator,
+    Callable,
+    Any,
 )
 import numpy as np
 
@@ -260,22 +260,10 @@ class AcquisitionFunction(ScoringFunction):
         return list(self.compute_acq(inputs, predictor=predictor))
 
 
-AcquisitionClassAndArgs = Union[
-    Type[AcquisitionFunction], Tuple[Type[AcquisitionFunction], Dict[str, Any]]
-]
-
-ScoringClassAndArgs = Union[
-    Type[ScoringFunction], Tuple[Type[ScoringFunction], Dict[str, Any]]
-]
+AcquisitionFunctionConstructor = Callable[[Any], AcquisitionFunction]
 
 
-def unwrap_acquisition_class_and_kwargs(
-    acquisition_class: AcquisitionClassAndArgs,
-) -> (Type[AcquisitionFunction], Dict[str, Any]):
-    if isinstance(acquisition_class, tuple):
-        return acquisition_class
-    else:
-        return acquisition_class, dict()
+ScoringFunctionConstructor = Callable[[Any], ScoringFunction]
 
 
 class LocalOptimizer:
@@ -299,7 +287,7 @@ class LocalOptimizer:
         self,
         hp_ranges: HyperparameterRanges,
         predictor: OutputPredictor,
-        acquisition_class: AcquisitionClassAndArgs,
+        acquisition_class: AcquisitionFunctionConstructor,
         active_metric: Optional[str] = None,
     ):
         self.hp_ranges = hp_ranges

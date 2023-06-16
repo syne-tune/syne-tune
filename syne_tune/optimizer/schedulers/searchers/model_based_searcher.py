@@ -42,12 +42,11 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import (
     OutputEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
-    AcquisitionClassAndArgs,
     LocalOptimizer,
     ScoringFunction,
     OutputPredictor,
-    unwrap_acquisition_class_and_kwargs,
     CandidateGenerator,
+    AcquisitionFunctionConstructor,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.bo_algorithm import (
     BayesianOptimizationAlgorithm,
@@ -117,7 +116,7 @@ class ModelBasedSearcher(StochasticSearcher):
         self,
         hp_ranges: HyperparameterRanges,
         estimator: OutputEstimator,
-        acquisition_class: AcquisitionClassAndArgs,
+        acquisition_class: AcquisitionFunctionConstructor,
         map_reward: Optional[MapReward] = None,
         init_state: TuningJobState = None,
         local_minimizer_class: Type[LocalOptimizer] = None,
@@ -157,7 +156,11 @@ class ModelBasedSearcher(StochasticSearcher):
             )
         self.acquisition_class = acquisition_class
         if isinstance(estimator, dict):
-            estimator_main = estimator[INTERNAL_METRIC_NAME]
+            # If no estimator for INTERNAL_METRIC_NAME can be found,
+            # use the debug log from a first metric
+            estimator_main = estimator.get(
+                INTERNAL_METRIC_NAME, next(iter(estimator.values()))
+            )
         else:
             estimator_main = estimator
         self._debug_log = estimator_main.debug_log
@@ -486,7 +489,7 @@ class ModelBasedSearcher(StochasticSearcher):
 def create_initial_candidates_scorer(
     initial_scoring: str,
     predictor: OutputPredictor,
-    acquisition_class: AcquisitionClassAndArgs,
+    acquisition_class: AcquisitionFunctionConstructor,
     random_state: np.random.RandomState,
     active_metric: str = INTERNAL_METRIC_NAME,
 ) -> ScoringFunction:
@@ -496,12 +499,7 @@ def create_initial_candidates_scorer(
             predictor = predictor[active_metric]
         return IndependentThompsonSampling(predictor, random_state=random_state)
     else:
-        acquisition_class, acquisition_kwargs = unwrap_acquisition_class_and_kwargs(
-            acquisition_class
-        )
-        return acquisition_class(
-            predictor, active_metric=active_metric, **acquisition_kwargs
-        )
+        return acquisition_class(predictor, active_metric=active_metric)
 
 
 class BayesianOptimizationSearcher(ModelBasedSearcher):

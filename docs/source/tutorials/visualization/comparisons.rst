@@ -295,13 +295,21 @@ would look like this:
        benchmark_name=benchmark_name,
        plot_params=plot_params,
        dataframe_column_generator=dataframe_column_generator,
+       one_result_per_trial=True,
    )
 
-The mapping returned by
-:func:`~syne_tune.experiments.multiobjective.hypervolume_indicator_column_generator`
-maps a results dataframe to a new column containing the best hypervolume
-indicator as function of wall-clock time for the metrics ``cost`` and
-``latency``, which must be contained in the results dataframe.
+* The mapping returned by
+  :func:`~syne_tune.experiments.multiobjective.hypervolume_indicator_column_generator`
+  maps a results dataframe to a new column containing the best hypervolume
+  indicator as function of wall-clock time for the metrics ``cost`` and
+  ``latency``, which must be contained in the results dataframe.
+* The option ``one_result_per_trial=True`` of ``results.plot`` ensures that the
+  result data is filtered, so that for each experiment, one the final row for
+  each trial remains. This option is useful if the methods are single-fidelity,
+  but results are reported after each epoch. The filtering makes sure that only
+  results for the largest epoch are used for each trial. Since this is done
+  before the best hypervolume indicator is computed, it can speed up the
+  computation dramatically.
 
 Filtering Experiments by DateTime Bounds
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

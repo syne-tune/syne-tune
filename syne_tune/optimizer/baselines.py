@@ -556,7 +556,7 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
 
 def _create_searcher_kwargs(
     config_space: Dict[str, Any],
-    metric: str,
+    metric: Union[str, List[str]],
     random_seed: Optional[int],
     kwargs: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -762,18 +762,17 @@ class MOREA(FIFOScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs["mode"] = mode
+        searcher_kwargs["population_size"] = population_size
+        searcher_kwargs["sample_size"] = sample_size
         super(MOREA, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=MultiObjectiveRegularizedEvolution(
-                config_space=config_space,
-                metric=metric,
-                mode=mode,
-                population_size=population_size,
-                sample_size=sample_size,
-                random_seed=random_seed,
-            ),
+            searcher=MultiObjectiveRegularizedEvolution(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -802,17 +801,16 @@ class NSGA2(FIFOScheduler):
         random_seed: Optional[int] = None,
         **kwargs,
     ):
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs["mode"] = mode
+        searcher_kwargs["population_size"] = population_size
         super(NSGA2, self).__init__(
             config_space=config_space,
             metric=metric,
             mode=mode,
-            searcher=NSGA2Searcher(
-                config_space=config_space,
-                metric=metric,
-                mode=mode,
-                population_size=population_size,
-                random_seed=random_seed,
-            ),
+            searcher=NSGA2Searcher(**searcher_kwargs),
             random_seed=random_seed,
             **kwargs,
         )
@@ -1016,7 +1014,7 @@ class CQR(FIFOScheduler):
         metric: str,
         mode: str = "min",
         random_seed: Optional[int] = None,
-        **surrogate_kwargs,
+        **kwargs,
     ):
         try:
             from syne_tune.optimizer.schedulers.searchers.conformal.surrogate_searcher import (
@@ -1025,17 +1023,18 @@ class CQR(FIFOScheduler):
         except ImportError:
             logging.info(try_import_blackbox_repository_message())
             raise
+
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs["mode"] = mode
         super(CQR, self).__init__(
-            searcher=SurrogateSearcher(
-                mode=mode,
-                metric=metric,
-                config_space=config_space,
-                random_seed=random_seed,
-                **surrogate_kwargs,
-            ),
-            mode=mode,
             config_space=config_space,
             metric=metric,
+            mode=mode,
+            searcher=SurrogateSearcher(**searcher_kwargs),
+            random_seed=random_seed,
+            **kwargs,
         )
 
 
@@ -1069,13 +1068,14 @@ class ASHACQR(HyperbandScheduler):
         searcher_kwargs = _create_searcher_kwargs(
             config_space, metric, random_seed, kwargs
         )
-
+        searcher_kwargs["mode"] = mode
         super(ASHACQR, self).__init__(
-            searcher=SurrogateSearcher(**searcher_kwargs),
-            mode=mode,
             config_space=config_space,
             metric=metric,
+            mode=mode,
+            searcher=SurrogateSearcher(**searcher_kwargs),
             resource_attr=resource_attr,
+            random_seed=random_seed,
             **kwargs,
         )
 

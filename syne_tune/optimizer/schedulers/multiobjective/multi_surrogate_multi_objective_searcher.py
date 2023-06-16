@@ -11,17 +11,16 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
+from functools import partial
 from typing import Optional, List, Dict, Any
 
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
-    EIAcquisitionFunction,
+from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
+    MultiObjectiveLCBRandomLinearScalarization,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model import (
-    SKLearnEstimatorWrapper,
+from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
+    TrialEvaluations,
 )
-from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.estimator import (
-    SKLearnEstimator,
-)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
     ScoringFunctionConstructor,
 )
@@ -35,13 +34,14 @@ from syne_tune.optimizer.schedulers.searchers.gp_searcher_utils import (
 from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
     BayesianOptimizationSearcher,
 )
+from syne_tune.optimizer.schedulers.searchers.searcher_base import extract_random_seed
 from syne_tune.optimizer.schedulers.searchers.utils import make_hyperparameter_ranges
 
 logger = logging.getLogger(__name__)
 
 
-class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
-    """SKLearn Surrogate Bayesian optimization for FIFO scheduler
+class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
+    """Multi Objective Multi Surrogate Searcher for FIFO scheduler
 
     This searcher must be used with
     :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. It provides
@@ -71,8 +71,9 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
     def __init__(
         self,
         config_space: Dict[str, Any],
-        metric: str,
-        estimator: SKLearnEstimator,
+        metric: List[str],
+        estimators: Dict[str, Estimator],
+        mode: Optional[List[str]] = None,
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
         scoring_class: Optional[ScoringFunctionConstructor] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
@@ -82,31 +83,35 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
         clone_from_state: bool = False,
         **kwargs,
     ):
+        if mode is None:
+            mode = ["min" for item in metric]
+
         super().__init__(
             config_space,
             metric=metric,
+            mode=mode,
             points_to_evaluate=points_to_evaluate,
             random_seed_generator=kwargs.get("random_seed_generator"),
             random_seed=kwargs.get("random_seed"),
         )
-        self.estimator = SKLearnEstimatorWrapper(estimator)
-
         if scoring_class is None:
-            scoring_class = EIAcquisitionFunction
+            random_seed, _ = extract_random_seed(**kwargs)
+            scoring_class = partial(
+                MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
+            )
 
         if not clone_from_state:
             hp_ranges = make_hyperparameter_ranges(self.config_space)
             self._create_internal(
                 hp_ranges=hp_ranges,
-                estimator=self.estimator,
+                estimator=estimators,
                 acquisition_class=scoring_class,
                 num_initial_candidates=num_initial_candidates,
                 num_initial_random_choices=num_initial_random_choices,
                 initial_scoring="acq_func",
-                skip_local_optimization=True,
+                skip_local_optimization={name: True for name in estimators.keys()},
                 allow_duplicates=allow_duplicates,
                 restrict_configurations=restrict_configurations,
-                **kwargs,
             )
         else:
             # Internal constructor, bypassing the factory
@@ -114,12 +119,24 @@ class SKLearnSurrogateSearcher(BayesianOptimizationSearcher):
             # overwritten in ``_restore_from_state``
             self._create_internal(**kwargs.copy())
 
+    def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
+        # Gather metrics
+        metrics = {name: result[name] for name in self._metric}
+
+        self.state_transformer.label_trial(
+            TrialEvaluations(trial_id=trial_id, metrics=metrics), config=config
+        )
+        if self.debug_log is not None:
+            _trial_id = self._trial_id_string(trial_id, result)
+            msg = f"Update for trial_id {_trial_id}: metric = {metrics:.3f}"
+            logger.info(msg)
+
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
         init_state = decode_state(state["state"], self._hp_ranges_in_state())
         estimator = self.state_transformer.estimator
         # Call internal constructor
-        new_searcher = SKLearnSurrogateSearcher(
+        new_searcher = MultiObjectiveMultiSurrogateSearcher(
             **self._new_searcher_kwargs_for_clone(),
             estimator=estimator,
             init_state=init_state,

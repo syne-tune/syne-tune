@@ -30,6 +30,8 @@ from syne_tune.optimizer.schedulers.transfer_learning.quantile_based.normalizati
 from syne_tune.config_space import Domain
 from syne_tune.util import catchtime
 
+logger = logging.getLogger(__name__)
+
 
 def extract_input_output(
     transfer_learning_evaluations, normalization: str, random_state
@@ -167,8 +169,7 @@ class QuantileBasedSurrogateSearcher(StochasticSearcher):
             model=xgboost.XGBRegressor(),
             random_state=self.random_state,
         )
-        logging.info(f"residual train: {sigma_train}")
-        logging.info(f"residual val: {sigma_val}")
+        logger.info(f"residual train: {sigma_train}\nresidual val: {sigma_val}")
 
         with catchtime("time to predict"):
             # note the candidates could also be sampled every time, we cache them rather to save compute time.

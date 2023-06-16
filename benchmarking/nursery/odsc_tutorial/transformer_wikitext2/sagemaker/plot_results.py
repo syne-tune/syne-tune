@@ -11,6 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from typing import Dict, Any, Optional
+import logging
 
 from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
 from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.benchmark_definitions import (
@@ -42,6 +43,7 @@ def metadata_to_subplot(metadata: dict) -> Optional[int]:
 
 
 if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.INFO)
     experiment_names = ("tmlr-10",)
     num_runs = 5
     download_from_s3 = False  # Set ``True`` in order to download files from S3

@@ -43,6 +43,8 @@ try:
 except ImportError:
     print(try_import_visual_message())
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ExperimentResult:
@@ -213,7 +215,7 @@ class ExperimentResult:
             )
 
         if len(self.metric_names()) > 1 and verbose:
-            logging.warning(
+            logger.warning(
                 "Several metrics exists, this will "
                 f"use metric={metric_name} (index={metric}) out of {self.metric_names()}."
             )
@@ -253,10 +255,10 @@ def download_single_experiment(
     ]
     for file in result_files:
         try:
-            logging.info(f"downloading {file} on {s3_path}")
+            logger.info(f"downloading {file} on {s3_path}")
             s3.download_file(s3_bucket, f"{s3_key}/{file}", str(tgt_dir / file))
         except ClientError as e:
-            logging.info(f"could not find {file} on {s3_path}")
+            logger.info(f"could not find {file} on {s3_path}")
 
 
 def load_experiment(
@@ -279,7 +281,7 @@ def load_experiment(
     path = experiment_path(tuner_name, local_path)
     metadata_path = path / ST_METADATA_FILENAME
     if not (metadata_path.exists()) and download_if_not_found:
-        logging.info(
+        logger.info(
             f"experiment {tuner_name} not found locally, trying to get it from s3."
         )
         download_single_experiment(

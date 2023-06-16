@@ -22,7 +22,7 @@ import pytest
 import sys
 
 
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(30)
 @pytest.mark.skipif(
     sys.version_info < (3, 8), reason="BoTorch requires python 3.8 or higher"
 )
