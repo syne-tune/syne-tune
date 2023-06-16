@@ -11,6 +11,12 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import pickle
+from pathlib import Path
+import os
+
+cur_folder = str(Path(__file__).parent)
+output_folder = cur_folder + "/generated_files"
+os.makedirs(output_folder, exist_ok=True)
 
 # Store default fixed factors
 pickle.dump(
@@ -23,5 +29,5 @@ pickle.dump(
         "price": [9.0, 9.0, 9.0],
         "cost": [5.0, 5.0, 5.0],
     },
-    open("generated_files/default_fixed_factors.p", "wb"),
+    open(output_folder + "/default_fixed_factors.p", "wb"),
 )

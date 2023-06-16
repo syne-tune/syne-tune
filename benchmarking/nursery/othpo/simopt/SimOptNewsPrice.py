@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     args.factors_file = str(file_dir) + "/default_fixed_factors.p"
     args.context_file = (
-        str(file_dir) + "/opt-price-random-walk-utility-context-2022-11-08.p"
+        str(file_dir) + "/opt-price-random-walk-utility-context-default.p"
     )
 
     model_fixed_factors = pickle.load(open(args.factors_file, "rb"))

@@ -56,7 +56,7 @@ except:
     for time_idx in range(num_probs):
         factors_file = str(file_dir) + "/default_fixed_factors.p"
         context_file = (
-            str(file_dir) + "/opt-price-random-walk-utility-context-2022-11-08.p"
+            str(file_dir) + "/opt-price-random-walk-utility-context-default.p"
         )
 
         model_fixed_factors = pickle.load(open(factors_file, "rb"))

@@ -10,9 +10,10 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import datetime
 import numpy as np
 import pickle
+from pathlib import Path
+import os
 
 
 def rand_walk_step(prev_utility):
@@ -41,12 +42,16 @@ for _ in range(9):
 
 context = {"c_utility": np.array(utilities), "init_level": np.array(init_levels)}
 
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-print("Generated simopt context with timestamp: %s" % timestamp)
+identifier = "default"
+print("Generated simopt context with identifier: %s" % identifier)
+
+cur_folder = str(Path(__file__).parent)
+output_folder = cur_folder + "/generated_files"
+os.makedirs(output_folder, exist_ok=True)
 
 pickle.dump(
     context,
     open(
-        "generated_files/opt-price-random-walk-utility-context-%s.p" % timestamp, "wb"
+        output_folder + "/opt-price-random-walk-utility-context-%s.p" % identifier, "wb"
     ),
 )
