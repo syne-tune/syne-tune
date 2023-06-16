@@ -14,8 +14,13 @@ import copy
 import numpy as np
 import os
 import pickle
+import sys
 
 from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
+
+from utils import store_json_res
 
 exp_dir = Path(__file__).parent.parent / "xgboost_experiment_results"
 
@@ -62,4 +67,4 @@ for exp in experiments:
 for key in ["test_error_mat", "train_error_mat", "execution_times"]:
     assert np.sum(np.isnan(agg_experiments[key])) == 0
 
-pickle.dump(agg_experiments, open(exp_folder + "aggregated_experiments.p", "wb"))
+store_json_res(agg_experiments, exp_folder + "aggregated_experiments.json")

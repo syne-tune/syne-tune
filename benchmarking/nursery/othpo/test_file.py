@@ -237,7 +237,7 @@ def test_num_optima():
 
 
 simopt_backend_file = "simopt/SimOptNewsPrice.py"
-xgboost_res_file = "xgboost_experiment_results/random-mnist/aggregated_experiments.p"
+xgboost_res_file = "xgboost_experiment_results/random-mnist/aggregated_experiments.json"
 yahpo_dataset = "1220"
 yahpo_scenario = "rbv2_svm"
 

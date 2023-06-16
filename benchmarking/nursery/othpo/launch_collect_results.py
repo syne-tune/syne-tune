@@ -63,9 +63,9 @@ def main(run_locally):
     points_per_task = 25
 
     xgboost_res_file_long = (
-        "xgboost_experiment_results/random-mnist/aggregated_experiments.p"
+        "xgboost_experiment_results/random-mnist/aggregated_experiments.json"
     )
-    xgboost_res_file_short = "aggregated_experiments.p"
+    xgboost_res_file_short = "aggregated_experiments.json"
 
     if run_locally:
         from collect_results import collect_res

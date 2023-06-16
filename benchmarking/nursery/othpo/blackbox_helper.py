@@ -41,6 +41,8 @@ from syne_tune.optimizer.schedulers.searchers.botorch.botorch_transfer_searcher 
     BoTorchTransfer,
 )
 
+from utils import load_json_res
+
 # Partly based on https://github.com/awslabs/syne-tune/blob/main/examples/launch_simulated_benchmark.py
 
 
@@ -66,7 +68,7 @@ def get_configs(
         assert (
             xgboost_res_file is not None
         ), "XGBoost requires a file with experiment evaluations."
-        res = pickle.load(open(xgboost_res_file, "rb"))
+        res = load_json_res(xgboost_res_file)
         X, Y, E, order, data_sizes = massage_data(res)
         task_list = [int(dd) for dd in data_sizes]
         return task_list, lambda active_task_val: xgboost_backend_conf(

@@ -10,11 +10,17 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-import pickle
+import json
 import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as plc
 import numpy as np
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
+
+from utils import load_json_res
 
 from plotting_helper import task_pos_in_order
 
@@ -26,7 +32,7 @@ exp_folder = "xgboost_experiment_results/random-mnist/"
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams["pdf.fonttype"] = 42
 
-agg_experiments = pickle.load(open(exp_folder + "aggregated_experiments.p", "rb"))
+agg_experiments = load_json_res(exp_folder + "aggregated_experiments.json")
 
 
 def plot_hyp_per(

@@ -57,7 +57,7 @@ experiments_meta_dict = {
     "XGBoost": {
         "backend": "XGBoost",
         "simopt_backend_file": None,
-        "xgboost_res_file": "xgboost_experiment_results/random-mnist/aggregated_experiments.p",
+        "xgboost_res_file": "xgboost_experiment_results/random-mnist/aggregated_experiments.json",
         "yahpo_scenario": None,
         "yahpo_dataset": None,
         "metric": None,

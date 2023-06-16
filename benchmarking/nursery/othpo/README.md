@@ -59,6 +59,7 @@ All of the steps after setting up the virtual environments are optional. In part
 * `python launch_xgboost.py --local`
 
 ##### Post-process
+* Change folder to main folder
 * `python aggregate_experiment.py`
 
 #### [Slow] Run experiments (see below)
