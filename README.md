@@ -9,8 +9,6 @@
 
 ![Alt Text](docs/source/synetune.gif)
 
-[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)
-
 This package provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
 * Wide coverage (>20) of different HPO methods, including:
   * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
