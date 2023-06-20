@@ -162,6 +162,12 @@ class BoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
         ), "This searcher requires TrialSchedulerWithSearcher scheduler"
         super().configure_scheduler(scheduler)
 
+    def _get_gp_bounds(self):
+        return Tensor(self._hp_ranges.get_ndarray_bounds()).T
+
+    def _config_from_ndarray(self, candidate) -> dict:
+        return self._hp_ranges.from_ndarray(candidate)
+
     def _sample_next_candidate(self) -> Optional[dict]:
         """
         :return: A next candidate to evaluate, if possible it is obtained by
@@ -212,13 +218,13 @@ class BoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
                 # ``restrict_configurations`` not used
                 candidate, acq_value = optimize_acqf(
                     acq,
-                    bounds=Tensor(self._hp_ranges.get_ndarray_bounds()).T,
+                    bounds=self._get_gp_bounds(),
                     q=1,
                     num_restarts=3,
                     raw_samples=100,
                 )
                 candidate = candidate.detach().numpy()[0]
-                config = self._hp_ranges.from_ndarray(candidate)
+                config = self._config_from_ndarray(candidate)
                 if self.should_not_suggest(config):
                     logger.warning(
                         "Optimization of the acquisition function yielded a config that was already seen."
@@ -229,6 +235,10 @@ class BoTorchSearcher(StochasticAndFilterDuplicatesSearcher):
             logging.warning("Chlolesky inversion failed, sampling randomly.")
             return self._get_random_config()
         except ModelFittingError as _:
+            logging.warning("Botorch was unable to fit the model, sampling randomly.")
+            return self._get_random_config()
+        except:
+            # BoTorch can raise different errors, easier to not try to catch them individually
             logging.warning("Botorch was unable to fit the model, sampling randomly.")
             return self._get_random_config()
 
