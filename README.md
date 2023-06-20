@@ -7,16 +7,19 @@
 [![Python Version](https://img.shields.io/static/v1?label=python&message=3.7%20%7C%203.8%20%7C%203.9&color=blue?style=flat-square&logo=python)](https://pypi.org/project/syne-tune/)
 [![codecov.io](https://codecov.io/github/awslabs/syne-tune/branch/main/graphs/badge.svg)](https://app.codecov.io/gh/awslabs/syne-tune)
 
-![Alt Text](docs/source/synetune.gif)
+![Syne Tune](docs/source/synetune.gif)
 
-This package provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
+**[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)** | **[Tutorials](https://syne-tune.readthedocs.io/en/latest/tutorials/basics/README.html)** | **[API Reference](https://syne-tune.readthedocs.io/en/latest/_apidoc/modules.html#)** | **[PyPI](https://pypi.org/project/syne-tune)** | **[Latest Blog Post](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/)**
+
+Syne Tune provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
+
 * Wide coverage (>20) of different HPO methods, including:
-  * Asynchronous versions to maximize utilization and distributed versions (i.e., with multiple workers);
+  * Asynchronous and distributed tuning (i.e., with multiple workers);
   * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
-  * Hyperparameter transfer learning to speed up (repeated) tuning jobs;
+  * Transfer learning to speed up (repeated) tuning jobs;
   * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
-* HPO can be run in different environments (locally, AWS, simulation) by changing just one line of code.
-* Out-of-the-box tabulated benchmarks that allows you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
+* Run on different compute environments (locally, AWS, simulation) by changing just one line of code.
+* Out-of-the-box tabulated benchmarks allow you to simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
 
 ## Installing
 
@@ -74,7 +77,7 @@ if __name__ == '__main__':
         report(epoch=step + 1, mean_loss=dummy_score)
 ```
 
-Once you have a script reporting metric, you can launch a tuning as-follow:
+Once you have a training script reporting a metric, you can launch a tuning as follows:
 
 ```python
 # launch_height_simple.py
@@ -173,9 +176,9 @@ different functionalities provided by Syne Tune. For example:
 * [launch_height_sagemaker.py](examples/launch_height_sagemaker.py):
   launches HPO on SageMaker to tune a SageMaker Pytorch estimator
 * [launch_bayesopt_constrained.py](examples/launch_bayesopt_constrained.py):
-  launches Bayesian contrained hyperparameter optimization
+  launches Bayesian constrained hyperparameter optimization
 * [launch_height_sagemaker_custom_image.py](examples/launch_height_sagemaker_custom_image.py):
-  launches HPO on SageMaker to tune a entry point with a custom docker image
+  launches HPO on SageMaker to tune an entry point with a custom docker image
 * [launch_plot_results.py](examples/launch_plot_results.py): shows how to plot
   results of a HPO experiment
 * [launch_tensorboard_example.py](examples/launch_tensorboard_example.py):
