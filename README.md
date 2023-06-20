@@ -9,10 +9,10 @@
 
 ![Syne Tune](docs/source/synetune.gif)
 
-
 **[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)** | **[Tutorials](https://syne-tune.readthedocs.io/en/latest/tutorials/basics/README.html)** | **[API Reference](https://syne-tune.readthedocs.io/en/latest/_apidoc/modules.html#)** | **[PyPI](https://pypi.org/project/syne-tune)** | **[Latest Blog Post](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/)**
 
 Syne Tune provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
+
 * Wide coverage (>20) of different HPO methods, including:
   * Asynchronous and distributed tuning (i.e., with multiple workers);
   * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
