@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+<a name="0.8.0"></a>
+## [v0.8.0] - 2023-06-20
+[v0.8.0]: https://github.com/awslabs/syne-tune/compare/v0.7.0...0.8.0
+
+### New Features
+- Code for OTHPO paper ([#710](https://github.com/awslabs/syne-tune/issues/710))
+- Multi Surrogate Multi Objective Searcher ([#711](https://github.com/awslabs/syne-tune/issues/711))
+- Allow to transform result dataframe before aggregation in plotting ([#696](https://github.com/awslabs/syne-tune/issues/696))
+- Plotting for single seed results works as well ([#706](https://github.com/awslabs/syne-tune/issues/706))
+- Add Conformal Quantile Regression method from ICML paper. ([#689](https://github.com/awslabs/syne-tune/issues/689))
+- Some extra plotting features ([#694](https://github.com/awslabs/syne-tune/issues/694))
+- Allow base kernel to be selected ([#698](https://github.com/awslabs/syne-tune/issues/698))
+- Adding new searcher that uses contributed surrogate models.  ([#684](https://github.com/awslabs/syne-tune/issues/684))
+- Try again in remote launching when ResourceLimitExceeded is caught ([#676](https://github.com/awslabs/syne-tune/issues/676))
+
+### Bug Fixes
+- Avoid sphinx 7.0.0, since the readthedocs build fails with that ([#720](https://github.com/awslabs/syne-tune/issues/720))
+- Removed the broken example from github actions ([#718](https://github.com/awslabs/syne-tune/issues/718))
+- Fix bug in RemoteLauncher with SageMakerBackend ([#717](https://github.com/awslabs/syne-tune/issues/717))
+- Some fixes for multi-objective benchmarking ([#708](https://github.com/awslabs/syne-tune/issues/708))
+- Command line arguments of benchmarking ([#702](https://github.com/awslabs/syne-tune/issues/702))
+- Avoid MOO warning message ([#700](https://github.com/awslabs/syne-tune/issues/700))
+- New benchmarks need **kwargs, so that defaults can be overwritte… ([#693](https://github.com/awslabs/syne-tune/issues/693))
+- Remove (CITATION?). Currently, these results are not published a… ([#692](https://github.com/awslabs/syne-tune/issues/692))
+
+### Code Refactoring
+- Remove tuple option for Type[AcquisitionFunction], as this … ([#715](https://github.com/awslabs/syne-tune/issues/715))
+- Simplification in scikit-learn based estimators ([#704](https://github.com/awslabs/syne-tune/issues/704))
+- Clean up transformer_wikitext2 code ([#701](https://github.com/awslabs/syne-tune/issues/701))
+- Refactoring of scikit-learn based surrogate models ([#699](https://github.com/awslabs/syne-tune/issues/699))
+
+### Documentation Updates
+- Tutorial on experimentation ([#705](https://github.com/awslabs/syne-tune/issues/705))
+- Tutorial for ODSC presentation ([#703](https://github.com/awslabs/syne-tune/issues/703))
+- **examples:** Typo fix ([#713](https://github.com/awslabs/syne-tune/issues/713))
+
+### Maintenance
+- update README ([#723](https://github.com/awslabs/syne-tune/issues/723))
+- Remove documentation link from README.md ([#722](https://github.com/awslabs/syne-tune/issues/722))
+- Update pytest-cov requirement from ~=4.0.0 to ~=4.1.0 ([#697](https://github.com/awslabs/syne-tune/issues/697))
+- enable caching for unit tests, fix README typo ([#695](https://github.com/awslabs/syne-tune/issues/695))
+
+
 <a name="v0.7.0"></a>
 ## [v0.7.0] - 2023-05-23
 ### New Features
