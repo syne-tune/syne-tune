@@ -897,7 +897,7 @@ def _common_defaults(
         "num_init_candidates": DEFAULT_NUM_INITIAL_CANDIDATES,
         "initial_scoring": DEFAULT_INITIAL_SCORING,
         "skip_local_optimization": False,
-        "debug_log": True,
+        "debug_log": False,
         "cost_attr": "elapsed_time",
         "normalize_targets": True,
         "no_fantasizing": False,

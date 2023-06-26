@@ -11,5 +11,27 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
+    MultiObjectiveRegularizedEvolution,
+)
+from syne_tune.optimizer.schedulers.multiobjective.nsga2_searcher import (
+    NSGA2Searcher,
+)
+from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
+    LinearScalarizedScheduler,
+)
+from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objective_searcher import (
+    MultiObjectiveMultiSurrogateSearcher,
+)
+from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
+    MultiObjectiveLCBRandomLinearScalarization,
+)
 
-__all__ = ["MOASHA"]
+__all__ = [
+    "MOASHA",
+    "MultiObjectiveRegularizedEvolution",
+    "NSGA2Searcher",
+    "LinearScalarizedScheduler",
+    "MultiObjectiveMultiSurrogateSearcher",
+    "MultiObjectiveLCBRandomLinearScalarization",
+]

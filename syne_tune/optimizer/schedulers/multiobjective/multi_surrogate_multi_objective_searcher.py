@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 import logging
 from functools import partial
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 
 from syne_tune.optimizer.schedulers.multiobjective.random_scalarization import (
     MultiObjectiveLCBRandomLinearScalarization,
@@ -73,7 +73,7 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
         config_space: Dict[str, Any],
         metric: List[str],
         estimators: Dict[str, Estimator],
-        mode: Optional[List[str]] = None,
+        mode: Union[List[str], str] = "min",
         points_to_evaluate: Optional[List[Dict[str, Any]]] = None,
         scoring_class: Optional[ScoringFunctionConstructor] = None,
         num_initial_candidates: int = DEFAULT_NUM_INITIAL_CANDIDATES,
@@ -128,8 +128,9 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
         )
         if self.debug_log is not None:
             _trial_id = self._trial_id_string(trial_id, result)
-            msg = f"Update for trial_id {_trial_id}: metric = {metrics:.3f}"
-            logger.info(msg)
+            part = ",".join(f"{k}:{v:.3f}" for k, v in metrics.items())
+            msg = f"Update for trial_id {_trial_id}: metrics = ["
+            logger.info(msg + part + "]")
 
     def clone_from_state(self, state):
         # Create clone with mutable state taken from 'state'
