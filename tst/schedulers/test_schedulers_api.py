@@ -42,6 +42,8 @@ from syne_tune.optimizer.baselines import (
     NSGA2,
     CQR,
     ASHACQR,
+    MOLinearScalarizationBayesOpt,
+    MORandomScalarizationBayesOpt,
     # ASHACTS,
 )
 from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objective_searcher import (
@@ -408,12 +410,11 @@ list_schedulers_to_test = [
     #     max_t=max_t,
     #     resource_attr=resource_attr,
     # ),
-    LinearScalarizedScheduler(
+    MOLinearScalarizationBayesOpt(
         config_space=config_space,
         metric=[metric1, metric2],
         mode=[mode, mode],
         scalarization_weights=[1, 1],
-        base_scheduler_factory=FIFOScheduler,
     ),
     LinearScalarizedScheduler(
         config_space=config_space,
@@ -455,6 +456,11 @@ list_schedulers_to_test = [
                 metric2: SKLearnEstimatorWrapper(TestEstimator()),
             },
         ),
+        metric=[metric1, metric2],
+        mode=[mode, mode],
+    ),
+    MORandomScalarizationBayesOpt(
+        config_space=config_space,
         metric=[metric1, metric2],
         mode=[mode, mode],
     ),

@@ -26,6 +26,7 @@ from syne_tune.optimizer.schedulers.multiobjective import (
     NSGA2Searcher,
     MultiObjectiveMultiSurrogateSearcher,
     MultiObjectiveLCBRandomLinearScalarization,
+    LinearScalarizedScheduler,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
@@ -838,7 +839,6 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
 
 class NSGA2(FIFOScheduler):
     """
-
     See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
     for ``kwargs["search_options"]`` parameters.
 
@@ -915,6 +915,40 @@ class MOREA(FIFOScheduler):
             mode=mode,
             searcher=MultiObjectiveRegularizedEvolution(**searcher_kwargs),
             random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class MOLinearScalarizationBayesOpt(LinearScalarizedScheduler):
+    """
+    Uses :class:`~syne_tune.optimizer.schedulers.multiobjective.LinearScalarizedScheduler`
+    together with a default GP surrogate model.
+
+    See :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param scalarization_weights: Positive weight used for the scalarization.
+        Defaults to all 1
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: List[str],
+        scalarization_weights: Optional[List[float]] = None,
+        **kwargs,
+    ):
+        searcher_name = "bayesopt"
+        _assert_searcher_must_be(kwargs, searcher_name)
+        super().__init__(
+            config_space=config_space,
+            metric=metric,
+            scalarization_weights=scalarization_weights,
+            searcher=searcher_name,
             **kwargs,
         )
 

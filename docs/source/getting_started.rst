@@ -138,6 +138,8 @@ Supported Multi-objective Optimization Methods
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.MORandomScalarizationBayesOpt`   | `Peria, et al. (2018) <https://proceedings.mlr.press/v115/paria20a.html>`__ | model-based | yes           | no              | no        |
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
+| :class:`~syne_tune.optimizer.baselines.MOLinearScalarizationBayesOpt`   |                                                                             | model-based | yes           | no              | no        |
++-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 
 HPO methods listed can be used in a multi-objective setting by scalarization
 (:class:`~syne_tune.optimizer.schedulers.multiobjective.multiobjective_priority.LinearScalarizationPriority`)
