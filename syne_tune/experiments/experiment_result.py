@@ -221,7 +221,7 @@ class ExperimentResult:
             )
 
         metric_mode = self.metric_mode()
-        if len(metric_mode) > 1:
+        if isinstance(metric_mode, list):
             metric_mode = metric_mode[metric]
 
         return metric, metric_name, metric_mode
