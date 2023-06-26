@@ -799,6 +799,8 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         searcher_kwargs["mode"] = mode
         if estimators is None:
             estimators = dict()
+        else:
+            estimators = estimators.copy()
         if isinstance(mode, str):
             mode = [mode] * len(metric)
         if "search_options" in kwargs:

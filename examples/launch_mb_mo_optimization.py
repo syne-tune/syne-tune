@@ -10,7 +10,6 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -19,11 +18,6 @@ from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import LocalBackend
 from syne_tune.config_space import randint, uniform
 from syne_tune.optimizer.baselines import MORandomScalarizationBayesOpt
-from syne_tune.optimizer.schedulers import FIFOScheduler
-from syne_tune.optimizer.schedulers.multiobjective import (
-    MultiObjectiveMultiSurrogateSearcher,
-    MultiObjectiveLCBRandomLinearScalarization,
-)
 
 
 def main():
