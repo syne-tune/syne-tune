@@ -203,9 +203,11 @@ class RemoteLauncher:
             )
             shutil.copy(endpoint_requirements, tgt_requirement)
 
-        # add tuner requirements, this will create the req file if it does not exist
+        # Add tuner requirements, this will create the req file if it does not exist
+        # The leading "\n" makes sure this works even if the file behind
+        # ``tgt_requirement`` does not end with "\n"
         with open(tgt_requirement, "a") as reqf:
-            reqf.write("syne-tune[extra]\n")
+            reqf.write("\nsyne-tune[extra]\n")
 
     def get_source_dir(self) -> Path:
         # note: this logic would be better moved to the backend.
