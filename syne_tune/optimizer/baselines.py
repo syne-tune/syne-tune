@@ -13,20 +13,25 @@
 from typing import Dict, Optional, Any, List, Union
 import logging
 import copy
+from functools import partial
 
 from syne_tune.optimizer.schedulers import (
     FIFOScheduler,
     HyperbandScheduler,
     PopulationBasedTraining,
 )
-from syne_tune.optimizer.schedulers.multiobjective import MOASHA
+from syne_tune.optimizer.schedulers.multiobjective import (
+    MOASHA,
+    MultiObjectiveRegularizedEvolution,
+    NSGA2Searcher,
+    MultiObjectiveMultiSurrogateSearcher,
+    MultiObjectiveLCBRandomLinearScalarization,
+    LinearScalarizedScheduler,
+)
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
 from syne_tune.optimizer.schedulers.searchers.regularized_evolution import (
     RegularizedEvolution,
 )
-from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
-    MultiObjectiveRegularizedEvolution,
-)
-from syne_tune.optimizer.schedulers.multiobjective.nsga2_searcher import NSGA2Searcher
 from syne_tune.optimizer.schedulers.synchronous import (
     SynchronousGeometricHyperbandScheduler,
     GeometricDifferentialEvolutionHyperbandScheduler,
@@ -733,6 +738,142 @@ class REA(FIFOScheduler):
         )
 
 
+def create_gaussian_process_estimator(
+    config_space: Dict[str, Any],
+    metric: str,
+    mode: Optional[str] = None,
+    random_seed: Optional[int] = None,
+    search_options: Optional[Dict[str, Any]] = None,
+) -> Estimator:
+    scheduler = BayesianOptimization(
+        config_space=config_space,
+        metric=metric,
+        mode=mode,
+        random_seed=random_seed,
+        search_options=search_options,
+    )
+    searcher = scheduler.searcher  # GPFIFOSearcher
+    state_transformer = searcher.state_transformer  # ModelStateTransformer
+    estimator = state_transformer.estimator  # GaussProcEmpiricalBayesEstimator
+
+    # update the estimator properties
+    estimator.active_metric = metric
+    return estimator
+
+
+class MORandomScalarizationBayesOpt(FIFOScheduler):
+    """
+    Uses :class:`~syne_tune.optimizer.schedulers.multiobjective.MultiObjectiveMultiSurrogateSearcher`
+    with one standard GP surrogate model per metric (same as in
+    :class:`BayesianOptimization`, together with the
+    :class:`~syne_tune.optimizer.schedulers.multiobjective.MultiObjectiveLCBRandomLinearScalarization`
+    acquisition function.
+
+    If `estimators` is given, surrogate models are taken from there, and the
+    default is used otherwise. This is useful if you have a good low-variance
+    model for one of the objectives.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metrics to optimize
+    :param mode: Modes of optimization. Defaults to "min" for all
+    :param random_seed: Random seed, optional
+    :param estimators: Use these surrogate models instead of the default GP
+        one. Optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`. Here,
+        ``kwargs["search_options"]`` is used to create the searcher and its
+        GP surrogate models.
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: List[str],
+        mode: Union[List[str], str] = "min",
+        random_seed: Optional[int] = None,
+        estimators: Optional[Dict[str, Estimator]] = None,
+        **kwargs,
+    ):
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs["mode"] = mode
+        if estimators is None:
+            estimators = dict()
+        else:
+            estimators = estimators.copy()
+        if isinstance(mode, str):
+            mode = [mode] * len(metric)
+        if "search_options" in kwargs:
+            search_options = kwargs["search_options"].copy()
+        else:
+            search_options = dict()
+        search_options["no_fantasizing"] = True
+        for _metric, _mode in zip(metric, mode):
+            if _metric not in estimators:
+                estimators[_metric] = create_gaussian_process_estimator(
+                    config_space=config_space,
+                    metric=_metric,
+                    mode=_mode,
+                    search_options=search_options,
+                )
+        searcher = MultiObjectiveMultiSurrogateSearcher(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            estimators=estimators,
+            scoring_class=partial(
+                MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
+            ),
+            random_seed=random_seed,
+        )
+        super().__init__(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            searcher=searcher,
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
+class NSGA2(FIFOScheduler):
+    """
+    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    for ``kwargs["search_options"]`` parameters.
+
+    :param config_space: Configuration space for evaluation function
+    :param metric: Name of metric to optimize
+    :param population_size: The size of the population for NSGA-2
+    :param random_seed: Random seed, optional
+    :param kwargs: Additional arguments to
+        :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
+    """
+
+    def __init__(
+        self,
+        config_space: Dict[str, Any],
+        metric: List[str],
+        mode: Union[List[str], str] = "min",
+        population_size: int = 20,
+        random_seed: Optional[int] = None,
+        **kwargs,
+    ):
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+        searcher_kwargs["mode"] = mode
+        searcher_kwargs["population_size"] = population_size
+        super(NSGA2, self).__init__(
+            config_space=config_space,
+            metric=metric,
+            mode=mode,
+            searcher=NSGA2Searcher(**searcher_kwargs),
+            random_seed=random_seed,
+            **kwargs,
+        )
+
+
 class MOREA(FIFOScheduler):
     """
 
@@ -778,16 +919,18 @@ class MOREA(FIFOScheduler):
         )
 
 
-class NSGA2(FIFOScheduler):
+class MOLinearScalarizationBayesOpt(LinearScalarizedScheduler):
     """
+    Uses :class:`~syne_tune.optimizer.schedulers.multiobjective.LinearScalarizedScheduler`
+    together with a default GP surrogate model.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.RandomSearcher`
+    See :class:`~syne_tune.optimizer.schedulers.searchers.GPFIFOSearcher`
     for ``kwargs["search_options"]`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
-    :param population_size: The size of the population for NSGA-2
-    :param random_seed: Random seed, optional
+    :param scalarization_weights: Positive weight used for the scalarization.
+        Defaults to all 1
     :param kwargs: Additional arguments to
         :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`
     """
@@ -796,22 +939,16 @@ class NSGA2(FIFOScheduler):
         self,
         config_space: Dict[str, Any],
         metric: List[str],
-        mode: Union[List[str], str] = "min",
-        population_size: int = 20,
-        random_seed: Optional[int] = None,
+        scalarization_weights: Optional[List[float]] = None,
         **kwargs,
     ):
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["mode"] = mode
-        searcher_kwargs["population_size"] = population_size
-        super(NSGA2, self).__init__(
+        searcher_name = "bayesopt"
+        _assert_searcher_must_be(kwargs, searcher_name)
+        super().__init__(
             config_space=config_space,
             metric=metric,
-            mode=mode,
-            searcher=NSGA2Searcher(**searcher_kwargs),
-            random_seed=random_seed,
+            scalarization_weights=scalarization_weights,
+            searcher=searcher_name,
             **kwargs,
         )
 

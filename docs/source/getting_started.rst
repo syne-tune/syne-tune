@@ -124,7 +124,7 @@ The searchers fall into four broad categories, **deterministic**, **random**, **
 Syne Tune also supports `BoTorch <https://github.com/pytorch/botorch>`__ searchers,
 see :class:`~syne_tune.optimizer.baselines.BoTorch`.
 
-Supported multi-objective optimization methods
+Supported Multi-objective Optimization Methods
 ----------------------------------------------
 
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
@@ -135,6 +135,10 @@ Supported multi-objective optimization methods
 | :class:`~syne_tune.optimizer.schedulers.multiobjective.MOASHA`          | `Schmucker, et al. (2021) <https://arxiv.org/abs/2106.12639>`__             | random      | yes           | yes             | no        |
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.NSGA2`                           | `Deb, et al. (2002) <https://ieeexplore.ieee.org/document/996017>`__        | evolutionary| no            | no              | no        |
++-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
+| :class:`~syne_tune.optimizer.baselines.MORandomScalarizationBayesOpt`   | `Peria, et al. (2018) <https://proceedings.mlr.press/v115/paria20a.html>`__ | model-based | yes           | no              | no        |
++-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
+| :class:`~syne_tune.optimizer.baselines.MOLinearScalarizationBayesOpt`   |                                                                             | model-based | yes           | no              | no        |
 +-------------------------------------------------------------------------+-----------------------------------------------------------------------------+-------------+---------------+-----------------+-----------+
 
 HPO methods listed can be used in a multi-objective setting by scalarization

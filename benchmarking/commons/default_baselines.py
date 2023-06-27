@@ -38,9 +38,8 @@ from syne_tune.optimizer.baselines import (
     SyncMOBSTER as _SyncMOBSTER,
     MOREA as _MOREA,
     NSGA2 as _NSGA2,
-)
-from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
-    LinearScalarizedScheduler as _LinearScalarizedScheduler,
+    MORandomScalarizationBayesOpt as _MORandomScalarizationBayesOpt,
+    MOLinearScalarizationBayesOpt as _MOLinearScalarizationBayesOpt,
 )
 from syne_tune.util import recursive_merge
 
@@ -145,8 +144,12 @@ def MOREA(method_arguments: MethodArguments, **kwargs):
 
 
 def LSOBO(method_arguments: MethodArguments, **kwargs):
-    return _LinearScalarizedScheduler(**_baseline_kwargs(method_arguments, kwargs))
+    return _MOLinearScalarizationBayesOpt(**_baseline_kwargs(method_arguments, kwargs))
 
 
 def NSGA2(method_arguments: MethodArguments, **kwargs):
     return _NSGA2(**_baseline_kwargs(method_arguments, kwargs))
+
+
+def MORandomScalarizationBayesOpt(method_arguments: MethodArguments, **kwargs):
+    return _MORandomScalarizationBayesOpt(**_baseline_kwargs(method_arguments, kwargs))
