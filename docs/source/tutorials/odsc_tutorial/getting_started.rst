@@ -138,7 +138,7 @@ Once you have annotated your training script and chosen a configuration space,
 you have specified all the input Syne Tune needs. You can now specify the
 details about your tuning experiment in code, as discussed
 `here <../basics/basics_randomsearch.html#launcher-script-for-random-search>`__.
-However, Syne Tune provides some tooling in :mod:`benchmarking` which makes the
+However, Syne Tune provides some tooling in :mod:`syne_tune.experiments` which makes the
 life of most users easier, and we will use this tooling in the rest of the
 tutorial. To this end, we need to define some defaults about how experiments
 are to be run (most of these can be overwritten by command line arguments):
@@ -149,7 +149,7 @@ are to be run (most of these can be overwritten by command line arguments):
 
 All you need to do is to provide a function (``transformer_wikitext2_benchmark`` here)
 which returns an instance of
-:class:`~benchmarking.commons.benchmark_definitions.common.RealBenchmarkDefinition`.
+:class:`~syne_tune.experiments.benchmark_definitions.common.RealBenchmarkDefinition`.
 The most important fields are:
 
 * ``script``: Filename of training script.
@@ -170,3 +170,9 @@ The most important fields are:
 Also, note the role of ``**kwargs`` in the function signature, which allows
 to overwrite any of the default values (e.g., for ``max_wallclock_time``,
 ``n_workers``, or ``instance_type``) with command line arguments.
+
+.. note::
+   In the Syne Tune experimentation framework, a tuning problem (i.e., training and
+   evaluation script together with defaults) is called a *benchmark*.
+   This terminology is used even if the goal of experimentation is not benchmarking
+   (i.e., comparing different HPO methods), as is the case in this tutorial here.

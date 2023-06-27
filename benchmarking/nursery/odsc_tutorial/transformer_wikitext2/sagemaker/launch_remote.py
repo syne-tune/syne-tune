@@ -12,11 +12,12 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.commons.launch_remote_sagemaker import launch_remote
+import benchmarking
 from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.baselines import methods
 from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.benchmark_definitions import (
     benchmark_definitions,
 )
+from syne_tune.experiments.launchers.launch_remote_sagemaker import launch_remote
 
 
 if __name__ == "__main__":
@@ -25,4 +26,5 @@ if __name__ == "__main__":
         entry_point=entry_point,
         methods=methods,
         benchmark_definitions=benchmark_definitions,
+        source_dependencies=benchmarking.__path__,
     )

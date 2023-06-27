@@ -12,12 +12,10 @@
 # permissions and limitations under the License.
 from typing import Dict, Any, Optional, List
 
-from benchmarking.commons.hpo_main_simulator import main
-from benchmarking.examples.benchmark_dyhpo.baselines import methods
-from benchmarking.examples.benchmark_dyhpo.benchmark_definitions import (
-    benchmark_definitions,
-)
+from baselines import methods
+from benchmark_definitions import benchmark_definitions
 from syne_tune import Tuner
+from syne_tune.experiments.launchers.hpo_main_simulator import main
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
     DyHPORungSystem,

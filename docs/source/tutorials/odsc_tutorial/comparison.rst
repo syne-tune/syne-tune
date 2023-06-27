@@ -50,7 +50,7 @@ to consider in our study:
 The only benchmark we consider in this study is our ``transformer_wikitext2``
 tuning problem, with its default configuration space (in general, many
 benchmarks can be selected from
-:func:`benchmarking.commons.benchmark_definitions.real_benchmark_definitions.real_benchmark_definitions`).
+:func:`benchmarking.benchmark_definitions.real_benchmark_definitions.real_benchmark_definitions`).
 Our study has the following properties:
 
 * We use :class:`~syne_tune.backend.LocalBackend` as execution backend, which

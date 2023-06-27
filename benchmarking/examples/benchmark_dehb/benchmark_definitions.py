@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from benchmarking.commons.benchmark_definitions import (
+from syne_tune.experiments.benchmark_definitions import (
     nas201_benchmark_definitions,
     fcnet_benchmark_definitions,
     lcbench_selected_benchmark_definitions,

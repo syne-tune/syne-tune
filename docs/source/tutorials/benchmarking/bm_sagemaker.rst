@@ -12,11 +12,11 @@ The scripts required to define an experiment are pretty much the same as in the
 local backend case. We will look at an example in
 `benchmarking/examples/launch_sagemaker/ <../../benchmarking/launch_sagemaker.html>`__.
 Common code used in these benchmarks can be found in
-:mod:`benchmarking.commons`:
+:mod:`syne_tune.experiments`:
 
-* Local launcher: :mod:`benchmarking.commons.hpo_main_sagemaker`
-* Remote launcher: :mod:`benchmarking.commons.launch_remote_sagemaker`
-* Benchmark definitions: :mod:`benchmarking.commons.benchmark_definitions`
+* Local launcher: :mod:`syne_tune.experiments.launchers.hpo_main_sagemaker`
+* Remote launcher: :mod:`syne_tune.experiments.launchers.launch_remote_sagemaker`
+* Definitions for real benchmarks: :mod:`benchmarking.benchmark_definitions`
 
 The scripts
 `benchmarking/examples/launch_sagemaker/baselines.py <../../benchmarking/launch_sagemaker.html#id1>`__,
@@ -24,19 +24,19 @@ The scripts
 `benchmarking/examples/launch_sagemaker/launch_remote.py <../../benchmarking/launch_sagemaker.html#id3>`__
 are identical in structure to what happens in the
 `local backend case <bm_local.html#defining-the-experiment>`__, with the only
-difference that :mod:`benchmarking.commons.hpo_main_sagemaker` or
-:mod:`benchmarking.commons.launch_remote_sagemaker` are imported from. Moreover,
+difference that :mod:`syne_tune.experiments.launchers.hpo_main_sagemaker` or
+:mod:`syne_tune.experiments.launchers.launch_remote_sagemaker` are imported from. Moreover,
 Syne Tune dependencies need to be specified in
 `benchmarking/examples/launch_sagemaker/requirements.txt <../../benchmarking/launch_sagemaker.html#id4>`__.
 
 In terms of benchmarks, the same definitions can be used for the SageMaker
 backend, in particular you can select from
-:func:`~benchmarking.commons.benchmark_definitions.real_benchmark_definitions`.
+:func:`~benchmarking.benchmark_definitions.real_benchmark_definitions`.
 However, the functions there are called with ``sagemaker_backend=True``, which
 can lead to different values in
-:class:`~benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`.
+:class:`~syne_tune.experiments.benchmark_definitions.RealBenchmarkDefinition`.
 For example,
-:func:`~benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`
+:func:`~benchmarking.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`
 returns ``instance_type=ml.g4dn.xlarge`` for the SageMaker backend (1 GPU per
 instance), but ``instance_type=ml.g4dn.12xlarge`` for the local backend (4 GPUs
 per instance). This is because for the local backend to support ``n_workers=4``,

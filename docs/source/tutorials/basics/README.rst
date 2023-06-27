@@ -6,9 +6,8 @@ most important concepts of automated hyperparameter tuning, and how to make it
 work for your setup.
 
 .. note::
-   This tutorial makes use of the *benchmarking* framework, you need to have
-   `installed Syne Tune from source <../../getting_started.html#installation>`__
-   to run it.
+   In order to run the code coming with this tutorial, you need to have
+   `installed Syne Tune from source <../../getting_started.html#installation>`__.
 
 .. toctree::
    :name: Basics of Syne Tune Sections

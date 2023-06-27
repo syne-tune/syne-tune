@@ -12,14 +12,14 @@
 # permissions and limitations under the License.
 from typing import Dict, Any, Optional
 
+from benchmarking.examples.fine_tuning_transformer_glue.baselines import methods
+from benchmarking.benchmark_definitions import (
+    real_benchmark_definitions,
+)
 from syne_tune.experiments import (
     ComparativeResults,
     PlotParameters,
     ShowTrialParameters,
-)
-from benchmarking.examples.fine_tuning_transformer_glue.baselines import methods
-from benchmarking.commons.benchmark_definitions.real_benchmark_definitions import (
-    real_benchmark_definitions,
 )
 
 

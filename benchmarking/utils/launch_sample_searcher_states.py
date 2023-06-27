@@ -20,7 +20,7 @@ from syne_tune.backend import LocalBackend
 from syne_tune.optimizer.schedulers import HyperbandScheduler
 from syne_tune import Tuner
 
-from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
+from benchmarking.benchmark_definitions.mlp_on_fashionmnist import (
     mlp_fashionmnist_benchmark,
 )
 from benchmarking.utils import StoreSearcherStatesCallback

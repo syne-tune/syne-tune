@@ -161,12 +161,6 @@ The figure for benchmark ``nas201-cifar-100`` looks as follows:
 * If we pass ``file_name`` as argument to ``results.plot``, the figure is
   stored in this file.
 
-For details about further features, consider the documentations of
-:class:`~syne_tune.experiments.ComparativeResults`,
-:class:`~syne_tune.experiments.PlotParameters`,
-:class:`~syne_tune.experiments.SubplotParameters`,
-:class:`~syne_tune.experiments.ShowTrialParameters`.
-
 .. note::
    Apart from plots comparing different setups, aggregated over multiple seeds,
    we can also visualize the learning curves per trial for a single

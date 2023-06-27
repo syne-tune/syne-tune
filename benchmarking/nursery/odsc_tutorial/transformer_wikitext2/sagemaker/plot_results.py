@@ -13,10 +13,10 @@
 from typing import Dict, Any, Optional
 import logging
 
-from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
 from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.benchmark_definitions import (
     benchmark_definitions,
 )
+from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
 
 
 TMLR10_SETUPS = [

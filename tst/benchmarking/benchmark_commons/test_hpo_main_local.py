@@ -13,8 +13,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from benchmarking.commons.default_baselines import RandomSearch
-from benchmarking.commons.hpo_main_common import ConfigDict
+from syne_tune.experiments.default_baselines import RandomSearch
+from syne_tune.experiments.launchers.hpo_main_common import ConfigDict
 from benchmarking.nursery.benchmark_multiobjective.baselines import (
     Methods,
     MOREA,
@@ -29,12 +29,15 @@ from syne_tune.config_space import choice
 
 class HPOMainLocalTests(unittest.TestCase):
     @patch(
-        "benchmarking.commons.hpo_main_simulator.config_from_argparse",
+        "syne_tune.experiments.launchers.hpo_main_simulator.config_from_argparse",
         new_callable=MagicMock,
     )
-    @patch("benchmarking.commons.hpo_main_simulator.Tuner", new_callable=MagicMock)
     @patch(
-        "benchmarking.commons.hpo_main_simulator.BlackboxRepositoryBackend.blackbox",
+        "syne_tune.experiments.launchers.hpo_main_simulator.Tuner",
+        new_callable=MagicMock,
+    )
+    @patch(
+        "syne_tune.experiments.launchers.hpo_main_simulator.BlackboxRepositoryBackend.blackbox",
         new_callable=MagicMock,
     )
     def test_tuner_is_run_the_expected_number_of_times(

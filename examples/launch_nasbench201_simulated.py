@@ -15,7 +15,7 @@ Example for running the simulator backend on a tabulated benchmark
 """
 import logging
 
-from benchmarking.commons.benchmark_definitions.nas201 import nas201_benchmark
+from syne_tune.experiments.benchmark_definitions.nas201 import nas201_benchmark
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend
 from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCallback
 from syne_tune.optimizer.baselines import ASHA

@@ -18,7 +18,7 @@ script for launching experiments locally:
    :start-after: # permissions and limitations under the License.
 
 This is very simple, as most work is done by the generic
-:func:`benchmarking.commons.hpo_main_local.main`. Note that ``hpo_main_local``
+:func:`syne_tune.experiments.launchers.hpo_main_local.main`. Note that ``hpo_main_local``
 needs to be chosen, since we use the local backend.
 
 This local launcher script can be used to configure your experiment, given
@@ -35,7 +35,7 @@ experiments in parallel:
    :start-after: # permissions and limitations under the License.
 
 Once more, all the hard work in done in
-:func:`benchmarking.commons.launch_remote_local.launch_remote`, where
+:func:`syne_tune.experiments.launchers.launch_remote_local.launch_remote`, where
 ``launch_remote_local`` needs to be chosen for the local backend. Most important
 is that our previous ``hpo_main.py`` is specified as ``entry_point`` here. Here is
 the command to run all experiments of our study in parallel:
@@ -54,6 +54,8 @@ the command to run all experiments of our study in parallel:
 * You can use ``--instance_type`` and ``--max_wallclock_time`` command line
   arguments to change these defaults. However, if you choose an instance type with
   less than 4 GPUs, the local backend will not be able to run 4 trials in parallel.
+* If ``benchmark_definitions.py`` defines a single benchmark only, the
+  ``--benchmark`` argument can also be dropped.
 
 When using remote launching, results of your experiments are written to S3, to
 the default bucket for your AWS account. Once all jobs have finished (which takes

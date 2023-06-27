@@ -17,8 +17,11 @@ HPO algorithm. The tutorial here is self-contained, but the reader may want
 to consult the benchmarking tutorial for background information.
 
 .. note::
-   In order to use the *benchmarking* framework, you need to have
-   `installed Syne Tune from source <../../getting_started.html#installation>`__.
+   The code used in this tutorial is contained in the
+   `Syne Tune sources <../../getting_started.html#installation>`__, it is not
+   installed by ``pip``. You can obtain this code by installing Syne Tune from
+   source, but the only code that is needed is in
+   :mod:`benchmarking.examples.demo_experiment`.
 
 .. toctree::
    :name: Rapid Experimentation with Syne Tune Sections

@@ -13,7 +13,7 @@
 import logging
 from argparse import ArgumentParser
 
-from benchmarking.commons.benchmark_definitions import nas201_benchmark
+from syne_tune.experiments.benchmark_definitions import nas201_benchmark
 from syne_tune.backend.simulator_backend.simulator_callback import (
     SimulatorCallback,
 )

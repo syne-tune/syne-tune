@@ -18,13 +18,13 @@ from yahpo_gym.configuration import list_scenarios
 
 from syne_tune.blackbox_repository import BlackboxRepositoryBackend, load_blackbox
 from syne_tune.blackbox_repository.utils import metrics_for_configuration
-from benchmarking.commons.benchmark_definitions.lcbench import (
+from syne_tune.experiments.benchmark_definitions.lcbench import (
     lcbench_selected_datasets,
 )
 from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
     NB301_ATTRIBUTE_NAME_PREFIX,
 )
-from benchmarking.commons.benchmark_definitions import (
+from syne_tune.experiments.benchmark_definitions import (
     yahpo_lcbench_benchmark_definitions,
     lcbench_benchmark_definitions,
 )

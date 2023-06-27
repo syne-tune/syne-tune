@@ -6,6 +6,12 @@ surrogate model) is based on a training script, which is executed for each
 evaluation. The local backend is the default choice in Syne Tune for running
 on real benchmarks.
 
+.. note::
+   While Syne Tune contains benchmark definitions for all surrogate benchmarks
+   in :mod:`syne_tune.experiments.benchmark_definitions`, examples for real
+   benchmarks are only available when Syne Tune is installed from source.
+   They are located in :mod:`benchmarking`.
+
 Defining the Experiment
 -----------------------
 
@@ -13,11 +19,11 @@ As usual in Syne Tune, the experiment is defined by a number of scripts.
 We will look at an example in
 `benchmarking/examples/launch_local/ <../../benchmarking/launch_local.html>`__.
 Common code used in these benchmarks can be found in
-:mod:`benchmarking.commons`:
+:mod:`syne_tune.experiments`:
 
-* Local launcher: :mod:`benchmarking.commons.hpo_main_local`
-* Remote launcher: :mod:`benchmarking.commons.launch_remote_local`
-* Benchmark definitions: :mod:`benchmarking.commons.benchmark_definitions`
+* Local launcher: :mod:`syne_tune.experiments.launchers.hpo_main_local`
+* Remote launcher: :mod:`syne_tune.experiments.launchers.launch_remote_local`
+* Definitions for real benchmarks: :mod:`benchmarking.benchmark_definitions`
 
 Let us look at the scripts in order, and how you can adapt them to your needs:
 
@@ -27,13 +33,15 @@ Let us look at the scripts in order, and how you can adapt them to your needs:
 * `benchmarking/examples/launch_local/hpo_main.py <../../benchmarking/launch_local.html#id2>`__:
   This is the same as in the
   `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
-  :mod:`benchmarking.commons.hpo_main_local`. We will see shortly how the
+  :mod:`syne_tune.experiments.launchers.hpo_main_local`. We will see shortly how the
   launcher is called, and what happens inside.
 * `benchmarking/examples/launch_local/launch_remote.py <../../benchmarking/launch_local.html#id3>`__:
   Much the same as in the
   `simulator case <bm_simulator.html#defining-the-experiment>`__, but based on
-  :mod:`benchmarking.commons.launch_remote_local`. We will see shortly how the
-  launcher is called, and what happens inside.
+  :mod:`syne_tune.experiments.launchers.launch_remote_local`. We will see shortly how the
+  launcher is called, and what happens inside. Note that
+  ``source_dependencies=benchmarking.__path__``, which allows the launcher
+  script to access the training code and benchmark definitions.
 * `benchmarking/examples/launch_local/requirements-synetune.txt <../../benchmarking/launch_local.html#id4>`__:
   This file is for defining the requirements of the SageMaker training job in
   remote launching, it mainly has to contain the Syne Tune dependencies. Your
@@ -63,7 +71,7 @@ GPU with PyTorch being installed):
   ``~/syne-tune/{experiment_tag}/*/{experiment_tag}-*/``. This name should
   confirm to S3 conventions (alphanumerical and ``-``; no underscores).
 * ``benchmark``: Selects benchmark from keys of
-  :func:`~benchmarking.commons.benchmark_definitions.real_benchmark_definitions`.
+  :func:`~benchmarking.benchmark_definitions.real_benchmark_definitions`.
   The default is ``resnet_cifar10``.
 * ``method``: Selects HPO method to run from keys of ``methods``. If this is
   not given, experiments for all keys in ``methods`` are run in sequence.
@@ -119,16 +127,16 @@ Benchmark Definitions
 ---------------------
 
 In the example above, we select a benchmark via ``--benchmark resnet_cifar10``.
-All currently supported real benchmarks are collected in
-:func:`~benchmarking.commons.benchmark_definitions.real_benchmark_definitions`,
+All currently included real benchmarks are collected in
+:func:`~benchmarking.benchmark_definitions.real_benchmark_definitions`,
 a function which returns the dictionary of real benchmarks, configured by some
 extra arguments. If you are happy with selecting one of these existing benchmarks,
 you may safely skip this subsection.
 
 For ``resnet_cifar10``, this selects
-:func:`~benchmarking.commons.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`,
+:func:`~benchmarking.benchmark_definitions.resnet_cifar10.resnet_cifar10_benchmark`,
 which returns meta-data for the benchmark as a
-:class:`~benchmarking.commons.benchmark_definitions.RealBenchmarkDefinition`
+:class:`~syne_tune.experiments.benchmark_definitions.RealBenchmarkDefinition`
 object. Here, the argument ``sagemaker_backend`` is ``False`` in our case,
 since we use the local backend, and additional ``**kwargs`` override arguments
 of ``RealBenchmarkDefinition``. Important arguments are:
@@ -158,8 +166,9 @@ Launching Experiments Remotely
 Remote launching is particularly convenient for experiments with the local
 backend, even if you just want to run a single experiment. For local
 launching, you need to be on an EC2 instance of the desired instance type, and
-Syne Tune has to be installed there. None of this needs to be done for remote
-launching. Here is an example:
+Syne Tune has to be installed there along with all dependencies of your
+benchmrk. None of this needs to be done for remote launching. Here is an
+example:
 
 .. code-block:: bash
 

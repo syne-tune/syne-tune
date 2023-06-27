@@ -27,7 +27,7 @@ from syne_tune.results_callback import ExtraResultsComposer, StoreResultsCallbac
 from syne_tune.util import find_first_of_type
 from syne_tune import Tuner, StoppingCriterion
 
-from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import (
+from benchmarking.benchmark_definitions.mlp_on_fashionmnist import (
     mlp_fashionmnist_benchmark,
 )
 

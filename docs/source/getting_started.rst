@@ -64,6 +64,16 @@ This example runs `ASHA <tutorials/multifidelity/mf_asha.html>`__ with
 seconds on the local machine it is called on
 (:code:`trial_backend=LocalBackend(entry_point=entry_point)`).
 
+Experimentation with Syne Tune
+==============================
+
+If you plan to use advanced features of Syne Tune, such as different execution
+backends or running experiments remotely, writing launcher scripts like
+``examples/launch_height_simple.py`` can become tedious. Syne Tune provides an
+advanced experimentation framework, which you can learn about in
+`this tutorial <tutorials/experimentation/README.html>`__, or also in
+`this one <tutorials/odsc_tutorial/README.html>`__.
+
 Supported HPO Methods
 =====================
 

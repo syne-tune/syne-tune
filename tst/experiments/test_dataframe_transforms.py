@@ -14,9 +14,7 @@ import numpy as np
 import pandas as pd
 
 from syne_tune.constants import ST_TUNER_TIME
-from syne_tune.experiments.multiobjective import (
-    hypervolume_indicator_column_generator,
-)
+from syne_tune.experiments import hypervolume_indicator_column_generator
 
 
 def test_append_hypervolume_indicator():

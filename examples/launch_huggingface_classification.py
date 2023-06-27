@@ -19,9 +19,7 @@ from pathlib import Path
 from sagemaker.huggingface import HuggingFace
 
 import syne_tune
-from benchmarking.commons.benchmark_definitions.distilbert_on_imdb import (
-    distilbert_imdb_benchmark,
-)
+from benchmarking.benchmark_definitions import distilbert_imdb_benchmark
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.backend import SageMakerBackend
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (

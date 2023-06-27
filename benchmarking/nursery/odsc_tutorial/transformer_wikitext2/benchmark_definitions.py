@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from typing import Dict
 
-from benchmarking.commons.benchmark_definitions import RealBenchmarkDefinition
+from syne_tune.experiments.benchmark_definitions import RealBenchmarkDefinition
 from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.code.transformer_wikitext2_definition import (
     transformer_wikitext2_benchmark,
 )

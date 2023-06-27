@@ -13,11 +13,9 @@
 from typing import Dict, Any, Optional
 import logging
 
+from baselines import methods
+from benchmark_definitions import benchmark_definitions
 from syne_tune.experiments import ComparativeResults, PlotParameters, SubplotParameters
-from benchmarking.examples.benchmark_hypertune.baselines import methods
-from benchmarking.examples.benchmark_hypertune.benchmark_definitions import (
-    benchmark_definitions,
-)
 
 
 def metadata_to_setup(metadata: Dict[str, Any]) -> Optional[str]:

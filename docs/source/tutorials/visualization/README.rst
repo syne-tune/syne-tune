@@ -11,7 +11,7 @@ insights for the next steps, or to present final results to clients. This
 tutorial provides an overview of visualization facilities.
 
 .. note::
-   In order to use the *benchmarking* framework, you need to have
+   In order to run the code in this tutorial, you need to have
    `installed Syne Tune from source <../../getting_started.html#installation>`__.
 
 .. toctree::

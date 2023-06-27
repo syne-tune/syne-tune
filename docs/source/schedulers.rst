@@ -59,7 +59,7 @@ launcher script using :class:`~syne_tune.optimizer.schedulers.FIFOScheduler`:
    from syne_tune.optimizer.schedulers import FIFOScheduler
    from syne_tune import Tuner, StoppingCriterion
 
-   from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import \
+   from benchmarking.benchmark_definitions import \
        mlp_fashionmnist_benchmark
 
 
@@ -255,7 +255,7 @@ Here is a launcher script using
    from syne_tune.optimizer.schedulers import HyperbandScheduler
    from syne_tune import Tuner, StoppingCriterion
 
-   from benchmarking.commons.benchmark_definitions.mlp_on_fashionmnist import \
+   from benchmarking.benchmark_definitions import \
        mlp_fashionmnist_benchmark
 
    if __name__ == '__main__':
