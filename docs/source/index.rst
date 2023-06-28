@@ -91,6 +91,11 @@ What's New?
    tutorials/transfer_learning/transfer_learning
    tutorials/odsc_tutorial/README
 
+Videos
+------
+
+* `Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023) <https://www.youtube.com/watch?v=onX6fXzp9Yk>`__
+
 .. toctree::
    :name: API docs
    :caption: API docs
