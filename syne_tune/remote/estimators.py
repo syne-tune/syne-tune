@@ -10,6 +10,17 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+from syne_tune.remote.constants import (
+    DEFAULT_CPU_INSTANCE,
+    PYTORCH_LATEST_FRAMEWORK,
+    PYTORCH_LATEST_PY_VERSION,
+    HUGGINGFACE_LATEST_FRAMEWORK_VERSION,
+    HUGGINGFACE_LATEST_PYTORCH_VERSION,
+    HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
+    HUGGINGFACE_LATEST_PY_VERSION,
+    MXNET_LATEST_PY_VERSION,
+    MXNET_LATEST_VERSION,
+)
 from syne_tune.try_import import try_import_aws_message
 
 try:
@@ -22,22 +33,6 @@ try:
     from sagemaker.xgboost import XGBoost
 except ImportError:
     print(try_import_aws_message())
-
-DEFAULT_CPU_INSTANCE = "ml.c5.4xlarge"
-DEFAULT_CPU_INSTANCE_SMALL = "ml.m5.large"
-DEFAULT_GPU_INSTANCE_1GPU = "ml.g4dn.xlarge"
-DEFAULT_GPU_INSTANCE_4GPU = "ml.g4dn.12xlarge"
-
-PYTORCH_LATEST_FRAMEWORK = "1.12.1"
-PYTORCH_LATEST_PY_VERSION = "py38"
-
-HUGGINGFACE_LATEST_FRAMEWORK_VERSION = "4.4"
-HUGGINGFACE_LATEST_PYTORCH_VERSION = "1.7.1"
-HUGGINGFACE_LATEST_TRANSFORMERS_VERSION = "4.6.1"
-HUGGINGFACE_LATEST_PY_VERSION = "py36"
-
-MXNET_LATEST_PY_VERSION = "py38"
-MXNET_LATEST_VERSION = "1.9.0"
 
 
 def instance_sagemaker_estimator(**kwargs):

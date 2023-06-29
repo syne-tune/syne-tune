@@ -18,15 +18,15 @@ from collections import Counter
 from syne_tune.optimizer.schedulers.hyperband_promotion import (
     PromotionRungSystem,
 )
-from syne_tune.optimizer.schedulers.searchers.dyhpo.dyhpo_searcher import (
-    DynamicHPOSearcher,
-    KEY_NEW_CONFIGURATION,
-)
+from syne_tune.optimizer.schedulers.searchers import BaseSearcher
 
 logger = logging.getLogger(__name__)
 
 
 DEFAULT_SH_PROBABILITY = 0.25
+
+
+KEY_NEW_CONFIGURATION = "new_configuration"
 
 
 class ScheduleDecision:
@@ -100,14 +100,11 @@ class DyHPORungSystem(PromotionRungSystem):
         mode: str,
         resource_attr: str,
         max_t: int,
-        searcher: DynamicHPOSearcher,
+        searcher: BaseSearcher,
         probability_sh: bool,
         random_state: RandomState,
     ):
         assert len(rung_levels) > 0, "rung_levels must not be empty"
-        assert isinstance(
-            searcher, DynamicHPOSearcher
-        ), "searcher must be of type DynamicHPOSearcher. Use searcher='dyhpo'"
         assert (
             0 <= probability_sh < 1
         ), f"probability_sh = {probability_sh}, must be in [0, 1)"

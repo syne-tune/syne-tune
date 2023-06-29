@@ -28,10 +28,10 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
 )
 from syne_tune.config_space import loguniform, lograndint
 from syne_tune.optimizer.baselines import ASHA
-from syne_tune.remote.estimators import (
+from syne_tune.remote.constants import (
     DEFAULT_CPU_INSTANCE,
-    MXNET_LATEST_VERSION,
     MXNET_LATEST_PY_VERSION,
+    MXNET_LATEST_VERSION,
 )
 
 if __name__ == "__main__":

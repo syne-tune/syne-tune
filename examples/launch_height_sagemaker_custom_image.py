@@ -30,7 +30,7 @@ from examples.training_scripts.height_example.train_height import (
     MAX_RESOURCE_ATTR,
 )
 from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune.remote.estimators import DEFAULT_CPU_INSTANCE_SMALL
+from syne_tune.remote.constants import DEFAULT_CPU_INSTANCE_SMALL
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)

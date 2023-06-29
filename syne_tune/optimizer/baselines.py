@@ -24,8 +24,6 @@ from syne_tune.optimizer.schedulers.multiobjective import (
     MOASHA,
     MultiObjectiveRegularizedEvolution,
     NSGA2Searcher,
-    MultiObjectiveMultiSurrogateSearcher,
-    MultiObjectiveLCBRandomLinearScalarization,
     LinearScalarizedScheduler,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.estimator import Estimator
@@ -44,6 +42,7 @@ from syne_tune.try_import import (
     try_import_blackbox_repository_message,
     try_import_bore_message,
     try_import_botorch_message,
+    try_import_moo_message,
 )
 from syne_tune.util import dict_get
 
@@ -794,6 +793,15 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         estimators: Optional[Dict[str, Estimator]] = None,
         **kwargs,
     ):
+        try:
+            from syne_tune.optimizer.schedulers.multiobjective import (
+                MultiObjectiveMultiSurrogateSearcher,
+                MultiObjectiveLCBRandomLinearScalarization,
+            )
+        except ImportError:
+            logging.info(try_import_moo_message())
+            raise
+
         searcher_kwargs = _create_searcher_kwargs(
             config_space, metric, random_seed, kwargs
         )

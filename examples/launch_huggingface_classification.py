@@ -27,10 +27,10 @@ from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     default_sagemaker_session,
 )
 from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune.remote.estimators import (
+from syne_tune.remote.constants import (
     HUGGINGFACE_LATEST_FRAMEWORK_VERSION,
-    HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
     HUGGINGFACE_LATEST_PYTORCH_VERSION,
+    HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
     HUGGINGFACE_LATEST_PY_VERSION,
 )
 

@@ -14,7 +14,7 @@ from pathlib import Path
 
 from syne_tune.experiments.benchmark_definitions.common import RealBenchmarkDefinition
 from syne_tune.config_space import uniform, loguniform
-from syne_tune.remote.estimators import (
+from syne_tune.remote.constants import (
     DEFAULT_GPU_INSTANCE_1GPU,
     DEFAULT_GPU_INSTANCE_4GPU,
 )

@@ -26,7 +26,8 @@ from syne_tune.optimizer.scheduler import (
     SchedulerDecision,
     TrialSuggestion,
 )
-from syne_tune import Tuner, StoppingCriterion
+from syne_tune.tuner import Tuner
+from syne_tune.stopping_criterion import StoppingCriterion
 from syne_tune.config_space import randint
 from examples.training_scripts.height_example.train_height import (
     METRIC_ATTR,

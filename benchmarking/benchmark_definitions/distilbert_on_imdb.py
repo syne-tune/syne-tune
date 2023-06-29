@@ -18,7 +18,7 @@ from benchmarking.training_scripts.distilbert_on_imdb.distilbert_on_imdb import 
     _config_space,
 )
 from syne_tune.experiments.benchmark_definitions.common import RealBenchmarkDefinition
-from syne_tune.remote.estimators import DEFAULT_GPU_INSTANCE_1GPU
+from syne_tune.remote.constants import DEFAULT_GPU_INSTANCE_1GPU
 
 
 def distilbert_imdb_benchmark(sagemaker_backend: bool = False, **kwargs):

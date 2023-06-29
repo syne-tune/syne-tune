@@ -65,6 +65,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: extra
       script-path: examples/launch_tuning_gluonts.py
       requires-aws-credentials: true
     secrets: inherit
@@ -73,6 +74,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: extra
       script-path: examples/launch_moasha_instance_tuning.py
       requires-aws-credentials: true
     secrets: inherit
@@ -81,6 +83,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: aws
       script-path: examples/launch_height_sagemaker.py
       requires-aws-credentials: true
     secrets: inherit
@@ -89,6 +92,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: aws
       script-path: examples/launch_huggingface_classification.py
       requires-aws-credentials: true
     secrets: inherit
@@ -97,6 +101,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: aws
       script-path: examples/launch_height_sagemaker_remotely.py --use_sagemaker_backend 0
       requires-aws-credentials: true
     secrets: inherit
@@ -105,6 +110,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: aws
       script-path: examples/launch_height_sagemaker_remotely.py --use_sagemaker_backend 1
       requires-aws-credentials: true
     secrets: inherit
@@ -113,6 +119,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: aws
       script-path: examples/launch_height_sagemaker_checkpoints.py
       requires-aws-credentials: true
     secrets: inherit
@@ -121,7 +128,8 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      script-path: examples/launch_simulated_benchmark.py      
+      extras-require: blackbox-repository,aws
+      script-path: examples/launch_simulated_benchmark.py
       requires-aws-credentials: true
     secrets: inherit
 
@@ -129,6 +137,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: blackbox-repository,aws
       additional-command: pip install matplotlib
       script-path: examples/launch_nas201_transfer_learning.py
       requires-aws-credentials: true
@@ -138,6 +147,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: blackbox-repository,aws
       script-path: examples/launch_nasbench201_simulated.py
       requires-aws-credentials: true
     secrets: inherit
@@ -146,6 +156,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: blackbox-repository,aws
       script-path: examples/launch_pasha_nasbench201.py
       requires-aws-credentials: true
     secrets: inherit
@@ -154,6 +165,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: extra
       script-path: examples/launch_cqr_nasbench201.py
       requires-aws-credentials: true
     secrets: inherit
@@ -162,6 +174,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: aws
       script-path: examples/launch_height_config_json.py --use_sagemaker_backend 1
       requires-aws-credentials: true
     secrets: inherit
@@ -170,6 +183,8 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,aws
+      additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: examples/launch_fashionmnist_checkpoint_removal.py
       requires-aws-credentials: true
     secrets: inherit
@@ -178,6 +193,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws
       script-path: examples/launch_lcbench_simulated.py
       requires-aws-credentials: true
     secrets: inherit
@@ -186,6 +202,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: extra
       script-path: examples/example_automatic_termination_criterion.py
       requires-aws-credentials: true
     secrets: inherit
@@ -196,6 +213,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method RS
       requires-aws-credentials: true
@@ -205,6 +223,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method BO
       requires-aws-credentials: true
@@ -214,6 +233,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method ASHA-STOP
       requires-aws-credentials: true
@@ -223,6 +243,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method ASHA-PROM
       requires-aws-credentials: true
@@ -232,6 +253,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method MOBSTER-STOP
       requires-aws-credentials: true
@@ -241,6 +263,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers
       additional-command: pip install -r benchmarking/training_scripts/mlp_on_fashion_mnist/requirements.txt
       script-path: docs/source/tutorials/basics/code/hpo_main.py --max_wallclock_time 300 --method MOBSTER-PROM
       requires-aws-credentials: true
@@ -252,6 +275,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method ASHA-STOP
       requires-aws-credentials: true
     secrets: inherit
@@ -260,6 +284,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method ASHA-PROM
       requires-aws-credentials: true
     secrets: inherit
@@ -268,6 +293,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method ASHA6-STOP
       requires-aws-credentials: true
     secrets: inherit
@@ -276,6 +302,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method MOBSTER-JOINT
       requires-aws-credentials: true
     secrets: inherit
@@ -284,6 +311,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method MOBSTER-INDEP
       requires-aws-credentials: true
     secrets: inherit
@@ -292,6 +320,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method HYPERTUNE-INDEP
       requires-aws-credentials: true
     secrets: inherit
@@ -300,6 +329,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method HYPERTUNE4-INDEP
       requires-aws-credentials: true
     secrets: inherit
@@ -308,6 +338,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method HYPERTUNE-JOINT
       requires-aws-credentials: true
     secrets: inherit
@@ -316,6 +347,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method SYNCHB
       requires-aws-credentials: true
     secrets: inherit
@@ -324,6 +356,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method SYNCSH
       requires-aws-credentials: true
     secrets: inherit
@@ -332,6 +365,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method SYNCMOBSTER
       requires-aws-credentials: true
     secrets: inherit
@@ -340,6 +374,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method BOHB
       requires-aws-credentials: true
     secrets: inherit
@@ -348,6 +383,7 @@ jobs:
     needs: stop_all_training_jobs
     uses: ./.github/workflows/run-syne-tune.yml
     with:
+      extras-require: gpsearchers,blackbox-repository,aws,kde
       script-path: docs/source/tutorials/multifidelity/code/hpo_main.py --method DEHB
       requires-aws-credentials: true
     secrets: inherit

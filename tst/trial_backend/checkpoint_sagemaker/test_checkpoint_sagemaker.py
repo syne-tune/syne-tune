@@ -21,8 +21,8 @@ from syne_tune import StoppingCriterion, Tuner
 from syne_tune.backend import SageMakerBackend
 from syne_tune.remote.estimators import (
     pytorch_estimator,
-    DEFAULT_CPU_INSTANCE_SMALL,
 )
+from syne_tune.remote.constants import DEFAULT_CPU_INSTANCE_SMALL
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     get_execution_role,
     default_sagemaker_session,

@@ -30,10 +30,6 @@ from syne_tune.optimizer.schedulers.searchers.random_grid_searcher import (  # n
 from syne_tune.optimizer.schedulers.searchers.searcher_factory import (  # noqa: F401
     searcher_factory,
 )
-from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (  # noqa: F401
-    ModelBasedSearcher,
-    BayesianOptimizationSearcher,
-)
 
 __all__ = [
     "BaseSearcher",
@@ -44,11 +40,13 @@ __all__ = [
     "RandomSearcher",
     "GridSearcher",
     "searcher_factory",
-    "ModelBasedSearcher",
-    "BayesianOptimizationSearcher",
 ]
 
 try:
+    from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (  # noqa: F401
+        ModelBasedSearcher,
+        BayesianOptimizationSearcher,
+    )
     from syne_tune.optimizer.schedulers.searchers.gp_fifo_searcher import (  # noqa: F401
         GPFIFOSearcher,
     )
@@ -58,6 +56,8 @@ try:
 
     __all__.extend(
         [
+            "ModelBasedSearcher",
+            "BayesianOptimizationSearcher",
             "GPFIFOSearcher",
             "GPMultiFidelitySearcher",
         ]

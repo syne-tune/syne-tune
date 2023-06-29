@@ -32,10 +32,10 @@ from examples.training_scripts.height_example.train_height import (
     MAX_RESOURCE_ATTR,
 )
 from syne_tune.optimizer.baselines import RandomSearch
-from syne_tune.remote.estimators import (
+from syne_tune.remote.constants import (
+    DEFAULT_CPU_INSTANCE_SMALL,
     PYTORCH_LATEST_FRAMEWORK,
     PYTORCH_LATEST_PY_VERSION,
-    DEFAULT_CPU_INSTANCE_SMALL,
 )
 
 if __name__ == "__main__":

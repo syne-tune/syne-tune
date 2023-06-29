@@ -32,11 +32,11 @@ from syne_tune.constants import (
     ST_INSTANCE_TYPE,
 )
 from syne_tune.optimizer.schedulers.multiobjective import MOASHA
-from syne_tune.remote.estimators import (
+from syne_tune.remote.constants import (
     DEFAULT_CPU_INSTANCE_SMALL,
     HUGGINGFACE_LATEST_FRAMEWORK_VERSION,
-    HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
     HUGGINGFACE_LATEST_PYTORCH_VERSION,
+    HUGGINGFACE_LATEST_TRANSFORMERS_VERSION,
     HUGGINGFACE_LATEST_PY_VERSION,
 )
 from syne_tune.remote.remote_launcher import RemoteLauncher
