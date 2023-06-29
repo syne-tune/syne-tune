@@ -13,10 +13,8 @@
 from typing import Dict, Any, Optional
 import logging
 
-from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.baselines import methods
-from benchmarking.nursery.odsc_tutorial.transformer_wikitext2.benchmark_definitions import (
-    benchmark_definitions,
-)
+from transformer_wikitext2.baselines import methods
+from transformer_wikitext2.benchmark_definitions import benchmark_definitions
 from syne_tune.experiments import (
     TrialsOfExperimentResults,
     PlotParameters,

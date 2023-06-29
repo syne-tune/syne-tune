@@ -63,7 +63,7 @@ Ignoring the boilerplate, here are the important parts. First, we define the
 hyperparameters which should be optimized over:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/code/training_script_report_end.py
-   :caption: training_script_report_end.py -- hyperparameters
+   :caption: transformer_wikitext2/code/training_script_report_end.py -- hyperparameters
    :start-at: from syne_tune import Reporter
    :end-before: DATASET_PATH =
 
@@ -77,7 +77,7 @@ hyperparameters which should be optimized over:
 Next, here is the function which executes a trial:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/code/training_script_report_end.py
-   :caption: training_script_report_end.py -- objective
+   :caption: transformer_wikitext2/code/training_script_report_end.py -- objective
    :start-at: def objective(config):
    :end-at: report(**{METRIC_NAME: val_loss})
 
@@ -96,7 +96,7 @@ Next, here is the function which executes a trial:
 Finally, the script needs some command line arguments:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/code/training_script_report_end.py
-   :caption: training_script_report_end.py -- command line arguments
+   :caption: transformer_wikitext2/code/training_script_report_end.py -- command line arguments
    :start-at: parser = argparse.ArgumentParser(
 
 * We use an argument parser ``parser``. Hyperparameters can be added by
@@ -120,7 +120,7 @@ add this definition to the script, but you can also keep it separate and
 use the same training script with different configuration spaces:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/code/training_script_report_end.py
-   :caption: training_script_report_end.py -- configuration space
+   :caption: transformer_wikitext2/code/training_script_report_end.py -- configuration space
    :start-at: _config_space = {
    :end-before: DATASET_PATH =
 
@@ -144,7 +144,7 @@ tutorial. To this end, we need to define some defaults about how experiments
 are to be run (most of these can be overwritten by command line arguments):
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/code/transformer_wikitext2_definition.py
-   :caption: transformer_wikitext2_definition.py
+   :caption: transformer_wikitext2/code/transformer_wikitext2_definition.py
    :start-after: # permissions and limitations under the License.
 
 All you need to do is to provide a function (``transformer_wikitext2_benchmark`` here)

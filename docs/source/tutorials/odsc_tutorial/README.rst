@@ -5,12 +5,12 @@ These sections are part of a tutorial given at the Open Data Science Conference
 Europe in June 2023. They provide hands-on examples for distributed
 hyperparameter tuning, as well as links to further details for self-teaching.
 
-The example code used in this tutorial is located in
-:mod:`benchmarking.nursery.odsc_tutorial`.
-
 .. note::
-   In order to run the examples in this tutorial, Syne Tune needs to be
-   `installed from source <../../getting_started.html#installation>`__.
+   The code used in this tutorial is contained in the
+   `Syne Tune sources <../../getting_started.html#installation>`__, it is not
+   installed by ``pip``. You can obtain this code by installing Syne Tune from
+   source, but the only code that is needed is in
+   :mod:`benchmarking.nursery.odsc_tutorial`.
    You also need have access to AWS SageMaker, and work through
    `these setups <../../faq.html#how-can-i-run-on-aws-and-sagemaker>`__.
 

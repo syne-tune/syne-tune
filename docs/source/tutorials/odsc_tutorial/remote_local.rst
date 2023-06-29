@@ -6,6 +6,14 @@ landscape. Your success depends to a large extent on whether you can *decrease
 the time to the next decision*. In this section, we discuss one important
 approach, namely how to increase the *number of experiments run in parallel*.
 
+.. note::
+   Imports in our scripts are absolute against the root package
+   ``transformer_wikitext2``, so that only the code in
+   :mod:`benchmarking.nursery.odsc_tutorial` has to be present. In order to run
+   them, you need to append ``<abspath>/odsc_tutorial/`` to the ``PYTHONPATH``
+   environment variable. This is required even if you have installed Syne Tune
+   from source.
+
 Launching our Study
 -------------------
 
@@ -38,11 +46,13 @@ Once more, all the hard work in done in
 :func:`syne_tune.experiments.launchers.launch_remote_local.launch_remote`, where
 ``launch_remote_local`` needs to be chosen for the local backend. Most important
 is that our previous ``hpo_main.py`` is specified as ``entry_point`` here. Here is
-the command to run all experiments of our study in parallel:
+the command to run all experiments of our study in parallel (replace ``...`` by the
+absolute path to ``odsc_tutorial``):
 
 .. code-block:: bash
 
-   python benchmarking/nursery/odsc_tutorial/transformer_wikitext2/local/launch_remote.py \
+   export PYTHONPATH="${PYTHONPATH}:/.../odsc_tutorial/"
+   python transformer_wikitext2/local/launch_remote.py \
      --experiment_tag odsc-1 --benchmark transformer_wikitext2 --num_seeds 10
 
 * This command launches 40 SageMaker training jobs, running 10 random repetitions
