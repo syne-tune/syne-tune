@@ -110,6 +110,16 @@ tuner.run()
 
 The above example runs ASHA with 4 asynchronous workers on a local machine.
 
+## Experimentation with Syne Tune
+
+If you plan to use advanced features of Syne Tune, such as different execution
+backends or running experiments remotely, writing launcher scripts like
+`examples/launch_height_simple.py` can become tedious. Syne Tune provides an
+advanced experimentation framework, which you can learn about in
+[this tutorial](https://syne-tune.readthedocs.io/en/latest/tutorials/experimentation/README.html)
+or also in
+[this one](https://syne-tune.readthedocs.io/en/latest/tutorials/odsc_tutorial/README.html).
+
 ## Supported HPO methods
 
 The following hyperparameter optimization (HPO) methods are available in Syne Tune:
@@ -198,6 +208,12 @@ different functionalities provided by Syne Tune. For example:
   launches HPO locally with [Ray Tune](https://docs.ray.io/en/master/tune/index.html)
   scheduler
 
+## Examples for Experimentation and Benchmarking
+
+You will find many examples for experimentation and benchmarking in
+[benchmarking/examples/](benchmarking/examples/) and in
+benchmarking/nusery/](benchmarking/nursery/).
+
 ## FAQ and Tutorials
 
 You can check our [FAQ](https://syne-tune.readthedocs.io/en/latest/faq.html), to
@@ -242,10 +258,12 @@ Do you want to know more? Here are a number of tutorials.
 * [Using the Built-in Schedulers](https://syne-tune.readthedocs.io/en/latest/schedulers.html)
 * [Multi-Fidelity Hyperparameter Optimization](https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/README.html)
 * [Benchmarking in Syne Tune](https://syne-tune.readthedocs.io/en/latest/tutorials/benchmarking/README.html)
+* [Visualization of Results](https://syne-tune.readthedocs.io/en/latest/tutorials/visualization/README.html)
+* [Rapid Experimentation with Syne Tune](https://syne-tune.readthedocs.io/en/latest/tutorials/experimentation/README.html)
 * [How to Contribute a New Scheduler](https://syne-tune.readthedocs.io/en/latest/tutorials/developer/README.html)
 * [PASHA: Efficient HPO and NAS with Progressive Resource Allocation](https://syne-tune.readthedocs.io/en/latest/tutorials/pasha/pasha.html)
 * [Using Syne Tune for Transfer Learning](https://syne-tune.readthedocs.io/en/latest/tutorials/transfer_learning/transfer_learning.html)
-
+* [Distributed Hyperparameter Tuning: Finding the Right Model can be Fast and Fun](https://syne-tune.readthedocs.io/en/latest/tutorials/odsc_tutorial/README.html)
 
 ## Blog Posts
 

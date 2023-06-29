@@ -72,7 +72,9 @@ backends or running experiments remotely, writing launcher scripts like
 ``examples/launch_height_simple.py`` can become tedious. Syne Tune provides an
 advanced experimentation framework, which you can learn about in
 `this tutorial <tutorials/experimentation/README.html>`__, or also in
-`this one <tutorials/odsc_tutorial/README.html>`__.
+`this one <tutorials/odsc_tutorial/README.html>`__. Examples for the
+experimentation framework are given in :mod:`benchmarking.examples` and
+:mod:`benchmarking.nursery`.
 
 Supported HPO Methods
 =====================
