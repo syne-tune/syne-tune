@@ -113,7 +113,7 @@ class SKLearnEstimatorWrapper(Estimator):
 
         If ``self.state.pending_evaluations`` is not empty, we compute posterior for state without pending evals.
         This method can be overwritten for any other behaviour such as one found in
-        ``syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model.GaussProcEstimator.fit_from_state``
+        :meth:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.gp_model.GaussProcEstimator.fit_from_state`.
 
         :param state: Current data model parameters are to be fit on, and the
             posterior state is to be computed from

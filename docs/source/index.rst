@@ -87,6 +87,7 @@ What's New?
    tutorials/visualization/README
    tutorials/experimentation/README
    tutorials/developer/README
+   tutorials/dev_bayesopt/README
    tutorials/pasha/pasha
    tutorials/transfer_learning/transfer_learning
    tutorials/odsc_tutorial/README
