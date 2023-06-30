@@ -6,6 +6,14 @@ the *time per experiment*. This can be done, to some extent, by increasing the
 number of workers, i.e. the number of trials which are run in parallel. In
 this section, we show how this can be done.
 
+.. note::
+   Imports in our scripts are absolute against the root package
+   ``transformer_wikitext2``, so that only the code in
+   :mod:`benchmarking.nursery.odsc_tutorial` has to be present. In order to run
+   them, you need to append ``<abspath>/odsc_tutorial/`` to the ``PYTHONPATH``
+   environment variable. This is required even if you have installed Syne Tune
+   from source.
+
 Comparing Different Numbers of Workers
 --------------------------------------
 
@@ -39,10 +47,11 @@ in the launcher scripts:
 
 We import from ``hpo_main_sagemaker`` and ``launch_remote_sagemaker`` instead
 of ``hpo_main_local`` and ``launch_remote_local``. Here is how the experiments
-are launched:
+are launched (replace ``...`` by the absolute path to ``odsc_tutorial``):
 
 .. code-block:: bash
 
+   export PYTHONPATH="${PYTHONPATH}:/.../odsc_tutorial/"
    python benchmarking/nursery/odsc_tutorial/transformer_wikitext2/sagemaker/launch_remote.py \
      --experiment_tag tmlr-10 --benchmark transformer_wikitext2 \
      --random_seed 2938702734 --scale_max_wallclock_time 1 \

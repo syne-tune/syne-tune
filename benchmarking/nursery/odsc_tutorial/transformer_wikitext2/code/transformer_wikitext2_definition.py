@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 from pathlib import Path
 
-from benchmarking.training_scripts.transformer_wikitext2.training_script import (
+from transformer_wikitext2.code.training_script import (
     _config_space,
     METRIC_NAME,
     RESOURCE_ATTR,

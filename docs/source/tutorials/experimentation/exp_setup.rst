@@ -34,11 +34,11 @@ default configuration space for these benchmarks:
 
 .. note::
    The code used in this tutorial is contained in the
-   `Syne Tune sources <../../getting_started.html#installation>`__, it is not
+   `Syne Tune source <../../getting_started.html#installation>`__, it is not
    installed by ``pip``. You can obtain this code by installing Syne Tune from
    source, but the only code that is needed is in
    :mod:`benchmarking.examples.demo_experiment`, so if you copy that out of the
-   repository, you do not need all the remaining sources.
+   repository, you do not need all the remaining source code.
 
 Modifying the Configuration Space
 ---------------------------------
@@ -143,7 +143,7 @@ information about the experiment. Here is the script:
 The outcome is that a number of additional columns are appended to the dataframe
 stored in ``results.csv.zip``, at least for experiments with ASHA or
 MOBSTER schedulers. Running this script launches an experiment locally (if you
-installed Syne Tune from sources, you need to start the script from the
+installed Syne Tune from source, you need to start the script from the
 ``benchmarking/examples`` directory):
 
 .. code-block:: bash
@@ -193,7 +193,7 @@ Running experiments in parallel requires a remote launcher script:
   in total.
 
 All of these experiments can be launched with a single command (if you
-installed Syne Tune from sources, you need to start the script from the
+installed Syne Tune from source, you need to start the script from the
 ``benchmarking/examples`` directory):
 
 .. code-block:: bash

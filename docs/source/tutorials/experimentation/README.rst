@@ -21,7 +21,8 @@ to consult the benchmarking tutorial for background information.
    `Syne Tune sources <../../getting_started.html#installation>`__, it is not
    installed by ``pip``. You can obtain this code by installing Syne Tune from
    source, but the only code that is needed is in
-   :mod:`benchmarking.examples.demo_experiment`.
+   :mod:`benchmarking.examples.demo_experiment`. The final section also needs
+   code from :mod:`benchmarking.nursery.odsc_tutorial`.
 
 .. toctree::
    :name: Rapid Experimentation with Syne Tune Sections
@@ -29,4 +30,4 @@ to consult the benchmarking tutorial for background information.
 
    exp_setup
    exp_plotting
-
+   exp_packages

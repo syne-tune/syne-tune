@@ -34,7 +34,7 @@ training script,
 enables multi-fidelity tuning. The relevant part is this:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/code/training_script_no_checkpoints.py
-   :caption: training_script_no_checkpoints.py -- objective
+   :caption: transformer_wikitext2/code/training_script_no_checkpoints.py -- objective
    :start-at: def objective(config):
    :end-at: report(**{RESOURCE_ATTR: epoch, METRIC_NAME: val_loss})
 
@@ -67,7 +67,7 @@ training script,
 enables checkpointing. The relevant part is this:
 
 .. literalinclude:: ../../../../benchmarking/nursery/odsc_tutorial/transformer_wikitext2/code/training_script.py
-   :caption: training_script.py -- objective
+   :caption: transformer_wikitext2/code/training_script.py -- objective
    :start-at: def objective(config):
    :end-at: report(**{RESOURCE_ATTR: epoch, METRIC_NAME: val_loss})
 

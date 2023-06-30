@@ -166,7 +166,7 @@ Launching Experiments Locally
 -----------------------------
 
 Here is an example of how simulated experiments are launched locally (if you
-installed Syne Tune from sources, you need to start the script from the
+installed Syne Tune from source, you need to start the script from the
 ``benchmarking/examples`` directory):
 
 .. code-block:: bash
@@ -234,7 +234,7 @@ the machine you launch from. Second, different experiments are run sequentially,
 not in parallel. Remote launching has exactly the same parameters as launching
 locally, but experiments are sliced along certain axes and run in parallel,
 using a number of SageMaker training jobs. Here is an example (if you
-installed Syne Tune from sources, you need to start the script from the
+installed Syne Tune from source, you need to start the script from the
 ``benchmarking/examples`` directory):
 
 .. code-block:: bash
