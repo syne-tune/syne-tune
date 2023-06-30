@@ -18,7 +18,7 @@ from benchmarking.training_scripts.mlp_on_fashion_mnist.mlp_on_fashion_mnist imp
     METRIC_NAME,
     RESOURCE_ATTR,
 )
-from syne_tune.remote.estimators import DEFAULT_CPU_INSTANCE
+from syne_tune.remote.constants import DEFAULT_CPU_INSTANCE
 
 
 def mlp_fashionmnist_benchmark(sagemaker_backend: bool = False, **kwargs):

@@ -13,7 +13,6 @@
 from typing import Dict, Optional, Iterable, List, Callable
 
 import numpy as np
-import scipy.stats
 from numpy.random import RandomState
 
 from syne_tune.optimizer.schedulers.searchers.bayesopt.tuning_algorithms.base_classes import (
@@ -74,6 +73,7 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
         candidates: Iterable[Configuration],
         predictor: Optional[Dict[str, Predictor]] = None,
     ) -> List[float]:
+        from scipy import stats
 
         if predictor is None:
             predictor = self.predictor
@@ -86,7 +86,7 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
 
             metric_score = self._single_objective_score(predicted_mean, predicted_std)
             if self.normalize_acquisition:
-                metrics_score_normalized = scipy.stats.rankdata(metric_score)
+                metrics_score_normalized = stats.rankdata(metric_score)
                 metrics_score_normalized = (
                     metrics_score_normalized / metrics_score_normalized.max()
                 )

@@ -18,6 +18,9 @@ from syne_tune.optimizer.schedulers.searchers import (
     BaseSearcher,
     GPMultiFidelitySearcher,
 )
+from syne_tune.optimizer.schedulers.searchers.dyhpo.hyperband_dyhpo import (
+    KEY_NEW_CONFIGURATION,
+)
 from syne_tune.optimizer.schedulers.searchers.model_based_searcher import (
     create_initial_candidates_scorer,
 )
@@ -44,9 +47,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_im
 )
 
 logger = logging.getLogger(__name__)
-
-
-KEY_NEW_CONFIGURATION = "new_configuration"
 
 
 INTERNAL_KEY = "RESERVED_KEY_31415927"

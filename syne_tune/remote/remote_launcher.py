@@ -23,8 +23,8 @@ import syne_tune
 from syne_tune import Tuner
 from syne_tune.remote.estimators import (
     instance_sagemaker_estimator,
-    DEFAULT_CPU_INSTANCE,
 )
+from syne_tune.remote.constants import DEFAULT_CPU_INSTANCE
 from syne_tune.remote.remote_metrics_callback import RemoteTuningMetricsCallback
 from syne_tune.backend.sagemaker_backend.sagemaker_utils import (
     add_syne_tune_dependency,

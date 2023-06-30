@@ -19,7 +19,7 @@ from benchmarking.training_scripts.resnet_cifar10.resnet_cifar10 import (
     MAX_RESOURCE_ATTR,
     _config_space,
 )
-from syne_tune.remote.estimators import (
+from syne_tune.remote.constants import (
     DEFAULT_GPU_INSTANCE_1GPU,
     DEFAULT_GPU_INSTANCE_4GPU,
 )

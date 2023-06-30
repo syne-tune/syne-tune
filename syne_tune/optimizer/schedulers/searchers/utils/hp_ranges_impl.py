@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from typing import Tuple, Dict, List, Any, Optional, Union
 import numpy as np
-from autograd import numpy as anp
 
 from syne_tune.config_space import (
     Domain,
@@ -839,7 +838,7 @@ def decode_extended_features(
     resources_encoded = features_ext[:, -1].reshape((-1,))
     lower = r_min - 0.5 + EPS
     width = r_max - r_min + 1 - 2 * EPS
-    resources = anp.clip(
-        anp.round(resources_encoded * width + lower), r_min, r_max
+    resources = np.clip(
+        np.round(resources_encoded * width + lower), r_min, r_max
     ).astype("int64")
     return features, resources

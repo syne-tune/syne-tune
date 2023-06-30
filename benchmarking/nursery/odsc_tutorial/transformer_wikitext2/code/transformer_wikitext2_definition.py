@@ -19,7 +19,7 @@ from benchmarking.training_scripts.transformer_wikitext2.training_script import 
     MAX_RESOURCE_ATTR,
 )
 from syne_tune.experiments.benchmark_definitions.common import RealBenchmarkDefinition
-from syne_tune.remote.estimators import (
+from syne_tune.remote.constants import (
     DEFAULT_GPU_INSTANCE_1GPU,
     DEFAULT_GPU_INSTANCE_4GPU,
 )
