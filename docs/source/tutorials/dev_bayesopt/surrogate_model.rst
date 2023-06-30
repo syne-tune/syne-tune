@@ -19,8 +19,69 @@ of how to implement a new scikit-learn estimator based model. More details
 about how to extend GP based models are provided
 `further below <gp_model.html>`__.
 
+
+Example
+-------
+
+Before diving into details, let us look at a simple example for how to implement
+a new surrogate model in Syne Tune, of the scikit-learn estimator based type. It
+does not come with some of the complexities of Gaussian process based surrogate
+models, to be discussed below:
+
+* Fantasizing is not supported
+* MCMC (or ensemble predictions) is not supported
+* Gradient-based optimization of an acquisition function is not supported, in
+  that Bayesian optimization is scoring a finite number of candidates drawn
+  at random, selecting the best
+
+The full example code is given
+`here <../../examples.html#bayesian-optimization-with-scikit-learn-based-surrogate-model>`__.
+We implement subclasses of
+:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.SKLearnPredictor`
+and
+:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.SKLearnEstimator`.
+These are wrapped by
+:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model.SKLearnPredictorWrapper`
+and
+:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model.SKLearnEstimatorWrapper`.
+
+.. literalinclude:: ../../../../examples/launch_sklearn_surrogate_bo.py
+   :caption: examples/launch_sklearn_surrogate_bo.py
+   :start-at: from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn import (
+   :end-before: if __name__ == "__main__":
+
+* The ``BayesianRidgeEstimator`` is wrapping the scikit-learn estimator
+  ``sklearn.linear_model.BayesianRidge``, which implements a form of
+  Bayesian regression estimation. While this method has hyperparameters, they
+  are automatically set in ``fit``, so we do not need to make them explicit.
+  The result of ``fit`` is a ``BayesianRidgePredictor`` instance which wraps
+  a copy of the fitted scikit-learn estimator.
+* In ``BayesianRidgePredictor``, the ``predict`` methods calls the equivalent
+  of the scikit-learn estimator with ``return_std=True``, so that both
+  predictive means and stddevs are returned.
+
+The remaining launcher script is much the same as other examples, except that
+:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` is used with a
+particular searcher:
+
+.. literalinclude:: ../../../../examples/launch_sklearn_surrogate_bo.py
+   :caption: examples/launch_sklearn_surrogate_bo.py
+   :start-at: searcher = SKLearnSurrogateSearcher(
+   :end-before: scheduler = FIFOScheduler(
+
+* :class:`~syne_tune.optimizer.schedulers.searchers.sklearn.SKLearnSurrogateSearcher`
+  needs a :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.SKLearnEstimator`
+  object as ``estimator``, as well as the choice of acquisition function as
+  ``scoring_class``.
+
+
 The Predictor Class
 -------------------
+
+Scikit-learn based estimators are typically rather simple and based on
+deterministic machine learning methods. Bayesian optimization is usually run with
+*Bayesian models*, where proper quantification of uncertainty is center-stage,
+and supporting these is a little more difficult.
 
 In Bayesian statistics, (surrogate) models are conditioned on data in order to
 obtain a posterior distribution, represented by a *posterior state*. Given this
@@ -90,6 +151,9 @@ supported). This is served by methods of
   :math:`[\sigma(\mathbf{x}_i)]_i` of shape ``(n,)``. If the surrogate
   model does not support fantasizing, the entry for "mean" is also a
   vector of shape ``(n,)``.
+* ``predict_candidates``: Version of ``predict``, where the input is a list of
+  configurations :math:`[\mathbf{c}_j]`, which are first mapped to rows of
+  the matrix :math:`\mathbf{X}` by using ``hp_ranges_for_prediction``.
 * ``keys_predict``: Keys of dictionaries returned by ``predict``. If a
   surrogate model is to be used with a standard acquisition function, such
   as expected improvement, it needs to return at least means ("mean") and
@@ -213,56 +277,3 @@ GP posterior state is computed.
    in order to convert the ``TuningJobState`` object into the usual pair of
    feature matrix ``features`` and target vector ``targets``, along with
    normalization of targets.
-
-Example
--------
-
-Let us look at a simple example for how to implement a new surrogate model in
-Syne Tune, of the scikit-learn estimator based type. It does not come with some
-of the complexities of Gaussian process based surrogate models:
-
-* Fantasizing is not supported
-* MCMC (or ensemble predictions) is not supported
-* Gradient-based optimization of an acquisition function is not supported, in
-  that Bayesian optimization is scoring a finite number of candidates drawn
-  at random, selecting the best
-
-The full example code is given
-`here <../../examples.html#bayesian-optimization-with-scikit-learn-based-surrogate-model>`__.
-We implement subclasses of
-:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.SKLearnPredictor`
-and
-:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.SKLearnEstimator`.
-These are wrapped by
-:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model.SKLearnPredictorWrapper`
-and
-:class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.sklearn_model.SKLearnEstimatorWrapper`.
-
-.. literalinclude:: ../../../../examples/launch_sklearn_surrogate_bo.py
-   :caption: examples/launch_sklearn_surrogate_bo.py
-   :start-at: from syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn import (
-   :end-before: if __name__ == "__main__":
-
-* The ``BayesianRidgeEstimator`` is wrapping the scikit-learn estimator
-  ``sklearn.linear_model.BayesianRidge``, which implements a form of
-  Bayesian regression estimation. While this method has hyperparameters, they
-  are automatically set in ``fit``, so we do not need to make them explicit.
-  The result of ``fit`` is a ``BayesianRidgePredictor`` instance which wraps
-  a copy of the fitted scikit-learn estimator.
-* In ``BayesianRidgePredictor``, the ``predict`` methods calls the equivalent
-  of the scikit-learn estimator with ``return_std=True``, so that both
-  predictive means and stddevs are returned.
-
-The remaining launcher script is much the same as other examples, except that
-:class:`~syne_tune.optimizer.schedulers.FIFOScheduler` is used with a
-particular searcher:
-
-.. literalinclude:: ../../../../examples/launch_sklearn_surrogate_bo.py
-   :caption: examples/launch_sklearn_surrogate_bo.py
-   :start-at: searcher = SKLearnSurrogateSearcher(
-   :end-before: scheduler = FIFOScheduler(
-
-* :class:`~syne_tune.optimizer.schedulers.searchers.sklearn.SKLearnSurrogateSearcher`
-  needs a :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.sklearn.SKLearnEstimator`
-  object as ``estimator``, as well as the choice of acquisition function as
-  ``scoring_class_and_args``.
