@@ -130,6 +130,7 @@ Grid Search |  | deterministic | yes | no | no
 Random Search | Bergstra, et al. (2011) | random | yes | no | no 
 Bayesian Optimization | Snoek, et al. (2012) | model-based | yes | no | no 
 BORE | Tiao, et al. (2021) | model-based | yes | no | no 
+CQR | Salinas, et al. (2023) | model-based | yes | no | no 
 MedianStoppingRule | Golovin, et al. (2017) | any | yes | yes | no 
 SyncHyperband | Li, et al. (2018) | random | no | yes | no 
 SyncBOHB | Falkner, et al. (2018) | model-based | no | yes | no 
@@ -140,7 +141,8 @@ MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no
 DEHB | Awad, et al. (2021) | evolutionary | no | yes | no 
 HyperTune | Li, et al. (2022) | model-based | yes | yes | no
 DyHPO | Wistuba, et al. (2022) | model-based | yes | yes | no
-ASHABORE | Tiao, et al. (2021) | model-based | yes | yes | no 
+ASHABORE | Tiao, et al. (2021) | model-based | yes | yes | no
+ASHACQR | Salinas, et al. (2023) | model-based | yes | yes | no 
 PASHA | Bohdal, et al. (2022)| random or model-based | yes | yes | no 
 REA | Real, et al. (2019) | evolutionary | yes | no | no 
 KDE | Falkner, et al. (2018) | model-based | yes | no | no 
