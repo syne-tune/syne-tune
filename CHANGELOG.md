@@ -4,9 +4,33 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+
+<a name="v0.9.0"></a>
+## [v0.9.0] - 2023-07-04
+
+### Bug Fixes
+- Clean up imports so that code runs with core dependencies. Update test workflows ([#734](https://github.com/awslabs/syne-tune/issues/734))
+- Make sure RemoteLauncher works with requirements.txt not ending on \n ([#731](https://github.com/awslabs/syne-tune/issues/731))
+- ExperimentResult.best_config() always used max mode ([#728](https://github.com/awslabs/syne-tune/issues/728))
+
+### Code Refactoring
+- Move code from benchmarking/commons to syne_tune/experiments ([#719](https://github.com/awslabs/syne-tune/issues/719))
+- Wrappers for multi-objective methods ([#727](https://github.com/awslabs/syne-tune/issues/727))
+
+### Documentation Updates
+- Experimentation framework without Syne Tune installed from source ([#733](https://github.com/awslabs/syne-tune/issues/733))
+- New tutorial on how to implement Bayesian optimization ([#709](https://github.com/awslabs/syne-tune/issues/709))
+- Add CQR in list of method supported in readme ([#736](https://github.com/awslabs/syne-tune/issues/736))
+- Updated documentation ([#732](https://github.com/awslabs/syne-tune/issues/732))
+
+### Maintenance
+- Fix yahpo dependency version of configspace ([#725](https://github.com/awslabs/syne-tune/issues/725))
+
+[v0.9.0]: https://github.com/awslabs/syne-tune/compare/v0.8.0...v0.9.0
+
+
 <a name="0.8.0"></a>
 ## [v0.8.0] - 2023-06-20
-[v0.8.0]: https://github.com/awslabs/syne-tune/compare/v0.7.0...0.8.0
 
 ### New Features
 - Code for OTHPO paper ([#710](https://github.com/awslabs/syne-tune/issues/710))
@@ -46,9 +70,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Update pytest-cov requirement from ~=4.0.0 to ~=4.1.0 ([#697](https://github.com/awslabs/syne-tune/issues/697))
 - enable caching for unit tests, fix README typo ([#695](https://github.com/awslabs/syne-tune/issues/695))
 
+[v0.8.0]: https://github.com/awslabs/syne-tune/compare/v0.7.0...v0.8.0
+
 
 <a name="v0.7.0"></a>
 ## [v0.7.0] - 2023-05-23
+
 ### New Features
 - Plotting code for fine_tuning_transformer_glue benchmark ([#686](https://github.com/awslabs/syne-tune/issues/686))
 - Backoff decorator for jobs scheduling ([#673](https://github.com/awslabs/syne-tune/issues/673))
@@ -118,6 +145,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 [v0.6.0]: https://github.com/awslabs/syne-tune/compare/v0.5.0...v0.6.0
 
+
 <a name="v0.5.0"></a>
 ## [v0.5.0] - 2023-04-20
 
@@ -154,6 +182,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Bump tensorflow from 2.11.0 to 2.11.1 in /examples/training_scripts/rl_cartpole ([#609](https://github.com/awslabs/syne-tune/issues/609))
 
 [v0.5.0]: https://github.com/awslabs/syne-tune/compare/v0.4.1...v0.5.0
+
 
 ## [0.4.1] - 2023-03-16
 
