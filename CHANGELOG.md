@@ -31,7 +31,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 <a name="0.8.0"></a>
 ## [v0.8.0] - 2023-06-20
-[v0.8.0]: https://github.com/awslabs/syne-tune/compare/v0.7.0...0.8.0
 
 ### New Features
 - Code for OTHPO paper ([#710](https://github.com/awslabs/syne-tune/issues/710))
