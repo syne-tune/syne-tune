@@ -12,14 +12,25 @@
 **[Documentation](https://syne-tune.readthedocs.io/en/latest/index.html)** | **[Tutorials](https://syne-tune.readthedocs.io/en/latest/tutorials/basics/README.html)** | **[API Reference](https://syne-tune.readthedocs.io/en/latest/_apidoc/modules.html#)** | **[PyPI](https://pypi.org/project/syne-tune)** | **[Latest Blog Post](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/)**
 
 Syne Tune provides state-of-the-art algorithms for hyperparameter optimization (HPO) with the following key features:
+* **Lightweight and platform-agnostic**: Syne Tune is designed to work with
+  different execution backends, so you are not locked into a particular
+  distributed system architecture. Syne Tune runs with minimal dependencies.
+* **Wide coverage of different HPO methods**: Syne Tune supports more than 20 different optimization methods across [multi-fidelity HPO](https://syne-tune.readthedocs.io/en/latest/tutorials/multifidelity/README.html), [constrained HPO](https://syne-tune.readthedocs.io/en/latest/tutorials/basics/basics_outlook.html#further-topics), [multi-objective HPO](https://syne-tune.readthedocs.io/en/latest/getting_started.html#supported-multi-objective-optimization-methods), [transfer learning](https://syne-tune.readthedocs.io/en/latest/tutorials/transfer_learning/transfer_learning.html), [cost-aware HPO](https://syne-tune.readthedocs.io/en/latest/_apidoc/syne_tune.optimizer.schedulers.searchers.cost_aware.html), and [population-based training](https://syne-tune.readthedocs.io/en/latest/_apidoc/syne_tune.optimizer.schedulers.pbt.html).
+* **Simple, modular design**: Rather than wrapping other HPO
+  frameworks, Syne Tune provides simple APIs and scheduler templates, which can
+  easily be [extended to your specific needs](https://syne-tune.readthedocs.io/en/latest/tutorials/developer/README.html).
+  Studying the code will allow you to understand what the different algorithms
+  are doing, and how they differ from each other.
+* **Industry-strength Bayesian optimization**: Syne Tune has comprehensive support
+  for [Gaussian Process-based Bayesian optimization](https://syne-tune.readthedocs.io/en/latest/tutorials/basics/basics_bayesopt.html).
+  The same code powers modalities such as multi-fidelity HPO, constrained HPO, and
+  cost-aware HPO, and has been tried and tested in production for several years.
+* **Support for distributed workloads**: Syne Tune lets you move fast, thanks to the parallel compute resources AWS SageMaker offers. Syne Tune allows ML/AI practitioners to easily set up and run studies with many [experiments running in parallel](https://syne-tune.readthedocs.io/en/latest/tutorials/experimentation/README.html). Run on different compute environments (locally, AWS, simulation) by changing just one line of code.
+* **Out-of-the-box tabulated benchmarks:** Tabulated benchmarks let you simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
 
-* Wide coverage (>20) of different HPO methods, including:
-  * Asynchronous and distributed tuning (i.e., with multiple workers);
-  * Multi-fidelity methods supporting model-based decisions (BOHB and MOBSTER);
-  * Transfer learning to speed up (repeated) tuning jobs;
-  * Multi-objective optimizers that can tune multiple objectives simultaneously (such as accuracy and latency).
-* Run on different compute environments (locally, AWS, simulation) by changing just one line of code.
-* Out-of-the-box tabulated benchmarks allow you to simulate results in seconds while preserving the real dynamics of asynchronous or synchronous HPO with any number of workers.
+
+Syne Tune is developed in collaboration with the team behind the [Automatic Model Tuning](https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html) service.
+
 
 ## Installing
 
@@ -29,14 +40,13 @@ To install Syne Tune from pip, you can simply do:
 pip install 'syne-tune[extra]'
 ```
 
-or to install the latest version from source (necessary to run the scripts in the [examples/](https://github.com/awslabs/syne-tune/tree/main/examples) folder): 
+or to install the latest version from source: 
 
 ```bash
 git clone https://github.com/awslabs/syne-tune.git
 cd syne-tune
 python3 -m venv st_venv
 . st_venv/bin/activate
-pip install wheel
 pip install --upgrade pip
 pip install -e '.[extra]'
 ```
