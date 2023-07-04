@@ -22,6 +22,11 @@ We hope this information inspires you to give it a try. Please do consider
 * Your code is more awesome than ours? Great! Why not contribute your backend
   or your benchmarks to Syne Tune as well?
 
+.. note::
+   In order to develop new methodology in Syne Tune, make sure to use an
+   `installation from source <../../faq.html#what-are-the-different-installation-options-supported>`__.
+   In particular, you need to have installed the ``dev`` dependencies.
+
 .. toctree::
    :name: How to Contribute a New Scheduler Sections
    :maxdepth: 1

@@ -80,11 +80,18 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
 * ``botorch``: Bayesian optimization from BoTorch (see
   :class:`~syne_tune.optimizer.schedulers.searchers.botorch.BoTorchSearcher`)
 * ``dev``: For developers who would like to extend Syne Tune
-* ``extra``: For installing all the above
 * ``bore``: For Bore optimizer (see :class:`~syne_tune.optimizer.baselines.BORE`)
 
-For instance, ``pip install 'syne-tune[gpsearchers]'`` will install Syne
-Tune along with many built-in Gaussian process optimizers.
+There are also union tags you can use:
+
+* ``basic``: Union of dependencies of a reasonable size. This excludes ``raytune``,
+  ``benchmarks``, ``yahpo``, ``botorch``, ``bore``, ``dev``.
+* ``extra``: Union of all dependencies listed above.
+
+Our general recommendation is to use ``pip install 'syne-tune[basic]'``, then add
+``dev`` if you aim to extend Syne Tune, ``benchmarks`` if you like to run our
+benchmarks locally. If the size of the installation is of no concern, just use
+``pip install 'syne-tune[extra]'``.
 
 To install the latest version from git, run the following:
 
@@ -102,7 +109,7 @@ enable you to easily test your changes:
    python3 -m venv st_venv
    . st_venv/bin/activate
    pip install --upgrade pip
-   pip install -e '.[extra]'
+   pip install -e '.[basic,dev]'
 
 This installs everything in a virtual environment ``st_venv``. Remember to
 activate this environment before working with Syne Tune. We also recommend

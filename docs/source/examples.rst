@@ -100,7 +100,7 @@ Bayesian Optimization with Scikit-learn Based Surrogate Model
 **Requirements**:
 
 * Needs ``sckit-learn`` to be installed. If you installed Syne Tune
-  with ``sklearn`` or ``extra``, this dependence is included.
+  with ``sklearn`` or ``basic``, this dependence is included.
 
 In this example, a simple new surrogate model is implemented based on
 ``sklearn.linear_model.BayesianRidge``, and Bayesian optimization is run with
@@ -427,7 +427,7 @@ Transfer Learning Example
 
 * Needs ``matplotlib`` to be installed if the plotting flag is given:
   ``pip install matplotlib``. If you installed Syne Tune with ``visual`` or
-  ``extra``, this dependence is included.
+  ``basic``, this dependence is included.
 
 An example of how to use evaluations collected in Syne Tune to run a transfer
 learning scheduler. Makes use of :ref:`train_height.py <train_height_script>`.
@@ -448,7 +448,7 @@ Plot Results of Tuning Experiment
 
 * Needs ``matplotlib`` to be installed:
   ``pip install matplotlib``. If you installed Syne Tune with ``visual`` or
-  ``extra``, this dependence is included.
+  ``basic``, this dependence is included.
 
 Makes use of :ref:`train_height.py <train_height_script>`.
 

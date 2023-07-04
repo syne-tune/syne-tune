@@ -26,7 +26,7 @@ Building the Documentation
 --------------------------
 
 You can build the documentation locally as follows. Make sure to have Syne
-Tune installed with ``dev`` (or ``extra``) dependencies:
+Tune installed with ``dev`` dependencies:
 
 .. code-block:: bash
 

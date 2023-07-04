@@ -12,6 +12,11 @@ We hope this information inspires you to give it a try to extend Syne Tune's
 Bayesian optimization to your needs. Please do consider
 `contributing your efforts to Syne Tune <https://github.com/awslabs/syne-tune/blob/main/CONTRIBUTING.md>`__.
 
+.. note::
+   In order to develop new methodology in Syne Tune, make sure to use an
+   `installation from source <../../faq.html#what-are-the-different-installation-options-supported>`__.
+   In particular, you need to have installed the ``dev`` dependencies.
+
 .. toctree::
    :name: How to Implement Bayesian Optimization Sections
    :maxdepth: 1
