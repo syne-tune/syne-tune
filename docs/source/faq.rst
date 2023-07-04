@@ -90,8 +90,13 @@ There are also union tags you can use:
 
 Our general recommendation is to use ``pip install 'syne-tune[basic]'``, then add
 ``dev`` if you aim to extend Syne Tune, ``benchmarks`` if you like to run our
-benchmarks locally. If the size of the installation is of no concern, just use
-``pip install 'syne-tune[extra]'``.
+benchmarks locally. In order to run schedulers which depend on BOTorch, you need
+to add ``botorch``, and if you like to run Ray Tune schedulers, you need to add
+``raytune`` (both of these come with many dependencies). If the size of the
+installation is of no concern, just use ``pip install 'syne-tune[extra]'``.
+
+If you run code which needs dependencies you have not installed, a warning message
+tells you which tag is missing, and you can always install it later.
 
 To install the latest version from git, run the following:
 
