@@ -12,3 +12,4 @@ myst-parser
 sphinx_copybutton
 sphinxcontrib-bibtex
 sphinxcontrib.jquery
+wheel
