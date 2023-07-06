@@ -107,7 +107,7 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | `HyperTune <tutorials/multifidelity/mf_async_model.html#hyper-tune>`__                 | `Li, et al. (2022) <https://arxiv.org/abs/2201.06834>`__                        | model-based   | yes           | yes             | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
-| `DyHPO <tutorials/multifidelity/mf_async_model.html#dyhpo>`__                          | `Wistuba, et al. (2022) <https://arxiv.org/abs/2202.09774>`__                   | model-based   | yes           | yes             | no        |
+| `DyHPO <tutorials/multifidelity/mf_async_model.html#dyhpo>`__ :sup:`*`                          | `Wistuba, et al. (2022) <https://arxiv.org/abs/2202.09774>`__                   | model-based   | yes           | yes             | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.baselines.ASHABORE`                                       | `Tiao, et al. (2021) <https://proceedings.mlr.press/v139/tiao21a.html>`__       | model-based   | yes           | yes             | no        |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
@@ -127,6 +127,11 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 | :class:`~syne_tune.optimizer.schedulers.transfer_learning.BoundingBox`                 | `Perrone, et al. (2019) <https://arxiv.org/abs/1909.12552>`__                   | any           | yes           | yes             | yes       |
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
+
+:sup:`*`: We implement the model-based scheduling logic of DyHPO, but use the
+same Gaussian process surrogate models than MOBSTER or HyperTune. The original
+source code for the paper is
+`here <https://github.com/releaunifreiburg/DyHPO/tree/main>`__.
 
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 
