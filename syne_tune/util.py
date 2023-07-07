@@ -221,6 +221,14 @@ def is_positive_integer(lst: List[int]) -> bool:
     return all(x == int(x) and x >= 1 for x in lst)
 
 
+def is_integer(lst: list) -> bool:
+    """
+    :param lst: List of entries
+    :return: Are all entries of ``lst`` of type ``int``?
+    """
+    return all(x == int(x) for x in lst)
+
+
 def dump_json_with_numpy(
     x: dict, filename: Optional[Union[str, Path]] = None
 ) -> Optional[str]:

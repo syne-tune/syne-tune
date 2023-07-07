@@ -21,6 +21,7 @@ from syne_tune.utils.config_as_json import (  # noqa: F401
     add_config_json_to_argparse,
     load_config_json,
 )
+from syne_tune.utils.convert_domain import streamline_config_space
 
 __all__ = [
     "add_checkpointing_to_argparse",
@@ -30,4 +31,5 @@ __all__ = [
     "parse_bool",
     "add_config_json_to_argparse",
     "load_config_json",
+    "streamline_config_space",
 ]
