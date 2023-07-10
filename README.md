@@ -163,7 +163,7 @@ RUSH | Zappella, et al. (2021)| random | yes | yes | yes
 BoundingBox | Perrone, et al. (2019) | any | yes | yes | yes
 
 <sup>*</sup>: We implement the model-based scheduling logic of DyHPO, but use
-the same Gaussian process surrogate models than MOBSTER or HyperTune. The original
+the same Gaussian process surrogate models as MOBSTER and HyperTune. The original
 source code for the paper is [here](https://github.com/releaunifreiburg/DyHPO/tree/main).
 
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.

@@ -129,7 +129,7 @@ The following hyperparameter optimization (HPO) methods are available in Syne Tu
 +----------------------------------------------------------------------------------------+---------------------------------------------------------------------------------+---------------+---------------+-----------------+-----------+
 
 :sup:`*`: We implement the model-based scheduling logic of DyHPO, but use the
-same Gaussian process surrogate models than MOBSTER or HyperTune. The original
+same Gaussian process surrogate models as MOBSTER and HyperTune. The original
 source code for the paper is
 `here <https://github.com/releaunifreiburg/DyHPO/tree/main>`__.
 
