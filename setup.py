@@ -23,6 +23,8 @@ def load_benchmark_requirements():
     return list(res)
 
 
+long_description = (Path(__file__).parent / "README.md").read_text()
+
 required_core = load_requirements("requirements.txt")
 required_ray = load_requirements("requirements-ray.txt")
 required_gpsearchers = load_requirements("requirements-gpsearchers.txt")
@@ -42,7 +44,6 @@ required_moo = load_requirements("requirements-moo.txt")
 required_visual = load_requirements("requirements-visual.txt")
 required_sklearn = load_requirements("requirements-sklearn.txt")
 
-long_description = (Path(__file__).parent / "README.md").read_text()
 required_extra = (
     required_gpsearchers
     + required_kde
@@ -60,6 +61,10 @@ required_extra = (
 # Botorch only supports python version >= 3.8
 if sys.version_info >= (3, 8):
     required_extra += required_botorch
+
+required_basic = (
+    required_gpsearchers + required_kde + required_aws + required_moo + required_sklearn
+)
 
 setup(
     name="syne_tune",
@@ -89,6 +94,7 @@ setup(
         "botorch": required_botorch,
         "bore": required_bore,
         "extra": required_extra,
+        "basic": required_basic,
     },
     install_requires=required_core,
     include_package_data=True,

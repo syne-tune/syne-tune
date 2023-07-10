@@ -5,7 +5,7 @@ To install Syne Tune from pip, you can simply do:
 
 .. code-block:: bash
 
-   pip install 'syne-tune[extra]'
+   pip install 'syne-tune[basic]'
 
 For development, you need to install Syne Tune from source:
 
@@ -16,9 +16,9 @@ For development, you need to install Syne Tune from source:
    python3 -m venv st_venv
    . st_venv/bin/activate
    pip install --upgrade pip
-   pip install -e '.[extra]'
+   pip install -e '.[basic,dev]'
 
-This installs everything in a virtual environment ``st_venv``. Remember to activate
+This installs Syne Tune in a virtual environment ``st_venv``. Remember to activate
 this environment before working with Syne Tune. We also recommend building the
 virtual environment from scratch now and then, in particular when you pull a new
 release, as dependencies may have changed.
@@ -26,9 +26,11 @@ release, as dependencies may have changed.
 See our `change log <https://github.com/awslabs/syne-tune/blob/main/CHANGELOG.md>`__ to
 check what has changed in the latest version.
 
-In the examples above, Syne Tune is installed with the union of all its
-dependencies, which can be a lot. If you only need specific features, you may
-be able to use `partial dependencies <faq.html#what-are-the-different-installations-options-supported>`__.
+In the examples above, Syne Tune is installed with the tag ``basic``, which
+collects a reasonable number of dependencies. If you want to install all
+dependencies, replace ``basic`` with ``extra``. You can further refine this
+selection by using
+`partial dependencies <faq.html#what-are-the-different-installations-options-supported>`__.
 
 What Is Hyperparameter Optimization?
 ====================================

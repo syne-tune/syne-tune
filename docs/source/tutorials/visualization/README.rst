@@ -13,6 +13,8 @@ tutorial provides an overview of visualization facilities.
 .. note::
    In order to run the code in this tutorial, you need to have
    `installed Syne Tune from source <../../getting_started.html#installation>`__.
+   Also, make sure to have installed the ``blackbox-repository``
+   `dependencies <../faq.html#what-are-the-different-installations-options-supported>`__.
 
 .. toctree::
    :name: Benchmarking in Syne Tune Sections

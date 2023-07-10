@@ -100,7 +100,7 @@ Bayesian Optimization with Scikit-learn Based Surrogate Model
 **Requirements**:
 
 * Needs ``sckit-learn`` to be installed. If you installed Syne Tune
-  with ``sklearn`` or ``extra``, this dependence is included.
+  with ``sklearn`` or ``basic``, this dependence is included.
 
 In this example, a simple new surrogate model is implemented based on
 ``sklearn.linear_model.BayesianRidge``, and Bayesian optimization is run with
@@ -116,6 +116,8 @@ Launch HPO Experiment with Simulator Backend
 
 **Requirements**:
 
+* Syne Tune dependencies ``blackbox-repository`` need to be
+  `installed <faq.html#what-are-the-different-installations-options-supported>`__.
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 * If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
@@ -185,6 +187,8 @@ PASHA: Efficient HPO and NAS with Progressive Resource Allocation
 
 **Requirements**:
 
+* Syne Tune dependencies ``blackbox-repository`` need to be
+  `installed <faq.html#what-are-the-different-installations-options-supported>`__.
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 
@@ -218,6 +222,8 @@ Restrict Scheduler to Tabulated Configurations with Simulator Backend
 
 **Requirements**:
 
+* Syne Tune dependencies ``blackbox-repository`` need to be
+  `installed <faq.html#what-are-the-different-installations-options-supported>`__.
 * Needs ``lcbench`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 * If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
@@ -405,6 +411,8 @@ Transfer Tuning on NASBench-201
 
 **Requirements**:
 
+* Syne Tune dependencies ``blackbox-repository`` need to be
+  `installed <faq.html#what-are-the-different-installations-options-supported>`__.
 * Needs ``nasbench201`` blackbox to be downloaded and preprocessed. This can
   take quite a while when done for the first time
 * If `AWS SageMaker is used  <faq.html#how-can-i-run-on-aws-and-sagemaker>`__
@@ -495,6 +503,11 @@ Speculative Early Checkpoint Removal
 .. literalinclude:: ../../examples/launch_fashionmnist_checkpoint_removal.py
    :caption: examples/launch_fashionmnist_checkpoint_removal.py
    :start-after: # permissions and limitations under the License.
+
+**Requirements**:
+
+* Needs "mlp_fashionmnist" benchmark, which requires Syne Tune to have been
+  installed `from source <getting_started.html#installation>`__.
 
 This example uses the ``mlp_fashionmnist`` benchmark. It runs for about 30
 minutes. It demonstrates speculative early checkpoint removal for MOBSTER
