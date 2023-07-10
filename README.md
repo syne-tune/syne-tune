@@ -150,7 +150,7 @@ BOHB | Falkner, et al. (2018) | model-based | yes | yes | no
 MOBSTER | Klein, et al. (2020) | model-based | yes | yes | no 
 DEHB | Awad, et al. (2021) | evolutionary | no | yes | no 
 HyperTune | Li, et al. (2022) | model-based | yes | yes | no
-DyHPO | Wistuba, et al. (2022) | model-based | yes | yes | no
+DyHPO<sup>*</sup> | Wistuba, et al. (2022) | model-based | yes | yes | no
 ASHABORE | Tiao, et al. (2021) | model-based | yes | yes | no
 ASHACQR | Salinas, et al. (2023) | model-based | yes | yes | no 
 PASHA | Bohdal, et al. (2022)| random or model-based | yes | yes | no 
@@ -161,6 +161,10 @@ ZeroShotTransfer | Wistuba, et al. (2015) | deterministic | yes | no | yes
 ASHA-CTS | Salinas, et al. (2021)| random | yes | yes | yes 
 RUSH | Zappella, et al. (2021)| random | yes | yes | yes 
 BoundingBox | Perrone, et al. (2019) | any | yes | yes | yes
+
+<sup>*</sup>: We implement the model-based scheduling logic of DyHPO, but use
+the same Gaussian process surrogate models as MOBSTER and HyperTune. The original
+source code for the paper is [here](https://github.com/releaunifreiburg/DyHPO/tree/main).
 
 The searchers fall into four broad categories, **deterministic**, **random**, **evolutionary** and **model-based**. The random searchers sample candidate hyperparameter configurations uniformly at random, while the model-based searchers sample them non-uniformly at random, according to a model (e.g., Gaussian process, density ration estimator, etc.) and an acquisition function. The evolutionary searchers make use of an evolutionary algorithm.
 
@@ -224,7 +228,7 @@ different functionalities provided by Syne Tune. For example:
 
 You will find many examples for experimentation and benchmarking in
 [benchmarking/examples/](benchmarking/examples/) and in
-benchmarking/nusery/](benchmarking/nursery/).
+[benchmarking/nusery/](benchmarking/nursery/).
 
 ## FAQ and Tutorials
 
@@ -279,9 +283,13 @@ Do you want to know more? Here are a number of tutorials.
 
 ## Blog Posts
 
-- [Run distributed hyperparameter and neural architecture tuning jobs with Syne Tune](https://aws.amazon.com/blogs/machine-learning/run-distributed-hyperparameter-and-neural-architecture-tuning-jobs-with-syne-tune/)
-- [Hyperparameter optimization for fine-tuning pre-trained transformer models from Hugging Face](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/) [(notebook)](https://github.com/awslabs/syne-tune/blob/hf_blog_post/hf_blog_post/example_syne_tune_for_hf.ipynb)
-- [Learn Amazon Simple Storage Service transfer configuration with Syne Tune](https://aws.amazon.com/blogs/opensource/learn-amazon-simple-storage-service-transfer-configuration-with-syne-tune/) [(code)](https://github.com/aws-samples/syne-tune-s3-transfer)
+* [Run distributed hyperparameter and neural architecture tuning jobs with Syne Tune](https://aws.amazon.com/blogs/machine-learning/run-distributed-hyperparameter-and-neural-architecture-tuning-jobs-with-syne-tune/)
+* [Hyperparameter optimization for fine-tuning pre-trained transformer models from Hugging Face](https://aws.amazon.com/blogs/machine-learning/hyperparameter-optimization-for-fine-tuning-pre-trained-transformer-models-from-hugging-face/) [(notebook)](https://github.com/awslabs/syne-tune/blob/hf_blog_post/hf_blog_post/example_syne_tune_for_hf.ipynb)
+* [Learn Amazon Simple Storage Service transfer configuration with Syne Tune](https://aws.amazon.com/blogs/opensource/learn-amazon-simple-storage-service-transfer-configuration-with-syne-tune/) [(code)](https://github.com/aws-samples/syne-tune-s3-transfer)
+
+## Videos
+
+* [Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023)](https://www.youtube.com/watch?v=onX6fXzp9Yk)
 
 ## Security
 
