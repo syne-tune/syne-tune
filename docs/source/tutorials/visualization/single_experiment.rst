@@ -9,6 +9,17 @@ we show how the results of a single experiment can be visualized.
    `this one <../benchmarking/bm_plotting.html>`__, but is more
    comprehensive in terms of features.
 
+.. note::
+   In this tutorial, we will use a surrogate benchmark in order to obtain
+   realistic results with little computation. To this end, you need
+   to have the ``blackbox-repository`` dependencies installed, as detailed
+   `here <../faq.html#what-are-the-different-installations-options-supported>`__.
+   Note that
+   the first time you use a surrogate benchmark, its data files are downloaded
+   and stored to your S3 bucket, this can take a considerable amount of time.
+   The next time you use the benchmark, it is loaded from your local disk or
+   your S3 bucket, which is fast.
+
 A Comparative Study
 -------------------
 

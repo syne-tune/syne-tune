@@ -63,13 +63,7 @@ if sys.version_info >= (3, 8):
     required_extra += required_botorch
 
 required_basic = (
-    required_gpsearchers
-    + required_kde
-    + required_aws
-    + required_moo
-    + required_visual
-    + required_sklearn
-    + required_blackbox_repository
+    required_gpsearchers + required_kde + required_aws + required_moo + required_sklearn
 )
 
 setup(

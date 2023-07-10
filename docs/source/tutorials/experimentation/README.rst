@@ -24,6 +24,9 @@ to consult the benchmarking tutorial for background information.
    :mod:`benchmarking.examples.demo_experiment`. The final section also needs
    code from :mod:`benchmarking.nursery.odsc_tutorial`.
 
+   Also, make sure to have installed the ``blackbox-repository``
+   `dependencies <../faq.html#what-are-the-different-installations-options-supported>`__.
+
 .. toctree::
    :name: Rapid Experimentation with Syne Tune Sections
    :maxdepth: 1

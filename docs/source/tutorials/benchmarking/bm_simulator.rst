@@ -10,6 +10,16 @@ cases, results for experiments with ``max_wallclock_time`` of several hours,
 can be obtained in a few seconds.
 
 .. note::
+   In order to use surrogate benchmarks and the simulator backend, you need
+   to have the ``blackbox-repository`` dependencies installed, as detailed
+   `here <../faq.html#what-are-the-different-installations-options-supported>`__.
+   For the YAHPO blackbox, you also need the ``yahpo`` dependencies. Note that
+   the first time you use a surrogate benchmark, its data files are downloaded
+   and stored to your S3 bucket, this can take a considerable amount of time.
+   The next time you use the benchmark, it is loaded from your local disk or
+   your S3 bucket, which is fast.
+
+.. note::
    The experimentation framework in :mod:`syne_tune.experiments` which is used
    here, is not limited to *benchmarking* (i.e., comparing the performance
    between different HPO methods), but is also the default way to run many

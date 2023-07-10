@@ -21,7 +21,7 @@ install Syne Tune from source:
    pip install --upgrade pip
    pip install -e '.[basic,dev]'
 
-This installs everything in a virtual environment ``st_venv``. Remember to activate
+This installs Syne Tune in a virtual environment ``st_venv``. Remember to activate
 this environment before working with Syne Tune. We also recommend building the
 virtual environment from scratch now and then, in particular when you pull a new
 release, as dependencies may have changed.

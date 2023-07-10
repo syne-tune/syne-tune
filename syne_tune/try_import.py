@@ -63,6 +63,7 @@ def try_import_blackbox_repository_message() -> str:
     return _try_import_message(
         "Dependencies of blackbox repository are not imported",
         tag="blackbox-repository",
+        recommend_extra=True,
     )
 
 
@@ -82,7 +83,9 @@ def try_import_moo_message() -> str:
 
 def try_import_visual_message() -> str:
     return _try_import_message(
-        "Dependencies for visualization are not imported", tag="visual"
+        "Dependencies for visualization are not imported",
+        tag="visual",
+        recommend_extra=True,
     )
 
 

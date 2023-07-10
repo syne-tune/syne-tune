@@ -40,6 +40,15 @@ default configuration space for these benchmarks:
    :mod:`benchmarking.examples.demo_experiment`, so if you copy that out of the
    repository, you do not need all the remaining source code.
 
+.. note::
+   In order to use surrogate benchmarks and the simulator backend, you need
+   to have the ``blackbox-repository`` dependencies installed, as detailed
+   `here <../faq.html#what-are-the-different-installations-options-supported>`__.
+   Note that the first time you use a surrogate benchmark, its data files are
+   downloaded and stored to your S3 bucket, this can take a considerable amount
+   of time. The next time you use the benchmark, it is loaded from your local
+   disk or your S3 bucket, which is fast.
+
 Modifying the Configuration Space
 ---------------------------------
 

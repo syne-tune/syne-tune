@@ -84,16 +84,24 @@ Ray Tune or Bore optimizer, you can run ``pip install 'syne-tune[X]'`` where
 
 There are also union tags you can use:
 
-* ``basic``: Union of dependencies of a reasonable size. This excludes ``raytune``,
-  ``benchmarks``, ``yahpo``, ``botorch``, ``bore``, ``dev``.
+* ``basic``: Union of dependencies of a reasonable size (``gpsearchers``,
+  ``kde``, ``aws``, ``moo``, ``sklearn``). Even if size does not matter for
+  your local installation, you should consider ``basic`` for
+  `remote launching of experiments <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__.
 * ``extra``: Union of all dependencies listed above.
 
 Our general recommendation is to use ``pip install 'syne-tune[basic]'``, then add
-``dev`` if you aim to extend Syne Tune, ``benchmarks`` if you like to run our
-benchmarks locally. In order to run schedulers which depend on BOTorch, you need
-to add ``botorch``, and if you like to run Ray Tune schedulers, you need to add
-``raytune`` (both of these come with many dependencies). If the size of the
-installation is of no concern, just use ``pip install 'syne-tune[extra]'``.
+
+* ``dev`` if you aim to extend Syne Tune
+* ``benchmarks`` if you like to run Syne Tune real benchmarks locally
+* ``blackbox-repository`` if you like to run surrogate benchmarks with the
+  simulator backend
+* ``visual`` if you like to visualize results of experiments
+
+In order to run schedulers which depend on BOTorch, you need to add ``botorch``,
+and if you like to run Ray Tune schedulers, you need to add ``raytune`` (both
+of these come with many dependencies). If the size of the installation is of no
+concern, just use ``pip install 'syne-tune[extra]'``.
 
 If you run code which needs dependencies you have not installed, a warning message
 tells you which tag is missing, and you can always install it later.
