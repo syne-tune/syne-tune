@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 
+ <a name="v0.9.1"></a>
+## [v0.9.1] - 2023-07-19
+### New Features
+- New group tag 'basic' for dependencies of reasonable size ([#738](https://github.com/awslabs/syne-tune/issues/738))
+
+### Documentation Updates
+- Small fix and update of README.md ([#740](https://github.com/awslabs/syne-tune/issues/740))
+
+### Maintenance
+- Bump zgosalvez/github-actions-ensure-sha-pinned-actions from 2.1.3 to 2.1.4 ([#742](https://github.com/awslabs/syne-tune/issues/742))
+- update README ([#739](https://github.com/awslabs/syne-tune/issues/739))
+
+
+
 <a name="v0.9.0"></a>
 ## [v0.9.0] - 2023-07-04
 
