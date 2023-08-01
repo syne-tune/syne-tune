@@ -124,10 +124,10 @@ categorical type are often used. For example:
 
 .. code-block:: python
 
-   from syne_tune.config_space import randint, choice
+   from syne_tune.config_space import lograndint, choice
 
    config_space = {
-       'n_units_1': randint(4, 1024),
+       'n_units_1': lograndint(4, 1024),
        # ...
        'activation': choice(['ReLU', 'LeakyReLU', 'Softplus']),
    }
@@ -144,7 +144,7 @@ This is usually **not** what you want with numerical values, whose
 ordering provide important information to the search. For example,
 it sounds simpler to search over the finite range
 ``choice([4, 8, 16, 32, 64, 128, 256, 512, 1024])`` than over the infinite
-``randint(4, 1024)`` for ``n_units_1``, but **the opposite is the
+``lograndint(4, 1024)`` for ``n_units_1``, but **the opposite is the
 case**. The former occupies 9 dimensions, the latter 1 dimension in
 the encoded space, and ordering information is lost for the former.
 A better alternative is ``logfinrange(4, 1024, 9)``.
