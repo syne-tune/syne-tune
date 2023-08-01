@@ -82,6 +82,12 @@ def convert_choice_domain(domain: Categorical, name: Optional[str] = None) -> Do
     :func:`~syne_tune.config_space.ordinal`, or
     :func:`~syne_tune.config_space.logordinal`. Otherwise, ``domain`` is
     returned as is.
+
+    The idea is to compute the least squares fit :math:`a * j + b` to ``x[j]``,
+    where ``x`` are the sorted values or their logs (if all values are positive).
+    If this fit is very close (judged by coefficient of variation :math:`R^2`), we
+    use the equi-spaced types ``finrange`` or ``logfinrange``, otherwise we use
+    ``ordinal`` or ``logordinal``.
     """
     num_values = len(domain)
     if num_values <= 2:
@@ -94,12 +100,15 @@ def convert_choice_domain(domain: Categorical, name: Optional[str] = None) -> Do
     best_fit = fit_to_regular_grid(x)
     best_is_log = False
     if sorted_values[0] >= POSITIVE_EPS:
+        # All entries are positive. Try least squares fit in log domain
         log_fit = fit_to_regular_grid(np.log(x))
         if log_fit["r2"] > best_fit["r2"]:
+            # Better fit in log domain
             best_is_log = True
             best_fit = log_fit
     if best_fit["r2"] >= R2_THRESHOLD:
-        # ``finrange`` or ``logfinrange``
+        # Error of least squares fit in normal or log domain small enough:
+        # Use ``finrange`` or ``logfinrange``
         lower = best_fit["b"]
         upper = lower + best_fit["a"] * (num_values - 1)
         if best_is_log:
@@ -114,7 +123,7 @@ def convert_choice_domain(domain: Categorical, name: Optional[str] = None) -> Do
                 lower=lower, upper=upper, size=num_values, cast_int=values_are_int
             )
     else:
-        # ``ordinal`` or ``logordinal``
+        # Least squares fit not good enough: Use ``ordinal`` or ``logordinal``
         result = (
             logordinal(sorted_values)
             if best_is_log

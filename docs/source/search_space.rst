@@ -103,7 +103,7 @@ Recommendations
 
 How to choose the domain for a given hyperparameter? Obviously, we want to
 avoid illegal values: learning rates should be positive, probabilities lie
-in ``[0, 1]``, and numbers of unit must be integers. Apart from this, the
+in ``[0, 1]``, and numbers of units must be integers. Apart from this, the
 choice of domain is not always obvious, and different choices can affect
 search performance significantly in some cases.
 
