@@ -86,13 +86,14 @@ def convert_choice_domain(domain: Categorical, name: Optional[str] = None) -> Do
     The idea is to compute the least squares fit :math:`a * j + b` to ``x[j]``,
     where ``x`` are the sorted values or their logs (if all values are positive).
     If this fit is very close (judged by coefficient of variation :math:`R^2`), we
-    use the equi-spaced types ``finrange`` or ``logfinrange``, otherwise we use
+    use the equispaced types ``finrange`` or ``logfinrange``, otherwise we use
     ``ordinal`` or ``logordinal``.
     """
     num_values = len(domain)
     if num_values <= 2:
         return domain
     if not isinstance(domain.categories[0], Real):
+        # Note: All entries of ``domain.categories`` have the same type
         return domain
     values_are_int = is_integer(domain.categories)
     sorted_values = sorted(domain.categories)
