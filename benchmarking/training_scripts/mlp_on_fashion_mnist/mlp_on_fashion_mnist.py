@@ -35,7 +35,13 @@ except ImportError:
     )
 
 from syne_tune import Reporter
-from syne_tune.config_space import randint, uniform, loguniform, add_to_argparse
+from syne_tune.config_space import (
+    randint,
+    lograndint,
+    uniform,
+    loguniform,
+    add_to_argparse,
+)
 from syne_tune.utils import (
     resume_from_checkpointed_model,
     checkpoint_model_at_rung_level,
@@ -57,8 +63,8 @@ ELAPSED_TIME_ATTR = "elapsed_time"
 
 
 _config_space = {
-    NUM_UNITS_1: randint(4, 1024),
-    NUM_UNITS_2: randint(4, 1024),
+    NUM_UNITS_1: lograndint(4, 1024),
+    NUM_UNITS_2: lograndint(4, 1024),
     "batch_size": randint(8, 128),
     "dropout_1": uniform(0, 0.99),
     "dropout_2": uniform(0, 0.99),

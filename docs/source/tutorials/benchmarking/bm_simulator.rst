@@ -229,8 +229,10 @@ This call runs a number of experiments sequentially on the local machine:
   `not a good choice <../../search_space.html#recommendations>`__. With this
   option, the domain can be switched to different variants of ``ordinal``.
   The default is ``nn-log``, which is the domain
-  ``logordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``. In order to keep
-  the original categorical domain, use ``--fcnet_ordinal none``.
+  ``logordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])`` (this is also the
+  replacement which :func:`~syne_tune.utils.streamline_config_space` would do).
+  In order to keep the original categorical domain, use
+  ``--fcnet_ordinal none``.
 
 If you defined additional arguments via ``extra_args``, you can use them
 here as well. For example, ``--num_brackets 3`` would run all

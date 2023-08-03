@@ -51,7 +51,7 @@ def finetune_transformer_swag_benchmark(
     config_space = {
         "learning_rate": loguniform(1e-6, 1e-4),
         "warmup_ratio": uniform(0, 0.5),
-        "weight_decay": uniform(0, 1e-1),
+        "weight_decay": uniform(0, 0.1),
         "adam_beta1": uniform(0.0, 0.9999),
         "adam_beta2": uniform(0.0, 0.9999),
         "adam_epsilon": loguniform(1e-10, 1e-6),

@@ -702,14 +702,18 @@ Further schedulers provided by Syne Tune include:
 * `Transfer learning schedulers <examples.html#transfer-tuning-on-nasbench-201>`__
 * `Wrappers for Ray Tune schedulers <examples.html#launch-hpo-experiment-with-ray-tune-scheduler>`__
 
-How do I define the search space?
-=================================
+How do I define the configuration space?
+========================================
 
 While the training script defines the function to be optimized, some
-care needs to be taken to define the search space for the hyperparameter
+care needs to be taken to define the configuration space for the hyperparameter
 optimization problem. This being a global optimization problem without
 gradients easily available, it is most important to reduce the number of
-parameters. Some advice is given `here <search_space.html>`__.
+parameters. A general recommendation is to use
+:func:`~syne_tune.utils.streamline_config_space` on your configuration space,
+which does some automatic rewriting to enforce best practices. Details on how
+to choose a configuration space, and on automatic rewriting, is given
+`here <search_space.html>`__.
 
 A powerful approach is to run experiments in parallel. Namely, split
 your hyperparameters into groups A, B, such that HPO over B is

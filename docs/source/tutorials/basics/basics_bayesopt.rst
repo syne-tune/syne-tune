@@ -124,40 +124,44 @@ categorical type are often used. For example:
 
 .. code-block:: python
 
-   from syne_tune.config_space import randint, choice
+   from syne_tune.config_space import lograndint, choice
 
    config_space = {
-       'n_units_1': randint(4, 1024),
+       'n_units_1': lograndint(4, 1024),
        # ...
        'activation': choice(['ReLU', 'LeakyReLU', 'Softplus']),
    }
 
 Here, ``activation`` could determine the type of activation function.
-Maybe the most important recommendation for Bayesian optimization and
-categorical parameters is not to use them if you do not have to. If your
-parameter is numerical, it admits a linear ordering, which is important
-information for any optimizer. By turning it into a categorical
-parameter, this ordering information is lost. Worse, in Bayesian
-optimization, the search space is encoded as multi-dimensional unit
-cube. This is a relaxation for ``int`` values, so one parameter maps to
-one encoded dimension. For a categorical parameter, in order to make
-sure that each value is equidistant any other, we need to use one-hot
-encoding, so the encoding dimension is equal to the number of different
-values!
+It is important to understand that in Bayesian optimization, a
+categorical parameter is encoded as vector in the multi-dimensional
+unit cube: the encoding dimension is equal to the number of different
+values. This is to make sure there is no ordering information between
+the different values, each pair has the same distance in the encoding
+space.
 
-In short, while it is tempting to “simplify” our search space by
-replacing the ``n_units_1`` domain ``randint(4, 1024)`` with
-``choice([4, 8, 16, 32, 64, 128, 256, 512, 1024])``, reducing 1021 to 9
-distinct values, this would not make much of a difference for random
-search, while it would likely make Bayesian optimization perform worse.
-Both the acquisition function and the ARD parameters of our surrogate
-model would have to be optimized over a space with 8 more dimensions,
-and valuable ordering information between ``n_units_1`` values would be
-lost. If you insist on a sparse “regular grid” value range, you can use
-``logfinrange(4, 1024, 9)``, which has the same 9 values, but uses a
-latent ``int`` representation, which is encoded with a single number.
-More information can be found
+This is usually **not** what you want with numerical values, whose
+ordering provide important information to the search. For example,
+it sounds simpler to search over the finite range
+``choice([4, 8, 16, 32, 64, 128, 256, 512, 1024])`` than over the infinite
+``lograndint(4, 1024)`` for ``n_units_1``, but **the opposite is the
+case**. The former occupies 9 dimensions, the latter 1 dimension in
+the encoded space, and ordering information is lost for the former.
+A better alternative is ``logfinrange(4, 1024, 9)``.
+
+Syne Tune provides a range of finite numerical domains in order to
+avoid suboptimal performance of Bayesian optimization due to the uncritical
+use of ``choice``. Since this is somewhat subtle, and you may also want
+to import configuration spaces from other HPO libraries which do not
+have these types, Syne Tune provides an automatic conversion logic
+with :func:`~syne_tune.utils.streamline_config_space`. Details are given
 `here <../../search_space.html#recommendations>`__.
+
+.. note::
+   When using Bayesian optimization or any other model-based HPO method,
+   we strongly recommend to use
+   :func:`~syne_tune.utils.streamline_config_space` in order to ensure that
+   your domains are chosen in a way that works best with internal encoding.
 
 Speeding up Decision-Making
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

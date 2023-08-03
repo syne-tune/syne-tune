@@ -4,7 +4,10 @@ How to Choose a Configuration Space
 One important step in applying hyperparameter optimization to your tuning
 problem is to define a configuration space (or search space). Doing this
 optimally for any given problem is more of an art than a science, but in this
-tutorial you will learn about the basics and some gotchas.
+tutorial you will learn about the basics and some gotchas. Syne Tune also
+provides some logic in :func:`~syne_tune.utils.streamline_config_space` to
+automatically transform domains into forms more suitable for Bayesian
+optimization, this is explained here as well.
 
 Introduction
 ------------
@@ -14,11 +17,11 @@ Here is an example for a configuration space:
 .. code-block:: python
 
    from syne_tune.config_space import (
-       randint, uniform, loguniform, choice,
+       lograndint, uniform, loguniform, choice,
    )
 
    config_space = {
-       'n_units': randint(4, 1024),
+       'n_units': lograndint(4, 1024),
        'dropout': uniform(0, 0.9),
        'learning_rate': loguniform(1e-6, 1),
        'activation': choice(['relu', 'tanh']),
@@ -50,7 +53,7 @@ currently supported (for full details, see :mod:`syne_tune.config_space`):
   ``x`` is drawn uniformly in ``[log(lower), log(upper)]``.
 * ``randint(lower, upper)``: Integer uniform in ``lower, ..., upper``.
   The value range includes both ``lower`` and ``upper`` (difference to
-  Python range convention).
+  Python range convention, where ``upper`` would not be included).
 * ``lograndint(lower, upper)``: Integer log-uniform in
   ``lower, ..., upper``. More precisely, the value is
   ``int(round(exp(x)))``, where ``x`` is drawn uniformly in
@@ -100,9 +103,39 @@ Recommendations
 
 How to choose the domain for a given hyperparameter? Obviously, we want to
 avoid illegal values: learning rates should be positive, probabilities lie
-in ``[0, 1]``. Apart from this, the choice of domain is not always obvious,
-and different choices can affect search performance significantly in some
-cases. Here, we provide some recommendations:
+in ``[0, 1]``, and numbers of units must be integers. Apart from this, the
+choice of domain is not always obvious, and different choices can affect
+search performance significantly in some cases.
+
+With :func:`~syne_tune.utils.streamline_config_space`, Syne Tune provides some
+logic which transforms domains into others more suitable for Bayesian
+optimization. For example:
+
+.. code-block:: python
+
+   from syne_tune.config_space import randint, uniform, choice
+   from syne_tune.utils import streamline_config_space
+
+   config_space = {
+       'n_units': randint(4, 1024),
+       'dropout': uniform(0, 0.9),
+       'learning_rate': uniform(1e-6, 1),
+       'weigth_decay': choice([0.001, 0.01, 0.1, 1.0]),
+       'magic_constant': choice([1, 2, 5, 10, 15, 30]),
+   }
+   new_config_space = streamline_config_space(config_space)
+   # Results in:
+   # new_config_space = {
+   #     'n_units': lograndint(4, 1024),
+   #     'dropout': uniform(0, 0.9),
+   #     'learning_rate': loguniform(1e-6, 1),
+   #     'weigth_decay': logfinrange(0.001, 1.0, 4),
+   #     'magic_constant': logordinal([1, 2, 5, 10, 15, 30]),
+   # }
+
+Here, ``new_config_space`` results in the same set of configurations, but the
+internal encoding is more suitable for many of the model-based HPO methods in
+Syne Tune. Why?
 
 * **Avoid using choice (categorical) for numerical parameters.**
   Many HPO algorithms make very good use of the information that a
@@ -119,6 +152,11 @@ cases. Here, we provide some recommendations:
   distance in this embedding, so that any ordering or distance
   information is lost. Bayesian optimization does not perform well in
   general in high-dimensional embedding spaces.
+
+  It is for this reason that :func:`~syne_tune.utils.streamline_config_space`
+  converts the domains of ``weight_decay`` and ``magic_constant`` from
+  ``choice`` to ``logfinrange`` and ``logordinal`` respectively.
+
 * **Use infinite ranges.** No competitive HPO algorithm ever enumerates
   all possible configurations and iterates over all of them. There is
   almost certainly no gain in restricting a learning rate to 5 values
@@ -134,15 +172,57 @@ cases. Here, we provide some recommendations:
   respectively. If your value spacing is not regular, you can use ``ordinal``
   or ``logordinal``. For example,
   ``choice([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])`` can be replaced by
-  ``logordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``.
-* **Explore ordinal or logordinal as alternative to choice.** What if your
-  finite set of numerical values is not equi-spaced? Ordinal parameters are
-  encoded by a single int value (if ``kind="equal"``) or a single float value
-  (if ``kind in {"nn", "nn-log"}``), which is more economical in Bayesian
-  optimization.
+  ``logordinal([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])``, which is what
+  :func:`~syne_tune.utils.streamline_config_space` would do.
 * **Use a log transform** for parameters which may vary over several orders
   of magnitude. Examples are learning rates or regularization constants.
+  In the example above, :func:`~syne_tune.utils.streamline_config_space`
+  converts ``n_units`` from :code:`randint(4, 1024)` to :code:`lograndint(4, 1024)`
+  and ``learning_rate`` from :code:`uniform(1e-6, 1)` to
+  :code:`loguniform(1e-6, 1)`.
 * **Use points_to_evaluate**. On top of refining your configuration space, we
   strongly recommend to
   `specify initial default configurations <schedulers.html#fifoscheduler>`__
   by ``points_to_evaluate``.
+
+As a user, you can memory all of this, or you can use
+:func:`~syne_tune.utils.streamline_config_space` and just do the following:
+
+* Use ``uniform`` for ``float`` values, ``randint`` for ``int`` values, and
+  leave the decision for log scaling to the logic.
+* Use ``choice`` for each finite domain, just make sure that all entries have
+  the same type (``str``, ``int``, or ``float``).
+  :func:`~syne_tune.utils.streamline_config_space` will transform your choice
+  into ``finrange``, ``logfinrange``, ``ordinal``, or ``logordinal`` for value
+  types ``float`` or ``int``.
+
+You should also use :func:`~syne_tune.utils.streamline_config_space` when
+importing configuration spaces from other HPO libraries, which may not support
+the finite numerical domains Syne Tune has.
+
+.. note::
+   The conversion of ``choice`` to ``finrange`` or ``logfinrange`` in
+   :func:`~syne_tune.utils.streamline_config_space` can be approximate. While
+   the list has the same size, some entries may be changed. For example,
+   :code:`choice([1, 2, 5, 10, 20, 50])` is replaced by ``logfinrange`` with
+   values ``1, 2, 5, 10, 22, 48``. If this is a problem for certain domains, use
+   the ``exclude_names`` argument.
+
+Finally, here is what :func:`~syne_tune.utils.streamline_config_space` is doing:
+
+* For a domain :code:`uniform(lower, upper)` or :code:`randint(lower, upper)`:
+  If :code:`lower > 0` and :code:`upper >= lower * 100`, replace domain by
+  :code:`loguniform(lower, upper)` or :code:`lograndint(lower, upper)`.
+* For a domain :code:`choice(categories)`, where all entries in ``categories``
+  are of type ``int`` or ``float``: This domain is replaced by
+  ``finrange``, ``logfinrange``, ``ordinal``, or ``logordinal`` (with the same
+  value type), depending on best fit. Namely, ``categories`` is sorted to
+  :math:`x_0 < \dots < x_{n-1}`, and a linear function
+  :math:`a * j + b, j = 0,\dots, n-1` is fit to :math:`[x_j]`, and to
+  :math:`[\log x_j]` if :math:`x_0 > 0`. The quality of the fit is scored by
+  :math:`R^2`, it determines logarithmic or linear encoding, and also the choice
+  between ``finrange`` and ``ordinal``. For ``ordinal``, we always use
+  ``kind="nn"``.
+* In order to exclude certain hyperparameters from replacements, pass their
+  names in the ``exclude_names`` argument of
+  :func:`~syne_tune.utils.streamline_config_space`.
