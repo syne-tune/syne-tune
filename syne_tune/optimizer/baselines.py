@@ -740,14 +740,12 @@ class REA(FIFOScheduler):
 def create_gaussian_process_estimator(
     config_space: Dict[str, Any],
     metric: str,
-    mode: Optional[str] = None,
     random_seed: Optional[int] = None,
     search_options: Optional[Dict[str, Any]] = None,
 ) -> Estimator:
     scheduler = BayesianOptimization(
         config_space=config_space,
         metric=metric,
-        mode=mode,
         random_seed=random_seed,
         search_options=search_options,
     )
@@ -802,10 +800,6 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
             logging.info(try_import_moo_message())
             raise
 
-        searcher_kwargs = _create_searcher_kwargs(
-            config_space, metric, random_seed, kwargs
-        )
-        searcher_kwargs["mode"] = mode
         if estimators is None:
             estimators = dict()
         else:
@@ -817,14 +811,16 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         else:
             search_options = dict()
         search_options["no_fantasizing"] = True
-        for _metric, _mode in zip(metric, mode):
+        for _metric in metric:
             if _metric not in estimators:
                 estimators[_metric] = create_gaussian_process_estimator(
                     config_space=config_space,
                     metric=_metric,
-                    mode=_mode,
                     search_options=search_options,
                 )
+        # Note: ``mode`` is dealt with in the ``update`` method of the MO
+        # searcher, by converting the metrics. Internally, all metrics are
+        # minimized
         searcher = MultiObjectiveMultiSurrogateSearcher(
             config_space=config_space,
             metric=metric,
