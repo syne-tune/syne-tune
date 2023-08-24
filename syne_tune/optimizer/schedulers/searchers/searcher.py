@@ -188,7 +188,17 @@ class BaseSearcher:
         self._points_to_evaluate = impute_points_to_evaluate(
             points_to_evaluate, config_space
         )
+        self._check_mode(mode)
         self._mode = mode
+
+    @staticmethod
+    def _check_mode(mode):
+        if isinstance(mode, str):
+            mode = [mode]
+        allowed_vals = {"min", "max"}
+        assert all(
+            x in allowed_vals for x in mode
+        ), f"mode = {mode} must have entries from {allowed_vals}"
 
     def configure_scheduler(self, scheduler):
         """

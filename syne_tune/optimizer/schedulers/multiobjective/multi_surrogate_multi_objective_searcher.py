@@ -84,7 +84,7 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
         **kwargs,
     ):
         if mode is None:
-            mode = ["min" for item in metric]
+            mode = "min"
 
         super().__init__(
             config_space,
@@ -99,6 +99,7 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
             scoring_class = partial(
                 MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
             )
+        self._set_metric_to_internal_signs()
 
         if not clone_from_state:
             hp_ranges = make_hyperparameter_ranges(self.config_space)
@@ -119,16 +120,30 @@ class MultiObjectiveMultiSurrogateSearcher(BayesianOptimizationSearcher):
             # overwritten in ``_restore_from_state``
             self._create_internal(**kwargs.copy())
 
+    def _set_metric_to_internal_signs(self):
+        num_metrics = len(self._metric)
+        if isinstance(self._mode, str):
+            mode = [self._mode] * num_metrics
+        else:
+            assert (
+                len(self._mode) == num_metrics
+            ), f"mode = {self._mode} and metric = {self._metric} must have the same length"
+            mode = self._mode
+        self._metric_to_internal_signs = [-1 if m == "max" else 1 for m in mode]
+
     def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         # Gather metrics
-        metrics = {name: result[name] for name in self._metric}
+        metrics = {
+            name: result[name] * self._metric_to_internal_signs[pos]
+            for pos, name in enumerate(self._metric)
+        }
 
         self.state_transformer.label_trial(
             TrialEvaluations(trial_id=trial_id, metrics=metrics), config=config
         )
         if self.debug_log is not None:
             _trial_id = self._trial_id_string(trial_id, result)
-            part = ",".join(f"{k}:{v:.3f}" for k, v in metrics.items())
+            part = ",".join([f"{name}:{result[name]:.3f}" for name in self._metric])
             msg = f"Update for trial_id {_trial_id}: metrics = ["
             logger.info(msg + part + "]")
 
