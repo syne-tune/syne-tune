@@ -827,6 +827,7 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         # minimized
         searcher = MultiObjectiveMultiSurrogateSearcher(
             estimators=estimators,
+            mode=mode,
             scoring_class=partial(
                 MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
             ),
