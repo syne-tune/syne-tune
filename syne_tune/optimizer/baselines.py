@@ -803,7 +803,7 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         searcher_kwargs = _create_searcher_kwargs(
             config_space, metric, random_seed, kwargs
         )
-        
+
         if estimators is None:
             estimators = dict()
         else:
