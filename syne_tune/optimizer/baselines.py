@@ -826,14 +826,11 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
                     search_options=search_options,
                 )
         searcher = MultiObjectiveMultiSurrogateSearcher(
-            config_space=config_space,
-            metric=metric,
-            mode=mode,
             estimators=estimators,
             scoring_class=partial(
                 MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
             ),
-            random_seed=random_seed,
+            **searcher_kwargs,
         )
         super().__init__(
             config_space=config_space,
