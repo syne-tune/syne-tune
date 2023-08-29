@@ -800,6 +800,10 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
             logging.info(try_import_moo_message())
             raise
 
+        searcher_kwargs = _create_searcher_kwargs(
+            config_space, metric, random_seed, kwargs
+        )
+
         if estimators is None:
             estimators = dict()
         else:
@@ -822,14 +826,12 @@ class MORandomScalarizationBayesOpt(FIFOScheduler):
         # searcher, by converting the metrics. Internally, all metrics are
         # minimized
         searcher = MultiObjectiveMultiSurrogateSearcher(
-            config_space=config_space,
-            metric=metric,
-            mode=mode,
             estimators=estimators,
+            mode=mode,
             scoring_class=partial(
                 MultiObjectiveLCBRandomLinearScalarization, random_seed=random_seed
             ),
-            random_seed=random_seed,
+            **searcher_kwargs,
         )
         super().__init__(
             config_space=config_space,
