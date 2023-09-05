@@ -21,6 +21,16 @@ import syne_tune
 sys.path.insert(0, os.path.abspath("../../"))
 
 
+def copy_notebooks_into_docs_folder(app):
+    # .ipynb files must be inside the docs/ folder for Jupyter to be able to convert them
+    destination = "source/notebooks"
+    try:
+        shutil.rmtree(destination)
+    except OSError as e:
+        print("Error: %s - %s." % (e.filename, e.strerror))
+    shutil.copytree("../examples/notebooks", destination)
+
+
 def run_apidoc(app):
     """Generate doc stubs using sphinx-apidoc."""
     module_dir = os.path.join(app.srcdir, "../../")
@@ -61,6 +71,7 @@ def run_apidoc(app):
 
 def setup(app):
     """Register our sphinx-apidoc hook."""
+    app.connect("builder-inited", copy_notebooks_into_docs_folder)
     app.connect("builder-inited", run_apidoc)
 
 
@@ -110,6 +121,7 @@ default_role = "py:obj"
 templates_path = ["_templates"]
 exclude_patterns = []
 
+nbsphinx_execute = 'never'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

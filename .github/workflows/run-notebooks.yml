@@ -1,0 +1,35 @@
+name: Run Jupyter Notebooks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  prepare:
+    runs-on: syne-tune_ubuntu-latest_16-core
+    # outputs:
+    #   matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Convert notebooks to python scripts
+        id: set-matrix
+        run: |
+          jupyter nbconvert \
+          --TagRemovePreprocessor.enabled=True \
+          --TagRemovePreprocessor.remove_cell_tags install-dependencies \
+          --to python "examples/notebooks/xgboost_example.ipynb"
+
+  tests:
+    needs: prepare
+    # strategy:
+    #   fail-fast: false
+    #   matrix:
+    #     suite: ${{ fromJSON(needs.prepare.outputs.matrix)}}
+    uses: ./.github/workflows/run-syne-tune.yml
+    with:
+      script-path: run_quick_test.py --test-file examples/notebooks/xgboost_example.py

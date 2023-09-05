@@ -37,7 +37,7 @@ Syne Tune is developed in collaboration with the team behind the [Automatic Mode
 To install Syne Tune from pip, you can simply do:
 
 ```bash
-pip install 'syne-tune[extra]'
+pip install 'syne-tune[basic]'
 ```
 
 or to install the latest version from source: 
@@ -48,7 +48,7 @@ cd syne-tune
 python3 -m venv st_venv
 . st_venv/bin/activate
 pip install --upgrade pip
-pip install -e '.[extra]'
+pip install -e '.[basic]'
 ```
 
 This installs everything in a virtual environment `st_venv`. Remember to activate

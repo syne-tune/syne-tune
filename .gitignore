@@ -10,3 +10,4 @@ coverage.xml
 std.out
 docs/build/*
 docs/source/_apidoc/*
+docs/source/notebooks/*
