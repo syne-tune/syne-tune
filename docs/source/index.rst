@@ -75,6 +75,13 @@ What's New?
    examples_toc
 
 .. toctree::
+   :name: Notebooks
+   :caption: Notebooks
+   :maxdepth: 1
+
+   notebooks/xgboost_example.ipynb
+
+.. toctree::
    :name: Tutorials
    :caption: Tutorials
    :maxdepth: 1

@@ -92,6 +92,7 @@ extensions = [
     "sphinxcontrib.bibtex",
     "myst_parser",
     "sphinxcontrib.jquery",  # can be removed as soon as the theme no longer depends on jQuery
+    "nbsphinx",
 ]
 
 myst_heading_anchors = 2

@@ -8,3 +8,5 @@ coverage.xml
 .idea
 .vscode
 std.out
+docs/build/*
+docs/source/_apidoc/*
