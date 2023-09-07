@@ -15,7 +15,7 @@ jobs:
     #   matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Install dev dependencies
-        run: pip install -r requirements-dev.txt
+        run: pip install -r ./requirements-dev.txt
       - name: Convert notebooks to python scripts
         id: set-matrix
         run: |

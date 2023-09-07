@@ -23,12 +23,15 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 def copy_notebooks_into_docs_folder(app):
     # .ipynb files must be inside the docs/ folder for Jupyter to be able to convert them
-    destination = "source/notebooks"
+    currpath = os.path.dirname(os.path.realpath(__file__))
+    source = os.path.join(currpath, "../../examples/notebooks")
+    destination = os.path.join(currpath, "notebooks")
+    print(f"current path: {currpath}; source path: {source}; destination path: {destination}")
     try:
         shutil.rmtree(destination)
     except OSError as e:
         print("Error: %s - %s." % (e.filename, e.strerror))
-    shutil.copytree("../examples/notebooks", destination)
+    shutil.copytree(source, destination)
 
 
 def run_apidoc(app):
@@ -121,7 +124,7 @@ default_role = "py:obj"
 templates_path = ["_templates"]
 exclude_patterns = []
 
-nbsphinx_execute = 'never'
+nbsphinx_execute = "never"
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
