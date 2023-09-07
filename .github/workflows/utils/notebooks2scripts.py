@@ -5,7 +5,7 @@ from traitlets.config import Config
 from nbconvert.exporters import PythonExporter
 
 c = Config()
-c.TagRemovePreprocessor.remove_cell_tags = "install-dependencies"
+c.TagRemovePreprocessor.remove_cell_tags = "ci-skip-cell"
 python_exporter = PythonExporter(config=c)
 
 
