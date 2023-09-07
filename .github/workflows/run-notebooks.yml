@@ -38,10 +38,10 @@ jobs:
 
   tests:
     needs: prepare
-    strategy:
-      fail-fast: false
-      matrix:
-        suite: ${{ fromJSON(needs.prepare.outputs.matrix)}}
+    # strategy:
+    #   fail-fast: false
+      # matrix:
+      #   suite: ${{ fromJSON(needs.prepare.outputs.matrix)}}
     uses: ./.github/workflows/run-syne-tune.yml
     with: 
       download-artifact-name: xgboost_example.py
