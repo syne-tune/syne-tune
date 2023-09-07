@@ -45,7 +45,7 @@ jobs:
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - uses: actions/checkout@v3
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
           cache: 'pip'
