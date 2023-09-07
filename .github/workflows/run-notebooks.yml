@@ -27,13 +27,26 @@ jobs:
           --TagRemovePreprocessor.enabled=True \
           --TagRemovePreprocessor.remove_cell_tags install-dependencies \
           --to python "examples/notebooks/xgboost_example.ipynb"
+      - name: Upload converted python script
+        uses: actions/upload-artifact@master
+        with:
+          name: xgboost_example.py
+          path: examples/notebooks/
 
   tests:
     needs: prepare
+    runs-on: syne-tune_ubuntu-latest_16-core
     # strategy:
     #   fail-fast: false
     #   matrix:
     #     suite: ${{ fromJSON(needs.prepare.outputs.matrix)}}
-    uses: ./.github/workflows/run-syne-tune.yml
-    with:
-      script-path: examples/notebooks/xgboost_example.py
+    steps: 
+      - name: Download converted python script
+        uses: actions/download-artifact@master
+        with:
+          name: xgboost_example.py
+          path: examples/notebooks/
+      - name: Run script
+        uses: ./.github/workflows/run-syne-tune.yml
+        with:
+          script-path: examples/notebooks/xgboost_example.py
