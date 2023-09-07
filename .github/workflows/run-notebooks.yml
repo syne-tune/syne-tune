@@ -11,8 +11,8 @@ on:
 jobs:
   prepare:
     runs-on: syne-tune_ubuntu-latest_16-core
-    # outputs:
-    #   matrix: ${{ steps.set-matrix.outputs.matrix }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: check out Syne Tune
         uses: actions/checkout@v3
@@ -27,6 +27,9 @@ jobs:
           --TagRemovePreprocessor.enabled=True \
           --TagRemovePreprocessor.remove_cell_tags install-dependencies \
           --to python "examples/notebooks/xgboost_example.ipynb"
+
+          echo "xgboost_example=xgboost_example" >> "$GITHUB_OUTPUT"
+          echo "script2=script2" >> "$GITHUB_OUTPUT" 
       - name: Upload converted python script
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
@@ -35,20 +38,12 @@ jobs:
 
   tests:
     needs: prepare
-    runs-on: syne-tune_ubuntu-latest_16-core
-    # strategy:
-    #   fail-fast: false
-    #   matrix:
-    #     suite: ${{ fromJSON(needs.prepare.outputs.matrix)}}
-    steps:
-      - name: check out Syne Tune
-        uses: actions/checkout@v3
-      - name: Download converted python script
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: xgboost_example.py
-          path: examples/notebooks/
-      - name: Run script
-        uses: ./.github/workflows/run-syne-tune.yml
-        with:
-          script-path: examples/notebooks/xgboost_example.py
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON(needs.prepare.outputs.matrix)}}
+    uses: ./.github/workflows/run-syne-tune.yml
+    with: 
+      download-artifact-name: xgboost_example.py
+      download-artifact-path: examples/notebooks/
+      script-path: examples/notebooks/xgboost_example.py
