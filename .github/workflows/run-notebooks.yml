@@ -47,3 +47,5 @@ jobs:
       download-artifact-name: xgboost_example.py
       download-artifact-path: examples/notebooks/
       script-path: examples/notebooks/xgboost_example.py
+      extras-require: basic
+      additional-command: pip install xgboost
