@@ -6,7 +6,7 @@ Examples
    :caption: Example Notebooks
    :maxdepth: 1
 
-   notebooks/xgboost_example.ipynb
+   notebooks/tune_xgboost.ipynb
 
 
 .. toctree::
