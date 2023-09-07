@@ -15,7 +15,7 @@ jobs:
     #   matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Install dev dependencies
-        run: pip install -r ./requirements-dev.txt
+        run: python -m pip install -e '.[dev]'
       - name: Convert notebooks to python scripts
         id: set-matrix
         run: |
@@ -32,4 +32,4 @@ jobs:
     #     suite: ${{ fromJSON(needs.prepare.outputs.matrix)}}
     uses: ./.github/workflows/run-syne-tune.yml
     with:
-      script-path: run_quick_test.py --test-file examples/notebooks/xgboost_example.py
+      script-path: examples/notebooks/xgboost_example.py

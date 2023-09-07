@@ -26,7 +26,9 @@ def copy_notebooks_into_docs_folder(app):
     currpath = os.path.dirname(os.path.realpath(__file__))
     source = os.path.join(currpath, "../../examples/notebooks")
     destination = os.path.join(currpath, "notebooks")
-    print(f"current path: {currpath}; source path: {source}; destination path: {destination}")
+    print(
+        f"current path: {currpath}; source path: {source}; destination path: {destination}"
+    )
     try:
         shutil.rmtree(destination)
     except OSError as e:
