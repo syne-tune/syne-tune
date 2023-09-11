@@ -14,6 +14,7 @@ import datetime
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import syne_tune
 
@@ -23,17 +24,10 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 def copy_notebooks_into_docs_folder(app):
     # .ipynb files must be inside the docs/ folder for Jupyter to be able to convert them
-    currpath = os.path.dirname(os.path.realpath(__file__))
-    source = os.path.join(currpath, "../../examples/notebooks")
-    destination = os.path.join(currpath, "notebooks")
-    print(
-        f"current path: {currpath}; source path: {source}; destination path: {destination}"
-    )
-    try:
-        shutil.rmtree(destination)
-    except OSError as e:
-        print("Error: %s - %s." % (e.filename, e.strerror))
-    shutil.copytree(source, destination)
+    source = Path(__file__).parent.parent.parent / "examples" / "notebooks"
+    destination = Path(__file__).parent / "notebooks"
+    print(f"Jupyter notebook source path: {source}; destination path: {destination}")
+    shutil.copytree(source, destination, dirs_exist_ok=True)
 
 
 def run_apidoc(app):
