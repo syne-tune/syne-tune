@@ -71,6 +71,16 @@ projects, by default, use the default GitHub issue labels
 (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any
 'help wanted' issues is a great place to start.
 
+## Adding/updating Syne Tune examples
+
+We are always interested in adding examples that demonstrate how to use Syne Tune.
+
+Please add your example inside the `examples/` folder. 
+
+If you create an example notebook, please put it under the `examples/notebooks` folder.
+
+Please ensure that your example assumes no prior knowledge of hyperparameter optimization, to ensure that the library remains accessible to new users. 
+
 
 ## Contributing to the Documentation
 
@@ -93,6 +103,10 @@ hints:
   that this PR implies. Locate the check **docs/readthedocs.org:syne-tune**, click
   on `Details`, then on the small `View docs` link just under `Build took X seconds`
   (not the tall `View docs` link in the upper right).
+
+
+Jupyter notebooks inside the `examples/notebooks` folder can be easily added as documentation pages. 
+See `tune_xgboost.ipynb` for an example showing how this can be done. 
 
 
 ## Code of Conduct
