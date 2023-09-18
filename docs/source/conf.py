@@ -14,11 +14,20 @@ import datetime
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import syne_tune
 
 
 sys.path.insert(0, os.path.abspath("../../"))
+
+
+def copy_notebooks_into_docs_folder(app):
+    # .ipynb files must be inside the docs/ folder for Jupyter to be able to convert them
+    source = Path(__file__).parent.parent.parent / "examples" / "notebooks"
+    destination = Path(__file__).parent / "notebooks"
+    print(f"Jupyter notebook source path: {source}; destination path: {destination}")
+    shutil.copytree(source, destination, dirs_exist_ok=True)
 
 
 def run_apidoc(app):
@@ -61,6 +70,7 @@ def run_apidoc(app):
 
 def setup(app):
     """Register our sphinx-apidoc hook."""
+    app.connect("builder-inited", copy_notebooks_into_docs_folder)
     app.connect("builder-inited", run_apidoc)
 
 
@@ -92,6 +102,7 @@ extensions = [
     "sphinxcontrib.bibtex",
     "myst_parser",
     "sphinxcontrib.jquery",  # can be removed as soon as the theme no longer depends on jQuery
+    "nbsphinx",
 ]
 
 myst_heading_anchors = 2
@@ -109,6 +120,7 @@ default_role = "py:obj"
 templates_path = ["_templates"]
 exclude_patterns = []
 
+nbsphinx_execute = "never"
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
