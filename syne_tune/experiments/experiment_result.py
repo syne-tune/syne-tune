@@ -21,7 +21,6 @@ from typing import List, Dict, Callable, Optional, Union, Any, Tuple
 import numpy as np
 import pandas as pd
 
-from syne_tune import Tuner
 from syne_tune.constants import (
     ST_METADATA_FILENAME,
     ST_RESULTS_DATAFRAME_FILENAME,
@@ -61,7 +60,7 @@ class ExperimentResult:
     name: str
     results: pd.DataFrame
     metadata: Dict[str, Any]
-    tuner: Tuner
+    tuner: "Tuner"
     path: Path
 
     def __str__(self):
@@ -201,17 +200,17 @@ class ExperimentResult:
         if isinstance(metric, str):
             assert (
                 metric in self.metric_names()
-            ), f"Attepted to use {metric} while available metrics are {self.metric_names()}"
+            ), f"Attempted to use {metric} while available metrics are {self.metric_names()}"
             metric_name = metric
             metric = self.metric_names().index(metric)
         elif isinstance(metric, int):
             assert metric < len(
                 self.metric_names()
-            ), f"Attepted to use metric index={metric} with {len(self.metric_names())} availale metrics"
+            ), f"Attempted to use metric index={metric} with {len(self.metric_names())} available metrics"
             metric_name = self.metric_names()[metric]
         else:
             raise AttributeError(
-                f"metic must be <int> or <str> but {type(metric)} was provided"
+                f"metric must be <int> or <str> but {type(metric)} was provided"
             )
 
         if len(self.metric_names()) > 1 and verbose:

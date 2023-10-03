@@ -14,7 +14,7 @@ import logging
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple, Any
+from typing import Callable, Dict, List, Optional, Set, Tuple, Any, Union
 
 import dill as dill
 
@@ -31,6 +31,7 @@ from syne_tune.constants import (
     ST_TUNER_DILL_FILENAME,
     TUNER_DEFAULT_SLEEP_TIME,
 )
+from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.optimizer.schedulers.remove_checkpoints import (
     RemoveCheckpointsSchedulerMixin,
@@ -683,3 +684,24 @@ class Tuner:
         :return: Default callback to store results
         """
         return StoreResultsCallback()
+
+    def best_config(self, metric: Optional[Union[str, int]] = 0) -> Dict[str, Any]:
+        """
+        :param metric: Indicates which metric to use, can be the index or a name of the metric.
+            default to 0 - first metric defined in the Scheduler
+        :return: the best configuration found while tuning for the metric given and the associated trial-id
+        """
+        tuning_experiment = load_experiment(self.name)
+
+        best_config_info = tuning_experiment.best_config(metric)
+        trial_id = best_config_info["trial_id"]
+        config = {k.replace("config_", ""): v for k, v in best_config_info.items() if k.startswith("config_")}
+
+        logger.info(
+            f"If you want to retrain the best configuration found, you can run: \n"
+            f"```tuner.trial_backend.start_trial(config={config})``` to start training from scratch\n"
+            f"or\n"
+            f"```tuner.trial_backend.start_trial(config={config}, checkpoint_trial_id={trial_id})``` to start from "
+            f"last checkpoint (your script should have stored a checkpoint)"
+        )
+        return config, trial_id
