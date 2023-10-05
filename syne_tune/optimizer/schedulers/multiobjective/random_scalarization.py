@@ -90,6 +90,8 @@ class MultiObjectiveLCBRandomLinearScalarization(ScoringFunction):
                 metrics_score_normalized = (
                     metrics_score_normalized / metrics_score_normalized.max()
                 )
+            else:
+                metrics_score_normalized = metric_score
             scores += metrics_score_normalized * weights[metric]
         return list(scores)
 
