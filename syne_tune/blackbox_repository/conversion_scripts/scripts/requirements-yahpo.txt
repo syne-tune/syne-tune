@@ -1,3 +1,5 @@
+# TODO uncomment once https://github.com/slds-lmu/yahpo_gym/pull/83 is released in Yahpo
+# onnxruntime>=1.10.0
 onnxruntime==1.10.0
 pyyaml
 configspace<=0.6.1
