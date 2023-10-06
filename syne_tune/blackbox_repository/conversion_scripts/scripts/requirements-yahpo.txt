@@ -1,4 +1,4 @@
-onnxruntime>=1.10.0
+onnxruntime==1.10.0
 pyyaml
 configspace<=0.6.1
 pandas

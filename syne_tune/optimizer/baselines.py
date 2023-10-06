@@ -43,6 +43,7 @@ from syne_tune.try_import import (
     try_import_bore_message,
     try_import_botorch_message,
     try_import_moo_message,
+    _try_import_message,
 )
 from syne_tune.util import dict_get
 
@@ -1222,6 +1223,47 @@ class ASHACQR(HyperbandScheduler):
             **kwargs,
         )
 
+
+try:
+    from syne_tune.optimizer.schedulers.smac_scheduler import SMACScheduler
+
+    class SMAC(SMACScheduler):
+        """
+        Wrapper to SMAC3. Requires SMAC3 to be installed, see https://github.com/automl/SMAC3 for instructions.
+        """
+
+        def __init__(
+            self,
+            config_space: Dict[str, Any],
+            metric: str,
+            mode: str = "min",
+            points_to_evaluate: Optional[list] = None,
+            random_seed: Optional[int] = None,
+            **kwargs,
+        ):
+            """
+            :param config_space:
+            :param metric: metric to be optimized, should be present in reported results dictionary
+            :param mode: "min" or "max", default to "min"
+            :param points_to_evaluate: list of points to consider before calling the optimizer
+            :param random_seed: to fix the behavior of smac
+            """
+            super(SMAC, self).__init__(
+                config_space=config_space,
+                metric=metric,
+                mode=mode,
+                random_seed=random_seed,
+                points_to_evaluate=points_to_evaluate,
+                **kwargs,
+            )
+
+except ImportError:
+    logging.info(
+        _try_import_message(
+            message_text="SMAC is not imported (not contained in extra)",
+            tag="smac",
+        )
+    )
 
 # Dictionary that allows to also list baselines who don't need a wrapper class
 # such as :class:`PopulationBasedTraining`
