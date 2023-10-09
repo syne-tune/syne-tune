@@ -83,7 +83,6 @@ def run_smac_simulated_backend():
         dataset=dataset_name,
     )
 
-    # Asynchronous successive halving (ASHA)
     blackbox = trial_backend.blackbox
 
     scheduler = SMAC(
