@@ -72,5 +72,5 @@ if __name__ == "__main__":
     tuning_experiment.plot()
 
     # Print the best configuration found from the tuner and retrain it
-    best_config, trial_id = tuner.best_config()
+    trial_id, best_config = tuner.best_config()
     tuner.trial_backend.start_trial(config=best_config)

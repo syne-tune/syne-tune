@@ -21,6 +21,7 @@ from typing import List, Dict, Callable, Optional, Union, Any, Tuple
 import numpy as np
 import pandas as pd
 
+from syne_tune import Tuner
 from syne_tune.constants import (
     ST_METADATA_FILENAME,
     ST_RESULTS_DATAFRAME_FILENAME,
@@ -29,7 +30,7 @@ from syne_tune.constants import (
     ST_TUNER_TIME,
 )
 from syne_tune.try_import import try_import_aws_message, try_import_visual_message
-from syne_tune.util import experiment_path, s3_experiment_path
+from syne_tune.util import experiment_path, s3_experiment_path, metric_name_mode
 
 try:
     import boto3
@@ -60,7 +61,7 @@ class ExperimentResult:
     name: str
     results: pd.DataFrame
     metadata: Dict[str, Any]
-    tuner: "Tuner"
+    tuner: Tuner
     path: Path
 
     def __str__(self):
@@ -97,7 +98,7 @@ class ExperimentResult:
             len(metrics_to_plot) > 1
         ), "Only one metric defined, cannot compute hypervolume"
 
-        metrics, metric_names, metric_modes = zip(
+        metric_names, metric_modes = zip(
             *[self._metric_name_mode(metric) for metric in metrics_to_plot]
         )
         assert np.all(
@@ -138,8 +139,8 @@ class ExperimentResult:
             If None, the figure is shown
         :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
         """
-        metric, metric_name, metric_mode = self._metric_name_mode(
-            metric_to_plot, verbose=True
+        metric_name, metric_mode = self._metric_name_mode(
+            metric_to_plot
         )
 
         df = self.results
@@ -177,7 +178,7 @@ class ExperimentResult:
             default to 0 - first metric defined in the Scheduler
         :return: Configuration corresponding to best metric value
         """
-        metric, metric_name, metric_mode = self._metric_name_mode(metric, verbose=True)
+        metric_name, metric_mode = self._metric_name_mode(metric)
 
         # locate best result
         if metric_mode == "min":
@@ -190,40 +191,18 @@ class ExperimentResult:
         return {k: v for k, v in res.items() if not k.startswith("st_")}
 
     def _metric_name_mode(
-        self, metric: Union[str, int], verbose: bool = False
-    ) -> Tuple[int, str, str]:
+        self, metric: Union[str, int]
+    ) -> Tuple[str, str]:
         """
-        Determine the metric, name and its mode given ambiguous input.
+        Determine the name and its mode given ambiguous input.
         :param metric: Index or name of the selected metric
-        :param verbose: If True, prints a warning message when only one metric is selected from many
         """
-        if isinstance(metric, str):
-            assert (
-                metric in self.metric_names()
-            ), f"Attempted to use {metric} while available metrics are {self.metric_names()}"
-            metric_name = metric
-            metric = self.metric_names().index(metric)
-        elif isinstance(metric, int):
-            assert metric < len(
-                self.metric_names()
-            ), f"Attempted to use metric index={metric} with {len(self.metric_names())} available metrics"
-            metric_name = self.metric_names()[metric]
-        else:
-            raise AttributeError(
-                f"metric must be <int> or <str> but {type(metric)} was provided"
-            )
+        return metric_name_mode(
+            metric_names=self.metric_names(),
+            metric_mode=self.metric_mode(),
+            metric=metric,
+        )
 
-        if len(self.metric_names()) > 1 and verbose:
-            logger.warning(
-                "Several metrics exists, this will "
-                f"use metric={metric_name} (index={metric}) out of {self.metric_names()}."
-            )
-
-        metric_mode = self.metric_mode()
-        if isinstance(metric_mode, list):
-            metric_mode = metric_mode[metric]
-
-        return metric, metric_name, metric_mode
 
 
 def download_single_experiment(

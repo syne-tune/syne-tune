@@ -31,7 +31,6 @@ from syne_tune.constants import (
     ST_TUNER_DILL_FILENAME,
     TUNER_DEFAULT_SLEEP_TIME,
 )
-from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.scheduler import SchedulerDecision, TrialScheduler
 from syne_tune.optimizer.schedulers.remove_checkpoints import (
     RemoveCheckpointsSchedulerMixin,
@@ -44,7 +43,7 @@ from syne_tune.util import (
     check_valid_sagemaker_name,
     experiment_path,
     name_from_base,
-    dump_json_with_numpy,
+    dump_json_with_numpy, metric_name_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -685,17 +684,21 @@ class Tuner:
         """
         return StoreResultsCallback()
 
-    def best_config(self, metric: Optional[Union[str, int]] = 0) -> Dict[str, Any]:
+    def best_config(self, metric: Optional[Union[str, int]] = 0) -> Tuple[int, Dict[str, Any]]:
         """
         :param metric: Indicates which metric to use, can be the index or a name of the metric.
             default to 0 - first metric defined in the Scheduler
         :return: the best configuration found while tuning for the metric given and the associated trial-id
         """
-        tuning_experiment = load_experiment(self.name)
-
-        best_config_info = tuning_experiment.best_config(metric)
-        trial_id = best_config_info["trial_id"]
-        config = {k.replace("config_", ""): v for k, v in best_config_info.items() if k.startswith("config_")}
+        metric_name, metric_mode = metric_name_mode(
+            metric_names=self.scheduler.metric_names(),
+            metric_mode=self.scheduler.metric_mode(),
+            metric=metric,
+        )
+        trial_id, best_metric = print_best_metric_found(
+            self.tuning_status, metric_names=[metric_name], mode=metric_mode
+        )
+        config = self.trial_backend._trial_dict[trial_id].config
 
         logger.info(
             f"If you want to retrain the best configuration found, you can run: \n"
@@ -704,4 +707,4 @@ class Tuner:
             f"```tuner.trial_backend.start_trial(config={config}, checkpoint_trial_id={trial_id})``` to start from "
             f"last checkpoint (your script should have stored a checkpoint)"
         )
-        return config, trial_id
+        return trial_id, config
