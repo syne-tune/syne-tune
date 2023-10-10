@@ -139,9 +139,7 @@ class ExperimentResult:
             If None, the figure is shown
         :param plt_kwargs: Arguments to :func:`matplotlib.pyplot.plot`
         """
-        metric_name, metric_mode = self._metric_name_mode(
-            metric_to_plot
-        )
+        metric_name, metric_mode = self._metric_name_mode(metric_to_plot)
 
         df = self.results
         if df is not None and len(df) > 0:
@@ -190,9 +188,7 @@ class ExperimentResult:
         # Don't include internal fields
         return {k: v for k, v in res.items() if not k.startswith("st_")}
 
-    def _metric_name_mode(
-        self, metric: Union[str, int]
-    ) -> Tuple[str, str]:
+    def _metric_name_mode(self, metric: Union[str, int]) -> Tuple[str, str]:
         """
         Determine the name and its mode given ambiguous input.
         :param metric: Index or name of the selected metric
@@ -202,7 +198,6 @@ class ExperimentResult:
             metric_mode=self.metric_mode(),
             metric=metric,
         )
-
 
 
 def download_single_experiment(

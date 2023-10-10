@@ -324,8 +324,9 @@ def find_first_of_type(a: Iterable[Any], typ) -> Optional[Any]:
     except StopIteration:
         return None
 
+
 def metric_name_mode(
-        metric_names: List[str], metric_mode: Union[str, List[str]], metric: Union[str, int]
+    metric_names: List[str], metric_mode: Union[str, List[str]], metric: Union[str, int]
 ) -> Tuple[str, str]:
     """
     Retrieve the metric mode given a metric queried by either index or name.
@@ -336,7 +337,7 @@ def metric_name_mode(
     """
     if isinstance(metric, str):
         assert (
-                metric in metric_names
+            metric in metric_names
         ), f"Attempted to use {metric} while available metrics are {metric_names}"
         metric_name = metric
     elif isinstance(metric, int):
@@ -356,7 +357,9 @@ def metric_name_mode(
         )
 
     if isinstance(metric_mode, list):
-        metric_index = metric_names.index(metric_name) if isinstance(metric, str) else metric
+        metric_index = (
+            metric_names.index(metric_name) if isinstance(metric, str) else metric
+        )
         metric_mode = metric_mode[metric_index]
 
     return metric_name, metric_mode

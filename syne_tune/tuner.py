@@ -43,7 +43,8 @@ from syne_tune.util import (
     check_valid_sagemaker_name,
     experiment_path,
     name_from_base,
-    dump_json_with_numpy, metric_name_mode,
+    dump_json_with_numpy,
+    metric_name_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -684,7 +685,9 @@ class Tuner:
         """
         return StoreResultsCallback()
 
-    def best_config(self, metric: Optional[Union[str, int]] = 0) -> Tuple[int, Dict[str, Any]]:
+    def best_config(
+        self, metric: Optional[Union[str, int]] = 0
+    ) -> Tuple[int, Dict[str, Any]]:
         """
         :param metric: Indicates which metric to use, can be the index or a name of the metric.
             default to 0 - first metric defined in the Scheduler
