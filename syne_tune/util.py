@@ -352,7 +352,7 @@ def metric_name_mode(
 
     if len(metric_names) > 1:
         logger.warning(
-            "Several metrics exists, this will "
+            "Several metrics exist, this will "
             f"use metric={metric_name} (index={metric}) out of {metric_names}."
         )
 
