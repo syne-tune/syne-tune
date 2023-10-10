@@ -181,9 +181,18 @@ class ExperimentResult:
         fig, ax = plt.subplots(1, 1, figsize=figsize if figsize else (12, 4))
         for trial_id in sorted(df.trial_id.unique()):
             df_trial = df[df.trial_id == trial_id]
-            df_trial.plot(x=ST_TUNER_TIME, y=metric_name, marker=".", ax=ax, legend=None, alpha=0.5)
-        df_stop = df[df['st_decision'] == "STOP"]
-        plt.scatter(df_stop[ST_TUNER_TIME], df_stop[metric_name], marker="x", color="red")
+            df_trial.plot(
+                x=ST_TUNER_TIME,
+                y=metric_name,
+                marker=".",
+                ax=ax,
+                legend=None,
+                alpha=0.5,
+            )
+        df_stop = df[df["st_decision"] == "STOP"]
+        plt.scatter(
+            df_stop[ST_TUNER_TIME], df_stop[metric_name], marker="x", color="red"
+        )
         plt.xlabel("Wallclock time (s)")
         plt.ylabel(metric_name)
         plt.title("Trials value over time")
