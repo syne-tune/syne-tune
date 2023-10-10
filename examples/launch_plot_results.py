@@ -68,4 +68,8 @@ if __name__ == "__main__":
 
     print(f"best result found: {tuning_experiment.best_config()}")
 
+    # plots the best metric over time
     tuning_experiment.plot()
+
+    # plots values found by all trials over time
+    tuning_experiment.plot_trials_over_time()
