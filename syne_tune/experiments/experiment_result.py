@@ -171,9 +171,7 @@ class ExperimentResult:
             If None, the figure is shown
         :param figsize: width and height of figure
         """
-        _, metric_name, metric_mode = self._metric_name_mode(
-            metric_to_plot, verbose=True
-        )
+        metric_name, metric_mode = self._metric_name_mode(metric_to_plot)
         df = self.results
 
         fig, ax = plt.subplots(1, 1, figsize=figsize if figsize else (12, 4))

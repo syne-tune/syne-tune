@@ -63,6 +63,9 @@ if __name__ == "__main__":
 
     tuner.run()
 
+    # shows how to print the best configuration found from the tuner and retrains it
+    trial_id, best_config = tuner.best_config()
+
     tuning_experiment = load_experiment(tuner.name)
 
     # prints the best configuration found from experiment-results
@@ -73,8 +76,4 @@ if __name__ == "__main__":
 
     # plots values found by all trials over time
     tuning_experiment.plot_trials_over_time()
-
-    # prints the best configuration found from the tuner and retrains it
-    trial_id, best_config = tuner.best_config()
-    tuner.trial_backend.start_trial(config=best_config)
 
