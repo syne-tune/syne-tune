@@ -76,4 +76,3 @@ if __name__ == "__main__":
 
     # plots values found by all trials over time
     tuning_experiment.plot_trials_over_time()
-
