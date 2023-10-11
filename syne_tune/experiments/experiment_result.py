@@ -160,6 +160,45 @@ class ExperimentResult:
             else:
                 fig.show()
 
+    def plot_trials_over_time(
+        self, metric_to_plot: Union[str, int] = 0, figure_path: str = None, figsize=None
+    ):
+        """Plot trials results over as function of wallclock time
+
+        :param metric_to_plot: Indicates which metric to plot, can be the index or a name of the metric.
+            default to 0 - first metric defined
+        :param figure_path: If specified, defines the path where the figure will be saved.
+            If None, the figure is shown
+        :param figsize: width and height of figure
+        """
+        _, metric_name, metric_mode = self._metric_name_mode(
+            metric_to_plot, verbose=True
+        )
+        df = self.results
+
+        fig, ax = plt.subplots(1, 1, figsize=figsize if figsize else (12, 4))
+        for trial_id in sorted(df.trial_id.unique()):
+            df_trial = df[df.trial_id == trial_id]
+            df_trial.plot(
+                x=ST_TUNER_TIME,
+                y=metric_name,
+                marker=".",
+                ax=ax,
+                legend=None,
+                alpha=0.5,
+            )
+        df_stop = df[df["st_decision"] == "STOP"]
+        plt.scatter(
+            df_stop[ST_TUNER_TIME], df_stop[metric_name], marker="x", color="red"
+        )
+        plt.xlabel("Wallclock time (s)")
+        plt.ylabel(metric_name)
+        plt.title("Trials value over time")
+        if figure_path is not None:
+            fig.savefig(figure_path)
+        else:
+            fig.show()
+
     def metric_mode(self) -> Union[str, List[str]]:
         return self.metadata["metric_mode"]
 

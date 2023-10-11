@@ -43,7 +43,9 @@ required_aws = load_requirements("requirements-aws.txt")
 required_moo = load_requirements("requirements-moo.txt")
 required_visual = load_requirements("requirements-visual.txt")
 required_sklearn = load_requirements("requirements-sklearn.txt")
+required_smac = load_requirements("requirements-smac.txt")
 
+# Do not add SMAC for now in "extra" as it can easily conflict with Yahpo config-space version
 required_extra = (
     required_gpsearchers
     + required_kde
@@ -95,6 +97,7 @@ setup(
         "bore": required_bore,
         "extra": required_extra,
         "basic": required_basic,
+        "smac": required_smac,
     },
     install_requires=required_core,
     include_package_data=True,
