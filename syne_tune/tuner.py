@@ -14,7 +14,7 @@ import logging
 import time
 from collections import OrderedDict
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Set, Tuple, Any
+from typing import Callable, Dict, List, Optional, Set, Tuple, Any, Union
 
 import dill as dill
 
@@ -44,6 +44,7 @@ from syne_tune.util import (
     experiment_path,
     name_from_base,
     dump_json_with_numpy,
+    metric_name_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -683,3 +684,30 @@ class Tuner:
         :return: Default callback to store results
         """
         return StoreResultsCallback()
+
+    def best_config(
+        self, metric: Optional[Union[str, int]] = 0
+    ) -> Tuple[int, Dict[str, Any]]:
+        """
+        :param metric: Indicates which metric to use, can be the index or a name of the metric.
+            default to 0 - first metric defined in the Scheduler
+        :return: the best configuration found while tuning for the metric given and the associated trial-id
+        """
+        metric_name, metric_mode = metric_name_mode(
+            metric_names=self.scheduler.metric_names(),
+            metric_mode=self.scheduler.metric_mode(),
+            metric=metric,
+        )
+        trial_id, best_metric = print_best_metric_found(
+            self.tuning_status, metric_names=[metric_name], mode=metric_mode
+        )
+        config = self.trial_backend._trial_dict[trial_id].config
+
+        logger.info(
+            f"If you want to retrain the best configuration found, you can run: \n"
+            f"```tuner.trial_backend.start_trial(config={config})``` to start training from scratch\n"
+            f"or\n"
+            f"```tuner.trial_backend.start_trial(config={config}, checkpoint_trial_id={trial_id})``` to start from "
+            f"last checkpoint (your script should have stored a checkpoint)"
+        )
+        return trial_id, config

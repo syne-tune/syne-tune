@@ -337,6 +337,14 @@ You can take a look at this example
 `examples/launch_checkpoint_example.py <examples.html#retrieving-the-best-checkpoint>`__
 which shows how to retrieve the best checkpoint obtained after tuning an XGBoost model.
 
+How can I retrain the best model found after tuning?
+====================================================
+
+You can call ``tuner.trial_backend.start_trial(config=tuner.best_config())`` after tuning to retrain the best config,
+you can take a look at this example
+`examples/launch_plot_example.py <examples.html#plot-results-of-tuning-experiment>`__
+which shows how to retrain the best model found while tuning.
+
 Which schedulers make use of checkpointing?
 ===========================================
 

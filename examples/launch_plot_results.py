@@ -25,7 +25,7 @@ from examples.training_scripts.height_example.train_height import (
 )
 
 if __name__ == "__main__":
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.INFO)
 
     random_seed = 31415927
     max_steps = 100
@@ -63,9 +63,12 @@ if __name__ == "__main__":
 
     tuner.run()
 
-    tuning_experiment = load_experiment(tuner.name)
-    print(tuning_experiment)
+    # shows how to print the best configuration found from the tuner and retrains it
+    trial_id, best_config = tuner.best_config()
 
+    tuning_experiment = load_experiment(tuner.name)
+
+    # prints the best configuration found from experiment-results
     print(f"best result found: {tuning_experiment.best_config()}")
 
     # plots the best metric over time

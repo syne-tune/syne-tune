@@ -21,6 +21,8 @@ from pathlib import Path
 from typing import Optional, List, Union, Dict, Any, Iterable
 from time import perf_counter
 from contextlib import contextmanager
+from typing import Tuple, Union, List
+import logging
 
 import numpy as np
 
@@ -30,6 +32,8 @@ from syne_tune.constants import (
     ST_DATETIME_FORMAT,
 )
 from syne_tune.try_import import try_import_aws_message
+
+logger = logging.getLogger(__name__)
 
 try:
     import sagemaker
@@ -319,3 +323,43 @@ def find_first_of_type(a: Iterable[Any], typ) -> Optional[Any]:
         return next(x for x in a if isinstance(x, typ))
     except StopIteration:
         return None
+
+
+def metric_name_mode(
+    metric_names: List[str], metric_mode: Union[str, List[str]], metric: Union[str, int]
+) -> Tuple[str, str]:
+    """
+    Retrieve the metric mode given a metric queried by either index or name.
+    :param metric_names: metrics names defined in a scheduler
+    :param metric_mode: metric mode or modes of a scheduler
+    :param metric: Index or name of the selected metric
+    :return the name and the mode of the queried metric
+    """
+    if isinstance(metric, str):
+        assert (
+            metric in metric_names
+        ), f"Attempted to use {metric} while available metrics are {metric_names}"
+        metric_name = metric
+    elif isinstance(metric, int):
+        assert metric < len(
+            metric_names
+        ), f"Attempted to use metric index={metric} with {len(metric_names)} available metrics"
+        metric_name = metric_names[metric]
+    else:
+        raise AttributeError(
+            f"metric must be <int> or <str> but {type(metric)} was provided"
+        )
+
+    if len(metric_names) > 1:
+        logger.warning(
+            "Several metrics exist, this will "
+            f"use metric={metric_name} (index={metric}) out of {metric_names}."
+        )
+
+    if isinstance(metric_mode, list):
+        metric_index = (
+            metric_names.index(metric_name) if isinstance(metric, str) else metric
+        )
+        metric_mode = metric_mode[metric_index]
+
+    return metric_name, metric_mode
