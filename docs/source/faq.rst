@@ -219,6 +219,16 @@ at the same time (set by ``n_workers`` when creating the
 :class:`~syne_tune.Tuner`) should account for the capacity of the machine where
 the trials are executed.
 
+Is the tuner checkpointed?
+==========================
+
+Yes. When performing the tuning, the tuner state is regularly saved on the
+experiment path under ``tuner.dill`` (every 10 seconds, which can be configured
+with ``results_update_interval`` when creating the :class:`~syne_tune.Tuner`).
+This allows to use spot-instances when running a tuning remotely with the remote
+launcher. It also allows to resume a past experiment or analyse the state of
+scheduler at any point.
+
 Where can I find the output of the tuning?
 ==========================================
 
@@ -227,6 +237,16 @@ When running locally, the output of the tuning is saved under
 the output of the tuning is saved under ``/opt/ml/checkpoints/`` by default and
 the tuning output is synced regularly to
 ``s3://{sagemaker-default-bucket}/syne-tune/{tuner-name}/``.
+
+Can I resume a previous tuning job?
+===================================
+
+Yes, if you want to resume tuning you can deserialize the tuner that is regularly checkpointed to disk
+possibly after having modified some part of the scheduler
+or adapting the stopping condition to your need.
+See `examples/launch_resume_tuning.py <examples.html#resume-a-tuning-job>`__.
+for an example which resumes a previous tuning after having updated the
+configuration space.
 
 How can I change the default output folder where tuning results are stored?
 ===========================================================================
@@ -431,16 +451,6 @@ A complete example is
 `examples/launch_fashionmnist_checkpoint_removal.py <examples.html#speculative-early-checkpoint-removal>`__.
 For details on speculative checkpoint removal, look at
 :class:`~syne_tune.callbacks.hyperband_remove_checkpoints_callback.HyperbandRemoveCheckpointsCallback`.
-
-Is the tuner checkpointed?
-==========================
-
-Yes. When performing the tuning, the tuner state is regularly saved on the
-experiment path under ``tuner.dill`` (every 10 seconds, which can be configured
-with ``results_update_interval`` when creating the :class:`~syne_tune.Tuner`).
-This allows to use spot-instances when running a tuning remotely with the remote
-launcher. It also allows to resume a past experiment or analyse the state of
-scheduler at any point.
 
 Where can I find the output of my trials?
 =========================================

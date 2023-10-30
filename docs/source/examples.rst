@@ -461,6 +461,14 @@ Plot Results of Tuning Experiment
 Makes use of :ref:`train_height.py <train_height_script>`.
 
 
+Resume a Tuning Job
+===================
+
+.. literalinclude:: ../../examples/launch_resume_tuning.py
+   :caption: examples/launch_resume_tuning.py
+   :start-after: # permissions and limitations under the License.
+
+
 Customize Results Written during an Experiment
 ==============================================
 
