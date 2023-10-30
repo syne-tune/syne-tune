@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 
+<a name="v0.10.0"></a>
+## [v0.10.0] - 2023-11-01
+### New Features
+- Add example to resume tuning from previous experiment and update conf… ([#780](https://github.com/awslabs/syne-tune/issues/780))
+- Add method to get the best configuration directly from Tuner, add com… ([#767](https://github.com/awslabs/syne-tune/issues/767))
+- Add util to plot trials over time from ExperimentResult ([#768](https://github.com/awslabs/syne-tune/issues/768))
+- Add SMAC wrapper and examples ([#765](https://github.com/awslabs/syne-tune/issues/765))
+- Automatic streamlining of configuration space ([#741](https://github.com/awslabs/syne-tune/issues/741))
+
+### CI
+- automatically test all notebooks under `examples/notebooks` and render them in docs page ([#756](https://github.com/awslabs/syne-tune/issues/756))
+
+### Bug Fixes
+- Fix malformatted table in docs ([#757](https://github.com/awslabs/syne-tune/issues/757))
+- pass arguments to scheduler ([#755](https://github.com/awslabs/syne-tune/issues/755))
+- RSBO ([#748](https://github.com/awslabs/syne-tune/issues/748))
+- Fix for issue [#749](https://github.com/awslabs/syne-tune/issues/749) ([#750](https://github.com/awslabs/syne-tune/issues/750))
+
+### Maintenance
+- Add smac to possible install tag, fix comment in example ([#766](https://github.com/awslabs/syne-tune/issues/766))
+- Update sphinx requirement from <7.0.0 to <8.0.0 ([#745](https://github.com/awslabs/syne-tune/issues/745))
+- Update numpy requirement from <1.24.0,>=1.16.0 to >=1.16.0,<1.27.0 ([#761](https://github.com/awslabs/syne-tune/issues/761))
+- Bump release-drafter/release-drafter from 5.23.0 to 5.24.0 ([#735](https://github.com/awslabs/syne-tune/issues/735))
+- Bump aws-actions/configure-aws-credentials from 3 to 4 ([#760](https://github.com/awslabs/syne-tune/issues/760))
+- Bump actions/checkout from 3 to 4 ([#763](https://github.com/awslabs/syne-tune/issues/763))
+- Bump actions/setup-python from 2 to 4 ([#762](https://github.com/awslabs/syne-tune/issues/762))
+- Bump actions/checkout from 3 to 4 ([#759](https://github.com/awslabs/syne-tune/issues/759))
+- Bump actions/setup-python from 2 to 4 ([#747](https://github.com/awslabs/syne-tune/issues/747))
+- Bump aws-actions/configure-aws-credentials from 2 to 3 ([#752](https://github.com/awslabs/syne-tune/issues/752))
+
+[v0.10.0]: https://github.com/awslabs/syne-tune/compare/v0.9.1...v0.10.0
+
  <a name="v0.9.1"></a>
 ## [v0.9.1] - 2023-07-19
 ### New Features
@@ -17,6 +49,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Bump zgosalvez/github-actions-ensure-sha-pinned-actions from 2.1.3 to 2.1.4 ([#742](https://github.com/awslabs/syne-tune/issues/742))
 - update README ([#739](https://github.com/awslabs/syne-tune/issues/739))
 
+
+[v0.9.1]: https://github.com/awslabs/syne-tune/compare/v0.9.0...v0.9.1
 
 
 <a name="v0.9.0"></a>
