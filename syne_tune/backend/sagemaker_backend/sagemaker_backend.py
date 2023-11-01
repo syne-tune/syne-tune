@@ -21,6 +21,7 @@ import time
 
 from sagemaker import LocalSession
 from sagemaker.estimator import Framework
+from sagemaker.interactive_apps import TensorBoardApp
 
 from syne_tune.backend.trial_backend import TrialBackend, BUSY_STATUS
 from syne_tune.constants import (
@@ -443,17 +444,25 @@ class SageMakerBackend(TrialBackend):
             return Path(self.source_dir) / self.sm_estimator.entry_point
 
     def __getstate__(self):
-        # dont store sagemaker client that cannot be serialized, we could remove it by changing our interface
+        # dont store sagemaker client or members that cannot be serialized (for instance because SSLContext cannot
+        # be serialized), we could remove it by changing our interface
         # and having kwargs/args of SagemakerFramework in the constructor of this class (that would be serializable)
         # plus the class (for instance PyTorch)
+
         self.sm_estimator.sagemaker_session = None
         self.sm_estimator.latest_training_job = None
+        if hasattr(self.sm_estimator, "tensorboard_app"):
+            self.sm_estimator.tensorboard_app = None
         self.sm_estimator.jobs = []
         return self.__dict__
 
     def __setstate__(self, state):
         self.__dict__ = state
         self.initialize_sagemaker_session()
+        if hasattr(self.sm_estimator, "tensorboard_app"):
+            self.sm_estimator.tensorboard_app = TensorBoardApp(
+                region=self.sm_estimator.sagemaker_session.boto_region_name
+            )
 
         # adjust the dependencies when running Sagemaker backend on sagemaker with remote launcher
         # since they are in a different path
