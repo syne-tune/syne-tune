@@ -38,6 +38,13 @@ decisions based on too little data.
 Our `launcher script <mf_setup.html#the-launcher-script>`__ runs the stopping
 variant of ASHA if ``method="ASHA-STOP"``.
 
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.ASHA`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+  (``type="stopping"`` selects the early stopping variant)
+
+
 Asynchronous Successive Halving: Promotion Variant
 --------------------------------------------------
 
@@ -52,6 +59,12 @@ it may resume and train until the next rung level. If no promotable paused
 trial is found, a new trial is started from scratch. Our
 `launcher script <mf_setup.html#the-launcher-script>`__ runs the stopping
 variant of ASHA if ``method="ASHA-PROM"``.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.ASHA`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+  (``type="promotion"`` selects the promotion variant)
 
 If these two variants (stopping and promotion) are compared under ideal
 conditions, one sometimes does better than the other, and vice versa. However,
@@ -97,6 +110,12 @@ this distribution is :math:`P(r_{min}) = [1:243/415, 3:98/415, 9:41/415,
 27:18/415, 81:9/415, 200:6/415]`. Our `launcher script
 <mf_setup.html#the-launcher-script>`__ runs asynchronous Hyperband with 6
 brackets if ``method="ASHA6-STOP"``.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.ASHA`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+  (``brackets`` selects the number of brackets, defaults to 1)
 
 As also noted in `ASHA <https://arxiv.org/abs/1810.05934>`__, the algorithm
 often works best with a single bracket, so that ``brackets=1`` is the default

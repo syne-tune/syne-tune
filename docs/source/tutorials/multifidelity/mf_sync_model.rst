@@ -33,6 +33,11 @@ data for the two densities to be properly fit. It then makes a TPE decision at
 this resource level. Our `launcher script <mf_setup.html#the-launcher-script>`__
 runs synchronous BOHB if ``method="BOHB"``.
 
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.SyncBOHB`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
+
 While BOHB is often more efficient than SYNCHB, it is held back by synchronous
 decision-making. Note that BOHB does not model the random function
 :math:`f(\mathbf{x}, r)` directly, which makes it hard to properly react to
@@ -55,6 +60,11 @@ is represented by an independent Gaussian process (more details are given
 `here <mf_async_model.html#independent-processes-at-each-rung-level>`__).
 `It turns out <mf_comparison.html>`__ that ``SyncMOBSTER`` outperforms
 ``SyncBOHB`` substantially on the benchmark chosen here.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.SyncMOBSTER`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
 
 When running these experiments with the simulator backend, we note that
 suddenly it takes quite some time for an experiment to be finished. Still many
@@ -92,6 +102,11 @@ configurations are not just sampled once, but potentially modified at every
 rung, the hope is to find well-performing configurations faster. Our
 `launcher script <mf_setup.html#the-launcher-script>`__ runs DEHB if
 ``method="DEHB"``.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.DEHB`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.synchronous.GeometricDifferentialEvolutionHyperbandScheduler`
 
 The main feature of DEHB over synchronous Hyperband is that configurations can
 be modified at every rung. However, this feature also has a drawback. Namely,
