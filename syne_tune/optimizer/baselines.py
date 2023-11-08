@@ -146,8 +146,10 @@ class ASHA(HyperbandScheduler):
     """Asynchronous Sucessive Halving (ASHA).
 
     One of ``max_t``, ``max_resource_attr`` needs to be in ``kwargs``. For
-    ``type="promotion"``, the latter is more useful, see also
-    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+    ``type="promotion"``, the latter is more useful.
+
+    See also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for
+    ``kwargs`` parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -183,8 +185,12 @@ class MOBSTER(HyperbandScheduler):
     ``"gp_independent"`` (independent GP models at each rung level, with shared
     ARD kernel).
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.GPMultifidelitySearcher`
-    for ``kwargs["search_options"]`` parameters.
+    See also:
+
+    * :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for ``kwargs``
+      parameters
+    * :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`
+      for ``kwargs["search_options"]`` parameters
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -225,11 +231,14 @@ class HyperTune(HyperbandScheduler):
         | VLDB 2022
         | https://arxiv.org/abs/2201.06834
 
-    See also
-    :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`,
-    and see
-    :class:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
-    for ``kwargs["search_options"]`` parameters.
+    See also:
+
+    * :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for ``kwargs``
+      parameters
+    * :class:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
+      for ``kwargs["search_options"]`` parameters
+    * :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.gpautograd.hypertune.gp_model.HyperTuneIndependentGPModel`
+      for implementation
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -292,14 +301,16 @@ class DyHPO(HyperbandScheduler):
       data at higher rungs, the score values for promoting a trial are much worse
       than those for starting a new one.
 
-    See :class:`~syne_tune.optimizer.schedulers.searchers.GPMultifidelitySearcher`
+    See :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for ``kwargs``
+    parameters, and
+    :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`
     for ``kwargs["search_options"]`` parameters. The following parameters are
     most important for DyHPO:
 
     * ``rung_increment`` (and ``grace_period``): These parameters determine the
       rung level spacing. DyHPO is run with linearly spaced rung levels
       :math:`r_{min} + k \nu`, where :math:`r_{min}` is ``grace_period`` and
-      :math:`\nu` is `rung_increment``. The default is 2.
+      :math:`\nu` is ``rung_increment``. The default is 2.
     * ``probability_sh``: See comment. The smaller this probability, the closer
       the method is to the published original, which tends to start many more
       trials than promote paused ones. On the other hand, if this probability is
@@ -394,7 +405,9 @@ class BOHB(HyperbandScheduler):
 
     See
     :class:`~syne_tune.optimizer.schedulers.searchers.kde.MultiFidelityKernelDensityEstimator`
-    for ``kwargs["search_options"]`` parameters.
+    for ``kwargs["search_options"]`` parameters, and
+    :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler` for ``kwargs``
+    parameters.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -422,6 +435,9 @@ class SyncHyperband(SynchronousGeometricHyperbandScheduler):
 
     One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
     The latter is more useful, see also :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    If ``kwargs["brackets"]`` is not given, the maximum number of brackets is
+    used. Choose ``kwargs["brackets"] = 1`` for synchronous successive halving.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -456,6 +472,9 @@ class SyncBOHB(SynchronousGeometricHyperbandScheduler):
     One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
     The latter is more useful, see also
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    If ``kwargs["brackets"]`` is not given, the maximum number of brackets is
+    used. Choose ``kwargs["brackets"] = 1`` for synchronous successive halving.
 
     :param config_space: Configuration space for evaluation function
     :param metric: Name of metric to optimize
@@ -525,6 +544,9 @@ class SyncMOBSTER(SynchronousGeometricHyperbandScheduler):
     One of ``max_resource_level``, ``max_resource_attr`` needs to be in ``kwargs``.
     The latter is more useful, see also
     :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`.
+
+    If ``kwargs["brackets"]`` is not given, the maximum number of brackets is
+    used. Choose ``kwargs["brackets"] = 1`` for synchronous successive halving.
 
     The default surrogate model (``search_options["model"]`` in ``kwargs``) is
     ``"gp_independent"``, different to :class:`MOBSTER`.

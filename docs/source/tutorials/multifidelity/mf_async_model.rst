@@ -121,7 +121,13 @@ above. The acquisition function is expected improvement (EI) at the rung level
 Our `launcher script <mf_setup.html#the-launcher-script>`__ runs (asynchronous)
 MOBSTER-JOINT if ``method="MOBSTER-JOINT"``. The searcher can be configured
 with ``search_options``, but MOBSTER-JOINT with the ``"exp-decay-sum"``
-covariance model is the default
+covariance model is the default.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.MOBSTER`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+* ``search_options``: :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`
 
 As shown `below <mf_comparison.html>`__, MOBSTER can outperform ASHA
 significantly. This is achieved by starting many less trials that stop very
@@ -168,6 +174,13 @@ MOBSTER tends to perform slightly better with a joint multi-task GP model than
 with an independent GPs model, justifying the Syne Tune default. In our
 experience so far, changing the covariance model in MOBSTER-JOINT has only
 marginal impact.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.MOBSTER`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+* ``search_options``: :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`
+  (here, we use ``search_options["model"] = "gp_independent"``)
 
 MOBSTER and Hyperband
 ~~~~~~~~~~~~~~~~~~~~~
@@ -236,6 +249,14 @@ used in MOBSTER. In result plots for this tutorial, original Hyper-Tune is
 called HYPERTUNE-INDEP, while this latter variant is called HYPERTUNE-JOINT.
 Our `launcher script <mf_setup.html#the-launcher-script>`__ runs this variant
 if ``method="HYPERTUNE-JOINT"``.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.HyperTune`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+* ``search_options``: :class:`~syne_tune.optimizer.schedulers.searchers.hypertune.HyperTuneSearcher`
+  (``search_options["model"] = "gp_independent"`` by default, but HYPERTUNE-JOINT
+  is using ``"gp_multitask"``)
 
 Finally, computations of Hyper-Tune can be
 `controlled in the same way as in MOBSTER <#controlling-mobster-computations>`__.
@@ -386,3 +407,10 @@ important points:
   `above <#controlling-mobster-computations>`__. Apart from the default for
   ``max_size_data_for_model``, we also use ``opt_skip_period = 3`` as default
   for DyHPO.
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.DyHPO`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.HyperbandScheduler`
+* ``search_options``: :class:`~syne_tune.optimizer.schedulers.searchers.GPMultiFidelitySearcher`
+  (note that ``search_options["model"]`` must not be equal to ``"gp_independent"``)

@@ -88,8 +88,12 @@ Our `launcher script <mf_setup.html#the-launcher-script>`__ runs synchronous
 successive halving if ``method="SYNCSH"``. The relevant parameters are
 ``grace_period`` ( :math:`r_{min}` ) and ``reduction_factor`` ( :math:`\eta` ).
 Moreover, for SH, we need to set ``brackets=1``, since otherwise an extension
-called *Hyperband* is run (to be discussed shortly). Our implementation is
-:class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
+called *Hyperband* is run (to be discussed shortly).
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.SyncHyperband`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
 
 Synchronous SH employs *pause-and-resume scheduling* (see
 `introduction <mf_introduction.html#multi-fidelity-scheduling>`__). Once a
@@ -158,8 +162,12 @@ NASBench-201 example:
 Our `launcher script <mf_setup.html#the-launcher-script>`__ runs synchronous
 Hyperband if ``method="SYNCHB"``. Since ``brackets`` is not used when creating
 ``SyncHyperband``, the maximum value 6 is chosen. We also use the default
-values for ``grace_period`` (1) and ``reduction_factor`` (3). Our implementation
-is :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousHyperbandScheduler`.
+values for ``grace_period`` (1) and ``reduction_factor`` (3).
+
+API docs:
+
+* Baseline: :class:`~syne_tune.optimizer.baselines.SyncHyperband`
+* Additional arguments: :class:`~syne_tune.optimizer.schedulers.synchronous.SynchronousGeometricHyperbandScheduler`
 
 The advantages of Hyperband over SH are mostly theoretical. In practice, while
 Hyperband can improve on SH if :math:`r_{min}` chosen for SH is clearly too
