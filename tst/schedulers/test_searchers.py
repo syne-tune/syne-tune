@@ -263,23 +263,3 @@ def test_restrict_configurations(scheduler_cls, is_multifid, is_bo):
                 break
         if it >= max_resource_val - 1:
             scheduler.on_trial_complete(trial=trial, result=result)
-
-
-def test_reject_nan_inf():
-    config_space = {"a": uniform(0.0, 1.0)}
-    scheduler = BayesianOptimization(
-        config_space,
-        metric="metric",
-        mode="min",
-        max_resource_attr="epochs",
-    )
-    data = [(0, 1), (1, np.nan), (0.5, 2), (0.75, np.inf), (0.8, -np.inf)]
-    for trial_id, (x, y) in enumerate(data):
-        trial = Trial(
-            trial_id=trial_id,
-            config={"a": x},
-            creation_time=datetime.now(),
-        )
-        scheduler.on_trial_complete(trial, result={"metric": y})
-    state = scheduler.searcher.state_transformer.state
-    assert len(state.trials_evaluations) == 2

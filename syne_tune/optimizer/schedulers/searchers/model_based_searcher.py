@@ -269,9 +269,6 @@ class ModelBasedSearcher(StochasticSearcher):
 
     def _update(self, trial_id: str, config: Dict[str, Any], result: Dict[str, Any]):
         metric_val = result[self._metric]
-        # Reject NaN or infinite values
-        if np.isnan(metric_val) or np.isinf(metric_val):
-            return
         # Transform to criterion to be minimized
         if self.map_reward is not None:
             crit_val = self.map_reward(metric_val)
