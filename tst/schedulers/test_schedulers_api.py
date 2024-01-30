@@ -39,7 +39,7 @@ from syne_tune.optimizer.baselines import (
     SyncMOBSTER,
     ZeroShotTransfer,
     MOREA,
-    NSGA2,
+    # NSGA2,
     CQR,
     ASHACQR,
     MOLinearScalarizationBayesOpt,
