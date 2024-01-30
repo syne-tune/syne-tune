@@ -161,8 +161,7 @@ class EIAcquisitionFunction(MeanStdAcquisitionFunction):
 
 class LCBAcquisitionFunction(MeanStdAcquisitionFunction):
     r"""
-    Lower confidence bound (LCB) acquisition function, the negative of upper
-    confidence bound (UCB):
+    Lower confidence bound (LCB) acquisition function:
 
     .. math::
 
