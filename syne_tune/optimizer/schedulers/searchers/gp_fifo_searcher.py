@@ -124,6 +124,15 @@ class GPFIFOSearcher(BayesianOptimizationSearcher):
         Defaults to "matern52-ard" (Matern 5/2 with automatic relevance
         determination).
     :type gp_base_kernel: str, optional
+    :param acq_function: Selects the acquisition function to be used. Supported
+        choices are
+        :const:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.acqfunc_factory.SUPPORTED_ACQUISITION_FUNCTIONS`.
+        Defaults to "ei" (expected improvement acquisition function).
+    :type acq_function: str, optional
+    :param acq_function_kwargs: Some acquisition functions have additional
+        parameters, they can be passed here. If none are given, default values
+        are used.
+    :type acq_function_kwargs: dict, optional
     :param initial_scoring: Scoring function to rank initial candidates
         (local optimization of EI is started from top scorer):
 
