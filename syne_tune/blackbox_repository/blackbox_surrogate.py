@@ -238,9 +238,7 @@ class BlackboxSurrogate(Blackbox):
             features_union.append(
                 (
                     "categorical",
-                    make_pipeline(
-                        Columns(names=categorical), encoder
-                    ),
+                    make_pipeline(Columns(names=categorical), encoder),
                 )
             )
         if len(numeric) > 0:
