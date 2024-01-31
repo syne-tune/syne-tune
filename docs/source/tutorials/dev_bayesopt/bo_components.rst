@@ -88,6 +88,21 @@ Here is the code:
   value), which means that the ``current_best`` arguments need not be
   provided.
 
+Finally, a new acquisition function should be linked into
+:func:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.acqfunc_factory.acquisition_function_factory`,
+so that users can select it via arguments ``acq_function`` and
+``acq_function_kwargs`` in
+:class:`~syne_tune.optimizer.baselines.BayesianOptimization`. The factory code
+is:
+
+.. literalinclude:: ../../../../syne_tune/optimizer/schedulers/searchers/bayesopt/models/acqfunc_factory.py
+   :caption: bayesopt/models/acqfunc_factory.py
+   :start-after: # permissions and limitations under the License.
+
+Here, ``acq_function_kwargs`` is passed as ``kwargs``. For our example,
+:code:`acq_function="lcb"`. The user can pass a value for ``kappa`` via
+:code:`acq_function_kwargs={"kappa": 0.5}`.
+
 A slightly more involved example is
 :class:`~syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl.EIAcquisitionFunction`,
 representing the expected improvement (EI) acquisition function, which is the
