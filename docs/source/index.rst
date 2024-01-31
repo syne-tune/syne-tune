@@ -99,8 +99,9 @@ What's New?
 Videos featuring Syne Tune
 --------------------------
 
-* `Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023) <https://www.youtube.com/watch?v=onX6fXzp9Yk>`__
 * `Andreas Mueller: Mothernet: A Foundational Hypernetwork for Tabular Classification (AutoML Seminar 2024) <https://www.youtube.com/watch?v=-pAuQSAW5w0>`__
+* `Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023) <https://www.youtube.com/watch?v=onX6fXzp9Yk>`__
+* `David Salinas: Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research <https://www.youtube.com/watch?v=DlM-__TTa3U>`__
 
 .. toctree::
    :name: API docs
