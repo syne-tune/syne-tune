@@ -22,33 +22,36 @@ from syne_tune import StoppingCriterion
 from syne_tune import Tuner
 
 
-root = Path(__file__).parent
-sm_estimator = PyTorch(
-    entry_point="folder2/main.py",
-    source_dir=str(root / "folder1"),
-    instance_type="local",
-    instance_count=1,
-    py_version="py3",
-    framework_version="1.7.1",
-    role="dummy",
-)
-
-backend = SageMakerBackend(sm_estimator=sm_estimator)
-remote_launcher = RemoteLauncher(
-    tuner=Tuner(
-        trial_backend=backend,
-        scheduler=FIFOScheduler({}, searcher="random", metric="dummy"),
-        stop_criterion=StoppingCriterion(max_wallclock_time=600),
-        n_workers=4,
+def _create_remote_launcher():
+    root = Path(__file__).parent
+    sm_estimator = PyTorch(
+        entry_point="folder2/main.py",
+        source_dir=str(root / "folder1"),
+        instance_type="local",
+        instance_count=1,
+        py_version="py3",
+        framework_version="1.7.1",
+        role="dummy",
     )
-)
-remote_launcher.prepare_upload()
+
+    backend = SageMakerBackend(sm_estimator=sm_estimator)
+    remote_launcher = RemoteLauncher(
+        tuner=Tuner(
+            trial_backend=backend,
+            scheduler=FIFOScheduler({}, searcher="random", metric="dummy"),
+            stop_criterion=StoppingCriterion(max_wallclock_time=600),
+            n_workers=4,
+        )
+    )
+    remote_launcher.prepare_upload()
+    return remote_launcher
 
 
 @pytest.mark.skip("this test needs sagemaker")
 def test_check_paths():
     # for now, we only check that sm_estimator source_dir, endpoint script is correct
     # todo check that dependencies are correct
+    remote_launcher = _create_remote_launcher()
     remote_sm_estimator = remote_launcher.tuner.trial_backend.sm_estimator
 
     assert remote_sm_estimator.source_dir == "tuner"
@@ -61,6 +64,7 @@ def test_check_paths():
     "this test is skipped currently as it takes ~15s and requires docker installed locally."
 )
 def test_estimator():
+    remote_launcher = _create_remote_launcher()
     tuner = Tuner.load(str(remote_launcher.upload_dir()))
     remote_sm_estimator = tuner.backend.sm_estimator
     remote_sm_estimator.source_dir = str(remote_launcher.upload_dir())
