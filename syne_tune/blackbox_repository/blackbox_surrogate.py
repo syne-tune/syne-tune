@@ -229,13 +229,16 @@ class BlackboxSurrogate(Blackbox):
         # the surrogate model
         features_union = []
         if len(categorical) > 0:
+            # `sparse` renamed to `sparse_output` in version 1.2. Different
+            # versions are used depending on the Python version
+            try:
+                encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
+            except TypeError:
+                encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
             features_union.append(
                 (
                     "categorical",
-                    make_pipeline(
-                        Columns(names=categorical),
-                        OneHotEncoder(sparse=False, handle_unknown="ignore"),
-                    ),
+                    make_pipeline(Columns(names=categorical), encoder),
                 )
             )
         if len(numeric) > 0:
