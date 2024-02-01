@@ -228,7 +228,7 @@ different functionalities provided by Syne Tune. For example:
 
 You will find many examples for experimentation and benchmarking in
 [benchmarking/examples/](benchmarking/examples/) and in
-[benchmarking/nusery/](benchmarking/nursery/).
+[benchmarking/nursery/](benchmarking/nursery/).
 
 ## FAQ and Tutorials
 

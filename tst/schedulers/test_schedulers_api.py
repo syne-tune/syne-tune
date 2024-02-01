@@ -39,7 +39,7 @@ from syne_tune.optimizer.baselines import (
     SyncMOBSTER,
     ZeroShotTransfer,
     MOREA,
-    NSGA2,
+    # NSGA2,
     CQR,
     ASHACQR,
     MOLinearScalarizationBayesOpt,
@@ -261,12 +261,13 @@ list_schedulers_to_test = [
         population_size=1,
         sample_size=2,
     ),
-    NSGA2(
-        config_space=config_space,
-        metric=[metric1, metric2],
-        mode=[mode, mode],
-        population_size=10,
-    ),
+    # DISABLED: PyMOO seems to have a bug?
+    # NSGA2(
+    #     config_space=config_space,
+    #     metric=[metric1, metric2],
+    #     mode=[mode, mode],
+    #     population_size=10,
+    # ),
     ASHA(
         config_space=config_space,
         metric=metric1,

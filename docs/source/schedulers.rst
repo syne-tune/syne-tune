@@ -215,6 +215,12 @@ full range of arguments. We list the most important ones:
   the surrogate model. Current choices are "matern52-ard" (Matern ``5/2`` with
   automatic relevance determination; the default) and "matern52-noard"
   (Matern ``5/2`` without ARD).
+* ``acq_function``: Selects the acquisition function to be used. Current choices
+  are "ei" (negative expected improvement; the default) and "lcb" (lower
+  confidence bound). The latter has the form :math:`\mu(x) - \kappa \sigma(x)`,
+  where :math:`\mu(x)`, :math:`\sigma(x)` are predictive mean and standard
+  deviation, and :math:`\kappa > 0` is a parameter, which can be passed via
+  ``acq_function_kwargs={"kappa": 0.5}`` for :math:`\kappa = 0.5`.
 * ``input_warping``: If this is ``True``, inputs are warped before being fed
   into the covariance function, the effective kernel becomes
   :math:`k(w(x), w(x'))`, where :math:`w(x)` is a warping transform with two

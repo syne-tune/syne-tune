@@ -28,6 +28,9 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.kernel_factory imp
     SUPPORTED_RESOURCE_MODELS,
     resource_kernel_factory,
 )
+from syne_tune.optimizer.schedulers.searchers.bayesopt.models.acqfunc_factory import (
+    acquisition_function_factory,
+)
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.config_ext import (
     ExtendedConfiguration,
 )
@@ -86,7 +89,6 @@ from syne_tune.optimizer.schedulers.searchers.bayesopt.models.cost_fifo_model im
     CostEstimator,
 )
 from syne_tune.optimizer.schedulers.searchers.bayesopt.models.meanstd_acqfunc_impl import (
-    EIAcquisitionFunction,
     CEIAcquisitionFunction,
     EIpuAcquisitionFunction,
 )
@@ -551,6 +553,12 @@ def _create_common_objects(model=None, is_hypertune=False, **kwargs):
     return result
 
 
+def _create_acq_function(**kwargs):
+    name = kwargs["acq_function"]
+    af_kwargs = kwargs.get("acq_function_kwargs", dict())
+    return acquisition_function_factory(name, **af_kwargs)
+
+
 def gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     """
     Returns ``kwargs`` for
@@ -579,7 +587,7 @@ def gp_fifo_searcher_factory(**kwargs) -> Dict[str, Any]:
     # Common objects
     result = _create_common_objects(**kwargs)
 
-    return dict(**result, acquisition_class=EIAcquisitionFunction)
+    return dict(**result, acquisition_class=_create_acq_function(**kwargs))
 
 
 def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
@@ -611,7 +619,7 @@ def gp_multifidelity_searcher_factory(**kwargs) -> Dict[str, Any]:
     kwargs_int = dict(
         result,
         resource_attr=kwargs["resource_attr"],
-        acquisition_class=EIAcquisitionFunction,
+        acquisition_class=_create_acq_function(**kwargs),
     )
     if kwargs["model"] in {"gp_multitask", "gp_independent"}:
         kwargs_int["resource_for_acquisition"] = resource_for_acquisition_factory(
@@ -906,6 +914,7 @@ def _common_defaults(
         "boxcox_transform": False,
         "max_size_top_fraction": 0.25,
         "gp_base_kernel": "matern52-ard",
+        "acq_function": "ei",
     }
     if is_restrict_configs:
         default_options["initial_scoring"] = "acq_func"
