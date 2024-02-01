@@ -31,6 +31,10 @@ This package provides state-of-the-art algorithms for hyperparameter optimizatio
 What's New?
 -----------
 
+* Andreas Mueller, co-creator and core contributor to `scikit-learn <https://scikit-learn.org/stable/>`__,
+  used Syne Tune extensively to optimize parameters of a hypernetwork which solves
+  tabular classification tasks faster than state of the art boosted decision tree
+  algorithms. Check out the `video <https://www.youtube.com/watch?v=-pAuQSAW5w0>`__.
 * The experimentation framework of Syne Tune, providing an easy access to all the
   different methods, execution backends, and ways to run many experiments in parallel,
   is now available in :mod:`syne_tune.experiments`, there is no need to install from
@@ -92,10 +96,12 @@ What's New?
    tutorials/transfer_learning/transfer_learning
    tutorials/odsc_tutorial/README
 
-Videos
-------
+Videos featuring Syne Tune
+--------------------------
 
+* `Andreas Mueller: Mothernet: A Foundational Hypernetwork for Tabular Classification (AutoML Seminar 2024) <https://www.youtube.com/watch?v=-pAuQSAW5w0>`__
 * `Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023) <https://www.youtube.com/watch?v=onX6fXzp9Yk>`__
+* `David Salinas: Syne Tune: A Library for Large Scale Hyperparameter Tuning and Reproducible Research <https://www.youtube.com/watch?v=DlM-__TTa3U>`__
 
 .. toctree::
    :name: API docs
