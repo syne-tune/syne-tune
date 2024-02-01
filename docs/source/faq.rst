@@ -785,6 +785,34 @@ example, the number of epochs already trained).
    ``max_resource_attr`` in favour of ``max_t`` or ``max_resource_value``, as
    the latter is error-prone and may be less efficient for some schedulers.
 
+Is my training script ready for multi-fidelity tuning?
+======================================================
+
+A more detailed answer to this question is given in the
+`multi-fidelity tutorial <tutorials/multifidelity/README.html>`__. In short:
+
+* You need to define the notion of resource for your script. Resource is a
+  discrete variable (integer), so that time/costs scale linearly in it for
+  every configuration. A common example is epochs of training for a neural
+  network. You need to pass the name of this argument as ``max_resource_attr``
+  to the multi-fidelity scheduler.
+* One input argument to your script is the maximum number of resources. Your
+  script loops over resources until this is reached, then terminates.
+* At the end of this resource loop (e.g., loop over training epochs), you
+  report metrics. Here, you need to report the current resource level as well
+  (e.g., number of epochs trained so far).
+* It is recommended to support checkpointing, as is detailed
+  `here <#how-can-i-enable-trial-checkpointing>`__.
+
+.. note::
+   In pause-and-resume multi-fidelity schedulers, we know for how many
+   resources each training job runs, since it is paused at the next rung
+   level. Such schedulers will pass this resource level via
+   ``max_resource_attr`` to the training script. This means that the
+   script terminates on its own and does not have to be stopped by the
+   trial execution backend.
+
+
 How can I visualize the progress of my tuning experiment with Tensorboard?
 ==========================================================================
 
