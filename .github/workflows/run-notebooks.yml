@@ -17,7 +17,7 @@ jobs:
       - name: check out Syne Tune
         uses: actions/checkout@v4
       - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
       - name: Install dev dependencies
         run: python -m pip install -e '.[dev]'
       - name: Convert notebooks to python scripts
