@@ -17,7 +17,7 @@ The input arguments learning-rate and gamma discount factor can be tuned for max
 """
 from argparse import ArgumentParser
 from syne_tune import Reporter
-from ray.rllib.agents.ppo import PPOTrainer
+from ray.rllib.algorithms.ppo import PPO
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         "lr": args.lr,
     }
 
-    trainer = PPOTrainer(config=config)
+    trainer = PPO(config=config)
 
     reporter = Reporter()
     # Run it for n max_training_steps iterations. A training iteration includes
