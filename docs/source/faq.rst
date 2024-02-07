@@ -187,8 +187,8 @@ metrics:
 How can I utilize multiple GPUs?
 ================================
 
-To utilize multiple GPUs you can either use the local backend
-:class:`~syne_tune.backend.LocalBackend`, which will run on the GPU available
+To utilize multiple GPUs you can use the local backend
+:class:`~syne_tune.backend.LocalBackend`, which will run on the GPUs available
 in a local machine. You can also run on a remote AWS instance with multiple GPUs
 using the local backend and the remote launcher, see
 `here <#i-dont-want-to-wait-how-can-i-launch-the-tuning-on-a-remote-machine>`__,
@@ -202,6 +202,8 @@ variable. When running on a machine with more than one GPU, you can adjust
 the number of GPUs assigned to each trial by ``num_gpus_per_trial``. However,
 make sure that the product of ``n_workers`` and ``num_gpus_per_trial`` is not
 larger than the total number of GPUs, since otherwise trials will be delayed.
+You can also use ``gpus_to_use`` in order restrict Syne Tune to use a subset of
+available GPUs only.
 
 What is the default mode when performing optimization?
 ======================================================
