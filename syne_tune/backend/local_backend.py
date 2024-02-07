@@ -57,6 +57,9 @@ class LocalBackend(TrialBackend):
     :param num_gpus_per_trial: Number of GPUs to be allocated to each trial.
         Must be not larger than the total number of GPUs available.
         Defaults to 1
+    :param gpus_to_use: If this is given, the backend only uses GPUs in this
+        lists (non-negative ints). Entries must be in
+        ``range(get_num_gpus())``. Defaults to using all GPUs.
     """
 
     def __init__(
@@ -66,6 +69,7 @@ class LocalBackend(TrialBackend):
         pass_args_as_json: bool = False,
         rotate_gpus: bool = True,
         num_gpus_per_trial: int = 1,
+        gpus_to_use: Optional[List[int]] = None,
     ):
         super(LocalBackend, self).__init__(
             delete_checkpoints=delete_checkpoints, pass_args_as_json=pass_args_as_json
@@ -80,9 +84,11 @@ class LocalBackend(TrialBackend):
 
         # GPU rotation
         # Note that the initialization is delayed until first used, so we can
-        # be sure it happens on the instance running the training evaluations
+        # be sure it happens on the instance running the training evaluations.
+        # Also, the validity of ``gpus_to_use`` can only be judged then.
         self.rotate_gpus = rotate_gpus
         self.num_gpus = None
+        self.gpus_to_use = gpus_to_use
         # Maps ``trial_id`` to list of GPUs currently assigned to this trial
         self.trial_gpu = None
         self.gpu_times_assigned = None
@@ -130,6 +136,20 @@ class LocalBackend(TrialBackend):
             else:
                 self.num_gpus = num_gpus
             logger.info(f"Detected {self.num_gpus} GPUs")
+            if self.gpus_to_use is not None:
+                # Restrict to subset of available GPUs
+                gtu_set = set(self.gpus_to_use)
+                assert gtu_set.issubset(range(self.num_gpus)), (
+                    f"gpus_to_use = {self.gpus_to_use} must be subset of "
+                    f"range({self.num_gpus})"
+                )
+                assert len(gtu_set) == len(
+                    self.gpus_to_use
+                ), f"gpus_to_use = {self.gpus_to_use} must not contain duplicates"
+                num_gpus = len(self.gpus_to_use)
+                if num_gpus < self.num_gpus:
+                    logger.info(f"Will use {num_gpus} GPUs: {self.gpus_to_use}")
+                self.num_gpus = num_gpus
             if self.num_gpus_per_trial > self.num_gpus:
                 logger.warning(
                     f"num_gpus_per_trial = {self.num_gpus_per_trial} is too "
@@ -211,9 +231,13 @@ class LocalBackend(TrialBackend):
     def _allocate_gpu(self, trial_id: int, env: Dict[str, Any]):
         if self.rotate_gpus:
             gpus = self._gpus_for_new_trial()
-            env["CUDA_VISIBLE_DEVICES"] = ",".join(str(gpu) for gpu in gpus)
+            if self.gpus_to_use is not None:
+                real_gpus = [self.gpus_to_use[gpu] for gpu in gpus]
+            else:
+                real_gpus = gpus
+            env["CUDA_VISIBLE_DEVICES"] = ",".join(str(gpu) for gpu in real_gpus)
             self.trial_gpu[trial_id] = gpus
-            part = f"GPU {gpus[0]}" if len(gpus) == 1 else f"GPUs {gpus}"
+            part = f"GPU {real_gpus[0]}" if len(gpus) == 1 else f"GPUs {real_gpus}"
             # logger.debug(f"Assigned {part} to trial_id {trial_id}")
             logger.info(f"*** Assigned {part} to trial_id {trial_id}")  # DEBUG
 
