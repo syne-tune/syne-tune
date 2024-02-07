@@ -232,7 +232,9 @@ def test_multi_gpu_allocation(caplog):
         ([10, 0, 15, 12, 1, 2, 13, 9], 16),
     ]:
         backend = temporary_local_backend(
-            entry_point=str(path_script), num_gpus_per_trial=2
+            entry_point=str(path_script),
+            num_gpus_per_trial=2,
+            gpus_to_use=gpus_to_use,
         )
         backend._prepare_for_schedule(num_gpus=num_gpus)
         env = dict()
