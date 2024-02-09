@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 
+<a name="v0.13.0"></a>
+## [v0.13.0] - 2024-02-09
+### New Features
+- Allow to restrict GPUs to be used in LocalBackend to a subset of all available ones ([#817](https://github.com/awslabs/syne-tune/issues/817))
+- Obtain Pareto Set from results ([#798](https://github.com/awslabs/syne-tune/issues/798))
+- Allow the acquisition function to be chosen in GPFIFOSearcher ([#807](https://github.com/awslabs/syne-tune/issues/807))
+
+### Bug Fixes
+- Reject results if metric is NaN or infinite ([#788](https://github.com/awslabs/syne-tune/issues/788))
+
+### Documentation Updates
+- Add FAQ entry to clarify behaviour of training script for pause and resume scheduling ([#809](https://github.com/awslabs/syne-tune/issues/809))
+- Links to Andreas Mueller's talk on Mothernet ([#808](https://github.com/awslabs/syne-tune/issues/808))
+
+### Maintenance
+- Bump zgosalvez/github-actions-ensure-sha-pinned-actions from 2.1.4 to 3.0.3 ([#797](https://github.com/awslabs/syne-tune/issues/797))
+- update Ray version in example ([#814](https://github.com/awslabs/syne-tune/issues/814))
+- Bump actions/setup-python from 4 to 5 ([#793](https://github.com/awslabs/syne-tune/issues/793))
+- Bump release-drafter/release-drafter from 5.24.0 to 5.25.0 ([#774](https://github.com/awslabs/syne-tune/issues/774))
+- Uncommented test which needs SageMaker. It is still commented out ([#810](https://github.com/awslabs/syne-tune/issues/810))
+- change version of pymoo ([#806](https://github.com/awslabs/syne-tune/issues/806))
+
+[v0.13.0]: https://github.com/awslabs/syne-tune/compare/v0.10.0...v0.13.0
+
+
 <a name="v0.10.0"></a>
 ## [v0.10.0] - 2023-11-01
 ### New Features
@@ -37,7 +62,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 [v0.10.0]: https://github.com/awslabs/syne-tune/compare/v0.9.1...v0.10.0
 
- <a name="v0.9.1"></a>
+
+<a name="v0.9.1"></a>
 ## [v0.9.1] - 2023-07-19
 ### New Features
 - New group tag 'basic' for dependencies of reasonable size ([#738](https://github.com/awslabs/syne-tune/issues/738))
@@ -48,7 +74,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Maintenance
 - Bump zgosalvez/github-actions-ensure-sha-pinned-actions from 2.1.3 to 2.1.4 ([#742](https://github.com/awslabs/syne-tune/issues/742))
 - update README ([#739](https://github.com/awslabs/syne-tune/issues/739))
-
 
 [v0.9.1]: https://github.com/awslabs/syne-tune/compare/v0.9.0...v0.9.1
 
