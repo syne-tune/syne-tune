@@ -92,6 +92,9 @@ GPU with PyTorch being installed):
   you can prescribe how many GPUs should be allocated to each trial. The default
   is 1. Note that if the product of ``n_workers`` and ``num_gpus_per_trial`` is
   larger than the number of GPUs on the instance, trials will be delayed.
+* ``gpus_to_use``: Allows to restrict the GPUs used by Syne Tune. For example,
+  if your instance has 8 GPUs, but you also want to use the latter four of them,
+  use :code:`gpus_to_use=[4, 5, 6, 7]`.
 * ``delete_checkpoints``: If 1, checkpoints of trials are removed whenever they
   are not needed anymore. The default is 0, in that all checkpoints are
   retained.
