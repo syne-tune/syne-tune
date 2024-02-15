@@ -28,6 +28,7 @@ from syne_tune.optimizer.baselines import (
     SyncBOHB,
     BORE,
     KDE,
+    EHVI,
 )
 from syne_tune.config_space import (
     choice,
@@ -53,6 +54,7 @@ SCHEDULERS = [
     (SyncBOHB, True),
     (BORE, False),
     (KDE, False),
+    (EHVI, False),
 ]
 
 

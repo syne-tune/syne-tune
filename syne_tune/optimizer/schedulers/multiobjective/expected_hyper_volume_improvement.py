@@ -1,41 +1,29 @@
-# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License").
-# You may not use this file except in compliance with the License.
-# A copy of the License is located at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
-# express or implied. See the License for the specific language governing
-# permissions and limitations under the License.
 from typing import Optional, List, Dict, Any, Union
 import logging
 
 import numpy as np
 import torch
+
 from syne_tune.try_import import try_import_botorch_message
 
-# try:
-from torch import Tensor, randn_like, random
-from botorch.models import SingleTaskGP
-from botorch.fit import fit_gpytorch_mll
-from botorch.models.transforms import Warp
-from botorch.utils import standardize
-from botorch.sampling import SobolQMCNormalSampler
-from botorch.utils.transforms import normalize
-from botorch.utils.multi_objective.box_decompositions import NondominatedPartitioning
-from botorch.acquisition.multi_objective.monte_carlo import (
-    qExpectedHypervolumeImprovement,
-)
-from botorch.optim import optimize_acqf
-from botorch.exceptions.errors import ModelFittingError
-from gpytorch.mlls import ExactMarginalLogLikelihood
-from linear_operator.utils.errors import NotPSDError
+try:
+    from torch import Tensor, randn_like, random
+    from botorch.models import SingleTaskGP
+    from botorch.fit import fit_gpytorch_mll
+    from botorch.models.transforms import Warp
+    from botorch.sampling import SobolQMCNormalSampler
+    from botorch.utils.transforms import normalize
+    from botorch.utils.multi_objective.box_decompositions import NondominatedPartitioning
+    from botorch.acquisition.multi_objective.monte_carlo import (
+        qExpectedHypervolumeImprovement,
+    )
+    from botorch.optim import optimize_acqf
+    from botorch.exceptions.errors import ModelFittingError
+    from gpytorch.mlls import ExactMarginalLogLikelihood
+    from linear_operator.utils.errors import NotPSDError
 
-# except ImportError:
-#     print(try_import_botorch_message())
+except ImportError:
+     print(try_import_botorch_message())
 
 from syne_tune.optimizer.schedulers.searchers import (
     StochasticAndFilterDuplicatesSearcher,
@@ -50,7 +38,12 @@ MC_SAMPLES = 128
 
 class ExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
     """
+    Implementation of expected hypervolume improvement [1] based on the BOTorch implementation.
 
+    [1] S. Daulton, M. Balandat, and E. Bakshy.
+    Differentiable Expected Hypervolume Improvement for Parallel Multi-Objective
+    Bayesian Optimization.
+    Advances in Neural Information Processing Systems 33, 2020.
 
     Additional arguments on top of parent class
     :class:`~syne_tune.optimizer.schedulers.searchers.StochasticAndFilterDuplicatesSearcher`:
@@ -226,7 +219,8 @@ class ExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
                 X_pending = self._config_to_feature_matrix(self._configs_pending())
             else:
                 X_pending = None
-            sampler = SobolQMCNormalSampler(num_samples=MC_SAMPLES)
+            sampler = SobolQMCNormalSampler(torch.Size([MC_SAMPLES]))
+
             partitioning = NondominatedPartitioning(
                 ref_point=self.ref_point, Y=Y_tensor
             )
@@ -274,9 +268,6 @@ class ExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
         if double_precision:
             X_tensor = X_tensor.double()
             Y_tensor = Y_tensor.double()
-
-        # noise_std = NOISE_LEVEL
-        # Y_tensor += noise_std * randn_like(Y_tensor)
 
         if self.input_warping:
             warp_tf = Warp(indices=list(range(X_tensor.shape[-1])))
@@ -329,40 +320,3 @@ class ExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
 
     def metric_mode(self) -> str:
         return self._mode
-
-
-if __name__ == "__main__":
-
-    from syne_tune.config_space import uniform
-    from syne_tune.optimizer.schedulers.searchers.utils import (
-        make_hyperparameter_ranges,
-    )
-
-    random_seed = 31415927
-    random_state = np.random.RandomState(random_seed)
-    hp_cols = ("x0", "x1", "x2")
-    config_space = {node: uniform(0, 1) for node in hp_cols}
-    metric = ["error", "size"]
-    mode = ["min", "min"]
-    searcher = ExpectedHyperVolumeImprovement(
-        config_space=config_space,
-        metric=metric,
-        mode=mode,
-        points_to_evaluate=[],
-    )
-
-    hp_ranges = make_hyperparameter_ranges(config_space)
-    num_data = 20
-    trial_ids = list(range(num_data))
-    configs = hp_ranges.random_configs(random_state, num_data)
-    metric_values = random_state.randn(num_data, len(metric))
-    # Feed data to searcher
-    for trial_id, config, metric_val in zip(trial_ids, configs, metric_values):
-        searcher.get_config(trial_id=trial_id)
-
-        result = {name: value for name, value in zip(metric, metric_val)}
-        searcher._update(
-            trial_id=trial_id,
-            config=config,
-            result=result,
-        )
