@@ -13,7 +13,9 @@ try:
     from botorch.models.transforms import Warp
     from botorch.sampling import SobolQMCNormalSampler
     from botorch.utils.transforms import normalize
-    from botorch.utils.multi_objective.box_decompositions import NondominatedPartitioning
+    from botorch.utils.multi_objective.box_decompositions import (
+        NondominatedPartitioning,
+    )
     from botorch.acquisition.multi_objective.monte_carlo import (
         qExpectedHypervolumeImprovement,
     )
@@ -23,7 +25,7 @@ try:
     from linear_operator.utils.errors import NotPSDError
 
 except ImportError:
-     print(try_import_botorch_message())
+    print(try_import_botorch_message())
 
 from syne_tune.optimizer.schedulers.searchers import (
     StochasticAndFilterDuplicatesSearcher,

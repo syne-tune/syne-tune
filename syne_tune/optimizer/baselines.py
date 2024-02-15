@@ -1290,6 +1290,7 @@ class EHVI(FIFOScheduler):
             **kwargs,
         )
 
+
 class ASHACQR(HyperbandScheduler):
     """
     Multi-fidelity Conformal Quantile Regression approach proposed in:
