@@ -10,7 +10,7 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
-from syne_tune.try_import import try_import_moo_message
+from syne_tune.try_import import try_import_moo_message, try_import_botorch_message
 from syne_tune.optimizer.schedulers.multiobjective.moasha import MOASHA
 from syne_tune.optimizer.schedulers.multiobjective.multi_objective_regularized_evolution import (
     MultiObjectiveRegularizedEvolution,
@@ -21,17 +21,20 @@ from syne_tune.optimizer.schedulers.multiobjective.nsga2_searcher import (
 from syne_tune.optimizer.schedulers.multiobjective.linear_scalarizer import (
     LinearScalarizedScheduler,
 )
-from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
-    ExpectedHyperVolumeImprovement,
-)
 
 __all__ = [
     "MOASHA",
     "MultiObjectiveRegularizedEvolution",
     "NSGA2Searcher",
     "LinearScalarizedScheduler",
-    "ExpectedHyperVolumeImprovement",
 ]
+
+try:
+    from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
+        ExpectedHyperVolumeImprovement,
+    )
+except ImportError:
+    print(try_import_botorch_message())
 
 try:
     from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objective_searcher import (  # noqa: F401
