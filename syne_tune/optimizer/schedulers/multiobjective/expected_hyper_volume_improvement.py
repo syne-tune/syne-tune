@@ -277,7 +277,7 @@ class ExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
         #     logging.warning("Botorch was unable to fit the model, sampling randomly.")
         #     return self._get_random_config()
 
-    def _make_gp(self, X_tensor: Tensor, Y_tensor: Tensor) -> SingleTaskGP:
+    def _make_gp(self, X_tensor, Y_tensor):
         double_precision = False
         if double_precision:
             X_tensor = X_tensor.double()
