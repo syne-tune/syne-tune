@@ -30,13 +30,6 @@ __all__ = [
 ]
 
 try:
-    from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
-        ExpectedHyperVolumeImprovement,
-    )
-except ImportError:
-    print(try_import_botorch_message())
-
-try:
     from syne_tune.optimizer.schedulers.multiobjective.multi_surrogate_multi_objective_searcher import (  # noqa: F401
         MultiObjectiveMultiSurrogateSearcher,
     )

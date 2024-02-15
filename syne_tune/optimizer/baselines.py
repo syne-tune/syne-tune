@@ -1288,7 +1288,7 @@ except ImportError:
     )
 
 try:
-    from syne_tune.optimizer.schedulers.multiobjective import (
+    from syne_tune.optimizer.schedulers.multiobjective.expected_hyper_volume_improvement import (
         ExpectedHyperVolumeImprovement,
     )
 
