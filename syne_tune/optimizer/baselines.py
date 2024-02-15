@@ -1204,7 +1204,6 @@ class CQR(FIFOScheduler):
         )
 
 
-
 class ASHACQR(HyperbandScheduler):
     """
     Multi-fidelity Conformal Quantile Regression approach proposed in:
@@ -1289,7 +1288,10 @@ except ImportError:
     )
 
 try:
-    from syne_tune.optimizer.schedulers.multiobjective import ExpectedHyperVolumeImprovement
+    from syne_tune.optimizer.schedulers.multiobjective import (
+        ExpectedHyperVolumeImprovement,
+    )
+
     class EHVI(FIFOScheduler):
         """
         Implements the Expected Hypervolume Improvement method.
@@ -1311,12 +1313,12 @@ try:
         """
 
         def __init__(
-                self,
-                config_space: Dict[str, Any],
-                metric: List[str],
-                mode: Union[List[str], str] = "min",
-                random_seed: Optional[int] = None,
-                **kwargs,
+            self,
+            config_space: Dict[str, Any],
+            metric: List[str],
+            mode: Union[List[str], str] = "min",
+            random_seed: Optional[int] = None,
+            **kwargs,
         ):
             searcher_kwargs = _create_searcher_kwargs(
                 config_space, metric, random_seed, kwargs
@@ -1332,6 +1334,7 @@ try:
                 random_seed=random_seed,
                 **kwargs,
             )
+
 except ImportError:
     logging.info(
         _try_import_message(
