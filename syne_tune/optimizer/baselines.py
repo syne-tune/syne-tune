@@ -1364,5 +1364,4 @@ baselines_dict = {
     "ASHACTS": ASHACTS,
     "CQR": CQR,
     "ASHACQR": ASHACQR,
-    "EHVI": EHVI,
 }

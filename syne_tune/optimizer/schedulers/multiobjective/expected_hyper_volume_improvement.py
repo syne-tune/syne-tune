@@ -289,7 +289,7 @@ class ExpectedHyperVolumeImprovement(StochasticAndFilterDuplicatesSearcher):
             warp_tf = None
         return SingleTaskGP(X_tensor, Y_tensor, input_transform=warp_tf)
 
-    def _config_to_feature_matrix(self, configs: List[dict]) -> Tensor:
+    def _config_to_feature_matrix(self, configs: List[dict]):
         bounds = Tensor(self._hp_ranges.get_ndarray_bounds()).T
         X = Tensor(self._hp_ranges.to_ndarray_matrix(configs))
         return normalize(X, bounds)
