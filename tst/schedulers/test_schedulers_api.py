@@ -317,11 +317,6 @@ list_schedulers_to_test = [
         metrics=[metric1, metric2],
         mode=mode,
     ),
-    EHVI(
-        config_space=config_space,
-        metric=[metric1, metric2],
-        mode=mode,
-    ),
     MedianStoppingRule(
         scheduler=FIFOScheduler(
             config_space, searcher="random", metric=metric1, mode=mode
@@ -481,6 +476,13 @@ if sys.version_info >= (3, 8):
         BoTorch(
             config_space=config_space,
             metric=metric1,
+            mode=mode,
+        ),
+    )
+    list_schedulers_to_test.append(
+        EHVI(
+            config_space=config_space,
+            metric=[metric1, metric2],
             mode=mode,
         ),
     )
