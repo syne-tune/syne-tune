@@ -178,7 +178,7 @@ Constrained Bayesian Optimization |   Gardner, et al. (2014)    | model-based  |
 MOASHA |  Schmucker, et al. (2021)   |    random    | yes | yes | no
 NSGA-2 |     Deb, et al. (2002)      | evolutionary | no | no | no
 Multi Objective Multi Surrogate (MSMOS) | Guerrero-Viu, et al. (2021) | model-based  | no | no | no
-MSMOS wihh random scalarization |    Paria, et al. (2018)     | model-based  | no | no | no
+MSMOS with random scalarization |    Paria, et al. (2018)     | model-based  | no | no | no
 
 HPO methods listed can be used in a multi-objective setting by scalarization or non-dominated sorting. See [multiobjective_priority.py](syne_tune/optimizer/schedulers/multiobjective/multiobjective_priority.py) for details.
 
@@ -290,7 +290,8 @@ Do you want to know more? Here are a number of tutorials.
 ## Videos
 
 * [Martin Wistuba: Hyperparameter Optimization for the Impatient (PyData 2023)](https://www.youtube.com/watch?v=onX6fXzp9Yk)
-
+* [David Salinas: Syne Tune: A Library for Large-Scale Hyperparameter Tuning and Reproducible Research (AutoML Seminar)](https://youtu.be/DlM-__TTa3U?feature=shared)
+  
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
