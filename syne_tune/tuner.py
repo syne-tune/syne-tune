@@ -126,7 +126,7 @@ class Tuner:
         information is written to the same path as tuning results.
 
         If the backend is :class:`~syne_tune.backend.LocalBackend` and the
-        experiment is ru remotely, we recommend to set this, since otherwise
+        experiment is run remotely, we recommend to set this, since otherwise
         checkpoints and logs are synced to S3, along with tuning results, which
         is costly and error-prone.
     """
