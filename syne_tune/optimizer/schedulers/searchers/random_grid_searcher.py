@@ -238,7 +238,7 @@ class GridSearcher(StochasticSearcher):
                         f"{DEFAULT_NSAMPLE} is set as number of samples"
                     )
             # num_sample for integer hp must be capped at length of the range when specified. Otherwise,
-            # minimum of default value DEFAULT_NSAMPLE and the interger range is used.
+            # minimum of default value DEFAULT_NSAMPLE and the integer range is used.
             if isinstance(hp_range, Integer):
                 if hp in self.num_samples:
                     if self.num_samples[hp] > len(hp_range):
