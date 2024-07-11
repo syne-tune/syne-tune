@@ -24,7 +24,7 @@ jobs:
         id: set-matrix
         run: python ./.github/workflows/utils/notebooks2scripts.py
       - name: Upload converted python script
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: converted_notebooks
           path: examples/notebooks/
