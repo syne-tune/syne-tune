@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 import logging
 
-from syne_tune.try_import import try_import_raytune_message
 from syne_tune.optimizer.schedulers.fifo import FIFOScheduler
 from syne_tune.optimizer.schedulers.hyperband import HyperbandScheduler
 from syne_tune.optimizer.schedulers.median_stopping_rule import MedianStoppingRule
@@ -32,4 +31,4 @@ try:
 
     __all__.append("RayTuneScheduler")
 except ImportError:
-    logging.info(try_import_raytune_message())
+    pass

@@ -19,12 +19,11 @@ from syne_tune.backend.simulator_backend.simulator_callback import SimulatorCall
 from syne_tune.optimizer.baselines import BORE
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.experiments import load_experiment
-from syne_tune.try_import import try_import_visual_message
 
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    print(try_import_visual_message())
+    pass
 
 
 n_workers = 4

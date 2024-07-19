@@ -14,12 +14,10 @@ import os
 from pathlib import Path
 from typing import Optional, List
 
-from syne_tune.try_import import try_import_aws_message
-
 try:
     import boto3
 except ImportError:
-    print(try_import_aws_message())
+    pass
 
 from syne_tune.experiments.launchers.hpo_main_common import (
     ExtraArgsType,

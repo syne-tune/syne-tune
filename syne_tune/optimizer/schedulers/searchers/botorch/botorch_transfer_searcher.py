@@ -14,14 +14,13 @@ import copy
 import numpy as np
 from typing import Optional, List, Dict, Any
 
-from syne_tune.try_import import try_import_botorch_message
 
 try:
     from torch import Tensor
     import torch
     from botorch.utils.transforms import normalize
 except ImportError:
-    print(try_import_botorch_message())
+    pass
 
 import syne_tune.config_space as sp
 from syne_tune.optimizer.baselines import BoTorch

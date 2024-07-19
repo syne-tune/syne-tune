@@ -211,12 +211,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.generate_plots:
-        from syne_tune.try_import import try_import_visual_message
 
         try:
             import matplotlib.pyplot as plt
         except ImportError:
-            print(try_import_visual_message())
+            pass
 
         print("Generating optimisation plots.")
         """ Plot the results on the transfer task """

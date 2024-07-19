@@ -30,13 +30,12 @@ from syne_tune.experiments.visualization.results_utils import (
     download_result_files_from_s3,
     SINGLE_BENCHMARK_KEY,
 )
-from syne_tune.try_import import try_import_visual_message
 from syne_tune.util import is_increasing, is_positive_integer
 
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    print(try_import_visual_message())
+    pass
 
 logger = logging.getLogger(__name__)
 

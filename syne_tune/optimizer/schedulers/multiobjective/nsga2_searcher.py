@@ -17,7 +17,6 @@ from typing import Optional, List, Union, Dict, Any
 from syne_tune.optimizer.schedulers.searchers import StochasticSearcher
 from syne_tune.config_space import Domain, Float, Integer, Categorical, FiniteRange
 from syne_tune.optimizer.schedulers.random_seeds import generate_random_seed
-from syne_tune.try_import import try_import_moo_message
 
 try:
     from pymoo.algorithms.moo.nsga2 import NSGA2
@@ -33,7 +32,7 @@ try:
     from pymoo.core.variable import Choice as PyMOOChoice
     from pymoo.core.variable import Integer as PyMOOInteger
 except ImportError:
-    print(try_import_moo_message())
+    pass
 
 
 def _create_multiobjective_problem(config_space: Dict[str, Any], n_obj: int, **kwargs):

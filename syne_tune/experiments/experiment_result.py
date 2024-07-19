@@ -29,19 +29,18 @@ from syne_tune.constants import (
     ST_TUNER_CREATION_TIMESTAMP,
     ST_TUNER_TIME,
 )
-from syne_tune.try_import import try_import_aws_message, try_import_visual_message
 from syne_tune.util import experiment_path, s3_experiment_path, metric_name_mode
 
 try:
     import boto3
     from botocore.exceptions import ClientError
 except ImportError:
-    print(try_import_aws_message())
+    pass
 
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    print(try_import_visual_message())
+    pass
 
 logger = logging.getLogger(__name__)
 

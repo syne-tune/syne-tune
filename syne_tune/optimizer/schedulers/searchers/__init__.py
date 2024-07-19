@@ -12,8 +12,6 @@
 # permissions and limitations under the License.
 import logging
 
-from syne_tune.try_import import try_import_gpsearchers_message
-
 from syne_tune.optimizer.schedulers.searchers.searcher import (  # noqa: F401
     BaseSearcher,
     impute_points_to_evaluate,
@@ -63,4 +61,4 @@ try:
         ]
     )
 except ImportError:
-    logging.info(try_import_gpsearchers_message())
+    pass

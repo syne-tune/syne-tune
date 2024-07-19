@@ -21,7 +21,6 @@ from syne_tune.remote.constants import (
     MXNET_LATEST_PY_VERSION,
     MXNET_LATEST_VERSION,
 )
-from syne_tune.try_import import try_import_aws_message
 
 try:
     from sagemaker.pytorch import PyTorch
@@ -32,7 +31,7 @@ try:
     from sagemaker.chainer import Chainer
     from sagemaker.xgboost import XGBoost
 except ImportError:
-    print(try_import_aws_message())
+    pass
 
 
 def instance_sagemaker_estimator(**kwargs):

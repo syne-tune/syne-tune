@@ -39,8 +39,6 @@ recipes = [
 ]
 
 
-from syne_tune.try_import import try_import_yahpo_message
-
 try:
     from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
         YAHPORecipe,
@@ -50,7 +48,7 @@ try:
     for scenario in yahpo_scenarios:
         recipes.append(YAHPORecipe("yahpo-" + scenario))
 except ImportError:
-    print(try_import_yahpo_message())
+    pass
 
 
 generate_blackbox_recipes = {recipe.name: recipe for recipe in recipes}

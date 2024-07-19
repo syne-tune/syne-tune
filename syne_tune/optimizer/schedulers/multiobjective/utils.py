@@ -13,12 +13,10 @@
 from typing import List
 import numpy as np
 
-from syne_tune.try_import import try_import_moo_message
-
 try:
     from pymoo.indicators.hv import HV
 except ImportError:
-    print(try_import_moo_message())
+    pass
 
 
 EPSILON = 1e-6

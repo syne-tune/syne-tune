@@ -18,14 +18,12 @@ import pandas
 from functools import lru_cache
 from pathlib import Path
 
-from syne_tune.try_import import try_import_aws_message
-
 try:
     import s3fs
     import sagemaker
     from botocore.exceptions import NoCredentialsError
 except ImportError:
-    print(try_import_aws_message())
+    pass
 
 
 @lru_cache(maxsize=1)

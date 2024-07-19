@@ -22,12 +22,11 @@ from syne_tune.experiments import load_experiment
 from syne_tune.optimizer.baselines import ASHA
 from syne_tune import Tuner, StoppingCriterion
 from syne_tune.config_space import Domain
-from syne_tune.try_import import try_import_visual_message
 
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    print(try_import_visual_message())
+    pass
 
 
 def plot_yahpo_learning_curves(

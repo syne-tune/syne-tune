@@ -12,12 +12,6 @@
 # permissions and limitations under the License.
 import logging
 
-from syne_tune.try_import import (
-    try_import_gpsearchers_message,
-    try_import_kde_message,
-    try_import_bore_message,
-    try_import_botorch_message,
-)
 from syne_tune.optimizer.schedulers.searchers import (
     BaseSearcher,
     RandomSearcher,
@@ -92,7 +86,6 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
                 MultiFidelityKernelDensityEstimator,
             )
         except ImportError:
-            logger.info(try_import_kde_message())
             raise
 
         if scheduler == "fifo":
@@ -107,7 +100,6 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
                 MultiFidelityBore,
             )
         except ImportError:
-            logger.info(try_import_bore_message())
             raise
 
         if scheduler == "fifo":
@@ -121,7 +113,6 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
                 SurrogateSearcher,
             )
         except ImportError:
-            logger.info(try_import_bore_message())
             raise
         searcher_cls = SurrogateSearcher
     elif searcher_name == "botorch":
@@ -130,7 +121,6 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
                 BoTorchSearcher,
             )
         except ImportError:
-            logger.info(try_import_botorch_message())
             raise
 
         searcher_cls = BoTorchSearcher
@@ -165,7 +155,6 @@ def searcher_factory(searcher_name: str, **kwargs) -> BaseSearcher:
                 DynamicHPOSearcher,
             )
         except ImportError:
-            logger.info(try_import_gpsearchers_message())
             raise
 
         if searcher_name == "bayesopt":
