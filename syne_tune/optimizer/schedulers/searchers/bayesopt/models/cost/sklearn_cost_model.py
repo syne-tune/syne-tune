@@ -12,7 +12,6 @@
 # permissions and limitations under the License.
 from typing import List, Tuple, Callable, Optional, Dict, Any
 import numpy as np
-import logging
 
 try:
     from sklearn.ensemble import (

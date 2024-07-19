@@ -11,7 +11,6 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import numpy as np
-import logging
 
 try:
     from scipy.special import betainc
