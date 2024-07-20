@@ -488,6 +488,7 @@ if sys.version_info >= (3, 8):
     )
 
 
+@pytest.mark.timeout(20)
 @pytest.mark.parametrize("scheduler", list_schedulers_to_test)
 def test_schedulers_api(scheduler):
     trial_ids = range(4)
