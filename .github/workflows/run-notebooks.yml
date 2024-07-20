@@ -10,7 +10,7 @@ on:
 
 jobs:
   prepare:
-    runs-on: syne-tune_ubuntu-latest_16-core
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
