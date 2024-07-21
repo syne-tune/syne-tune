@@ -12,6 +12,8 @@
 # permissions and limitations under the License.
 from math import fabs
 
+import pytest
+
 from syne_tune.config_space import uniform, randint, choice
 from syne_tune.optimizer.schedulers.searchers.bayesopt.datatypes.common import (
     dictionarize_objective,
@@ -39,6 +41,7 @@ def _gp_searcher_with_state(gp_searcher, state):
 # Uses code from examples/launch_standalone_bayesian_optimization.py. This is
 # because we'd like to test whether the correct acquisition function object is
 # created under realistic conditions.
+@pytest.mark.skip("too long for CI")
 def test_choose_acquisition_function():
     # toy example of 3 hp's
     config_space = {

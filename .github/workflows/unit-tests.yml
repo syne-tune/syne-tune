@@ -13,12 +13,14 @@ on:
 jobs:
   test:
 
-    runs-on: syne-tune_ubuntu-latest_16-core
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
         # Run in all these versions of Python
-        python-version: [3.7, 3.8, 3.9]
+        # Currently 3.10 and 3.11 fails because of numpy error
+        # setup.py:67: RuntimeWarning: NumPy 1.19.4 may not yet support Python 3.11.
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v4

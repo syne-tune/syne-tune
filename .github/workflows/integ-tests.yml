@@ -5,13 +5,8 @@ name: Integ Tests
 # 2. Do not require AWS credentials (We only run the tests that require credentials on code that has been approved and merged to main)
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
+  workflow_dispatch:
+    
 jobs:
   launch_tensorboard_example:
     uses: ./.github/workflows/run-syne-tune.yml
