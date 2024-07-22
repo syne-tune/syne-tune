@@ -7,10 +7,7 @@ from syne_tune.blackbox_repository.conversion_scripts.recipes import (
 )
 
 if __name__ == "__main__":
-    # list all blackboxes available
     for blackbox, recipe in generate_blackbox_recipes.items():
-        if not "yahpo" in blackbox:
-            continue
         try:
             recipe.generate(upload_on_hub=True)
         except Exception as e:
