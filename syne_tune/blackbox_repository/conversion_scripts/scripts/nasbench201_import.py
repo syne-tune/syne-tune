@@ -43,8 +43,6 @@ METRIC_VALID_ERROR = "metric_valid_error"
 
 METRIC_ELAPSED_TIME = "metric_elapsed_time"
 
-SHA256_HASH = "8828c25ebccb0ba99eefed1b7f97ac4686dc1abb91f352ec9019338f2ae0f558"
-
 # This is time required for the given epoch, not time elapsed
 # since start of training
 METRIC_TIME_THIS_RESOURCE = "metric_runtime"
@@ -217,7 +215,6 @@ class NASBench201Recipe(BlackboxRecipe):
     def __init__(self):
         super(NASBench201Recipe, self).__init__(
             name="nasbench201",
-            hash=SHA256_HASH,
             cite_reference="NAS-Bench-201: Extending the scope of reproducible neural architecture search. "
             "Dong, X. and Yang, Y. 2020.",
         )
@@ -240,7 +237,7 @@ class NASBench201Recipe(BlackboxRecipe):
 
                     session = requests.Session()
 
-                    params = {"id": id, "confirm": True}
+                    params = {"id": id, "confirm": "t"}
                     response = session.get(URL, params=params, stream=True)
 
                     save_response_content(response, destination)
