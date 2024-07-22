@@ -8,3 +8,6 @@ xgboost
 # required to load datasets
 fastparquet
 h5py # note: only needed for fcnet for high compression
+
+# required to download datasets
+huggingface_hub
