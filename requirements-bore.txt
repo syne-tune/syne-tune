@@ -1,3 +1,2 @@
 xgboost
 scikit-learn
-GPy==1.12.0

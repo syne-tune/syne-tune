@@ -49,7 +49,7 @@ class Bore(StochasticAndFilterDuplicatesSearcher):
     :param calibrate: If set to true, we calibrate the predictions of the
         classifier via CV. Defaults to False
     :param classifier: The binary classifier to model the acquisition
-        function. Choices: :code:`{"mlp", "gp", "xgboost", "rf", "logreg"}`.
+        function. Choices: :code:`{"mlp", "xgboost", "rf", "logreg"}`.
         Defaults to "xgboost"
     :param acq_optimizer: The optimization method to maximize the acquisition
         function. Choices: :code:`{"de", "rs", "rs_with_replacement"}`. Defaults
@@ -128,12 +128,6 @@ class Bore(StochasticAndFilterDuplicatesSearcher):
             self.model = LogisticRegression()
         elif self.classifier == "rf":
             self.model = RandomForestClassifier()
-        elif self.classifier == "gp":
-            from syne_tune.optimizer.schedulers.searchers.bore.gp_classififer import (
-                GPModel,
-            )
-
-            self.model = GPModel(**classifier_kwargs)
         elif self.classifier == "mlp":
             from syne_tune.optimizer.schedulers.searchers.bore.mlp_classififer import (
                 MLP,
