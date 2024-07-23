@@ -439,7 +439,7 @@ if __name__ == "__main__":
     # plot one learning-curve for sanity-check
     from syne_tune.blackbox_repository import load_blackbox
 
-    bb_dict = load_blackbox(f"yahpo-{scenario}", skip_if_present=False)
+    bb_dict = load_blackbox(f"yahpo-{scenario}")
     first_task = next(iter(bb_dict.keys()))
     b = bb_dict[first_task]
     configuration = {k: v.sample() for k, v in b.configuration_space.items()}

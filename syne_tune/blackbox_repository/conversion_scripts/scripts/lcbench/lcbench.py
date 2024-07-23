@@ -25,7 +25,7 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts import (
     default_metric,
     resource_attr,
 )
-from syne_tune.config_space import randint, lograndint, uniform, loguniform
+from syne_tune.config_space import randint, lograndint, uniform, loguniform, choice
 from syne_tune.util import catchtime
 from syne_tune.blackbox_repository.conversion_scripts.scripts.lcbench.api import (
     Benchmark,
@@ -43,10 +43,10 @@ RESOURCE_ATTR = "epoch"
 
 MAX_RESOURCE_LEVEL = 50
 
-SHA256_HASH = "5461a65e6b94a877fd3214b4ef50436e25127f73303bf3e77f5db59289ecc670"
-
 CONFIGURATION_SPACE = {
-    "num_layers": randint(1, 5),
+    # LCBench data has a bug and layers are encoded with 2, 3, 4 and True probably due to a script
+    # error, we treat the value as categorical to preserve the available information
+    "num_layers": choice(["True", "2", "3", "4"]),
     "max_units": lograndint(64, 1024),
     "batch_size": lograndint(16, 512),
     "learning_rate": loguniform(1e-4, 1e-1),
@@ -90,6 +90,9 @@ def convert_task(bench, dataset_name):
             if tag == "time":
                 # Remove time for scoring the model before training it
                 objectives_evaluations[i, 0, :, j] -= raw_objective_evaluations[0]
+
+    # see mention of bug issue with num_layers in LCBench for why we map to string
+    hyperparameters["num_layers"] = hyperparameters["num_layers"].apply(str)
     return BlackboxTabular(
         hyperparameters=hyperparameters,
         configuration_space=CONFIGURATION_SPACE,
@@ -112,7 +115,6 @@ class LCBenchRecipe(BlackboxRecipe):
     def __init__(self):
         super(LCBenchRecipe, self).__init__(
             name=BLACKBOX_NAME,
-            hash=SHA256_HASH,
             cite_reference="Auto-PyTorch: Multi-Fidelity MetaLearning for Efficient and Robust AutoDL. "
             "Lucas Zimmer, Marius Lindauer, Frank Hutter. 2020.",
         )

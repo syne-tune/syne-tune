@@ -11,35 +11,28 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from typing import Optional
 
-from syne_tune.util import catchtime
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
-    compute_hash_benchmark,
-    blackbox_local_path,
+    upload_blackbox,
 )
+from syne_tune.util import catchtime
 
 
 class BlackboxRecipe:
-    def __init__(self, name: str, cite_reference: str, hash: str = None):
+    def __init__(self, name: str, cite_reference: str):
         """
         Parent class for a blackbox recipe that allows to generate the blackbox data on disk, see ``FCNETRecipe`` or
         ``LCBenchRecipe`` classes for example on how to add a new benchmark.
         :param name: name of the blackbox
         :param cite_reference: name of the paper to be referenced. A message is prompted when generating the blackbox
         to ask the user to cite the relevant paper.
-        :param hash: pre-computed hash of all generated files. Hashes are stored as constants
-        in the conversion_scripts.
         """
         self.name = name
-        self.hash = hash
         self.cite_reference = cite_reference
 
-    def generate(self, s3_root: Optional[str] = None):
+    def generate(self, upload_on_hub: bool = True):
         """
-        Generates the blackbox on disk then upload it on s3 if AWS is available.
-        :param s3_root: s3 root where to upload to s3, default to s3://{sagemaker-bucket}/blackbox-repository.
-        If AWS is not available, this step is skipped and the dataset is just persisted locally.
+        Generates the blackbox on disk then upload it on HuggingFace hub
         :return:
         """
         message = (
@@ -49,19 +42,9 @@ class BlackboxRecipe:
         logging.info(message)
         self._generate_on_disk()
 
-        hash = compute_hash_benchmark(blackbox_local_path(name=self.name))
-
-        logging.info(
-            f"Hash of new generated benchmark: {hash}. If you send a PR, "
-            f"replace SHA256_HASH in the conversion script with this new hash."
-        )
-
-        with catchtime("uploading to s3"):
-            from syne_tune.blackbox_repository.conversion_scripts.utils import (
-                upload_blackbox,
-            )
-
-            upload_blackbox(name=self.name, s3_root=s3_root)
+        if upload_on_hub:
+            with catchtime(f"Uploading blackbox {self.name} to HuggingFace hub"):
+                upload_blackbox(name=self.name)
 
     def _generate_on_disk(self):
         """

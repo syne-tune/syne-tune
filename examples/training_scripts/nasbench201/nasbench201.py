@@ -40,8 +40,7 @@ def objective(config):
     dont_sleep = parse_bool(config["dont_sleep"])
 
     ts_start = time.time()
-    s3_root = config.get("blackbox_repo_s3_root")
-    blackbox = load_blackbox(BLACKBOX_NAME, s3_root=s3_root)[config["dataset_name"]]
+    blackbox = load_blackbox(BLACKBOX_NAME)[config["dataset_name"]]
     # We load metric values for all epochs required here
     essential_config = {k: config[k] for k in CONFIG_KEYS}
     fidelity_range = (1, config["epochs"])
