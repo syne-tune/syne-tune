@@ -116,7 +116,6 @@ def load_blackbox(
             yahpo_kwargs = dict()
         return instantiate_yahpo(name, **yahpo_kwargs)
     elif name.startswith("pd1"):
-        print(blackbox_path)
         return deserialize_pd1(blackbox_path)
     elif (blackbox_path / "hyperparameters.parquet").exists():
         return deserialize_tabular(blackbox_path)

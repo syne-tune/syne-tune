@@ -237,7 +237,11 @@ class NASBench201Recipe(BlackboxRecipe):
 
                     session = requests.Session()
 
-                    params = {"id": id, "confirm": "t"}
+                    print(
+                        "TODO fix me, right now this download does not work as google added a warning, "
+                        "file must be downloaded manually for now"
+                    )
+                    params = {"id": id, "confirm": True}
                     response = session.get(URL, params=params, stream=True)
 
                     save_response_content(response, destination)
