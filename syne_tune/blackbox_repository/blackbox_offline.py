@@ -217,7 +217,7 @@ def deserialize(path: str) -> Union[Dict[str, BlackboxOffline], BlackboxOffline]
     task_names = metadata.get("task_names")
 
     # need to specify columns to have categorical encoding of columns (rather than int or float)
-    # this is required as it has a massive effect on memory usage; we use fastparquet for the engine as pyarrow does
+    # this is required as it has a massive effect on memory usage; we use fastparquet for the engine as  does
     # not handle categorization of int/float columns
     df_tasks = {
         task: pd.read_parquet(

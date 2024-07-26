@@ -1,2 +1,2 @@
-datasets==1.8.0
+datasets>=1.8.0
 transformers

@@ -46,6 +46,7 @@ required_sklearn = load_requirements("requirements-sklearn.txt")
 required_smac = load_requirements("requirements-smac.txt")
 
 # Do not add SMAC for now in "extra" as it can easily conflict with Yahpo config-space version
+# Do not add benchmarks either as it contains lots of dependencies can cause conflicts
 required_extra = (
     required_gpsearchers
     + required_kde
@@ -55,7 +56,6 @@ required_extra = (
     + required_visual
     + required_sklearn
     + required_blackbox_repository
-    + required_benchmarks
     + required_yahpo
     + required_ray
 )

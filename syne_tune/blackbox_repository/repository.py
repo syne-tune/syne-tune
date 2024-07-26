@@ -11,14 +11,17 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 import logging
-from pathlib import Path
 from typing import List, Union, Dict, Optional
 
+<<<<<<< HEAD
 try:
     import s3fs as s3fs
     from botocore.exceptions import NoCredentialsError
 except ImportError:
     pass
+=======
+from huggingface_hub import snapshot_download
+>>>>>>> main
 
 from syne_tune.blackbox_repository.blackbox import Blackbox
 from syne_tune.blackbox_repository.blackbox_offline import (
@@ -31,21 +34,12 @@ from syne_tune.blackbox_repository.conversion_scripts.scripts.pd1_import import 
     deserialize as deserialize_pd1,
 )
 
-try:
-    from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
-        instantiate_yahpo,
-    )
-except ImportError:
-    pass
-
-# where the blackbox repository is stored on s3
 from syne_tune.blackbox_repository.conversion_scripts.recipes import (
     generate_blackbox_recipes,
 )
 from syne_tune.blackbox_repository.conversion_scripts.utils import (
-    validate_hash,
-    blackbox_local_path,
-    blackbox_s3_path,
+    repository_path,
+    repo_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -60,11 +54,11 @@ def blackbox_list() -> List[str]:
 
 def load_blackbox(
     name: str,
-    skip_if_present: bool = True,
-    s3_root: Optional[str] = None,
-    generate_if_not_found: bool = True,
+    custom_repo_id: Optional[str] = None,
     yahpo_kwargs: Optional[dict] = None,
-    ignore_hash: bool = True,  # TODO: Switch back to ``False`` once hash computation fixed
+    local_files_only: bool = False,
+    force_download: bool = False,
+    **snapshot_download_kwargs,
 ) -> Union[Dict[str, Blackbox], Blackbox]:
     """
     :param name: name of a blackbox present in the repository, see
@@ -90,87 +84,51 @@ def load_blackbox(
         * "yahpo-*": Number of different benchmarks from YAHPO Gym. Note that these
           blackboxes come with surrogates already, so no need to wrap them into
           :class:`SurrogateBlackbox`
-
-    :param skip_if_present: skip the download if the file locally exists
-    :param s3_root: S3 root directory for blackbox repository. Defaults to
-        S3 bucket name of SageMaker session
-    :param generate_if_not_found: If the blackbox file is not present locally
-        or on S3, should it be generated using its conversion script?
+    :param custom_repo_id: custom hugging face repoid to use, default to Syne Tune hub
     :param yahpo_kwargs: For a YAHPO blackbox (``name == "yahpo-*"``), these are
         additional arguments to ``instantiate_yahpo``
-    :param ignore_hash: do not check if hash of currently stored files matches the
-        pre-computed hash. Be careful with this option. If hashes do not match, results
-        might not be reproducible.
+    :param local_files_only: whether to use local files with no internet check on the Hub
+    :param force_download: forces files to be downloaded
+    :param snapshot_download_kwargs: keyword arguments for `snapshot_download` (other than local_files_only and force_download)
     :return: blackbox with the given name, download it if not present.
     """
-    tgt_folder = blackbox_local_path(name)
+    assert (
+        name in blackbox_list()
+    ), f"Got {name} but only the following blackboxes are supported {blackbox_list()}."
 
-    expected_hash = generate_blackbox_recipes[name].hash
-
-    if check_blackbox_local_files(tgt_folder) and skip_if_present:
-        if (
-            not ignore_hash
-            and expected_hash is not None
-            and not validate_hash(tgt_folder, expected_hash)
-        ):
-            logger.warning(
-                f"Files seem to be corrupted (hash mismatch), regenerating it locally and persisting it on S3."
-            )
-            generate_blackbox_recipes[name].generate(s3_root=s3_root)
-            if not validate_hash(tgt_folder, expected_hash):
-                Exception(
-                    f"The hash of the files do not match the stored hash after regenerations. "
-                    f"Consider updating the hash and sending a pull-request to change it or set the option ``ignore_hash`` to True."
-                )
-        logger.info(
-            f"Skipping download of {name} as {tgt_folder} already exists, change skip_if_present to redownload"
-        )
+    # download blackbox if not present, we use allow_patterns to download only the files wanted
+    if not name.startswith("yahpo"):
+        allow_patterns = f"{name}/*"
     else:
-        logger.info("Local files not found, attempting to copy from S3.")
-        tgt_folder.mkdir(exist_ok=True, parents=True)
-        try:
-            s3_folder = blackbox_s3_path(name=name, s3_root=s3_root)
-            fs = s3fs.S3FileSystem()
-            data_on_s3 = fs.exists(f"{s3_folder}/metadata.json")
-        except NoCredentialsError:
-            data_on_s3 = False
-        if data_on_s3:
-            logger.info("found blackbox on S3, copying it locally")
-            # download files from s3 to repository_path
-            for src in fs.glob(f"{s3_folder}/*"):
-                tgt = tgt_folder / Path(src).name
-                logger.info(f"copying {src} to {tgt}")
-                fs.get(src, str(tgt))
+        allow_patterns = f"yahpo/*"
 
-            if (
-                not ignore_hash
-                and expected_hash is not None
-                and not validate_hash(tgt_folder, expected_hash)
-            ):
-                logger.warning(
-                    f"Files seem to be corrupted (hash mismatch), regenerating it locally and overwrite files on S3."
-                )
-                generate_blackbox_recipes[name].generate(s3_root=s3_root)
-        else:
-            assert generate_if_not_found, (
-                "Blackbox files do not exist locally or on S3. If you have "
-                + f"write permissions to {s3_folder}, you can set "
-                + "generate_if_not_found=True in order to generate and persist them"
-            )
-            logger.info(
-                "Did not find blackbox files locally nor on S3, regenerating it locally and persisting it on S3."
-            )
-            generate_blackbox_recipes[name].generate(s3_root=s3_root)
+    snapshot_download(
+        repo_id=custom_repo_id if custom_repo_id else repo_id,
+        repo_type="dataset",
+        # for now we use allow_pattern for lack of a better option to specify explicitly the desired blackbox directory
+        allow_patterns=allow_patterns,
+        local_dir=repository_path,
+        force_download=force_download,
+        local_files_only=local_files_only,
+        **snapshot_download_kwargs,
+    )
+
+    # TODO avoid switch case of PD1
+    blackbox_path = repository_path / name
     if name.startswith("yahpo"):
+        from syne_tune.blackbox_repository.conversion_scripts.scripts.yahpo_import import (
+            instantiate_yahpo,
+        )
+
         if yahpo_kwargs is None:
             yahpo_kwargs = dict()
         return instantiate_yahpo(name, **yahpo_kwargs)
     elif name.startswith("pd1"):
-        return deserialize_pd1(tgt_folder)
-    elif (tgt_folder / "hyperparameters.parquet").exists():
-        return deserialize_tabular(tgt_folder)
+        return deserialize_pd1(blackbox_path)
+    elif (blackbox_path / "hyperparameters.parquet").exists():
+        return deserialize_tabular(blackbox_path)
     else:
-        return deserialize_offline(tgt_folder)
+        return deserialize_offline(blackbox_path)
 
 
 def check_blackbox_local_files(tgt_folder) -> bool:

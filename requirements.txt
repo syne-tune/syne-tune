@@ -1,4 +1,4 @@
-numpy>=1.16.0, <1.27.0
+numpy>=1.22.0, <1.27.0
 dill>=0.3.6
 pandas
 # only needed for python version lower than 3.8

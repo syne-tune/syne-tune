@@ -15,4 +15,4 @@ yahpo-gym==1.0.1
 botorch>=0.7.2
 pytest==7.2.0
 boto3==1.26.49
-sagemaker==2.128.0
+sagemaker==2.218.0
