@@ -9,10 +9,10 @@ statsmodels
 # BORE
 xgboost
 scikit-learn
-# searchers using BOtorch
-botorch>=0.7.2
 # GP-based methods
 scipy>=1.3.3
 autograd>=1.3
 # MOO
 pymoo==0.6.0
+# Examples
+matplotlib

@@ -1,9 +1,0 @@
-# ray
-ray[tune]>=2.0.0
-scikit-learn
-scikit-optimize
-# SMAC
-swig
-smac>=2.0
-# Examples
-matplotlib

@@ -27,10 +27,7 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 
 required_core = load_requirements("requirements.txt")
 required_ray = load_requirements("requirements-ray.txt")
-required_gpsearchers = load_requirements("requirements-gpsearchers.txt")
-required_bore = load_requirements("requirements-bore.txt")
 required_botorch = load_requirements("requirements-botorch.txt")
-required_kde = load_requirements("requirements-kde.txt")
 required_blackbox_repository = load_requirements(
     "syne_tune/blackbox_repository/requirements.txt"
 )
@@ -39,22 +36,13 @@ required_yahpo = load_requirements(
 )
 required_benchmarks = load_benchmark_requirements()
 required_dev = load_requirements("requirements-dev.txt")
-required_aws = load_requirements("requirements-aws.txt")
-required_moo = load_requirements("requirements-moo.txt")
-required_visual = load_requirements("requirements-visual.txt")
-required_sklearn = load_requirements("requirements-sklearn.txt")
 required_smac = load_requirements("requirements-smac.txt")
 
 # Do not add SMAC for now in "extra" as it can easily conflict with Yahpo config-space version
 # Do not add benchmarks either as it contains lots of dependencies can cause conflicts
 required_extra = (
-    required_gpsearchers
-    + required_kde
+    required_core
     + required_dev
-    + required_aws
-    + required_moo
-    + required_visual
-    + required_sklearn
     + required_blackbox_repository
     + required_yahpo
     + required_ray
@@ -64,9 +52,6 @@ required_extra = (
 if sys.version_info >= (3, 8):
     required_extra += required_botorch
 
-required_basic = (
-    required_gpsearchers + required_kde + required_aws + required_moo + required_sklearn
-)
 
 setup(
     name="syne_tune",
@@ -82,21 +67,13 @@ setup(
         ]
     ),
     extras_require={
-        "gpsearchers": required_gpsearchers,
-        "kde": required_kde,
         "dev": required_dev,
-        "aws": required_aws,
-        "moo": required_moo,
-        "visual": required_visual,
-        "sklearn": required_sklearn,
         "blackbox-repository": required_blackbox_repository,
         "benchmarks": required_benchmarks,
         "yahpo": required_yahpo,
         "raytune": required_ray,
         "botorch": required_botorch,
-        "bore": required_bore,
         "extra": required_extra,
-        "basic": required_basic,
         "smac": required_smac,
     },
     install_requires=required_core,
