@@ -29,6 +29,7 @@ def plot_yahpo_learning_curves(
 ):
     try:
         import matplotlib.pyplot as plt
+
         bb = trial_backend.blackbox
         plt.figure()
         plt.title(
