@@ -23,7 +23,7 @@ from syne_tune.experiments import load_experiment
 try:
     import matplotlib.pyplot as plt
 except ImportError:
-    print('This example require matplotlib. You can install it by pip install matplotlib')
+    print('This example requires matplotlib. You can install via pip install matplotlib')
     raise
 
 
